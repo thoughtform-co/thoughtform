@@ -14,6 +14,10 @@
   bars" (the hero was the term doing the drifting). Answers
   [ADR-082 U28 §5](082-voidwalker-character-stage.md)'s open question about a
   Low Power Mode reload, through the bisect.
+- **Followed by:** [ADR-125](125-the-phone-corridor-lands-on-its-beats.md)
+  (2026-09-25) — the corridor's beats become plateaus with seats, and the
+  corridor's height is reserved on ≤960 before its chunk lands, which is what
+  gives Part 1's scroll restoration a stable `scrollHeight` sooner.
 - **Related:** [ADR-107](107-the-proof-card-is-two-sheets-on-a-phone.md) (the pile is
   eight sheets), [ADR-108](108-the-ring-on-phones.md) (the ring's fixed canvas and
   its ship-with-fail answer), [ADR-038](038-corridor-quality-governor.md) (the

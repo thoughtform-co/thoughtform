@@ -7,6 +7,7 @@ import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
+import { CorridorPhoneSeats } from "./CorridorPhoneSeats";
 // ADR-021 amendment (2026-06-19): CorridorSeamPixelField is RETIRED on
 // the production path. `#services` is now a content section (Keynote /
 // Workshop / Embedded terminal cards), not a brandmark runway, and the
@@ -203,6 +204,12 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
           </div>
         )}
       </div>
+
+      {/* The phone's snap seats (ADR-125) — siblings of the sticky cell,
+          absolute in the stage, one per plateau of the phone paint clock
+          and one per stretch after it. The cell itself stays no snap area.
+          Nothing on the desktop or the fallback path. */}
+      {!fallback && <CorridorPhoneSeats />}
     </div>
   );
 }

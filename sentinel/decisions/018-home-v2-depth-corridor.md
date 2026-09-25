@@ -12,6 +12,16 @@
 
 ---
 
+> **2026-09-25 — the phone's paint clock is a leg table with plateaus
+> ([ADR-125](125-the-phone-corridor-lands-on-its-beats.md)).** `getMobilePaintProgress`
+> and `MOBILE_THOUGHTFORM_END` are re-exports of `lib/home-v2/phoneCorridorClock.ts`
+> now: the thesis dwell is 100svh (its end DERIVED — 0.1837, where Revision 3's
+> literal was 0.30), each park is HELD for 80svh with smoothstep passes between,
+> and eight snap seats ride the plateaus. Everything below about the mobile
+> composition still binds; only the clock's shape changed. ⚠ The motion
+> follower's teleport detector reads RAW `progress` since the same pass — a
+> detector on the remapped paint snapped the follower on an ordinary fling.
+
 ## 2026-07-15 Revision 3 — Mobile Quality Pass, Round 3 (thesis rise + gateway-at-rest + caption + type scale)
 
 Owner visual-tuning follow-up to Revision 2. Desktop stays byte-identical

@@ -11,6 +11,7 @@ import {
 } from "@/lib/stores/depthGatewayStore";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
+import { EPILOGUE_START } from "@/lib/home-v2/phoneCorridorClock";
 import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /** Fraction of the sticky stage that belongs to the calibrated
@@ -37,8 +38,11 @@ import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
  *  300svh to 200svh and pulled TITLE_IN forward inside the band
  *  table so the Build → "billions" handoff resolves in roughly one
  *  viewport of scroll instead of three. The corridor span itself
- *  is byte-identical. */
-const EPILOGUE_START = 620 / 820;
+ *  is byte-identical.
+ *
+ *  ADR-125: the constant lives in `lib/home-v2/phoneCorridorClock.ts`
+ *  (same value), where the phone's schedule derives the corridor's span
+ *  from it; imported above. */
 // Safety valve for reverse scroll / HMR races: the corridor-exit hook
 // (`useCorridorExitScroll` per ADR-021; previously
 // `useEmbeddedServicesScroll` under ADR-018 v3.15) is the only writer
@@ -71,6 +75,7 @@ const DOCK_RELEASE_EPILOGUE_PROGRESS = 0.7;
 export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>): void {
   const rafId = useRef<number | null>(null);
   const lastProgress = useRef<number>(-1);
+  const lastPaint = useRef<number>(-1);
   const lastFrameTime = useRef<number>(-1);
 
   const writeFrame = useCallback(() => {
@@ -179,6 +184,16 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       const dtSec = Math.max(0.001, (now - lastT) / 1000);
       velocity = (progress - lastP) / dtSec;
     }
+    // ADR-125: on the phone the paint clock holds a plateau at every park
+    // (`getMobilePaintProgress`), and the streaks read this velocity — so
+    // it is the PAINT's rate there, or the streaks would stream past a
+    // held camera. Desktop: paint IS progress while active, so this is
+    // the same number.
+    if (active && mobile && lastT > 0 && lastPaint.current >= 0) {
+      const dtSec = Math.max(0.001, (now - lastT) / 1000);
+      velocity = (paintProgress - lastPaint.current) / dtSec;
+    }
+    lastPaint.current = paintProgress;
 
     const prev = useDepthGatewayStore.getState().transform;
     const htmlDocked =

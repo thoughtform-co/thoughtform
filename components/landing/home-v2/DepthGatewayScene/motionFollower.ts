@@ -91,10 +91,13 @@ const MOTION_FOLLOWER_TAU_DISSIPATE_S = 0.18;
  *  Settle ≈ 3·(2·tau) ≈ 1.0 s. (v3.12c stack-ramp pass.) */
 const MOTION_FOLLOWER_TAU_STACK_S = 0.17;
 
-/** `paintProgress` jump (per frame) above which we treat the change
- *  as a TELEPORT (hash nav, scroll restore on reload) and snap every
- *  channel instead of easing across half the corridor. Comfortably
- *  above anything a physical fling produces in one frame. */
+/** Progress jump (per frame) above which we treat the change as a
+ *  TELEPORT (hash nav, scroll restore on reload) and snap every channel
+ *  instead of easing across half the corridor. Comfortably above
+ *  anything a physical fling produces in one frame — of RAW progress:
+ *  the driver passes `transform.progress`, never the phone's remapped
+ *  paint, whose passes are steep enough to trip this on one stalled
+ *  frame (ADR-125; `phone-corridor-clock.test.ts` pins both). */
 const TELEPORT_PROGRESS_DELTA = 0.25;
 
 /** Live smoothed channels. Mutated in place by the driver each frame;
@@ -113,7 +116,7 @@ const state: MotionFollowerState = {
  *  The composition has zero velocity at onset — the S-ramp. */
 let stackMid = 0;
 
-let lastPaintProgress: number | null = null;
+let lastProgress: number | null = null;
 
 /** Wall-clock timestamp (ms) of the previous driven frame, or 0 before
  *  the first drive. The R3F loop idles (`frameloop="demand"`) while the
@@ -151,8 +154,11 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
  *
  * @param targets       Raw scrubbed values at the CURRENT paintProgress.
  * @param dtSeconds     Frame delta (clamped internally).
- * @param paintProgress Current store paintProgress — used for teleport
- *                      detection only.
+ * @param progress      Current store RAW `progress` — used for teleport
+ *                      detection only. ⚠ Not `paintProgress`: on the
+ *                      phone that clock holds plateaus and runs steep
+ *                      passes (ADR-125), and a detector reading it snaps
+ *                      the follower on an ordinary fling.
  * @param engaged       Store `active || armed || docked` flag. The follower
  *                      eases continuously across the active <-> armed
  *                      boundary so reverse scroll across the corridor entry
@@ -165,7 +171,7 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
 export function driveMotionFollower(
   targets: MotionFollowerState,
   dtSeconds: number,
-  paintProgress: number,
+  progress: number,
   engaged: boolean
 ): void {
   const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
@@ -173,9 +179,8 @@ export function driveMotionFollower(
   lastDriveTime = nowMs;
 
   const teleport =
-    lastPaintProgress === null ||
-    Math.abs(paintProgress - lastPaintProgress) > TELEPORT_PROGRESS_DELTA;
-  lastPaintProgress = paintProgress;
+    lastProgress === null || Math.abs(progress - lastProgress) > TELEPORT_PROGRESS_DELTA;
+  lastProgress = progress;
 
   // Snap only on real discontinuities: teleport (hash nav, scroll
   // restore), idle resume (the demand-mode loop was off-screen and

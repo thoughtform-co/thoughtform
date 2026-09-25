@@ -46,6 +46,7 @@ import {
 } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import { MOBILE_THESIS_EXIT_START, MOBILE_THOUGHTFORM_END } from "@/lib/home-v2/phoneCorridorClock";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
 import { arcLabelFade } from "@/lib/arc-cases/arcCasesMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
@@ -919,53 +920,18 @@ export function depthOpacityForWorldPosition(
 // stations so existing gate / painter imports keep working; the
 // world-Z, half-extent, and park progress all derive from the map.
 
-/** Raw-progress end of the mobile Thoughtform DWELL — the scroll span
- *  that holds the mobile Thoughtform composition (copy above +
- *  brandmark/compass diagram below in a single composed portrait
- *  layout) before the corridor fly begins.
- *
- *  Mobile quality pass (2026-07-15): the mobile stage was raised from
- *  620svh to 820svh (matching desktop) to fix the "too fast to read"
- *  scroll on the Navigate→Encode→Build fly. With the taller stage the
- *  corridor scroll span is now ~620svh (up from ~469svh), so this raw
- *  window is retuned from 0.38 → 0.30 to keep the Thoughtform dwell at
- *  ~2 viewports (~186svh) — same reading time as before while the
- *  reclaimed ~130svh flows into the fly section. Every consumer already
- *  reads `paintProgress` via `getMobilePaintProgress`, so the retune
- *  shifts the whole timeline coherently. */
-export const MOBILE_THOUGHTFORM_END = 0.3;
-
-/**
- * Mobile-only paint-progress remap — two mobile Thoughtform moments,
- * then fly.
- *
- * On desktop the Thoughtform beat spends [park, dollyHoldEnd] panning
- * the brandmark to centre while the camera Z dolly is held at 0. On
- * mobile the mark is already centred (`getThoughtformCenterOffsetX`
- * returns 0), and the beat is sequenced into two scroll moments — copy
- * alone, then the brandmark + compass diagram — both of which want the
- * camera HELD. So the entire dwell `[0, MOBILE_THOUGHTFORM_END]` is
- * mapped into the camera-hold span `[0, dollyHoldEnd]` (where
- * `cameraZDollyT` ≡ 0), and everything past the dwell is rescaled to
- * run the dolly + ring flythrough to completion at progress = 1.
- *
- * The copy fade, brandmark fade + slide, compass + phase-label reveal
- * are NOT driven by this remap — they come from `getThoughtformMobilePhase`
- * (keyed off raw progress) so they can sequence WITHIN the held dwell.
- *
- * Continuous + monotonic at the seam `p = MOBILE_THOUGHTFORM_END` (both
- * branches → `dollyHoldEnd`); `cameraZDollyT(dollyHoldEnd) = 0`, so the
- * camera Z is identical on both sides — no pop. Every visual reads
- * `paintProgress`, so the whole timeline shifts coherently. Caller gates
- * this behind `isMobileComposition()`. (ADR-018 mobile revision.)
- */
-export function getMobilePaintProgress(progress: number): number {
-  const p = clamp01(progress);
-  const dwell = MOBILE_THOUGHTFORM_END;
-  const hold = CORRIDOR_TIMELINE.dollyHoldEnd;
-  if (p <= dwell) return (p / dwell) * hold;
-  return hold + ((p - dwell) * (1 - hold)) / (1 - dwell);
-}
+/** The phone's paint clock lives in `lib/home-v2/phoneCorridorClock.ts`
+ *  (ADR-125): the thesis dwell's end is DERIVED from the schedule there
+ *  (was a literal 0.30), the remap holds a PLATEAU at every park so each
+ *  beat is composed for a whole hold rather than at one scroll position,
+ *  and the passes ease in and out. Re-exported here so every consumer
+ *  keeps its import; `useDepthScroll` still gates the remap behind
+ *  `active && isMobileComposition()`, which is the desktop identity. */
+export {
+  MOBILE_THESIS_EXIT_START,
+  MOBILE_THOUGHTFORM_END,
+  phonePaintProgress as getMobilePaintProgress,
+} from "@/lib/home-v2/phoneCorridorClock";
 
 /** Per-element factors for the mobile Thoughtform beat, keyed off
  *  RAW scroll progress (not `paintProgress`, which is pinned into the
@@ -990,12 +956,11 @@ export function getMobilePaintProgress(progress: number): number {
  *  Desktop short-circuits to the identity `{1, 1, 0}` so every consumer
  *  can multiply unconditionally and desktop is provably unchanged.
  *
- *  Timing note: the raw progress windows below are proportional to
- *  `MOBILE_THOUGHTFORM_END`, which was retuned from 0.38 to 0.30 in the
- *  same pass. The entrance window `[0.06, 0.15]` puts the diagram fade
- *  in the first third of the dwell; the exit fade `[0.24, 0.30]` fires
- *  in the final ~10% so the composition leaves the frame right as the
- *  camera fly begins. */
+ *  Timing note: the exit fade runs over the LAST `THESIS_EXIT_SVH` of the
+ *  thesis rise (`MOBILE_THESIS_EXIT_START` → `MOBILE_THOUGHTFORM_END`,
+ *  both derived in `phoneCorridorClock` — ADR-125; before it a literal
+ *  `[0.24, 0.30]` of raw progress), so the composition leaves the frame
+ *  right as the flight into Navigate begins. */
 export interface ThoughtformMobilePhase {
   copyFactor: number;
   diagramFactor: number;
@@ -1007,7 +972,9 @@ export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobil
   const p = clamp01(rawProgress);
   // Both surfaces fade OUT together in the final sliver of the dwell so
   // the composed layout exits as one unit when the corridor fly begins.
-  const exitFade = 1 - smoothstep(0.24, MOBILE_THOUGHTFORM_END, p);
+  // ADR-125: the window is the rise's last `THESIS_EXIT_SVH` (derived in
+  // the clock module), not a literal a shorter dwell would sit under.
+  const exitFade = 1 - smoothstep(MOBILE_THESIS_EXIT_START, MOBILE_THOUGHTFORM_END, p);
   // Gateway visible at REST (2026-07-15 pass 3): the compass + diagram
   // read as "already there" the moment the hero curtain lifts, matching
   // desktop (where `diagramFactor ≡ 1`). The arrival flourish is carried

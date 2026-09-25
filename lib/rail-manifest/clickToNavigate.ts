@@ -8,6 +8,9 @@
  * scroll behavior. Under `prefers-reduced-motion` the scroll jumps.
  */
 
+import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import { phoneSeatFraction } from "@/lib/home-v2/phoneCorridorClock";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import { CORRIDOR_MOUNT_ID, type ManifestEntry } from "./entries";
 
 /**
@@ -21,8 +24,17 @@ export function scrollTargetForEntry(entry: ManifestEntry): number | null {
   if (entry.kind === "corridor") {
     const mount = document.getElementById(CORRIDOR_MOUNT_ID);
     if (!mount) return null;
-    const runway = Math.max(0, mount.offsetHeight - window.innerHeight);
-    return mount.offsetTop + (entry.scrollFraction ?? 0) * runway;
+    // ADR-125: the runway is `stageHeight − 100svh` (what `useDepthScroll`
+    // scrubs), so it is measured against the LAYOUT viewport, and on the
+    // phone a beat's landing spot is its plateau's first frame — the seat
+    // the snap would pull a nearby rest onto anyway — never the desktop's
+    // park fraction, which sits mid-pass on the phone's clock.
+    const runway = Math.max(0, mount.offsetHeight - layoutViewportHeight());
+    const fraction =
+      isMobileComposition() && entry.corridorPhase
+        ? phoneSeatFraction(entry.corridorPhase)
+        : (entry.scrollFraction ?? 0);
+    return mount.offsetTop + fraction * runway;
   }
   const el = document.getElementById(entry.targetId);
   return el ? el.offsetTop : null;

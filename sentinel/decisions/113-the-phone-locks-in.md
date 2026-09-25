@@ -375,3 +375,33 @@ Everything else here stands: the proximity root, `#services` / `#contact` as
 stops, no `scroll-padding-top`, no gating on reduced motion, §3's no-live-`dvh`
 law for in-flow content (the pinned `.vwd` is a band, ADR-115 U1's own class),
 and §4.
+
+## Update 3 (2026-09-25, owner) — the corridor host carries seats on its plateaus (ADR-125)
+
+His third device read, on the Arc: _"when you scroll, it shoots off or is a
+bit too far … it either scrolls too far, so the elements are too small, or it
+scrolls too far ahead, so some of the elements are out of view. I'm sure
+there's a clean way for it to land nicely."_ §1's **"Not the corridor host"**
+reverses for the phone rung, in [ADR-125](125-the-phone-corridor-lands-on-its-beats.md):
+
+- The ruling's premise — "820svh with no snap area, so proximity cannot fire
+  inside it" — was true and was the defect: on the phone every beat of the Arc
+  was composed at ONE scroll position (the camera moves ~40 world units per
+  unit of paint at the Navigate park, so the title's scale is within 2 % of 1
+  for ±14px of scroll at 390×844), and nothing on the page could land on it.
+- The phone paint clock now holds a PLATEAU at each park (80svh, the owner's
+  number) with smoothstep passes between them and a 100svh thesis (was 163),
+  and the STAGE carries eight absolute seats on those plateaus (`CorridorPhoneSeats`):
+  a plateau's first frame (`scroll-snap-stop: always` — one flick steps one
+  beat, up and down) and the stretch after it whose first frame is the
+  plateau's last. **The stage and its sticky cell stay no snap area**; the
+  seats are children, and they exist only where the plateaus do (one predicate,
+  `useDeviceTier() === "mobile"` = `isMobileComposition()`).
+- The round-3 dead-scroll objection does not hold: a plateau is 80svh in which
+  the picture is the beat, composed — the same reading U2 gave the era runway.
+
+Everything else here stands: the proximity root (never `mandatory`), the
+hero as a non-stop (a rest in its last radius now completes the curtain onto
+the composed thesis seat), no `scroll-padding-top`, no gating on reduced
+motion, §2's one clock (the rail's click-to-navigate joined its adopters),
+§3 and §4.

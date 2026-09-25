@@ -42,6 +42,9 @@ const ADOPTERS = [
   // ADR-123: the era instrument's phone branch reads the frame it is on
   // screen against.
   "components/landing/home-v2/hooks/useVoidwalkerHologramScroll.ts",
+  // ADR-125: the rail's click-to-navigate scrubs the corridor mount's
+  // runway, which is stage − one layout screen.
+  "lib/rail-manifest/clickToNavigate.ts",
 ];
 
 describe("layoutViewportHeight", () => {

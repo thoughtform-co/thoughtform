@@ -41,6 +41,16 @@ const HEADLESS = args.includes("--headless");
    adds the band's release, makes the era STATION the stop and adds its
    release target. `.vwd` is pinned inside the runway and no longer a stop. */
 const STOPS = [
+  /* ADR-125: the corridor's eight seats — a plateau's first frame (`always`)
+     and the stretch after it whose first frame is the plateau's last. */
+  ".home-v2-stage__seat--thesis",
+  ".home-v2-stage__seat--thesis-out",
+  ".home-v2-stage__seat--navigate",
+  ".home-v2-stage__seat--navigate-out",
+  ".home-v2-stage__seat--encode",
+  ".home-v2-stage__seat--encode-out",
+  ".home-v2-stage__seat--build",
+  ".home-v2-stage__seat--build-out",
   "#services",
   ".voidwalker__snap",
   ".voidwalker__snap-out",
@@ -195,7 +205,12 @@ for (const [w, h] of SHAPES) {
   /* ── the proximity radius, per stop ─────────────────────────────── */
   console.log("\n  radius sweep (largest short-stop that lands on the seat)");
   const radii = {};
-  for (const sel of ["#services", ".voidwalker__snap", "#voidwalker"]) {
+  for (const sel of [
+    ".home-v2-stage__seat--navigate",
+    "#services",
+    ".voidwalker__snap",
+    "#voidwalker",
+  ]) {
     let byScroll = 0;
     let byWheel = 0;
     for (const n of SWEEP) {

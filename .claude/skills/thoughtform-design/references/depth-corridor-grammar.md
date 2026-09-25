@@ -16,13 +16,13 @@ The corridor is a single continuous **camera move through latent space**, not a 
 
 The store transform (`depthGatewayStore.ts`) exposes both a raw `progress` and a derived `paintProgress`:
 
-| Field          | Meaning                                                                                  |
-| -------------- | ---------------------------------------------------------------------------------------- |
-| `progress`     | Raw 0–1 scrub of the stage. Debug/HUD only.                                              |
-| `paintProgress`| What every visual reads. `= progress` while `active`; forced to `0` while `armed`/idle.  |
-| `active`       | Stage pinned (`rect.top <= 0`) and still in view. Corridor is engaged.                   |
-| `armed`        | Stage rising into the pin; parked layout painted (`paintProgress = 0`).                  |
-| `velocity`     | Signed progress-units/sec; zero when idle. Drives velocity-gated layers only.            |
+| Field           | Meaning                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------- |
+| `progress`      | Raw 0–1 scrub of the stage. Debug/HUD only.                                             |
+| `paintProgress` | What every visual reads. `= progress` while `active`; forced to `0` while `armed`/idle. |
+| `active`        | Stage pinned (`rect.top <= 0`) and still in view. Corridor is engaged.                  |
+| `armed`         | Stage rising into the pin; parked layout painted (`paintProgress = 0`).                 |
+| `velocity`      | Signed progress-units/sec; zero when idle. Drives velocity-gated layers only.           |
 
 **Rule:** any new visual MUST read `paintProgress`, never raw `progress`. The canvas camera (`FlyingCameraRig`), the DOM mirror camera (`useWorldDomTracker`), the brandmark (`ProjectedBrandmarkActor`), the compass (`ThoughtformCompassGate`), and every `COPY_ANCHORS` resolver all read `paintProgress`. Reading raw `progress` desyncs you from the rest of the scene.
 
@@ -34,7 +34,7 @@ The store transform (`depthGatewayStore.ts`) exposes both a raw `progress` and a
 
 DOM copy and the brandmark are **not** CSS-positioned. They are placed at world coordinates and projected to screen by a mirror camera (`useWorldDomTracker.ts`) that traces the **same path** as the canvas camera. The tracker overwrites each anchor's inline `transform`/`opacity` every frame.
 
-**Rule:** the canvas camera and the mirror camera must compute FOV from the **same aspect via `getCameraFov(aspect)`** and both call `updateProjectionMatrix()` on resize. If they disagree, the DOM copy drifts off the canvas geometry. Pure-CSS repositioning of a tracked anchor's *position* is futile — change the world anchor in `COPY_ANCHORS`; use CSS only for properties the tracker does not write (width, font-size, text-align).
+**Rule:** the canvas camera and the mirror camera must compute FOV from the **same aspect via `getCameraFov(aspect)`** and both call `updateProjectionMatrix()` on resize. If they disagree, the DOM copy drifts off the canvas geometry. Pure-CSS repositioning of a tracked anchor's _position_ is futile — change the world anchor in `COPY_ANCHORS`; use CSS only for properties the tracker does not write (width, font-size, text-align).
 
 The tracker fires `onPaint(ctx, element)` **after** writing opacity — the sanctioned hook for folding in a per-element factor (the brandmark and the mobile phase factors use this).
 
@@ -62,7 +62,7 @@ The tracker fires `onPaint(ctx, element)` **after** writing opacity — the sanc
 
 Desktop is copy-left / brandmark-right with a pan-to-centre as you scroll. Mobile (`isMobileComposition()`) reshapes the Thoughtform beat into discrete scroll moments, all gated behind `isMobileComposition()` / `useDeviceTier()` so desktop is provably unchanged:
 
-- **`getMobilePaintProgress(progress)`** — monotonic, continuous piecewise remap keyed off `MOBILE_THOUGHTFORM_END = 0.38` and `dollyHoldEnd`. The entire mobile dwell maps into the camera-held window so the camera stays still through the copy and diagram moments, then flies. Applied at the `paintProgress` write in `useDepthScroll.ts`; on mobile `beat`/`gateProgress` are derived from the painted value, not raw progress.
+- **`getMobilePaintProgress(progress)`** — a re-export of `phonePaintProgress` from `lib/home-v2/phoneCorridorClock.ts` (ADR-125): a monotonic, continuous LEG TABLE in svh of scroll from the pin — a 40svh thesis hold at paint 0, a 60svh rise to `dollyHoldEnd`, then a smoothstep pass into each park and an 80svh PLATEAU on it (Navigate / Encode / Build held at `BEAT_PARK_CENTRES` by reference), a linear tail to paint 1. `MOBILE_THOUGHTFORM_END` is derived from the same table (100svh / the corridor's 544.39svh). Eight snap seats (`CorridorPhoneSeats`) sit on those plateaus. Applied at the `paintProgress` write in `useDepthScroll.ts`; on mobile `beat`/`gateProgress` are derived from the painted value, not raw progress. ⚠ The follower's teleport detector reads RAW progress for the same reason.
 - **`getThoughtformMobilePhase(rawProgress)`** → `{ copyFactor, diagramFactor, slideY }`. Identity on desktop (short-circuits → all 1 / 0). Drives: copy fading out (Moment 1 → 2), brandmark + compass + phase labels fading/sliding in (Moment 2), via the `onPaint` hook. Position math still uses `paintProgress`; only opacity/slide use the phase factors.
 
 **Rule:** copy/label visibility is keyed off `paintProgress` against `BEAT_WINDOWS` — keeping the mobile remap inside the thoughtform window means no `BEAT_WINDOWS` edits are needed for the dwell. Continuity (C0) at remap seams matters: verify no camera-Z pop where segments meet (`cameraZDollyT` is 0 across the held window, so seams there are safe).
@@ -75,21 +75,21 @@ The Canvas is mounted for the whole page but only draws while the corridor is en
 
 Several layers animate on **continuous `clock` time**, independent of scroll, so they keep moving while the user is parked-and-reading:
 
-| Layer                  | Clock-driven motion                              | File:line (approx)                          |
-| ---------------------- | ------------------------------------------------ | ------------------------------------------- |
-| ThoughtformAtmosphere  | star twinkle (`uTime`) + boot-glow "breathing"   | `ThoughtformAtmosphere.tsx:339,393`         |
-| LatentFieldTunnel      | embedding-vector twinkle (`uTime`)               | `LatentFieldTunnel.tsx:722,737`             |
-| InterGateCorridor      | debris-ring rotation (`rotation.z += spinRate*δ`)| `InterGateCorridor.tsx:145`                 |
+| Layer                 | Clock-driven motion                               | File:line (approx)                  |
+| --------------------- | ------------------------------------------------- | ----------------------------------- |
+| ThoughtformAtmosphere | star twinkle (`uTime`) + boot-glow "breathing"    | `ThoughtformAtmosphere.tsx:339,393` |
+| LatentFieldTunnel     | embedding-vector twinkle (`uTime`)                | `LatentFieldTunnel.tsx:722,737`     |
+| InterGateCorridor     | debris-ring rotation (`rotation.z += spinRate*δ`) | `InterGateCorridor.tsx:145`         |
 
 A naive velocity-gate would freeze these on-screen the moment scrolling stops — a visible regression. Engagement-gating keeps `frameloop="always"` for the whole time the corridor is visible (including parked dwell), and only stops when it is off-screen.
 
-**Rule:** a `useFrame` that animates on continuous `clock` time is permitted *only* because the loop is kept alive while engaged. It MUST tolerate being paused when disengaged and MUST NOT rely on running off-screen. If you ever need a layer to animate while the corridor is off-screen, the engagement gate is the wrong mechanism — revisit ADR-018 first. Everything else (camera, starfield opacity, streaks, motes, wormhole/contours, gates) is a pure function of `paintProgress`/`velocity` and freezes cleanly when idle.
+**Rule:** a `useFrame` that animates on continuous `clock` time is permitted _only_ because the loop is kept alive while engaged. It MUST tolerate being paused when disengaged and MUST NOT rely on running off-screen. If you ever need a layer to animate while the corridor is off-screen, the engagement gate is the wrong mechanism — revisit ADR-018 first. Everything else (camera, starfield opacity, streaks, motes, wormhole/contours, gates) is a pure function of `paintProgress`/`velocity` and freezes cleanly when idle.
 
 ---
 
 ## Quick checklist before editing the corridor
 
-- New visual reads `paintProgress` (not raw `progress`)? 
+- New visual reads `paintProgress` (not raw `progress`)?
 - Touched FOV → both cameras use `getCameraFov(aspect)` + `updateProjectionMatrix()` on resize?
 - Mobile branch gated behind `isMobileComposition()` / `useDeviceTier`, desktop path untouched?
 - Per-frame resolver avoids reading `window`/`matchMedia` (use the cached `isMobileComposition()`)?

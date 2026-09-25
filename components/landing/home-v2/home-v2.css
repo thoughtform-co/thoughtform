@@ -83,6 +83,24 @@
   z-index: 3;
 }
 
+/* ADR-125 — THE CORRIDOR'S HEIGHT IS RESERVED BEFORE ITS CHUNK LANDS.
+   `useCorridorMount` renders this host synchronously with a null Suspense
+   fallback, and on ≤960 the corridor chunk waits for the first scroll /
+   touch / idle before it is even fetched — so until it arrives the host is
+   an EMPTY element, the page is hero → #services, and the chunk's arrival
+   inserts a whole stage under the reader's thumb (WebKit has no scroll
+   anchoring; the owner read it as "it takes a while to get into the arc").
+   Reserve the stage's own height while the host has no stage: the hero
+   lifts over a void band instead of over the pile, and the arrival is a
+   paint rather than a layout shift. The literal is the stage's `820svh`,
+   pinned equal in `phone-corridor-clock.test.ts`; ≤960 is the import
+   gate's own rung (`useCorridorMount`), so the desktop is untouched. */
+@media (max-width: 960px) {
+  .home-corridor-host:not(:has(.home-v2-stage)) {
+    min-height: 820svh;
+  }
+}
+
 /* ── Sticky depth stage ──────────────────────────────────────── */
 .home-v2-stage {
   position: relative;
@@ -147,6 +165,14 @@
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
+}
+
+/* The phone's snap seats (ADR-125): absent everywhere but the ≤760 block
+   below, where they are absolute children of the stage on the phone paint
+   clock's plateaus. `CorridorPhoneSeats` only renders them on the mobile
+   tier; this is the belt. */
+.home-v2-stage__seat {
+  display: none;
 }
 
 .home-v2-stage__sticky {
@@ -3319,6 +3345,45 @@ html[data-services-ambient="true"] .home-v2-mobile-signal {
      new taller stage. (ADR-018 mobile quality pass.) */
   .home-v2-stage {
     height: 820svh;
+  }
+
+  /* ── THE PHONE'S SNAP SEATS (ADR-125) ───────────────────────────
+     Eight absolute, full-width, invisible children of the stage, one on
+     each plateau of the phone paint clock (`phoneCorridorClock.ts`) and
+     one on the stretch after it; `CorridorPhoneSeats` writes their `top`
+     and `height` inline as `calc(f * (100% - 100svh))` from the one
+     schedule, so no `820` lives here. `start`-aligned, and the four
+     plateau starts carry `scroll-snap-stop: always` — one flick steps one
+     beat, up and down (the owner's call, 2026-09-25). They paint nothing
+     and take no pointer; the sticky cell beside them stays no snap area
+     (a sticky child creates no position). The root is `proximity`
+     (landing.css); a rest in a pass is pulled onto the plateau it left or
+     the next, a rest on a plateau is already composed. */
+  .home-v2-stage__seat {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    scroll-snap-align: start;
+  }
+  .home-v2-stage__seat[data-corridor-stop="always"] {
+    scroll-snap-stop: always;
+  }
+
+  /* ── THE TITLE SCALES ABOUT ITS ANCHORED EDGE (ADR-125) ────────
+     `useWorldDomTracker` writes `translate3d(x, y) translate(origin%)
+     scale(s)` with no origin rule anywhere, so a `bottom-center` title
+     scaled about its default centre drifts by `(s − 1) · h / 2` off the
+     point it is anchored to on approach. With the origin on the anchored
+     edge the translations commute with the scale and that edge lands on
+     the projected point at every `s`. `StationTitle` is mobile-only, so
+     this is phone-scoped by the block it sits in. */
+  .home-v2-readout[data-anchor-origin="bottom-center"] {
+    transform-origin: 50% 100%;
+  }
+  .home-v2-readout[data-anchor-origin="top-center"] {
+    transform-origin: 50% 0;
   }
   /* Mobile Thoughtform copy: one vertically-centred column (bridge,
      title, body, chevron cue) that reads as a single cohesive paragraph.

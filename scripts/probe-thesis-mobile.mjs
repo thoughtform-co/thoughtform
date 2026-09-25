@@ -40,8 +40,10 @@ const SETTLE_MS = Number(args.find((a) => /^\d+$/.test(a)) ?? 220);
 const CHROME_BAND = 56; // --mobile-chrome-top / -bottom at both reference shapes
 const TOL = 1;
 const VIS = 0.05;
-/** The mobile dwell is raw stage progress [0, 0.30]; sweep a touch past it. */
-const SWEEP = { from: 0.0, to: 0.34, step: 0.01 };
+/** The mobile dwell is the thesis hold + rise of the phone paint clock
+ *  (ADR-125: 100svh of the 820svh stage, i.e. 0.122 of it); sweep a touch
+ *  past it into the flight. */
+const SWEEP = { from: 0.0, to: 0.16, step: 0.005 };
 
 const SHAPES = [
   ["iphone-14", 390, 844],

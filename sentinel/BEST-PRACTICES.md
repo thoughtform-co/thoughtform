@@ -1805,6 +1805,30 @@ too and put the seat on its runway's top** — the dwell then buys something (th
 eras ride it) and the snap has a station-sized area to hold instead of a
 radius to miss.
 
+## A composition that exists at one scroll position is a composition nobody lands on (ADR-125, 2026-09-25)
+
+The phone corridor's three beats were each composed at exactly one scroll
+position: the camera dolly was one smoothstep across the whole corridor, the
+DOM title scaled by `referenceDistance / distance`, and at the Navigate park
+the camera moved ~40 world units per unit of paint — so the frame the owner
+photographed held for ±14px of scroll at 390×844. Every rest missed it, and
+the miss read as "too small" or "too far ahead". **A frame a reader is meant
+to land on needs a HOLD in the clock that paints it — a plateau — and a snap
+seat on that plateau is honest only because the picture does not change
+across it.** A seat on a moving clock is a seat on a frame nobody chose.
+
+## A guard that reads a remapped clock trips on the remap (ADR-125)
+
+The motion follower snaps every channel on a per-frame `paintProgress` jump
+above 0.25 — a teleport, on the desktop, where paint IS progress. Give the
+phone a paint clock with plateaus and 50svh passes and the same delta of PAINT
+is ~250px of scroll: one stalled frame under a fling, an ordinary gesture.
+**A discontinuity detector reads the clock the gesture moves, never a clock
+derived from it** — raw progress here — and the unit test pins both the
+argument and the arithmetic (0.25 of raw is over a thousand px on the shortest
+phone). The inverse holds for what MUST follow the derived clock: the streaks'
+velocity reads the paint's rate, or they stream past a held camera.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.

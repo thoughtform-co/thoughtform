@@ -43,9 +43,10 @@ async function rollTo(page: Page, y: number) {
  * 9676 across the four. At the `y = 2800` these tests used to hardcode
  * that is 0.40 of the corridor on iphone-14 and 0.37 on iphone-14-pro-max,
  * which is the whole reason 2800 sat in `navigate` on three shapes and in
- * `thesis` on the tall phone. The band itself is at 0.40–0.50 on the two
- * phones and 0.30–0.40 on tablet and desktop, so no single fraction is
- * safe either: search for it.
+ * `thesis` on the tall phone. The band itself is at 0.30–0.40 on tablet and
+ * desktop and — since ADR-125 put plateaus on the phone paint clock —
+ * 0.149–0.316 of the stage on every phone (the phase flips at paint 0.2 and
+ * 0.48, both mid-pass), so no single fraction is safe either: search for it.
  *
  * ⚠ AND SETTLING COSTS REAL MILLISECONDS. `data-corridor-phase` is written
  * from the WebGL frameloop off a SMOOTHED scroll value, so it lags

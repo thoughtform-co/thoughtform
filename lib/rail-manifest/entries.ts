@@ -58,7 +58,9 @@ export interface ManifestEntry {
    *  0..1 across the whole 820svh) — BOTH the click-nav landing spot and
    *  the detent position. Beat parks are paintProgress × EPILOGUE_START
    *  (620/820): Navigate 0.40 → 0.30, Encode 0.636 → 0.48,
-   *  Build 0.923 → 0.70. */
+   *  Build 0.923 → 0.70. ⚠ DESKTOP ONLY: on the phone the paint clock
+   *  holds a plateau at each park (ADR-125) and `scrollTargetForEntry`
+   *  lands on that plateau's first frame from `phoneSeatFraction`. */
   scrollFraction?: number;
   /** Hero canon: the first viewport shows no rail title. */
   hideActiveName?: boolean;

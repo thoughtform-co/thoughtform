@@ -50,6 +50,7 @@ function MotionFollowerDriver() {
   const wasEngagedRef = useRef(false);
   useFrame((_, delta) => {
     const {
+      progress,
       paintProgress,
       epilogueProgress,
       active,
@@ -97,7 +98,15 @@ function MotionFollowerDriver() {
         dissipate: docked ? dockProgress : servicesAmbient ? 1 : 0,
       },
       delta,
-      paintProgress,
+      // ⚠ RAW progress, not paint (ADR-125). The teleport detector snaps
+      // every channel on a per-frame jump above TELEPORT_PROGRESS_DELTA; on
+      // the phone the paint clock's passes are steep enough that one
+      // stalled frame under a fling moves that much PAINT in ~250px of
+      // scroll, while the same delta of raw progress is more than a
+      // thousand px. Desktop is byte-identical: while engaged, progress
+      // and paintProgress are one number in every state (armed both 0,
+      // active equal, the exit hold both 1).
+      progress,
       active || armed || docked || servicesAmbient || vwTravelRef.current.engaged
     );
   }, -10);

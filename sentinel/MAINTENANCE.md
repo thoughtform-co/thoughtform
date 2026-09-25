@@ -68,6 +68,35 @@ Embedded card must be practical, what a buyer can expect.
 - The three surfaces (site, keynote, session) now share one line: a layer
   built for the intelligence, a person keeping the last word.
 
+### 2026-09-25 — the phone corridor lands on its beats (ADR-125)
+
+**Trigger:** the owner, on his iPhone, in the Arc: scrolling "shoots off or is
+a bit too far" — the elements too small, or half out of view — and "it takes
+a while to scroll to the arc section and get into it". Every beat was composed
+at one scroll position (±14px at 390×844) with no snap area in the corridor,
+and the corridor had zero height until its chunk landed.
+
+- **Cycle B → ADR-125**, three owner decisions taken first (80svh holds, one
+  flick one beat, the thesis 163 → 100svh): the phone paint clock becomes a
+  leg table with plateaus (`lib/home-v2/phoneCorridorClock.ts`, the parks by
+  reference), eight snap seats ride them (`CorridorPhoneSeats`), the host
+  reserves the stage's height on ≤960, the title scales about its anchored
+  edge, the rail's click-to-navigate lands on the phone's seats.
+- **Reverses on his word:** ADR-113 §1's "not the corridor host" (recorded as
+  ADR-113 U3); the stage and its cell stay no snap area.
+- **Q3 (a class of bug) → BEST-PRACTICES:** a composition that exists at one
+  scroll position is one nobody lands on; a guard that reads a remapped clock
+  trips on the remap (the follower's teleport detector reads RAW progress now).
+- **Q5 (a runtime check that caught it earlier):** `phone-corridor-clock`
+  (the schedule, the parks by reference, the pixel table, the mirrored 820,
+  the two source contracts), the seams spec's two new cases (the three beats
+  seat COMPOSED — opacity, scale, both chrome bands; every rest from the pin to
+  the Build seat lands on a seat, a plateau or a named pass).
+- **Rules:** `mobile-sections.md` §10 amended, new §13; `scroll-animations.md`;
+  the corridor grammar reference (both skill copies); ADR-018 and ADR-123 notes.
+- **Not verified here:** the device (WebKit's snap radius; whether the passes
+  read too quick; hero → thesis → Navigate as two flicks).
+
 ### 2026-09-24 — the last proof card claims the expansion, the Embedded card says what it does, the third reading is the layer (ADR-124)
 
 **Trigger:** the owner, in a dictated note after the week's client work: the

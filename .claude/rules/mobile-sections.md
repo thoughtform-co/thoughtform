@@ -434,10 +434,12 @@ from either side.
   seated it ~67px down, its era stops below the fold); on the runway rung the
   station has NO padding, its top IS the instrument's top, and the station is
   the stop (§12). Same law, satisfied by arithmetic now.
-- ⚠ **NOT the hero** (a stop at 0 drags the half-lifted curtain back), **NOT
-  the corridor host** (820svh, no snap area, so proximity cannot fire inside
-  it — its one reachable stop is `#services`' seat at its end), **no sticky
-  child** (the ring band, the proof slots — they seat on their own runways).
+- ⚠ **NOT the hero** (a stop at 0 drags the half-lifted curtain back), **the
+  corridor host's STAGE is no snap area and neither is its sticky cell** —
+  ⚠ **but since ADR-125 the stage carries eight absolute SEATS on the phone
+  paint clock's plateaus (§13)**, which is what reversed "proximity cannot
+  fire inside it" — **no sticky child** (the ring band, the proof slots, the
+  corridor's cell — they seat on their own runways).
 - ⚠ **NO `scroll-padding-top`.** The stations reserve `--mobile-chrome-top` in
   their own padding and `.vwd` clears from inside; a scroll-padding pays the
   band twice.
@@ -660,6 +662,83 @@ runway.offsetHeight − .vwd.offsetHeight`, the pick ref claims the era, the
   geometry / stillness / sweep cases and its re-cut snap tables, and
   `scripts/probe-mobile-lockin.mjs` on the new stops. **The device is the gate**
   (ADR-123 §Device checklist).
+
+## 13 · The corridor's beats are plateaus, and the seats come from the same table (ADR-125)
+
+Owner, 2026-09-24, from his phone, on the Arc: _"sometimes, when you scroll, it
+shoots off or is a bit too far … it either scrolls too far, so the elements are
+too small, or it scrolls too far ahead, so some of the elements are out of
+view. I'm sure there's a clean way for it to land nicely."_ On the phone every
+beat was composed at ONE scroll position (the camera never held; the title's
+scale was within 2 % of 1 for ±14px at 390×844), and the corridor had no snap
+area. His numbers (2026-09-25): a beat holds **80svh**, one flick steps one
+beat, the thesis rest is **100svh** (was 163).
+
+- **ONE CLOCK, ONE TABLE, NO LITERAL.** `lib/home-v2/phoneCorridorClock.ts`
+  (three-free, DOM-free) owns the schedule as svh of scroll from the pin —
+  thesis hold 40 · rise 60 · pass 60 · NAVIGATE 80 · pass 50 · ENCODE 80 · pass
+  50 · BUILD 80 · tail (derived, ~44) — and derives `phonePaintProgress` (the
+  parks by REFERENCE from `corridorMap`, held across each plateau, smoothstep
+  passes so the paint velocity is zero at both edges), `MOBILE_THOUGHTFORM_END`
+  (0.1837, derived) and the seats. `sceneGeom` re-exports it as
+  `getMobilePaintProgress`; `useDepthScroll` still gates the remap behind
+  `active && isMobileComposition()`, which IS the desktop identity.
+- **THE SEATS ARE ABSOLUTE CHILDREN OF THE STAGE** (`CorridorPhoneSeats`,
+  behind `!fallback` and `useDeviceTier() === "mobile"` — the plateaus'
+  own predicate), written inline as `calc(f * (100% − 100svh))` where `f` is
+  the seat's fraction of the SCRUB: `100%` is the stage's height for an
+  absolute child, so no `820` lives in the component. Eight, tiling the
+  corridor: a plateau's first frame (`start`, **`always`** — one flick steps
+  one beat, up AND down) and the stretch after it whose first frame is the
+  plateau's LAST composed frame (`start`, `normal` — §12's `.vw-phone-snap`
+  idiom; never `always`, or a flick from a plateau's start would stop 80svh
+  later on the same picture). The stage and its sticky cell stay no snap
+  area. The Arc's two passes (50svh) are shorter than two Blink radii, so no
+  transit frame in them is un-pulled; the entry flight (rise + pass into
+  Navigate, ~450px un-pulled at 844) is the one named stretch, and `always`
+  on Navigate is what lands every flick there anyway.
+- ⚠ **A SEAT'S BOX IS NEVER AS TALL AS THE SNAPPORT** (`SEAT_BOX_MAX_SVH` 50;
+  the range it names is `span`). A snap area taller than the scrollport is
+  a COVERING area — every covering position is a legitimate rest and a rest
+  just past it is pulled back to its END: the first cut's 120svh
+  `thesis-out` box pulled seven consecutive rests back onto a mid-flight
+  frame at its foot. The seams sweep classifies by the seats' TOPS, never
+  their boxes.
+- ⚠ **THE TAIL IS NOT OPTIONAL**: the epilogue's camera starts from paint 1,
+  so a clock ending on the Build park pops the camera at the epilogue's
+  first frame. It is what the schedule leaves after the last hold, and the
+  unit test wants a quarter screen of it.
+- ⚠ **A GUARD THAT READS A REMAPPED CLOCK TRIPS ON THE REMAP.** The motion
+  follower's teleport detector (`TELEPORT_PROGRESS_DELTA` 0.25 per frame)
+  read `paintProgress`; the phone's passes move that much PAINT in ~250px of
+  scroll, one stalled frame under a fling. It reads RAW `progress` now —
+  desktop-identical, because progress and paint are one number there in
+  every engaged state. The streaks' velocity is the PAINT's rate on the phone
+  for the opposite reason: streaks may not stream past a held camera.
+- **THE HOST RESERVES THE STAGE'S HEIGHT BEFORE THE CHUNK** (≤960, the import
+  gate's rung): `.home-corridor-host:not(:has(.home-v2-stage)) { min-height: 820svh }`.
+  The chunk waits for the first scroll on the phone, so the page was hero →
+  `#services` until it landed and then grew a whole stage under the thumb;
+  now the hero lifts over a void band and the arrival is a paint. The
+  literal is pinned equal to the stage's in `phone-corridor-clock.test.ts`.
+- **The title scales about its anchored edge** (`transform-origin` on
+  `[data-anchor-origin="bottom-center"]` / `"top-center"` in the ≤760
+  block): the tracker's `translate3d · translate(origin) · scale` about the
+  default centre drifted the anchored edge by `(s − 1)·h/2` on approach.
+- **Programmatic paths land on seats** (§12's law): `scrollTargetForEntry`
+  uses `phoneSeatFraction(phase)` on the phone and measures the runway with
+  `layoutViewportHeight()`.
+- **The guards**: `phone-corridor-clock.test.ts` (the schedule, monotonic +
+  continuous, the parks by reference, the pixel table, the seats' tiling,
+  the mirrored 820, the two source contracts), `mobile-section-seams`' snap
+  tables and its two new cases (the three beats seat composed — opacity,
+  scale, both chrome bands; every rest from the pin to the Build seat lands
+  on a seat, a plateau or a named pass), `probe-mobile-lockin` on the eight
+  seats. **The device is the gate** (ADR-125 §Device checklist).
+- **Not done, and why**: a smoothing library on touch (the reference smooths
+  the wheel only); a `scrollend` glide (a second motion owner); `mandatory`
+  (root-wide); a shorter phone stage (`EPILOGUE_START` is shared); an
+  epilogue seat (not asked — the named dial, on the "billions" title).
 
 ## Verifying
 

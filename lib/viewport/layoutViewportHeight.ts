@@ -19,9 +19,9 @@
  * `innerHeight` where it was.
  *
  * Three-free and DOM-only on purpose: the writers that read it live on the
- * landing's DOM seam. ⚠ Do NOT adopt it in `useLandingScroll`'s `--hero-lift`:
- * that clock is paired with the hero's `100dvh` box by design (landing.css
- * §hero, "DELIBERATELY NO 100lvh FLOOR") and must follow the dynamic viewport.
+ * landing's DOM seam. Since ADR-123 the hero is `100svh` and `--hero-lift`
+ * reads this too — no deliberate `innerHeight` reader remains on the landing
+ * (`tests/lib/layout-viewport-height.test.ts` pins the adopters).
  */
 export function layoutViewportHeight(): number {
   return document.documentElement.clientHeight || window.innerHeight || 1;

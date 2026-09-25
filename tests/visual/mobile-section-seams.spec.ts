@@ -225,6 +225,15 @@ async function rollTo(page: Page, y: number) {
  * stop list can be walked against it — see the note inside `snapSeats`.
  */
 const SEAT_CANDIDATES = [
+  /* ADR-125: the corridor's seats. */
+  ".home-v2-stage__seat--thesis",
+  ".home-v2-stage__seat--thesis-out",
+  ".home-v2-stage__seat--navigate",
+  ".home-v2-stage__seat--navigate-out",
+  ".home-v2-stage__seat--encode",
+  ".home-v2-stage__seat--encode-out",
+  ".home-v2-stage__seat--build",
+  ".home-v2-stage__seat--build-out",
   "#services",
   "#about",
   ".voidwalker__snap-in",
@@ -249,6 +258,15 @@ async function snapSeats(page: Page): Promise<number[]> {
     const seats: number[] = [];
     const vh = document.documentElement.clientHeight;
     for (const sel of [
+      /* ADR-125: the corridor's seats. */
+      ".home-v2-stage__seat--thesis",
+      ".home-v2-stage__seat--thesis-out",
+      ".home-v2-stage__seat--navigate",
+      ".home-v2-stage__seat--navigate-out",
+      ".home-v2-stage__seat--encode",
+      ".home-v2-stage__seat--encode-out",
+      ".home-v2-stage__seat--build",
+      ".home-v2-stage__seat--build-out",
       "#services",
       "#about",
       ".voidwalker__snap-in",
@@ -1063,6 +1081,18 @@ test.describe("mobile section seams", () => {
      sticky band. ⚠ Measured in Blink: an aligned position attracts within
      ~280px either way and a covering area never overrides one. */
   const SNAP_STOPS = [
+    /* ADR-125: the phone corridor's eight seats — each plateau of the phone
+       paint clock (its first frame, `always`) and the stretch after it (its
+       first frame is the plateau's LAST composed frame, `normal`). The stage
+       and its sticky cell stay no snap area; these are absolute children. */
+    ".home-v2-stage__seat--thesis",
+    ".home-v2-stage__seat--thesis-out",
+    ".home-v2-stage__seat--navigate",
+    ".home-v2-stage__seat--navigate-out",
+    ".home-v2-stage__seat--encode",
+    ".home-v2-stage__seat--encode-out",
+    ".home-v2-stage__seat--build",
+    ".home-v2-stage__seat--build-out",
     "#services",
     ".voidwalker__snap-in",
     ".voidwalker__snap",
@@ -1082,6 +1112,14 @@ test.describe("mobile section seams", () => {
   ] as const;
   /** The alignment each stop declares; `end` names its BOTTOM edge. */
   const SNAP_ALIGN: Record<(typeof SNAP_STOPS)[number], "start" | "end"> = {
+    ".home-v2-stage__seat--thesis": "start",
+    ".home-v2-stage__seat--thesis-out": "start",
+    ".home-v2-stage__seat--navigate": "start",
+    ".home-v2-stage__seat--navigate-out": "start",
+    ".home-v2-stage__seat--encode": "start",
+    ".home-v2-stage__seat--encode-out": "start",
+    ".home-v2-stage__seat--build": "start",
+    ".home-v2-stage__seat--build-out": "start",
     "#services": "start",
     ".voidwalker__snap-in": "end",
     ".voidwalker__snap": "start",
@@ -1159,12 +1197,34 @@ test.describe("mobile section seams", () => {
       () => getComputedStyle(document.getElementById("voidwalker")!).scrollSnapStop
     );
     expect(stop, "#voidwalker is not a mandatory stop on the way past").toBe("always");
+    // ADR-125: one flick steps one beat — the four plateau STARTS are
+    // `always`; an out (a plateau's last frame) never is, or a flick from a
+    // plateau's start would stop 80svh later on the same picture.
+    const stops = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".home-v2-stage__seat")].map((el) => [
+        el.dataset.corridorSeat,
+        getComputedStyle(el).scrollSnapStop,
+      ])
+    );
+    expect(stops).toEqual([
+      ["thesis", "always"],
+      ["thesis-out", "normal"],
+      ["navigate", "always"],
+      ["navigate-out", "normal"],
+      ["encode", "always"],
+      ["encode-out", "normal"],
+      ["build", "always"],
+      ["build-out", "normal"],
+    ]);
   });
 
   test("a stop short of a station glides onto its seat; the instrument seats itself (ADR-113)", async ({
     page,
   }, testInfo) => {
     phonesOnly(testInfo);
+    // ADR-125 added eight corridor seats to the walk (four rolls each); the
+    // default 30s budget ran out on the eleventh stop.
+    test.setTimeout(240_000);
     await boot(page);
 
     // A stop's SEAT is the scroll position its alignment names: the top for
@@ -1543,6 +1603,191 @@ test.describe("mobile section seams", () => {
         run.end - run.start,
         `a stretch of ${run.end - run.start}px at ${run.start}`
       ).toBeLessThanOrEqual(vh / 3 + 80);
+  });
+
+  /* ── ADR-125: the corridor's beats are plateaus, and the seats sit on them ── */
+
+  /** A beat's DOM pair on the phone: the world-anchored title cluster and the
+   *  caption card (`StationTitle`, mobile-only), by the anchor ids the tracker
+   *  writes to. */
+  const BEATS = [
+    { seat: ".home-v2-stage__seat--navigate", base: "navigate", minOpacity: 0.9 },
+    { seat: ".home-v2-stage__seat--encode", base: "diagnostic", minOpacity: 0.95 },
+    { seat: ".home-v2-stage__seat--build", base: "intelligence", minOpacity: 0.95 },
+  ] as const;
+
+  async function readBeat(page: Page, base: string) {
+    return page.evaluate((b) => {
+      const box = (sel: string) => {
+        const el = document.querySelector<HTMLElement>(sel);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        // The tracker writes `translate3d(...) translate(...) scale(s)`; the
+        // computed matrix's `a` term is that scale (no rotation on this box).
+        const m = cs.transform.match(/matrix\(([^)]+)\)/);
+        const scale = m ? Number(m[1].split(",")[0]) : 1;
+        return {
+          top: r.top,
+          bottom: r.bottom,
+          left: r.left,
+          right: r.right,
+          opacity: Number(cs.opacity),
+          visibility: cs.visibility,
+          scale,
+        };
+      };
+      return {
+        title: box(`[data-world-anchor="${b}.title"]`),
+        support: box(`[data-world-anchor="${b}.support"]`),
+        vh: document.documentElement.clientHeight,
+        vw: document.documentElement.clientWidth,
+        phase: document.documentElement.getAttribute("data-corridor-phase"),
+      };
+    }, base);
+  }
+
+  test("the corridor's three beats seat, composed (ADR-125)", async ({ page }, testInfo) => {
+    phonesOnly(testInfo);
+    test.setTimeout(180_000);
+    await boot(page);
+    const isFallback = await page.evaluate(
+      () => document.querySelector(".home-v2-stage")?.getAttribute("data-fallback") === "true"
+    );
+    test.skip(isFallback, "the static corridor has no plateaus");
+    const bands = await chromeBands(page);
+    const rows: string[] = [];
+    for (const beat of BEATS) {
+      const seat = await docTop(page, beat.seat);
+      const at = await seekTo(page, seat);
+      await settleSnap(page);
+      // The reveal follower (τ 0.2 s) and the tracker's next writes.
+      await page.waitForTimeout(900);
+      const r = await readBeat(page, beat.base);
+      rows.push(`${beat.base} seat ${seat} at ${at} ${JSON.stringify(r)}`);
+      expect(
+        Math.abs(at - seat),
+        `${beat.base}: the seek did not rest on the seat`
+      ).toBeLessThanOrEqual(1.5);
+      expect(r.title, `${beat.base}: no title anchor`).not.toBeNull();
+      expect(r.support, `${beat.base}: no caption anchor`).not.toBeNull();
+      const title = r.title!;
+      const support = r.support!;
+      // Composed: visible at (near) full strength and at its parked scale.
+      expect(title.opacity, `${beat.base}: title opacity`).toBeGreaterThanOrEqual(beat.minOpacity);
+      expect(support.opacity, `${beat.base}: caption opacity`).toBeGreaterThanOrEqual(
+        beat.minOpacity
+      );
+      expect(title.scale, `${beat.base}: title scale`).toBeGreaterThanOrEqual(0.97);
+      expect(title.scale, `${beat.base}: title scale`).toBeLessThanOrEqual(1.05);
+      expect(support.scale, `${beat.base}: caption scale`).toBeGreaterThanOrEqual(0.97);
+      expect(support.scale, `${beat.base}: caption scale`).toBeLessThanOrEqual(1.05);
+      // In the frame, clear of both chrome bands, title above caption.
+      expect(title.top, `${beat.base}: title under the top chrome`).toBeGreaterThanOrEqual(
+        bands.top - 2
+      );
+      expect(support.bottom, `${beat.base}: caption under the bottom chrome`).toBeLessThanOrEqual(
+        r.vh - bands.bottom + 2
+      );
+      expect(title.bottom, `${beat.base}: title over the caption`).toBeLessThanOrEqual(
+        support.top + 1
+      );
+      expect(title.left, `${beat.base}: title off the left edge`).toBeGreaterThanOrEqual(-1);
+      expect(support.right, `${beat.base}: caption off the right edge`).toBeLessThanOrEqual(
+        r.vw + 1
+      );
+    }
+    await testInfo.attach("corridor-beats", {
+      body: rows.join("\n"),
+      contentType: "text/plain",
+    });
+  });
+
+  test("every rest from the corridor's pin to the Build seat lands on a seat, a plateau or a named pass (ADR-125)", async ({
+    page,
+  }, testInfo) => {
+    phonesOnly(testInfo);
+    test.setTimeout(300_000);
+    await boot(page);
+    const isFallback = await page.evaluate(
+      () => document.querySelector(".home-v2-stage")?.getAttribute("data-fallback") === "true"
+    );
+    test.skip(isFallback, "the static corridor has no plateaus");
+    const from = await seekTo(page, await docTop(page, ".home-v2-stage"));
+    const to = await docTop(page, ".home-v2-stage__seat--build-out");
+    const vh = await page.evaluate(() => document.documentElement.clientHeight);
+    const seats = await snapSeats(page);
+    // The seats' TOPS in document space, in order: a plateau runs from its
+    // seat's top to its out's, a pass from the out's top to the next plateau's.
+    // ⚠ Never the boxes: a seat's box is capped at half a screen
+    // (`SEAT_BOX_MAX_SVH`) precisely so it can never be a covering area — the
+    // first cut's 120svh `thesis-out` box pulled seven consecutive rests back
+    // onto a mid-flight frame at its foot — so a box says nothing about the
+    // range its seat names.
+    const tops = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".home-v2-stage__seat")].map((el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          id: el.dataset.corridorSeat!,
+          stop: el.dataset.corridorStop!,
+          top: r.top + window.scrollY,
+          bottom: r.bottom + window.scrollY,
+        };
+      })
+    );
+    const ranges = tops.map((t, i) => ({
+      ...t,
+      end: i + 1 < tops.length ? tops[i + 1].top : t.bottom,
+    }));
+    const inside = (at: number, stop: "always" | "normal") =>
+      ranges.find((b) => b.stop === stop && at >= b.top - 0.5 && at < b.end + 0.5);
+    const rows: { y: number; at: number; kind: string; box: string }[] = [];
+    for (let y = from; y <= to; y += 40) {
+      await rollTo(page, y);
+      const at = await page.evaluate(() => window.scrollY);
+      const seated = seats.some((s) => Math.abs(at - s) <= 1.5);
+      const plateau = inside(at, "always");
+      const pass = inside(at, "normal");
+      const kind = seated
+        ? "seat"
+        : plateau
+          ? "plateau"
+          : pass && Math.abs(at - y) <= 1.5
+            ? "stretch"
+            : "fail";
+      rows.push({ y, at: Math.round(at), kind, box: (plateau ?? pass)?.id ?? "-" });
+    }
+    await testInfo.attach("corridor-rest-sweep", {
+      body: rows.map((r) => `${r.y} → ${r.at} ${r.kind} ${r.box}`).join("\n"),
+      contentType: "text/plain",
+    });
+    expect(
+      rows.filter((r) => r.kind === "fail"),
+      "a rest landed on nothing"
+    ).toEqual([]);
+    // What may remain un-pulled: the entry flight (the thesis's rise and the
+    // pass into Navigate — bounded by the thesis's last frame and Navigate's
+    // first, one radius short of each), and at most one sample in each of the
+    // two Arc passes, which are shorter than two radii by construction.
+    const runs: { start: number; end: number; box: string; n: number }[] = [];
+    for (const r of rows) {
+      if (r.kind !== "stretch") continue;
+      const last = runs[runs.length - 1];
+      if (last && r.y - last.end <= 40 && last.box === r.box) {
+        last.end = r.y;
+        last.n += 1;
+      } else runs.push({ start: r.y, end: r.y, box: r.box, n: 1 });
+    }
+    for (const run of runs) {
+      if (run.box === "thesis-out") {
+        expect(
+          run.end - run.start,
+          `the entry flight's un-pulled run at ${run.start}`
+        ).toBeLessThanOrEqual(vh * 0.6);
+      } else {
+        expect(run.n, `an un-pulled run in ${run.box} at ${run.start}`).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
   test("the desktop declares no snap (byte-identity)", async ({ page }, testInfo) => {
