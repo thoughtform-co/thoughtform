@@ -1,171 +1,85 @@
-import type { CSSProperties } from "react";
-
-import { beatOf, type MusingBeat } from "@/lib/musings/cover";
 import {
-  ORBIT_CORE,
   ORBIT_HALF,
-  ORBIT_HALO,
-  ORBIT_OUTER,
-  ORBIT_QUARTERS,
-  ORBIT_QUARTER_R,
-  ORBIT_RIM,
   ORBIT_RINGS,
-  ORBIT_SPOKE,
-  ORBIT_TRACK,
-  orbitArcPath,
   orbitCirclePath,
-  orbitPoint,
-  orbitSeat,
-  orbitSeg,
+  orbitElapsedPath,
+  orbitEllipsePath,
+  orbitEllipsePoint,
   orbitSpec,
 } from "@/lib/musings/orbit";
 
 /**
- * A note's drawn cover, in the register of the About drawing (ADR-122).
- * `lib/musings/orbit.ts` resolves the record and the geometry; this file only
- * draws. One drawing at two sizes: whole in the open card, and — under 140px,
- * where the note's cover box is its THUMBNAIL — stripped by the sheet's
- * `@container mu-cv` to the gold track, the inner ring, the hand and the mark.
+ * A note's drawn cover — the field behind the owner's portrait, carrying the
+ * note's own year (ADR-122 U2). `lib/musings/orbit.ts` resolves the record and
+ * the geometry; this file only draws.
  *
- * ⚠ **THE BEAT'S MARK IS COPIED FROM `rail-instruments/sectionGlyphs.tsx`,
- * NOT IMPORTED** — 24-unit box, `fill: none`, `stroke: currentColor`, 1.5
- * stroke (ADR-106's precedent). Those three drawings MEAN Navigate / Encode /
- * Build, which is exactly what they mean here; a station importing the frame's
- * chrome is a dependency in the wrong direction. The paths are byte-identical
- * to the rail's on purpose — if one changes, both should.
- * ⚠ **A NOTE WITH NO ARC TAG DRAWS NO MARK** — never a substitute.
- * ⚠ **NO SVG `<text>` AND NO `transform` ATTRIBUTE.** The labels are DOM,
- * seated by fraction; every mark is drawn at its own coordinates.
+ * ⚠ **IT IS A FIELD, NOT AN INSTRUMENT** (owner, 2026-09-25: "less like a
+ * compass and more abstract, like the diagrams behind our profile picture in
+ * the about section"). Nothing here takes a bearing: there is no graduated
+ * rim, no cardinal stub, no spoke, no hand and no beat mark — the row letters
+ * the beat two columns to the left. What is drawn is About's six rings, the
+ * note's year as a tilted orbit through them, the part of that year already
+ * elapsed, the note's own body on its day, the year's other notes as open
+ * dots, and About's dust.
+ *
+ * ⚠ **NO SVG `<text>`, NO DOM LABEL AND NO `transform` ATTRIBUTE.** The cover
+ * letters nothing at all now (the row already prints the date, the beat and
+ * the length), the tilt rides the arc command's own rotation term, and every
+ * mark is drawn at its own coordinates.
+ * ⚠ **AND NO FRAME** (owner, same read: "just the diagram") — the drawing
+ * sits on the station's own ground; `.mu-note__cover` declares no border and
+ * no background, and the capture fails either.
  */
-
-/** Byte-identical to the rail's, at this drawing's scale. Exported for the
- *  gallery lab (`/test/musings-gallery`), which draws the same three marks. */
-export const BEAT_PATHS: Readonly<Record<MusingBeat, readonly string[]>> = {
-  /* A compass needle. */
-  navigate: ["M12 3l4.5 14.5L12 14l-4.5 3.5Z", "M7 21h10"],
-  /* Registration brackets closing on a lattice — judgment, crystallised. */
-  encode: ["M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"],
-  /* Offset strata — the layer, built on. */
-  build: ["M7 6.5h13M4 12h13M7 17.5h13"],
-};
-
-/** `encode`'s lattice is the one filled figure in the set. */
-export const ENCODE_CELLS =
-  "M9 9h2.4v2.4H9zM12.8 9h2.4v2.4h-2.4zM9 12.8h2.4v2.4H9zM12.8 12.8h2.4v2.4h-2.4z";
-
-const diamond = (x: number, y: number, s: number) =>
-  `${x},${y - s} ${x + s},${y} ${x},${y + s} ${x - s},${y}`;
-
-interface OrbitPost {
-  slug: string;
-  date: string;
-  tags: readonly string[];
-}
-
 export function MusingOrbit({
   post,
   posts,
 }: {
-  post: OrbitPost;
+  post: { slug: string; date: string };
   posts: readonly { slug: string; date: string }[];
 }) {
-  const beat = beatOf(post.tags);
   const spec = orbitSpec(post, posts);
-  const at = orbitPoint(spec.lit, ORBIT_TRACK);
-  const h0 = orbitPoint(spec.lit, ORBIT_CORE);
-  const h1 = orbitPoint(spec.lit, ORBIT_SPOKE);
-  const cardinals = [0, 90, 180, 270];
-  const ticks = Array.from({ length: 24 }, (_, i) => i * 15).filter((d) => d % 90 !== 0);
+  const at = orbitEllipsePoint(spec.path, spec.f);
 
   return (
-    <div className="mu-orbit" aria-hidden="true">
-      <span className="mu-orbit__label mu-orbit__label--tr">{spec.day}</span>
-      <span className="mu-orbit__label mu-orbit__label--bl">{spec.year}</span>
-      <div className="mu-orbit__dial">
-        <svg
-          className="mu-orbit__svg"
-          viewBox={`${-ORBIT_HALF} ${-ORBIT_HALF} ${2 * ORBIT_HALF} ${2 * ORBIT_HALF}`}
-          focusable="false"
-        >
-          {ORBIT_RINGS.map((g) => (
-            <path
-              key={g.r}
-              d={orbitCirclePath(g.r)}
-              className={`mu-orbit__${g.ink}${g.detail ? " mu-cv-detail" : ""}`}
-              strokeDasharray={g.dash}
-            />
-          ))}
-          {/* The rim: four cardinal stubs, twenty ticks between them. */}
-          <path
-            className="mu-orbit__stub mu-cv-detail"
-            d={cardinals.map((d) => orbitSeg(d, ORBIT_RIM, ORBIT_RIM - 14)).join(" ")}
-          />
-          <path
-            className="mu-orbit__tick mu-cv-detail"
-            d={ticks.map((d) => orbitSeg(d, ORBIT_RIM, ORBIT_RIM - 8)).join(" ")}
-          />
-          {/* About's four gold spokes, on the cardinals. */}
-          <path
-            className="mu-orbit__soft mu-cv-detail"
-            d={cardinals.map((d) => orbitSeg(d, ORBIT_SPOKE, ORBIT_CORE)).join(" ")}
-          />
-          {/* The halo: one dot a month, the note's month lit. */}
-          {Array.from({ length: 12 }, (_, m) => {
-            const p = orbitPoint((m + 0.5) * 30, ORBIT_HALO);
-            const lit = m === spec.month;
-            return (
-              <circle
-                key={m}
-                cx={p.x}
-                cy={p.y}
-                r={lit ? 3.2 : 1.8}
-                className={`mu-orbit__halo${lit ? " mu-orbit__halo--lit" : ""} mu-cv-detail`}
-              />
-            );
-          })}
-          {/* The year's other notes, on the outer solid ring. */}
-          {spec.others.map((b, i) => {
-            const p = orbitPoint(b, ORBIT_OUTER);
-            return (
-              <circle key={i} cx={p.x} cy={p.y} r={3} className="mu-orbit__mark mu-cv-detail" />
-            );
-          })}
-          {/* The note: its year elapsed on the gold track, a hand, the day lit. */}
-          {spec.lit > 1 ? (
-            <path d={orbitArcPath(ORBIT_TRACK, 0, spec.lit)} className="mu-orbit__elapsed" />
-          ) : null}
-          <path d={`M ${h0.x} ${h0.y} L ${h1.x} ${h1.y}`} className="mu-orbit__hand" />
-          <polygon points={diamond(at.x, at.y, 7)} className="mu-orbit__lit" />
-          {beat ? (
-            <svg
-              x={-35}
-              y={-35}
-              width={70}
-              height={70}
-              viewBox="0 0 24 24"
-              className="mu-orbit__glyph"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              {BEAT_PATHS[beat].map((d) => (
-                <path key={d} d={d} />
-              ))}
-              {beat === "encode" ? (
-                <path fill="currentColor" stroke="none" d={ENCODE_CELLS} />
-              ) : null}
-            </svg>
-          ) : null}
-        </svg>
-        {ORBIT_QUARTERS.map(([m, deg]) => {
-          const p = orbitPoint(deg, ORBIT_QUARTER_R);
-          return (
-            <span key={m} className="mu-orbit__q" style={orbitSeat(p.x, p.y) as CSSProperties}>
-              {m}
-            </span>
-          );
-        })}
-      </div>
-    </div>
+    <svg
+      className="mu-orbit"
+      viewBox={`${-ORBIT_HALF} ${-ORBIT_HALF} ${2 * ORBIT_HALF} ${2 * ORBIT_HALF}`}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {/* The field: About's six rings, radius for radius. */}
+      {ORBIT_RINGS.map((g) => (
+        <path
+          key={g.r}
+          d={orbitCirclePath(g.r)}
+          className={`mu-orbit__${g.ink}`}
+          strokeDasharray={g.dash}
+        />
+      ))}
+      {/* About's dust, seeded off the slug. */}
+      {spec.drift.map((m, i) => (
+        <circle
+          key={i}
+          cx={m.x}
+          cy={m.y}
+          r={m.r}
+          className="mu-orbit__mote"
+          style={{ opacity: m.o }}
+        />
+      ))}
+      {/* The note's year, and the part of it already spent. */}
+      <path d={orbitEllipsePath(spec.path)} className="mu-orbit__orbit" />
+      {spec.f > 0.004 ? (
+        <path d={orbitElapsedPath(spec.path, spec.f)} className="mu-orbit__elapsed" />
+      ) : null}
+      {/* The year's other notes, on the same orbit. */}
+      {spec.others.map((f, i) => {
+        const p = orbitEllipsePoint(spec.path, f);
+        return <circle key={i} cx={p.x} cy={p.y} r={3.4} className="mu-orbit__mark" />;
+      })}
+      {/* The note itself: a body with its corona — About's lit pair. */}
+      <circle cx={at.x} cy={at.y} r={15} className="mu-orbit__corona" />
+      <circle cx={at.x} cy={at.y} r={6} className="mu-orbit__lit" />
+    </svg>
   );
 }

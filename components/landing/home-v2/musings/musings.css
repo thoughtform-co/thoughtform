@@ -107,21 +107,13 @@
   --mu-rule: rgba(var(--dawn-rgb), 0.16);
   --mu-rule-soft: rgba(var(--dawn-rgb), 0.1);
 
-  /* ── THE NOTE IS THE PROOF CARD'S FOLDER SKIN, RE-SOLVED FOR THIS SIZE
-     (ADR-097 → ADR-121 → ADR-122). ONE dial for the glass: the plate is a tint
-     of the page's own deep step, so it stays a tint of whatever ground it sits
-     on across the flip. */
-  --mu-glass-a: 0.62;
-  --mu-plate: rgba(var(--void-deep-rgb), var(--mu-glass-a));
-  --mu-blur: 14px;
-  /* The lip: FLAT, the housing's own value (ADR-092 stage 1 U1). `--gold-line`
-     is the ramp's LINE step — byte-equal to `--gold` in dark and the parchment
-     value in light — so the lip re-derives with no theme branch. At rest it is
-     30 % of that; the open note takes the whole line. */
-  --mu-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
-  /* A corner catching light, at the plate's own alpha; light lowers it. */
-  --mu-bloom-a: 0.13;
-  /* The way out's border — a control, not a card, so it keeps the dawn edge. */
+  /* ⚠ THE NOTE IS NOT A PLATE ANY MORE (ADR-122 U2). The folder skin — the
+     glass, the flat gold lip, the corner bloom, the scanline and the top-right
+     notch — went with v17 when the owner picked the LEDGER; a ruled row has no
+     housing, so it has no material, no corner and nothing to frost. What
+     survives of ADR-097's family on this station is the ink ramp and the
+     ruleline. ⚠ `--mu-edge` STAYS: the way out is a CONTROL, not a card, and
+     it kept its dawn border through both forms. */
   --mu-edge: rgba(var(--dawn-rgb), 0.2);
 
   /* One type ladder. Chrome is PT Mono, prose is PP Neue Montreal — two
@@ -131,34 +123,33 @@
   --mu-chrome: clamp(10px, 0.72vw, 12px);
   --mu-copy: clamp(13px, 0.95vw, 16px);
 
-  /* The corner. ⚠ ONE NOTCH, TOP-RIGHT — his corner every time (ADR-097's
-     proof card, ADR-098 U5's plates, ADR-082 U37's record cards). `--mu-chi`
-     is the RING's inner leg: insetting a 45° cut by `d` shortens its leg by
-     `d(2 − √2)` ≈ 0.586d, so it is not `ch − 1px`. */
-  --mu-ch: clamp(14px, 1.6vw, 22px);
-  --mu-chi: calc(var(--mu-ch) - 0.586px);
-
-  /* ── THE LIST'S DIALS (ADR-122) — the gallery lab's v17, number for number.
-     A note is one ROW (the title over its meta line, the chip) and, open, the
-     excerpt under it; its cover rides the last column across both. Off the
-     pinned rung the row and the open cover are rested values; ON it they are
-     SOLVED from the count inside the frame (`.mu__notes`, below), which is
-     what keeps five notes and the open card inside the rails at the owner's
-     viewport. ⚠ THE TITLE IS v4's SCALE (the owner: "what I like about v4
-     still is the big title size") — `clamp(22px, 2.5vw, 48px)`, capped by what
-     the row leaves above the meta line: a 64px row holds a 32px title, the
-     6px gap and the meta line with room to spare. ⚠ The thumbnail and the
-     open card's floor are declared OFF the row, so they re-solve with it. */
-  --mu-note-gap: 8px;
+  /* ── THE LIST'S DIALS (ADR-122 U2) — the gallery lab's v10, number for
+     number. A note is ONE LINE (the mark, the date, the title, the chip, the
+     length) and, open, a compact feature under it: the excerpt with its sign
+     seated at the top of the copy column, the cover a SQUARE at the row's end.
+     Off the pinned rung the row and the open feature are rested values; ON it
+     they are SOLVED from the count inside the frame (`.mu__notes`, below),
+     which is what keeps five notes and the open feature inside the rails at
+     the owner's viewport.
+     ⚠ THE TITLE RIDES ITS ROW, AND THE LEDGER'S ROW IS SHORTER THAN v17's —
+     so the cap is `row × 0.58` against a 32px ceiling, not v4's 48. The ledger
+     buys its density back in ROWS, not in type: five notes of one line each
+     leave the open feature a floor v17's two-line cards could not.
+     ⚠ THE COVER IS NOT A COLUMN OF THE NOTE. It lives inside the open
+     feature, so there is no thumbnail and no `--mu-note-col` — the growth is
+     ONE transition (`grid-template-rows` 0fr → 1fr) where v17 had two. */
   --mu-note-inset: clamp(14px, 1.4vw, 22px);
-  --mu-note-cgap: clamp(12px, 1.3vw, 20px);
-  --mu-note-row: clamp(64px, 8.6svh, 108px);
-  --mu-note-open: clamp(180px, 20svh, 240px);
-  --mu-note-thumb: calc(var(--mu-note-row) - 20px);
-  --mu-note-title: min(clamp(22px, 2.5vw, 48px), calc((var(--mu-note-row) - 26px) * 0.9));
-  /* The open note's growth: the cover column and the excerpt's row move on
-     one clock, the house's expo-out — a pointer response wants an immediate
-     start (ADR-121's reason, kept). */
+  --mu-note-cgap: clamp(12px, 1.3vw, 22px);
+  --mu-note-row: clamp(44px, 6.4svh, 68px);
+  --mu-note-open: clamp(190px, 22svh, 260px);
+  --mu-note-title: min(clamp(20px, 1.7vw, 32px), calc(var(--mu-note-row) * 0.58));
+  /* The ledger's two chrome columns: the filing date left of the title, the
+     length closing the line. Both are PT Mono at `--mu-chrome`, so their
+     widths are a constant of the type rather than of the copy. */
+  --mu-note-date: clamp(96px, 8vw, 130px);
+  --mu-note-len: clamp(44px, 4vw, 64px);
+  /* The open note's growth: one transitioned row, the house's expo-out — a
+     pointer response wants an immediate start (ADR-121's reason, kept). */
   --mu-note-grow: 560ms cubic-bezier(0.16, 1, 0.3, 1);
   /* The way out's own row — part of the list's arithmetic, so a token. */
   --mu-foot-h: clamp(58px, 7svh, 76px);
@@ -611,96 +602,49 @@
   grid-template-rows: auto auto;
   align-content: start;
 }
+/* ⚠ THE LIST IS RULED, NOT STACKED (ADR-122 U2). The ledger's rows touch and
+   each one carries its OWN TOP RULE, with the list closing the set at its
+   foot — so a note's first pixel is its rule, which is exactly what the
+   arrival draws first (`mu-unfold`, below). A `border-bottom` would have put
+   the rule at the far end of the box the clip opens from, and the line the
+   owner asked for would have been drawn on nothing. */
 .mu__list {
   margin: 0;
-  padding: 2px 0;
+  padding: 0;
   list-style: none;
   display: grid;
   align-content: start;
-  gap: var(--mu-note-gap);
+  border-bottom: 1px solid var(--mu-rule);
   min-height: 0;
 }
 
 /* ── The note ────────────────────────────────────────────────────────
-   ⚠ THE PROOF CARD'S FOLDER, AT LIST SCALE (ADR-097 → ADR-122): the plate's
-   own scanline under the copy, a corner catching light stated in PIXELS
-   (`260px 180px` hung 60px in from the top-right), then the glass. ⚠ NO
-   `border` — a clip CUTS a border and never strokes one; the edge is the
-   clipped RING below.
-   ⚠ ONE COVER, TWO SIZES: the note is a grid of two columns and two rows,
-   the row and the excerpt in the first column, the cover in the last across
-   both. `--mu-note-col` is the cover column — the thumbnail at rest, the
-   feature open — and `grid-template-columns` is what transitions (a length to
-   a length, one track each side), so nothing is measured and nothing is
-   written per frame. */
+   ⚠ ONE LINE, AND THE FEATURE UNDER IT (ADR-122 U2 — the lab's v10). The note
+   is two rows: the link (mark · date · title · chip · length) at
+   `--mu-note-row`, and the excerpt's wrapper under it, which is the ONE thing
+   that transitions. There is no cover column and no thumbnail: the drawing
+   lives inside the feature, at the row's end.
+   ⚠ NO PLATE, NO CLIP, NO RING. The folder skin went with v17; the note's own
+   material is a hairline and the ground it sits on. */
 .mu-note {
-  --mu-note-col: var(--mu-note-thumb);
   position: relative;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--mu-note-col);
   grid-template-rows: var(--mu-note-row) auto;
-  column-gap: var(--mu-note-cgap);
-  padding: 0 calc(var(--mu-ch) + 6px) 0 var(--mu-note-inset);
-  background:
-    repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
-    radial-gradient(
-      260px 180px at calc(100% - 60px) -30px,
-      rgba(var(--gold-rgb), var(--mu-bloom-a)),
-      transparent 62%
-    ),
-    var(--mu-plate);
-  /* The silhouette: the fill is genuinely CUT, because a ring drawn over a
-     square corner is a diagonal with nothing behind it. */
-  clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
-  transition: grid-template-columns var(--mu-note-grow);
-}
-.mu-note[data-mu-open] {
-  --mu-note-col: var(--mu-note-open);
+  border-top: 1px solid var(--mu-rule);
+  transition: border-top-color 240ms ease-out;
 }
 
-/* ⚠ THE EDGE IS A CLOSED TWO-CONTOUR RING, NEVER A `border`: outer contour,
-   then the inner one 1px in with its own shortened leg; `evenodd` makes the
-   middle a hole. ⚠ BOTH CONTOURS CLOSE — every housing on `/arcs` painted a
-   bow-tie until ADR-118 U2 because one of them did not. ⚠ `background-color`,
-   NOT `background`, so the open note's lift to the whole line transitions. */
-.mu-note::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background-color: var(--mu-lip);
-  clip-path: polygon(
-    evenodd,
-    0 0,
-    calc(100% - var(--mu-ch)) 0,
-    100% var(--mu-ch),
-    100% 100%,
-    0 100%,
-    0 0,
-    1px 1px,
-    calc(100% - 1px - var(--mu-chi)) 1px,
-    calc(100% - 1px) calc(1px + var(--mu-chi)),
-    calc(100% - 1px) calc(100% - 1px),
-    1px calc(100% - 1px),
-    1px 1px
-  );
-  transition: background-color 240ms ease-out;
-}
-/* ⚠ THE STATE IS THE RING, NEVER A FILTER. A large-area brightness change on
-   every hover is the class of motion ADR-097 U12 retired; the open note is
-   told by its lip rising to the whole line, its row's ink and its chip. */
-.mu-note[data-mu-open]::before {
-  background-color: var(--gold-line);
-}
-
-/* The row — the note's link: the title over its meta line, the chip. */
+/* The row — the note's link, one line of five cells. ⚠ EVERY CELL IS A
+   CONSTANT OF THE TYPE except the title, which takes what is left: the date
+   and the length are PT Mono at one size, so the titles start and end on one
+   line down the whole list however long a note's name is. */
 .mu-note__row {
-  grid-column: 1;
   grid-row: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns:
+    12px var(--mu-note-date) minmax(0, 1fr)
+    auto var(--mu-note-len);
   align-items: center;
   column-gap: var(--mu-note-cgap);
   min-width: 0;
@@ -716,13 +660,46 @@
   outline: 1px solid var(--gold-line);
   outline-offset: 4px;
 }
-.mu-note__text {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
+/* ⚠ THE STATE IS THE MARK, THE DATE AND THE INK — NEVER A FILL OR A FILTER.
+   ADR-097 U12's photosensitivity ruling binds on this station too: what tells
+   the open row is one 8px diamond filling, its date going gold, the row's ink
+   coming up and the chip going gold-ink. Four small marks, no large area. */
+.mu-note__mark {
+  width: 8px;
+  height: 8px;
+  margin-left: 2px;
+  border: 1px solid var(--mu-edge);
+  transform: rotate(45deg);
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out;
 }
-/* ⚠ v4's TITLE: whole, one line, set as large as the row allows. The ellipsis
-   is a belt — the capture fails a title that reaches it. */
+.mu-note[data-mu-open] .mu-note__mark {
+  border-color: var(--gold-line);
+  background: var(--gold-line);
+}
+.mu-note__date,
+.mu-note__len {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+  transition: color 200ms ease-out;
+}
+.mu-note__len {
+  text-align: right;
+}
+.mu-note[data-mu-open] .mu-note__date {
+  color: var(--gold-ink);
+}
+/* ⚠ THE TITLE IS SET WHOLE ON ONE LINE, and the ellipsis is a BELT — the
+   capture fails the run on any cut title. The cap is the ROW's own height, so
+   a shorter row (more notes, or a shorter frame) sets a smaller title rather
+   than a clipped one. */
 .mu-note__title {
   min-width: 0;
   overflow: hidden;
@@ -734,24 +711,8 @@
   line-height: 1.08;
   letter-spacing: var(--track-display);
 }
-.mu-note__meta {
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  font-weight: var(--weight-text);
-  line-height: 1.3;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--mu-ink-3);
-}
-/* ⚠ THE SEPARATOR INHERITS THE LINE'S OWN INK — a mid-dot separates by
-   SHAPE, so it needs no value of its own (ADR-121's measured reason). */
-.mu-note__dot {
-  padding-inline: 0.5em;
-}
-/* The beat, as a bracketed mono designation — the house has no pills. Closed
-   notes carry it on the quiet rung; the open note's is the list's ONE gold
-   line of chrome. */
+/* The beat, as a bracketed mono designation — the house has no pills. The
+   open note's is the list's ONE gold line of chrome. */
 .mu-note__chip {
   display: inline-flex;
   gap: 0.4em;
@@ -772,30 +733,11 @@
   color: var(--mu-ink-3);
 }
 
-/* The cover — ONE element, seated across both rows in the last column: the
-   thumbnail at rest (centred in its row by its 10px margin), the feature open.
-   ⚠ A SIZE CONTAINER NAMED `mu-cv`, so the drawing below it knows which of
-   its two sizes it is. ⚠ NO BORDER, NO WELL: the note is the frame. */
-.mu-note__cover {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  align-self: start;
-  display: grid;
-  box-sizing: border-box;
-  width: 100%;
-  aspect-ratio: 1;
-  min-height: 0;
-  margin-top: 10px;
-  container-type: size;
-  container-name: mu-cv;
-}
-
-/* The excerpt, unrolled: one transitioned `grid-template-rows` 0fr → 1fr,
-   the detail laid out at its final size once, so the copy never reflows as it
-   is uncovered. The closed notes' copy is `visibility: hidden` — out of the
-   tab order, which is what a hidden control owes. */
+/* The feature, unrolled: ONE transitioned `grid-template-rows` 0fr → 1fr, the
+   detail laid out at its final size once, so the copy never reflows as it is
+   uncovered. The closed notes' copy is `visibility: hidden` — out of the tab
+   order, which is what a hidden control owes. */
 .mu-note__open {
-  grid-column: 1;
   grid-row: 2;
   display: grid;
   grid-template-rows: 0fr;
@@ -815,29 +757,34 @@
   min-height: 0;
   overflow: hidden;
 }
-/* ⚠ THE SIGN SITS ON THE COVER'S FLOOR (the owner: "the call to action and
-   the author should be aligned to the bottom of that visual"). The cover runs
-   from 10px below the note's top to `10px + open`; the note is the row plus
-   this detail, so solving the detail's height from the cover puts its content
-   box's floor exactly on the cover's, and `margin-top: auto` seats the byline
-   and the way in there — the excerpt keeps the top, the air falls between. */
+/* ⚠ THE COPY IS INDENTED ONTO THE TITLE'S OWN COLUMN — the mark's 12px, the
+   date's column and the two gaps between them — so the excerpt starts where
+   the title does and the ledger reads as one ruled table rather than as a row
+   with a paragraph hanging off its left edge. */
 .mu-note__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--mu-note-open);
+  column-gap: clamp(20px, 2.6vw, 48px);
+  box-sizing: border-box;
+  height: var(--mu-note-open);
+  padding: 0 0 clamp(14px, 2svh, 22px) calc(12px + var(--mu-note-date) + 2 * var(--mu-note-cgap));
+}
+/* ⚠ ONE STACK, SEATED AT THE TOP (the ledger's round-four ruling).
+   `space-between` put the way in on the feature's floor and left the room
+   between it and the excerpt as a hole; the air falls BELOW the block, where
+   it is the row's. */
+.mu-note__copy {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
-  /* ⚠ A MINIMUM, NOT A SPACING. The sign's `margin-top: auto` puts it on the
-     floor; this gap only says how close a long excerpt may come to it. At
-     28px a three-line excerpt (the registry's 220-character budget, and the
-     live "Encode the context") pushed the sign 7.9px under the cover's floor
-     at 1920×1247 — three lines, 12px and the 40px button fit the box the
-     cover solves at every rung. */
-  gap: 12px;
-  box-sizing: border-box;
-  height: calc(var(--mu-note-open) + 10px + var(--mu-note-inset) - var(--mu-note-row));
-  padding: 0 0 var(--mu-note-inset);
+  justify-content: flex-start;
+  gap: clamp(16px, 2.4svh, 28px);
+  min-height: 0;
 }
 .mu-note__lede {
   margin: 0;
-  max-width: 34em;
+  max-width: 36em;
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(15px, 1.15vw, 19px);
   font-weight: var(--weight-text);
@@ -846,7 +793,6 @@
   color: var(--mu-ink-2);
 }
 .mu-note__sign {
-  margin-top: auto;
   display: flex;
   align-items: center;
   gap: clamp(16px, 2vw, 32px);
@@ -870,8 +816,8 @@
   align-items: center;
   gap: 12px;
   box-sizing: border-box;
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 38px;
+  padding: 0 12px;
   border: 1px solid var(--gold-line);
   font-family: var(--font-pt-mono);
   font-size: 11px;
@@ -902,121 +848,101 @@
   background: currentColor;
 }
 
-/* ── The drawn cover: the About drawing, re-seated (`MusingOrbit`) ─────
-   The inks are the station's dawn ramp and the gold LINE step; the lit mark
-   takes the gold fill and light re-derives it in theme.css BLOCK 4g. What
-   the thumbnail drops is marked `.mu-cv-detail` and struck below 140px. */
-.mu-orbit {
-  position: relative;
+/* ⚠ THE COVER IS UNFRAMED, AND THAT IS THE OWNER'S WORD (2026-09-25: "the
+   visual / diagram on the right should not have a frame around it just the
+   diagram"). NO border, NO background, NO notch, NO well — a square at the
+   feature's end, ending on its floor, with the drawing filling it. The
+   capture fails either declaration coming back. */
+.mu-note__cover {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
   display: grid;
-  place-items: center;
-  width: 100%;
+  box-sizing: border-box;
   height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-.mu-orbit__dial {
-  position: relative;
-  width: min(100cqh, 100cqw);
   aspect-ratio: 1;
+  min-height: 0;
 }
-.mu-orbit__svg {
+
+/* ── The drawn cover: the field behind the portrait (`MusingOrbit`) ─────
+   ⚠ A FIELD, NOT AN INSTRUMENT (ADR-122 U2). No graduated rim, no cardinal
+   stub, no spoke, no hand, no beat mark and no label: About's six rings, the
+   note's year as a tilted orbit through them, the elapsed part of that year in
+   gold, the note's body on its day, the year's other notes as open dots, and
+   About's dust. The inks are the station's dawn ramp and the gold LINE step;
+   the lit body takes the gold fill and light re-derives it in theme.css
+   BLOCK 4g. */
+.mu-orbit {
   display: block;
   width: 100%;
   height: 100%;
   overflow: visible;
 }
-.mu-orbit__svg path {
+.mu-orbit path {
   fill: none;
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
+/* ⚠ ONE STEP STRONGER THAN ABOUT'S OWN ALPHAS, and it is arithmetic rather
+   than taste: this drawing renders at 0.45–0.57 of its authoring scale, where
+   a hairline paints under a device pixel and the browser pays the difference
+   in alpha (ADR-070 U16). About's `--dawn-15` / `--dawn-08` ladder measured as
+   an empty box at 238px. */
 .mu-orbit__line {
-  stroke: rgba(var(--dawn-rgb), 0.3);
+  stroke: rgba(var(--dawn-rgb), 0.34);
 }
 .mu-orbit__line2 {
-  stroke: rgba(var(--dawn-rgb), 0.2);
+  stroke: rgba(var(--dawn-rgb), 0.26);
 }
 .mu-orbit__faint {
-  stroke: rgba(var(--dawn-rgb), 0.14);
+  stroke: rgba(var(--dawn-rgb), 0.16);
 }
-.mu-orbit__tick {
-  stroke: rgba(var(--dawn-rgb), 0.32);
-}
-.mu-orbit__stub {
-  stroke: rgba(var(--dawn-rgb), 0.6);
-}
+/* ⚠ ABOUT'S THREE GOLD RUNGS ARE QUIETER HERE THAN THEY ARE THERE, and the
+   reason is that this drawing has a gold RECORD and that one does not. Over
+   the portrait the only warm things in the field are two rings and two tiny
+   bodies; here the note's own year is a long gold line, so a ring at About's
+   own weight reads as a second one and the two cross into a Venn. The field
+   keeps its warmth and yields its brightness (ADR-063's one-lit-thing law). */
 .mu-orbit__gold {
   stroke: var(--gold-line);
-  stroke-opacity: 0.7;
+  stroke-opacity: 0.22;
 }
 .mu-orbit__soft {
   stroke: var(--gold-line);
-  stroke-opacity: 0.35;
+  stroke-opacity: 0.13;
 }
-.mu-orbit__svg path.mu-orbit__elapsed {
+/* The note's own year — the one complete figure crossing the field, so it is
+   dawn line-work rather than a fourth gold ring. */
+.mu-orbit path.mu-orbit__orbit {
+  stroke: rgba(var(--dawn-rgb), 0.38);
+}
+/* And the part of it already spent: the drawing's one bright LINE — the one
+   bright MARK is the body below. ⚠ 1.4, NOT 2: `vector-effect` makes this a
+   device-pixel width whatever the box, and at 2 a September note's arc is
+   nearly a whole gold ellipse and reads as a lasso thrown over the field. */
+.mu-orbit path.mu-orbit__elapsed {
   stroke: var(--gold-line);
-  stroke-width: 2;
+  stroke-width: 1.4;
 }
-.mu-orbit__svg path.mu-orbit__hand {
+.mu-orbit__mote {
+  fill: var(--mu-draw);
+}
+
+.mu-orbit__mark {
+  fill: none;
+  stroke: var(--mu-draw);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.mu-orbit__corona {
+  fill: none;
   stroke: var(--gold-line);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
-.mu-orbit__halo {
-  fill: rgba(var(--dawn-rgb), 0.4);
-}
-.mu-orbit__halo--lit,
 .mu-orbit__lit {
   fill: var(--gold);
-}
-.mu-orbit__mark {
-  fill: rgba(var(--dawn-rgb), 0.55);
-}
-/* The beat's mark keeps its own 1.5 stroke in its own 24-unit box, and the
-   Encode cells their fill — `.mu-orbit__svg path` above is for line work. */
-.mu-orbit__glyph {
-  color: var(--mu-ink-2);
-}
-.mu-orbit__svg .mu-orbit__glyph path {
-  stroke: currentColor;
-  stroke-width: 1.5;
-  vector-effect: none;
-}
-.mu-orbit__svg .mu-orbit__glyph path[stroke="none"] {
-  fill: currentColor;
-  stroke: none;
-}
-/* The designations (About's diagonal pair: the day and the year) and the
-   quarter months — DOM, so no `<text>` needs a fit discipline. */
-.mu-orbit__label,
-.mu-orbit__q {
-  position: absolute;
-  z-index: 1;
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  font-weight: var(--weight-text);
-  line-height: 1;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--mu-ink-3);
-}
-.mu-orbit__label--tr {
-  top: var(--mu-note-inset);
-  right: var(--mu-note-inset);
-}
-.mu-orbit__label--bl {
-  bottom: var(--mu-note-inset);
-  left: var(--mu-note-inset);
-}
-.mu-orbit__q {
-  transform: translate(-50%, -50%);
-}
-@container mu-cv (max-width: 140px) {
-  .mu-cv-detail,
-  .mu-orbit__label,
-  .mu-orbit__q {
-    display: none;
-  }
 }
 
 /* ── The way out, and the empty state ───────────────────────────────
@@ -1106,32 +1032,29 @@
     padding-block-end: var(--hud-rail-y-end);
   }
 
-  /* ⚠ THE ROWS ARE SOLVED FROM THE COUNT, INSIDE THE FRAME. The open card's
-     floor is paid for first, then the way out; the closed rows share what is
-     left, at v4's own 8.6svh wherever they can have it and never under 64px,
-     and the open cover takes whatever the rows then leave, up to 240px. So
-     five notes at the owner's 1920×1247 keep their titles near full size with
-     the open card whole, and a short frame (1280×720) scrolls the list inside
-     itself rather than clipping it. ⚠ `100cqh` is resolved where each token
-     is USED — inside the note — against this box, the nearest size container;
-     the cover's own container is a sibling of the row, never an ancestor. */
+  /* ⚠ THE ROWS ARE SOLVED FROM THE COUNT, INSIDE THE FRAME (ADR-122 → U2, the
+     ledger's own numbers). The open feature's floor is paid for first, then
+     the way out; the closed rows share what is left, at the ledger's 6.4svh
+     wherever they can have it and never under 44px, and the open feature takes
+     whatever the rows then leave, up to 260px. The term subtracted per row is
+     1px — the ledger's rows TOUCH and each carries its own top rule, where
+     v17's cards were `--mu-note-gap` apart. ⚠ `100cqh` is resolved where each
+     token is USED — inside the note — against this box, the nearest size
+     container, so neither a note nor a row may become one. */
   .mu[data-mu-ready] .mu__notes {
-    --mu-note-open-min: clamp(180px, 20svh, 240px);
+    --mu-note-open-min: clamp(190px, 22svh, 260px);
     --mu-note-row: clamp(
-      64px,
+      44px,
       min(
-        8.6svh,
-        calc(
-          (100cqh - var(--mu-note-open-min) - var(--mu-foot-h)) / var(--mu-n, 3) -
-            var(--mu-note-gap)
-        )
+        6.4svh,
+        calc((100cqh - var(--mu-note-open-min) - var(--mu-foot-h)) / var(--mu-n, 3) - 1px)
       ),
-      108px
+      68px
     );
     --mu-note-open: clamp(
       var(--mu-note-open-min),
-      calc(100cqh - var(--mu-n, 3) * (var(--mu-note-row) + var(--mu-note-gap)) - var(--mu-foot-h)),
-      240px
+      calc(100cqh - var(--mu-n, 3) * (var(--mu-note-row) + 1px) - 1px - var(--mu-foot-h)),
+      260px
     );
     height: 100%;
     min-height: 0;
@@ -1155,17 +1078,14 @@
     margin-inline-end: calc(var(--rail-inset) + var(--mu-band-end));
   }
 
-  /* ── THE GLASS (ADR-121). ⚠ ON THE STAGE RUNG ONLY, WHERE THERE IS A
-     LIVE CORRIDOR TO BLUR: at 961–1100 the station is opaque and a blur
-     would re-snapshot every frame to frost its own stars. ⚠ NO
-     `brightness()` (the services plate's OPEN lift, which turns a ground
-     grey). Light drops the frost in `theme.css` BLOCK 4g. */
-  @supports (backdrop-filter: blur(2px)) {
-    #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note {
-      -webkit-backdrop-filter: blur(var(--mu-blur));
-      backdrop-filter: blur(var(--mu-blur));
-    }
-  }
+  /* ⚠ AND THERE IS NO GLASS (ADR-122 U2). ADR-121's frost existed because the
+     note was a PLATE over a live corridor and had to be told from it; the
+     ledger's note is a hairline and its copy, sitting on the station's own
+     ground exactly as the masthead above it does. A `backdrop-filter` on a
+     box with no fill frosts nothing and costs a per-frame snapshot anyway
+     (ADR-056's measurement), so the rule, `--mu-blur` and `--mu-glass-a` are
+     deleted rather than zeroed. The recorded fallback it was the fallback FOR
+     — the blur on the open note alone — goes with it. */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1219,16 +1139,21 @@
     pointer-events: auto;
   }
 
+  /* ⚠ THE NOTE UNFOLDS AS A RECTANGLE NOW (ADR-122 U2), and the line it is
+     drawn as IS ITS OWN TOP RULE — which is why the rule sits on the note's
+     top rather than on its bottom. The notched pair (`mu-unfold` / `mu-fold`)
+     is deleted with the plate that had the notch: a five-point polygon whose
+     cut is 0 interpolates identically to an `inset`, and keeping it would
+     have left `--mu-ch` alive as the one term of a silhouette nothing draws.
+     ⚠ AND THE LIP'S OWN KEYFRAME IS GONE WITH THE RING — the lit line is
+     `mu-unfold-edge` on the note's `border-top-color`. */
   .mu[data-mu-ready][data-mu-arrive="in"] .mu-note {
-    animation: mu-unfold var(--mu-unfold-in) calc(var(--mu-slot, 0) * var(--mu-unfold-step))
-      backwards;
-  }
-  .mu[data-mu-ready][data-mu-arrive="in"] .mu-note::before {
-    animation: mu-unfold-lip var(--mu-unfold-in) calc(var(--mu-slot, 0) * var(--mu-unfold-step))
-      backwards;
+    animation:
+      mu-unfold-rect var(--mu-unfold-in) calc(var(--mu-slot, 0) * var(--mu-unfold-step)) backwards,
+      mu-unfold-edge var(--mu-unfold-in) calc(var(--mu-slot, 0) * var(--mu-unfold-step)) backwards;
   }
   .mu[data-mu-ready][data-mu-arrive="out"] .mu-note {
-    animation: mu-fold var(--mu-unfold-out) none;
+    animation: mu-fold-rect var(--mu-unfold-out) none;
   }
   .mu[data-mu-ready][data-mu-arrive="in"] .mu__all {
     animation: mu-unfold-rect var(--mu-unfold-in) calc(var(--mu-n, 1) * var(--mu-unfold-step))
@@ -1239,52 +1164,22 @@
   }
 }
 
-/* The note's own silhouette at three moments — FIVE points each and one fill
-   rule, so the polygon interpolates point for point instead of snapping:
-   a zero-width line at the note's top-left, the full-width 1px top edge, the
-   whole notched plate. Only the RIGHT points move in the first phase and only
-   the BOTTOM points in the second — across, then down. */
-@keyframes mu-unfold {
-  0% {
-    clip-path: polygon(0 0, 0 0, 0 1px, 0 1px, 0 1px);
-  }
-  40% {
-    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% 1px, 100% 1px, 0 1px);
-  }
-  100% {
-    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
-  }
-}
-/* The line is the lip, lit: the gold line while the note is a line, then
-   settling to the note's own value (no `to` frame — it lands on the cascade). */
-@keyframes mu-unfold-lip {
+/* The line, LIT while it is a line: the note's own top rule goes gold while
+   the clip is 1px tall, then settles to the list's hairline (no `to` frame —
+   it lands on the cascade). This is `mu-unfold-lip` re-pointed from the
+   deleted ring onto the border the ledger draws instead. */
+@keyframes mu-unfold-edge {
   0%,
   40% {
-    background-color: var(--gold-line);
+    border-top-color: var(--gold-line);
   }
 }
-/* The leaving, played back: up into the line, then the line drawn in. ⚠ IT
-   HOLDS `opacity` AND `visibility` ITSELF: the `out` cascade above already
-   hides the note, so a fold that animated the clip alone would play on a note
-   nobody can see. It ends on the zero-width line, where nothing paints. */
-@keyframes mu-fold {
-  0% {
-    opacity: 1;
-    visibility: visible;
-    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
-  }
-  55% {
-    opacity: 1;
-    visibility: visible;
-    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% 1px, 100% 1px, 0 1px);
-  }
-  100% {
-    opacity: 1;
-    visibility: visible;
-    clip-path: polygon(0 0, 0 0, 0 1px, 0 1px, 0 1px);
-  }
-}
-/* The way out: a plain rectangle, so an `inset` — its top border is the line. */
+/* A note and the way out are both plain rectangles, so both unfold on an
+   `inset`: a zero-width 1px line at the top-left, then the full-width 1px top
+   edge, then the whole box — across, then down. ⚠ `fill-mode: backwards`,
+   never `forwards`: a note waiting for its slot shows the zero-width line
+   (nothing), and the last frame IS the resting silhouette, so a `forwards`
+   fill would pin a `clip-path` on the note for the rest of the page. */
 @keyframes mu-unfold-rect {
   0% {
     clip-path: inset(0 100% calc(100% - 1px) 0);
@@ -1392,11 +1287,22 @@
 }
 
 /* ── The phone ───────────────────────────────────────────────────────
-   The same list, flowing: the newest note open, the rest links. Nothing
-   pins, so nothing is solved from the frame: a row is as tall as its title
-   (which may wrap here — two lines of a note's name beat an ellipsis), the
-   cover stays a thumbnail at the row's right, and the open note's excerpt
-   and way in run the card's whole width under it. */
+   The same ledger, flowing: the newest note open, the rest links. Nothing
+   pins, so nothing is solved from the frame — a row is as tall as its title
+   (which may wrap here: two lines of a note's name beat an ellipsis), and the
+   open note's feature runs the list's whole width under it.
+   ⚠ THE CHIP COMES OFF THE LINE AND THE TWO CHROME COLUMNS DROP UNDER THE
+   TITLE. On the desktop ledger the chip is what tells the open row apart from
+   its neighbours at a glance, and the date is a 96px column no phone can
+   spare; the date and the length become the note's one meta line, reading as a
+   byline rather than as two columns. ⚠ **AND THE LENGTH MAY NOT END ON THE
+   ROW'S RIGHT EDGE HERE** — the frame's settings cluster is fixed in the
+   bottom-right corner band, and a row resting there put `1 MIN` under it
+   (`mobile-section-seams`' chrome-over-copy walk caught it, which is the only
+   thing that looks). It is `justify-self: start` in the row's LAST column, so
+   it sits one gap after the date and the right edge is empty. ⚠ And the
+   feature's indent goes with the date's column — there is nothing left to
+   align to. */
 @media (max-width: 960px) {
   .mu__stage {
     row-gap: clamp(14px, 2svh, 24px);
@@ -1406,33 +1312,58 @@
     --mu-note-title: clamp(20px, 5.4vw, 26px);
     --mu-note-inset: 14px;
   }
-  .mu-note,
-  .mu-note[data-mu-open] {
-    --mu-note-col: 56px;
+  .mu-note {
     grid-template-rows: auto auto;
-    padding: 0 calc(var(--mu-ch) + 4px) 0 var(--mu-note-inset);
   }
   .mu-note__row {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 12px auto minmax(0, 1fr);
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 6px;
     padding-block: 14px;
   }
+  .mu-note__mark {
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 6px;
+  }
   .mu-note__title {
+    grid-column: 2 / -1;
+    grid-row: 1;
     white-space: normal;
     overflow: visible;
+  }
+  .mu-note__date {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .mu-note__len {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: start;
+    text-align: left;
   }
   .mu-note__chip {
     display: none;
   }
-  .mu-note__cover {
-    grid-row: 1;
-    margin-top: 14px;
-  }
-  .mu-note__open {
-    grid-column: 1 / -1;
-  }
   .mu-note__detail {
+    grid-template-columns: minmax(0, 1fr);
     height: auto;
-    padding-bottom: 16px;
+    padding: 0 0 18px;
+  }
+  /* The drawing leads the feature on a phone, as a picture does, and is
+     capped so a square never eats the screen. */
+  .mu-note__cover {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    width: min(240px, 58vw);
+    height: auto;
+    margin-bottom: 16px;
+  }
+  .mu-note__copy {
+    grid-column: 1;
+    grid-row: 2;
   }
   .mu-note__sign {
     flex-wrap: wrap;

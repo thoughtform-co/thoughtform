@@ -12,18 +12,40 @@ classic in structure, and it has to be better.
 http://localhost:3003/test/musings-gallery?v=v6
 ```
 
-⚠ **v17 WON AND IS ON THE HOMEPAGE (owner, 2026-09-24; [ADR-122](../../../sentinel/decisions/122-the-musings-list.md)).**
-_"Let's go for V17 and maybe we can show more, maybe 5 in total."_ Production
-took v17 with three changes:
+⚠ **v10 IS ON THE HOMEPAGE (owner, 2026-09-25; [ADR-122 U3](../../../sentinel/decisions/122-the-musings-list.md)).**
+_"Can you make V10 the design for the musing section on our home page; but the
+visual / diagram on the right should not have a frame around it just the
+diagram, and also make the design look less like a compass and more abstract
+like the diagrams behind our profile picture in the about section."_ Production
+took v10 with three changes:
 
-- **At most five notes**, with the rows solved from the count inside the frame.
-- **The arrival is a line that unfolds downward**, replacing the centre-out
-  aperture the owner read as a scan line.
-- **The open note stays open** when the pointer leaves.
+- **The cover is unframed** — no border, no well, no plate behind it.
+- **The drawing is a FIELD, not an instrument**: About's ring ladder with the
+  note's year as a tilted orbit through it. No graduated rim, no cardinal
+  stubs, no spokes, no hand, no labels, no beat mark.
+- **The copy is seated at the top of the feature**, which is v10's own
+  round-four ruling, so the sign does not land on the cover's floor the way
+  v17's did.
 
-`v0` is now that list, and it is the control. The lab stays until the owner has
-read the list live. After that, the losing directions go, with their guards
-(ADR-070 U35).
+It keeps v17's three (five notes with the rows solved from the count, the
+arrival as a line that unfolds down, the open note staying where the reader
+left it).
+
+⚠ **v17 WON ROUND SIX AND SHIPPED FIRST (owner, 2026-09-24):** _"Let's go for
+V17 and maybe we can show more, maybe 5 in total."_ It was live for a day.
+⚠ **AND v10's RULED ROWS REVERSE v13's OWN RULING** — round six chose the
+folder cards over v12's open rows on _"I'm not really a fan of horizontal
+dividers that don't close"_ — which the owner made with v17 live beside v10 in
+this lab. Both readings are his.
+
+⚠ **THE LAB IS NOT RE-CUT FOR EITHER.** Its v10 still draws the round-four
+`dial` cover, frame and all; production has diverged from a direction before
+(v17 shipped with three changes). It is the record of the exploration. If the
+covers want comparing again, the new drawing takes a `cover=` kind of its own.
+
+`v0` is the shipped list, and it is the control. The lab stays until the owner
+has read the ledger live. After that, the losing directions go, with their
+guards (ADR-070 U35).
 
 (Read the port off the running server; 3003 is the default, not a guarantee.
 `/test/*` is proxy-blocked in production, so there is no thoughtform.co URL.)

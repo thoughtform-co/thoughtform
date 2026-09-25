@@ -365,3 +365,205 @@ list.
   veil, on the runway's own view timeline.
 - **The 100svh `.mu__band` is deleted.** It was one viewport of empty stars, and its
   cover role went to the footer.
+
+## Update 3: the ledger, and the cover stops being a compass (2026-09-25)
+
+Owner, on the still of v17 live:
+
+> Can you make V10 the design for the musing section on our home page; but the
+> visual / diagram on the right should not have a frame around it just the
+> diagram, and also make the design look less like a compass and more abstract
+> like the diagrams behind our profile picture in the about section.
+
+Three changes, and the first of them is a form change: **v17 is superseded by
+v10, the LEDGER** — the same gallery lab, round four, the direction next to the
+cards he had picked in round six.
+
+### §1 The note is a ruled line, not a folder card
+
+The list is v10, number for number: one line per note — a state **mark**, the
+filing **date** in its own mono column, the **title**, the beat **chip**, the
+**length** — and the row under the pointer opens down into a compact feature:
+the excerpt with the byline and the way in under it, indented onto the title's
+own column, and the drawing a **square at the row's end**.
+
+What that deletes, and it is a lot: **the folder skin goes with the card.** The
+glass, the flat gold lip, the corner bloom, the plate's scanline and the
+top-right notch were ADR-097's material at list scale, and a ruled row is not a
+housing — it has no corner (ADR-065), no ground and nothing to frost. `--mu-ch`,
+`--mu-chi`, `--mu-plate`, `--mu-lip`, `--mu-blur`, `--mu-glass-a`,
+`--mu-bloom-a`, `--mu-note-col`, `--mu-note-thumb`, `--mu-note-gap` and
+`theme.css`'s glass half of BLOCK 4g are all deleted rather than left resolving
+to nothing.
+
+⚠ **THIS REVERSES v13's OWN RULING, AND THE OWNER MADE BOTH.** Round six chose
+the cards over v12's open rows on _"I'm not really a fan of horizontal dividers
+that don't close"_; the ledger's rules are exactly that shape. He picked v10
+from the gallery with v17 live beside it, which is the later reading of the same
+question — recorded here so the next pass knows the divider is a decision and
+not an oversight.
+
+⚠ **THE ROWS ARE STILL SOLVED FROM THE COUNT, on the ledger's own numbers**:
+`44–68px` at `6.4svh` where they can have it, the feature's floor
+(`190px / 22svh / 260px`) paid first and the way out's row after it. **The term
+subtracted per row is 1px, not a gap** — the ledger's rows touch and each
+carries its own rule.
+
+⚠ **AND THE RULE IS ON THE NOTE'S TOP, NOT ITS BOTTOM.** The arrival draws each
+note as its own top edge first and then unfolds down from it (U0's `mu-unfold`),
+so with a `border-bottom` the 1px line the clip opens on would have been drawn
+on empty box. `.mu-note` takes `border-top` and `.mu__list` closes the set with
+a `border-bottom`.
+
+⚠ **THE UNFOLD IS AN `inset()` NOW, AND THE NOTCHED PAIR IS DELETED.**
+`mu-unfold` / `mu-fold` were five-point polygons whose only non-rectangular term
+was `--mu-ch`; with no notch they interpolate identically to the `mu-unfold-rect`
+pair the way out already used, so the note joins it and the lip's keyframe is
+re-pointed onto `border-top-color` (`mu-unfold-edge`). Keeping the polygons with
+a zero cut would have left a silhouette term alive that nothing draws, which is
+how a notch comes back.
+
+⚠ **ONE TRANSITION WHERE THERE WERE TWO.** v17 grew the cover's COLUMN from the
+thumbnail to the feature and unrolled the excerpt; the ledger has no thumbnail —
+the drawing lives inside the feature — so the growth is `grid-template-rows`
+`0fr → 1fr` alone, on the same 560ms expo-out.
+
+⚠ **THE SIGN-ON-THE-COVER'S-FLOOR RULING LOSES ITS SUBJECT.** U0 solved
+`.mu-note__detail`'s height so the byline and the way in landed exactly on the
+cover's floor. The ledger seats its copy at the **top** — the lab's own
+round-four ruling, because `space-between` put the way in on the floor and left
+the room between it and the excerpt as a hole — and the air falls below the
+block, where it is the row's. The capture's `signFloor` gate is re-pointed: it
+asks that the sign is INSIDE the feature, not that it is on its floor.
+
+⚠ **THE TITLE RIDES ITS ROW AND THE ROW IS SHORTER.** `min(clamp(20px, 1.7vw,
+32px), row × 0.58)` in place of v4's 48px ceiling. The density the ledger buys
+is in ROWS, not in type: five one-line notes leave the feature a floor the
+two-line cards could not.
+
+### §2 The cover has no frame
+
+Owner: _"just the diagram."_ `.mu-note__cover` declares no border, no ground, no
+well and no notch — a square at the feature's end at its full height, the
+drawing filling it. The capture fails either declaration coming back, on the
+note as well as on the cover.
+
+And the drawing letters **nothing**. v17's cover carried a designation pair (the
+day, the year) and, before it, the quarter months; the ledger's row prints the
+date, the beat and the length an inch to its left. That is ADR-064 U1's ruling
+on this surface a third time: _if a panel seems to need a second designation,
+the question is what the first one failed to say._
+
+### §3 The drawing is a field, not an instrument
+
+> less like a compass and more abstract like the diagrams behind our profile
+> picture in the about section
+
+⚠ **THE FIRST CUT WAS A COMPASS AND SAID SO IN ITS OWN PARTS** — a rim graduated
+every 15° off four cardinal stubs, four spokes on those cardinals, a HAND from
+the core to the day, `JAN · APR · JUL · OCT` hung round the rim, and, dead
+centre, a beat mark that for three notes in five is **literally a compass
+needle**. Not one of those is in the About drawing (`AboutStage.tsx:305–396`),
+which is six rings on an alternating dash ladder with small bodies riding them
+and a drift of dust, read behind a portrait. U0 recorded that it had ported
+About's register; what it had ported was About's RADII.
+
+All of it is deleted. What is left still draws the RECORD:
+
+| part               | fact                                               |
+| ------------------ | -------------------------------------------------- |
+| six rings          | About's own, radius for radius — the field         |
+| a tilted ellipse   | the note's YEAR                                    |
+| the gold arc on it | how much of that year had passed when it was filed |
+| the lit body       | the note, on its own day                           |
+| open dots          | the year's other notes, on the same orbit          |
+| the drift          | About's dust                                       |
+
+⚠ **THE BEAT LETTERS ON THE ROW, NOT IN THE DRAWING.** ADR-119's ruling — that
+the Arc's three marks are proper nouns and reusing one here is correct — held
+while the cover was the only thing that said which beat a note belonged to. In
+the ledger the chip prints `[ NAVIGATE ]` beside the drawing, so the mark was
+the said-twice defect AND the loudest compass signal at once. `BEAT_PATHS` and
+`ENCODE_CELLS` move to the gallery lab, which is their only remaining consumer:
+a production module exporting a constant only an internal route reads is a seam
+pointing the wrong way.
+
+⚠ **TWO SEEDS, NOT ONE, AND NEITHER IS THE DATE.** Tilt and flattening off one
+number move together, so every cover would sit on one line through the family —
+a flat orbit would always be the steep one. The second hash is the slug with a
+separator, which `slugSeed` already makes stable across a render on the server
+and one on the client. Neither encodes the date: the date is drawn twice
+already, as the arc's length and the body's seat, and a third unreadable copy of
+it in the shape is the map's own said-twice defect.
+
+⚠ **THE DASHES ARE SCALED AND THE RADII ARE NOT.** About's ladder is authored in
+a 400-unit crop rendered at ~400–500px — a scale of ~1, where `1 7` paints a 1px
+dash. This cover is a 420-unit crop in a **190–240px** box, a scale of
+**0.45–0.57**, where the same array paints a 0.5px dash with 4px of gap and the
+browser pays the rest in alpha: **the interior rings were not there at all on
+the first still.** `DASH_K` is 2, applied to the pitch alone, and the ring
+alphas take one step up — ADR-070 U16's own finding one drawing over, that a
+1-unit rule paints under a device pixel and the answer is the UNIT, never a
+second alpha.
+
+⚠ **THE ORBIT SITS INSIDE THE FIELD, NOT AROUND IT.** At `rx 168` its apsides
+landed within 4 units of About's 172 ring and the year read as a gold lasso
+thrown over the drawing — the field, which is the whole reason the register was
+asked for, became the background of the orbit. **142** crosses the 124 and 104
+rings and clears the 150 one.
+
+⚠ **AND ABOUT'S THREE GOLD RUNGS ARE QUIETER HERE THAN THEY ARE THERE**, because
+this drawing has a gold RECORD and that one does not. Over the portrait the only
+warm things are two rings and two tiny bodies; here the note's year is a long
+gold line, so a ring at About's own weight reads as a second one and the two
+cross into a Venn. The field keeps its warmth and yields its brightness
+(ADR-063's one-lit-thing law), and the elapsed arc is **1.4px, not 2** — with
+`vector-effect` that is a device width whatever the box, and at 2 a September
+note's arc is nearly a whole gold ellipse.
+
+### §4 What the gates had to change, and one that had to be honest
+
+- **`notchPaint` is deleted with its subject.** `_readNotch` stays on disk and
+  inert: it is the one probe on this surface that got the chamfer's `ch × 0.5`
+  trap right, and a station that grows a housing again wants it back rather than
+  re-derived. What replaces it is a per-note MATERIAL gate — no ground, no
+  background image, no clip, and a rule at least 1px — which fails on the plate
+  coming back rather than on the corner.
+- **The glass gate INVERTED rather than being deleted.** A frost that came back
+  would be the plate returning under another name.
+- ⚠ **THE HOVER PROBE'S TARGET GOES STALE DURING THE MOVE, and re-aiming once is
+  the honest fix.** Opening a note collapses whichever note was open before it,
+  so when that note is ABOVE, the list slides up by `open − closed` — **260px**
+  at 1920×1247, against **272** under v17's cards, so this is the FORM's
+  behaviour and not the ledger's. A four-step mouse move fires its steps ~17ms
+  apart against a 560ms transition, so each step lands on a layout that is still
+  moving and the last rests over a different note than the one it was aimed at.
+  v17 passed the same gate by arithmetic luck. The probe now moves, lets the
+  list settle, and re-aims ONCE at the wanted row's current seat — never in a
+  loop, which would turn "the pointer opens the note under it" into "keep poking
+  until it does".
+- **The title's floor drops 20 → 18** in the capture, because the ledger's title
+  rides its row and the narrowest rung sets 20.
+
+### Measured (1920×1247, dark and light, the lab at five and seven notes)
+
+- Rows 69px closed, 329px open; five notes end **on** the rails' last tick and do
+  not scroll.
+- Every title whole on one line at 32px, none cut.
+- The covers 238×238, square, `border-top-width: 0px`, `background-color:
+rgba(0, 0, 0, 0)`, `clip-path: none` — on the notes as well.
+- No `backdrop-filter` anywhere in the sheet or the theme.
+- The sign ends **116.9px above** the feature's floor (the air the ledger's own
+  ruling puts there), at rest, on hover and on Tab.
+- Every note ≥ 187px clear of the right rail's telemetry.
+
+### Left open
+
+- **The list still jumps under the hand** by `open − closed` when the note that
+  was open is above the one the pointer reaches. It is inherent to open-on-hover
+  and it is not new (272px under v17), but nothing on this station mitigates it
+  and the owner has not been asked.
+- **The gallery lab is not re-cut.** Its v10 still draws the round-four `dial`
+  cover with its frame; it is the record of the exploration, and production has
+  diverged from a direction before (v17 shipped with changes). If the covers
+  should be compared again, the new drawing wants a `cover=` kind of its own.

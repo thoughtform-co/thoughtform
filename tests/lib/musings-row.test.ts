@@ -29,14 +29,14 @@ import {
   coordStamp,
 } from "@/lib/musings/mastheadData";
 import {
+  ORBIT_CORE,
   ORBIT_HALF,
-  ORBIT_HALO,
-  ORBIT_QUARTER_R,
-  ORBIT_QUARTERS,
+  ORBIT_PATH,
   ORBIT_RIM,
   ORBIT_RINGS,
-  dayOfYear,
-  orbitPoint,
+  orbitDrift,
+  orbitEllipse,
+  orbitEllipsePoint,
   orbitSpec,
 } from "@/lib/musings/orbit";
 import { VOIDWALKER_HOLOGRAM_EXIT_WINDOW } from "@/lib/voidwalker/voidwalkerHologramClock";
@@ -392,44 +392,82 @@ describe("the list's window", () => {
   });
 });
 
-describe("orbit — the About drawing, re-seated for a note (ADR-122)", () => {
-  it("reads the day of the year off the STRING, never through a Date", () => {
-    expect(dayOfYear("2026-01-01")).toBe(1);
-    expect(dayOfYear("2026-09-14")).toBe(257);
-    expect(dayOfYear("2024-03-01")).toBe(61);
-    expect(dayOfYear("2026-03-01")).toBe(60);
-    expect(Number.isNaN(dayOfYear("nonsense"))).toBe(true);
-  });
-
-  it("plots the note on its own day and the year's OTHER notes, never itself or another year's", () => {
+describe("orbit — the field behind the portrait, carrying a note's year (ADR-122 U2)", () => {
+  it("plots the note at its own year fraction and the year's OTHER notes, never itself or another year's", () => {
     const posts = [
       { slug: "a", date: "2026-09-14" },
       { slug: "b", date: "2026-03-01" },
       { slug: "c", date: "2025-12-31" },
     ];
     const spec = orbitSpec(posts[0], posts);
-    expect(spec.lit).toBeCloseTo(yearFraction("2026-09-14") * 360, 6);
+    expect(spec.f).toBeCloseTo(yearFraction("2026-09-14"), 9);
     expect(spec.others).toHaveLength(1);
-    expect(spec.others[0]).toBeCloseTo(yearFraction("2026-03-01") * 360, 6);
-    expect(spec.month).toBe(8);
-    expect(spec.day).toBe("Day 257");
-    expect(spec.year).toBe("2026");
+    expect(spec.others[0]).toBeCloseTo(yearFraction("2026-03-01"), 9);
   });
 
-  it("keeps every ring inside the rim, the halo outside it, and the quarter months inside the crop", () => {
-    // ⚠ THE CROP CARRIES THE LABELS' ROOM: the lab's first still printed "ICT"
-    // and "API" at a 240 crop. A quarter month is seated on its radius and
-    // centred on it, so its centre must leave half a label of air.
+  it("is a FIELD, not an instrument: every ring inside the rim, nothing graduated, nothing lettered", () => {
+    // ⚠ The owner's read (2026-09-25): "less like a compass". What made the
+    // first cut one was its BEARING vocabulary — a graduated rim, cardinal
+    // stubs, spokes, a hand and quarter-month labels. None of that exists now,
+    // so the ring ladder is all the geometry module publishes, and the crop
+    // only has to hold the rings and the dust just outside them.
     for (const r of ORBIT_RINGS) expect(r.r).toBeLessThanOrEqual(ORBIT_RIM);
-    expect(ORBIT_HALO).toBeGreaterThan(ORBIT_RIM);
-    expect(ORBIT_QUARTER_R).toBeGreaterThan(ORBIT_HALO);
-    for (const [, deg] of ORBIT_QUARTERS) {
-      const p = orbitPoint(deg, ORBIT_QUARTER_R);
-      expect(Math.abs(p.x)).toBeLessThanOrEqual(ORBIT_HALF - 30);
-      expect(Math.abs(p.y)).toBeLessThanOrEqual(ORBIT_HALF - 30);
+    expect(ORBIT_RINGS).toHaveLength(6);
+    expect(ORBIT_HALF).toBeGreaterThan(ORBIT_RIM);
+    // About's own ladder, radius for radius, and all three gold rungs quiet.
+    expect(ORBIT_RINGS.map((r) => r.r)).toEqual([192, 172, 150, 124, 104, 82]);
+    expect(ORBIT_RINGS.filter((r) => r.ink === "gold" || r.ink === "soft")).toHaveLength(3);
+  });
+
+  it("gives two notes their own orbit, and neither one's shape is its date", () => {
+    // ⚠ TWO SEEDS. Tilt and flattening off one number move together, so every
+    // cover would sit on one line through the family. And neither is the date:
+    // the date is already the arc's length and the body's seat.
+    const a = orbitEllipse("encode-the-context");
+    const b = orbitEllipse("the-vibe-is-different");
+    expect(a.deg).not.toBeCloseTo(b.deg, 3);
+    expect(a.ry).not.toBeCloseTo(b.ry, 3);
+    for (const e of [a, b]) {
+      expect(e.rx).toBe(ORBIT_PATH);
+      expect(e.ry).toBeGreaterThan(ORBIT_PATH * 0.25);
+      expect(e.ry).toBeLessThan(ORBIT_PATH * 0.47);
+      expect(Math.abs(e.deg)).toBeLessThanOrEqual(34);
     }
-    // The thumbnail keeps the gold track and the inner ring, and only those.
-    expect(ORBIT_RINGS.filter((r) => !r.detail).map((r) => r.ink)).toEqual(["gold", "line"]);
+    // Stable across a render on the server and one on the client.
+    expect(orbitEllipse("encode-the-context")).toEqual(a);
+  });
+
+  it("seats the year clockwise from the orbit's own twelve o'clock, and inside the crop", () => {
+    const e = { rx: ORBIT_PATH, ry: ORBIT_PATH * 0.34, deg: 0 };
+    const jan = orbitEllipsePoint(e, 0);
+    expect(jan.x).toBeCloseTo(0, 9);
+    expect(jan.y).toBeCloseTo(-e.ry, 9);
+    // A quarter of the year later the body is to the RIGHT — clockwise.
+    expect(orbitEllipsePoint(e, 0.25).x).toBeCloseTo(e.rx, 9);
+    // And every seat on every real orbit stays inside the crop, with the
+    // body's corona (r 14) clear of the wall.
+    for (const slug of ["a", "navigate-the-intelligence", "the-model-has-a-dialect"]) {
+      const o = orbitEllipse(slug);
+      for (let i = 0; i <= 64; i++) {
+        const p = orbitEllipsePoint(o, i / 64);
+        expect(Math.hypot(p.x, p.y)).toBeLessThanOrEqual(ORBIT_HALF - 14);
+      }
+    }
+  });
+
+  it("scatters the drift in an ANNULUS, never a box", () => {
+    // ⚠ A square scatter puts motes in the corners, where this crop has no
+    // field and the eye reads them as dirt on the glass.
+    const drift = orbitDrift("navigate-the-intelligence");
+    expect(drift.length).toBeGreaterThan(8);
+    for (const m of drift) {
+      const r = Math.hypot(m.x, m.y);
+      expect(r).toBeGreaterThanOrEqual(ORBIT_CORE - 21);
+      expect(r).toBeLessThanOrEqual(ORBIT_RIM + 13);
+      expect(m.o).toBeGreaterThan(0.2);
+      expect(m.o).toBeLessThan(0.7);
+    }
+    expect(orbitDrift("navigate-the-intelligence")).toEqual(drift);
   });
 });
 
@@ -465,18 +503,15 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(read(SHEET)).toContain(`@media ${RUNG} {`);
   });
 
-  it("the open note grows on TWO transitions and one clock — the cover column and the excerpt's row", () => {
-    // v17's mechanic: the cover is ONE element whose column widens from the
-    // thumbnail to the feature, and the excerpt unrolls 0fr → 1fr. Nothing is
-    // posed, measured or written per frame; the writer moves one attribute.
+  it("the open note grows on ONE transition and one clock — the feature's own row", () => {
+    // ⚠ v10's mechanic (ADR-122 U2): the note is a ruled LINE and the feature
+    // unrolls under it, 0fr → 1fr. v17's second transition went with the cover
+    // column — there is no thumbnail to grow from, because the drawing lives
+    // INSIDE the feature. Nothing is posed, measured or written per frame; the
+    // writer moves one attribute.
     const sheet = read(SHEET);
-    const note = bodyOf(sheet, ".mu-note");
-    expect(flat(note)).toContain("grid-template-columns:minmax(0,1fr)var(--mu-note-col)");
-    expect(flat(note)).toContain("--mu-note-col:var(--mu-note-thumb)");
-    expect(note).toMatch(/transition:\s*grid-template-columns var\(--mu-note-grow\)/);
-    expect(bodyOf(sheet, ".mu-note[data-mu-open]")).toMatch(
-      /--mu-note-col:\s*var\(--mu-note-open\)/
-    );
+    const note = flat(bodyOf(sheet, ".mu-note"));
+    expect(note).toContain("grid-template-rows:var(--mu-note-row)auto");
     expect(bodyOf(sheet, ".mu-note__open")).toMatch(/grid-template-rows:\s*0fr/);
     expect(bodyOf(sheet, ".mu-note[data-mu-open] .mu-note__open")).toMatch(
       /grid-template-rows:\s*1fr/
@@ -484,17 +519,52 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(bodyOf(sheet, ".mu")).toMatch(
       /--mu-note-grow:\s*560ms cubic-bezier\(0\.16, 1, 0\.3, 1\)/
     );
+    // ⚠ AND THE COVER COLUMN IS GONE, NOT MERELY UNUSED: `--mu-note-col` and
+    // `--mu-note-thumb` are what a half-reverted promotion would leave behind,
+    // resolving to nothing and collapsing the cover to zero in silence.
+    expect(rules(sheet)).not.toMatch(/--mu-note-col|--mu-note-thumb/);
     // ADR-121's row mechanic is gone with the row.
     expect(rules(sheet)).not.toMatch(/flex-grow|--mu-strip|--mu-open-w|--mu-closed/);
   });
-  it("nothing 3D survives — no perspective, no rotation, no 3D context, no edge fade", () => {
+
+  it("the ledger's line is five cells, and every one but the title is a constant of the TYPE", () => {
+    // ⚠ v10 (owner, 2026-09-25: "make V10 the design for the musing section").
+    // The date and the length are PT Mono columns, so every title starts and
+    // ends on one line down the whole list however long a note's name is.
+    const sheet = read(SHEET);
+    const row = flat(bodyOf(sheet, ".mu-note__row"));
+    expect(row).toContain(
+      "grid-template-columns:12pxvar(--mu-note-date)minmax(0,1fr)autovar(--mu-note-len)"
+    );
+    const markup = read(NOTE);
+    for (const cls of ["__mark", "__date", "__title", "__chip", "__len"]) {
+      expect(markup).toContain(`className="mu-note${cls}"`);
+    }
+    // ⚠ THE STATE IS FOUR SMALL MARKS, NEVER A FILL OR A FILTER (ADR-097 U12's
+    // photosensitivity ruling): the diamond fills, the date and the chip go
+    // gold-ink, the row's ink comes up. Nothing large-area changes value.
+    expect(bodyOf(sheet, ".mu-note[data-mu-open] .mu-note__mark")).toMatch(
+      /background:\s*var\(--gold-line\)/
+    );
+    expect(bodyOf(sheet, ".mu-note[data-mu-open] .mu-note__date")).toMatch(
+      /color:\s*var\(--gold-ink\)/
+    );
+    expect(bodyOf(sheet, ".mu-note[data-mu-open] .mu-note__chip")).toMatch(
+      /color:\s*var\(--gold-ink\)/
+    );
+  });
+  it("nothing 3D survives — no perspective, no 3D rotation, no 3D context, no edge fade", () => {
     // ADR-119's rack, shelf and row are all retired with the form (ADR-121).
     // A `perspective` or a `rotateX` that came back would be the jukebox
     // returning under a new name; a mask on the row would be its edge fade.
+    // ⚠ THE BAN IS ON THE 3D FORMS, AND THE ONE 2D ROTATION IS NAMED BELOW —
+    // the ledger's 8px state diamond is the house's own mark (the rail's
+    // detent, the console's station), and a blanket `rotate(` ban would have
+    // made it unwritable rather than made the station safer.
     for (const src of [read(SHEET), read(NOTE), read(ORBIT), read(STATION), read(HOOK)]) {
       const s = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
       expect(s).not.toMatch(/perspective/);
-      expect(s).not.toMatch(/rotate[XYZ]?\(/);
+      expect(s).not.toMatch(/rotate[XYZ]\(|rotate3d\(/);
       expect(s).not.toMatch(/translateZ|preserve-3d|transform-style/);
       expect(s).not.toMatch(/mu__window|mu__rig|mu__rack|data-mu-tilt|muTilt|data-mu-front/);
       expect(s).not.toMatch(/--mu-step|--mu-tail|--mu-i\b|data-mu-card/);
@@ -503,6 +573,8 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     // The only mask left in the sheet is the masthead's own dot-grid lift.
     for (const [, sel, body] of blocks(read(SHEET))) {
       if (/mask-image/.test(body)) expect(sel.trim()).toBe(".mu__grid");
+      // And the only rotation anywhere in it is the state diamond's 45°.
+      if (/rotate\(/.test(body)) expect(sel.trim()).toBe(".mu-note__mark");
     }
     // And the writer assigns no per-card style at all.
     expect(read(HOOK)).not.toMatch(/style\.(transform|zIndex|opacity|filter)\s*=/);
@@ -524,70 +596,103 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(note).toContain('className="mu-note__cover" aria-hidden="true"');
   });
   it("the rows are solved from the COUNT inside the frame, on the pinned rung", () => {
-    // ⚠ The open card's floor is paid for first, then the way out; the closed
-    // rows share what is left at v4's 8.6svh where they can, never under 64px;
-    // the open cover takes what the rows then leave, up to 240px. `100cqh` is
-    // the notes' box — the one size container above the rows.
+    // ⚠ The open feature's floor is paid for first, then the way out; the
+    // closed rows share what is left at the ledger's 6.4svh where they can,
+    // never under 44px; the feature takes what the rows then leave, up to
+    // 260px. `100cqh` is the notes' box — the one size container above the
+    // rows. ⚠ THE PER-ROW TERM IS 1px, not a gap: the ledger's rows TOUCH and
+    // each carries its own top rule (ADR-122 U2).
     const sheet = read(SHEET);
     const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
     const notes = flat(bodyOf(rung, ".mu[data-mu-ready] .mu__notes"));
     expect(notes).toContain("container-type:size");
     expect(notes).toContain(
-      "--mu-note-row:clamp(64px,min(8.6svh,calc((100cqh-var(--mu-note-open-min)-var(--mu-foot-h))/var(--mu-n,3)-var(--mu-note-gap))),108px)"
+      "--mu-note-row:clamp(44px,min(6.4svh,calc((100cqh-var(--mu-note-open-min)-var(--mu-foot-h))/var(--mu-n,3)-1px)),68px)"
     );
     expect(notes).toContain(
-      "--mu-note-open:clamp(var(--mu-note-open-min),calc(100cqh-var(--mu-n,3)*(var(--mu-note-row)+var(--mu-note-gap))-var(--mu-foot-h)),240px)"
+      "--mu-note-open:clamp(var(--mu-note-open-min),calc(100cqh-var(--mu-n,3)*(var(--mu-note-row)+1px)-1px-var(--mu-foot-h)),260px)"
     );
     // The way out's row is the term the arithmetic subtracts.
     expect(bodyOf(sheet, ".mu__foot")).toMatch(/height:\s*var\(--mu-foot-h\)/);
     // And the station hands the list its count.
     expect(read(STATION)).toContain('"--mu-n": posts.length');
   });
-  it("the byline and the way in sit on the COVER's floor (the owner's ask)", () => {
-    // "the call to action and the author should be aligned to the bottom of that
-    // visual". The cover spans both rows from 10px down; the detail's height is
-    // solved so its content box ends where the cover does, and the sign is
-    // pushed to that line. Both halves of the arithmetic are pinned.
+  it("the cover is UNFRAMED, square, and ends on the feature's floor", () => {
+    // ⚠ The owner, 2026-09-25: "the visual / diagram on the right should not
+    // have a frame around it just the diagram." No border, no ground, no
+    // notch, no well — a square at the feature's end, at its full height. The
+    // capture measures the same two declarations live.
     const sheet = read(SHEET);
     const cover = flat(bodyOf(sheet, ".mu-note__cover"));
-    expect(cover).toContain("grid-row:1/3");
+    expect(cover).toContain("grid-column:2");
+    expect(cover).toContain("justify-self:end");
     expect(cover).toContain("aspect-ratio:1");
-    expect(cover).toContain("margin-top:10px");
-    expect(cover).not.toMatch(/border:|background:/);
+    expect(cover).toContain("height:100%");
+    // ⚠ Declaration-level, not a substring: `box-sizing: border-box` contains
+    // the word "border" and a blunt regex passes it for a border it never had.
+    for (const prop of ["border", "border-top", "background", "background-color", "clip-path"]) {
+      expect(cover, prop).not.toMatch(new RegExp(`(^|;)${prop}:`));
+    }
+    // ⚠ AND THE FOLDER SKIN IS GONE FROM THE NOTE ITSELF — the plate, the ring,
+    // the bloom, the scanline, the notch and the frost all went with v17. A
+    // half-reverted promotion leaves one of them painting on a ruled row.
+    const note = flat(bodyOf(sheet, ".mu-note"));
+    expect(note).toContain("border-top:1pxsolidvar(--mu-rule)");
+    expect(note).not.toMatch(/clip-path|backdrop-filter|--mu-plate|--mu-lip/);
+    expect(bodyOf(sheet, ".mu-note::before")).toBe("");
+    expect(rules(sheet)).not.toMatch(/--mu-plate|--mu-lip|--mu-blur|--mu-glass-a|--mu-bloom-a/);
+    // The feature's copy column is seated at its TOP (the ledger's own round-
+    // four ruling); the air falls below it, where it is the row's.
+    expect(bodyOf(sheet, ".mu-note__copy")).toMatch(/justify-content:\s*flex-start/);
     const detail = flat(bodyOf(sheet, ".mu-note__detail"));
-    expect(detail).toContain(
-      "height:calc(var(--mu-note-open)+10px+var(--mu-note-inset)-var(--mu-note-row))"
-    );
-    expect(detail).toContain("padding:00var(--mu-note-inset)");
-    expect(bodyOf(sheet, ".mu-note__sign")).toMatch(/margin-top:\s*auto/);
+    expect(detail).toContain("height:var(--mu-note-open)");
+    expect(detail).toContain("grid-template-columns:minmax(0,1fr)var(--mu-note-open)");
+    // ⚠ AND THE COPY IS INDENTED ONTO THE TITLE'S OWN COLUMN — the mark, the
+    // date column and the two gaps — so the ledger reads as one ruled table.
+    expect(detail).toContain("calc(12px+var(--mu-note-date)+2*var(--mu-note-cgap))");
   });
-  it("the title is v4's scale, set whole on one line", () => {
-    // "what I like about v4 still is the big title size". The cap is what the
-    // row leaves above the meta line, so a short row sets a smaller title
-    // rather than a clipped one — and the ellipsis is a belt the capture fails.
+  it("the title rides its ROW, set whole on one line", () => {
+    // ⚠ The ledger's row is shorter than v17's card, so the cap is `row × .58`
+    // against a 32px ceiling rather than v4's 48: a shorter row (more notes, a
+    // shorter frame) sets a smaller title rather than a clipped one, and the
+    // ellipsis is a belt the capture fails.
     const sheet = read(SHEET);
     expect(flat(bodyOf(sheet, ".mu"))).toContain(
-      "--mu-note-title:min(clamp(22px,2.5vw,48px),calc((var(--mu-note-row)-26px)*0.9))"
+      "--mu-note-title:min(clamp(20px,1.7vw,32px),calc(var(--mu-note-row)*0.58))"
     );
     const title = flat(bodyOf(sheet, ".mu-note__title"));
     expect(title).toContain("font-size:var(--mu-note-title)");
     expect(title).toContain("white-space:nowrap");
     expect(title).toContain("font-family:var(--font-pp-neue-montreal)");
   });
-  it("three lines of the excerpt's measure hold the registry's whole budget, and the gap above the sign is a MINIMUM", () => {
-    // ⚠ At a 28px gap a three-line excerpt (the live "Encode the context")
-    // pushed the sign 7.9px under the cover's floor at 1920×1247; the sign's
-    // `margin-top: auto` is what seats it, the gap only bounds how close.
+  it("three lines of the excerpt's measure hold the registry's whole budget, inside the feature", () => {
+    // ⚠ The feature's height is a fixed `--mu-note-open` box, so the question
+    // is whether the longest approved summary, the stack's gap and the way in
+    // fit it at its FLOOR. At 190px: three lines of 19px copy at 1.45 (82.7),
+    // the stack's 28px ceiling, the 38px button and the detail's 22px bottom
+    // padding come to 170.7.
     const MEAN_ADVANCE_EM = 0.45;
+    const sheet = read(SHEET);
     const registry = read("tests/lib/musings-registry.test.ts");
     const budget = Number(/summary\.length\)\.toBeLessThanOrEqual\((\d+)\)/.exec(registry)?.[1]);
     expect(budget).toBeGreaterThan(0);
-    const measureEm = Number(
-      /max-width:\s*(\d+)em/.exec(bodyOf(read(SHEET), ".mu-note__lede"))?.[1]
-    );
-    expect(measureEm).toBe(34);
+    const measureEm = Number(/max-width:\s*(\d+)em/.exec(bodyOf(sheet, ".mu-note__lede"))?.[1]);
+    expect(measureEm).toBe(36);
     expect(3 * measureEm).toBeGreaterThanOrEqual(budget * MEAN_ADVANCE_EM);
-    expect(bodyOf(read(SHEET), ".mu-note__detail")).toMatch(/gap:\s*12px/);
+    const floorPx = 190;
+    const lede = bodyOf(sheet, ".mu-note__lede");
+    const ledeMax = Number(/font-size:\s*clamp\([^)]*?,\s*([\d.]+)px\)/.exec(lede)?.[1]);
+    const lead = Number(/line-height:\s*([\d.]+)/.exec(lede)?.[1]);
+    const gapMax = Number(
+      /gap:\s*clamp\([^)]*?,\s*(\d+)px\)/.exec(bodyOf(sheet, ".mu-note__copy"))?.[1]
+    );
+    const button = Number(/min-height:\s*(\d+)px/.exec(bodyOf(sheet, ".mu-note__read"))?.[1]);
+    const pad = Number(
+      /padding:\s*0 0 clamp\([^)]*?,\s*(\d+)px\)/.exec(bodyOf(sheet, ".mu-note__detail"))?.[1]
+    );
+    expect(3 * ledeMax * lead + gapMax + button + pad).toBeLessThan(floorPx);
+    // And the floor the arithmetic is measured against is the one declared.
+    expect(flat(bodyOf(sheet, ".mu"))).toContain(`--mu-note-open:clamp(${floorPx}px,22svh,260px)`);
   });
   it("the band's end is DERIVED from the frame's own geometry, and zero where it need not be", () => {
     // ⚠ ADR-121 shipped a row whose last card ran 25.4px UNDER the right
@@ -694,14 +799,23 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     }
     const sheet = rules(read(SHEET));
     expect(sheet).not.toMatch(/mu-aperture/);
-    // The unfold: across first (the first 40 %), then down; five points a frame.
-    const unfold = /@keyframes mu-unfold \{([\s\S]*?)\n\}/.exec(sheet)?.[1] ?? "";
-    expect(flat(unfold)).toContain("0%{clip-path:polygon(00,00,01px,01px,01px);}");
-    expect(flat(unfold)).toContain(
-      "40%{clip-path:polygon(00,calc(100%-var(--mu-ch))0,100%1px,100%1px,01px);}"
-    );
+    // The unfold: across first (the first 40 %), then down. ⚠ AN `inset` SINCE
+    // ADR-122 U2 — the ledger's note is a rectangle, so the notched polygon
+    // pair is deleted rather than kept with a zero cut, and `--mu-ch` goes
+    // with it (a silhouette term nothing draws is one a later pass restores).
+    const unfold = /@keyframes mu-unfold-rect \{([\s\S]*?)\n\}/.exec(sheet)?.[1] ?? "";
+    expect(flat(unfold)).toContain("0%{clip-path:inset(0100%calc(100%-1px)0);}");
+    expect(flat(unfold)).toContain("40%{clip-path:inset(00calc(100%-1px)0);}");
+    expect(flat(unfold)).toContain("100%{clip-path:inset(0);}");
+    expect(sheet).not.toMatch(/@keyframes mu-unfold \{|@keyframes mu-fold \{/);
+    // ⚠ `\b` after `ch`, or the ban also fails on `--mu-chrome`.
+    expect(sheet).not.toMatch(/--mu-ch\b|--mu-chi\b/);
     // ⚠ Geometry only — no opacity curve in the arrival, no filter (ADR-097 U12).
     expect(unfold).not.toMatch(/opacity|filter/);
+    // The line, lit while it IS a line: the note's own top rule, which is why
+    // the rule sits on the note's top rather than on its bottom.
+    const edge = /@keyframes mu-unfold-edge \{([\s\S]*?)\n\}/.exec(sheet)?.[1] ?? "";
+    expect(flat(edge)).toContain("0%,40%{border-top-color:var(--gold-line);}");
     const mu = flat(bodyOf(read(SHEET), ".mu"));
     expect(mu).toContain("--mu-unfold-in:820mscubic-bezier(0.65,0,0.35,1)");
     expect(mu).toContain("--mu-unfold-out:420mscubic-bezier(0.65,0,0.35,1)");
@@ -714,8 +828,12 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     const rung = sheet.slice(
       sheet.lastIndexOf(`@media ${RUNG} {`, sheet.indexOf("@supports (animation-timeline: view())"))
     );
-    expect(flat(bodyOf(rung, '.mu[data-mu-ready][data-mu-arrive="in"] .mu-note'))).toContain(
-      "animation:mu-unfoldvar(--mu-unfold-in)calc(var(--mu-slot,0)*var(--mu-unfold-step))backwards"
+    const inRule = flat(bodyOf(rung, '.mu[data-mu-ready][data-mu-arrive="in"] .mu-note'));
+    expect(inRule).toContain(
+      "mu-unfold-rectvar(--mu-unfold-in)calc(var(--mu-slot,0)*var(--mu-unfold-step))backwards"
+    );
+    expect(inRule).toContain(
+      "mu-unfold-edgevar(--mu-unfold-in)calc(var(--mu-slot,0)*var(--mu-unfold-step))backwards"
     );
   });
   it("gates every aperture rule on the stamp AND the rung", () => {
@@ -749,39 +867,41 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     }
   });
 
-  it("the glass is on the STAGE rung only, and light drops it in theme.css BLOCK 4g", () => {
-    // ⚠ A blur over an opaque station re-snapshots every frame to frost its
-    // own stars; the plate only blurs where the corridor is alive behind it.
-    // Light has no bed to separate from, so the frost goes there too — with
-    // a selector that OUT-RANKS the sheet's (1,4,0), or it loses silently.
+  it("there is NO glass, and nothing on the station frosts anything (ADR-122 U2)", () => {
+    // ⚠ ADR-121's frost existed because the note was a PLATE over a live
+    // corridor and had to be told from it. The ledger's note is a hairline and
+    // its copy on the station's own ground, exactly as the masthead above it
+    // — a `backdrop-filter` on a box with no fill frosts nothing and costs a
+    // per-frame snapshot anyway (ADR-056's measurement). Deleted, not zeroed:
+    // a `blur(0)` still snapshots. The theme's BLOCK 4g half goes with it.
     const sheet = rules(read(SHEET));
-    for (const [, sel, body] of blocks(sheet)) {
-      if (/backdrop-filter/.test(body)) {
-        expect(sel.trim()).toBe('#musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note');
-        expect(body).not.toMatch(/brightness/);
-      }
-    }
-    expect(sheet).toMatch(/@supports \(backdrop-filter: blur\(2px\)\)/);
+    expect(sheet).not.toMatch(/backdrop-filter/);
     const theme = rules(read(THEME));
-    expect(theme).toMatch(/html\[data-theme="light"\] \.mu \{[^}]*--mu-bloom-a:/);
-    const light = bodyOf(
-      theme,
-      'html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note'
+    expect(theme).not.toMatch(/#musings\[data-mu-mode="stage"\][^{]*\.mu-note/);
+    expect(theme).not.toMatch(/--mu-bloom-a|--mu-glass-a|--mu-plate|--mu-lip/);
+    // What light still re-derives on this station: the quietest ink rung
+    // (BLOCK 4e) and the cover's one gold FILL, which takes the LINE rung at
+    // 5.5px on parchment (ADR-063 U2).
+    expect(bodyOf(theme, 'html[data-theme="light"] .mu')).toMatch(/--mu-ink-3:/);
+    expect(bodyOf(theme, 'html[data-theme="light"] .mu-orbit__lit')).toMatch(
+      /fill:\s*var\(--gold-line\)/
     );
-    expect(light).toMatch(/backdrop-filter:\s*none/);
   });
 
-  it("the state is the ring, never a filter on the notes", () => {
-    // A large-area brightness change on every hover is the class of motion
-    // ADR-097 U12 retired. The open note is told by its lip, its ink and its chip.
+  it("the state is four small marks, never a fill and never a filter", () => {
+    // A large-area brightness or value change on every hover is the class of
+    // motion ADR-097 U12 retired. The open note is told by its 8px diamond,
+    // its date, its chip and the row's ink — and by nothing with an area.
     const sheet = rules(read(SHEET));
     for (const [, sel, body] of blocks(sheet)) {
-      if (/\.mu-note/.test(sel)) expect(body, sel).not.toMatch(/(^|[\s;])filter\s*:/);
+      if (/\.mu-note/.test(sel)) {
+        expect(body, sel).not.toMatch(/(^|[\s;])filter\s*:/);
+        // ⚠ The note itself may not take a ground in ANY state: that is what
+        // the folder plate was, and the ledger's row is a hairline and its ink.
+        if (/^\.mu-note(\[[^\]]*\])?$/.test(sel.trim()))
+          expect(body, sel).not.toMatch(/(^|[\s;])background(-color|-image)?\s*:/);
+      }
     }
-    expect(bodyOf(sheet, ".mu-note[data-mu-open]::before")).toMatch(
-      /background-color:\s*var\(--gold-line\)/
-    );
-    expect(bodyOf(sheet, ".mu-note::before")).toMatch(/background-color:\s*var\(--mu-lip\)/);
   });
 
   it("the station renders ONE list with the notes as its direct children", () => {

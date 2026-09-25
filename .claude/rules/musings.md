@@ -12,20 +12,31 @@ description: The musings list (#musings) — five notes that open on hover, its 
 
 # Rule: the musings list
 
-`#musings` — the writing as a LIST OF NOTES THAT OPENS ON HOVER: the services
-masthead's grammar on the editorial band, decoding in place; at most five
-closed folder cards, each one row (the title at v4's scale, its meta line,
-the beat chip, the drawn cover unframed in the last column), of which the one
-under the pointer opens — its cover grows, its excerpt unrolls, the byline and
-the way in land on the cover's floor; one way out. It sits between the era
-stage and the footer.
+`#musings` — the writing as a LEDGER OF NOTES THAT OPENS ON HOVER: the services
+masthead's grammar on the editorial band, decoding in place; at most five ruled
+lines (a state mark, the filing date, the title, the beat chip, the length), of
+which the one under the pointer opens down into a compact feature — the excerpt
+with the byline and the way in under it, and the note's drawn cover UNFRAMED as
+a square at the row's end; one way out. It sits between the era stage and the
+footer.
 
-⚠ **[ADR-122](../../sentinel/decisions/122-the-musings-list.md) (2026-09-24,
-owner) IS THE LIVE FORM: THE GALLERY LAB'S v17, PROMOTED** — _"Let's go for
-V17 and maybe we can show more, maybe 5 in total … the cards should first be a
-line and then unfold downwards."_ It retires ADR-121's flex row of strips and
-its centre-out aperture on this station; everything else ADR-121 recorded (the
-weld, the head's seat, the band's end, the glass, the dwell) stands.
+⚠ **[ADR-122 U3](../../sentinel/decisions/122-the-musings-list.md) (2026-09-25,
+owner) IS THE LIVE FORM: THE GALLERY LAB'S v10, THE LEDGER** — _"can you make
+V10 the design for the musing section on our home page; but the visual /
+diagram on the right should not have a frame around it just the diagram, and
+also make the design look less like a compass and more abstract like the
+diagrams behind our profile picture in the about section."_ **The folder skin
+goes with the card**: no glass, no lip, no bloom, no scanline, no notch — a
+ruled row is not a housing (ADR-065), so it has no material and nothing to
+frost. ⚠ **THIS REVERSES v13's OWN RULING AND THE OWNER MADE BOTH** (round six
+chose the cards over open rows on _"I'm not really a fan of horizontal dividers
+that don't close"_); he picked v10 from the gallery with v17 live beside it.
+⚠ **THE COVER LETTERS NOTHING AND DRAWS NO COMPASS** — see §The cover below.
+The U0 record follows: v17 was the list of closed folder cards, each with its
+cover in the last column and the sign on the cover's floor. It retired
+ADR-121's flex row of strips and its centre-out aperture on this station;
+everything else ADR-121 recorded (the weld, the head's seat, the band's end,
+the dwell) stands — **but not the glass, which went with the plate.**
 ⚠ **AND ADR-121's RULING ON 3D STANDS WITH IT**: ADR-119 tried a fan, a shelf
 of spines and a row tipped back about X with a scroll detent per card, and the
 owner retired all three (_"remove the jukebox carousel thing"_). **Do not
@@ -45,11 +56,11 @@ FOOTER, RISING OVER THE PINNED LIST.** ADR-119 U1's 100svh `.mu__band` and the
 footer's bed are deleted: the band was one viewport of empty stars, the dead
 space he named. Three rungs:
 
-| rung                                       | `data-mu-mode` | station              | cover      | the footer                       | glass |
-| ------------------------------------------ | -------------- | -------------------- | ---------- | -------------------------------- | ----- |
-| ≥1101, motion, live corridor, hologram era | `stage`        | transparent, z 6     | `#contact` | rises over the pinned list (z 8) | blur  |
-| 961–1100 (list pinned, no stage)           | —              | opaque               | `#musings` | rises over the pinned list (z 8) | none  |
-| ≤960 / PRM / no JS                         | —              | opaque, flowing list | `#musings` | follows in flow, no weld         | none  |
+| rung                                       | `data-mu-mode` | station              | cover      | the footer                       |
+| ------------------------------------------ | -------------- | -------------------- | ---------- | -------------------------------- |
+| ≥1101, motion, live corridor, hologram era | `stage`        | transparent, z 6     | `#contact` | rises over the pinned list (z 8) |
+| 961–1100 (list pinned, no stage)           | —              | opaque               | `#musings` | rises over the pinned list (z 8) |
+| ≤960 / PRM / no JS                         | —              | opaque, flowing list | `#musings` | follows in flow, no weld         |
 
 ⚠ The PAGE `/musings` is a different surface with a different grammar — the
 SHEET (ADR-114), [`.claude/rules/sheet.md`](sheet.md). This station is a
@@ -59,14 +70,16 @@ to the sheet's variety law. They share exactly one thing: the record.
 **Read first**
 
 - [ADR-122](../../sentinel/decisions/122-the-musings-list.md) — the list: five
-  at most, the rows solved from the count, the sign on the cover's floor, the
-  open note that stays, the line that unfolds, the orbit cover, what it
-  deleted and what is measured.
+  at most, the rows solved from the count, the open note that stays, the line
+  that unfolds, the drawn cover, what it deleted and what is measured. **U3 is
+  the live form** (the ledger, the unframed cover, the field that is not a
+  compass, and the four gates that changed with them).
 - [ADR-121](../../sentinel/decisions/121-the-musings-row-opens-on-hover.md) —
-  the row before it: the glass ruling and its perf gate, the band's end (U1),
-  the head's seat (U2) and the weld (U3), all still live.
+  the row before it: the band's end (U1), the head's seat (U2) and the weld
+  (U3), all still live. ⚠ Its GLASS ruling and its perf gate are retired with
+  the plate (ADR-122 U3).
 - [`docs/design/musings-gallery/README.md`](../../docs/design/musings-gallery/README.md)
-  — the six rounds and seventeen directions v17 won out of.
+  — the six rounds and seventeen directions v17 and v10 came out of.
 - [ADR-119](../../sentinel/decisions/119-the-musings-rack.md) — the station's
   birth: the cover lockstep, the footer's bed, the head's decode (U2), the
   aperture (U1 §4), and the three forms the owner retired.
@@ -75,55 +88,72 @@ to the sheet's variety law. They share exactly one thing: the record.
 - [ADR-114](../../sentinel/decisions/114-the-sheet.md) — the content model
   (`MusingPost`, `content/musings/*.mdx`, the registry's two traps).
 - [ADR-097](../../sentinel/decisions/097-proof-card-is-a-folder.md) — the
-  folder skin this card is cut from (glass, the flat lip, the scanline, the
-  bloom stated in pixels).
+  folder skin the NOTE was cut from until ADR-122 U3 (glass, the flat lip, the
+  scanline, the bloom stated in pixels). Its U12 photosensitivity ruling still
+  binds on this station; its material does not.
 - [ADR-030 §6](../../sentinel/decisions/030-tools-section-cover-stack.md) — the
   cover lockstep this station sits at the centre of.
 
 ## Contracts
 
-- **A NOTE IS ONE GRID, AND THE OPEN ONE GROWS ON TWO TRANSITIONS AND ONE
-  CLOCK.** `.mu-note` is `grid-template-columns: minmax(0, 1fr)
-var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
-  cover in column 2 across both rows, the excerpt (`.mu-note__open`) under the
-  row. The open note sets `--mu-note-col` from the thumbnail to
-  `--mu-note-open` and its excerpt's wrapper from `grid-template-rows: 0fr` to
-  `1fr`, both on `--mu-note-grow` (560ms `cubic-bezier(0.16, 1, 0.3, 1)` — the
-  house's expo-out, because a pointer response wants an immediate start). The
-  cover is ONE element at two sizes; nothing is posed, measured or written per
-  frame. The dials sit on `.mu`: `--mu-note-gap`, `--mu-note-inset`,
-  `--mu-note-cgap`, `--mu-note-row`, `--mu-note-open`, `--mu-note-thumb`,
-  `--mu-note-title`, `--mu-note-grow`, `--mu-foot-h`, the unfold's three, and
-  `--mu-dwell`.
+- **A NOTE IS A RULED LINE AND ONE FEATURE, AND IT GROWS ON ONE TRANSITION AND
+  ONE CLOCK (ADR-122 U3).** `.mu-note` is `grid-template-rows: var(--mu-note-row)
+auto` with a `border-top` of `--mu-rule`; the row is the link (mark · date ·
+  title · chip · length, `12px var(--mu-note-date) minmax(0,1fr) auto
+var(--mu-note-len)`) and `.mu-note__open` under it goes `grid-template-rows:
+0fr → 1fr` on `--mu-note-grow` (560ms `cubic-bezier(0.16, 1, 0.3, 1)` — the
+  house's expo-out, because a pointer response wants an immediate start).
+  Nothing is posed, measured or written per frame. ⚠ **THE COVER IS NOT A
+  COLUMN OF THE NOTE** — it lives inside the feature, so there is no thumbnail
+  and no `--mu-note-col` / `--mu-note-thumb`; those and `--mu-note-gap` are
+  DELETED, not left resolving to nothing. The dials sit on `.mu`:
+  `--mu-note-inset`, `--mu-note-cgap`, `--mu-note-row`, `--mu-note-open`,
+  `--mu-note-date`, `--mu-note-len`, `--mu-note-title`, `--mu-note-grow`,
+  `--mu-foot-h`, the unfold's three, and `--mu-dwell`.
+- ⚠ **THE RULE IS ON THE NOTE'S TOP, NOT ITS BOTTOM, AND THAT IS THE ARRIVAL'S
+  DOING.** Each note is drawn as its own top edge first and then unfolds down
+  from it, so with a `border-bottom` the 1px line the clip opens on would be
+  drawn on empty box. `.mu-note` takes `border-top`, `.mu__list` closes the set
+  with a `border-bottom`.
+- ⚠ **THE STATE IS FOUR SMALL MARKS: the 8px diamond fills, the date and the
+  chip go `--gold-ink`, the row's ink comes up.** Never a fill and never a
+  filter — ADR-097 U12's photosensitivity ruling binds here too, and the note
+  itself may not take a ground in ANY state (that is what the folder plate was).
+  The source test fails a `background` on `.mu-note` and the capture fails a
+  ground, a background image or a clip on any note.
 - ⚠ **FIVE AT MOST, AND ON THE PINNED RUNG THE ROWS ARE SOLVED FROM THE COUNT
-  (ADR-122).** `MUSINGS_LIST_MAX` is 5 (the owner's number). `.mu[data-mu-ready]
-.mu__notes` is a SIZE container from the head to the rails' last tick, and
-  `100cqh` is its height: the open card's floor (`--mu-note-open-min`,
-  `clamp(180px, 20svh, 240px)`) and the way out's row (`--mu-foot-h`) are paid
-  first, the closed rows share the rest at v4's 8.6svh where they can (never
-  under 64px nor over 108px), and the open cover takes what the rows leave, up
-  to 240px. The station hands the count as `--mu-n`; the two files move
+  (ADR-122 → U3's numbers).** `MUSINGS_LIST_MAX` is 5 (the owner's number).
+  `.mu[data-mu-ready] .mu__notes` is a SIZE container from the head to the
+  rails' last tick, and `100cqh` is its height: the open feature's floor
+  (`--mu-note-open-min`, `clamp(190px, 22svh, 260px)`) and the way out's row
+  (`--mu-foot-h`) are paid first, the closed rows share the rest at the
+  ledger's 6.4svh where they can (never under 44px nor over 68px), and the
+  feature takes what the rows leave, up to 260px. ⚠ **THE TERM SUBTRACTED PER
+  ROW IS 1px, NOT A GAP** — the ledger's rows touch and each carries its own
+  rule. The station hands the count as `--mu-n`; the two files move
   together. ⚠ Custom properties substitute where they are USED, so `100cqh`
   inside `--mu-note-row` resolves against the notes' box even though a row
   reads it — making a note or a row a size container would silently re-base
   it. ⚠ **BELOW ~1000px OF HEIGHT FIVE DO NOT FIT** and the list scrolls within
   itself (a thin scrollbar); at the owner's 1920×1247 five end ON the rails'
   last tick with no scroll. Open, ADR-122.
-- ⚠ **THE TITLE IS v4's SCALE, SET WHOLE** —
-  `min(clamp(22px, 2.5vw, 48px), calc((var(--mu-note-row) - 26px) * 0.9))`,
-  capped by what the row leaves above the meta line, so a short row sets a
-  smaller title rather than a clipped one. `nowrap` + ellipsis is a BELT: the
-  capture fails the run on any cut title. On the phone titles wrap at
-  `clamp(20px, 5.4vw, 26px)` and the chip is hidden.
-- ⚠ **THE SIGN ENDS ON THE COVER'S FLOOR, BY ARITHMETIC** (the owner's ask:
-  _"the call to action and the author should be aligned to the bottom of that
-  visual"_). The cover spans both rows from 10px down at `aspect-ratio: 1`;
-  `.mu-note__detail`'s height is `open + 10px + inset − row` with the inset as
-  bottom padding, so its content box ends where the cover does, and
-  `.mu-note__sign` is `margin-top: auto`. ⚠ **THE DETAIL'S GAP IS A MINIMUM
-  (12px), NEVER A SPACING** — at 28px a three-line excerpt pushed the sign 7.9px
-  under the floor at 1920×1247. The capture gates the offset (±1.5px) on every
-  open note at rest, on hover and on Tab; it measures 0.
+- ⚠ **THE TITLE RIDES ITS ROW, SET WHOLE** —
+  `min(clamp(20px, 1.7vw, 32px), calc(var(--mu-note-row) * 0.58))`, so a short
+  row (more notes, a shorter frame) sets a smaller title rather than a clipped
+  one. `nowrap` + ellipsis is a BELT: the capture fails the run on any cut
+  title, and its floor is 18px (the narrowest rung sets 20). On the phone
+  titles wrap at `clamp(20px, 5.4vw, 26px)` and the chip is hidden. ⚠ **THE
+  DENSITY IS BOUGHT IN ROWS, NOT IN TYPE** — v4's 48px ceiling went with v17's
+  two-line cards, and five one-line notes leave the feature a floor those could
+  not.
+- ⚠ **THE COPY IS SEATED AT THE TOP OF THE FEATURE AND THE AIR FALLS BELOW IT**
+  (the ledger's own round-four ruling: `space-between` put the way in on the
+  floor and left the room between it and the excerpt as a hole). ⚠ **THIS
+  RETIRES U0's SIGN-ON-THE-COVER'S-FLOOR ARITHMETIC** — `.mu-note__detail`'s
+  height is `var(--mu-note-open)` flat, and the capture's `signFloor` gate asks
+  that the sign is INSIDE the feature rather than on its floor. ⚠ **THE COPY IS
+  INDENTED ONTO THE TITLE'S OWN COLUMN** (`12px + --mu-note-date + 2 ×
+--mu-note-cgap`), so the ledger reads as one ruled table.
 - **THE OPEN NOTE IS ONE ATTRIBUTE, `data-mu-open`, RENDERED ON THE NEWEST
   POST AND MOVED BY THE WRITER.** No timer, never a wall-clock rotation
   (ADR-021). React renders it on index 0 so SSR, no-JS and a reduced-motion
@@ -152,25 +182,24 @@ var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
   plus **3px — half the page's 6px scrollbar, across which the 100vw station is
   centred and the fixed rail is not.** The capture asks ≥ 12px at rest, on
   hover and on Tab (17.9 at 1280×720 on the landing).
-- **THE MATERIAL IS THE PROOF CARD'S FOLDER, RE-SOLVED FOR THIS SIZE
-  (ADR-097).** `--mu-plate` is `rgba(--void-deep-rgb, .62)` (.9 on parchment,
-  `theme.css` BLOCK 4g — unfrosted); the lip is FLAT,
-  `color-mix(in srgb, var(--gold-line) 30%, transparent)` at rest rising to
-  `--gold-line` on the open note (a `background-color` on the ring, so it
-  transitions); the plate's 1px/3px gold scanline sits UNDER the copy; the
-  bloom is stated in PIXELS. ⚠ NO `brightness()`. ⚠ **THE STATE IS THE RING,
-  THE INK AND THE CHIP, NEVER A FILTER** — a large-area brightness change on
-  every hover is the class of motion ADR-097 U12 retired. The open note's chip
-  goes gold-ink.
-- ⚠ **THE GLASS IS ON THE STAGE RUNG ONLY, AND IT IS MEASURED, NOT ASSUMED.**
-  `backdrop-filter: blur(--mu-blur)` under `@supports`, on
-  `#musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note` — where there is
-  a live corridor to blur. At 961–1100 the station is opaque; light drops it in
-  `theme.css` BLOCK 4g with a selector that OUT-RANKS the sheet's, or it loses
-  silently. `capture-musings-row.mjs --perf` gates the long-frame share while
-  the pointer sweeps the list against the proof card's recorded 15 % — 0 % at
-  1920×1247 (ADR-122). **The recorded fallback if it ever fails is the blur on
-  the OPEN note alone.**
+- ⚠ **THERE IS NO MATERIAL: THE NOTE IS A HAIRLINE AND ITS INK (ADR-122 U3).**
+  ADR-097's folder at list scale — `--mu-plate` at .62, the flat
+  `color-mix()` lip, the 1px/3px gold scanline, the pixel-stated bloom, the
+  top-right notch and its two-contour `evenodd` ring — went with v17 when the
+  owner picked the ledger, and the tokens are DELETED rather than zeroed
+  (`--mu-plate`, `--mu-lip`, `--mu-blur`, `--mu-glass-a`, `--mu-bloom-a`,
+  `--mu-ch`, `--mu-chi`). `--mu-edge` stays: the way out is a CONTROL, not a
+  card. What the source test and the capture both fail is any of them coming
+  back on a ruled row.
+- ⚠ **AND THERE IS NO GLASS.** ADR-121's frost existed because the note was a
+  PLATE over a live corridor and had to be told from it; a hairline has nothing
+  to be told apart from, and a `backdrop-filter` on a box with no fill frosts
+  nothing while still costing a per-frame snapshot (ADR-056's measurement).
+  ⚠ **THE GATE INVERTED RATHER THAN BEING DELETED** — a frost that came back
+  would be the plate returning under another name — and `theme.css` BLOCK 4g
+  is down to the cover's one gold FILL. `--perf` still measures the long-frame
+  share while the pointer sweeps the list; there is nothing left for it to
+  blame, which is the point.
 - **EVERY NOTE IS A REAL LINK AND EVERY NOTE IS FOCUSABLE.** The row
   (`.mu-note__row`) is the note's link; the open note's "Read the note" is a
   second link to the same page, hidden with its excerpt while closed
@@ -237,7 +266,7 @@ var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
 - ⚠ **AN ABSENT `data-mu-ready` MEANS SHOWN.** The rest state — no script, a
   reduced-motion reader, any phone — is the same LIST, flowing, with its newest
   note open, and it is the finished page rather than a fallback. Every
-  pinned-list rule (the rows solved from the frame, the glass, the arrival) is
+  pinned-list rule (the rows solved from the frame, the arrival) is
   gated on the stamp AND on the rung, so the two can never disagree about which
   layout is live; `musings-row.test.ts` walks every such declaration.
 - ⚠ **THE RUNG IS MIRRORED BY HAND** between `MUSINGS_ROW_MEDIA` in the writer
@@ -379,11 +408,15 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   glitch effect, and then the cards should come into view"_) and his gesture
   (_"the cards should first be a line and then unfold downwards"_; the
   centre-out aperture read as "a scan line … a bit cringe"). The writer holds
-  `data-mu-arrive="in"` until the head's level is 1. `mu-unfold` is a
-  five-point `clip-path` set, interpolated vertex for vertex: 0 % a zero-width
-  1px line at the top-left, **40 % the full-width top edge**, 100 % the notched
-  plate STRING-EQUAL to the cascade's clip. `mu-unfold-lip` lights the ring
-  `--gold-line` while the note is a line, so it reads as an edge being drawn.
+  `data-mu-arrive="in"` until the head's level is 1. `mu-unfold-rect` is an
+  `inset()` set: 0 % a zero-width 1px line at the top-left, **40 % the
+  full-width top edge**, 100 % the whole box. `mu-unfold-edge` lights the
+  note's own `border-top-color` to `--gold-line` while it is a line, so it
+  reads as an edge being drawn. ⚠ **AN `inset()` SINCE ADR-122 U3, AND THE
+  NOTCHED PAIR IS DELETED** — `mu-unfold` / `mu-fold` were five-point polygons
+  whose only non-rectangular term was `--mu-ch`, so with no notch they
+  interpolate identically to the rect pair the way out already used, and
+  keeping them would have left a silhouette term alive that nothing draws.
   Each note runs `--mu-unfold-in` (820ms, the house's ease-in-out — an arrival
   the reader did not cause wants to start soft) `--mu-slot × --mu-unfold-step`
   (90ms) after the one above, fill `backwards` (a waiting note is a zero-width
@@ -405,29 +438,40 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   animation (`getAnimations({ subtree: true })` — the lip animates a
   pseudo-element) — never sleep. ⚠ **And it waits `state: "attached"`**: the
   notes are hidden while the arrival AWAITS, so a visibility wait times out.
-- **The note takes ONE notch, TOP-RIGHT** — his corner every time (ADR-097's
-  proof card, ADR-098 U5's plates, ADR-082 U37's record cards). ⚠ A clip CUTS a
-  border and never strokes one, so the fill is clipped and the edge is a closed
-  two-contour `evenodd` RING on `::before`, inner leg `ch − 0.586px`. ⚠ The
-  corner is pinned from BOTH ENDS and it is HIT-TESTED, not parsed — a computed
-  `clip-path` keeps its percentages and `calc()`s. ⚠ The note's own box carries
-  the clip, the ring and the glass: ADR-121's separate face span existed only
-  because the card's box was the one growing, and nothing grows the note's box
-  sideways now.
-- **The cover draws the RECORD, in the About drawing's grammar**
-  (`lib/musings/orbit.ts` + `MusingOrbit.tsx`, ADR-122): six rings on the
-  alternating dash ladder, twenty rim ticks and four cardinal stubs, a
-  twelve-month halo with the note's month lit, the year's OTHER notes as dots
-  on the outer ring, the note's day on the gold track with the year's elapsed
-  arc and a hand, the beat glyph at the centre; DOM labels for the day of the
-  year, the year and the quarter months. ⚠ COPIED, NEVER IMPORTED (ADR-106):
-  the About drawing and the beat glyph's grammar (`rail-instruments/
-sectionGlyphs.tsx`) are both hand-copies. ⚠ A post with no Arc tag draws NO
-  glyph. ⚠ **ONE ELEMENT AT TWO SIZES**: `@container mu-cv (max-width: 140px)`
-  strips `.mu-cv-detail`, the labels and the quarters, leaving the gold track,
-  the inner ring and the glyph as the thumbnail. ⚠ The cover is UNFRAMED — no
-  border, no ground; the note is the frame (the owner, round six), and the
-  capture fails either.
+- ⚠ **THE NOTE HAS NO CORNER (ADR-122 U3).** ADR-097's top-right notch went
+  with the plate — a ruled row is not a housing (ADR-065) — and so did the
+  capture's `notchPaint` gate. ⚠ `readNotch` STAYS ON DISK AND INERT: it is the
+  one probe on this surface that got the chamfer's `ch × 0.5` trap right, and a
+  station that grows a housing again wants it back rather than re-derived. What
+  guards the absence is the per-note MATERIAL gate (no ground, no background
+  image, no clip, a rule ≥ 1px).
+- **The cover is a FIELD, not an instrument** (`lib/musings/orbit.ts` +
+  `MusingOrbit.tsx`, ADR-122 U3 — the owner: _"less like a compass and more
+  abstract, like the diagrams behind our profile picture in the about
+  section"_): About's six rings on the alternating dash ladder, the note's YEAR
+  as one tilted ellipse threading them, the elapsed part of that year in gold,
+  the note's body on its own day with a corona, the year's OTHER notes as open
+  dots on the same orbit, and About's dust. ⚠ **NOTHING TAKES A BEARING** — the
+  graduated rim, the four cardinal stubs, the four spokes, the HAND and the
+  quarter-month labels are deleted, and so is the beat mark, which for three
+  notes in five was literally a compass needle. ⚠ **THE COVER LETTERS NOTHING
+  AT ALL**: the row prints the date, the beat and the length an inch to its
+  left (ADR-064 U1 — _if a panel seems to need a second designation, the
+  question is what the first one failed to say_), and `BEAT_PATHS` /
+  `ENCODE_CELLS` moved to the gallery lab, their only remaining consumer.
+  ⚠ COPIED, NEVER IMPORTED (ADR-106). ⚠ **TWO SEEDS AND NEITHER IS THE DATE** —
+  tilt and flattening off one number move together, and the date is already
+  drawn twice (the arc's length, the body's seat). ⚠ **THE DASHES ARE SCALED
+  AND THE RADII ARE NOT** (`DASH_K` 2): this crop renders at 0.45–0.57 of
+  About's scale, where its `1 7` paints a 0.5px dash and the interior rings are
+  simply absent — ADR-070 U16's finding, and the answer is the UNIT, never a
+  second alpha. ⚠ **THE ORBIT SITS INSIDE THE FIELD** (`rx 142`): at 168 its
+  apsides landed on About's 172 ring and the year read as a lasso thrown over
+  the drawing. ⚠ **ABOUT'S GOLD RUNGS ARE QUIETER HERE THAN THERE**, because
+  this drawing has a gold RECORD and that one does not (ADR-063's one-lit-thing
+  law); the elapsed arc is 1.4px, not 2. ⚠ The cover is UNFRAMED — no border,
+  no ground, no well, no notch (the owner: _"just the diagram"_) — and the
+  capture fails either declaration, on the cover AND on the note.
 - ⚠ **NO `new Date()` ANYWHERE IN THIS MODULE.** An ISO date with no zone parses
   as UTC and renders a day earlier west of Greenwich — a day on the kicker, and
   across a year boundary the whole width of the plot on the mark. Both read the
@@ -450,8 +494,8 @@ sectionGlyphs.tsx`) are both hand-copies. ⚠ A post with no Arc tag draws NO
   PRODUCTION station — nothing re-drawn — with seven placeholder records
   (`placeholders.ts`), `?n=3|5|7`, `?theme=light`, `?console=0`. It supplies the
   DOM the writer reads (a hidden `#voidwalker[data-vw-mode="hologram"]` marker
-  and `data-corridor-exit` on `<html>`), so the station goes transparent and the
-  glass has the lab's BED to blur. A window onto production, not a copy.
+  and `data-corridor-exit` on `<html>`), so the station goes transparent over
+  the lab's own BED. A window onto production, not a copy.
 
 - **`MusingsStation`'s `gallery` slot is a LAB SEAM, and production never
   fills it.** Given a node it takes the place of the list AND the way out, so
@@ -540,10 +584,22 @@ view())` and the rung. ⚠ Never `opacity` on the stage (glass notes,
   capture reads both on every probe point and reports whether they agree; the
   plural form stays the one the gate uses.
 - ⚠ **A PROBE AT `ch × 0.5` LANDS EXACTLY ON THE CHAMFER'S DIAGONAL** and
-  resolves by rounding. Deleted: the `tr` probe at 30 % along the cut is the
-  question. **A gate whose answer depends on which side of a pixel a device
-  lands is not a gate.** ⚠ And the notch is asked of the NOTE, which carries
-  the clip.
+  resolves by rounding; the `tr` probe at 30 % along the cut is the question.
+  **A gate whose answer depends on which side of a pixel a device lands is not
+  a gate.** ⚠ Recorded for the next housing: `_readNotch` is inert since ADR-122
+  U3 (the ledger's note has no corner), and it is kept rather than deleted
+  precisely because this finding is expensive to re-derive.
+- ⚠ **THE HOVER PROBE'S TARGET GOES STALE DURING THE MOVE (ADR-122 U3).**
+  Opening a note collapses whichever note was open before it, so when that note
+  is ABOVE, the list slides up by `open − closed` — 260px at 1920×1247, against
+  272 under v17's cards, so it is the FORM's behaviour, not the ledger's. A
+  four-step `mouse.move` fires its steps ~17ms apart against a 560ms
+  transition, so each lands on a layout that is still moving. The probe moves,
+  lets the list settle, and re-aims ONCE at the wanted row's current seat —
+  never in a loop, which would turn "the pointer opens the note under it" into
+  "keep poking until it does". ⚠ **v17 PASSED THE SAME GATE BY ARITHMETIC
+  LUCK**, which is why the failure had to be stashed-and-re-run before it was
+  believed.
 - ⚠ **A RANGE'S CLIENT RECTS ARE THE LAYOUT, NOT THE CLIP.** That is what let
   ADR-121's capture ask the no-reflow question from inside a strip, and what
   lets the list's count a title's LINES: `overflow: hidden` never shrinks the
@@ -577,17 +633,16 @@ npx playwright test tests/visual/mobile-section-seams.spec.ts \
 node scripts/capture-musings-row.mjs --vp 1920x1247 --theme dark --perf   # and light, 1280x720, 390x844
 node scripts/capture-musings-row.mjs --lab --n 5 --vp 1920x1247 --theme dark   # the placeholder host
 node scripts/capture-musings-row.mjs --lab --n 7 --vp 1280x720 --theme dark    # the narrowest open card
-# the capture gates (ADR-122): note 0 open at rest; every title whole on one
-# line and none cut; every row a focusable link; the covers unframed, one
-# thumbnail size, the open one square and grown; the notes inside the rails'
-# last tick; five notes not scrolling on a frame >= 1000px tall; the sign on
-# the cover's floor (±1.5px) at rest, on hover and on Tab; hover opens note 2
-# and closes note 0, and leaving keeps note 2 open; Tab into note 1 opens it;
-# glass on every note on the stage rung in dark, on none in light or under
-# reduced motion; the head EMPTY off the pin and whole through the dwell; the
-# TR-only notch hit-tested from both ends; the readout; every note >= 12px
-# clear of the right rail's readouts; the title's top on --band-top (ADR-121
-# U2); and the RISE (ADR-105 U4) — see §The rise.
+# the capture gates (ADR-122 -> U3): note 0 open at rest; every title whole on
+# one line and none cut; every row a focusable link; the covers AND the notes
+# unframed (no border, no ground, no image, no clip; a rule >= 1px), the open
+# cover square and inside its own note; the notes inside the rails' last tick;
+# five notes not scrolling on a frame >= 1000px tall; the sign INSIDE the
+# feature at rest, on hover and on Tab; hover opens note 2 and closes note 0,
+# and leaving keeps note 2 open; Tab into note 1 opens it; NO glass anywhere;
+# the head EMPTY off the pin and whole through the dwell; the readout; every
+# note >= 12px clear of the right rail's readouts; the title's top on
+# --band-top (ADR-121 U2); and the RISE (ADR-105 U4) — see §The rise.
 node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # the footer's own contrast + plate
 # The gallery lab (/test/musings-gallery) — the directions under the head, on
 # the production station's `gallery` slot. Only the control (v0) fails the run;
@@ -605,11 +660,16 @@ node scripts/design-eval/mechanical.mjs --url / --theme light --scope ".mu" --pr
 node scripts/design-eval/mechanical.mjs --url /test/musings-row --theme dark --scope ".mu"
 ```
 
-⚠ **IT FAILS WITH SIX FINDINGS IN EACH THEME, AND THOSE SIX ARE KNOWN (ADR-119
-U3, 2026-09-22).** They are the title's gold glow (×5, the house display recipe
-the gate bans; the services masthead lists the same five) and the coord stamps
-at 1.43 / 1.40:1 (faint by the survey grammar). Both are open owner calls. A
-SEVENTH finding is a regression.
+⚠ **IT FAILS WITH SEVEN FINDINGS IN EACH THEME, AND THOSE SEVEN ARE KNOWN
+(ADR-119 U3, 2026-09-22; the count corrected against the baseline 2026-09-25).**
+They are the title's gold glow (×5, the house display recipe the gate bans; the
+services masthead lists the same five), the coord stamps at 1.43 / 1.40:1
+(faint by the survey grammar), and `accent` on `.mu-note__read` — the way in is
+the proof card's outlined gold button and the gate counts a gold border as an
+accent object. All three are open owner calls. ⚠ The record said SIX until
+2026-09-25; it was seven on `main` the whole time, and the way to find that out
+was to stash and re-run rather than to blame the pass in front of you. An
+EIGHTH finding is a regression.
 
 ⚠ **Every `--mu-ink-*` rung is TEXT.** The third is .54 here and .62 on
 parchment (`theme.css` BLOCK 4e). A drawing that wants a quieter ink takes

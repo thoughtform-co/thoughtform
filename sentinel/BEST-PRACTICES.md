@@ -1865,6 +1865,40 @@ and `shouldRestore` compared `vw` alone — so a rest at 390×844 replayed into 
 made; when a record carries a dimension, the predicate that consumes it walks
 every dimension it carries, and the unit test asks about each one.
 
+## A probe's target goes stale while its own move is still running (ADR-122 U3, 2026-09-25)
+
+The musings list opens the note under the pointer and collapses whichever note
+was open before it — so when that note is ABOVE, the whole list slides up by
+`open − closed` (260px). A `mouse.move(x, y, { steps: 4 })` fires its steps
+~17ms apart against a 560ms transition, so every step lands on a layout that is
+still moving and the last one RESTS over a different element than the one it
+was aimed at. The gate had been green for the form before it by arithmetic
+luck, not because the coordinate was sound.
+
+**Why it matters:** a coordinate read before an interaction is a fact about the
+layout the interaction is about to change, and a synthetic pointer is the one
+kind of user who never corrects. Resolve it the way a hand does — move, let the
+layout SETTLE, and if the wrong thing responded, re-aim ONCE at the target's
+current seat. **Once, never in a loop:** a retry loop turns "the pointer opens
+the thing under it" into "keep poking until it does", which is a gate that
+cannot fail. And when a gate that has been green goes red on a redesign, stash
+and re-run before believing either answer — here it proved the failure real and,
+separately, that a neighbouring gate's recorded "six known findings" had been
+seven on `main` the whole time.
+
+## A guard whose clause lost its subject is deleted, and its hard-won probe is kept (ADR-122 U3, 2026-09-25)
+
+Promoting the ledger took the note's folder plate, and with it the top-right
+notch the capture hit-tested from both ends. The gate had nothing left to ask.
+Deleting the gate is right; deleting `readNotch` with it would have thrown away
+the one probe on that surface that got the chamfer's `ch × 0.5` rounding trap
+right. It stays on disk as `_readNotch`, inert and named so the linter leaves
+it, with the reason written at the call site — and what replaces it asks the
+question one level up: the note may paint no ground, no background image and no
+clip, and must draw a rule. **A material gate outlives the shape gate**, because
+it fails on the deleted thing COMING BACK rather than on the shape it happened
+to have.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1873,4 +1907,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-25 (ADR-125 U1, ADR-107 U2)_
+_Last updated: 2026-09-25 (ADR-122 U3, ADR-125 U1, ADR-107 U2)_

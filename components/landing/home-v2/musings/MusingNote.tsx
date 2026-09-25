@@ -7,22 +7,26 @@ import type { MusingCardData } from "@/lib/musings/types";
 import { MusingOrbit } from "./MusingOrbit";
 
 /**
- * One note in the list (ADR-122 — the gallery lab's v17, the owner's pick:
- * "Let's go for V17").
+ * One note in the list (ADR-122 U2 — the gallery lab's v10, the LEDGER, the
+ * owner's pick on 2026-09-25: "can you make V10 the design for the musing
+ * section on our home page").
  *
- * A folder card: the note's title set large on one line (v4's scale — "what I
- * like about v4 still is the big title size") over its one meta line, the
- * beat as a bracketed chip, and its drawn cover in the card's last column.
- * The OPEN card grows: the cover column widens from the thumbnail to the
- * feature, the excerpt unrolls under the title, and the byline and the way in
- * sit on the cover's floor (the owner: "the call to action and the author
- * should be aligned to the bottom of that visual").
+ * A ruled row, one line: the state mark, the filing date in its own column,
+ * the title, the beat as a bracketed chip, the length. The row under the
+ * pointer OPENS downward into a compact feature — the excerpt with the byline
+ * and the way in under it, indented to the title's own column, and the note's
+ * drawn cover a square at the row's end.
  *
- * ⚠ **ONE COVER, TWO SIZES.** The cover is ONE element seated across both of
- * the card's rows; the thumbnail IS the feature's cover, grown — nothing
- * appears beside it (ADR-069's persistent object). ⚠ **AND NO FRAME OF ITS
- * OWN** (owner: "we already have an overarching frame") — the drawing sits on
- * the card's glass.
+ * ⚠ **THE ROW LETTERS THE RECORD AND THE DRAWING DOES NOT** (ADR-122 U2). The
+ * date, the beat and the length are in the row, an inch to the left of the
+ * cover, so the cover carries no designation, no quarter label and no beat
+ * mark — three said-twice defects at once, and the surface has removed a
+ * console head, a foot and a designator for exactly that (ADR-064 U1).
+ *
+ * ⚠ **AND THE COVER HAS NO FRAME** (owner, same read: "the visual / diagram on
+ * the right should not have a frame around it just the diagram"). No border,
+ * no well, no notch: the drawing sits on the station's own ground, and the
+ * capture fails a border or a background on `.mu-note__cover`.
  *
  * ⚠ **`data-mu-open` IS RENDERED ON THE NEWEST NOTE AND MOVED BY THE WRITER**
  * — the rest state (the newest open, no timer), so SSR, no script and reduced
@@ -30,7 +34,7 @@ import { MusingOrbit } from "./MusingOrbit";
  * has not changed, so the writer's move survives every re-render.
  *
  * ⚠ **EVERY NOTE IS A REAL LINK.** The row is the link; the way in repeats it
- * inside the open card, where the closed cards' copy is `visibility: hidden`
+ * inside the open card, where the closed rows' copy is `visibility: hidden`
  * and so out of the tab order.
  *
  * ⚠ **`--mu-slot` IS THE ARRIVAL'S STAGGER**, the note's place in the list —
@@ -60,20 +64,10 @@ export function MusingNote({
       data-mu-open={index === 0 ? "" : undefined}
       style={{ "--mu-slot": index } as CSSProperties}
     >
-      <div className="mu-note__cover" aria-hidden="true">
-        <MusingOrbit post={post} posts={posts} />
-      </div>
       <a className="mu-note__row" href={href}>
-        <span className="mu-note__text">
-          <span className="mu-note__title">{post.title}</span>
-          <span className="mu-note__meta">
-            {rackDate(post.date)}
-            <span className="mu-note__dot" aria-hidden="true">
-              ·
-            </span>
-            {post.readingMinutes} min read
-          </span>
-        </span>
+        <span className="mu-note__mark" aria-hidden="true" />
+        <span className="mu-note__date">{rackDate(post.date)}</span>
+        <span className="mu-note__title">{post.title}</span>
         <span className="mu-note__chip">
           <span className="mu-note__b" aria-hidden="true">
             [
@@ -83,19 +77,29 @@ export function MusingNote({
             ]
           </span>
         </span>
+        <span className="mu-note__len">{post.readingMinutes} min</span>
       </a>
       <div className="mu-note__open">
         <div className="mu-note__inner">
           <div className="mu-note__detail">
-            <p className="mu-note__lede">{post.summary}</p>
-            <div className="mu-note__sign">
-              <span className="mu-note__by">
-                <span className="mu-note__by-k">By</span> {post.author}
-              </span>
-              <a className="mu-note__read" href={href}>
-                Read the note
-                <span className="mu-note__arrow" aria-hidden="true" />
-              </a>
+            {/* ⚠ ONE STACK, SEATED AT THE TOP (the ledger's own round-four
+                ruling): `space-between` put the way in on the row's floor and
+                left the room between it and the excerpt as a hole. The air
+                falls BELOW the block, where it is the row's. */}
+            <div className="mu-note__copy">
+              <p className="mu-note__lede">{post.summary}</p>
+              <div className="mu-note__sign">
+                <span className="mu-note__by">
+                  <span className="mu-note__by-k">By</span> {post.author}
+                </span>
+                <a className="mu-note__read" href={href}>
+                  Read the note
+                  <span className="mu-note__arrow" aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+            <div className="mu-note__cover" aria-hidden="true">
+              <MusingOrbit post={post} posts={posts} />
             </div>
           </div>
         </div>

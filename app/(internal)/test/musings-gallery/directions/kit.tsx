@@ -2,11 +2,12 @@
 
 import { useEffect, type CSSProperties, type RefObject } from "react";
 
-import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingOrbit";
 import { rackDate } from "@/lib/musings/cards";
 import { beatOf, coverSpec, yearFraction, type MusingBeat } from "@/lib/musings/cover";
 import type { MusingOutline } from "@/lib/musings/outline";
 import type { MusingCardData } from "@/lib/musings/types";
+
+import { BEAT_PATHS, ENCODE_CELLS } from "./beatPaths";
 
 /**
  * The gallery lab's shared parts — what every direction draws the SAME way, so

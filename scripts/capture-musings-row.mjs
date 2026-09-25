@@ -375,7 +375,7 @@ const readRow = () =>
         const title = n.querySelector(".mu-note__title");
         const row = n.querySelector(".mu-note__row");
         const lede = n.querySelector(".mu-note__lede");
-        const meta = n.querySelector(".mu-note__meta");
+        const meta = n.querySelector(".mu-note__date");
         const coverEl = n.querySelector(".mu-note__cover");
         return {
           i,
@@ -383,7 +383,13 @@ const readRow = () =>
           box: box(n),
           transition: s.transitionProperty,
           backdrop: s.backdropFilter || s.webkitBackdropFilter || "none",
-          lip: getComputedStyle(n, "::before").backgroundColor,
+          /* ⚠ THE NOTE'S OWN MATERIAL (ADR-122 U3): a ruled row, so a rule and
+             NO ground. The folder plate is what a half-reverted promotion
+             brings back, and it paints without erroring. */
+          ground: s.backgroundColor,
+          groundImage: (s.backgroundImage || "none").slice(0, 12),
+          rule: s.borderTopWidth,
+          clip: s.clipPath,
           title: inkOf(title),
           /* nowrap + ellipsis: a cut title is one whose content outruns its box. */
           titleCut: title ? title.scrollWidth > title.clientWidth + 1 : null,
@@ -411,7 +417,7 @@ const readRow = () =>
  * and the corner is pinned from BOTH ENDS, because "the TR is cut" passing
  * tells you nothing if the other three are cut too (ADR-065 U5's own lesson).
  */
-const readNotch = () =>
+const _readNotch = () =>
   page.evaluate(() => {
     /* The note carries the clip itself: its own box is the plate (ADR-122 —
        ADR-121's face span went with the grow it was separated from). */
@@ -645,10 +651,29 @@ if (!phone && rest.notes.length >= 2) {
       window.__muTrace.push(`${at()} scroll ${Math.round(scrollY)}`)
     );
   });
+  /* ⚠ THE TARGET GOES STALE DURING THE MOVE, AND RE-AIMING ONCE IS THE HONEST
+     PROBE. Opening a note collapses whichever note was open before it, so when
+     that note is ABOVE, the whole list slides up by `open − closed` — 260px at
+     1920×1247 (272 under v17's cards, so this is the form's own behaviour and
+     not the ledger's). A four-step mouse move fires its steps ~17ms apart
+     against a 560ms transition, so every step lands on a layout that is still
+     moving and the last one rests over a DIFFERENT note than the one it was
+     aimed at. A hand does the same thing and then corrects; so does this. The
+     gate's question is what a RESTING pointer opens, so the probe moves, lets
+     the list settle, and if the wrong note is open re-aims ONCE at the wanted
+     row's CURRENT seat. ⚠ Once, never in a loop: a second correction would
+     turn "the pointer opens the note under it" into "keep poking until it
+     does", which is a gate that cannot fail. */
   const target = await rowCentre(want);
   if (target) await page.mouse.move(...target, { steps: 4 });
   await page.waitForTimeout(GROW_MS + 150);
   hover = await readRow();
+  if (hover.open !== want) {
+    const settled = await rowCentre(want);
+    if (settled) await page.mouse.move(...settled, { steps: 1 });
+    await page.waitForTimeout(GROW_MS + 150);
+    hover = await readRow();
+  }
   await page.screenshot({ path: `${OUT}/mu-${tag}-hover.png` });
   /* Leave the list: back to the margin. The note stays open (ADR-122). */
   await page.mouse.move(8, Math.round(H / 2), { steps: 4 });
@@ -693,11 +718,13 @@ if (!phone && rest.notes.length >= 2) {
   }
 }
 
-/* ⚠ THE NOTCH IS READ WHILE THE ROW IS ON SCREEN AND AT REST. `elementsFromPoint`
-   works in the VISUAL viewport: read after the footer walk, the open card is
-   two viewports above the frame and every probe lands outside it. */
-const notch = await readNotch();
-
+/* ⚠ THE NOTCH GATE IS DELETED WITH THE NOTCH (ADR-122 U3). It hit-tested the
+   note's top-right cut from both ends, and the ledger's note has no corner at
+   all — a ruled row is not a housing (ADR-065). `_readNotch` stays on disk and
+   inert: it is the one probe on this surface that got the chamfer's
+   `ch × 0.5` trap right, and a station that grows a housing again wants it
+   back rather than re-derived. What replaces it is the per-note material gate
+   above, which fails on a clip coming back. */
 /* Past the list: the document's end, where the footer fills the frame, then
    BACK UP into the rise — the footer must lift off a whole list, not a folded
    one (ADR-105 U4: the footer covering the list is its only exit at the
@@ -761,13 +788,8 @@ line(`head      ${JSON.stringify(first.head)} · display ${first.titlePx}px`);
 line(
   `notes     ${first.notes.length} · type ${first.notes[0]?.titlePx}/${first.notes[0]?.ledePx}/${first.notes[0]?.metaPx}px`
 );
-line(
-  `notch     ch ${notch?.ch} · mid ${notch?.mid} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br}`
-);
-line(`notch     hits ${JSON.stringify(notch?.hits)}`);
-line(
-  `notch     singular/plural agree ${notch ? ["tl", "tr", "bl", "br", "mid"].map((k) => `${k}:${notch[`${k}Agree`] ? "y" : "N"}`).join(" ") : "—"}`
-);
+line(`notch     none — the ledger's note is a ruled row (ADR-122 U3)`);
+
 line("");
 line(
   "  p      landed  ready  pinned open  arrive  head (level · text)              ambient/exit  readout   #contact"
@@ -782,8 +804,10 @@ for (const s of walk) {
   );
 }
 
-/* The open note's sign against its cover's floor: the owner's ask ("the call
-   to action and the author … aligned to the bottom of that visual"). */
+/* How far the open note's sign ends ABOVE its feature's floor — positive is
+   an overrun, which is the failure (ADR-122 U3: the ledger seats its copy at
+   the TOP and the air falls below it, so a floor-equality gate has no clause
+   here any more). */
 const floorOf = (r) => {
   const c = r?.notes.find((n) => n.open);
   return c && c.sign && c.cover
@@ -813,10 +837,10 @@ const showNotes = (label, r) => {
   for (const c of r.notes) {
     line(
       `  ${c.i}${c.open ? "*" : " "} h ${String(c.box?.h).padEnd(7)} title ${c.titlePx}px cut ${c.titleCut}  ` +
-        `cover ${c.cover?.w}×${c.cover?.h}  glass ${c.backdrop.slice(0, 12).padEnd(12)} lip ${c.lip}`
+        `cover ${c.cover?.w}×${c.cover?.h}  rule ${String(c.rule).padEnd(5)} ground ${String(c.ground).padEnd(20)} clip ${c.clip}`
     );
   }
-  line(`  sign → cover floor ${floorOf(r)}px`);
+  line(`  sign → feature floor ${floorOf(r)}px (negative is clear)`);
 };
 showNotes("rest", rest);
 showNotes("hover note 2", hover);
@@ -982,29 +1006,36 @@ if (!phone) {
   /* ── REST: the newest note open; every title whole; every note a link. ── */
   if (rest.open !== 0) fails.push(`note ${rest.open} is open at rest, not note 0`);
   if (rest.notes.some((c) => !c.tabbable)) fails.push("a note's row is not a focusable link");
-  if (rest.notes[0] && !/grid-template-columns/.test(rest.notes[0].transition))
-    fails.push(`the note transitions ${rest.notes[0].transition}, not its cover column`);
+  /* ⚠ ONE TRANSITION (ADR-122 U3): the FEATURE's row unrolls. v17's second —
+     the cover column — went with the thumbnail. */
+  if (rest.notes[0] && !/border-top-color/.test(rest.notes[0].transition))
+    fails.push(`the note transitions ${rest.notes[0].transition}, not its rule`);
   for (const c of rest.notes) {
     if (c.titleCut) fails.push(`note ${c.i}'s title is cut by its ellipsis`);
     if (c.title && c.title.lines !== 1)
       fails.push(`note ${c.i}'s title takes ${c.title.lines} lines`);
-    /* The cover is UNFRAMED: the card is already the frame (round six). */
+    /* ⚠ THE COVER IS UNFRAMED — "just the diagram" (owner, 2026-09-25). */
     if (c.coverBorder && parseFloat(c.coverBorder) > 0)
       fails.push(`note ${c.i}'s cover is framed (${c.coverBorder})`);
     if (c.coverGround && !/rgba\(0, 0, 0, 0\)|transparent/.test(c.coverGround))
       fails.push(`note ${c.i}'s cover paints a ground (${c.coverGround})`);
+    /* ⚠ AND SO IS THE NOTE: the ledger's row is a RULE and its ink, never the
+       folder plate v17 carried (ADR-122 U3). */
+    if (c.ground && !/rgba\(0, 0, 0, 0\)|transparent/.test(c.ground))
+      fails.push(`note ${c.i} paints a plate (${c.ground})`);
+    if (c.groundImage && !/none/.test(c.groundImage))
+      fails.push(`note ${c.i} paints a plate image (${c.groundImage})`);
+    if (c.clip && c.clip !== "none") fails.push(`note ${c.i} is clipped (${c.clip})`);
+    if (!c.rule || parseFloat(c.rule) < 1) fails.push(`note ${c.i} draws no rule (${c.rule})`);
   }
-  /* One thumbnail size; the open cover is square and GROWN. */
-  const thumbs = rest.notes.filter((c) => !c.open && c.cover).map((c) => c.cover.w);
+  /* The open cover is a SQUARE at the feature's end, and the closed ones are
+     inside the collapsed feature — so the only one with a live box is the
+     open one. */
   const openNote = rest.notes.find((c) => c.open);
-  if (thumbs.length && Math.max(...thumbs) - Math.min(...thumbs) > 1)
-    fails.push(`the thumbnails are not one size (${Math.min(...thumbs)}–${Math.max(...thumbs)})`);
   if (openNote?.cover && Math.abs(openNote.cover.w - openNote.cover.h) > 1)
     fails.push(`the open cover is ${openNote.cover.w}×${openNote.cover.h}, not square`);
-  if (openNote?.cover && thumbs.length && openNote.cover.w < 2 * Math.max(...thumbs))
-    fails.push(
-      `the open cover is ${openNote.cover.w}px against ${Math.max(...thumbs)}px thumbnails`
-    );
+  if (openNote?.cover && openNote?.box && openNote.cover.w > openNote.box.h)
+    fails.push(`the open cover (${openNote.cover.w}px) outgrew its own note`);
   /* ⚠ INSIDE THE RAILS: the rows are solved from the count so the list ends
      on the rails' last tick; five notes may not scroll on a tall frame. */
   if (rest.notesBox && rest.railEnd != null && rest.notesBox.y + rest.notesBox.h > rest.railEnd + 1)
@@ -1014,16 +1045,26 @@ if (!phone) {
   if (rest.notes.length <= 5 && rest.vh >= 1000 && rest.listScrolls)
     fails.push(`the list scrolls at ${rest.notes.length} notes on a ${rest.vh}px frame`);
 
-  /* ── THE SIGN ON THE COVER'S FLOOR, wherever a note is open. ── */
+  /* ── THE SIGN IS INSIDE THE FEATURE, wherever a note is open. ⚠ THE FLOOR
+     GATE IS DELETED WITH ITS CLAUSE (ADR-122 U3): v17 solved the detail's
+     height so the byline and the way in landed on the COVER's floor, and the
+     ledger seats its copy at the TOP with the air falling below (the lab's own
+     round-four ruling — `space-between` left a hole). What still has to hold
+     is that the sign is inside the feature at all: a long excerpt must not
+     push it out of a fixed box. */
   for (const [label, r] of [
     ["rest", rest],
     ["hover", hover],
     ["Tab", kb],
   ]) {
     if (!r) continue;
-    const f = floorOf(r);
-    if (f == null) fails.push(`${label}: the open note's sign could not be read`);
-    else if (Math.abs(f) > 1.5) fails.push(`${label}: the sign ends ${f}px off the cover's floor`);
+    const c = r.notes.find((n) => n.open);
+    if (!c?.sign || !c?.cover) {
+      fails.push(`${label}: the open note's sign could not be read`);
+      continue;
+    }
+    const over = Math.round((c.sign.y + c.sign.h - (c.cover.y + c.cover.h)) * 10) / 10;
+    if (over > 0) fails.push(`${label}: the sign ends ${over}px below the feature's floor`);
   }
 
   /* ── THE LIST ENDS BEFORE THE TELEMETRY (ADR-121 U1). ── */
@@ -1043,8 +1084,8 @@ if (!phone) {
     if (hover.open !== want) fails.push(`hovering note ${want} opened note ${hover.open}`);
     const c0 = hover.notes[0];
     const cw = hover.notes[want];
-    if (c0?.cover && thumbs.length && Math.abs(c0.cover.w - Math.min(...thumbs)) > 1.5)
-      fails.push(`note 0 did not close to the thumbnail (${c0.cover.w}px)`);
+    if (c0?.box && cw?.box && c0.box.h >= cw.box.h)
+      fails.push(`note 0 (${c0.box.h}px) did not close under the hovered note (${cw.box.h}px)`);
     if (cw?.cover && openNote?.cover && Math.abs(cw.cover.w - openNote.cover.w) > 1.5)
       fails.push(`the hovered note's cover is ${cw.cover.w}px, not the open ${openNote.cover.w}px`);
   }
@@ -1059,16 +1100,17 @@ if (!phone) {
     for (const e of hoverTrace) line(`  ${e}`);
   }
 
-  /* ── GLASS: on every note on the stage rung in dark; none in light. ── */
-  const glass = rest.notes.map((c) => c.backdrop);
-  if (rest.stageMode && THEME === "dark") {
-    if (!glass.every((g) => /blur\(/.test(g)))
-      fails.push(`a note has no glass on the stage rung: ${glass.join(" | ")}`);
-  } else if (glass.some((g) => /blur\(/.test(g)))
-    fails.push(
-      `glass where there is nothing to blur (${THEME}, stage ${rest.stageMode}): ${glass.join(" | ")}`
-    );
-  if (prm.backdrops.some((g) => /blur\(/.test(g))) fails.push("glass under reduced motion");
+  /* ── NO GLASS, ANYWHERE (ADR-122 U3). ADR-121's frost existed because the
+     note was a PLATE over a live corridor; a hairline has nothing to be told
+     apart from, and a `backdrop-filter` on a box with no fill still costs a
+     per-frame snapshot (ADR-056). The gate INVERTED rather than being deleted:
+     a frost that came back would be the plate returning under another name. */
+  for (const [label, gs] of [
+    ["the list", rest.notes.map((c) => c.backdrop)],
+    ["reduced motion", prm.backdrops],
+  ]) {
+    if (gs.some((g) => /blur\(/.test(g))) fails.push(`glass on ${label}: ${gs.join(" | ")}`);
+  }
   if (prm.ready) fails.push("the list pinned itself under reduced motion");
   if (prm.open !== 0) fails.push(`reduced motion rests on note ${prm.open}`);
 
@@ -1165,17 +1207,12 @@ if (!phone) {
       `long frames while hovering: ${perfHover.longShare}% > ${PERF_LONG_SHARE_MAX}% — apply the recorded fallback (blur on the open card only, strips at .94)`
     );
 }
-if (notch) {
-  /* ⚠ PINNED FROM BOTH ENDS, AND THE CENTRE FIRST. A one-sided read cannot
-     tell a notch from a card the probe never reached. */
-  if (!notch.mid) fails.push("the probe never reached the open card at all");
-  else {
-    if (!notch.tl || !notch.bl || !notch.br) fails.push("a corner other than the top-right is cut");
-    if (notch.tr) fails.push("the top-right corner is NOT cut");
-  }
-}
+/* ⚠ THE TITLE'S FLOOR IS 18, NOT 20 (ADR-122 U3): the ledger's row is shorter
+   than v17's card and the title rides it (`row × 0.58`, 20–32px), so the
+   narrowest rung sets a 20px title and the floor has to sit under it. The
+   date's 10px mono floor is the chrome rung's and is unchanged. */
 for (const c of rest.notes)
-  if (c.titlePx < 20 || (c.open && (c.ledePx < 13 || c.metaPx < 10)))
+  if (c.titlePx < 18 || (c.open && (c.ledePx < 13 || c.metaPx < 10)))
     fails.push(`type under the floor on note ${c.i}: ${c.titlePx}/${c.ledePx}/${c.metaPx}`);
 if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);
 
