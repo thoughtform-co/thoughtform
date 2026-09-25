@@ -224,15 +224,16 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     id: "embedded",
     chip: "Embedded",
     statusCode: "BLD-03",
-    title: "An intelligence configuration you own.",
+    /* ADR-124 U1 (owner, 2026-09-25): practical, what a buyer can expect. */
+    title: "A setup your team runs itself.",
     /* ADR-124 (owner, 2026-09-24): the card says what the work IS, in the
        room it is built in. "Marketing team" is a deliberate narrowing of
        ADR-111's "any team"; the general claim keeps its place in
        `serviceData.body`. The word "creative" stays off the baked face and
        the phone back (ADR-111), so the scope reads production, operations,
-       review. 148 characters against LEDE_MAX_CH. */
+       review. 156 characters against LEDE_MAX_CH. */
     lede: [
-      "Embedded in your marketing team, from production to operations to review: a setup on your own keys, in your own tools, that the team runs by itself.",
+      "Embedded in your marketing team: a setup built around the work, production to operations to review, on your own keys, handed over on a date set in week one.",
     ],
     /* ADR-112: the leadership altitude enters through the third bullet — the
        doctrine's "standing session with leadership" is what Advisory's monthly

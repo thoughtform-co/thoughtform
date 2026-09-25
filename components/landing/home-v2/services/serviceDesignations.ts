@@ -107,7 +107,9 @@ export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation
     D("lower-left-arm", "TRAINED PEOPLE", "who run it after", "right", 24, 60),
     // Ownership moves to the base's detail, which is the slot that always
     // reads — stronger than a crown label saying it (ADR-111).
-    D("base", "BUILD", "you own what runs", "right", 36, 36),
+    // ADR-124 U1: the base's detail is where the turn is said on the
+    // hologram; ownership sits in the title and `leavesWith`.
+    D("base", "BUILD", "for the intelligence", "right", 36, 36),
   ],
   // 04 Home session (ADR-112) — the table, the argument, the skill; the
   // base keeps the arc designation (the session runs Navigate).

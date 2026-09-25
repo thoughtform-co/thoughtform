@@ -39,11 +39,11 @@ describe("the four services (ADR-112)", () => {
     expect(SERVICES.map((s) => s.id)).toEqual(SERVICE_PLATES.map((p) => p.id));
   });
 
-  it("names the merged offer EMBEDDED and keeps ADR-111's title", () => {
+  it("names the merged offer EMBEDDED and carries the title ADR-124 U1 ruled", () => {
     const e = SERVICE_PLATES[2];
     expect(e.id).toBe("embedded");
     expect(e.chip).toBe("Embedded");
-    expect(e.title).toBe("An intelligence configuration you own.");
+    expect(e.title).toBe("A setup your team runs itself.");
     // The leadership altitude entered, once on the plate (the bullet and the
     // includes name it; nothing else may).
     expect(plateCopyStrings(e).filter((s) => /leadership/i.test(s))).toHaveLength(2);

@@ -181,8 +181,8 @@ export const SERVICES: readonly Service[] = [
     index: "03",
     verb: "EMBEDDED",
     name: "Embedded",
-    kicker: "AN INTELLIGENCE CONFIGURATION YOU OWN",
-    tagline: "An intelligence configuration you own.",
+    kicker: "A SETUP YOUR TEAM RUNS ITSELF",
+    tagline: "A setup your team runs itself.",
     /* ⚠ THE CARD NAMES THE SHAPE; CREATIVE IS THE PROOF, NOT THE DEFINITION
        (ADR-111). The doctrine's licence is exact: "the embedded partner's
        productised shape for creative teams is the configuration sprint; other
@@ -192,7 +192,7 @@ export const SERVICES: readonly Service[] = [
        on a DOM surface with no bake budget, phrased as evidence. It may not
        travel to the baked face or the phone back. ADR-112 adds the leadership
        altitude in the same breath — Advisory's standing read, inside the embed. */
-    body: "Embedded in your marketing team, from creative production to operations to review: a modular sprint in three stage-gated workstreams on your own keys, inside the tools the team already uses, with a standing session for leadership alongside. Proven first on creative work; the same shape takes any team's own workstreams.",
+    body: "Embedded in your marketing team, from creative production to operations to review: a modular sprint in three stage-gated workstreams on your own keys, inside the tools the team already uses, with a standing session for leadership alongside, and a handover dated in week one. Proven first on creative work; the same shape takes any team's own workstreams.",
     meta: [
       { label: "Runs", value: "Three workstreams · leadership" },
       { label: "Format", value: "Fixed term · dated handover" },
