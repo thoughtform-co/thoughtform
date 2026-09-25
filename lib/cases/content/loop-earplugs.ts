@@ -2154,13 +2154,13 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           chains: MAP_CHAINS,
           envelope: "WITHIN",
         },
-        // Four proof blocks in the left-column register, practical: what a
-        // company can expect (ADR-124 U1, owner 2026-09-25). The first two
-        // are readings the drawing beside them can be checked against
-        // (ADR-062, PRD §10): 27 modules on the board, 47 Skills summed by
-        // the five mains, the Skills now said as what they are for, a
-        // briefing an agent inherits. The third asks the session's question,
-        // for a person or for AI; the fourth keeps the person's last word.
+        // Four proof blocks in the left-column register, concrete: what the
+        // practice brings, not what the drawing counts (ADR-124 U1, owner
+        // 2026-09-25, second pass: "every stream on one board" read as vague,
+        // and the question was rhetorical). Built natively for AI is the
+        // claim; the Skills and the evals are the two things written down;
+        // the loop is the podcast's, say what success looks like and let it
+        // run. The 47 keeps the Skills-sum guard reading the map's total.
         // The glyph keys stay.
         //
         // ⚠ "14 TEAMS USING THE LAYER" LEFT THIS PANEL with ADR-062, by
@@ -2178,23 +2178,23 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         blocks: [
           {
             glyph: "board",
-            title: "Every stream on one board",
-            desc: "Twenty-seven modules, including the work deliberately left person-led.",
+            title: "Built natively for AI",
+            desc: "Per stream: which model runs it, what it can reach, how much it decides alone, who owns it.",
           },
           {
             glyph: "encode",
-            title: "47 Skills, built for agents",
-            desc: "The briefing an agent inherits: the rules, the examples, where to look.",
-          },
-          {
-            glyph: "reuse",
-            title: "For a person, or for AI?",
-            desc: "For a person you design every step. For an agent you say what good looks like.",
+            title: "47 Skills, written down",
+            desc: "What each team knows, encoded once, as the briefing every agent inherits.",
           },
           {
             glyph: "envelope",
-            title: "People keep the last word",
-            desc: "It runs for hours on what the team wrote down, and the team judges what comes back.",
+            title: "Evals, so it checks itself",
+            desc: "What good looks like, written as checks: a result passes, goes to review, or is blocked.",
+          },
+          {
+            glyph: "reuse",
+            title: "Set the goal, let it run",
+            desc: "Say what success looks like and let it work for hours. A person judges what comes back.",
           },
         ],
         context: [

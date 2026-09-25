@@ -165,10 +165,15 @@ gets out of the way of the model. The site said none of it.
    escalating card 3's tools for the work into a layer for the intelligence.
    Lede: _"Across Loop, team by team. Then what we build turned: a briefing the
    intelligence inherits, checks it runs on its own work, and a person with the
-   last word."_ Four practical claims, glyph keys unchanged: the board (27
-   modules, kept); "47 Skills, built for agents" (the briefing an agent
-   inherits); "For a person, or for AI?" (the session's own line); "People keep
-   the last word" (it runs for hours on what the team wrote down, and the team
+   last word."_ Four concrete claims, glyph keys unchanged, rewritten the
+   same afternoon after the owner read the first set ("every stream on one
+   board" vague; the question rhetorical, "it's built natively for AI"):
+   "Built natively for AI" (per stream: which model runs it, what it can
+   reach, how much it decides alone, who owns it); "47 Skills, written down"
+   (what each team knows, encoded once, as the briefing every agent
+   inherits); "Evals, so it checks itself" (what good looks like, written as
+   checks: a result passes, goes to review, or is blocked); "Set the goal, let
+   it run" (say what success looks like and let it work for hours; a person
    judges what comes back). The `brief` stays the owner's.
 2. **The Embedded card says what you get.** Title _"A setup your team runs
    itself."_; lede _"Embedded in your marketing team: a setup built around the
