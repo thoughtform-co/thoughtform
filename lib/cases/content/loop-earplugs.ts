@@ -2154,13 +2154,14 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           chains: MAP_CHAINS,
           envelope: "WITHIN",
         },
-        // Four proof blocks in the left-column register. The first two are
-        // readings the drawing beside them can be checked against (ADR-062,
-        // PRD §10): 27 modules on the board, 47 Skills summed by the five
-        // mains. The last two are the seam the proposals already state, in
-        // the same words (ADR-124, owner 2026-09-24): adoption writes the
-        // layer, automation runs on it. The glyph keys stay; the reuse figure
-        // and the envelope remain on the console's own readings.
+        // Four proof blocks in the left-column register, practical: what a
+        // company can expect (ADR-124 U1, owner 2026-09-25). The first two
+        // are readings the drawing beside them can be checked against
+        // (ADR-062, PRD §10): 27 modules on the board, 47 Skills summed by
+        // the five mains, the Skills now said as what they are for, a
+        // briefing an agent inherits. The third asks the session's question,
+        // for a person or for AI; the fourth keeps the person's last word.
+        // The glyph keys stay.
         //
         // ⚠ "14 TEAMS USING THE LAYER" LEFT THIS PANEL with ADR-062, by
         // owner ruling — a deliberate removal, not an erosion. It was the
@@ -2182,18 +2183,18 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           },
           {
             glyph: "encode",
-            title: "47 Skills encoded once",
-            desc: "Written down by the team that needed it, reused by every team after.",
+            title: "47 Skills, built for agents",
+            desc: "The briefing an agent inherits: the rules, the examples, where to look.",
           },
           {
             glyph: "reuse",
-            title: "Adoption writes the layer",
-            desc: "Each team learns on its own work, then writes down what good looks like.",
+            title: "For a person, or for AI?",
+            desc: "For a person you design every step. For an agent you say what good looks like.",
           },
           {
             glyph: "envelope",
-            title: "Automation runs on it",
-            desc: "The layer runs inside the tools they already use and hands the time back.",
+            title: "People keep the last word",
+            desc: "It runs for hours on what the team wrote down, and the team judges what comes back.",
           },
         ],
         context: [
@@ -2245,13 +2246,15 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           ". The board lays out the estate: work streams as modules, clustered by the team that owns them. Open one and it comes apart into its configuration. Below grade runs the shared substrate — encoded once for one team, tapped by the next.",
         ],
         card: {
-          lede: "The same move, team by team: embed in the work, write down what good looks like, build the tools around it, hand it over. First the studio, then every team at Loop.",
+          lede: "Across Loop, team by team. Then what we build turned: a briefing the intelligence inherits, checks it runs on its own work, and a person with the last word.",
         },
         /* The arc's last beat — the sequence itself is documented on
-           `atl-films`, which opens it. The lede claims the EXPANSION the
-           title makes (owner ruling, 2026-09-24, ADR-124); until then it
-           described the map, which the console beside it still draws. */
-        arc: { step: "04", title: "We took it to the rest of the company" },
+           `atl-films`, which opens it. The fourth step is the turn (owner
+           ruling, 2026-09-25, ADR-124 U1): what we build is built for the
+           intelligence, with a person keeping the last word. For one day it
+           claimed the expansion; before that it described the map, which the
+           console beside it still draws. */
+        arc: { step: "04", title: "We built the layer the agents run on" },
       },
       {
         id: "tooling",

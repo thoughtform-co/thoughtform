@@ -71,7 +71,7 @@ describe("the trinny proof order", () => {
       "We pushed the frontiers of AI creative",
       "We made the creative team self-sufficient",
       "We built the tools the work needed",
-      "We took it to the rest of the company",
+      "We built the layer the agents run on",
     ]);
   });
 
