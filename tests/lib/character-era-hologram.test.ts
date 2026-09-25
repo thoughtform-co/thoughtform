@@ -132,20 +132,26 @@ describe("ADR-082 · normalized character hologram assets", () => {
     expect(pokemon?.hologram?.footY).toBeCloseTo(0.9953, 3);
   });
 
-  it("resolves the genai era to its authored Starhaven hologram", () => {
+  it("resolves the genai era to its authored captain, stone halo and all (ADR-082 U44)", () => {
     const genai = CHARACTER_ERAS.find((e) => e.id === "genai");
     expect(genai?.hologram).toBeDefined();
     expect(isCharacterEraHologram(genai?.hologram)).toBe(true);
     expect(resolveCharacterEraHologram(genai!)).toBe(genai!.hologram);
-    expect(genai?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-genai-v2.webm");
-    // ⚠ It ships the Safari lane too, unlike azeroth — its matte is one figure
-    // with a clean silhouette, so the encoder meets the fidelity standard.
-    expect(genai?.hologram?.videoAlphaHevcPath).toBe("/videos/voidwalker/holo-idle-genai-v2.mov");
+    expect(genai?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-genai-v4.webm");
+    expect(genai?.hologram?.thumbPath).toBe("/images/voidwalker/holo-thumb-genai-v4.webp");
+    // ⚠ No `.mov` for v4 (HEVC alpha needs a Mac). v2's `.mov` is a DIFFERENT
+    // figure, so pointing at it would put the old captain on Safari alone.
+    expect(genai?.hologram?.videoAlphaHevcPath).toBeUndefined();
     /* The anchors are MEASURED off the delivered alpha over every frame, and
-       the figure was SEATED so they land beside the canonical pair's rather
-       than hovering above the projector disc. */
-    expect(genai?.hologram?.footY).toBeCloseTo(0.993, 3);
-    expect(genai?.hologram?.headY).toBeCloseTo(0.0563, 3);
+       the figure was SEATED so the boots land beside every other era's. */
+    expect(genai?.hologram?.footY).toBeCloseTo(0.9953, 3);
+    // ⚠ headY is the HALO's top shard; the stature runs from his CROWN (0.093),
+    // so the body is fitted at every other era's scale and the halo stands above.
+    expect(genai?.hologram?.headY).toBeCloseTo(0.0305, 3);
+    expect(genai?.hologram?.stature).toBeCloseTo(0.9023, 3);
+    expect(genai!.hologram!.stature!).toBeLessThan(genai!.hologram!.footY - genai!.hologram!.headY);
+    // The robe and the ring of stars left with v2, by his word.
+    expect(genai?.loadout).not.toMatch(/star/i);
   });
 
   it("resolves the azeroth era to its authored Arafel hologram", () => {

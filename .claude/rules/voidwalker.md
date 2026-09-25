@@ -331,6 +331,22 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     `scripts/capture-record-marks.mjs` (`--experimental-strip-types`,
     unlabelled, both themes) before it ships; `record-marks.test.ts` holds the
     grammar.
+  - ⚠ **U44 (2026-09-25, owner): THE AI CAPTAIN IS RE-DRAWN (`genai-v4`), HIS
+    HALO OF GATEWAY STONE TURNS.** His face, the long cloak and gold pauldrons
+    over his own black jeans and high boots, sigils about his forearms, a
+    broken halo of the site's gateway stone. GPT Image 2 on the plate stage
+    (Gemini did not draw his face), `lift.py` before the grade (a black cloak
+    painted black blew the face out at ×1.35). ⚠ **The halo turns in POST**
+    (`post.py --loop orbit`): the model's ring is erased and frame 0's is turned
+    one full turn per loop behind him while the body plays forward and back;
+    Veo's own rotation never returned and was never rigid. ⚠ **Veo pushed in
+    3.8 % though told not to** — `stabilise_push` scales every frame back onto
+    frame 0. ⚠ **`stature` also serves a thing ABOVE the head**: `headY` is the
+    top shard, `stature` runs from the crown (0.9), so the man matches every
+    era and the halo stands over the line. No `.mov` yet (Safari takes the
+    floor on this era). ⚠ **v4 MOVES** ("a bit too static"): a scene from plate
+    O back to plate O, cut where the motion ends and settled, the halo following
+    his head (`--loop orbit --orbit-body settle --cut 144`).
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title

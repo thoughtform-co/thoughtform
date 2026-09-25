@@ -135,15 +135,57 @@ def multipart(fields: list[tuple[str, str]], files: list[tuple[str, Path]]) -> t
     return bytes(out), boundary
 
 
-def draw_one_gpt(prompt: str, refs: list[tuple[str, Path]], seed_note: str, key: str) -> bytes:
+#: ⚠ A PLATE HAS NO SOURCE FRAME TO TAKE ITS SHAPE FROM (2026-09-25). An edit
+#: sent bare comes back at its source's aspect (the Expanse's 936x1680), but a
+#: plate's references are square-ish photographs, so the plate lane ASKS for
+#: 9:16 and keeps asking — its fallback is the 2:3 portrait, padded to 9:16 with
+#: the ground by `pad_to_9x16`, never an `auto` size that could come back square.
+#: And it never sends `input_fidelity`, which this model refuses.
+GPT_PLATE_SIZES = ("1152x2048", "1024x1536")
+
+
+def pad_to_9x16(png: bytes) -> bytes:
+    """Pad a plate to exactly 9:16 with its own ground (the corners' median), so
+    a 2:3 draw reaches Veo and `post.py` at the shape every era is delivered at.
+    Padding, never cropping: a crop could take a hand or a sigil off the side."""
+    import io
+
+    import numpy as np
+    from PIL import Image
+
+    im = Image.open(io.BytesIO(png)).convert("RGB")
+    w, h = im.size
+    if w * 16 == h * 9:
+        return png
+    a = np.asarray(im)
+    c = 16
+    ground = np.median(np.concatenate([a[:c, :c].reshape(-1, 3), a[:c, -c:].reshape(-1, 3),
+                                       a[-c:, :c].reshape(-1, 3), a[-c:, -c:].reshape(-1, 3)]), axis=0)
+    tw, th = (w, round(w * 16 / 9)) if w * 16 > h * 9 else (round(h * 9 / 16), h)
+    canvas = Image.new("RGB", (tw, th), tuple(int(v) for v in ground))
+    canvas.paste(im, ((tw - w) // 2, (th - h) // 2))
+    buf = io.BytesIO()
+    canvas.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def draw_one_gpt(prompt: str, refs: list[tuple[str, Path]], seed_note: str, key: str,
+                 plate: bool = False) -> bytes:
     """One edit through GPT Image 2. The reference ORDER is the label: the body
     opens by naming what each attached image is, in the order it is attached.
     ⚠ `input_fidelity: high` is what keeps a face — it is the whole point of
     this lane — and a 400 naming it (or the size) retries ONCE without, the
-    Gemini lane's own rule for a renamed field."""
+    Gemini lane's own rule for a renamed field. `plate` is the plate stage's
+    shape: 9:16 asked for, a 2:3 fallback, never a bare `auto` (see above)."""
     legend = "; ".join(f"IMAGE {i} — {role}" for i, (role, _) in enumerate(refs, start=1))
     text = f"The images are attached in this order: {legend}.\n\n{prompt}\n\n{seed_note}"
     files = [("image[]", path) for _, path in refs]
+    if plate:
+        head = [("model", GPT_MODEL), ("prompt", text), ("n", "1")]
+        tail = [("quality", "high"), ("output_format", "png")]
+        full = head + [("size", GPT_PLATE_SIZES[0])] + tail
+        bare = head + [("size", GPT_PLATE_SIZES[1])] + tail
+        return pad_to_9x16(_post_gpt(full, bare, files, key))
     full = [
         ("model", GPT_MODEL),
         ("prompt", text),
@@ -154,6 +196,11 @@ def draw_one_gpt(prompt: str, refs: list[tuple[str, Path]], seed_note: str, key:
         ("input_fidelity", "high"),
     ]
     bare = [f for f in full if f[0] not in ("input_fidelity", "size")]
+    return _post_gpt(full, bare, files, key)
+
+
+def _post_gpt(full: list[tuple[str, str]], bare: list[tuple[str, str]],
+              files: list[tuple[str, Path]], key: str) -> bytes:
     fields = full
     last: Exception | None = None
     for attempt, wait in enumerate(RETRY_BACKOFF):
@@ -313,7 +360,8 @@ def main() -> int:
     # ADR-082 U33: `aim` draws a scene's END POSE from the picked plate, so its
     # framing is checked before a video is paid for.
     ap.add_argument("--edit-kind",
-                    choices=("rifle", "aim", "command", "mouth", "aim-stand", "face", "rig"),
+                    choices=("rifle", "aim", "command", "mouth", "aim-stand", "face", "rig", "outfit",
+                             "halo"),
                     default="rifle",
                     help="edit stage: the rifle swap (U32), the scene's aim pose (U33), "
                          "the standing commander (U34), its mouth closed (U34), the "
@@ -321,8 +369,12 @@ def main() -> int:
                          "face put back from the wave's identity crops (U41), or the "
                          "helmet and the broader build (U41, --design = the helmet frames)")
     ap.add_argument("--model", choices=("gemini", "gpt"), default="gemini",
-                    help="edit stage: the image model — gemini (the chain's) or gpt "
-                         "(GPT Image 2, the identity-rescue lane; face edits only)")
+                    help="plate or edit stage: the image model — gemini (the chain's) or gpt "
+                         "(GPT Image 2, the identity-rescue lane)")
+    # 2026-09-25: an era may carry a SECOND plate lock (the Latent Land era's
+    # second habit, `genai-regalia`); the ground stays the era's.
+    ap.add_argument("--lock", default=None,
+                    help="plate stage: the PLATE_LOCK to draw (default: the era's own)")
     ap.add_argument("--identity", type=Path, help="still stage: the identity frame")
     # ⚠ MORE THAN ONE WARDROBE REFERENCE IS ALLOWED, and the identity still
     # goes FIRST. `expanse` needs two: a solo full-body frame for the silhouette
@@ -342,9 +394,13 @@ def main() -> int:
     manifest = wave / "MANIFEST.jsonl"
 
     if args.stage == "plate":
-        prompt = plate_prompt(args.era)
+        prompt = plate_prompt(args.era, args.lock)
         refs = plate_refs(wave)
-        stem = f"plate-{args.era}"
+        stem = f"plate-{args.lock or args.era}"
+        # The GPT lane's plates live beside Gemini's under their own stem, as
+        # its edits do (resume-by-existence would read one as the other).
+        if args.model == "gpt":
+            stem += "-gpt"
         note_tail = "Vary only the draw; the man, the wardrobe, the pose and the light are fixed."
     elif args.stage == "edit":
         if not args.source or not args.source.exists():
@@ -362,7 +418,16 @@ def main() -> int:
         # the face edit is addressed to them by number, and every other edit is
         # told, first, that his face stays exactly theirs.
         identity = plate_refs(wave) if (wave / "refs" / "refs.json").exists() else []
-        if args.edit_kind in ("face", "rig"):
+        if args.edit_kind == "outfit":
+            # 2026-09-25: the wave's refs.json (`refs.py --set outfit`) holds the
+            # identity crops AND his jeans and boots; the prompt numbers each.
+            ids = [r for r in identity if r[0] == "IDENTITY"]
+            wear = [r for r in identity if r[0] != "IDENTITY"]
+            if not ids:
+                raise SystemExit("the outfit edit needs the wave's identity crops (refs.py --set outfit)")
+            refs += ids + wear
+            prompt = edit_prompt(args.era, len(wear), "outfit", n_identity=len(ids))
+        elif args.edit_kind in ("face", "rig"):
             # These two address the identity crops (and the rig its design
             # frames) by number themselves.
             if not identity:
@@ -373,22 +438,35 @@ def main() -> int:
             prompt = edit_prompt(args.era, len(args.design), args.edit_kind)
             if identity:
                 refs += identity
+                # The design photographs, if any, come after the identity crops;
+                # the edit's own numbering is re-based FIRST. ⚠ Re-basing after
+                # the identity line was prepended renumbered that line too
+                # ("IMAGE 5, IMAGE 6 and IMAGE 4 are this man's IDENTITY",
+                # caught on the halo edit's dry run, 2026-09-25).
+                if args.design:
+                    shift = len(identity)
+                    for i in range(2 + len(args.design) - 1, 1, -1):
+                        prompt = prompt.replace(f"IMAGE {i}", f"IMAGE {i + shift}")
                 nums = [f"IMAGE {i}" for i in range(2, 2 + len(identity))]
                 keep = (
                     f"{', '.join(nums[:-1])} and {nums[-1]} are" if len(nums) > 1 else f"{nums[0]} is"
                 ) + " this man's IDENTITY: his face, his beard and his skin stay exactly theirs and exactly IMAGE 1's — the change below does not touch them."
                 prompt = keep + "\n\n" + prompt
-                # The rifle design photographs, if any, then come after the
-                # identity crops; the rifle lock's own numbering is re-based.
-                if args.design:
-                    shift = len(identity)
-                    for i in range(2 + len(args.design) - 1, 1, -1):
-                        prompt = prompt.replace(f"IMAGE {i}", f"IMAGE {i + shift}")
-        design_role = "HELMET DESIGN" if args.edit_kind == "rig" else "RIFLE DESIGN"
-        design_stem = "helmet-design" if args.edit_kind == "rig" else "rifle-design"
+        design_role, design_stem = {
+            "rig": ("HELMET DESIGN", "helmet-design"),
+            # 2026-09-25: the Latent Land halo's stone, from the gateway key visuals.
+            "halo": ("HALO MATERIAL", "halo-material"),
+        }.get(args.edit_kind, ("RIFLE DESIGN", "rifle-design"))
         for i, d in enumerate(args.design, start=1):
             refs.append((design_role, shrink(d, wave / "refs" / f"{design_stem}-{i}.jpg")))
-        if args.edit_kind == "face":
+        if args.edit_kind == "halo":
+            stem = f"plate-{args.era}-halo"
+            note_tail = "Change only the halo; every other pixel of IMAGE 1 is fixed."
+        elif args.edit_kind == "outfit":
+            stem = f"plate-{args.era}-outfit"
+            note_tail = ("Change the pauldrons, what he wears below the belt and the halo; his face, "
+                         "the pose, the sigils and the cloak are fixed.")
+        elif args.edit_kind == "face":
             stem = f"plate-{args.era}-face"
             note_tail = "Change only his face; every other pixel of IMAGE 1 is fixed."
         elif args.edit_kind == "rig":
@@ -433,7 +511,7 @@ def main() -> int:
         print("\n" + prompt)
         return 0
 
-    use_gpt = args.stage == "edit" and args.model == "gpt"
+    use_gpt = args.stage in ("plate", "edit") and args.model == "gpt"
     model_name = GPT_MODEL if use_gpt else MODEL
     key = require("OPENAI_API_KEY" if use_gpt else "GEMINI_API_KEY")
     made = 0
@@ -451,7 +529,9 @@ def main() -> int:
             "model": model_name,
             "stage": args.stage,
             "era": args.era,
-            "config": {"size": "1024x1536", "quality": "high", "input_fidelity": "high"}
+            "config": ({"size": list(GPT_PLATE_SIZES), "quality": "high", "padded_to": "9:16"}
+                       if args.stage == "plate" else
+                       {"size": "1024x1536", "quality": "high", "input_fidelity": "high"})
             if use_gpt
             else {"aspectRatio": "9:16", "imageSize": "2K"},
             "refs": [{"image": n, "role": role, "file": p.name, "sha256_16": sha(p)}
@@ -459,7 +539,8 @@ def main() -> int:
             "prompt": prompt + "\n\n" + note,
         }
         try:
-            out.write_bytes(draw_one_gpt(prompt, refs, note, key) if use_gpt else draw_one(parts, key))
+            out.write_bytes(draw_one_gpt(prompt, refs, note, key, plate=args.stage == "plate")
+                            if use_gpt else draw_one(parts, key))
             made += 1
             row = {"draw": i, "file": out.name, "model": model_name, "stage": args.stage, "ok": True}
             print(f"     -> {out.stat().st_size // 1024} KB")

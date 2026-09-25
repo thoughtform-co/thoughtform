@@ -126,6 +126,12 @@ export interface CharacterEraHologram {
    * stature is the standing delivery's span times the ratio of the two head
    * widths. Author the arithmetic beside the value or it is a guess in
    * costume.
+   *
+   * ⚠ AND IT IS THE SAME FIELD FOR A THING ABOVE HIS HEAD (ADR-082 U44). The
+   * Latent Land captain stands, but his halo's shards float over his skull, so
+   * `headY` (the ink's top) is not his head: his stature is `footY` minus the
+   * CROWN, measured inside the ring on the delivered frames, and the halo
+   * stands above the head line every other era's cap sits on.
    */
   stature?: number;
 }
@@ -749,44 +755,56 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     year: "2023",
     wardrobe: "The AI Captain",
     /* ⚠ THE LOADOUT NAMES WHAT THE PLATE SHOWS (ADR-082 U13's rule, applied
-       here by ADR-082 U23's wave). It read "Blazer · shirt · Latent Land cape ·
-       cap" — the UNIFORM's loadout, carried over before this era had a figure
-       of its own. The Starhaven captain wears none of it: he is bare-headed in
-       a cloak over a floor-length robe, and the cap belongs to the Architect. */
-    loadout: "Latent Land cloak · gold cuffs · disc sash · a halo of stars.",
+       here by ADR-082 U23's wave, and again by U44's re-draw). U44 took the
+       robe, the cuffs, the sash and the stars away by the owner's word: the
+       long cloak over his own black jeans and high boots, gold pauldrons, and
+       a broken halo of the gateway's own stone. */
+    loadout: "Long cloak · gold pauldrons · black jeans · high boots · a halo of gateway stone.",
     motto: "The models arrived. Wrote the charter.",
     modelPath: null,
     stillPath: "/images/voidwalker/era-genai.jpg",
-    /* The era's own hologram — wave `20260918-genai-v1`, the Starhaven captain
-       from the owner's own reference painting with his identity locked from the
-       2025 shoot. Nano Banana Pro for the still, Veo 3.1 for the idle, keyed on
-       a LUT measured off this asset (`clip((val-11)*20)`).
-       ⚠ THE LOOP IS CLOSED BY AN OVERLAP, NOT BY A TRIM ALONE. This idle is
-       deliberately almost still (motion 1.19/255 between frames) and its best
-       return point still sat 3.5 out — three ordinary frame-steps of jump. The
-       tail is blended into the head, which takes the seam under the clip's own
-       motion floor: the join is quieter than the movement.
-       ⚠ AND THE FIGURE IS SEATED — the frame is shifted so the boots land on
-       the foot anchor rather than hovering above the projector disc.
-       ⚠ `-v2` BECAUSE `-v1` SHIPPED FOR AN HOUR AND DRIPPED. Its robe was lit
-       only along the fold highlights, so the cloth between them sat at the
-       ground's own black level and the key cut the silhouette into vertical
-       strips with the corridor showing through — measured 7.87 opaque runs per
-       hem row against the Architect's 1.93. Three things it was NOT: the model
-       (the raw frames are clean), the encoder (pre- and post-VP9 are
-       identical), or the LUT (every gain from 5 to 20 does it). The draw that
-       ships holds at 1.90. A cache does not read commit messages, so the
-       replacement takes a new URL. */
+    /* The era's own hologram, `-v4` (ADR-082 U44, 2026-09-25, owner): "a
+       realistic version of myself … my face needs to match", the long cloak and
+       gold pauldrons of his avatar paintings over his own black jeans and high
+       boots, sigils circling his raised forearms, and a halo "made out of our
+       Thoughtform gateways … shards … not too sharp" that turns about his head.
+       ⚠ `-v4`, NOT `-v3`: v3 was the same plate breathing in place, and he read
+       it as "a bit too static … move my hands a bit and also my posture … I
+       don't think I should walk". v4 is a SCENE drawn from plate O back to plate
+       O — the hands come together at his chest, he bows into the spell, opens
+       out and turns a little, his feet planted — cut at frame 144 and settled
+       onto frame 0 (6 frames over a near-still pose), three cycles per turn of
+       the halo, which FOLLOWS HIS HEAD (it travels ~20px). A scene is pinned to
+       the plate at both ends, so no push-in is corrected on it.
+       Wave `20260925-genai-v9` (plate O): drawn in colour on the blue key by
+       GPT Image 2 with his three identity crops, animated by Veo 3.1, keyed and
+       graded gold on the Architect's curve (x0.912, p75 105) — the two-step
+       route, so the cloth no longer has to glow to survive the key.
+       ⚠ THE HALO IS TURNED IN POST, NOT BY THE MODEL (`post.py --loop orbit`).
+       Veo turned the ring at a steady rate to the last frame (a trim found no
+       return: seam 5.96 against 0.5 of motion) and never rigidly, so the model's
+       ring is erased and frame 0's is turned one full turn per loop behind him
+       while his body plays forward and back — 382 frames, closed by arithmetic.
+       ⚠ AND VEO PUSHED IN 3.8 % over the clip though told not to; every frame
+       is scaled back onto frame 0 about his crown and soles, or the ping-pong
+       would swell him on the page and the ring would drift off his head.
+       ⚠ `stature` IS THE SKULL, NOT THE INK. `headY` is the halo's top shard
+       (0.0305); the crown is 0.093, so his body spans 0.9023 and the fit draws
+       him at every other era's scale with the halo standing above the head
+       line — the kneeling commander's mechanism (U26), for a thing ABOVE him.
+       ⚠ NO `.mov`: HEVC alpha needs macOS VideoToolbox, so Safari takes the
+       floor on this era until a Mac cuts one from `veo/graded/` (v2's `.mov`
+       is a different figure and may not be pointed at). */
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-genai-v2.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-genai-v2.webm",
-      videoAlphaHevcPath: "/videos/voidwalker/holo-idle-genai-v2.mov",
-      posterPath: "/images/voidwalker/holo-still-genai-v2.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-genai-v2.webp",
-      thumbPath: "/images/voidwalker/holo-thumb-genai-v2.webp",
+      videoPath: "/videos/voidwalker/holo-idle-genai-v4.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-genai-v4.webm",
+      posterPath: "/images/voidwalker/holo-still-genai-v4.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-genai-v4.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-genai-v4.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.0563,
-      footY: 0.993,
+      headY: 0.0305,
+      footY: 0.9953,
+      stature: 0.9023,
     },
     short: "Latent Land",
     facts: [

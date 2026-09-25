@@ -47,6 +47,12 @@ python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expans
 python scripts/voidwalker-avatar/post.py --wave <wave> --era expanse --version v3 --matte ground --clip <plate-stem>.scene.raw.mp4 --loop settle
 # ...and if it will not settle, the same take cut in a HELD beat and played back and forth
 python scripts/voidwalker-avatar/post.py ... --loop pingpong --cut <frame in the hold>
+# 2026-09-25 (ADR-082 U44): lift a dark GPT plate before the grade, and an idle whose HALO TURNS
+python scripts/voidwalker-avatar/lift.py --wave <wave> --match gpt          # or --source <plate.png>
+python scripts/voidwalker-avatar/post.py --wave <wave> --era genai --version v3 --matte ground --clip <plate-stem>.raw.mp4 --loop orbit
+# ...and when he MOVES (a scene back to the plate): the halo follows his head, the loop is cut where the motion ends
+python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era genai --still <plate.png> --scene
+python scripts/voidwalker-avatar/post.py --wave <wave> --era genai --version v4 --matte ground --clip <plate-stem>.scene.raw.mp4 --loop orbit --orbit-body settle --cut 144
 # ADR-082 U34: a NEW POSE is an edit of the picked plate, and a parted mouth is fixed on the plate
 python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind command --source <plate F>
 python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind mouth --source <the picked command plate>
@@ -82,6 +88,49 @@ carries it. ⚠ The face is also said in WORDS (`FACE_LOCK`), read off the
 photographs — "close-trimmed, connected" let the model keep a full even beard
 across the cheeks; the shoot shows a dense chin beard and near-clean cheeks
 (`identity-map.md` corrected the same day).
+
+⚠ **THE LATENT LAND RE-BRIEF (2026-09-25, owner): HIS FACE, THE PAINTING'S
+CLOTHES, NO STARS.** _"A realistic version of myself inspired by this clothing
+… I like the airbrush retro-futuristic style … I don't want stars around my
+head … a subtle halo … casting subtle magic sigils and spells around my arms …
+like an idle animation from an RPG video game or a character select."_ Two
+habits drawn side by side from his avatar paintings on Drive (`05_Key
+Visuals\Avatars`): `genai` (the Starhaven cloak, wave `20260925-genai-v5`) and
+`genai-regalia` (pauldrons, a belt of machined modules, bracers; wave `-v6`,
+`generate.py --lock genai-regalia`). Both recipes take the THREE-angle face set,
+so the wardrobe is IMAGE 4 and the hands IMAGE 5. What the wave measured:
+
+- **GPT Image 2 draws his face; Gemini does not.** Six Gemini plates came back a
+  generic, darker-skinned man in smooth game-art paint, four of them on the
+  wrong blue. `generate.py --stage plate --model gpt` asks for 1152x2048 and
+  falls back to 2:3 padded to 9:16 with the ground (`pad_to_9x16`) — never a
+  bare `auto`, which follows no source frame on a plate.
+- **GPT paints a black cloak BLACK, and that blows the face out in gold.** p50
+  18–23, up to 44 % crushed; the exposure solve hit its ×1.35 ceiling and the
+  face went to a white blob. `lift.py` (gamma 0.8 on luma, figure-only through
+  the key matte) takes them to p50 30–37 and ×0.89–1.09 with every gate green.
+  ⚠ **Lift the PICK before `vid.py`**, so the idle inherits the tone.
+- ⚠ **A gold halo is skin-toned** — `sheet.find_face` skips any blob under 35 %
+  of its own box, or every face zoom lands on the ring.
+- **His second read, on D and E** (the regalia): the long cloak kept, the
+  pauldrons GOLD, his black jeans and high-top lace-up boots showing (the robe
+  gone), the halo as BROKEN PARTS turning around his head. One GPT edit,
+  `--edit-kind outfit` over `refs.py --set outfit` (the face set plus his jeans
+  from the stage frame and a WHOLE boot — `BOOTS` stops at the laces); waves
+  `-v7` (from D) and `-v8` (from E). The edit re-darkens a lifted source about
+  half the time, so lift its outputs too. The idle turns the halo's pieces on
+  ONE circle so the loop can close.
+- **His third read: the halo is GATEWAY STONE** (_"made out of our Thoughtform
+  gateways … that white stony material … shards … not too sharp"_).
+  `--edit-kind halo` on K, the design images crops of the site's own gateway
+  key visuals (`public/images/Gateway_v2-light.webp`,
+  `public/images/gateway/thoughtform-gateway-1.png`); wave `-v9`, M–P. ⚠ Asked
+  for "never paper-white", the model draws the stone near-white anyway, and in
+  gold the ring is the brightest thing on him; a low-saturation mask to tone it
+  caught only part of the stone and was dropped. ⚠ The generic edit path
+  renumbered its own identity line when it re-based the design images (fixed:
+  re-base first, then prepend). ⚠ A pale shard can win `find_face`; take the
+  face box from the SOURCE plate on an edit.
 
 ⚠ **A SPOKEN BEAT IS MOUTHED, NEVER VOICED (U35).** The commander's scene has
 him press the earpiece and give an order. After U34's five audio refusals the
@@ -190,12 +239,12 @@ seat box is still there), so a figure ending above the canvas floor hovers.
 
 ## State
 
-| era          | wave                     | status                                                   |
-| ------------ | ------------------------ | -------------------------------------------------------- |
-| `genai`      | `20260918-genai-v3`      | shipped (one-step, `-v2`) — re-cut on the two-step route |
-| `expanse`    | `20260924-expanse-v8`    | his face back, helmet, broader (U41): the scene, `-v6`   |
-| `azeroth`    | offline `v5-blender`     | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`) |
-| `pokemon-go` | `20260922-pokemon-go-v1` | the trainer as a cel, on magenta (U33), `-v1`            |
+| era          | wave                     | status                                                                                                                                                     |
+| ------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `genai`      | `20260925-genai-v9`      | `-v4` (plate O), uncommitted: the living idle (`--scene`, `--loop orbit --orbit-body settle --cut 144`), the stone halo turned in post, following his head |
+| `expanse`    | `20260924-expanse-v8`    | his face back, helmet, broader (U41): the scene, `-v6`                                                                                                     |
+| `azeroth`    | offline `v5-blender`     | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`)                                                                                                   |
+| `pokemon-go` | `20260922-pokemon-go-v1` | the trainer as a cel, on magenta (U33), `-v1`                                                                                                              |
 
 ⚠ **THE REFUSAL STAYS, EMPTY.** An era without a photograph hits `BLOCKED` and
 stops: ADR-082 U14 measured what a words-only wardrobe produces. 2016 left it by

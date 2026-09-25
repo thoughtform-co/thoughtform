@@ -294,9 +294,15 @@ console.log(
 console.log(
   `foot line      ${Math.min(...fs).toFixed(1)} .. ${Math.max(...fs).toFixed(1)} px  (drift ${footDrift.toFixed(1)}, seated eras only)`
 );
+/* ⚠ AN AUTHORED STATURE IS NOT ALWAYS A KNEEL (ADR-082 U44). The Latent Land
+   captain stands with a halo ABOVE his crown, so his ink starts over the head
+   line rather than under it; the sign says which of the two it is. */
 for (const r of rows.filter((x) => x.kneels)) {
+  const d = r.inkTopPx - r.headPx;
   console.log(
-    `  · ${r.era} KNEELS: a standing ${r.figurePx}px man drawn as ${r.inkPx}px of ink; its top (the muzzle) paints at ${r.inkTopPx}, ${(r.inkTopPx - r.headPx).toFixed(1)}px under his standing head line`
+    d >= 0
+      ? `  · ${r.era} KNEELS: a standing ${r.figurePx}px man drawn as ${r.inkPx}px of ink; its top (the muzzle) paints at ${r.inkTopPx}, ${d.toFixed(1)}px under his standing head line`
+      : `  · ${r.era} carries something ABOVE his head: a ${r.figurePx}px man drawn as ${r.inkPx}px of ink; its top paints at ${r.inkTopPx}, ${(-d).toFixed(1)}px over his head line`
   );
 }
 for (const r of rows.filter((x) => UNSEATED.has(x.era))) {

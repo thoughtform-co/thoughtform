@@ -347,35 +347,80 @@ def key_ground_text(era: str | None) -> str:
     )
 
 PLATE_LOCK: dict[str, str] = {
-    # 2023 · the AI Captain. The owner's own painting of the character is the
-    # WARDROBE and the PAINT HANDLING; its face is not his, which is why it is
-    # attached cropped at the collar and why the identity images come first.
+    # 2023 · the AI Captain, re-briefed by the owner (2026-09-25): "a realistic
+    # version of myself inspired by this clothing. My face needs to match … I
+    # like the airbrush retro-futuristic style … I don't want stars around my
+    # head. It should be more like a subtle halo and I should be casting subtle
+    # magic sigils and spells around my arms … like an idle animation from an
+    # RPG video game or a character select."
+    #
+    # ⚠ THE PAINTING IS THE WARDROBE AND THE HANDLING, NEVER THE MAN. Both
+    #   avatar paintings are a bald man with a grey beard and dark skin; they are
+    #   cut below the beard (refs.py) and the three identity crops come first.
+    # ⚠ THE STARS ARE GONE BY HIS WORD, and the halo is a single fine ring.
+    # ⚠ THE SIGILS ARE THIN LINES OF LIGHT, NOT A HAZE. They are the one
+    #   emissive thing on a plate cut by a CHROMA key: a line with a tight glow
+    #   keys as partial alpha and `gold.unmix` takes the blue back out of it; a
+    #   haze spread over the ground would key as a blue-grey fog. Their shapes
+    #   are the vocabulary of the linework tattoos on his fingers, so the spell
+    #   reads as his and no lettering enters the picture.
+    # ⚠ THE HANDS ARE RAISED, SO THEY ARE HELD INSIDE THE CLOAK'S LINE: the
+    #   site's figure column is width-bound, and the widest thing in a plate
+    #   sets the scale of the whole man (ADR-082 U18).
+    # ⚠ THE CLOTH IS STILL LIT AS CLOTH: the gold grade needs readable
+    #   charcoal folds, which is what keeps this era inside the Architect's band
+    #   where `genai-v2` read "too glowing".
     "genai": """
-IMAGE 1 and IMAGE 2 are this man's IDENTITY. IMAGE 3 is the WARDROBE and the
-PAINT HANDLING — a painting cropped at the collar, headless on purpose: take its
-garments and its brushwork, never a face or a skin tone from it. IMAGE 4 is his
-HANDS. Draw ONE figure: this man, full length, in that wardrobe.
+IMAGE 1, IMAGE 2 and IMAGE 3 are this man's IDENTITY, at three angles. IMAGE 4 is
+the WARDROBE and the PAINT HANDLING — a painting cut below its figure's beard,
+headless on purpose: take its garments and its handling, never a face, a beard or
+a skin tone from it. IMAGE 5 is his HANDS. Draw ONE figure: this man, full
+length, in that wardrobe.
 
-HIS FACE, unchanged and recognisable at a glance: a long oval face, a heavy
-straight brow, hooded dark eyes with real irises, a straight nose, a short
-close-trimmed beard that thins at the cheeks, his own warm olive skin.
-BARE-HEADED: the head shaved to the skin — no cap, no hood, no crown.
+HIS FACE, exactly as in the identity photographs and recognisable at a glance: a
+long oval face with a strong, angular jaw; a heavy, straight, low-set dark brow;
+deep-set, hooded dark eyes with real irises and shadowed hollows beneath them; a
+straight nose with a broad bridge; a thin upper lip over a fuller lower lip. THE
+BEARD IS A CHIN BEARD: a dark moustache joining a dense, full dark beard on the
+chin and along the jawline, the CHEEKS nearly clean. His own light, warm skin.
+BARE-HEADED, the head shaved to the skin — no cap, no hood, no crown. A serious,
+contained expression, eyes on the lens, MOUTH CLOSED.
 
-THE HABIT, exactly as IMAGE 3: a long black cloak with a high standing collar and
+THE HABIT, exactly as IMAGE 4: a long black cloak with a high standing collar and
 a ragged hem over a floor-length black robe; a bandolier from the left shoulder
 to the right hip set with small metal plates; a sash-belt closed by ONE LARGE
 ROUND GOLD DISC; a smaller gold boss at the breast; THICK STACKED GOLD CUFFS
 three bands deep on both forearms; two medallions on a fine chain; a slim
-gold-banded rod WORN at the hip inside the line of the cloak — never held, never
-projecting past it. His hands are EMPTY and hang at his sides, backs to the
-camera, with his own tattoos and his gold signet ring as in IMAGE 4.
+gold-banded rod WORN at the hip inside the line of the cloak — never held. His
+hands are BARE, with his own tattoos and his gold signet ring as in IMAGE 5.
 
-THE HALO: a thin gold ring behind his head with five or six small FOUR-POINTED
-stars set ON the ring — fine line and solid shapes. No glow, no sparkle dust.
+POSE, like a hero on a character-select screen: standing tall and square to the
+camera, his weight settled, calm and in command. His forearms are raised a little
+in front of him at waist height, elbows near his sides, hands open about a
+forearm's length from his body, palms turned a little upward and toward each
+other, fingers relaxed and slightly parted — a spell held quietly between them,
+never thrown. Both hands stay INSIDE the outline of the cloak.
 
-PAINTED as heroic cinema key art: acrylic over a tight pencil drawing, realism
-first. Confident brushwork in the cloth, tighter in the face and the metal.
-Sculpted values, decisive edges. The blacks are PAINTED AS CLOTH.
+THE SPELL, subtle and sparse: around each forearm, just above the gold cuffs, one
+thin ring of small floating SIGILS circles the arm, and two or three more of the
+same small sigils hang in the air just above each open palm. Each sigil is a fine
+geometric line-glyph — a small circle crossed by straight strokes, a node on a
+line, an open arc with a tick — the same vocabulary as the small linework tattoos
+on his fingers; never letters, runes or numbers. They are drawn as FINE LINES OF
+WARM GOLD LIGHT, each line carrying only a tight, soft glow that hugs it; they
+cast a faint warm light onto his palms and the cuffs and nowhere else.
+
+THE HALO, subtle: ONE thin, even circle of warm gold light behind his head, a
+little wider than his head and centred on it, its line fine and clean with a
+tight soft glow. NO STARS on it or around it — no star points, no rays, no
+sparkles, no second ring.
+
+PAINTED as retro-futuristic science-fiction poster art, realism first so he is
+recognisable at a glance: AIRBRUSHED over a tight drawing — smooth sprayed
+gradients modelling the skin and the cloak's folds, soft sprayed highlights, crisp
+masked edges and hard bright specular glints on the gold and the metal, a few
+confident brush marks in the cloth. Heroic and idealised, a painting — not a
+photograph and not a 3D render. The blacks are PAINTED AS CLOTH.
 
 LIT by two fixtures only: a broad soft white bounce below the camera as the KEY,
 reaching into every fold, so the black cloth reads dark-to-mid charcoal and
@@ -384,13 +429,94 @@ a HAIRLINE rim on the crown and the tops of the shoulders only.
 
 CAMERA LOW, at hip height, tilted up a little; 85mm or longer.
 
-FRAMING 9:16: the whole figure, from the highest star to the soles. The top of
-the skull about 11 % down from the top edge, the soles about 5 % up from the
-bottom edge, and nothing touching any edge. If he does not fit, make him smaller.
+FRAMING 9:16: the whole figure, from the top of the halo to the soles. The top of
+the halo about 6 % down from the top edge, the soles about 4 % up from the bottom
+edge, and nothing — no hand, no sigil, no hem — touching any edge. If he does not
+fit, make him smaller.
 
-DO NOT: a hologram, a glow, glowing eyes, gold-tinted skin, a monochrome image;
-a rock, a ledge, sand, a floor, a shadow; blue light on the figure; text or a
-signature; a crop; a second figure; anything held in his hands.
+DO NOT: stars anywhere; a hologram, a monochrome image, gold-tinted skin, glowing
+eyes; a haze, smoke or light rays; letters, runes, numbers, text or a signature; a
+rock, a ledge, sand, a floor, a shadow; blue light on the figure; gloves; a staff,
+rod or weapon in his hands; a crop; a second figure.
+""".strip(),
+    # 2023 · the same brief on the owner's SECOND habit (2026-09-25), drawn beside
+    # the first so he picks the clothing from the sheet: sculpted pauldrons, a
+    # belt of machined gold modules, filigree bracers. ⚠ The painting's figure
+    # is GLOVED and his hands are the identity's watermark (the skill's Rule 2),
+    # so the bracers stop at the wrist and the hands are bare.
+    "genai-regalia": """
+IMAGE 1, IMAGE 2 and IMAGE 3 are this man's IDENTITY, at three angles. IMAGE 4 is
+the WARDROBE and the PAINT HANDLING — a painting cut below its figure's beard,
+headless on purpose: take its garments and its handling, never a face, a beard, a
+skin tone or its gloved hands from it. IMAGE 5 is his HANDS. Draw ONE figure: this
+man, full length, in that wardrobe.
+
+HIS FACE, exactly as in the identity photographs and recognisable at a glance: a
+long oval face with a strong, angular jaw; a heavy, straight, low-set dark brow;
+deep-set, hooded dark eyes with real irises and shadowed hollows beneath them; a
+straight nose with a broad bridge; a thin upper lip over a fuller lower lip. THE
+BEARD IS A CHIN BEARD: a dark moustache joining a dense, full dark beard on the
+chin and along the jawline, the CHEEKS nearly clean. His own light, warm skin.
+BARE-HEADED, the head shaved to the skin — no cap, no hood, no crown. A serious,
+contained expression, eyes on the lens, MOUTH CLOSED.
+
+THE REGALIA, exactly as IMAGE 4: a long black cloak with a high collar falling to
+the floor over a floor-length black robe; on both shoulders, sculpted PAULDRONS of
+polished silver-and-gold metal, their surfaces engraved with fine circuit-like
+line-work and set with small round lenses; small gold emblems pinned on the
+cloak's breast — a gold cross within a ring, and small geometric line emblems; at
+the waist a WIDE BELT of gold machined modules — blocks, ridges and round
+lens-discs like the face of an old instrument; a small gold pendant on a cord
+hanging from the belt; on both forearms, ornate gold BRACERS of the same machined
+filigree, ending AT THE WRIST. IMAGE 4 is cut at the knee: continue the cloak and
+the robe to the floor over dark boots. IMAGE 4 wears gloves — HE DOES NOT: his
+hands are BARE, with his own tattoos and his gold signet ring as in IMAGE 5.
+
+POSE, like a hero on a character-select screen: standing tall and square to the
+camera, his weight settled, calm and in command. His forearms are raised a little
+in front of him at waist height, elbows near his sides, hands open about a
+forearm's length from his body, palms turned a little upward and toward each
+other, fingers relaxed and slightly parted — a spell held quietly between them,
+never thrown. Both hands stay INSIDE the outline of the cloak.
+
+THE SPELL, subtle and sparse: around each forearm, just above the bracers' wrist
+edge, one thin ring of small floating SIGILS circles the arm, and two or three
+more of the same small sigils hang in the air just above each open palm. Each
+sigil is a fine geometric line-glyph — a small circle crossed by straight strokes,
+a node on a line, an open arc with a tick — the same vocabulary as the small
+linework tattoos on his fingers; never letters, runes or numbers. They are drawn
+as FINE LINES OF WARM GOLD LIGHT, each line carrying only a tight, soft glow that
+hugs it; they cast a faint warm light onto his palms and the bracers and nowhere
+else.
+
+THE HALO, subtle: ONE thin, even circle of warm gold light behind his head, a
+little wider than his head and centred on it, its line fine and clean with a
+tight soft glow. NO STARS on it or around it — no star points, no rays, no
+sparkles, no second ring.
+
+PAINTED as retro-futuristic science-fiction poster art, realism first so he is
+recognisable at a glance: AIRBRUSHED over a tight drawing — smooth sprayed
+gradients modelling the skin and the cloak's folds, soft sprayed highlights, crisp
+masked edges and hard bright specular glints on the pauldrons, the belt and the
+bracers, a few confident brush marks in the cloth. Heroic and idealised, a
+painting — not a photograph and not a 3D render. The blacks are PAINTED AS CLOTH.
+
+LIT by two fixtures only: a broad soft white bounce below the camera as the KEY,
+reaching into every fold, so the black cloth reads dark-to-mid charcoal and
+nothing is crushed; and one small hard warm source high to camera-right, drawing
+a HAIRLINE rim on the crown and the tops of the pauldrons only.
+
+CAMERA LOW, at hip height, tilted up a little; 85mm or longer.
+
+FRAMING 9:16: the whole figure, from the top of the halo to the soles. The top of
+the halo about 6 % down from the top edge, the soles about 4 % up from the bottom
+edge, and nothing — no pauldron, no hand, no sigil, no hem — touching any edge. If
+he does not fit, make him smaller.
+
+DO NOT: stars anywhere; a hologram, a monochrome image, gold-tinted skin, glowing
+eyes; a haze, smoke or light rays; letters, runes, numbers, text or a signature; a
+mountain, a sky, a rock, a floor, a shadow; blue light on the figure; gloves; a
+staff, rod or weapon in his hands; a crop; a second figure.
 """.strip(),
     # 2018 · the campaign commander, on the set visit. Live action: the owner's
     # own brief is "realistic … a live-action-ish type of thing".
@@ -514,25 +640,39 @@ a crop.
 }
 
 
-def plate_prompt(era: str) -> str:
-    """The full lock for one era's COLOUR PLATE — the two-step route's first half."""
-    lock = PLATE_LOCK.get(era)
-    if lock is None:
-        raise SystemExit(f"no plate lock for era '{era}'")
-    return lock + "\n\n" + key_ground_text(era)
+def plate_prompt(era: str, lock: str | None = None) -> str:
+    """The full lock for one era's COLOUR PLATE — the two-step route's first half.
+    `lock` names a second lock for the same era (`genai-regalia`); the ground is
+    always the ERA's, so a second habit cannot stand on a different key."""
+    text = PLATE_LOCK.get(lock or era)
+    if text is None:
+        raise SystemExit(f"no plate lock '{lock or era}'")
+    return text + "\n\n" + key_ground_text(era)
 
 
 #: The idle for a PLATE (Veo image-to-video). The ground is the key colour now,
 #: so the invariant is that it STAYS the key colour — a ground that drifts in
 #: value is a matte that drifts with it.
 PLATE_IDLE: dict[str, tuple[str, str]] = {
+    # ⚠ RE-BRIEFED 2026-09-25 (the owner: "casting subtle magic sigils and spells
+    # around my arms … like an idle animation from an RPG video game or a
+    # character select"). The ring of stars is gone; what moves now is the
+    # SPELL, and only the spell and a breath. The sigils are the one thing a
+    # video model will want to turn into an effect, so their motion is given as
+    # a slow, even orbit and a soft brightening, and the burst is banned by name.
+    # ⚠ AND THE HALO IS BROKEN PARTS THAT TURN (owner, same day: "like broken
+    # parts rotating around my head"): the pieces orbit ON their circle, so the
+    # loop can close on the frame it began on.
     "genai": (
-        "A slow, shallow breath under the cloak; the hem stirs and settles; one slow "
-        "blink — that is everything",
-        "his feet, his head, his eyes on the lens, his arms, all the metalwork, the ring "
-        "of stars (a fixed object: no rotation, no twinkle, no pulse), and THE PAINT "
-        "(the brushwork is fixed to the cloth like a printed surface; it never shimmers "
-        "and it is never repainted)",
+        "A slow, shallow breath under the cloak; the thin rings of small gold sigils "
+        "around his forearms turn slowly and evenly around his arms, and the few sigils "
+        "above his open palms drift a little, brightening and dimming softly; the stone "
+        "shards of the halo turn slowly and evenly around his head, all together on their "
+        "one ring, like a slow orbit, their small chips drifting with them; one normal blink — that is everything",
+        "his feet, his stance, his head and his eyes on the lens, his raised forearms and "
+        "open hands (exactly where they are in the first frame), all the metalwork, the "
+        "halo's circle (its size and its centre behind his head), and THE PAINT (the airbrushed surface is fixed to him like "
+        "a printed surface; it never shimmers and it is never repainted)",
     ),
     # ⚠ THE COMMANDER (ADR-082 U34, owner: "more like a general or commander,
     # maybe holding my gun but then pointing in the distance, giving commands.
@@ -598,6 +738,15 @@ PLATE_IDLE_NEGATIVE = (
 #: The hold goes FIRST now, in the picture's terms, and the moves it made are
 #: banned by name in the negative.
 PLATE_IDLE_HOLD: dict[str, str] = {
+    # ⚠ U32's lesson again: raised forearms the model is not told to HOLD are
+    # forearms it will lower, and open hands it will close or wave.
+    "genai": (
+        "THE POSE IS HELD FOR ALL EIGHT SECONDS. His forearms stay raised in front of him "
+        "at waist height and his hands stay open, palms up, exactly where they are in the "
+        "first frame; they never drop, never lift, never close and never gesture. He keeps "
+        "looking at the camera and his lips stay closed. The last frame is the first "
+        "frame's pose."
+    ),
     # ⚠ U32's lesson, one pose on: a raised arm the model is not told to HOLD is
     # an arm it will lower, so the hold is stated first and in picture terms.
     # ⚠ AND HE DOES NOT SPEAK. The first commander plate caught him with his
@@ -640,6 +789,19 @@ PLATE_IDLE_NEGATIVE_EXTRA: dict[str, str] = {
 #: shared one bans rifle moves and blue light; the trainer has no rifle, and his
 #: ground is magenta.
 PLATE_IDLE_NEGATIVE_OWN: dict[str, str] = {
+    # The captain has no rifle, and the shared negative's "particles" would
+    # fight the sigils he is holding; what he may not have is an EFFECT.
+    # ⚠ "a camera orbit", never a bare "orbit": the halo's shards DO orbit.
+    "genai": (
+        "camera movement, pan, tilt, zoom, dolly, a camera orbit, handheld shake; walking, stepping, "
+        "turning away, talking, moving lips; lowering the arms, closing the hands, a hand "
+        "gesture, throwing a spell; a burst of magic, an explosion of light, sparks, embers, "
+        "dust, fire, lightning, smoke, light rays, lens flare, flicker, exposure change; stars; "
+        "the halo growing, shrinking or moving off his head, its pieces leaving their circle; redrawn or shimmering paint, a change of style; a "
+        "gradient, vignette, floor, horizon or shadow on the ground; blue light on the "
+        "figure; text, watermark; a second figure; the figure leaving the frame; cropped "
+        "boots; music, a song, singing, speech, voices, sound effects"
+    ),
     "pokemon-go": (
         "camera movement, pan, tilt, zoom, dolly, orbit, handheld shake; walking, turning "
         "away, talking; throwing, tossing, dropping or swapping the ball; lowering the hand "
@@ -727,6 +889,37 @@ def plate_idle_negative(era: str) -> str:
 #:   in the hand on the LEFT. A kneeling text left under this key would draw a
 #:   standing man on one knee the first time anyone ran `--ending home`.
 PLATE_SCENE: dict[str, str] = {
+    # 2026-09-25 (ADR-082 U44 A, the owner on genai-v3: "I think I'm a bit too
+    # static. I think I should move my hands a bit and also my posture. I don't
+    # think I should walk but … just move a bit with my body"). A LIVING IDLE,
+    # drawn as a scene so it comes home to plate O on its own and the loop
+    # closes on a pose rather than on a reversal (a ping-pong turns moving hands
+    # around mid-gesture).
+    # ⚠ THE HANDS ARE GIVEN A SHAPE TO MOVE IN, NOT A MOTION TO MAKE — U34's
+    #   lesson: a hand told only "moves" became a raised index finger. So the
+    #   drift is bounded (low, open, palms up, a few centimetres) and the
+    #   gesture shapes are banned by name.
+    # ⚠ THE HALO IS NOT ASKED TO DO ANYTHING: `post.py --loop orbit` erases the
+    #   model's ring and turns frame 0's, following his head.
+    "genai": (
+        "LOCKED STATIC FRAME on a heavy tripod; the camera never moves and never pushes in. "
+        "The shot BEGINS AND ENDS ON THE FIRST FRAME'S POSE: he stands with his forearms "
+        "raised in front of him at waist height, his hands open, palms up, the ring of stone "
+        "shards behind his head. In between, a slow, LIVING idle in real time, like a hero "
+        "waiting on a character-select screen. His weight shifts gently onto one leg and back; "
+        "his shoulders rise with a slow breath and settle; his torso turns a few degrees to one "
+        "side and returns, his head tilting a little with it and coming back to the lens. His "
+        "hands keep moving slowly the whole time, as if shaping the spell between them: they "
+        "drift a few centimetres up and apart and turn a little, the fingers flexing and "
+        "curling softly, then drift back down and together — always low, open and palms up. "
+        "The small gold sigils follow his hands. His feet stay planted exactly where they are; "
+        "he never steps, walks or lifts a heel. No gesture: no pointing, no raised finger, no "
+        "fist, no wave, no reach toward the camera; his hands never rise above his chest and "
+        "never leave the frame. His lips stay closed and he does not speak. His eyes stay "
+        "open and alert; he blinks normally and quickly. In the last second he settles back "
+        "into the first frame's pose and holds it. The background is a FLAT UNIFORM BLUE, the "
+        "same value in every corner on every frame. The lighting does not change."
+    ),
     "expanse": (
         "LOCKED STATIC FRAME on a heavy tripod; the camera never moves. The shot BEGINS "
         "AND ENDS ON THE FIRST FRAME'S POSE: he stands, pointing into the distance with the "
@@ -744,6 +937,17 @@ PLATE_SCENE: dict[str, str] = {
 }
 
 PLATE_SCENE_NEGATIVE: dict[str, str] = {
+    "genai": (
+        "walking, stepping, lifting a foot or a heel, turning around, kneeling, crouching; "
+        "pointing, a raised index finger, a fist, waving, beckoning, reaching toward the camera, "
+        "hands above the chest, the arms dropping to his sides; talking, moving lips, an open "
+        "mouth; slow blinking, eyes closing, drooping eyelids; a burst of magic, an explosion "
+        "of light, sparks, embers, fire, lightning, smoke, light rays, lens flare; stars; "
+        "camera movement, pan, tilt, zoom, push-in, dolly, a camera orbit, handheld shake; "
+        "redrawn or shimmering paint, a change of style; a gradient, vignette, floor, horizon "
+        "or shadow on the ground; blue light on the figure; flicker, exposure change; text, "
+        "watermark; a second figure; the figure leaving the frame; cropped boots"
+    ),
     "expanse": (
         "firing, a muzzle flash, recoil, smoke, shell casings, sparks; the barrel pointing "
         "straight into the lens; the rifle, the muzzle or an elbow leaving the frame; "
@@ -1136,6 +1340,134 @@ the rifle, the kilt, the boots, the pose or the framing.
 """
 
 
+#: 2026-09-25 · the Latent Land regalia, the owner's second read (on plates D and
+#: E of `20260925-genai-v6`): "I like the long cloak and I also want the golden
+#: pauldrons, but I think we should be able to see my black pants and black
+#: boots … I love to wear high-top boots with black jeans … a bit more
+#: adventurous … the halo should be made out of parts, like broken parts
+#: rotating around my head."
+#: ⚠ THREE CHANGES IN ONE EDIT, each named and bounded, and the sigils, the
+#:   raised hands and the long cloak listed as KEPT: an outfit edit that is not
+#:   told the cloak stays long shortens it with the robe.
+#: ⚠ THE HALO'S PIECES STAY ON ONE CIRCLE, at the old ring's size and centre, so
+#:   the idle can turn them as one broken ring rather than scatter them.
+EDIT_OUTFIT = """
+IMAGE 1 is the painting to edit. {idents} this man's IDENTITY — the same person,
+photographed. {jeans} his own BLACK JEANS. {boots} his own HIGH BOOTS, with the
+jeans' turned-up cuff resting on one. Take only the garments from those two —
+never a background, a person or a pose.
+
+Keep exactly as IMAGE 1: this man's FACE — the brow, the eyes, the nose, the chin
+beard, exactly as the identity photographs — his shaved head, his gaze on the
+lens and his closed mouth; his raised forearms and open hands with his tattoos and
+his ring; the small gold sigils circling his forearms and floating above his
+palms; the LONG black cloak falling from his shoulders to the floor, its high
+collar, the emblems on its breast; the belt of machined gold modules and its
+pendant; the bracers; the light; the painted, airbrushed handling; his size and
+his place in the picture; and the flat blue ground.
+
+Make THREE changes, and nothing else.
+
+ONE — THE PAULDRONS ARE GOLD: the same sculpted pauldrons, the same shape, size
+and engraved line-work and lenses, now in polished warm GOLD rather than silver.
+
+TWO — BELOW THE BELT: BLACK JEANS AND HIGH BOOTS. The floor-length robe is GONE.
+Under the belt he wears his own relaxed, straight-cut BLACK JEANS as in {jeans_n},
+their hems turned up once in a thick cuff that rests on his own worn black
+leather LACE-UP HIGH BOOTS as in {boots_n}, laced to well above the ankle, on
+thick lug soles. The long cloak still falls from his shoulders to the floor behind
+him and at his sides, OPEN AT THE FRONT, so the jeans and the boots read clearly
+from the belt to the soles. A travelling adventurer, not a priest: the leather
+creased and worn, never polished parade boots. His feet stay planted where they
+are, the soles on the same line as before, nothing touching a frame edge.
+
+THREE — THE HALO IS BROKEN: the single thin ring becomes a halo of separate PARTS —
+six to eight curved arc segments of the same fine warm gold light, of unequal
+lengths with clean gaps between them, all on ONE circle at the old ring's size
+and centre behind his head, as if the ring had broken and its pieces keep
+circling him; one or two small fragments sit a little off the circle. Fine lines
+with a tight soft glow. No stars, no rays, no sparkles, no second ring.
+
+The ground stays one perfectly uniform blue, #0A28D2, edge to edge — no shadow,
+no gradient, and no blue light on the figure.
+
+DO NOT: a robe, a skirt, a kilt or trousers of any colour but black; shoes,
+trainers or short boots; a shorter cloak; stars; a different face; gloves; a
+change to the pose, the hands, the sigils or the framing; lettering anywhere.
+"""
+
+
+#: 2026-09-25 · the owner's third read, on G–L: "the halo should be made out of
+#: our Thoughtform gateways. It's like that white stony material … shards, maybe
+#: out of shards, not too sharp." ONE change, on the picked outfit plate; the
+#: design images are crops of the site's own gateway key visuals (the ring of
+#: chalky, panelled stone that erodes into fragments at its edge).
+#: ⚠ THE SHARDS ARE STONE, NOT LIGHT: matte and opaque, so the chroma key reads
+#:   them as solid (a glow over blue is the one thing that keys as fog).
+#: ⚠ OFF-WHITE, NEVER PURE WHITE, AND LIT LIKE HIM: the gold grade lifts
+#:   mid-tones hard, and a paper-white ring beside his head would be the
+#:   brightest thing on the figure — "too glowing" in a new place.
+#: ⚠ ONE RING, at the old halo's size and centre, so the idle can turn the
+#:   pieces together and the loop can close.
+EDIT_HALO = """
+Keep the image exactly as it is — the same man: his face, his beard, his shaved
+head, his gaze on the lens and his closed mouth; his raised forearms and open
+hands with his tattoos and his ring; the small gold sigils circling his forearms
+and floating above his palms; the gold pauldrons, the long open black cloak, the
+emblems, the belt of machined gold modules and its pendant, the bracers, the black
+jeans with their turned-up cuffs, the high lace-up boots; the light, the painted
+handling, his size and his place in the picture; and the flat blue ground.
+
+Make ONE change: THE HALO. The thin broken lines of gold light behind his head are
+REPLACED by a halo of floating SHARDS OF PALE STONE — the material of the ring-shaped
+structure in {designs}: a chalky, matte, warm off-white stone, faintly weathered,
+engraved with fine panel lines and seams. Seven to ten curved pieces of it that
+together still trace ONE ring behind his head, at the old halo's size and centre,
+with clear gaps between them, and a few small chips drifting just off the ring.
+The shards are CHUNKY, with SOFTENED, ERODED EDGES and rounded broken corners —
+weathered stone fragments, never blades, spikes, splinters or glass. Solid and
+opaque: they do NOT glow. They catch the same light as his shoulders, lit from
+below and in front, with a hairline of warm light along their upper edges, so
+they read as a warm pale grey-white, never paper-white. They float free: nothing
+joins them to him.
+
+The ground stays one perfectly uniform blue, #0A28D2, edge to edge — no shadow,
+no gradient, and no blue light on the figure or on the stone.
+
+DO NOT: glowing or emissive shards; lines of gold light; crystal, glass, ice or
+metal; sharp points, spikes or blades; a whole unbroken ring; a crown; stars;
+pure white; lettering; any change to his face, his pose, his hands, the sigils,
+the costume or the framing.
+"""
+
+
+def halo_prompt(n_design: int) -> str:
+    """The halo edit: IMAGE 1 the plate, then the gateway crops as IMAGE 2… —
+    `generate.py`'s generic edit path re-bases these past the identity crops."""
+    if n_design < 1:
+        raise SystemExit("the halo edit needs the gateway crops as --design")
+    d = [f"IMAGE {i}" for i in range(2, 2 + n_design)]
+    designs = d[0] if len(d) == 1 else ", ".join(d[:-1]) + f" and {d[-1]}"
+    lead = (f"{designs} show{'s' if len(d) == 1 else ''} only the MATERIAL of the halo — "
+            "take the stone's colour, surface, panel lines and eroded edges; ignore the "
+            "structure's size, its shape as a whole, the sky, the ground, the ink lines "
+            "and any lettering around it.\n")
+    return (lead + EDIT_HALO.format(designs=designs)).strip()
+
+
+def outfit_prompt(n_identity: int, n_design: int) -> str:
+    """The outfit edit: IMAGE 1 the plate, IMAGES 2… the identity crops, then his
+    jeans and his boots (`refs.py --set outfit` lists them in that order)."""
+    if n_identity < 1 or n_design != 2:
+        raise SystemExit("the outfit edit needs the wave's identity crops, then HIS BLACK JEANS "
+                         "and HIS HIGH BOOTS (refs.py --set outfit)")
+    nums = [f"IMAGE {i}" for i in range(2, 2 + n_identity)]
+    idents = f"{nums[0]} is" if len(nums) == 1 else ", ".join(nums[:-1]) + f" and {nums[-1]} are"
+    j, b = 2 + n_identity, 3 + n_identity
+    return EDIT_OUTFIT.format(idents=idents, jeans=f"IMAGE {j} shows", boots=f"IMAGE {b} shows",
+                              jeans_n=f"IMAGE {j}", boots_n=f"IMAGE {b}").strip()
+
+
 def rig_prompt(n_identity: int, n_design: int) -> str:
     """The helmet-and-build edit: IMAGE 1 the plate, IMAGES 2… the identity crops,
     then the helmet's reference frames, if any."""
@@ -1225,7 +1557,16 @@ def edit_prompt(era: str, n_design: int, kind: str = "rifle", n_identity: int = 
     of the new rifle follow IMAGE 1 (0 means the words alone carry it); `kind`
     "aim" is the scene's end pose (ADR-082 U33), "command" the standing
     commander (U34), "mouth" that commander with his mouth closed (U34), "face"
-    his own face put back from `n_identity` photographs (U41)."""
+    his own face put back from `n_identity` photographs (U41), "outfit" the Latent
+    Land regalia's gold pauldrons, jeans, boots and broken halo (2026-09-25)."""
+    if kind == "outfit":
+        if era != "genai":
+            raise SystemExit("the outfit edit is authored for genai only")
+        return outfit_prompt(n_identity, n_design)
+    if kind == "halo":
+        if era != "genai":
+            raise SystemExit("the halo edit is authored for genai only")
+        return halo_prompt(n_design)
     if era != "expanse":
         raise SystemExit(f"no plate edit is authored for era '{era}'")
     if kind == "face":

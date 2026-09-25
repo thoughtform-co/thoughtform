@@ -50,8 +50,13 @@ MAX_BYTES = 10_240
 MARKS: dict[str, dict] = {
     "thoughtform": dict(poster="holo-still-thoughtform.webp", out="holo-thumb-thoughtform.webp",
                         crown=0.122, chin=0.258, eye=0.205, cx=0.500),
-    "genai": dict(poster="holo-still-genai-v2.webp", out="holo-thumb-genai-v2.webp",
-                  crown=0.095, chin=0.211, eye=0.166, cx=0.490),
+    # v4 (2026-09-25, ADR-082 U44: the AI Captain re-drawn — his face, the
+    # regalia, the stone halo — and then made to move): re-marked off its own
+    # frame zero — the crown is the SKULL's top at row 119 (the halo's shards
+    # sit above it and are not the head), the chin the beard's bottom (269),
+    # the eye line 193, the head's centre x 352. (v3 was seated one row lower.)
+    "genai": dict(poster="holo-still-genai-v4.webp", out="holo-thumb-genai-v4.webp",
+                  crown=0.093, chin=0.2102, eye=0.1508, cx=0.489),
     # v11 = v10 + 33 rows (0.0258): the marks move with the frames.
     "azeroth": dict(poster="holo-still-azeroth-v11.webp", out="holo-thumb-azeroth-v11.webp",
                     crown=0.2875, chin=0.383, eye=0.332, cx=0.465),

@@ -269,9 +269,17 @@ def build_settle(src: Path, fdir: Path, cut: int | None = None, k_max: int = FPS
     held pose, so that step is compared with the held second's own motion (and a
     0.75/255 floor, the encoder's noise on a still frame); `k` grows until it
     passes or reaches a second, which is all the hold there is."""
+    out, info = _settle(decode_rgb(src, cut), k_max)
+    write_frames(out, fdir)
+    return info
+
+
+def _settle(arr, k_max: int = FPS):
+    """`build_settle`'s arithmetic on frames already in hand (U44 A: the orbit's
+    living idle settles a STABILISED clip, so it cannot re-decode the file)."""
     import numpy as np
 
-    arr = decode_rgb(src, cut).astype(np.float32)
+    arr = np.asarray(arr).astype(np.float32)
     n = len(arr)
     if n < FPS * 3:
         raise SystemExit(f"{n} frames is too short for a scene")
@@ -287,14 +295,285 @@ def build_settle(src: Path, fdir: Path, cut: int | None = None, k_max: int = FPS
         t = (j + 1) / (k + 1)
         i = m - k + j
         out[i] = arr[i] * (1 - t) + arr[0] * t
-    write_frames(out, fdir)
     osmall = out[:, ::8, ::8].mean(-1)
     seam = float(np.abs(osmall[-1] - osmall[0]).mean())
     motion = float(np.abs(np.diff(osmall, axis=0)).mean())
-    return {"period": len(out), "blend": k, "frames": len(out), "loop": "settle",
-            "drift": round(drift, 3), "held": round(held, 3), "step": round(drift / (k + 1), 3),
-            "seam": round(seam, 3), "motion": round(motion, 3),
-            "closed": drift / (k + 1) <= floor}
+    out = out.clip(0, 255).astype(np.uint8)
+    return out, {"period": len(out), "blend": k, "frames": len(out), "loop": "settle",
+                 "drift": round(drift, 3), "held": round(held, 3), "step": round(drift / (k + 1), 3),
+                 "seam": round(seam, 3), "motion": round(motion, 3),
+                 "closed": drift / (k + 1) <= floor}
+
+
+def head_track(frames) -> tuple:
+    """The top of his scalp per frame (row) and its centre (column), from the
+    SKIN alone — the stone halo and the ground are neutral or blue, the head is
+    warm — smoothed over time and WRAPPED, because the frames are one loop.
+    What the living idle's halo follows (U44 A)."""
+    import numpy as np
+    from scipy import ndimage
+
+    crowns, cxs = [], []
+    for f in frames:
+        f = f.astype(np.float32)
+        mx, mn = f.max(-1), f.min(-1)
+        sat = (mx - mn) / np.maximum(mx, 1)
+        skin = (sat > 0.18) & (f[..., 0] > f[..., 1]) & (f[..., 1] > f[..., 2]) & (f[..., 0] > 90)
+        skin[int(H * 0.2):] = False
+        skin = ndimage.binary_opening(skin, iterations=2)
+        lab, n = ndimage.label(skin)
+        if not n:
+            raise SystemExit("no head found to track")
+        m = lab == int(np.argmax(ndimage.sum(skin, lab, range(1, n + 1)))) + 1
+        ys, xs = np.where(m)
+        top = ys.min()
+        band = m[top:top + 50]
+        crowns.append(float(top))
+        cxs.append(float(np.where(band)[1].mean()))
+    crown = ndimage.gaussian_filter1d(np.array(crowns), 2.0, mode="wrap")
+    cx = ndimage.gaussian_filter1d(np.array(cxs), 2.0, mode="wrap")
+    return crown, cx
+
+
+def halo_ring(frame0, ground, head_band: float = 0.20) -> dict:
+    """The floating halo's geometry on frame 0: its pieces (every opaque
+    component above `head_band` of the height that is NOT the figure's own), the
+    circle fitted through them, and the figure's mask.
+
+    ⚠ THE PIECES MUST FLOAT FREE ON FRAME 0 — a piece merged with the figure is
+    part of the figure's component and would stay behind as a static fragment
+    while the rest turn. The plate lock and the halo edit both say it ("nothing
+    joins them to him"), and the count is printed so a merged piece shows.
+
+    ⚠ `head_band` IS 0.20, NOT 0.30: at 0.30 a floating SIGIL beside his raised
+    hand (y 366 of 1280) joined the pieces, the circle came out centred on his
+    chest with a 259px radius, and the erase swept the whole upper body. A ring
+    wider than a third of the canvas refuses."""
+    import numpy as np
+    from scipy import ndimage
+
+    import gold
+
+    a = gold.key_matte(frame0.astype(np.float32), tuple(ground))
+    m = a > 0.5
+    lab, n = ndimage.label(m)
+    sizes = ndimage.sum(m, lab, range(1, n + 1))
+    body = int(np.argmax(sizes)) + 1
+    pieces = [i for i in range(1, n + 1)
+              if i != body and (lab == i).sum() >= 15
+              and np.argwhere(lab == i)[:, 0].mean() < H * head_band]
+    if len(pieces) < 4:
+        raise SystemExit(f"only {len(pieces)} free halo piece(s) on frame 0 — nothing to turn")
+    pts = np.concatenate([np.argwhere(lab == i) for i in pieces]).astype(float)
+    y, x = pts[:, 0], pts[:, 1]
+    A = np.c_[2 * x, 2 * y, np.ones(len(x))]
+    cx, cy, c = np.linalg.lstsq(A, x ** 2 + y ** 2, rcond=None)[0]
+    d = np.hypot(x - cx, y - cy)
+    if d.max() > W / 3 or d.min() < 0.25 * d.max():
+        raise SystemExit(f"the halo fit is not a ring (r {d.min():.0f}-{d.max():.0f} px about "
+                         f"{cx:.0f},{cy:.0f}) — a non-halo piece joined it; lower head_band")
+    piece_mask = np.isin(lab, pieces)
+    return {"cx": float(cx), "cy": float(cy), "r": float(np.sqrt(c + cx ** 2 + cy ** 2)),
+            "r_min": float(d.min()), "r_max": float(d.max()), "n": len(pieces),
+            "pieces": piece_mask, "alpha": a}
+
+
+def stabilise_push(arr, ground) -> tuple:
+    """Undo a slow camera PUSH-IN: scale every frame back onto frame 0's
+    geometry, about the figure's own crown and soles.
+
+    ⚠ MEASURED ON THE LATENT LAND IDLE (2026-09-25): told "no zoom, no push-in",
+    Veo still pushed in 3.8 % over eight seconds, linearly, about his chest
+    (crown 82 → 68 px, soles 1227 → 1257, head width 95 → 99). Invisible in one
+    pass; but a ping-pong turns it into the figure slowly swelling and shrinking
+    on the page, and a halo turned about frame 0's centre drifts off his head.
+
+    The crown is the top of the SKIN (the bald head — warm and saturated, which
+    the stone halo and the ground are not), the soles the lowest opaque row;
+    both are fitted by a straight line over the clip so the correction cannot
+    jitter with a one-pixel measurement."""
+    import numpy as np
+    from scipy import ndimage
+
+    import gold
+
+    crowns, soles, cxs = [], [], []
+    for f in arr:
+        f = f.astype(np.float32)
+        mx, mn = f.max(-1), f.min(-1)
+        sat = (mx - mn) / np.maximum(mx, 1)
+        skin = (sat > 0.18) & (f[..., 0] > f[..., 1]) & (f[..., 1] > f[..., 2]) & (f[..., 0] > 90)
+        skin[int(H * 0.2):] = False
+        skin = ndimage.binary_opening(skin, iterations=2)
+        lab, n = ndimage.label(skin)
+        if not n:
+            raise SystemExit("no head found to stabilise on")
+        m = lab == int(np.argmax(ndimage.sum(skin, lab, range(1, n + 1)))) + 1
+        ys, xs = np.where(m)
+        crowns.append(ys.min())
+        cxs.append(xs.mean())
+        a = gold.key_matte(f, tuple(ground)) > 0.5
+        soles.append(np.where(a.any(1))[0].max())
+    k = np.arange(len(arr))
+    crown = np.polyval(np.polyfit(k, crowns, 1), k)
+    sole = np.polyval(np.polyfit(k, soles, 1), k)
+    cx = np.polyval(np.polyfit(k, cxs, 1), k)
+    out = np.empty_like(arr)
+    for i, f in enumerate(arr):
+        s = (sole[i] - crown[i]) / (sole[0] - crown[0])
+        # output (row, col) of frame 0's geometry -> input (row, col) of frame i
+        mat = np.array([[s, 0.0], [0.0, s]])
+        off = np.array([crown[i] - s * crown[0], cx[i] - s * cx[0]])
+        out[i] = np.stack([ndimage.affine_transform(f[..., ch].astype(np.float32), mat, offset=off,
+                                                    order=1, cval=float(ground[ch]))
+                           for ch in range(3)], -1).clip(0, 255).astype(np.uint8)
+    push = float((sole[-1] - crown[-1]) / (sole[0] - crown[0]) - 1)
+    return out, {"push": round(push, 4), "crown": [round(float(crown[0]), 1), round(float(crown[-1]), 1)],
+                 "sole": [round(float(sole[0]), 1), round(float(sole[-1]), 1)]}
+
+
+def build_orbit(src: Path, fdir: Path, turns: int = 1, body_loop: str = "pingpong",
+                target: int = 382, cut: int | None = None) -> dict:
+    """An idle whose HALO TURNS (2026-09-25, the Latent Land captain: "broken
+    parts rotating around my head"). The body plays forward then back — a loop
+    closed by construction, and a breath reverses anyway — while the halo is
+    lifted off frame 0 and turned RIGIDLY, `turns` full turns per loop, behind
+    the figure.
+
+    ⚠ WHY NOT THE MODEL'S OWN ROTATION. Veo turned the stone ring at a steady
+    rate from the first frame to the last (halo motion 2.5-3.2/255 a frame
+    throughout), so a trim finds no return (seam 5.96 against 0.5 of motion) and
+    a ping-pong would bounce the ring back every eight seconds. And it was never
+    a rigid rotation to begin with: the pieces drift and re-shape, and the ring's
+    measured angle wandered -5, +26, -4 degrees across the clip. A full turn of
+    the frame-0 ring closes on itself by arithmetic.
+
+    ⚠ THE MODEL'S HALO IS ERASED BEFORE THE TURNED ONE GOES IN: every pixel in
+    the ring's annulus that is not the figure (its largest component on that
+    frame, dilated 3px) is set to the ground, so no piece is drawn twice.
+
+    ⚠ COMPOSITED IN THE COLOUR DOMAIN ON THE GROUND, so the frames enter
+    `ground_frames` exactly as a Veo clip would: the halo goes BEHIND the
+    figure (`out = body + (1 − a_body) · dev_halo`), which is also what hides
+    the ring's lowest arc behind his neck, as on the plate.
+
+    ⚠ `body_loop="settle"` IS THE LIVING IDLE (U44 A, owner: "I'm a bit too
+    static … move my hands a bit and also my posture"). The clip is a SCENE
+    drawn from plate O back to plate O, closed by `_settle` rather than by a
+    reversal (a ping-pong turns moving hands around mid-gesture), repeated so
+    one loop is ~`target` frames and the halo keeps its slow turn. And because
+    he sways now, two things that were constants become per frame:
+      · the halo FOLLOWS HIS HEAD — the ring's centre moves with the top of his
+        scalp (`head_track`, skin only, smoothed and wrapped over the loop);
+      · the erase keeps THIS frame's figure — the largest opaque component once
+        stone-coloured pixels are set aside, dilated 2px — and never touches the
+        disc inside the ring's inner edge, where his head is. Frame 0's figure
+        would cut into him the moment he leans."""
+    import numpy as np
+    from scipy import ndimage
+
+    import gold
+
+    arr = decode_rgb(src, cut)
+    ground = gold.corner_ground(arr[0].astype(np.float32))
+    # ⚠ A SCENE IS NOT STABILISED: Veo drew it back to plate O (`last_frame`), so
+    # no push can accumulate, and his head BOWS into the spell mid-clip, which a
+    # crown-and-soles fit would read as a zoom and "correct" into a real one.
+    if body_loop == "settle":
+        push = {"push": 0.0, "skipped": "scene pinned to plate O at both ends"}
+    else:
+        arr, push = stabilise_push(arr, ground)
+    ring = halo_ring(arr[0], ground)
+    cx, cy = ring["cx"], ring["cy"]
+    r_lo, r_hi = ring["r_min"] - 8, ring["r_max"] + 14
+    yy, xx = np.mgrid[0:H, 0:W]
+    annulus = np.hypot(xx - cx, yy - cy)
+    annulus = (annulus >= r_lo) & (annulus <= r_hi)
+
+    # the halo layer: frame 0's pieces (plus a 2px apron for their anti-aliased
+    # edges, never onto the figure), as a signed deviation from the ground
+    body0 = (ring["alpha"] > 0.5) & ~ring["pieces"]
+    apron = ndimage.binary_dilation(ring["pieces"], iterations=2) & ~ndimage.binary_dilation(body0, iterations=1)
+    f0 = arr[0].astype(np.float32)
+    dev = np.where(apron[..., None], f0 - ground, 0.0)
+    # turn it inside a square around the ring only (speed), padded for the chips
+    R = int(np.ceil(r_hi + 4))
+    x0, y0 = int(round(cx)) - R, int(round(cy)) - R
+    pad = np.zeros((2 * R, 2 * R, 3), np.float32)
+    sy0, sx0 = max(0, y0), max(0, x0)
+    sy1, sx1 = min(H, y0 + 2 * R), min(W, x0 + 2 * R)
+    pad[sy0 - y0:sy1 - y0, sx0 - x0:sx1 - x0] = dev[sy0:sy1, sx0:sx1]
+    ccx, ccy = cx - x0, cy - y0
+
+    track = body_loop == "settle"
+    if track:
+        one, settle_info = _settle(arr)
+        reps = max(1, round(target / len(one)))
+        body = np.concatenate([one] * reps)
+        crown, hx = head_track(one)
+        dy = np.tile(crown - crown[0], reps)
+        dx = np.tile(hx - hx[0], reps)
+        R += int(np.ceil(max(np.abs(dy).max(), np.abs(dx).max()))) + 4
+        x0, y0 = int(round(cx)) - R, int(round(cy)) - R
+        pad = np.zeros((2 * R, 2 * R, 3), np.float32)
+        sy0, sx0 = max(0, y0), max(0, x0)
+        sy1, sx1 = min(H, y0 + 2 * R), min(W, x0 + 2 * R)
+        pad[sy0 - y0:sy1 - y0, sx0 - x0:sx1 - x0] = dev[sy0:sy1, sx0:sx1]
+        ccx, ccy = cx - x0, cy - y0
+    else:
+        body = np.concatenate([arr, arr[-2:0:-1]])      # forward, then back
+        settle_info = None
+        dy = dx = np.zeros(len(body))
+    n = len(body)
+    out = np.empty_like(body)
+    # ⚠ THE FIGURE KEPT IN THE ANNULUS IS FRAME 0's, dilated 3px — the frames are
+    # stabilised onto frame 0, so only a breath moves it. A per-frame "largest
+    # component" was the first cut and it KEPT any model piece that touched his
+    # neck on that frame, which then hung in the loop as a static fragment.
+    keep = ndimage.binary_dilation(body0, iterations=3)
+    for k in range(n):
+        f = body[k].astype(np.float32)
+        a = gold.key_matte(f, tuple(ground))
+        if track:
+            d = np.hypot(xx - (cx + dx[k]), yy - (cy + dy[k]))
+            ann_k = (d >= r_lo) & (d <= r_hi)
+            mx, mn = f.max(-1), f.min(-1)
+            stone = ann_k & ((mx - mn) / np.maximum(mx, 1) < 0.14) & (gold.luma(f) > 115)
+            fig = (a > 0.5) & ~stone
+            lab, nl = ndimage.label(fig)
+            if nl:
+                big = lab == int(np.argmax(ndimage.sum(fig, lab, range(1, nl + 1)))) + 1
+            else:
+                big = np.zeros_like(fig)
+            erase = ann_k & ~ndimage.binary_dilation(big, iterations=2)
+        else:
+            erase = annulus & ~keep
+        f[erase] = ground
+        a = np.where(erase, 0.0, a)
+        # clockwise on screen (y runs down), `turns` full turns per loop
+        th = 2 * np.pi * turns * k / n
+        c, s = np.cos(th), np.sin(th)
+        # output (row, col) -> input (row, col): the inverse of a clockwise turn
+        # on a y-down canvas, row_in = c·row + (−s)·col … col_in = s·row + c·col
+        mat = np.array([[c, -s], [s, c]])
+        # the ring follows his head: input = mat·(out − (c + t)) + c
+        cc = np.array([ccy, ccx])
+        off = cc - mat @ (cc + np.array([dy[k], dx[k]]))
+        turned = np.stack([ndimage.affine_transform(pad[..., ch], mat, offset=off, order=1)
+                           for ch in range(3)], -1)
+        halo = np.zeros_like(f)
+        halo[sy0:sy1, sx0:sx1] = turned[sy0 - y0:sy1 - y0, sx0 - x0:sx1 - x0]
+        out[k] = np.clip(f + (1.0 - a)[..., None] * halo, 0, 255).astype(np.uint8)
+    write_frames(out, fdir)
+    small = out[:, ::8, ::8].astype(np.float32).mean(-1)
+    motion = float(np.abs(np.diff(small, axis=0)).mean())
+    seam = float(np.abs(small[-1] - small[0]).mean())
+    return {"period": n, "blend": 0, "frames": n, "loop": "orbit", "turns": turns, "push": push,
+            "body": body_loop, "settle": settle_info,
+            "head_travel": [round(float(np.ptp(dx)), 1), round(float(np.ptp(dy)), 1)],
+            "ring": {k: round(v, 1) for k, v in ring.items() if isinstance(v, float)},
+            "pieces": ring["n"], "seam": round(seam, 3), "motion": round(motion, 3),
+            "closed": seam <= 2.0 * motion + 0.5}
 
 
 def build_pingpong(src: Path, fdir: Path, cut: int | None = None) -> dict:
@@ -676,7 +955,13 @@ def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
     print(f"trim alone: period {period['period']}/{period['frames']}  seam "
           f"{period['seam']}  motion {period['motion']}  {'closed' if period['closed'] else 'OPEN'}")
     loopdir = wave / "veo" / "loop"
-    if args.loop == "pingpong":
+    if args.loop == "orbit":
+        joined = build_orbit(raw, loopdir, args.turns, args.orbit_body, cut=args.cut)
+        print(f"orbit: {joined['frames']} frames, the halo's {joined['pieces']} pieces turned "
+              f"{joined['turns']}x about ({joined['ring']['cx']}, {joined['ring']['cy']}) r "
+              f"{joined['ring']['r_min']}-{joined['ring']['r_max']}; seam {joined['seam']}  "
+              f"motion {joined['motion']}  {'CLOSED' if joined['closed'] else 'OPEN'}")
+    elif args.loop == "pingpong":
         joined = build_pingpong(raw, loopdir, args.cut)
         print(f"ping-pong{f' (cut at {args.cut})' if args.cut is not None else ''}: {joined['frames']} "
               f"frames, seam {joined['seam']}  motion {joined['motion']}  CLOSED")
@@ -759,9 +1044,15 @@ def main() -> int:
     # clip already gold on black, keyed by brightness.
     ap.add_argument("--matte", choices=("luma", "ground"), default="luma")
     ap.add_argument("--clip", default=None, help="the Veo clip under veo/ (default raw.mp4)")
-    ap.add_argument("--loop", choices=("trim", "pingpong", "settle"), default="trim",
+    ap.add_argument("--loop", choices=("trim", "pingpong", "settle", "orbit"), default="trim",
                     help="ground route: trim to the clip's own period, play it back and forth, "
-                         "or (a scene drawn with last_frame) dissolve its end onto frame 0")
+                         "or (a scene drawn with last_frame) dissolve its end onto frame 0; "
+                         "`orbit` plays the body back and forth and TURNS the halo (2026-09-25)")
+    ap.add_argument("--turns", type=int, default=1, help="orbit: full turns of the halo per loop")
+    ap.add_argument("--orbit-body", choices=("pingpong", "settle"), default="pingpong",
+                    help="orbit: the body played back and forth (an idle), or a SCENE drawn back "
+                         "to its first frame and settled (the living idle, U44 A); the halo "
+                         "follows his head in the second")
     ap.add_argument("--cut", type=int, default=None,
                     help="ground route: keep frames 0..N first (a scene's ping-pong fallback, cut in a hold)")
     args = ap.parse_args()

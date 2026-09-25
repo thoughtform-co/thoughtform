@@ -68,7 +68,12 @@ def find_face(img: Image.Image) -> tuple[int, int, int, int] | None:
     boxes = []
     for sl, idx in zip(ndimage.find_objects(lab), range(1, n + 1)):
         area = int((lab[sl] == idx).sum())
-        if area >= min_area:
+        # ⚠ A GOLD HALO IS SKIN-TONED IN YCrCb (2026-09-25, genai-v5/v6): its
+        # warm ring sits above the head, so "the highest blob" zoomed every
+        # column onto the halo. A ring fills a small share of its own box and a
+        # face or a hand most of it, so a blob under 35 % of its box is skipped.
+        fill = area / max(1, (sl[0].stop - sl[0].start) * (sl[1].stop - sl[1].start))
+        if area >= min_area and fill >= 0.35:
             boxes.append((sl[0].start, sl[1].start, sl[1].stop, sl[0].stop, area))
     if not boxes:
         return None

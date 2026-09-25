@@ -4784,6 +4784,112 @@ wordmark's TOP line — and, at his window, 21px under the TRANSMISSION pile.
   `padding-bottom`, not the foot.
 - The hud-panel lab still does not mirror the foot (it has lagged since U22).
 
+## Update 44 — the AI Captain is re-drawn, and his halo of gateway stone turns (2026-09-25, owner)
+
+The owner, in four reads on one day, from his own avatar paintings on Drive
+(`01_Thoughtform Branding\05_Key Visuals\Avatars`): _"a realistic version of
+myself inspired by this clothing. My face needs to match … I like the airbrush
+retro-futuristic style … I don't want stars around my head. It should be more
+like a subtle halo and I should be casting subtle magic sigils and spells
+around my arms … like an idle animation from an RPG video game or a character
+select."_ Then, on the sheet: the long cloak and _"the golden pauldrons, but …
+my black pants and black boots … high-top boots with black jeans … a bit more
+adventurous"_, a halo of _"broken parts rotating around my head"_; then _"the
+halo should be made out of our Thoughtform gateways … that white stony
+material … shards … not too sharp"_; then _"O … start animating it and then
+implement it on our website."_ U31's "too glowing" is what opened it.
+
+### What shipped
+
+`genai-v4` (wave `20260925-genai-v9`, plate O): `holo-{idle,still,thumb}-genai-v4.*`,
+v2 archived under `waves/_shipped/genai-v2/` and the never-committed v3 beside it.
+⚠ **v3 was the same plate breathing in place, and he read it as _"a bit too
+static … move my hands a bit and also my posture. I don't think I should walk"_**
+— see D. The loadout names the plate
+(U13): _Long cloak · gold pauldrons · black jeans · high boots · a halo of
+gateway stone._ Graded ×0.912, p75 105, 5.4 % hot; 382 frames; figure-span
+probe at 1920 × 1247: one height (696.6px), boots on the seat line (956.3), cut
+0/0. On screen beside the Architect: p75 96 against 80, 5.2 % against 3.3 % over
+200 — the halo and the sigils' light, and a long way from v2's 172 against ~103.
+
+### A · Route: GPT Image 2 on the PLATE stage, and a lift
+
+- **Gemini did not draw his face** (six plates: a generic, darker-skinned man in
+  smooth game-art paint, four on the wrong blue). GPT Image 2 did, on both
+  habits. `generate.py --stage plate --model gpt` asks for 1152×2048 and falls
+  back to 2:3 padded to 9:16 with the ground — never a bare `auto`, which on a
+  plate follows no source frame.
+- **GPT paints a black cloak BLACK** (p50 18–23, up to 44 % crushed), the
+  exposure solve hits its ×1.35 ceiling and the FACE goes to a white blob.
+  `lift.py` (gamma 0.8 on luma, figure-only through the key matte) takes a plate
+  to p50 30–37 and ×0.89–1.09. Lift a pick BEFORE `vid.py`.
+- Three edits after the pick, each one change on GPT with the face crops:
+  `--edit-kind outfit` (gold pauldrons, his jeans and a WHOLE boot from the stage
+  frames, the robe gone), `--edit-kind halo` (the stone of the site's own gateway
+  key visuals). J–L (from E) held his face; G–I (from D) came out narrower.
+- ⚠ **The generic edit path renumbered its own identity line** when it re-based
+  the design images ("IMAGE 5, IMAGE 6 and IMAGE 4 are this man's IDENTITY");
+  re-base first, prepend after. Found on a dry run, before a draw was paid for.
+
+### B · The halo turns in post, not in the model
+
+- Veo turned the ring at a steady rate to its last frame (halo motion
+  2.5–3.2/255 a frame throughout), so a trim finds no return (seam 5.96 against
+  0.5 of motion) and a ping-pong would bounce it back every eight seconds. It was
+  never a rigid rotation either (measured angle −5, +26, −4°).
+- `post.py --loop orbit`: the model's ring is ERASED (the annulus minus frame
+  0's figure, dilated 3px), frame 0's ten pieces are turned one full clockwise
+  turn per loop behind him, and the body plays forward and back. Closed by
+  arithmetic: seam 0.71 against 0.53 of motion.
+- ⚠ **Veo pushed in 3.8 % over the clip, told not to** (crown 82 → 68, soles
+  1227 → 1257, linear, about his chest). `stabilise_push` scales every frame
+  back onto frame 0 about the crown (the top of the SKIN — the stone is neutral,
+  the head warm) and the soles, fitted by a line. Without it the ping-pong swells
+  him on the page and the ring drifts off his head.
+- ⚠ `halo_ring` takes pieces from the top FIFTH only: at 0.30 a floating sigil
+  beside his hand joined the fit, centred the "ring" on his chest at 259px and
+  erased the upper body. A ring wider than a third of the canvas refuses.
+
+### C · `stature` for a thing ABOVE the head
+
+`headY` is the halo's top shard (0.0305); his crown is 0.093 (inside the ring,
+on the delivered frames), so `stature` 0.9023 — U26's field, written for a kneel,
+now also for a halo. The fit draws the man at every era's scale and the halo
+stands above the head line; the phone seats the crown. The glitch seat test
+measured EXTENT and is corrected to stature (U26's own law); the probe says
+"above his head" rather than "kneels" when the ink starts over the line.
+
+### D · The living idle (`-v4`)
+
+- A SCENE, not an idle: Veo drawn from plate O back to plate O (`vid.py
+--scene`, `PLATE_SCENE["genai"]`) — his weight shifts, his hands drift up,
+  together and apart, the fingers flexing, he bows into the spell and turns a
+  little, feet planted. The hands are given a SHAPE to move in (low, open, palms
+  up) and every gesture shape is banned by name — U34's raised finger. Passed on
+  its audio first time.
+- ⚠ **Veo spent the motion in the first half** (frames 24–88) and drifted home
+  over the last four seconds; the whole clip looped would have repeated four
+  still seconds, which is the complaint. `--cut 144` (drift 2.36 from frame 0)
+  and `_settle` over 6 frames; three cycles per halo turn (432 frames, 18 s).
+  Body motion 1.43/255 a frame against v3's 0.53.
+- `--loop orbit --orbit-body settle`: the halo FOLLOWS HIS HEAD (`head_track`,
+  the scalp's skin, smoothed and wrapped; ~20px of travel), and the erase keeps
+  THIS frame's figure (stone-coloured pixels set aside, the largest component,
+  2px) and never the disc inside the ring. ⚠ **No push-in correction on a
+  scene** — it is pinned to the plate at both ends, and his head bowing reads as
+  a zoom to a crown-and-soles fit.
+- Graded ×0.915, p75 105, 5.3 % hot, T2 2.97 (median 1.51); the probe: one
+  height, seated, cut 0/0, the halo 48px over the head line.
+
+### Left open
+
+- **No `.mov`**: Safari takes the floor on this era until a Mac cuts HEVC alpha
+  from `veo/graded/`. v2's `.mov` is a different figure and is not pointed at.
+- The holo gallery has no v3 run yet; the light theme and the phone were not
+  captured this pass.
+- The airbrush handling survives as texture under the gold grade, not as colour
+  — every era is a gold hologram; asked, not yet answered.
+
 ## Update 43 — the record thumbnails are hairline drawings (2026-09-24, owner)
 
 The owner, on the ON RECORD cards: _"I don't really like the icon; it looks

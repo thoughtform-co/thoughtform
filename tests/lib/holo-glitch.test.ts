@@ -4,6 +4,7 @@ import {
   CHARACTER_ERAS,
   containedHologramPlacement,
   holoFigureFit,
+  holoFigureStature,
   resolveCharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
 import {
@@ -94,7 +95,10 @@ describe("ADR-082 U42 · the era glitch", () => {
       const heights = CHARACTER_ERAS.map((_, i) => {
         const h = holo(i);
         const r = holoPlateRect(boxW, boxH, holoFigureFit(h), h)!;
-        return r.h * (h.footY - h.headY);
+        // ⚠ STATURE, NOT EXTENT (ADR-082 U26, and U44's halo): the Latent Land
+        // captain's ink starts at a shard ABOVE his crown, so his extent is taller
+        // than his body by design; the law is about how big the MAN is drawn.
+        return r.h * holoFigureStature(h);
       });
       const spread = Math.max(...heights) - Math.min(...heights);
       // ADR-082 U25's law, read through the canvas: within a pixel.

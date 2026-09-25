@@ -35,9 +35,17 @@ from PIL import Image, ImageDraw
 
 BANK = Path(r"C:\Users\buyss\.claude\skills\voidwalker-avatar\references\photo-bank\thoughtform-shoot-20251126")
 DRIVE = Path(r"I:\My Drive\01_Thoughtform Branding\13_Voidwalker Pictures")
-PAINTING = Path(
-    r"C:\Users\buyss\Downloads"
-    r"\starhaven_Remove_the_background._And_maybe_extend_the_image_so__bfc4d908-b2c2-4faf-8e30-bfb9bb5bf043.png"
+#: The owner's own avatar paintings (2026-09-25: "Here are my avatars"). Both
+#: are Midjourney paintings of a bald, bearded man whose face and skin are NOT
+#: his, so each is cut below its beard.
+AVATARS = Path(r"I:\My Drive\01_Thoughtform Branding\05_Key Visuals\Avatars")
+PAINTING = AVATARS / (
+    "starhaven_Remove_the_background._And_maybe_extend_the_image_so__bfc4d908-b2c2-4faf-8e30-bfb9bb5bf043.png"
+)
+#: The second habit: sculpted pauldrons, a belt of machined gold modules,
+#: filigree bracers. Its figure is cut at the knee and gloved.
+REGALIA = AVATARS / (
+    "starhaven_a_mysterious_bald_celestial_Voidwalker_with_a_short_b_48144e25-c21c-40ef-9eeb-e0edc4d14e76.png"
 )
 MAX_PX = 2048
 
@@ -62,12 +70,38 @@ IDENTITY_FACE = IDENTITY + [
 ]
 BOOTS = ("boots.jpg", "HIS BOOTS", BANK / "boots-detail.jpg", (260, 0, 1100, 585),
          "his boots on the stage; the audience's heads are below the box")
+#: 2026-09-25 (owner, on the Latent Land regalia): "we should be able to see my
+#: black pants and black boots … I love to wear high-top boots with black jeans".
+#: ⚠ BOOTS above stops at the laces (it was cut for the Expanse's kilt and socks),
+#: so this set takes a WHOLE boot with the jeans' cuff resting on it, and the
+#: jeans' fit from the stage frame, cut between his jacket hem and the heads.
+OUTFIT = [
+    ("jeans.jpg", "HIS BLACK JEANS", BANK / "colour-05-fullbody-gema.jpg", (330, 860, 830, 1320),
+     "his relaxed straight black jeans below the jacket hem; the audience's heads are below the box"),
+    ("boots-high.jpg", "HIS HIGH BOOTS", BANK / "boots-detail.jpg", (450, 100, 1100, 746),
+     "one whole boot, laced high, with the jeans' thick turned-up cuff resting on it"),
+]
+HANDS = ("hands.jpg", "HANDS", BANK / "hands-detail.jpg", None,
+         "his tattoos and the signet; the paintings' hands are someone else's")
 RECIPES: dict[str, list[tuple[str, str, Path, tuple[int, int, int, int] | None, str]]] = {
-    "genai": IDENTITY + [
+    # ⚠ THE LATENT LAND RECIPES TAKE THE THREE-ANGLE FACE SET (2026-09-25). The
+    # owner's brief is "a realistic version of myself … my face needs to match",
+    # and U41 measured that two near-frontal crops let a model match loosely. So
+    # the wardrobe is IMAGE 4 and the hands IMAGE 5 here, and `PLATE_LOCK`'s two
+    # genai locks number them that way; `20260921-genai-v4` (never drawn) was cut
+    # on the old two-crop numbering and is superseded by `20260925-genai-v5`.
+    "genai": IDENTITY_FACE + [
         ("wardrobe-paint.jpg", "WARDROBE + PAINT HANDLING", PAINTING, (0, 830, 1600, 3040),
          "the painting cut BELOW its beard (y 830; the beard ends ~795) — its face and skin are not his"),
-        ("hands.jpg", "HANDS", BANK / "hands-detail.jpg", None,
-         "his tattoos and the signet; the painting's hands are someone else's"),
+        HANDS,
+    ],
+    # The second habit, as its own recipe so a wave's refs.json holds one
+    # wardrobe and the lock can address it as IMAGE 4.
+    "genai-regalia": IDENTITY_FACE + [
+        ("wardrobe-regalia.jpg", "WARDROBE + PAINT HANDLING", REGALIA, (300, 860, 1500, 2464),
+         "the painting cut BELOW its beard (y 860; the beard ends ~850) and inside its figure "
+         "— its face, skin and gloved hands are not his"),
+        HANDS,
     ],
     "expanse": IDENTITY + [
         ("wardrobe-silhouette.jpg", "WARDROBE SILHOUETTE",
@@ -121,9 +155,10 @@ def main() -> int:
     ap.add_argument("--wave", required=True)
     ap.add_argument("--looked", action="store_true",
                     help="after OPENING contact.jpg: mark every crop as looked at")
-    ap.add_argument("--set", choices=("plate", "face"), default="plate",
+    ap.add_argument("--set", choices=("plate", "face", "outfit"), default="plate",
                     help="plate: the era's full recipe; face: the three identity crops alone "
-                         "(ADR-082 U41, for `generate.py --edit-kind face`)")
+                         "(ADR-082 U41, for `generate.py --edit-kind face`); outfit: those three "
+                         "plus his jeans and his high boots (`--edit-kind outfit`, 2026-09-25)")
     args = ap.parse_args()
 
     refs = Path(__file__).resolve().parent / "waves" / args.wave / "refs"
@@ -137,7 +172,7 @@ def main() -> int:
         return 0
 
     rows = []
-    recipe = IDENTITY_FACE if args.set == "face" else RECIPES[args.era]
+    recipe = {"face": IDENTITY_FACE, "outfit": IDENTITY_FACE + OUTFIT}.get(args.set) or RECIPES[args.era]
     for n, (name, role, src, box, why) in enumerate(recipe, start=1):
         if not src.exists():
             raise SystemExit(f"reference source missing: {src}")
