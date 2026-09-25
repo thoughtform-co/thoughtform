@@ -11,6 +11,8 @@ import {
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import { getCase } from "@/lib/cases/registry";
 
+import { ENVELOPE } from "./helpers/mapEnvelope";
+
 /**
  * THE MAP'S THREE PHONE READINGS (ADR-107 U2).
  *
@@ -34,15 +36,6 @@ function mapVisual() {
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
   return visual;
 }
-
-const MODEL_FAMILIES = /\b(opus|sonnet|haiku|fable|gpt|gemini|llama|mistral|claude)\b/i;
-const ENVELOPE: readonly [string, RegExp][] = [
-  ["money", /[€$£¥]|\b(USD|EUR|GBP)\b|\b\d{1,3}(,\d{3})+\b/],
-  ["a source URL", /\b(monday|notion|github|figma)\.com\b/i],
-  ["a model family", MODEL_FAMILIES],
-  ["a vendor or private system", /\b(openai|anthropic|supabase|slack|aether|salesforce)\b/i],
-  ["a personal name", /\b(Vince|Astrid|Nathan|Koen|Olga|Helen|Damien|Robert|Toby|Maud)\b/],
-];
 
 describe("the phone readings' projections", () => {
   const visual = mapVisual();

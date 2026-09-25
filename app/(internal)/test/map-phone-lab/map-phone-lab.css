@@ -1,0 +1,683 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   /test/map-phone-lab — the lab's own sheet.
+
+   Three parts: the BOARD's chrome (desktop), the SINGLE mode's pile (only
+   the slots' static seating — every other pixel of the frame is
+   `proof-stack.css`'s own split rules), and the three DIRECTIONS' material,
+   all under `.mpl-v`.
+
+   ⚠ THE DIRECTIONS TAKE TOKENS FROM THE HOUSE RAMPS ONLY — dawn/void swap
+   with the theme (ADR-058), gold is split by role (`--gold` a mark or fill,
+   `--gold-line` a line, `--gold-ink` text), green is `--atreides-ink` and it
+   is the HUMAN's alone (the owner). Light re-derives the alphas below, never
+   inherits them.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── The board ─────────────────────────────────────────────────────────── */
+.mpl-boot {
+  min-height: 100vh;
+  background: rgb(var(--void-rgb));
+}
+.mpl-board {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 32px 32px 48px;
+  background: rgb(var(--void-rgb));
+  color: rgb(var(--dawn-rgb));
+  font-family: var(--font-pt-mono);
+}
+.mpl-board__head h1 {
+  margin: 0 0 6px;
+  font: var(--weight-lit) 20px/1.2 var(--font-pp-neue-montreal);
+}
+.mpl-board__head p {
+  margin: 0 0 14px;
+  max-width: 72ch;
+  font: 14px/1.5 var(--font-pp-neue-montreal);
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+.mpl-board__ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+}
+.mpl-board__ctl > span {
+  width: 72px;
+  color: var(--gold-ink);
+}
+.mpl-board__ctl button,
+.mpl-board__ctl select {
+  appearance: none;
+  border: 1px solid rgba(var(--dawn-rgb), 0.24);
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.mpl-board__ctl select {
+  text-transform: none;
+  background: rgb(var(--void-rgb));
+}
+.mpl-board__ctl button[data-on] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--gold-contrast);
+}
+.mpl-board__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-top: 24px;
+  overflow-x: auto;
+}
+.mpl-board__col {
+  margin: 0;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 10px;
+}
+.mpl-board__col figcaption {
+  width: 390px;
+  min-height: 92px;
+}
+.mpl-board__col figcaption b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink);
+}
+.mpl-board__col figcaption span {
+  display: block;
+  font: 12px/1.45 var(--font-pp-neue-montreal);
+  color: rgba(var(--dawn-rgb), 0.68);
+}
+.mpl-board__frame {
+  display: block;
+  border: 1px solid rgba(var(--dawn-rgb), 0.2);
+  background: rgb(var(--void-rgb));
+}
+
+/* ── The single phone document: the pile, seated statically ──────────────
+   Production pins every slot `position: sticky` on a scroll runway. The lab
+   has no runway, so each slot is seated ABSOLUTELY on its own pin line —
+   the same `top` and height the split rules compute — and every record but
+   the field's is clipped to its peek (the only part of a covered card the
+   reader sees). The card scales from its top edge (`transform-origin: 50% 0`),
+   so the recede never moves a band out of its clip. */
+.mpl-solo {
+  position: relative;
+  min-height: 100svh;
+  box-sizing: border-box;
+  padding-inline: var(--hud-content-inset, 24px);
+  background: rgb(var(--void-rgb));
+  overflow: hidden;
+}
+.mpl-solo .pf-stack.pf-stack--split.mpl-pile,
+.mpl-solo .pf-stack.pf-stack--split.mpl-pile .pf-stack__runway {
+  height: 100svh;
+}
+.mpl-solo .pf-stack.pf-stack--split.mpl-pile .pf-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0;
+}
+.mpl-solo .pf-stack.pf-stack--split.mpl-pile .pf-slot--record {
+  clip-path: inset(0 0 calc(100% - var(--pc-peek)) 0);
+}
+/* The dev server's tools badge is not the site: out of every still. */
+nextjs-portal {
+  display: none;
+}
+.mpl-read {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* ── The directions' material ──────────────────────────────────────────── */
+.mpl-v {
+  --mpl-ink: rgb(var(--dawn-rgb));
+  --mpl-ink2: rgba(var(--dawn-rgb), 0.74);
+  --mpl-ink3: rgba(var(--dawn-rgb), 0.56);
+  --mpl-rule: rgba(var(--dawn-rgb), 0.2);
+  --mpl-rule-soft: rgba(var(--dawn-rgb), 0.1);
+  --mpl-well: rgba(var(--dawn-rgb), 0.06);
+  --mpl-gold: var(--gold);
+  --mpl-gold-ink: var(--gold-ink);
+  --mpl-line: var(--gold-line);
+  --mpl-contrast: var(--gold-contrast);
+  --mpl-green: var(--atreides-ink);
+  --mpl-mono: var(--font-pt-mono);
+  --mpl-sans: var(--font-pp-neue-montreal);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--mpl-ink);
+  font-family: var(--mpl-mono);
+  pointer-events: auto;
+}
+html[data-theme="light"] .mpl-v {
+  --mpl-ink2: rgba(var(--dawn-rgb), 0.82);
+  --mpl-ink3: rgba(var(--dawn-rgb), 0.68);
+  --mpl-rule: rgba(var(--dawn-rgb), 0.28);
+  --mpl-rule-soft: rgba(var(--dawn-rgb), 0.14);
+  --mpl-well: rgba(var(--dawn-rgb), 0.07);
+}
+.mpl-v button {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mpl-v button:focus-visible {
+  outline: 1px dashed var(--mpl-line);
+  outline-offset: 2px;
+}
+.mpl-v p {
+  margin: 0;
+}
+
+/* The key: one mono rung, gold-ink (the text role — raw gold fails on
+   parchment). */
+.mpl-k {
+  font: 10px/1.2 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--mpl-gold-ink);
+}
+.mpl-sentence {
+  font: 14px/1.45 var(--mpl-sans);
+  color: var(--mpl-ink2);
+}
+.mpl-2nd {
+  display: none;
+  font: 12px/1.3 var(--mpl-sans);
+  color: var(--mpl-ink3);
+}
+
+/* The state mark */
+.mpl-mark {
+  flex: 0 0 auto;
+  display: block;
+}
+.mpl-mark__box {
+  stroke: var(--mpl-line);
+  stroke-width: 1;
+}
+.mpl-mark__in {
+  fill: var(--mpl-gold);
+}
+.mpl-mark[data-led] .mpl-mark__box,
+.mpl-mark__x {
+  stroke: var(--mpl-ink3);
+  stroke-width: 1;
+}
+
+/* The position: one lit segment on a hairline track */
+.mpl-pos {
+  position: relative;
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--mpl-rule);
+}
+.mpl-pos i {
+  position: absolute;
+  top: -1px;
+  left: calc(100% * var(--pos-i) / var(--pos-n));
+  width: calc(100% / var(--pos-n));
+  height: 3px;
+  background: var(--mpl-gold);
+  transition: left 180ms ease-out;
+}
+
+/* The spine — one stream, top to bottom */
+.mpl-spine {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding-left: 16px;
+}
+.mpl-spine::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--mpl-rule);
+}
+.mpl-spine__owner {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+/* The owner's node: the one green mark — the human, authority not data. */
+.mpl-spine__owner::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  translate: 0 -50%;
+  rotate: 45deg;
+  background: var(--mpl-green);
+}
+.mpl-spine__who {
+  font: 15px/1.2 var(--mpl-sans);
+  color: var(--mpl-green);
+}
+/* The card: the one framed object on the reading. */
+.mpl-spine__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--mpl-line);
+}
+.mpl-spine[data-led] .mpl-spine__card {
+  border-style: dashed;
+  border-color: var(--mpl-rule);
+}
+.mpl-spine__title {
+  font: var(--weight-lit) 18px/1.2 var(--mpl-sans);
+  color: var(--mpl-ink);
+}
+.mpl-spine__bar {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mpl-spine__barv {
+  font: 13px/1.35 var(--mpl-sans);
+  color: var(--mpl-ink2);
+}
+.mpl-spine__answers {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.mpl-spine__answers > div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+}
+.mpl-spine__answers dd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font: 13px/1.3 var(--mpl-sans);
+  color: var(--mpl-ink);
+}
+
+/* Where the bay is tall enough, the second line of every answer comes back
+   (the bay is the size container, `proof-stack.css`). */
+@container (min-height: 420px) {
+  .mpl-v .mpl-2nd {
+    display: block;
+  }
+  .mpl-v .mpl-pick__skills,
+  .mpl-v .mpl-rows__skills {
+    display: flex;
+  }
+}
+
+/* ── pick · One stream ─────────────────────────────────────────────────── */
+.mpl-pick {
+  gap: 12px;
+}
+.mpl-pick__field {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(5 * 76px + 4 * 6px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(44px, 1fr);
+  gap: 6px;
+}
+.mpl-v .mpl-pick__tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 7px 8px;
+  box-sizing: border-box;
+  background: var(--mpl-well);
+}
+.mpl-v .mpl-pick__tile[data-led] {
+  background: none;
+  outline: 1px dashed var(--mpl-rule);
+  outline-offset: -1px;
+}
+.mpl-v .mpl-pick__tile[data-on] {
+  background: var(--mpl-gold);
+  outline: 0;
+}
+.mpl-v .mpl-pick__tile[data-on] .mpl-mark__box {
+  stroke: var(--mpl-contrast);
+}
+.mpl-v .mpl-pick__tile[data-on] .mpl-mark__in {
+  fill: var(--mpl-contrast);
+}
+.mpl-pick__code {
+  font: 10px/1 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--mpl-ink2);
+}
+.mpl-v .mpl-pick__tile[data-on] .mpl-pick__code {
+  color: var(--mpl-contrast);
+}
+.mpl-pick__caption {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mpl-pick__title {
+  font: var(--weight-lit) 18px/1.2 var(--mpl-sans);
+}
+.mpl-pick__meta {
+  font: 10px/1.2 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--mpl-ink3);
+}
+.mpl-pick__meta span + span::before {
+  content: " · ";
+}
+.mpl-pick[data-reading="configuration"] {
+  justify-content: space-between;
+}
+.mpl-stepper {
+  display: flex;
+  flex: 0 0 44px;
+  align-items: center;
+  gap: 10px;
+}
+.mpl-v .mpl-stepper__b {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid var(--mpl-rule);
+  font: 18px/1 var(--mpl-mono);
+  color: var(--mpl-ink2);
+}
+.mpl-pick__bars {
+  display: grid;
+  gap: 4px;
+}
+.mpl-v .mpl-pick__bar {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: center;
+  height: 44px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+}
+.mpl-v .mpl-pick__bar[data-tap] {
+  border-color: var(--mpl-line);
+}
+.mpl-v .mpl-pick__bar[data-on] {
+  background: var(--mpl-gold);
+  border-color: var(--mpl-gold);
+  color: var(--mpl-contrast);
+}
+.mpl-pick__barname {
+  font: 11px/1 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+}
+.mpl-pick__cells {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+}
+.mpl-pick__cells i {
+  flex: 1 1 0;
+  background: var(--mpl-ink3);
+}
+.mpl-v .mpl-pick__bar[data-tap] .mpl-pick__cells i {
+  background: var(--mpl-gold);
+}
+.mpl-v .mpl-pick__bar[data-on] .mpl-pick__cells i {
+  background: var(--mpl-contrast);
+}
+.mpl-pick__open {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.mpl-pick__skills,
+.mpl-rows__skills,
+.mpl-deck__skills {
+  display: none;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font: 10px/1.3 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--mpl-ink3);
+}
+.mpl-pick__skills [data-flag],
+.mpl-deck__skills [data-flag] {
+  color: var(--mpl-ink);
+}
+
+/* ── rows · Readout ────────────────────────────────────────────────────── */
+.mpl-rows {
+  gap: 12px;
+}
+.mpl-rows__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mpl-row {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  min-height: 44px;
+  width: 100%;
+}
+.mpl-row--static {
+  min-height: 32px;
+}
+.mpl-row__k {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: var(--mpl-well);
+  border: 1px solid var(--mpl-rule);
+  font: 10px/1.2 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--mpl-ink2);
+}
+.mpl-row__v {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  padding: 4px 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--mpl-rule);
+  border-left: 0;
+  font: 11px/1.25 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  text-align: right;
+  color: var(--mpl-ink);
+}
+.mpl-row[data-owner] .mpl-row__v {
+  color: var(--mpl-green);
+}
+.mpl-row__marks {
+  gap: 6px;
+}
+.mpl-row--step {
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+}
+.mpl-v .mpl-row__btn {
+  justify-content: center;
+  padding: 0;
+  font: 18px/1 var(--mpl-mono);
+  border: 1px solid var(--mpl-rule);
+  background: var(--mpl-well);
+}
+.mpl-row__title {
+  justify-content: center;
+  text-align: center;
+  font: var(--weight-lit) 15px/1.2 var(--mpl-sans);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.mpl-v .mpl-row--step .mpl-row__btn + .mpl-row__title + .mpl-row__btn {
+  border-left: 0;
+}
+.mpl-v .mpl-row--hit[data-on] .mpl-row__k {
+  background: var(--mpl-gold);
+  border-color: var(--mpl-gold);
+  color: var(--mpl-contrast);
+}
+.mpl-row__ticks {
+  gap: 4px;
+}
+.mpl-row__ticks i {
+  width: 2px;
+  height: 14px;
+  background: var(--mpl-ink2);
+}
+.mpl-row__ticks i[data-flag] {
+  background: var(--mpl-gold);
+}
+.mpl-rows__open {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── deck · One per swipe ──────────────────────────────────────────────── */
+.mpl-deck {
+  gap: 12px;
+}
+.mpl-deck__track {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 8px;
+  padding-right: 28px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.mpl-deck__track::-webkit-scrollbar {
+  display: none;
+}
+.mpl-deck__card {
+  position: relative;
+  flex: 0 0 calc(100% - 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--mpl-rule);
+  scroll-snap-align: start;
+}
+.mpl-deck__card > * {
+  position: relative;
+  z-index: 1;
+}
+.mpl-deck__head {
+  font: 11px/1.2 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--mpl-gold-ink);
+}
+.mpl-deck__streams {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mpl-v .mpl-deck__stream {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-bottom-color: var(--mpl-rule-soft);
+}
+.mpl-v .mpl-deck__stream[data-on] {
+  border-color: var(--mpl-line);
+}
+.mpl-deck__title {
+  font: 15px/1.2 var(--mpl-sans);
+}
+.mpl-deck__lane {
+  font: 10px/1 var(--mpl-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--mpl-ink3);
+}
+.mpl-deck__card--shape .mpl-deck__field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.mpl-deck__card--shape .mpl-deck__skills {
+  display: flex;
+  margin-top: auto;
+}
+.mpl-deck > .mpl-pos {
+  flex: 0 0 1px;
+  margin: 0 0 4px;
+}

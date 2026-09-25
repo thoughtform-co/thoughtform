@@ -1,0 +1,3 @@
+# Per-cell stills are deterministic renders of a URL: rerun
+# scripts/capture-map-phone-lab.mjs. The contact sheets and report.json stay.
+p*_*_*_*.png
