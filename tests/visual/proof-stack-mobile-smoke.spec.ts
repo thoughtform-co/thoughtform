@@ -452,6 +452,127 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(caps.desc).toEqual(["inset(50%)", "inset(50%)", "inset(50%)", "inset(50%)"]);
   });
 
+  test("the map's field answers its rail with three readings (ADR-107 U2)", async ({ page }) => {
+    await openPile(page);
+    // The map's field sheet, found by what it holds — never by index.
+    const idx = await page.evaluate(() => {
+      const slot = document
+        .querySelector<HTMLElement>(".pf-slot--field .pf-field--map")
+        ?.closest<HTMLElement>(".pf-slot");
+      return slot ? Number(slot.dataset.pcIndex) : -1;
+    });
+    expect(idx, "no map field sheet").toBeGreaterThanOrEqual(0);
+    const state = await seatSlot(page, idx);
+    expect(state).toBe("pinned");
+    const scope = `.pf-slot[data-pc-index="${idx}"]`;
+
+    const readField = (sc: string) =>
+      page.evaluate((scopeSel) => {
+        const field = document.querySelector<HTMLElement>(`${scopeSel} .pf-field--map`)!;
+        const con = field.querySelector<HTMLElement>(".fl-pda .fl-con__console");
+        const list = field.querySelector<HTMLElement>(".fl-pda__list")!;
+        const cs = getComputedStyle(list);
+        const lb = list.getBoundingClientRect();
+        // Visible ink inside the list's own box, horizontally (vertical
+        // overflow is the scroll).
+        const out: string[] = [];
+        for (const el of list.querySelectorAll<HTMLElement>("span, em, dt, dd, p, h4, li")) {
+          if (!el.textContent?.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          for (const r of range.getClientRects()) {
+            if (r.width === 0 || r.bottom < lb.top || r.top > lb.bottom) continue;
+            if (r.left < lb.left - 1 || r.right > lb.right + 1) {
+              out.push(
+                `${el.className || el.tagName} ${Math.round(r.left)}…${Math.round(r.right)}`
+              );
+              break;
+            }
+          }
+        }
+        return {
+          consoleDisplay: con ? getComputedStyle(con).display : "(absent)",
+          listDisplay: cs.display,
+          overflowY: cs.overflowY,
+          scrolls: list.scrollHeight > list.clientHeight + 1,
+          scrollTop: list.scrollTop,
+          after: getComputedStyle(field, "::after").display,
+          view: list.dataset.pdaPhoneView ?? null,
+          dataView: field.querySelector<HTMLElement>(".fl-pda")?.dataset.view ?? null,
+          box: { x: lb.left, y: lb.top, w: lb.width, h: lb.height },
+          indexGroups: list.querySelectorAll(".fl-pda__list-group").length,
+          cfgRows: list.querySelectorAll("[data-pda-row]").length,
+          shapes: [...list.querySelectorAll<HTMLElement>(".fl-pda__shape")].map((sh) => ({
+            meaning: sh.querySelector(".fl-pda__shape-meaning")?.textContent?.trim().length ?? 0,
+            skills: sh.querySelectorAll(".fl-pda__shape-skill").length,
+          })),
+          tabs: [...document.querySelectorAll<HTMLElement>(`${scopeSel} [role="tab"]`)].map(
+            (t) => t.textContent?.trim().toUpperCase() ?? ""
+          ),
+          inkOut: out,
+        };
+      }, sc);
+
+    // 01 · THE WORK — the index, in a list the thumb can scroll.
+    let f = await readField(scope);
+    expect(f.consoleDisplay, "the console paints on the phone").toBe("none");
+    expect(f.listDisplay).toBe("block");
+    expect(f.overflowY).toBe("auto");
+    expect(f.after, "the map's event layer still covers the list").toBe("none");
+    expect(f.view).toBe("work");
+    expect(f.indexGroups).toBeGreaterThan(0);
+    expect(f.tabs).toEqual(expect.arrayContaining(["WORK", "CONFIGURATION", "LAYER"]));
+    expect(f.scrolls, "the work list fits its bay — nothing to scroll").toBe(true);
+    expect(f.inkOut).toEqual([]);
+    const pageY = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(f.box.x + f.box.w / 2, f.box.y + f.box.h / 2);
+    await page.mouse.wheel(0, 240);
+    await page.waitForTimeout(400);
+    const after = await page.evaluate(
+      (sc) => ({
+        list: document.querySelector<HTMLElement>(`${sc} .fl-pda__list`)!.scrollTop,
+        page: window.scrollY,
+      }),
+      scope
+    );
+    expect(after.list, "a wheel over the list did not scroll the list").toBeGreaterThan(0);
+    expect(
+      Math.abs(after.page - pageY),
+      "a wheel over the list scrolled the page"
+    ).toBeLessThanOrEqual(1);
+
+    // 02 · THE CONFIGURATION — the ledger, and the index gone.
+    await page.locator(`${scope} [role="tab"]`, { hasText: /configuration/i }).click();
+    await page.waitForTimeout(400);
+    f = await readField(scope);
+    expect(f.view).toBe("configuration");
+    expect(f.dataView).toBe("2");
+    expect(f.cfgRows).toBeGreaterThanOrEqual(20);
+    expect(f.indexGroups).toBe(0);
+    expect(f.inkOut).toEqual([]);
+
+    // 03 · THE LAYER — five shapes, each with its sentence and its run.
+    await page.locator(`${scope} [role="tab"]`, { hasText: /layer/i }).click();
+    await page.waitForTimeout(400);
+    f = await readField(scope);
+    expect(f.view).toBe("layer");
+    expect(f.dataView).toBe("3");
+    expect(f.shapes).toHaveLength(5);
+    for (const sh of f.shapes) {
+      expect(sh.meaning).toBeGreaterThan(20);
+      expect(sh.skills).toBeGreaterThanOrEqual(1);
+    }
+    expect(f.cfgRows).toBe(0);
+    expect(f.inkOut).toEqual([]);
+
+    // And back: the index returns whole.
+    await page.locator(`${scope} [role="tab"]`, { hasText: /work/i }).click();
+    await page.waitForTimeout(400);
+    f = await readField(scope);
+    expect(f.view).toBe("work");
+    expect(f.indexGroups).toBeGreaterThan(0);
+  });
+
   test("reduced motion and a short window keep the whole card in flow", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/", { waitUntil: "domcontentloaded" });

@@ -436,3 +436,78 @@ export function footCopy(
 }
 
 export const pdaTotals = mapTotals;
+
+/* ── The phone's three readings (ADR-107 U2) ───────────────────────────
+   Below the console's gate the drawings are dropped for LISTS, one per
+   reading, keyed on the same `view` the rail selects. 01 is the stream
+   index the fallback always was; these two are the projections behind 02
+   and 03. Pure, DOM-free, walked by `tests/lib/pda-phone-readings.test.ts`
+   under the envelope — a string composed at render time is outside every
+   content scanner (ADR-070 U15's `8 TEAMS`). */
+
+export const PDA_PHONE_VIEW: Record<PdaView, "work" | "configuration" | "layer"> = {
+  1: "work",
+  2: "configuration",
+  3: "layer",
+};
+
+export interface PdaPhoneConfigRow {
+  id: string;
+  title: string;
+  teamName: string;
+  configured: boolean;
+  /** WHAT RUNS IT — the Skill, then the lane's verbs (never the tier: the
+   *  envelope keeps the model class generic, and the verbs are what a
+   *  reader can picture). Person-led: the record's own absence. */
+  runs: string;
+  /** WHAT IT CAN REACH — the graph it queries, then the first system. */
+  reach: string;
+  /** WHERE IT RUNS — the agent, then the interface a person meets it on. */
+  where: string;
+}
+
+/** 02 as a ledger: the twenty on the board, each answered with the R4
+ *  board's own three answers (`RUNS · REACH · WHERE`). */
+export function phoneConfiguration(shown: readonly PdaWork[]): PdaPhoneConfigRow[] {
+  return shown.map((w) => ({
+    id: w.id,
+    title: w.title,
+    teamName: w.teamName,
+    configured: w.configured,
+    runs: w.configured ? `${w.cfg.skill} · ${w.cfg.laneVerbs}` : w.cfg.runsNote,
+    reach: w.configured ? `${w.cfg.graph} · ${w.cfg.system}` : w.cfg.rchNote,
+    where: `${w.cfg.agent} · ${w.cfg.surface}`,
+  }));
+}
+
+export interface PdaPhoneShape {
+  key: CaseMapShapeKey;
+  name: string;
+  /** The shape said as a sentence — VERBATIM, sentence case (`PdaShape.meaning`). */
+  meaning: string;
+  /** The Skills encoded on the shape, the roster's own short labels, the
+   *  first encode leading — the roster's `flagship` flag, exactly one per
+   *  engine (the registry pins it), the same mark the carrier greens. */
+  skills: { id: string; short: string; flagship: boolean }[];
+}
+
+/** 03 as a list: the five shapes, their sentences, their Skills as a run.
+ *  ⚠ NO COUNT PER SHAPE — a run of labels is countable, and a numeral
+ *  beside it is the surface saying the same thing twice (the hub's own
+ *  ruling, ADR-070 U28/U36); the record's total stays on the foot. */
+export function phoneLayer(
+  shapes: readonly CaseMapShape[],
+  skills: readonly CaseSkillEntry[]
+): PdaPhoneShape[] {
+  return shapes.map((s) => {
+    // ⚠ The flagship is the ROSTER's flag, not the shape's `first` work: that
+    // work's Skill can file under another engine (a stream that trenched
+    // Pattern runs a Validation Skill), and a lead that is not in the run it
+    // leads is a green mark on nothing. The carrier reads the same flag.
+    const run = skills
+      .filter((k) => k.engine.toLowerCase() === s.key)
+      .map((k) => ({ id: k.id, short: k.short, flagship: k.flagship === true }));
+    run.sort((a, b) => Number(b.flagship) - Number(a.flagship));
+    return { key: s.key, name: s.label.toUpperCase(), meaning: s.meaning, skills: run };
+  });
+}

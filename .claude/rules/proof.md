@@ -1573,7 +1573,10 @@ a slot.
   mechanism; the smoke asserts the absence on every row.
 - ⚠ **BELOW 980px THE CONSOLE UNWRAPS, IT DOES NOT HIDE.** Hiding it takes the
   plate's CONTENT with it — three of the four have no substitute. Only the map
-  hides its own console, because it has the stream index to put there.
+  hides its own console, because it has three phone READINGS to put there
+  (`PdaPhoneReadings`, ADR-107 U2), keyed on the same `view` the rail
+  selects — a fallback that ignores the rail is a rail nobody can press,
+  which is what the stream index alone was on the proof card for two weeks.
 - ⚠ **`clip-path` MAKES THE CONSOLE THE CONTAINING BLOCK FOR `fixed`
   DESCENDANTS.** `MediaLightbox` already portals to `document.body`; that is
   now load-bearing for three plates instead of one.

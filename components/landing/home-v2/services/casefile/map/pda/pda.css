@@ -639,8 +639,10 @@
 @media (max-width: 980px), (prefers-reduced-motion: reduce) {
   /* ⚠ THE MAP IS THE ONE PLATE THAT HIDES ITS CONSOLE rather than letting
      the frame unwrap it, because it has a DELIBERATE substitute below: the
-     index is the reading that never needed the projection. A plate without
-     one must let `console.css` unwrap, or its content goes with the chrome. */
+     three readings as lists (ADR-107 U2 — it was the index alone, whatever
+     the rail said), keyed on the same `view` the rail selects. A plate
+     without one must let `console.css` unwrap, or its content goes with
+     the chrome. */
   .fl-pda .fl-con__console {
     display: none;
   }
@@ -650,8 +652,15 @@
     height: 100%;
     overflow-y: auto;
     padding: 12px 14px 14px;
+    /* ADR-107 U2: the list scrolls under a finger and releases the
+       gesture to the page at its bounds (ADR-083's law; casefile.css's
+       own idiom). The proof card's event layer over this field is off on
+       the phone (proof-stack.css) — it served the desktop console's wheel
+       capture, which never arms here. */
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
-
   .fl-pda__list-head {
     display: flex;
     justify-content: space-between;
@@ -714,6 +723,113 @@
     font-size: var(--fl-chrome-sm, 10px);
     letter-spacing: var(--track-label);
     color: var(--pda-txt3);
+  }
+
+  /* ── 02 · THE CONFIGURATION AS A LEDGER (ADR-107 U2) ──────────────────
+     One row per stream on the board: the head the index's own row, then
+     the R4 board's three answers as framed keys (RUNS · REACH · WHERE) in
+     the key ink. Person-led rows say the absence in one line. */
+  .fl-pda__cfg {
+    padding: 8px 0;
+    border-top: 1px dotted var(--pda-rule);
+  }
+  .fl-pda__cfg-head {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    align-items: baseline;
+    gap: 8px;
+    font: max(11px, var(--fl-chrome-md, 11px))/1.35 var(--fl-mono, monospace);
+    color: var(--pda-txt);
+  }
+  .fl-pda__cfg-head > i {
+    font-style: normal;
+    color: var(--pda-grn);
+  }
+  .fl-pda__cfg[data-person] .fl-pda__cfg-head > i {
+    color: var(--pda-txt3);
+  }
+  .fl-pda__cfg-head > em {
+    font-style: normal;
+    font-size: var(--fl-chrome-sm, 10px);
+    letter-spacing: var(--track-label);
+    color: var(--pda-txt3);
+  }
+  .fl-pda__cfg-keys {
+    display: grid;
+    gap: 3px;
+    margin: 6px 0 0 20px;
+  }
+  .fl-pda__cfg-keys > div {
+    display: grid;
+    grid-template-columns: 5.2em minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+  }
+  .fl-pda__cfg-keys dt,
+  .fl-pda__cfg-keys dd,
+  .fl-pda__cfg-led {
+    margin: 0;
+    font: var(--fl-chrome-sm, 10px)/1.4 var(--fl-mono, monospace);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+  }
+  .fl-pda__cfg-keys dt {
+    color: var(--pda-ink, var(--gold));
+  }
+  .fl-pda__cfg-keys dd {
+    color: var(--pda-txt);
+    overflow-wrap: anywhere;
+  }
+  .fl-pda__cfg-led {
+    margin: 4px 0 0 20px;
+    color: var(--pda-txt3);
+  }
+
+  /* ── 03 · THE LAYER (ADR-107 U2) ───────────────────────────────────────
+     A shape, its sentence (the map's only prose, in the prose face), and
+     the Skills encoded on it as a run of the roster's short labels — the
+     first encode leads with the green mark and keeps its ink (the flagship
+     takes the accent, never the ink). No count per shape: the run is the
+     count. */
+  .fl-pda__shape {
+    margin-top: 14px;
+  }
+  .fl-pda__shape > h4 {
+    margin: 0 0 4px;
+    font: 400 var(--fl-chrome-md, 11px)/1.3 var(--fl-mono, monospace);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .fl-pda__shape-meaning {
+    margin: 0 0 6px;
+    font: 12.5px/1.45 var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+    color: var(--pda-txt);
+  }
+  .fl-pda__shape-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: var(--fl-chrome-sm, 10px)/1.4 var(--fl-mono, monospace);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--pda-txt3);
+  }
+  .fl-pda__shape-skill + .fl-pda__shape-skill::before {
+    content: "·";
+    margin: 0 6px;
+    color: var(--pda-rule);
+  }
+  .fl-pda__shape-skill[data-flagship] {
+    color: var(--pda-txt);
+  }
+  .fl-pda__shape-skill[data-flagship]::before {
+    content: "◆ ";
+    margin: 0;
+    color: var(--pda-grn);
   }
 
   /* ⚠ `--font-sans` does not exist in this app — see the note on

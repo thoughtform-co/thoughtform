@@ -2164,7 +2164,11 @@
    on it (a native non-passive listener); inside a sticky stack that would
    freeze the page whenever the cursor rests on card four. A transparent
    layer above it takes the events instead — they reach nothing that calls
-   preventDefault, so the page scrolls. */
+   preventDefault, so the page scrolls.
+   ⚠ DESKTOP ONLY. The capture it guards against is gated on
+   `SERVICES_SCROLL_OWNED_MEDIA` (min-width 961), so on the phone the layer
+   stopped nothing but the thumb — the map's readings could not be
+   scrolled under it. The ≤960 block below turns it off (ADR-107 U2). */
 .pf-stack .pf-field--map .fl-con {
   height: 100%;
 }
@@ -2215,6 +2219,12 @@
 }
 
 @media (max-width: 960px) {
+  /* ADR-107 U2: the map's event layer serves the desktop console's wheel
+     capture, which never arms on this rung; here it only kept a finger
+     off the readings. Off, so the list scrolls (pda.css). */
+  .pf-stack .pf-field--map::after {
+    display: none;
+  }
   /* The head WRAPS here and may exceed the peek; the band, its rule and its
      tint are the base rule's and come along. */
   .pf-stack .pf-card__head {

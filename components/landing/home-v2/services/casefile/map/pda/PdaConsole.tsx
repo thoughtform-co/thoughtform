@@ -30,6 +30,7 @@ import {
   configSkillNameRect,
 } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
+import { PdaPhoneReadings } from "./PdaPhoneReadings";
 import { ViewWork, gridRect, workExt, workLayout } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
@@ -604,36 +605,27 @@ export function PdaConsole({ shapes, districts, works, skills, envelope, railHos
          takes the height. `footCopy` still runs: `foot.title` is the SVG's
          accessible name and `foot.body` survives on the small-screen
          fallback list, where there is no drawing to say it. */
-      /* Below the desktop gate the drawing is dropped for a DELIBERATE
-         fallback — the reading that never needed the projection. */
+      /* Below the desktop gate the drawings are dropped for a DELIBERATE
+         fallback — three LISTS keyed on the same `view` the rail selects
+         (ADR-107 U2). It was one list, the stream index, whatever the rail
+         said: on the proof card the rail is portalled into the head, a tap
+         changed `view`, and nothing visible followed. A fallback that
+         ignores the control it sits under is a control nobody can press.
+         ⚠ The fallback carries NO rail of its own: `ConsoleFrame` renders it
+         on every rung, so a second `ConsoleRail` here doubled the desktop
+         arcs' stations behind a hidden list. Where nothing portals the rail
+         out (the arcs, reduced motion) the ≤980 fallback is unswitchable, as
+         it was before — ADR-107 U2's open item. */
       fallback={
-        <div className="fl-pda__list">
-          <div className="fl-pda__list-head">
-            <span>Index · streams by team</span>
-            <span>{`${shown.length} / ${totals.modules}`}</span>
-          </div>
-          {districts.map((d) => {
-            const rows = shown.filter((w) => w.team === d.id);
-            if (!rows.length) return null;
-            return (
-              <section className="fl-pda__list-group" key={d.id}>
-                <h4>{d.name}</h4>
-                {rows.map((w) => (
-                  <div
-                    className="fl-pda__list-row"
-                    key={w.id}
-                    data-person={w.configured ? undefined : ""}
-                  >
-                    <i aria-hidden="true">{w.configured ? "◆" : "○"}</i>
-                    <span>{w.title}</span>
-                    <em>{w.lane}</em>
-                  </div>
-                ))}
-              </section>
-            );
-          })}
-          <p className="fl-pda__list-foot">{foot.body}</p>
-        </div>
+        <PdaPhoneReadings
+          view={view}
+          shown={shown}
+          districts={districts}
+          shapes={shapes}
+          skills={skills}
+          totals={totals}
+          foot={foot}
+        />
       }
     >
       {/* The sweep. Keyed on the view tick so it plays once per change and

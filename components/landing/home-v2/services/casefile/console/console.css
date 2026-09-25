@@ -599,7 +599,8 @@
    already expect (`height: auto; overflow: visible`).
 
    A plate that DOES have a deliberate small-screen substitute (the map's
-   stream index) hides the console itself, in its own sheet.
+   three readings as lists, keyed on the rail's own `view` — ADR-107 U2)
+   hides the console itself, in its own sheet.
 
    ⚠ REDUCED MOTION IS PART OF THIS GATE (2026-08-07). casefile.css puts
    the whole casefile into static flow at `(max-width: 960px), (prefers-
