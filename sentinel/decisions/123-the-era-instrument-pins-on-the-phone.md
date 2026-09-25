@@ -249,7 +249,10 @@ desktop is byte-identical and the HUD snapshots prove it.
    saved ≤4 Hz and on `pagehide`; `vh` through `layoutViewportHeight()`). At
    mount `history.scrollRestoration = "manual"` (landing only, restored on
    unmount); skip on `location.hash`, on a bfcache restore, with no record, on a
-   rotation (`|vw − innerWidth| > 40`) or a record older than 30 min; otherwise
+   rotation (`|vw − innerWidth| > 40`; ⚠ **and `|vh − layoutViewportHeight()| > 40`
+   since ADR-125 U1, 2026-09-25** — the record carried `vh` and the decision
+   never read it, so a rest at 390×844 replayed into a 390×676 boot ~2 s in,
+   1768px past the reader) or a record older than 30 min; otherwise
    restore for `reload`, `back_forward` AND `navigate` (a jetsam reload may
    report `navigate` — the stamp will say). Then `releaseCorridorImportGate()`
    (an exported opener for the ≤960 first-scroll gate; the valves untouched),

@@ -194,6 +194,12 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           overlay via `CorridorStationHeaders` (mounted by
           `HomeCorridor`) so they don't skew with the camera or shift
           with aspect ratio. */}
+      {/* ADR-125 U1: the beats' SEAT LINES — two hidden probes whose heights
+          resolve the chrome band + the seat air, read once per resize by
+          `useWorldDomTracker.derivePhoneSeats` (a custom property is a
+          string until something lays it out). */}
+      {isMobile && <i className="home-v2-copy-seat home-v2-copy-seat--top" aria-hidden="true" />}
+      {isMobile && <i className="home-v2-copy-seat home-v2-copy-seat--bottom" aria-hidden="true" />}
       {isMobile && nav && <StationTitle content={nav} base="navigate" />}
       {isMobile && enc && <StationTitle content={enc} base="diagnostic" />}
 

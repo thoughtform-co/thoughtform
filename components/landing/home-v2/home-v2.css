@@ -3304,6 +3304,31 @@ html[data-services-ambient="true"] .home-v2-mobile-signal {
   :root {
     --copy-gutter: 24px;
     --copy-pscale: 1.15;
+    /* ADR-125 U1: the air between a beat's title/caption and its chrome
+       band, and between the sphere's ring and both. */
+    --corridor-seat-air: 12px;
+  }
+
+  /* ── THE BEATS' SEAT LINES (ADR-125 U1) ─────────────────────────
+     Two hidden probes in the copy layer whose HEIGHT resolves the chrome
+     band + the seat air; `useWorldDomTracker.derivePhoneSeats` reads
+     them once per resize and solves each beat's straddle so the title's
+     top sits on the top line and the caption's bottom on the bottom one
+     — on the toolbar frame and the tall one alike. The line stays
+     derived from the chrome's own tokens (landing.css). */
+  .home-v2-copy-seat {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .home-v2-copy-seat--top {
+    height: calc(var(--mobile-chrome-top) + var(--corridor-seat-air));
+  }
+  .home-v2-copy-seat--bottom {
+    height: calc(var(--mobile-chrome-bottom) + var(--corridor-seat-air));
   }
 
   /* ── MOBILE HIDES (LATE CASCADE) ────────────────────────────────
@@ -3347,18 +3372,18 @@ html[data-services-ambient="true"] .home-v2-mobile-signal {
     height: 820svh;
   }
 
-  /* ── THE PHONE'S SNAP SEATS (ADR-125) ───────────────────────────
-     Eight absolute, full-width, invisible children of the stage, one on
-     each plateau of the phone paint clock (`phoneCorridorClock.ts`) and
-     one on the stretch after it; `CorridorPhoneSeats` writes their `top`
-     and `height` inline as `calc(f * (100% - 100svh))` from the one
-     schedule, so no `820` lives here. `start`-aligned, and the four
-     plateau starts carry `scroll-snap-stop: always` — one flick steps one
-     beat, up and down (the owner's call, 2026-09-25). They paint nothing
-     and take no pointer; the sticky cell beside them stays no snap area
-     (a sticky child creates no position). The root is `proximity`
-     (landing.css); a rest in a pass is pulled onto the plateau it left or
-     the next, a rest on a plateau is already composed. */
+  /* ── THE PHONE'S SOFT SEATS (ADR-125 U1) ────────────────────────
+     Four absolute, full-width, invisible children of the stage, one on
+     each DWELL of the phone paint clock (`phoneCorridorClock.ts`);
+     `CorridorPhoneSeats` writes their `top` and `height` inline as
+     `calc(f * (100% - 100svh))` from the one schedule, so no `820` lives
+     here. `start`-aligned under the root's `proximity` (landing.css) and
+     NEVER `scroll-snap-stop: always` — the first cut's one-flick-one-beat
+     read as "it just jumps" (owner, 2026-09-25); a flick glides through
+     the Arc, a rest within reach lands on the composed frame, a rest
+     further out is travel. They paint nothing and take no pointer; the
+     sticky cell beside them stays no snap area (a sticky child creates
+     no position). */
   .home-v2-stage__seat {
     display: block;
     position: absolute;
@@ -3366,9 +3391,6 @@ html[data-services-ambient="true"] .home-v2-mobile-signal {
     right: 0;
     pointer-events: none;
     scroll-snap-align: start;
-  }
-  .home-v2-stage__seat[data-corridor-stop="always"] {
-    scroll-snap-stop: always;
   }
 
   /* ── THE TITLE SCALES ABOUT ITS ANCHORED EDGE (ADR-125) ────────

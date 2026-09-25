@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { releaseCorridorImportGate } from "./hooks/useCorridorMount";
 import { readScrollMemory, shouldRestore, startScrollMemory } from "@/lib/landing/scrollMemory";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
  * The landing lands where the reader was (ADR-123 §Part 1, commit A).
@@ -16,8 +17,10 @@ import { readScrollMemory, shouldRestore, startScrollMemory } from "@/lib/landin
  *
  * The replay instead:
  *   1. reads the memory `scrollMemory.ts` kept (≤4 Hz + `pagehide`),
- *   2. skips when an anchor, a bfcache restore, a rotation or a stale record
- *      says the reader did not come back to THIS layout,
+ *   2. skips when an anchor, a bfcache restore, a rotation, a resize on
+ *      either axis (ADR-125 U1 — the record always carried `vh`; the
+ *      decision read only `vw`) or a stale record says the reader did not
+ *      come back to THIS layout,
  *   3. releases the ≤960 corridor import gate (which otherwise waits for the
  *      first scroll — and there will be no scroll, the page is being put back),
  *   4. waits for the stage and, on the split rung, the split pile to mount,
@@ -61,6 +64,7 @@ export function ScrollRestoration() {
       hash: window.location.hash,
       persisted,
       vw: window.innerWidth,
+      vh: layoutViewportHeight(),
       now: Date.now(),
     });
 
@@ -71,7 +75,7 @@ export function ScrollRestoration() {
       const target = rec.y;
       const started = performance.now();
       const isSplit = window.matchMedia?.(SPLIT_MEDIA).matches ?? false;
-      const vh = document.documentElement.clientHeight || window.innerHeight;
+      const vh = layoutViewportHeight();
 
       const mounted = () =>
         !!document.querySelector(".home-v2-stage") &&

@@ -29,7 +29,7 @@ const rec = (over: Partial<ScrollMemory> = {}): ScrollMemory => ({
   t: 1_000_000,
   ...over,
 });
-const ctx = { hash: "", persisted: false, vw: 390, now: 1_000_000 + 5000 };
+const ctx = { hash: "", persisted: false, vw: 390, vh: 844, now: 1_000_000 + 5000 };
 
 describe("shouldRestore (pure)", () => {
   it("replays a fresh record from this layout", () => {
@@ -44,6 +44,12 @@ describe("shouldRestore (pure)", () => {
   it("drops a record from another width (a rotation) and a stale one", () => {
     expect(shouldRestore(rec(), { ...ctx, vw: 390 + SCROLL_MEMORY_ROTATION_PX + 1 })).toBe(false);
     expect(shouldRestore(rec(), { ...ctx, vw: 390 + SCROLL_MEMORY_ROTATION_PX })).toBe(true);
+    // ADR-125 U1: and from another HEIGHT at the same width — the toolbar-
+    // shown frame of the phone that wrote it at the toolbar-hidden one, or a
+    // resized window. Every runway is `svh`, so the same `y` is another frame.
+    expect(shouldRestore(rec(), { ...ctx, vh: 676 })).toBe(false);
+    expect(shouldRestore(rec(), { ...ctx, vh: 844 - SCROLL_MEMORY_ROTATION_PX })).toBe(true);
+    expect(shouldRestore(rec({ vh: 676 }), { ...ctx, vh: 676 })).toBe(true);
     expect(shouldRestore(rec(), { ...ctx, now: 1_000_000 + SCROLL_MEMORY_MAX_AGE_MS + 1 })).toBe(
       false
     );

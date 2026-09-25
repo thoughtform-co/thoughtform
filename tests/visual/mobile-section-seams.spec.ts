@@ -64,12 +64,10 @@ const STATION_IDS = ["hero", "services", "about", "voidwalker", "musings", "cont
  * playing it is CONTENT that owns the middle of the screen, which is what
  * test 3 is about instead.
  */
-const CHROME_SELECTORS = [
-  ".hud__nav__btn",
-  ".rin-settings",
-  ".hud__corner--tl",
-  ".hud__corner--br",
-] as const;
+/* ADR-125 U1 / ADR-059 U7: the two corner brackets are `display: none` on
+   the phone — the band case below asserts that — and the settings row
+   sits in the bottom-right corner's own seat. */
+const CHROME_SELECTORS = [".hud__nav__btn", ".rin-settings"] as const;
 
 /**
  * ⚠ THE OPEN CHROME-OVER-COPY DEBT, PINNED RATHER THAN TOLERATED.
@@ -114,10 +112,11 @@ const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {
   /* ADR-115 (2026-09-20): the ring band's runway grew 300 → 330svh for the
      deck's exit, and `#services`' MID rest (half its height) slid ~15svh
      down into the proof pile — where a field sheet's sentence ("Relative
-     draw measured against workload.") passes under the settings cluster and
-     the BR bracket, mid-station copy the padding floor cannot reach (§1).
-     Measured on both phone projects; the seat and NEAR read `(none)`. */
-  services: [".rin-settings", ".hud__corner--br"],
+     draw measured against workload.") passes under the settings cluster,
+     mid-station copy the padding floor cannot reach (§1). Measured on both
+     phone projects; the seat and NEAR read `(none)`. (The BR bracket was
+     the second entry until ADR-059 U7 took it off the phone.) */
+  services: [".rin-settings"],
 };
 
 const BOOT_TIMEOUT = 20_000;
@@ -227,13 +226,9 @@ async function rollTo(page: Page, y: number) {
 const SEAT_CANDIDATES = [
   /* ADR-125: the corridor's seats. */
   ".home-v2-stage__seat--thesis",
-  ".home-v2-stage__seat--thesis-out",
   ".home-v2-stage__seat--navigate",
-  ".home-v2-stage__seat--navigate-out",
   ".home-v2-stage__seat--encode",
-  ".home-v2-stage__seat--encode-out",
   ".home-v2-stage__seat--build",
-  ".home-v2-stage__seat--build-out",
   "#services",
   "#about",
   ".voidwalker__snap-in",
@@ -260,13 +255,9 @@ async function snapSeats(page: Page): Promise<number[]> {
     for (const sel of [
       /* ADR-125: the corridor's seats. */
       ".home-v2-stage__seat--thesis",
-      ".home-v2-stage__seat--thesis-out",
       ".home-v2-stage__seat--navigate",
-      ".home-v2-stage__seat--navigate-out",
       ".home-v2-stage__seat--encode",
-      ".home-v2-stage__seat--encode-out",
       ".home-v2-stage__seat--build",
-      ".home-v2-stage__seat--build-out",
       "#services",
       "#about",
       ".voidwalker__snap-in",
@@ -307,6 +298,11 @@ async function snapSeats(page: Page): Promise<number[]> {
  * ⚠ AND A LANDING ON A SNAP SEAT COUNTS AS SETTLED (ADR-113): the engine
  * has answered the request the way it answers a reader's flick, and a loop
  * that keeps asking for the un-snapped number never converges.
+ * ⚠ BUT ONLY A SEAT WITHIN HALF A SCREEN OF THE ASK (ADR-125 U1). A landing
+ * on a seat a whole beat past the ask is not the engine answering the
+ * request — it is something else moving the page (the landing's scroll
+ * memory replaying the previous boot's rest was the first, 1768px off), and
+ * a seek that accepted it reported "settled on the wrong seat" as success.
  */
 async function seekTo(page: Page, y: number, tolerance = 8): Promise<number> {
   const deadline = Date.now() + SEEK_TIMEOUT;
@@ -320,9 +316,11 @@ async function seekTo(page: Page, y: number, tolerance = 8): Promise<number> {
       () => document.documentElement.scrollHeight - window.innerHeight
     );
     if (y >= capped && at >= capped - tolerance) return at;
-    // Snapped: the page is resting on a seat within reach of the ask.
+    // Snapped: the page is resting on a seat within reach of the ask — and
+    // the seat itself is within half a screen of it (Blink's reach is ~vh/3).
     const seats = await snapSeats(page);
-    if (seats.some((s) => Math.abs(at - s) <= 1.5)) return at;
+    const vh = await page.evaluate(() => document.documentElement.clientHeight);
+    if (seats.some((s) => Math.abs(at - s) <= 1.5 && Math.abs(s - y) <= vh / 2)) return at;
   }
   throw new Error(`seek never settled on ${y} (last read ${at})`);
 }
@@ -983,6 +981,35 @@ test.describe("mobile section seams", () => {
     expect(bands.bottom, "--mobile-chrome-bottom does not resolve at this width").toBeGreaterThan(
       0
     );
+    // ADR-125 U1 / ADR-059 U7: no brackets on the phone, and the switch in
+    // the bottom-right corner's own seat (its right edge on the margin).
+    const corners = await page.evaluate(() => {
+      const cs = (sel: string) => {
+        const el = document.querySelector<HTMLElement>(sel);
+        return el ? getComputedStyle(el).display : "(absent)";
+      };
+      const probe = document.createElement("div");
+      probe.style.cssText = "position:fixed;width:var(--hud-margin);height:1px;visibility:hidden";
+      document.body.appendChild(probe);
+      const margin = probe.getBoundingClientRect().width;
+      probe.remove();
+      const settings = document
+        .querySelector<HTMLElement>(".rin-settings")
+        ?.getBoundingClientRect();
+      return {
+        tl: cs(".hud__corner--tl"),
+        br: cs(".hud__corner--br"),
+        margin,
+        settingsRight: settings ? settings.right : NaN,
+        vw: document.documentElement.clientWidth,
+      };
+    });
+    expect(corners.tl, "the TL bracket paints on the phone").toBe("none");
+    expect(corners.br, "the BR bracket paints on the phone").toBe("none");
+    expect(
+      Math.abs(corners.vw - corners.margin - corners.settingsRight),
+      "the settings row is not seated in the corner"
+    ).toBeLessThanOrEqual(1);
 
     for (const id of STATION_IDS) {
       const exists = await page.evaluate((s) => Boolean(document.getElementById(s)), id);
@@ -1081,18 +1108,15 @@ test.describe("mobile section seams", () => {
      sticky band. ⚠ Measured in Blink: an aligned position attracts within
      ~280px either way and a covering area never overrides one. */
   const SNAP_STOPS = [
-    /* ADR-125: the phone corridor's eight seats — each plateau of the phone
-       paint clock (its first frame, `always`) and the stretch after it (its
-       first frame is the plateau's LAST composed frame, `normal`). The stage
-       and its sticky cell stay no snap area; these are absolute children. */
+    /* ADR-125 U1: the phone corridor's four SOFT seats — each dwell of the
+       phone paint clock, its first frame the aligned position, `normal`
+       proximity and never `always` (a flick glides; a rest within reach
+       lands, a rest further out is travel). The stage and its sticky cell
+       stay no snap area; these are absolute children. */
     ".home-v2-stage__seat--thesis",
-    ".home-v2-stage__seat--thesis-out",
     ".home-v2-stage__seat--navigate",
-    ".home-v2-stage__seat--navigate-out",
     ".home-v2-stage__seat--encode",
-    ".home-v2-stage__seat--encode-out",
     ".home-v2-stage__seat--build",
-    ".home-v2-stage__seat--build-out",
     "#services",
     ".voidwalker__snap-in",
     ".voidwalker__snap",
@@ -1113,13 +1137,9 @@ test.describe("mobile section seams", () => {
   /** The alignment each stop declares; `end` names its BOTTOM edge. */
   const SNAP_ALIGN: Record<(typeof SNAP_STOPS)[number], "start" | "end"> = {
     ".home-v2-stage__seat--thesis": "start",
-    ".home-v2-stage__seat--thesis-out": "start",
     ".home-v2-stage__seat--navigate": "start",
-    ".home-v2-stage__seat--navigate-out": "start",
     ".home-v2-stage__seat--encode": "start",
-    ".home-v2-stage__seat--encode-out": "start",
     ".home-v2-stage__seat--build": "start",
-    ".home-v2-stage__seat--build-out": "start",
     "#services": "start",
     ".voidwalker__snap-in": "end",
     ".voidwalker__snap": "start",
@@ -1197,9 +1217,9 @@ test.describe("mobile section seams", () => {
       () => getComputedStyle(document.getElementById("voidwalker")!).scrollSnapStop
     );
     expect(stop, "#voidwalker is not a mandatory stop on the way past").toBe("always");
-    // ADR-125: one flick steps one beat — the four plateau STARTS are
-    // `always`; an out (a plateau's last frame) never is, or a flick from a
-    // plateau's start would stop 80svh later on the same picture.
+    // ADR-125 U1: the four seats are SOFT — `normal` proximity, never
+    // `always`. One flick per beat was the first cut and read as a jump;
+    // a flick glides through the Arc and a rest within reach lands.
     const stops = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>(".home-v2-stage__seat")].map((el) => [
         el.dataset.corridorSeat,
@@ -1207,14 +1227,10 @@ test.describe("mobile section seams", () => {
       ])
     );
     expect(stops).toEqual([
-      ["thesis", "always"],
-      ["thesis-out", "normal"],
-      ["navigate", "always"],
-      ["navigate-out", "normal"],
-      ["encode", "always"],
-      ["encode-out", "normal"],
-      ["build", "always"],
-      ["build-out", "normal"],
+      ["thesis", "normal"],
+      ["navigate", "normal"],
+      ["encode", "normal"],
+      ["build", "normal"],
     ]);
   });
 
@@ -1324,16 +1340,13 @@ test.describe("mobile section seams", () => {
     }
 
     // The seated instrument, both stills at once: the era stops on screen
-    // above the settings row, the title clear of the readout and the TL
-    // bracket. This is what the snap is FOR.
+    // above the settings row, the title clear of the readout (the TL
+    // bracket is gone on the phone since ADR-059 U7). This is what the snap
+    // is FOR.
     await test.step("#voidwalker seated", async () => {
       await seekTo(page, await seatOf("#voidwalker"));
       await settle(page, SETTLE_MS);
-      const chrome = await visibleChrome(page, [
-        ".hud__nav__btn",
-        ".hud__corner--tl",
-        ".rin-settings",
-      ]);
+      const chrome = await visibleChrome(page, [".hud__nav__btn", ".rin-settings"]);
       const seated = await page.evaluate((boxes) => {
         const vwd = document.querySelector<HTMLElement>(".vwd")!;
         const band = vwd.querySelector<HTMLElement>(".vwd__band");
@@ -1605,7 +1618,7 @@ test.describe("mobile section seams", () => {
       ).toBeLessThanOrEqual(vh / 3 + 80);
   });
 
-  /* ── ADR-125: the corridor's beats are plateaus, and the seats sit on them ── */
+  /* ── ADR-125 (U1): the corridor's beats dwell, the seats sit on them, the passes are travel ── */
 
   /** A beat's DOM pair on the phone: the world-anchored title cluster and the
    *  caption card (`StationTitle`, mobile-only), by the anchor ids the tracker
@@ -1647,55 +1660,99 @@ test.describe("mobile section seams", () => {
     }, base);
   }
 
-  test("the corridor's three beats seat, composed (ADR-125)", async ({ page }, testInfo) => {
+  test("the corridor's three beats seat, composed on the bands, on both phone frames (ADR-125 U1)", async ({
+    page,
+  }, testInfo) => {
     phonesOnly(testInfo);
-    test.setTimeout(180_000);
-    await boot(page);
-    const isFallback = await page.evaluate(
-      () => document.querySelector(".home-v2-stage")?.getAttribute("data-fallback") === "true"
-    );
-    test.skip(isFallback, "the static corridor has no plateaus");
-    const bands = await chromeBands(page);
+    test.setTimeout(300_000);
+    // The frame the project emulates, then — on the iPhone 14 project — the
+    // toolbar-showing frame of that phone (the SMALL viewport, ≈676 tall),
+    // which is the frame the cell composes in on the device.
+    const frames: ({ width: number; height: number } | null)[] = [null];
+    if (testInfo.project.name === "iphone-14-chromium") frames.push({ width: 390, height: 676 });
     const rows: string[] = [];
-    for (const beat of BEATS) {
-      const seat = await docTop(page, beat.seat);
-      const at = await seekTo(page, seat);
-      await settleSnap(page);
-      // The reveal follower (τ 0.2 s) and the tracker's next writes.
-      await page.waitForTimeout(900);
-      const r = await readBeat(page, beat.base);
-      rows.push(`${beat.base} seat ${seat} at ${at} ${JSON.stringify(r)}`);
-      expect(
-        Math.abs(at - seat),
-        `${beat.base}: the seek did not rest on the seat`
-      ).toBeLessThanOrEqual(1.5);
-      expect(r.title, `${beat.base}: no title anchor`).not.toBeNull();
-      expect(r.support, `${beat.base}: no caption anchor`).not.toBeNull();
-      const title = r.title!;
-      const support = r.support!;
-      // Composed: visible at (near) full strength and at its parked scale.
-      expect(title.opacity, `${beat.base}: title opacity`).toBeGreaterThanOrEqual(beat.minOpacity);
-      expect(support.opacity, `${beat.base}: caption opacity`).toBeGreaterThanOrEqual(
-        beat.minOpacity
+    for (const frame of frames) {
+      if (frame) await page.setViewportSize(frame);
+      await boot(page);
+      const isFallback = await page.evaluate(
+        () => document.querySelector(".home-v2-stage")?.getAttribute("data-fallback") === "true"
       );
-      expect(title.scale, `${beat.base}: title scale`).toBeGreaterThanOrEqual(0.97);
-      expect(title.scale, `${beat.base}: title scale`).toBeLessThanOrEqual(1.05);
-      expect(support.scale, `${beat.base}: caption scale`).toBeGreaterThanOrEqual(0.97);
-      expect(support.scale, `${beat.base}: caption scale`).toBeLessThanOrEqual(1.05);
-      // In the frame, clear of both chrome bands, title above caption.
-      expect(title.top, `${beat.base}: title under the top chrome`).toBeGreaterThanOrEqual(
-        bands.top - 2
-      );
-      expect(support.bottom, `${beat.base}: caption under the bottom chrome`).toBeLessThanOrEqual(
-        r.vh - bands.bottom + 2
-      );
-      expect(title.bottom, `${beat.base}: title over the caption`).toBeLessThanOrEqual(
-        support.top + 1
-      );
-      expect(title.left, `${beat.base}: title off the left edge`).toBeGreaterThanOrEqual(-1);
-      expect(support.right, `${beat.base}: caption off the right edge`).toBeLessThanOrEqual(
-        r.vw + 1
-      );
+      test.skip(isFallback, "the static corridor has no dwells");
+      const bands = await chromeBands(page);
+      for (const beat of BEATS) {
+        const seat = await docTop(page, beat.seat);
+        const at = await seekTo(page, seat);
+        await settleSnap(page);
+        // The reveal follower (τ 0.2 s) and the tracker's next writes.
+        await page.waitForTimeout(900);
+        const r = await readBeat(page, beat.base);
+        const seats = await page.evaluate(() =>
+          JSON.parse(
+            document.querySelector(".home-v2-copy-layer")?.getAttribute("data-phone-seats") ??
+              "null"
+          )
+        );
+        const tag = `${beat.base}@${r.vh}`;
+        rows.push(
+          `${tag} seat ${seat} at ${at} ${JSON.stringify(r)} ${JSON.stringify(seats?.[beat.base])}`
+        );
+        if (Math.abs(at - seat) > 1.5) {
+          // The record survives the failure: the seats the page declares and
+          // where the seek came to rest.
+          rows.push(`seats ${JSON.stringify(await snapSeats(page))}`);
+          await testInfo.attach("corridor-beats", {
+            body: rows.join("\n"),
+            contentType: "text/plain",
+          });
+        }
+        expect(
+          Math.abs(at - seat),
+          `${tag}: the seek did not rest on the seat`
+        ).toBeLessThanOrEqual(1.5);
+        expect(r.title, `${tag}: no title anchor`).not.toBeNull();
+        expect(r.support, `${tag}: no caption anchor`).not.toBeNull();
+        const title = r.title!;
+        const support = r.support!;
+        // Composed: visible at (near) full strength and at its parked scale.
+        expect(title.opacity, `${tag}: title opacity`).toBeGreaterThanOrEqual(beat.minOpacity);
+        expect(support.opacity, `${tag}: caption opacity`).toBeGreaterThanOrEqual(beat.minOpacity);
+        expect(title.scale, `${tag}: title scale`).toBeGreaterThanOrEqual(0.97);
+        expect(title.scale, `${tag}: title scale`).toBeLessThanOrEqual(1.05);
+        expect(support.scale, `${tag}: caption scale`).toBeGreaterThanOrEqual(0.97);
+        expect(support.scale, `${tag}: caption scale`).toBeLessThanOrEqual(1.05);
+        // SEATED (U1): the title's top on the top band + the air, the
+        // caption's bottom on the bottom band − the air, on every frame.
+        expect(seats, `${tag}: the tracker wrote no seat record`).toBeTruthy();
+        const air = Number(seats.air);
+        expect(
+          Math.abs(title.top - (bands.top + air)),
+          `${tag}: title top vs its seat line`
+        ).toBeLessThanOrEqual(4);
+        expect(
+          Math.abs(support.bottom - (r.vh - bands.bottom - air)),
+          `${tag}: caption bottom vs its seat line`
+        ).toBeLessThanOrEqual(4);
+        expect(title.bottom, `${tag}: title over the caption`).toBeLessThanOrEqual(support.top + 1);
+        expect(title.left, `${tag}: title off the left edge`).toBeGreaterThanOrEqual(-1);
+        expect(support.right, `${tag}: caption off the right edge`).toBeLessThanOrEqual(r.vw + 1);
+        // THE SPHERE: solved from the same seats — its outer ring clears both
+        // clusters by the air, and it is never smaller than the base scale.
+        const band = seats[beat.base];
+        expect(band, `${tag}: no sphere record`).toBeTruthy();
+        expect(Number(seats.sphere), `${tag}: sphere scale under the base`).toBeGreaterThanOrEqual(
+          Number(seats.sphereBase) - 1e-6
+        );
+        expect(Number(seats.sphere), `${tag}: sphere scale over the cap`).toBeLessThanOrEqual(
+          Number(seats.sphereMax) + 1e-6
+        );
+        const ring = (Number(band.ringPxAtBase) * Number(seats.sphere)) / Number(seats.sphereBase);
+        expect(Number(band.sphereY) - ring, `${tag}: ring into the title`).toBeGreaterThanOrEqual(
+          title.bottom + air - 4
+        );
+        expect(Number(band.sphereY) + ring, `${tag}: ring into the caption`).toBeLessThanOrEqual(
+          support.top - air + 4
+        );
+      }
     }
     await testInfo.attach("corridor-beats", {
       body: rows.join("\n"),
@@ -1703,7 +1760,7 @@ test.describe("mobile section seams", () => {
     });
   });
 
-  test("every rest from the corridor's pin to the Build seat lands on a seat, a plateau or a named pass (ADR-125)", async ({
+  test("every rest within reach of a park seat is pulled onto it; every other rest is travel (ADR-125 U1)", async ({
     page,
   }, testInfo) => {
     phonesOnly(testInfo);
@@ -1712,82 +1769,68 @@ test.describe("mobile section seams", () => {
     const isFallback = await page.evaluate(
       () => document.querySelector(".home-v2-stage")?.getAttribute("data-fallback") === "true"
     );
-    test.skip(isFallback, "the static corridor has no plateaus");
+    test.skip(isFallback, "the static corridor has no dwells");
     const from = await seekTo(page, await docTop(page, ".home-v2-stage"));
-    const to = await docTop(page, ".home-v2-stage__seat--build-out");
     const vh = await page.evaluate(() => document.documentElement.clientHeight);
-    const seats = await snapSeats(page);
-    // The seats' TOPS in document space, in order: a plateau runs from its
-    // seat's top to its out's, a pass from the out's top to the next plateau's.
-    // ⚠ Never the boxes: a seat's box is capped at half a screen
-    // (`SEAT_BOX_MAX_SVH`) precisely so it can never be a covering area — the
-    // first cut's 120svh `thesis-out` box pulled seven consecutive rests back
-    // onto a mid-flight frame at its foot — so a box says nothing about the
-    // range its seat names.
-    const tops = await page.evaluate(() =>
-      [...document.querySelectorAll<HTMLElement>(".home-v2-stage__seat")].map((el) => {
-        const r = el.getBoundingClientRect();
-        return {
-          id: el.dataset.corridorSeat!,
-          stop: el.dataset.corridorStop!,
-          top: r.top + window.scrollY,
-          bottom: r.bottom + window.scrollY,
-        };
-      })
+    // The four seats' tops in document space. Under U1 a pass is TRAVEL: a
+    // rest inside a seat's reach is pulled onto the composed frame, a rest
+    // further out stays where the thumb left it, on purpose. Blink's reach is
+    // about a third of the snapport (ADR-115's measurement); a quarter is the
+    // conservative floor asserted here, and the reach actually measured — the
+    // farthest requested rest that was still pulled — is attached as the
+    // record for the device read (WebKit's is unknown).
+    const seats = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".home-v2-stage__seat")].map((el) => ({
+        id: el.dataset.corridorSeat!,
+        top: el.getBoundingClientRect().top + window.scrollY,
+      }))
     );
-    const ranges = tops.map((t, i) => ({
-      ...t,
-      end: i + 1 < tops.length ? tops[i + 1].top : t.bottom,
-    }));
-    const inside = (at: number, stop: "always" | "normal") =>
-      ranges.find((b) => b.stop === stop && at >= b.top - 0.5 && at < b.end + 0.5);
-    const rows: { y: number; at: number; kind: string; box: string }[] = [];
+    expect(seats.map((s) => s.id)).toEqual(["thesis", "navigate", "encode", "build"]);
+    const reach = vh / 4;
+    const to = seats[seats.length - 1].top + reach;
+    const nearest = (y: number) =>
+      seats.reduce((best, s) => (Math.abs(s.top - y) < Math.abs(best.top - y) ? s : best));
+    const rows: { y: number; at: number; kind: string; seat: string; d: number }[] = [];
+    let measuredReach = 0;
     for (let y = from; y <= to; y += 40) {
       await rollTo(page, y);
       const at = await page.evaluate(() => window.scrollY);
-      const seated = seats.some((s) => Math.abs(at - s) <= 1.5);
-      const plateau = inside(at, "always");
-      const pass = inside(at, "normal");
-      const kind = seated
-        ? "seat"
-        : plateau
-          ? "plateau"
-          : pass && Math.abs(at - y) <= 1.5
-            ? "stretch"
-            : "fail";
-      rows.push({ y, at: Math.round(at), kind, box: (plateau ?? pass)?.id ?? "-" });
+      const seat = nearest(y);
+      const d = Math.abs(seat.top - y);
+      const seated = Math.abs(at - seat.top) <= 1.5;
+      const travel = Math.abs(at - y) <= 1.5;
+      const kind = seated ? "seat" : travel ? "travel" : "fail";
+      if (seated && d > measuredReach) measuredReach = d;
+      rows.push({ y, at: Math.round(at), kind, seat: seat.id, d: Math.round(d) });
+    }
+    const runs: { seat: string; n: number; start: number; end: number }[] = [];
+    for (const r of rows) {
+      if (r.kind !== "travel") continue;
+      const last = runs[runs.length - 1];
+      if (last && r.y - last.end <= 40) {
+        last.end = r.y;
+        last.n += 1;
+      } else runs.push({ seat: r.seat, n: 1, start: r.y, end: r.y });
     }
     await testInfo.attach("corridor-rest-sweep", {
-      body: rows.map((r) => `${r.y} → ${r.at} ${r.kind} ${r.box}`).join("\n"),
+      body: [
+        `vh ${vh} reach-floor ${Math.round(reach)} measured-reach ${Math.round(measuredReach)}`,
+        `travel runs: ${JSON.stringify(runs)}`,
+        ...rows.map((r) => `${r.y} → ${r.at} ${r.kind} ${r.seat} ${r.d}`),
+      ].join("\n"),
       contentType: "text/plain",
     });
     expect(
       rows.filter((r) => r.kind === "fail"),
       "a rest landed on nothing"
     ).toEqual([]);
-    // What may remain un-pulled: the entry flight (the thesis's rise and the
-    // pass into Navigate — bounded by the thesis's last frame and Navigate's
-    // first, one radius short of each), and at most one sample in each of the
-    // two Arc passes, which are shorter than two radii by construction.
-    const runs: { start: number; end: number; box: string; n: number }[] = [];
     for (const r of rows) {
-      if (r.kind !== "stretch") continue;
-      const last = runs[runs.length - 1];
-      if (last && r.y - last.end <= 40 && last.box === r.box) {
-        last.end = r.y;
-        last.n += 1;
-      } else runs.push({ start: r.y, end: r.y, box: r.box, n: 1 });
-    }
-    for (const run of runs) {
-      if (run.box === "thesis-out") {
-        expect(
-          run.end - run.start,
-          `the entry flight's un-pulled run at ${run.start}`
-        ).toBeLessThanOrEqual(vh * 0.6);
-      } else {
-        expect(run.n, `an un-pulled run in ${run.box} at ${run.start}`).toBeLessThanOrEqual(1);
+      if (r.d <= reach) {
+        expect(r.kind, `a rest ${r.d}px from ${r.seat} was not pulled onto it`).toBe("seat");
       }
     }
+    // Every seat pulled something from at least a quarter screen away.
+    expect(measuredReach).toBeGreaterThanOrEqual(reach - 40);
   });
 
   test("the desktop declares no snap (byte-identity)", async ({ page }, testInfo) => {

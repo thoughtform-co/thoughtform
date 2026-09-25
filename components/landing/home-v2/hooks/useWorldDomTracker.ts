@@ -4,12 +4,25 @@ import { useEffect, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import type { DepthGatewayTransform, Beat } from "@/lib/stores/depthGatewayStore";
 import { BEAT_WINDOWS, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import {
+  PHONE_SEAT_AIR_PX,
+  type PhoneSeatEdge,
+  phoneSphereScale,
+  phoneStraddleWorldY,
+  writePhoneSphereScale,
+  writePhoneStraddle,
+} from "@/lib/home-v2/phoneStraddle";
+import {
+  MOBILE_GYRO_SPHERE_SCALE,
+  MOBILE_GYRO_SPHERE_SCALE_MAX,
+  getBrandmarkWorldPosition,
   getCameraFov,
   type DepthFocusWindow,
   depthFocusOpacity,
   getCameraLookAt,
   getCameraPosition,
+  phoneSphereRingWorld,
 } from "../DepthGatewayScene/sceneGeom";
 
 /**
@@ -96,6 +109,18 @@ export interface WorldAnchor {
    *  "the next section is already there" rather than as travel
    *  through depth. */
   depthFade?: DepthFocusWindow;
+  /** Phone only (ADR-125 U1): seat this cluster on a chrome band at its
+   *  park. The tracker projects `base` (the anchor at straddle 0) at
+   *  `parkProgress` once per resize, measures the element, and writes the
+   *  world-Y straddle that puts the anchored edge on the band + the seat
+   *  air into `lib/home-v2/phoneStraddle`'s registry, which the anchor's
+   *  own `position` reads. `edge: "top"` is a `bottom-center` title (its
+   *  BOTTOM edge is the anchor), `"bottom"` a `top-center` caption. */
+  phoneSeat?: {
+    edge: PhoneSeatEdge;
+    parkProgress: number;
+    base: (transform: DepthGatewayTransform) => readonly [number, number, number];
+  };
   /** Optional per-frame hook fired after inline transform + opacity
    *  are written. Use for extra frame state (perspective-correct
    *  width/height, custom tilt, etc.). */
@@ -261,6 +286,165 @@ export function useWorldDomTracker(
     lastStateRef.current = new Map();
     elementCacheRef.current = new Map();
 
+    const elementFor = (id: string): HTMLElement | null => {
+      const root = rootRef.current;
+      if (!root) return null;
+      const elementCache = elementCacheRef.current;
+      let element = elementCache.get(id);
+      if (!element) {
+        const selector = `[data-world-anchor="${id}"]`;
+        element = root.matches(selector)
+          ? (root as HTMLElement)
+          : root.querySelector<HTMLElement>(selector);
+        if (element) elementCache.set(id, element);
+      }
+      return element ?? null;
+    };
+
+    // ── The beats' seat lines (ADR-125 U1, phone only) ───────────────
+    // A seated anchor's straddle is DERIVED from the frame: at the beat's
+    // park, project the anchor's base pose (straddle 0) and one world unit
+    // above it, measure the cluster, and solve the world-Y that puts its
+    // anchored edge on the chrome band + the seat air. Then the sphere: the
+    // largest ring that clears both clusters on the tightest beat, capped.
+    // Runs once per resize (and again when a seated cluster reflows), never
+    // per tick — `offsetHeight` is a layout read. The results live in
+    // `lib/home-v2/phoneStraddle`'s registry, which `sceneGeom` reads; the
+    // record is written onto the root as `data-phone-seats` for the smoke.
+    const seatCam = makeMirrorCamera(box.w / box.h);
+    const seatProj = new THREE.Vector3();
+    const seatFwd = new THREE.Vector3();
+    const seatTo = new THREE.Vector3();
+    let seatsDirty = true;
+    const r2 = (v: number) => Math.round(v * 100) / 100;
+    const derivePhoneSeats = () => {
+      seatsDirty = false;
+      if (!isMobileComposition()) return;
+      const root = rootRef.current;
+      if (!root) return;
+      const topLine = root.querySelector<HTMLElement>(".home-v2-copy-seat--top")?.offsetHeight ?? 0;
+      const bottomLine =
+        root.querySelector<HTMLElement>(".home-v2-copy-seat--bottom")?.offsetHeight ?? 0;
+      if (!(topLine > 0 && bottomLine > 0)) {
+        seatsDirty = true;
+        return;
+      }
+      const vh = box.h;
+      seatCam.aspect = box.w / vh;
+      seatCam.fov = getCameraFov(seatCam.aspect);
+      seatCam.updateProjectionMatrix();
+      const live = useDepthGatewayStore.getState().transform;
+      const projectY = (p: readonly [number, number, number]) => {
+        seatProj.set(p[0], p[1], p[2]).project(seatCam);
+        return (-seatProj.y * 0.5 + 0.5) * vh;
+      };
+      type Band = {
+        park: number;
+        titleBottom?: number;
+        captionTop?: number;
+        title?: number;
+        caption?: number;
+      };
+      const bands = new Map<string, Band>();
+      let seated = 0;
+      for (const anchor of anchors) {
+        const seat = anchor.phoneSeat;
+        if (!seat) continue;
+        const element = elementFor(anchor.id);
+        if (!element) {
+          seatsDirty = true;
+          continue;
+        }
+        const park = seat.parkProgress;
+        syncMirrorCamera(seatCam, park);
+        const at: DepthGatewayTransform = {
+          ...live,
+          progress: park,
+          paintProgress: park,
+          active: true,
+          armed: false,
+        };
+        const base = seat.base(at);
+        const [lx, ly, lz] = getCameraLookAt(park);
+        seatFwd.set(lx, ly, lz).sub(seatCam.position).normalize();
+        seatTo.set(base[0], base[1], base[2]).sub(seatCam.position);
+        const dist = Math.max(0.2, Math.abs(seatTo.dot(seatFwd)));
+        const centreY = projectY(base);
+        const pxPerUnit = centreY - projectY([base[0], base[1] + 1, base[2]]);
+        if (!(pxPerUnit > 0)) continue;
+        let scale = 1;
+        if (anchor.perspectiveScale) {
+          const { referenceDistance, min = 0.35, max = 1.25 } = anchor.perspectiveScale;
+          scale = Math.min(max, Math.max(min, referenceDistance / dist));
+        }
+        const clusterPx = element.offsetHeight;
+        const seatLinePx = seat.edge === "top" ? topLine : bottomLine;
+        const y = phoneStraddleWorldY({
+          edge: seat.edge,
+          vh,
+          seatLinePx,
+          clusterPx,
+          scale,
+          centreY,
+          pxPerUnit,
+        });
+        writePhoneStraddle(anchor.id, y);
+        if (ro) ro.observe(element);
+        seated += 1;
+        const key = anchor.id.split(".")[0];
+        const band = bands.get(key) ?? { park };
+        if (seat.edge === "top") {
+          band.titleBottom = seatLinePx + clusterPx * scale;
+          band.title = y;
+        } else {
+          band.captionTop = vh - seatLinePx - clusterPx * scale;
+          band.caption = y;
+        }
+        bands.set(key, band);
+      }
+      if (seated === 0) return;
+      let tightest = Infinity;
+      const record: Record<string, unknown> = {
+        vh,
+        air: PHONE_SEAT_AIR_PX,
+        topLine,
+        bottomLine,
+        sphereBase: MOBILE_GYRO_SPHERE_SCALE,
+        sphereMax: MOBILE_GYRO_SPHERE_SCALE_MAX,
+      };
+      for (const [key, band] of bands) {
+        if (band.titleBottom === undefined || band.captionTop === undefined) continue;
+        syncMirrorCamera(seatCam, band.park);
+        const sphere = getBrandmarkWorldPosition(band.park);
+        const sphereY = projectY(sphere);
+        const unit = sphereY - projectY([sphere[0], sphere[1] + 1, sphere[2]]);
+        const ringPxAtBase = phoneSphereRingWorld(band.park) * unit;
+        const halfBand = Math.min(sphereY - band.titleBottom, band.captionTop - sphereY);
+        const fit = phoneSphereScale({
+          halfBandPx: halfBand,
+          ringPxAtBase,
+          base: MOBILE_GYRO_SPHERE_SCALE,
+          max: MOBILE_GYRO_SPHERE_SCALE_MAX,
+        });
+        tightest = Math.min(tightest, fit);
+        record[key] = {
+          park: r2(band.park),
+          title: r2(band.title ?? NaN),
+          caption: r2(band.caption ?? NaN),
+          titleBottom: r2(band.titleBottom),
+          captionTop: r2(band.captionTop),
+          sphereY: r2(sphereY),
+          ringPxAtBase: r2(ringPxAtBase),
+          fit: r2(fit),
+        };
+      }
+      if (Number.isFinite(tightest)) {
+        writePhoneSphereScale(tightest);
+        record.sphere = r2(tightest);
+      }
+      root.setAttribute("data-phone-seats", JSON.stringify(record));
+    };
+
     const onResize = () => {
       const cam = cameraRef.current;
       if (!cam) return;
@@ -272,6 +456,9 @@ export function useWorldDomTracker(
       // the same aspect) so the projection never desyncs on rotate.
       cam.fov = getCameraFov(cam.aspect);
       cam.updateProjectionMatrix();
+      // The frame moved (or a seated cluster reflowed): re-derive the
+      // phone seats on the next tick, never inside the observer.
+      seatsDirty = true;
     };
     // The cell resizes on rotate and on a real resize; it does NOT resize
     // when an iOS toolbar collapses — which is exactly when `window`
@@ -291,6 +478,8 @@ export function useWorldDomTracker(
       const toA = toAnchorRef.current;
       if (!root || !cam || !proj || !fwd || !toA) return;
 
+      if (seatsDirty) derivePhoneSeats();
+
       const transform = useDepthGatewayStore.getState().transform;
       // Use `paintProgress` so during the `armed` pre-arm pass the
       // mirror camera sits at parked Thoughtform (progress 0) — the
@@ -309,15 +498,7 @@ export function useWorldDomTracker(
       fwd.set(lx, ly, lz).sub(cam.position).normalize();
 
       for (const anchor of anchors) {
-        const elementCache = elementCacheRef.current;
-        let element = elementCache.get(anchor.id);
-        if (!element) {
-          const selector = `[data-world-anchor="${anchor.id}"]`;
-          element = root.matches(selector)
-            ? (root as HTMLElement)
-            : root.querySelector<HTMLElement>(selector);
-          if (element) elementCache.set(anchor.id, element);
-        }
+        const element = elementFor(anchor.id);
         if (!element) continue;
 
         const worldPos = resolvePosition(anchor.position, transform);

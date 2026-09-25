@@ -41,16 +41,12 @@ const HEADLESS = args.includes("--headless");
    adds the band's release, makes the era STATION the stop and adds its
    release target. `.vwd` is pinned inside the runway and no longer a stop. */
 const STOPS = [
-  /* ADR-125: the corridor's eight seats — a plateau's first frame (`always`)
-     and the stretch after it whose first frame is the plateau's last. */
+  /* ADR-125 U1: the corridor's four soft seats — each dwell's first frame,
+     `normal` proximity; the passes between them are travel. */
   ".home-v2-stage__seat--thesis",
-  ".home-v2-stage__seat--thesis-out",
   ".home-v2-stage__seat--navigate",
-  ".home-v2-stage__seat--navigate-out",
   ".home-v2-stage__seat--encode",
-  ".home-v2-stage__seat--encode-out",
   ".home-v2-stage__seat--build",
-  ".home-v2-stage__seat--build-out",
   "#services",
   ".voidwalker__snap",
   ".voidwalker__snap-out",
@@ -277,7 +273,9 @@ for (const [w, h] of SHAPES) {
     const band = vwd?.querySelector(".vwd__band");
     const settings = document.querySelector(".rin-settings");
     const title = vwd?.querySelector(".vwd__mast__title");
-    const tl = document.querySelector(".hud__corner--tl");
+    // ADR-059 U7: no TL bracket on the phone; the readout button is the
+    // top chrome the title must clear.
+    const tl = document.querySelector(".hud__nav__btn");
     const rect = (el) => (el ? el.getBoundingClientRect() : null);
     const ink = (el) => {
       if (!el) return null;

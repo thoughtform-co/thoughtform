@@ -30,6 +30,7 @@
  */
 
 import {
+  BEAT_PARK_CENTRES,
   BEAT_WINDOWS,
   CAMERA_END,
   CAMERA_START,
@@ -47,6 +48,7 @@ import {
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { MOBILE_THESIS_EXIT_START, MOBILE_THOUGHTFORM_END } from "@/lib/home-v2/phoneCorridorClock";
+import { readPhoneSphereScale, readPhoneStraddle } from "@/lib/home-v2/phoneStraddle";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
 import { arcLabelFade } from "@/lib/arc-cases/arcCasesMath";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
@@ -1798,8 +1800,27 @@ export function getBrandmarkSphereMatchHalfExtent(progress: number): number {
  *  the sphere (ADR-023 `BRANDMARK_SPHERE_FILL`). Desktop returns 1 →
  *  byte-identical. (ADR-018 mobile quality pass 2.) */
 export const MOBILE_GYRO_SPHERE_SCALE = 1.1;
+/** ADR-125 U1: on the phone the scale is SOLVED per frame by
+ *  `useWorldDomTracker.derivePhoneSeats` — the largest ring that clears the
+ *  seated title and caption on the tightest beat by the seat air — floored
+ *  at the base above and capped here (≈1.15 on the toolbar frame, where
+ *  Navigate binds; the cap on the tall one). The cap is the dial the still
+ *  decides. Desktop returns 1 → byte-identical. */
+export const MOBILE_GYRO_SPHERE_SCALE_MAX = 1.3;
 export function mobileGyroSphereScale(): number {
-  return isMobileComposition() ? MOBILE_GYRO_SPHERE_SCALE : 1;
+  return isMobileComposition() ? readPhoneSphereScale(MOBILE_GYRO_SPHERE_SCALE) : 1;
+}
+/** The gyro's OUTER gimbal ring in world units at the BASE phone scale at
+ *  a park — what the tracker projects to solve the scale above. The ring
+ *  is a great circle tilted about the view axis, so its projected vertical
+ *  extent is its radius. */
+export function phoneSphereRingWorld(parkProgress: number): number {
+  return (
+    SUBSTRATE_GYRO_GIMBAL_RINGS[2].radius *
+    GYRO_ASSEMBLY_SCALE *
+    getNavigateApparentSizeBoost(parkProgress) *
+    MOBILE_GYRO_SPHERE_SCALE
+  );
 }
 
 /** Half-extent shared by the projected SVG and the particle core
@@ -1829,6 +1850,7 @@ import {
   STACK_LANE_COUNT,
   STACK_LANE_Y_RANGE,
   SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL,
+  SUBSTRATE_GYRO_GIMBAL_RINGS,
   SUBSTRATE_GYRO_GLOBE_RADIUS,
   getPrimitiveLabelOffset,
   petalStagger,
@@ -2398,10 +2420,13 @@ function gyroAssemblyWorldPosition(
   // assembly scales with the same channel (BrandmarkAccretionShell),
   // so projected DOM labels stay welded to the gliding geometry
   // instead of stepping against it (2026-06-11 smoothness pass).
+  // ADR-125 U1: the phone sphere scale folds in too, so the weld is true
+  // on the phone (every DOM it welds is hidden ≤760 today; desktop is 1).
   const s =
     base *
     getEpiloguePlanetScale(getSmoothedEpilogueProgress()) *
-    getNavigateApparentSizeBoost(transform.paintProgress);
+    getNavigateApparentSizeBoost(transform.paintProgress) *
+    mobileGyroSphereScale();
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
   const [x, y, z] = rotateGyroLocalOffset(scaledLocal);
@@ -2429,6 +2454,11 @@ const HEADER_TITLE_X = -2.0;
 const HEADER_SUPPORT_X = 0.3;
 /** Shared Y for the upper header band on desktop. */
 const HEADER_TOP_Y = 1.4;
+
+/** A station's park as paint progress — `BEAT_PARK_CENTRES` by its id. */
+function stationPark(station: GateStation): number {
+  return BEAT_PARK_CENTRES[station.id as Beat] ?? 0;
+}
 
 function stationHeaderPosition(
   station: GateStation,
@@ -2703,7 +2733,16 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // uses the empty band above the (now slightly larger) gyro sphere
     // instead of hugging it. Navigate's sphere is the biggest of the
     // three (navBoost 1.3 × mobile 1.1), so it gets the most clearance.
-    position: () => stationHeaderPosition(STATION_NAVIGATE, "title", 2.0),
+    // ADR-125 U1: on the phone the straddle is DERIVED — the cluster seats
+    // on the top chrome band at the park (`lib/home-v2/phoneStraddle`); the
+    // literal is the fallback until the tracker has measured the frame.
+    position: () =>
+      stationHeaderPosition(STATION_NAVIGATE, "title", readPhoneStraddle("navigate.title", 2.0)),
+    phoneSeat: {
+      edge: "top",
+      parkProgress: stationPark(STATION_NAVIGATE),
+      base: () => stationHeaderPosition(STATION_NAVIGATE, "title", 0),
+    },
     visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     // referenceDistance + depthFade tracks STATION_NAVIGATE.parkDistance
@@ -2728,7 +2767,17 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // bottom-heavy, so pulled up toward centre while keeping ~0.2 world
     // clearance below the Navigate sphere (its radius is the largest of
     // the three via `navBoost`).
-    position: () => stationHeaderPosition(STATION_NAVIGATE, "support", -1.8),
+    position: () =>
+      stationHeaderPosition(
+        STATION_NAVIGATE,
+        "support",
+        readPhoneStraddle("navigate.support", -1.8)
+      ),
+    phoneSeat: {
+      edge: "bottom",
+      parkProgress: stationPark(STATION_NAVIGATE),
+      base: () => stationHeaderPosition(STATION_NAVIGATE, "support", 0),
+    },
     visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     perspectiveScale: {
@@ -2762,16 +2811,28 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // orbits.start (~0.54) inside that leg isn't clipped to 0.
   {
     id: "diagnostic.title",
+    // Mobile straddle: DERIVED since ADR-125 U1 (seated on the top band at
+    // the park); 1.7 is the fallback. The approach offset stays in the pose
+    // the seat is solved from, so the -0.085 it still carries at the park
+    // is absorbed by the projection.
     position: (transform) =>
       stationHeaderPosition(
         STATION_DIAGNOSTIC,
-        // Mobile straddle 0.78 → 1.7 (ADR-018 pass 2): spread up into
-        // the empty band. Encode's sphere has no navBoost, so it needs
-        // less clearance than Navigate.
         "title",
-        1.7,
+        readPhoneStraddle("diagnostic.title", 1.7),
         diagnosticApproachDepthOffset(transform.paintProgress)
       ),
+    phoneSeat: {
+      edge: "top",
+      parkProgress: stationPark(STATION_DIAGNOSTIC),
+      base: (t) =>
+        stationHeaderPosition(
+          STATION_DIAGNOSTIC,
+          "title",
+          0,
+          diagnosticApproachDepthOffset(t.paintProgress)
+        ),
+    },
     visibilityBeats: ["pass-01b", "diagnostic"],
     // Tighter fade-out (was 1.4) so the title hides cleanly when the
     // camera dollies past the Encode park in passthrough-02. With the
@@ -2805,13 +2866,21 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_DIAGNOSTIC,
-        // Mobile straddle -0.88 → -1.7 (pass 2) → -1.5 (pass 3): pulled
-        // up so the caption reads less bottom-heavy (Encode's sphere has
-        // no navBoost, so ~0.27 world clearance remains below it).
         "support",
-        -1.5,
+        readPhoneStraddle("diagnostic.support", -1.5),
         diagnosticApproachDepthOffset(transform.paintProgress)
       ),
+    phoneSeat: {
+      edge: "bottom",
+      parkProgress: stationPark(STATION_DIAGNOSTIC),
+      base: (t) =>
+        stationHeaderPosition(
+          STATION_DIAGNOSTIC,
+          "support",
+          0,
+          diagnosticApproachDepthOffset(t.paintProgress)
+        ),
+    },
     visibilityBeats: ["pass-01b", "diagnostic"],
     fadeFrac: 0.4,
     perspectiveScale: {
@@ -2851,15 +2920,25 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // bump title +0.8 / support −0.9 on preview if it crowds.
   {
     id: "intelligence.title",
+    // Mobile straddle: DERIVED since ADR-125 U1; 1.65 is the fallback.
     position: (transform) =>
       stationHeaderPosition(
         STATION_INTELLIGENCE,
-        // Mobile straddle 0.74 → 1.65 (ADR-018 pass 2): spread up into
-        // the empty band above the Build sphere.
         "title",
-        1.65,
+        readPhoneStraddle("intelligence.title", 1.65),
         intelligenceApproachDepthOffset(transform.paintProgress)
       ),
+    phoneSeat: {
+      edge: "top",
+      parkProgress: stationPark(STATION_INTELLIGENCE),
+      base: (t) =>
+        stationHeaderPosition(
+          STATION_INTELLIGENCE,
+          "title",
+          0,
+          intelligenceApproachDepthOffset(t.paintProgress)
+        ),
+    },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
     // referenceDistance + depthFade tracks STATION_INTELLIGENCE.parkDistance
@@ -2889,14 +2968,21 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     position: (transform) =>
       stationHeaderPosition(
         STATION_INTELLIGENCE,
-        // Mobile straddle -0.9 → -1.45 (pass 2) → -1.35 (pass 3): pulled
-        // up so the caption reads less bottom-heavy AND the 2x2 case
-        // mini-cards below it gain room at the bottom of the frame. Kept
-        // the most modest of the three (the cards grow furthest down).
         "support",
-        -1.35,
+        readPhoneStraddle("intelligence.support", -1.35),
         intelligenceApproachDepthOffset(transform.paintProgress)
       ),
+    phoneSeat: {
+      edge: "bottom",
+      parkProgress: stationPark(STATION_INTELLIGENCE),
+      base: (t) =>
+        stationHeaderPosition(
+          STATION_INTELLIGENCE,
+          "support",
+          0,
+          intelligenceApproachDepthOffset(t.paintProgress)
+        ),
+    },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
     perspectiveScale: {
