@@ -118,6 +118,11 @@ services cards overlap the copy; the About chevron should open by itself.
   arc ("Jest worker encountered 2 child process exceptions", 3.4 GB), so the
   desktop arc smokes were run on an isolated `.next-verify` build on 3011 -
   the `local-build-verification` recipe.
+- **A second pre-existing red, same proof:** `about-voidwalker-handoff-boundaries`
+  "dark and light themes preserve the same capable handoff contract" fails
+  `data-corridor-exit="true"` on the LIVE site exactly as on this tree; the
+  spec's other eight cases pass on the isolated build. Both reds are the next
+  session's, not this pass's - nothing here touches the board or the exit hook.
 
 ### 2026-09-25 — the phone corridor lands on its beats (ADR-125)
 
