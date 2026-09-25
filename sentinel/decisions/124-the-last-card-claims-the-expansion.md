@@ -118,3 +118,71 @@ npx playwright test tests/visual/services-ring-smoke.spec.ts --project=desktop -
 
 Then `http://localhost:3003/#services` at 1440 and on a phone width, and
 `http://localhost:3003/arcs/trinny-london/proposal`.
+
+## U1 — The fourth step is the layer the agents run on, and the Embedded card says what you get
+
+- **Status:** Proposed (2026-09-25, owner) — shipped and guarded.
+- **Corrects:** the ruling's §1 and §2 above. The fourth step of the arc is not
+  the expansion; the Embedded title is not the object.
+
+### The ask
+
+Owner, 2026-09-25, after reading the day-old copy, with the podcast
+(`Lenny's Podcast`, OpenAI's product lead), Moira's second evals session and the
+Google keynote draft beside it:
+
+> "The main bottom line is the arc I'm trying to tell: we first push the
+> frontiers of AI creative, then we made the team self-sufficient, then we
+> built the tools around it. I think the next frontier is building tools for
+> AI. The big question is: are you building tools for yourself or for AI?"
+
+> "I don't want to imply that we're going to replace people. It's like that
+> co-intelligence as a coworker, but at the end of the day, why are we doing
+> the substrate? Why are we doing these evals and why is it working? It's
+> because we're building something meant for these agents. That's why it's
+> working."
+
+> "All the things I've built over the past couple of weeks with Armada have
+> been because I trusted the intelligence."
+
+Asked, he chose the fourth title **"We built the layer the agents run on"**,
+and ruled that the Embedded card be **practical: what can they expect?**
+
+### What the three surfaces already said
+
+The Google keynote draft closes on "The next frontier is a coworker. Write
+down what good looks like, then let it work", with "the work moves from rowing
+to steering … the person stays accountable". The second evals session turns on
+"Is the workflow for a person, or for an agent? For a person you design every
+step. For an agent you say what good looks like and leave the steps to it."
+The podcast supplies both: work as steering rather than rowing, a loop as
+"here's what success looks like, go off and figure it out", and a builder who
+gets out of the way of the model. The site said none of it.
+
+### The ruling
+
+1. **Card 4 is the turn.** Arc title "We built the layer the agents run on",
+   escalating card 3's tools for the work into a layer for the intelligence.
+   Lede: _"Across Loop, team by team. Then what we build turned: a briefing the
+   intelligence inherits, checks it runs on its own work, and a person with the
+   last word."_ Four practical claims, glyph keys unchanged: the board (27
+   modules, kept); "47 Skills, built for agents" (the briefing an agent
+   inherits); "For a person, or for AI?" (the session's own line); "People keep
+   the last word" (it runs for hours on what the team wrote down, and the team
+   judges what comes back). The `brief` stays the owner's.
+2. **The Embedded card says what you get.** Title _"A setup your team runs
+   itself."_; lede _"Embedded in your marketing team: a setup built around the
+   work, production to operations to review, on your own keys, handed over on a
+   date set in week one."_ (156 characters). The DOM body adds the dated
+   handover. The hologram's base reads "BUILD / for the intelligence"; the
+   crown keeps "production to review". "Creative" stays off the face and the
+   back (ADR-111).
+3. **Pins move in the same commits:** the fourth arc title in
+   `trinny-proof-order.test.ts`, the Embedded title in `services-copy.test.ts`,
+   the lab fixture's block titles.
+
+### Left open
+
+- The nuance is carried by the claims and the ledes, in the site's register;
+  the owner rewrites them in his voice.
+- Moira and the keynote are unchanged; the site now shares their line.

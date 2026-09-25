@@ -54,6 +54,20 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-25 — the fourth step is the layer the agents run on, and the Embedded card says what you get (ADR-124 U1)
+
+**Trigger:** the owner, reading the day-old copy against the podcast, the
+second evals session and the Google keynote draft: the fourth step of the arc
+is the next frontier, building for the intelligence ("are you building tools
+for yourself or for AI?"), without implying that people are replaced; and the
+Embedded card must be practical, what a buyer can expect.
+
+- **Cycle A, row 2 (a reversal of a day-old ruling) → ADR-124 U1:** card 4's
+  title and claims, the Embedded card's title, lede, body and hologram base;
+  two pins and the lab fixture move with them.
+- The three surfaces (site, keynote, session) now share one line: a layer
+  built for the intelligence, a person keeping the last word.
+
 ### 2026-09-24 — the last proof card claims the expansion, the Embedded card says what it does, the third reading is the layer (ADR-124)
 
 **Trigger:** the owner, in a dictated note after the week's client work: the
