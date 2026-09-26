@@ -42,6 +42,7 @@ export const LIGHT_LOCKED_ROUTES = [
   "/arcs/suri-proposal",
   "/arcs/perfect-ted-proposal",
   "/arcs/hungry-minds-proposal",
+  "/arcs/pandora-proposal",
   /* The Trinny brand bench (ADR-120, Update 1): one module on the plain
      warm grey of the client's own product tiles, no sheet and no switch
      drawn. Dev-only (`(internal)/test`), but a locked route is locked

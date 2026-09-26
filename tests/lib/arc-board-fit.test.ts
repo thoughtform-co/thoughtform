@@ -30,6 +30,7 @@ import {
 } from "@/components/arcs/board/boardLayout";
 import { adv } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
 import { MODULE } from "@/components/landing/home-v2/services/casefile/map/pda/substrateKit";
+import { ARCS } from "@/lib/arcs/registry";
 import type { BoardState } from "@/lib/arcs/types";
 
 /**
@@ -52,9 +53,32 @@ import type { BoardState } from "@/lib/arcs/types";
  * ADR-070 U15 paid for with `8 TEAMS` on a public page.
  */
 
-function states(): readonly [BoardState<"today">, BoardState<"configured">] {
+type States = readonly [BoardState<"today">, BoardState<"configured">];
+
+function trinnyStates(): States {
   if (TRINNY_BOARD.kind !== "board") throw new Error("the Trinny beat is not a board");
   return TRINNY_BOARD.states;
+}
+
+/**
+ * ⚠ EVERY REGISTERED BOARD IS WALKED, NOT ONLY TRINNY'S (ADR-128). The kind was
+ * guarded "so a registered proposal can adopt it", and the first one to do so
+ * (Pandora) letters a longer tools row than Trinny's — a fit walk that only
+ * read the Trinny record would have stayed green over a row through the wall.
+ * The label-set pin below stays Trinny's own; the geometry is every board's.
+ */
+const BOARDS: readonly (readonly [string, States])[] = [
+  ["trinny", trinnyStates()],
+  ...ARCS.flatMap((arc) =>
+    arc.sections.flatMap((section) =>
+      section.kind === "board" ? [[`${arc.slug}#${section.id}`, section.states] as const] : []
+    )
+  ),
+];
+
+/** Every board's states, flattened, each tagged with its home for the message. */
+function states(): readonly (BoardState & { home: string })[] {
+  return BOARDS.flatMap(([home, pair]) => pair.map((state) => ({ ...state, home })));
 }
 
 const longestWord = (text: string) =>
@@ -81,10 +105,10 @@ describe("arc board fit (ADR-100)", () => {
   it("every lettered string fits its measure, word by word, and letters no digit", () => {
     for (const state of states()) {
       const g = boardGeom(state);
-      expect(g.vb.h, `${state.mode}: the crop is the chain's`).toBe(VB.h);
-      expect(g.letters.length, `${state.mode}: letters`).toBeGreaterThan(0);
+      expect(g.vb.h, `${state.home} ${state.mode}: the crop is the chain's`).toBe(VB.h);
+      expect(g.letters.length, `${state.home} ${state.mode}: letters`).toBeGreaterThan(0);
       for (const l of g.letters) {
-        const at = `${state.mode} ${l.slot} "${l.text}"`;
+        const at = `${state.home} ${state.mode} ${l.slot} "${l.text}"`;
         expect(l.text.trim().length, `${at}: blank`).toBeGreaterThan(0);
         expect(/\d/.test(l.text), `${at}: a figure on the drawing`).toBe(false);
         // A wrapped line past the cap is declared at measure 0 — the tail
@@ -113,7 +137,7 @@ describe("arc board fit (ADR-100)", () => {
       for (const l of boardGeom(state).letters) {
         expect(
           (l.fs * BAND_PX["1280x720"]) / VB.row,
-          `${state.mode} ${l.slot}`
+          `${state.home} ${state.mode} ${l.slot}`
         ).toBeGreaterThanOrEqual(10);
       }
     }
@@ -127,113 +151,130 @@ describe("arc board fit (ADR-100)", () => {
       for (const l of g.letters) {
         if (l.anchor !== "start") continue;
         const m = moduleFor(g, l);
-        expect(m, `${state.mode} ${l.slot}: no object holds it`).toBeTruthy();
+        expect(m, `${state.home} ${state.mode} ${l.slot}: no object holds it`).toBeTruthy();
         if (!m) continue;
         /* ⚠ A LEDGER ROW HAS NO WALL. Its content hangs on the crop's own
            inset, which is the row's left edge — a module's 4-unit clearance
            is about padding, and a row has none. */
         const pad = m.paint === "row" ? 0 : 4;
-        expect(l.x, `${state.mode} ${l.slot}: left of its wall`).toBeGreaterThanOrEqual(
-          m.rect.x + pad
-        );
+        expect(
+          l.x,
+          `${state.home} ${state.mode} ${l.slot}: left of its wall`
+        ).toBeGreaterThanOrEqual(m.rect.x + pad);
         expect(
           l.x + letterWidth(l),
-          `${state.mode} ${l.slot}: through its wall`
+          `${state.home} ${state.mode} ${l.slot}: through its wall`
         ).toBeLessThanOrEqual(m.rect.x + m.rect.w - pad + 1e-6);
-        expect(l.y, `${state.mode} ${l.slot}: above its object`).toBeGreaterThan(m.rect.y);
-        expect(l.y, `${state.mode} ${l.slot}: below its object`).toBeLessThanOrEqual(
+        expect(l.y, `${state.home} ${state.mode} ${l.slot}: above its object`).toBeGreaterThan(
+          m.rect.y
+        );
+        expect(l.y, `${state.home} ${state.mode} ${l.slot}: below its object`).toBeLessThanOrEqual(
           m.rect.y + m.rect.h
         );
       }
       /* Every object inside the crop's own inset, on all four sides — the
          head strips are gone, so the inset is the whole frame (U4). */
       for (const m of g.modules) {
-        expect(m.rect.y, `${state.mode} ${m.id}: above the top`).toBeGreaterThanOrEqual(TOP_Y);
-        expect(m.rect.x, `${state.mode} ${m.id}: past the inset`).toBeGreaterThanOrEqual(INSET);
-        expect(m.rect.x + m.rect.w, `${state.mode} ${m.id}: past the inset`).toBeLessThanOrEqual(
-          g.vb.w - INSET
-        );
-        expect(m.rect.y + m.rect.h, `${state.mode} ${m.id}: below the floor`).toBeLessThanOrEqual(
-          FLOOR_Y
-        );
+        expect(
+          m.rect.y,
+          `${state.home} ${state.mode} ${m.id}: above the top`
+        ).toBeGreaterThanOrEqual(TOP_Y);
+        expect(
+          m.rect.x,
+          `${state.home} ${state.mode} ${m.id}: past the inset`
+        ).toBeGreaterThanOrEqual(INSET);
+        expect(
+          m.rect.x + m.rect.w,
+          `${state.home} ${state.mode} ${m.id}: past the inset`
+        ).toBeLessThanOrEqual(g.vb.w - INSET);
+        expect(
+          m.rect.y + m.rect.h,
+          `${state.home} ${state.mode} ${m.id}: below the floor`
+        ).toBeLessThanOrEqual(FLOOR_Y);
       }
     }
   });
 
-  it("the dormant side is a LEDGER and the lit side is a BOARD", () => {
-    const [today, configured] = states();
-    const t = boardGeom(today);
-    const k = boardGeom(configured);
-    /* ⚠ THE CONTRAST IS THE KIND OF OBJECT, NOT THE BRIGHTNESS (U2). Four
+  it.each(BOARDS)(
+    "the dormant side is a LEDGER and the lit side is a BOARD (%s)",
+    (_home, pair) => {
+      const [today, configured] = pair;
+      const t = boardGeom(today);
+      const k = boardGeom(configured);
+      /* ⚠ THE CONTRAST IS THE KIND OF OBJECT, NOT THE BRIGHTNESS (U2). Four
        rows, no housing, no cable, no colour on the left; the assembled
        board on the right. Drawn as dashed modules the left read as the
        right greyed out, which is what the owner rejected. */
-    expect(t.modules).toHaveLength(FACTS);
-    expect(t.modules.every((m) => m.paint === "row" && m.cut === 0)).toBe(true);
-    /* ⚠ EVERY ROW RULES ITS BOTTOM and the ledger opens UNRULED: with the
+      expect(t.modules).toHaveLength(FACTS);
+      expect(t.modules.every((m) => m.paint === "row" && m.cut === 0)).toBe(true);
+      /* ⚠ EVERY ROW RULES ITS BOTTOM and the ledger opens UNRULED: with the
        datum gone (U4) a rule at the crop's top would be a line with no
        object over it, and the last row's closes on the board's own floor. */
-    expect(t.modules.every((m) => m.rule === "bottom")).toBe(true);
-    expect(t.lanes).toHaveLength(0);
-    // The five facts, in the order both sides read them.
-    expect(t.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools", "reach"]);
-    // The lit side: one green seat, one gold chip, three head bands.
-    expect(k.modules.filter((m) => m.paint === "seat-lit")).toHaveLength(1);
-    expect(k.modules.filter((m) => m.paint === "card-lit")).toHaveLength(1);
-    expect(k.modules.filter((m) => m.head)).toHaveLength(3);
-    expect(k.modules.some((m) => m.paint === "row")).toBe(false);
-    expect(k.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools", "reach"]);
-    /* ⚠ THE CORNER IS PINNED FROM BOTH ENDS (ADR-065 U4/U5's own finding: a
+      expect(t.modules.every((m) => m.rule === "bottom")).toBe(true);
+      expect(t.lanes).toHaveLength(0);
+      // The five facts, in the order both sides read them.
+      expect(t.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools", "reach"]);
+      // The lit side: one green seat, one gold chip, three head bands.
+      expect(k.modules.filter((m) => m.paint === "seat-lit")).toHaveLength(1);
+      expect(k.modules.filter((m) => m.paint === "card-lit")).toHaveLength(1);
+      expect(k.modules.filter((m) => m.head)).toHaveLength(3);
+      expect(k.modules.some((m) => m.paint === "row")).toBe(false);
+      expect(k.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools", "reach"]);
+      /* ⚠ THE CORNER IS PINNED FROM BOTH ENDS (ADR-065 U4/U5's own finding: a
        one-sided assertion verifies a cut EXISTS, never that it is on the
        right corner). The chip is TOP-RIGHT alone — it is what becomes the
        offer's phase plates — and every housing around it keeps the pair. */
-    expect(k.modules.find((m) => m.id === "card")?.notch).toBe("tr");
-    for (const m of k.modules) {
-      if (m.id === "card") continue;
-      expect(m.notch, `${m.id}: a lone notch on a housing`).toBeUndefined();
+      expect(k.modules.find((m) => m.id === "card")?.notch).toBe("tr");
+      for (const m of k.modules) {
+        if (m.id === "card") continue;
+        expect(m.notch, `${m.id}: a lone notch on a housing`).toBeUndefined();
+      }
+      for (const m of t.modules) {
+        expect(m.notch, `${m.id}: a ledger row has no corner`).toBeUndefined();
+      }
     }
-    for (const m of t.modules) {
-      expect(m.notch, `${m.id}: a ledger row has no corner`).toBeUndefined();
-    }
-  });
+  );
 
-  it("the four ribbons run wall to wall and meet the chip, a cross", () => {
-    const [, configured] = states();
-    const g = boardGeom(configured);
-    const card = g.modules.find((m) => m.id === "card")!;
-    const layer = g.modules.find((m) => m.id === "layer")!;
-    const tools = g.modules.find((m) => m.id === "tools")!;
-    const seat = g.modules.find((m) => m.id === "seat")!;
-    const node = g.modules.find((m) => m.id === "reach")!;
-    const lane = (id: string) => g.lanes.find((l) => l.id === id)!;
-    const cx = card.rect.x + card.rect.w / 2;
-    const cy = card.rect.y + card.rect.h / 2;
-    expect(g.lanes.map((l) => l.id)).toEqual(["seat", "layer", "tools", "reach"]);
-    expect(lane("seat").pts[0][1]).toBeCloseTo(seat.rect.y + seat.rect.h, 6);
-    expect(lane("seat").pts[1][1]).toBeCloseTo(card.rect.y, 6);
-    // The seat drops onto the chip's own centre line, not a module's corner.
-    expect(lane("seat").pts[0][0]).toBeCloseTo(card.rect.x + card.rect.w / 2, 6);
-    expect(lane("layer").pts[0]).toEqual([card.rect.x, cy]);
-    expect(lane("layer").pts[1][0]).toBeCloseTo(layer.rect.x + layer.rect.w, 6);
-    expect(lane("tools").pts[0]).toEqual([card.rect.x + card.rect.w, cy]);
-    expect(lane("tools").pts[1][0]).toBeCloseTo(tools.rect.x, 6);
-    /* ⚠ THE FIFTH FACT HANGS OFF THE CHIP'S FLOOR ON THE SEAT'S OWN RUN —
+  it.each(BOARDS)(
+    "the four ribbons run wall to wall and meet the chip, a cross (%s)",
+    (_home, pair) => {
+      const [, configured] = pair;
+      const g = boardGeom(configured);
+      const card = g.modules.find((m) => m.id === "card")!;
+      const layer = g.modules.find((m) => m.id === "layer")!;
+      const tools = g.modules.find((m) => m.id === "tools")!;
+      const seat = g.modules.find((m) => m.id === "seat")!;
+      const node = g.modules.find((m) => m.id === "reach")!;
+      const lane = (id: string) => g.lanes.find((l) => l.id === id)!;
+      const cx = card.rect.x + card.rect.w / 2;
+      const cy = card.rect.y + card.rect.h / 2;
+      expect(g.lanes.map((l) => l.id)).toEqual(["seat", "layer", "tools", "reach"]);
+      expect(lane("seat").pts[0][1]).toBeCloseTo(seat.rect.y + seat.rect.h, 6);
+      expect(lane("seat").pts[1][1]).toBeCloseTo(card.rect.y, 6);
+      // The seat drops onto the chip's own centre line, not a module's corner.
+      expect(lane("seat").pts[0][0]).toBeCloseTo(card.rect.x + card.rect.w / 2, 6);
+      expect(lane("layer").pts[0]).toEqual([card.rect.x, cy]);
+      expect(lane("layer").pts[1][0]).toBeCloseTo(layer.rect.x + layer.rect.w, 6);
+      expect(lane("tools").pts[0]).toEqual([card.rect.x + card.rect.w, cy]);
+      expect(lane("tools").pts[1][0]).toBeCloseTo(tools.rect.x, 6);
+      /* ⚠ THE FIFTH FACT HANGS OFF THE CHIP'S FLOOR ON THE SEAT'S OWN RUN —
        equal lengths above and below is what makes the drawing a CROSS on the
        one lit object rather than a row with something under it (U4). */
-    expect(lane("reach").pts[0]).toEqual([cx, card.rect.y + card.rect.h]);
-    expect(lane("reach").pts[1]).toEqual([cx, node.rect.y]);
-    expect(lane("reach").len).toBeCloseTo(lane("seat").len, 6);
-    // And the node is the seat's own box, mirrored below.
-    expect(node.rect.x).toBe(seat.rect.x);
-    expect(node.rect.w).toBe(seat.rect.w);
-    for (const l of g.lanes) {
-      expect(l.len).toBeGreaterThan(0);
-      expect(l.wires).toBe(8);
+      expect(lane("reach").pts[0]).toEqual([cx, card.rect.y + card.rect.h]);
+      expect(lane("reach").pts[1]).toEqual([cx, node.rect.y]);
+      expect(lane("reach").len).toBeCloseTo(lane("seat").len, 6);
+      // And the node is the seat's own box, mirrored below.
+      expect(node.rect.x).toBe(seat.rect.x);
+      expect(node.rect.w).toBe(seat.rect.w);
+      for (const l of g.lanes) {
+        expect(l.len).toBeGreaterThan(0);
+        expect(l.wires).toBe(8);
+      }
     }
-  });
+  );
 
-  it("the label sets are pinned, per state", () => {
-    const [today, configured] = states();
+  it("the label sets are pinned, per state (Trinny)", () => {
+    const [today, configured] = trinnyStates();
     const texts = (s: BoardState) =>
       boardGeom(s)
         .letters.map((l) => l.text)

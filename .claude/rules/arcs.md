@@ -736,6 +736,28 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   pins that no row restates a phase's name or deliverable line — the owner:
   "not a simulacrum of those three modules". Rules for the scene it lives in:
   `.claude/rules/trinny-london.md` §The head decodes.
+- ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
+  2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
+  arc, never a fork of the Trinny route (a homepage-variant fork is that route's
+  whole file list copied; a proposal is read cold). Its proof is ADR-126's
+  register on the flat kinds: `films` · a chapter `head` over the `heimdall`
+  `dossier` (a dossier cannot carry an authored title, so the "we" line sits on a
+  head above it) · `sheets` · `intelligence`, in the pile's order, Loop's
+  evidence by reference. ⚠ **The studio today is a `board`, not a
+  `configuration`** — the first registered adopter of the kind — and its
+  **tools row is ONE LINE composed at draw time**: four product names sliced
+  "Planner" onto a second line, so the board carries three (Asana, the wider
+  org's board, stays in the prose). **A product name is never abbreviated to
+  fit a measure.** `arc-board-fit` walks EVERY registered board now, not only
+  `TRINNY_BOARD`; the label-set pin stays Trinny's. ⚠ **`sheet-instrument`'s
+  real overview reads on `REAL_TODAY`**, a pinned day at or after the newest
+  filing — a monitor read on a day before a filing reports "filed after now".
+  Bump it when a newer arc files; never the axis tests' `TODAY`. The fee is a
+  day-rate `ledger` (`["Month", "Days on the work", "Fee"]`) derived from one
+  constant that the deck's generator shares. Phase B (planned): `proof-card`
+  (the homepage's folder card at rest, `.pf-stack > .pf-slot`'s declared rest
+  state, `proof-stack.css` imported at the route) and `bench` (Moira's Run ·
+  Skill · Evals ported by hand) as the sixth and seventh exceptions.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

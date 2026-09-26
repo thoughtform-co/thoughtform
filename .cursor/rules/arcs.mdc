@@ -141,6 +141,15 @@ over a designation). `trinny-offer` pins that no row restates a phase
 ("not a simulacrum of those three modules"). Canonical text:
 `.claude/rules/arcs.md` §The client model; the record is ADR-103.
 
+⚠ ADR-128 (2026-09-26, Proposed): `/arcs/pandora-proposal` is a FLAT arc in
+ADR-126's proof register (films · a head over the `heimdall` dossier · sheets ·
+intelligence), the first registered `board` (its tools row is ONE composed
+line — three products, never an abbreviation), a day-rate ledger from one
+constant; `arc-board-fit` walks every registered board and `sheet-instrument`
+reads the real overview on `REAL_TODAY`. Phase B adds `proof-card` and `bench`
+as the sixth and seventh exceptions. Canonical text: `.claude/rules/arcs.md`
+§The client model.
+
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no
 three.js / Supabase / `LandingPage` imports — the casefile's dossier LEAVES

@@ -54,6 +54,37 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-26 — the Pandora proposal, the fourth cut of the format (ADR-128)
+
+**Trigger:** the owner, after the 25 September call with Pandora's Global Brand
+Creative Studio and the debrief with Rob: "a proposal page similar to what we
+did for Trinny London, with maybe also a practical thing", in ADR-126's
+"this is what we would do for you" register, for an ask that is creative
+OPERATIONS and REVIEW rather than production; and "that eval thing … felt very
+abstract", against the Loop evals workshop module that landed.
+
+- **Cycle B → ADR-128 (Proposed; Phase A shipped, Phase B planned):** a flat
+  registered arc (`/arcs/pandora-proposal`), never a fork of the Trinny route;
+  the four proof beats on the flat kinds under the "we" heads; the studio as a
+  `board` (the kind's first adopter on a registered arc) and NOT a
+  `configuration`; the checker as three plates until the `bench` kind lands;
+  a day-rate ledger derived from one constant; two new kinds planned
+  (`proof-card`, `bench`) as the sixth and seventh exceptions.
+- **Q3 (a guard that only read one record) → `arc-board-fit` walks EVERY
+  registered board:** the kind was guarded "so a registered proposal can adopt
+  it", and the first one to do so lettered a longer tools row than Trinny's;
+  the walk found "Planner" on a sliced second line at once. A product name is
+  never abbreviated to fit; Asana stays in the prose.
+- **Q5 (a pinned clock that a new filing walks past) → `REAL_TODAY`:** the
+  instrument test reads the real overview on a pinned day; a filing after that
+  day is reported as "filed after now". The real overview has its own pinned
+  day now, separate from the axis tests' `TODAY`, and moves when a newer arc
+  files.
+- **Two sessions, one tree:** a second proposal (Plopsa) was being scaffolded
+  into `clients.ts` and `registry.ts` at the same time; the commit order was
+  negotiated by message so neither registry imports the other's untracked
+  module.
+
 ### 2026-09-26 — the proof reads as the practice, and the offer leads (ADR-126)
 
 **Trigger:** the owner, and his Wispr Flow note "Thoughtform proof services
