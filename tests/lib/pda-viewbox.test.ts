@@ -11,21 +11,16 @@ import {
 import {
   VIEW_BOX,
   WORK_LAYOUT_0,
+  workCeilingPlan,
   workExt,
   workLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import { fitExt } from "@/components/landing/home-v2/services/casefile/map/pda/pdaFit";
 import {
-  CARRIER_CX,
-  CARRIER_CY,
-  CARRIER_R_OUT,
-  CARRIER_VIEWBOX,
-  carrierPlate,
-  polygonRayRadius,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaCarrier";
-import {
-  PDA_SHOWN,
   type PdaWork,
+  selectWorks,
   toPdaWork,
+  workPlan,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import type { CaseMapDistrict, CaseMapWork } from "@/lib/cases/types";
 import { getCase } from "@/lib/cases/registry";
@@ -51,20 +46,16 @@ import { getCase } from "@/lib/cases/registry";
 const FS_FLOOR = 12;
 
 /**
- * The resting crops. ⚠ **`VIEW_BOX[3]` IS THE CARRIER'S NOW** (ADR-070 U34) —
- * it used to be SECTION's while that drawing sat behind `SUBSTRATE_SECTION`, so
- * this record resolved reading 03 at the guard's own boundary rather than
- * trusting the shared constant. Both the flag and SECTION are retired; the
- * shared record and this one agree again, and `CARRIER_VIEWBOX` is asserted
- * below to be exactly what `VIEW_BOX[3]` carries so they cannot drift apart.
+ * The resting crops — two since ADR-126. Reading 03's (the carrier's) left
+ * the rail; `substrate-lab-fit.test.ts` still walks that drawing through the
+ * lab's re-export until the retirement commit.
  */
-const REST: Record<1 | 2 | 3, string> = {
+const REST: Record<1 | 2, string> = {
   1: VIEW_BOX[1],
   2: VIEW_BOX[2],
-  3: CARRIER_VIEWBOX,
 };
 
-function box(v: 1 | 2 | 3) {
+function box(v: 1 | 2) {
   const [x, y, w, h] = REST[v].split(" ").map(Number);
   return { x, y, w, h, right: x + w, bottom: y + h };
 }
@@ -80,9 +71,10 @@ function mapVisual() {
 /**
  * ALL TWENTY-SEVEN, projected the way the drawing projects them.
  *
- * Reading 01 shows twenty, but reading 02 will letter ANY of them — the reader
- * chooses — so the fit guard has to walk the whole record. The seven the grid
- * leaves out are exactly where an over-long string would hide.
+ * Reading 01 shows the twelve marketing streams, but reading 02 will letter
+ * ANY of them — the reader chooses — so the fit guard has to walk the whole
+ * record. The fifteen the reading leaves out are exactly where an over-long
+ * string would hide.
  */
 function allWorks(): PdaWork[] {
   const visual = mapVisual();
@@ -98,10 +90,10 @@ function allWorks(): PdaWork[] {
 }
 
 describe("the readings' crops", () => {
-  /* Declared extents, from each view's own geometry, AT REST. 01 is the 4x5
-     grid and 03 the pin grid's head band over its socket — both derived from
-     the layout rather than re-typed, because both are elastic now and a
-     literal would only be true at one field shape. */
+  /* Declared extents, from each view's own geometry, AT REST. 01 is the
+     ceiling block — three columns, four runs each — derived from the layout
+     rather than re-typed, because it is elastic and a literal would only be
+     true at one field shape. */
   const CONTENT = {
     1: {
       x: WORK_LAYOUT_0.block.x,
@@ -118,26 +110,9 @@ describe("the readings' crops", () => {
        crop than the crop can escape itself. What has to be asserted about it
        is that it fills BOTH ends, which is what the centring test does. */
     2: { x: 4, y: 20, right: 884, bottom: 660 },
-    /* 03 IS THE COMPOUND CARRIER (ADR-070 U33) — one dodecagonal plate, so its
-       content is the outer polygon's own bounding box and nothing else: there is
-       no head, no foot and no band above it. ⚠ **DERIVED FROM THE DRAWING'S OWN
-       RAY FUNCTION, PER AXIS.** At this rotation the dodecagon is flat on all
-       four sides, so both half-extents come out at `κ·R_OUT` — but asserting
-       that as one number would pass a rotation change that turned the plate
-       vertex-up and pushed its corners 3.5 % past the crop's pad.
-       The drawings this replaces, for the record: SECTION's five regions inset
-       26 from every wall (`26 / 26 / 906 / 26 + boxH`), the five pattern cards'
-       row before that, the pin grid's `26 / 26 / 906 / 656`, and the crossing
-       drawing's `10 / 93 / 766 / 702` before that again. */
-    3: {
-      x: CARRIER_CX - polygonRayRadius(0, CARRIER_R_OUT),
-      y: CARRIER_CY - polygonRayRadius(90, CARRIER_R_OUT),
-      right: CARRIER_CX + polygonRayRadius(180, CARRIER_R_OUT),
-      bottom: CARRIER_CY + polygonRayRadius(270, CARRIER_R_OUT),
-    },
   } as const;
 
-  for (const v of [1, 2, 3] as const) {
+  for (const v of [1, 2] as const) {
     it(`reading ${v} contains everything it draws`, () => {
       const b = box(v);
       const c = CONTENT[v];
@@ -384,22 +359,27 @@ describe("every reading fills the panel it is given", () => {
     { at: "1280x1440", w: 603, h: 1177 },
   ] as const;
 
+  /* ⚠ READING 01 IS WALKED ON THE LIVE PLAN AND ON THE CEILING (ADR-126). The
+     crop is the ceiling's whatever the record holds; the live plan is what the
+     console renders. Both must fill, and both at no cost in type. */
+  const livePlan = workPlan(
+    selectWorks(mapVisual().districts, mapVisual().works, mapVisual().skills)
+  );
   const READINGS = [
-    { v: "01 the work", at: (a: number) => workLayout(workExt(a)).crop, rest: VIEW_BOX[1] },
+    {
+      v: "01 the work (live)",
+      at: (a: number) => workLayout(workExt(a), livePlan).crop,
+      rest: VIEW_BOX[1],
+    },
+    {
+      v: "01 the work (ceiling)",
+      at: (a: number) => workLayout(workExt(a), workCeilingPlan()).crop,
+      rest: VIEW_BOX[1],
+    },
     {
       v: "02 the configuration",
       at: (a: number) => configLayout(configExt(a)).crop,
       rest: VIEW_BOX[2],
-    },
-    {
-      /* ⚠ THE LIVE DRAWING, VIA THE SAME CALL `PdaConsole` MAKES. `carrierPlate`
-         takes the console's `height / width` and inverts it at its own boundary,
-         so passing `a` straight through here is what production does — deriving
-         the crop from `carrierCrop` directly would test the arithmetic while
-         skipping the one place an inverted aspect could hide. */
-      v: "03 the carrier",
-      at: (a: number) => carrierPlate(a).crop,
-      rest: REST[3],
     },
   ] as const;
 
@@ -460,6 +440,78 @@ describe("every reading fills the panel it is given", () => {
   }
 });
 
+/**
+ * THE PILE'S OWN FIELDS (ADR-126). Every FIELD row above is the retired
+ * CASEFILE's console, measured in 2026-08; the pile's map card is a different
+ * box — landscape on a laptop (579 × 307 at 1280×720, 652 × 479 at 1440×900)
+ * and near-square at the owner's window (814 × 790 at 1920×1247), read off
+ * `capture-proof-stack.mjs`'s `mapField`. A three-column reading is a
+ * PORTRAIT block, so on the laptop fields it letterboxes on purpose — as the
+ * 4×5 grid of twenty did before it, unmeasured. What is claimed on these
+ * fields is the DENSITY argument: the estate never renders smaller than the
+ * grid it replaced, and the letterbox is bounded.
+ */
+describe("the marketing estate on the pile's own fields (ADR-126)", () => {
+  const PILE = [
+    { at: "1280x720", w: 579, h: 307 },
+    { at: "1440x900", w: 652, h: 479 },
+    { at: "the owner's 1920x1247", w: 814, h: 790 },
+  ] as const;
+  /* The grid of twenty, as `workLayout` computed it until 2026-09-26: a 780 ×
+     792 rest crop (4 × 176 + 3 × 16 + 28 by 5 × 136 + 4 × 22 + 24) whose
+     width could grow by 120 (three gutters of 40). Restated as a literal so
+     the drawing it describes can stay deleted. */
+  const GRID = { cropW: 780, cropH: 792, maxW: 120, maxH: 620 };
+  const gridMeet = (f: { w: number; h: number }) => {
+    const ext = fitExt(GRID, f.h / f.w);
+    return Math.min(f.w / (GRID.cropW + ext.extW), f.h / (GRID.cropH + ext.extH));
+  };
+  const plan = workPlan(selectWorks(mapVisual().districts, mapVisual().works, mapVisual().skills));
+  const parse = (crop: string) => {
+    const [x, y, w, h] = crop.split(" ").map(Number);
+    return { x, y, w, h };
+  };
+
+  it("never renders smaller than the grid of twenty did, at every pile field", () => {
+    for (const f of PILE) {
+      const c = parse(workLayout(workExt(f.h / f.w), plan).crop);
+      const meet = Math.min(f.w / c.w, f.h / c.h);
+      expect(
+        meet,
+        `${f.at}: the estate is smaller than the grid it replaced`
+      ).toBeGreaterThanOrEqual(gridMeet(f));
+      /* The letterbox is a RATCHET against the grid's own, not a number
+         picked to pass: a 588-wide block letterboxes more than a 780-wide one
+         on a landscape field, and the measured gap is 0.08 at 1280×720
+         (0.47 against 0.39), 0.10 at 1440×900 (0.27 against 0.17), 0 on the
+         owner's near-square window. Never more than a tenth beyond the grid,
+         never half the panel. */
+      const slackW = f.w - c.w * meet;
+      const gExt = fitExt(GRID, f.h / f.w);
+      const gSlack = f.w - (GRID.cropW + gExt.extW) * gridMeet(f);
+      expect(slackW / f.w, `${f.at}: the panel is mostly empty`).toBeLessThan(0.5);
+      expect(
+        (slackW - gSlack) / f.w,
+        `${f.at}: the estate letterboxes further past the grid than recorded`
+      ).toBeLessThanOrEqual(0.105);
+    }
+  });
+
+  it("letters its title at the measured rungs (recorded, not tuned)", () => {
+    /* 4.7px at 1280×720 (4.5 with the grid), 7.3px at 1440×900 (7.0), 12.0px
+       at the owner's window (11.5). Each card dropped from a column buys ~15 %
+       of type — nine cards, three per column, would letter at ~16px on his
+       window; which nine is the record's call (ADR-126 §Left open). */
+    const rung = (f: { w: number; h: number }) => {
+      const c = parse(workLayout(workExt(f.h / f.w), plan).crop);
+      return Math.min(f.w / c.w, f.h / c.h) * 11.5;
+    };
+    expect(rung(PILE[0])).toBeGreaterThan(4.6);
+    expect(rung(PILE[1])).toBeGreaterThan(7.2);
+    expect(rung(PILE[2])).toBeGreaterThan(11.9);
+  });
+});
+
 /* ⚠ THE CARTRIDGE'S OWN TYPE IS `tests/lib/pda-card.test.ts`' NOW
    (2026-08-13). It used to be measured here against hardcoded `w - 19` and
    `w - 25` measures while the drawing derived its own from `CARD.pad` — two
@@ -481,7 +533,7 @@ describe("every reading fills the panel it is given", () => {
 describe("the configuration letters into its boxes", () => {
   it("every string on every stream fits its measure", () => {
     const works = allWorks();
-    expect(works.length).toBeGreaterThanOrEqual(PDA_SHOWN);
+    expect(works.length).toBe(27);
     for (const w of works) {
       const specs = configurationLettering(w);
       expect(specs.length, `${w.id} letters nothing`).toBeGreaterThan(20);

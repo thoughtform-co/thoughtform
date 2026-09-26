@@ -20,13 +20,15 @@ import type {
   CaseSkillEntry,
 } from "@/lib/cases/types";
 
-export type MplReading = "work" | "configuration" | "layer";
-export const MPL_READINGS: readonly MplReading[] = ["work", "configuration", "layer"];
-/** The rail's three stations, the production names (`PdaConsole`). */
+/** Two readings since ADR-126 — the layer left production's rail, so the lab
+ *  (a window onto production, never a copy) shows two. The directions' LAYER
+ *  branches are unreachable now and go with the retirement commit. */
+export type MplReading = "work" | "configuration";
+export const MPL_READINGS: readonly MplReading[] = ["work", "configuration"];
+/** The rail's two stations, the production names (`PdaConsole`). */
 export const MPL_STATIONS = [
   { id: "work", name: "WORK" },
   { id: "configuration", name: "CONFIGURATION" },
-  { id: "substrate", name: "LAYER" },
 ] as const;
 
 export interface MplRecord {

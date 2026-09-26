@@ -79,6 +79,7 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
         <IntelligenceMapPlate
           shapes={visual.shapes}
           districts={visual.districts}
+          streams={visual.streams}
           works={visual.works}
           skills={visual.skills ?? []}
           envelope={visual.envelope}

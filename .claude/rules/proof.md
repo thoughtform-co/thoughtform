@@ -44,7 +44,9 @@ breather).
   own sentence** (`CaseMapShape.meaning`, which lettered nowhere for two
   redraws). See §The carrier's walls below.
   ⚠ **U35 (same day) retired `SUBSTRATE_SECTION` and U25's SECTION drawing** —
-  the carrier is reading 03 unconditionally; `flags.ts`, `PdaSubstrate.tsx`
+  the carrier is reading 03 unconditionally (⚠ and since ADR-126 reading 03
+  is OFF THE RAIL — the carrier is on disk, unmounted, until the owner's
+  live read); `flags.ts`, `PdaSubstrate.tsx`
   and `pda-substrate-fit.test.ts` are deleted, and the lab's `shipped` variant
   went with them (`carrier` is the baseline). ⚠ **`estateBand.tsx` STAYS** —
   `VariantManifold` imports it, so it outlived the drawing it was written for
@@ -1423,7 +1425,7 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
   The rule was therefore delivering exactly one visible thing — a diagonal
   185–581px along the rail on each OTHER plate, with no edge to explain it.
   `clip-path` is on `:first-of-type`; every trailing plate is square, on
-  **every** rail (map 3 · tools 4 · films 2 · sheets 3 · both labs).
+  **every** rail (map 2 since ADR-126 · tools 4 · films 2 · sheets 3 · both labs).
   ⚠ **The seam's shoulder is DECLARED now** — U1 got it free from the owning
   plate's clip, so `.fl-con__stn + .fl-con__stn::before` carries
   `top: var(--stn-ch)` explicitly; identical pixels, and the read it protects
@@ -1740,11 +1742,38 @@ a slot.
 
 ## The reading rail, and the wheel (ADR-063, live)
 
-The right panel is the PDA console (`map/pda/**`), three readings:
-**THE WORK · THE CONFIGURATION · THE LAYER** (the third renamed by ADR-124).
+The right panel is the PDA console (`map/pda/**`), TWO readings since
+[ADR-126](../sentinel/decisions/126-the-proof-reads-as-the-practice.md)
+(2026-09-26, owner: the layer "doesn't really come across … the configuration
+is the cleanest thing so maybe we only need two tabs"): **THE WORK · THE
+CONFIGURATION**. The third — THE LAYER, the carrier, renamed by ADR-124 — left
+the rail; `PdaCarrier.tsx`, its lab re-export and `substrate-lab-fit` stay on
+disk until the owner has read the two readings live (ADR-070 U35), then a
+retirement commit deletes them with `MAP_BACKPLANE` and the chip-morph CSS.
+⚠ **And THE WORK is the MARKETING ESTATE now** — the twelve streams that carry
+a `stream` (`CaseMapWork.stream`, the owner's own creative production ·
+operations · review), in three lettered columns each climbing a prompt → a
+tool → an agent → by hand (`runModeOf`, off the record's `cfg.a`), under PT Mono
+group heads. Both axes are the record; `pda-work-fit.test.ts` walks the
+declaration (`workLettering`) and renders the view to assert nothing prints
+that it did not name; the registry pins the triple's keys to `STREAM_ORDER`,
+≤ `WORK_COLUMN_SLOTS` per column, and every `cfg.a` on the record to the
+ladder. The crop is the CEILING's (four runs per column, record-independent)
+and the live block is centred in it; the columns are a portrait block in a
+laptop's landscape field, so `GUT_X_MAX` opens to 100 there. ⚠ THE PILE'S
+FIELDS (579 × 307 · 652 × 479 · 814 × 790 at 1280×720 · 1440×900 · 1920×1247,
+`capture-proof-stack.mjs`'s `mapField`) were never in the guards' tables — every
+row was the casefile's; the estate is pinned to never render smaller than the
+grid of twenty on them (title 4.7 / 7.3 / 12.0px against 4.5 / 7.0 / 11.5) and
+to letterbox at most a tenth of the panel past the grid's (0.47 / 0.27 / 0
+against 0.39 / 0.17 / 0). Each card dropped from a column buys
+~15 % of type — nine cards would letter at ~16px on the owner's window. `slotRect(layout, id)` is `gridRect`'s
+RENAME, never an alias; the wheel's last step is reading 02 and its lockout
+now holds a fling's tail BEFORE the release (with two readings a single
+fling lands on the last one).
 
 - **The rail is HORIZONTAL, across the top of the console** (owner,
-  2026-08-06), three equal stations. Still not a web tab strip: diamonds, mono
+  2026-08-06), equal stations. Still not a web tab strip: diamonds, mono
   caps and a hairline spine, with ONE lit segment that TRAVELS along that spine
   to the reading it opened — do not give each station its own marker.
 - ⚠ **THE RAIL LEFT THIS FILE'S SURFACE (ADR-066).** It is `ConsoleRail` in
@@ -1842,7 +1871,7 @@ The right panel is the PDA console (`map/pda/**`), three readings:
   quiet becomes invisible. The console's neutral ramp is re-derived per theme
   in theme.css and lifted UNEQUALLY so the drawing keeps its hierarchy.
 - **Colour is now GUARDED**, by a light-theme smoke case that composites every
-  alpha before measuring and walks all three readings (4.5:1 glyphs, 3:1 line
+  alpha before measuring and walks both readings (4.5:1 glyphs, 3:1 line
   work). Nothing on this surface looked at colour before. ⚠ Still open:
   `--pda-txt3` is **2.93:1 in DARK** (the same 80 labels) — owner's call,
   ~0.52 alpha would fix it; and the sites ADR-058 named (`4 ITEMS`,

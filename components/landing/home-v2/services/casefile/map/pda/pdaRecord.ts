@@ -2,18 +2,23 @@ import type {
   CaseMapDistrict,
   CaseMapShape,
   CaseMapShapeKey,
+  CaseMapStreamKey,
   CaseMapWork,
   CaseSkillEntry,
 } from "@/lib/cases/types";
 
 import {
   MASS_BAND,
+  RUN_MODES,
+  RUN_MODE_LABEL,
+  type RunMode,
   SEAT,
+  STREAM_ORDER,
   districtShapes,
   districtTrenched,
   isPersonLed,
   mapTotals,
-  worksInDistrict,
+  runModeOf,
 } from "../mapProjection";
 
 /**
@@ -25,10 +30,12 @@ import {
  * publishing numbers the case no longer holds.
  */
 
-/** The grid is four across and five down. Twenty is a shape, not a budget. */
-export const PDA_COLS = 4;
-export const PDA_ROWS = 5;
-export const PDA_SHOWN = PDA_COLS * PDA_ROWS;
+/* ⚠ THE GRID OF TWENTY IS GONE (ADR-126). `PDA_COLS / PDA_ROWS / PDA_SHOWN`
+   sized a 4×5 estate of every department; the WORK reading is the marketing
+   estate now — the streams that carry a `stream`, in three columns — and its
+   count is `shown.length`, its ceiling `WORK_COLUMN_SLOTS` per column
+   (`mapProjection`). A guard that wants "the number on the board" reads the
+   plan, never a constant. */
 
 export interface PdaWork {
   id: string;
@@ -75,6 +82,18 @@ export interface PdaWork {
    *  draws ONE BAR PER TAP and nothing else, so this is what decides how many
    *  bars it seats — the estate's other shapes belong to reading 03. */
   taps: readonly CaseMapShapeKey[];
+  /**
+   * THE WORK READING'S TWO AXES (ADR-126). `stream` is the record's own
+   * creative workstream — the column — and `null` off the marketing estate.
+   * `run` is how far the stream runs without a person, derived from its run
+   * mode (`runModeOf`): the row inside the column. `null` only for a run mode
+   * the table does not know, which the registry refuses upstream; the plan
+   * throws on it rather than seating the card in a silent row.
+   */
+  stream: CaseMapStreamKey | null;
+  run: RunMode | null;
+  /** The run's group head, uppercased for the drawing ("A PROMPT"). */
+  runLabel: string;
   /** What reading 02 actually prints. */
   cfg: PdaAnswers;
 }
@@ -245,60 +264,94 @@ function answers(work: CaseMapWork, skills: readonly CaseSkillEntry[]): PdaAnswe
 }
 
 /**
- * THE TWENTY, chosen round-robin across the teams.
+ * THE MARKETING ESTATE (ADR-126, owner 2026-09-26: "my main audiences are
+ * marketing and studio teams … clustered around creative production,
+ * creative operations, and creative review").
  *
- * ⚠ PERSON-LED WORK IS FIRST IN EVERY TEAM'S QUEUE, which is what guarantees
- * all three survive the cut. A map that shows only what was configured shows
+ * Every stream that carries a `stream` — the twelve marketing and studio
+ * streams on the record — ordered by column (`STREAM_ORDER`), then by how far
+ * it runs without a person (`RUN_MODES`, low to high), then by the record's
+ * own order. Nothing is chosen: the reading shows exactly what the record
+ * files under the three workstreams, so a stream authored onto one appears,
+ * and one authored off them does not, with no editorial step between.
+ *
+ * ⚠ PERSON-LED WORK STAYS. A map that shows only what was configured shows
  * what was built and hides what was not, and the negative space is the
- * reading leadership takes — it cannot be an editorial casualty of a grid
- * that happens to hold twenty.
+ * reading leadership takes; `hand` is the last run in every column.
  *
- * Round-robin rather than "the twenty biggest" for the second reason: taking
- * by draw alone would empty the smaller teams off the board entirely, and the
- * board's claim is that this is the whole estate.
+ * The signature keeps `districts` (the team codes on the cartridges come from
+ * it) so every caller — the console, the labs, five guards — is unchanged.
  */
 export function selectWorks(
   districts: readonly CaseMapDistrict[],
   works: readonly CaseMapWork[],
   skills: readonly CaseSkillEntry[]
 ): PdaWork[] {
-  const queues = districts.map((d) =>
-    [...worksInDistrict(works, d.id)].sort((a, b) => {
-      const pa = isPersonLed(a) ? 0 : 1;
-      const pb = isPersonLed(b) ? 0 : 1;
-      return pa - pb || b.mass - a.mass || a.id.localeCompare(b.id);
-    })
-  );
-
-  const out: CaseMapWork[] = [];
-  for (let round = 0; out.length < PDA_SHOWN; round += 1) {
-    let took = 0;
-    for (const q of queues) {
-      if (out.length >= PDA_SHOWN) break;
-      const next = q[round];
-      if (!next) continue;
-      out.push(next);
-      took += 1;
-    }
-    if (!took) break;
-  }
-
-  /* Back into the record's own order, so a team's streams stay adjacent on
-     the grid the way they are adjacent in the record. */
-  const picked = new Set(out.map((w) => w.id));
-  return works
-    .filter((w) => picked.has(w.id))
-    .map((w) =>
-      toPdaWork(
+  const col = (w: CaseMapWork) => (w.stream ? STREAM_ORDER.indexOf(w.stream) : -1);
+  const shown = works
+    .map((w, i) => ({ w, i }))
+    .filter(({ w }) => col(w) >= 0)
+    .map(({ w, i }) => ({
+      w,
+      i,
+      pw: toPdaWork(
         w,
         districts.find((d) => d.id === w.dist),
         skills
-      )
-    );
+      ),
+    }))
+    .sort((a, b) => {
+      const ca = col(a.w);
+      const cb = col(b.w);
+      if (ca !== cb) return ca - cb;
+      const ra = a.pw.run ? RUN_MODES.indexOf(a.pw.run) : RUN_MODES.length;
+      const rb = b.pw.run ? RUN_MODES.indexOf(b.pw.run) : RUN_MODES.length;
+      return ra - rb || a.i - b.i;
+    });
+  return shown.map((s) => s.pw);
+}
+
+/* ── The plan: what reading 01 draws, before any geometry ─────────────────
+   One column per workstream, each a run of group heads and cards. Pure and
+   record-only; `PdaViews.workLayout` turns it into rects. Declared here so
+   the phone list, the fit guard and the drawing all read ONE grouping. */
+
+export type WorkRun = { mode: RunMode; label: string; ids: readonly string[] };
+export interface WorkColumn {
+  stream: CaseMapStreamKey;
+  runs: readonly WorkRun[];
+}
+export interface WorkPlan {
+  columns: readonly WorkColumn[];
+  /** Every card on the reading, in drawing order — the flight's slot index. */
+  ids: readonly string[];
+}
+
+/**
+ * Group the shown streams into columns and runs. ⚠ THROWS on a stream whose
+ * run mode the table does not know — the registry makes that unreachable in
+ * production, and a silent row would be the `8 TEAMS` class of defect (a
+ * drawing composing what no guard scans).
+ */
+export function workPlan(shown: readonly PdaWork[]): WorkPlan {
+  const columns: WorkColumn[] = [];
+  for (const stream of STREAM_ORDER) {
+    const inCol = shown.filter((w) => w.stream === stream);
+    if (!inCol.length) continue;
+    const runs: WorkRun[] = [];
+    for (const mode of RUN_MODES) {
+      const ids = inCol.filter((w) => w.run === mode).map((w) => w.id);
+      if (ids.length) runs.push({ mode, label: RUN_MODE_LABEL[mode].toUpperCase(), ids });
+    }
+    const lost = inCol.find((w) => w.run === null);
+    if (lost) throw new Error(`[pda] ${lost.id} runs on a mode the ladder does not place`);
+    columns.push({ stream, runs });
+  }
+  return { columns, ids: columns.flatMap((c) => c.runs.flatMap((r) => r.ids)) };
 }
 
 /** One record, projected onto what the drawing letters. Exported so the fit
- *  guard can measure ALL twenty-seven, not just the twenty on the grid. */
+ *  guard can measure ALL twenty-seven, not just the twelve on the reading. */
 export function toPdaWork(
   work: CaseMapWork,
   district: CaseMapDistrict | undefined,
@@ -325,6 +378,9 @@ export function toPdaWork(
     owner: (work.cfg?.p[0] ?? "The person does the work").toUpperCase(),
     ownerNote: work.cfg ? work.cfg.p[1].toUpperCase() : null,
     taps: work.shapes,
+    stream: work.stream ?? null,
+    run: runModeOf(work),
+    runLabel: (runModeOf(work) ? RUN_MODE_LABEL[runModeOf(work)!] : "").toUpperCase(),
     cfg: answers(work, skills),
   };
 }
@@ -408,7 +464,8 @@ export function crossing(
    was looking AT. The counts are interpolated so a record edit cannot leave
    the prose claiming a number the drawing no longer shows. */
 
-export type PdaView = 1 | 2 | 3;
+/** Two readings since ADR-126 — the carrier left the rail. */
+export type PdaView = 1 | 2;
 
 export function footCopy(
   view: PdaView,
@@ -421,34 +478,28 @@ export function footCopy(
       body: "What one stream is actually made of. Four parts on record, and an owner who sits outside the boundary.",
     };
   }
-  if (view === 3) {
-    /* ADR-124: the reading is the layer, said plainly; the five-shape
-       taxonomy left the caption with the rename. */
-    return {
-      title: "03 · The layer",
-      body: `${totals.skills} Skills, each written down once by the team that needed it. Every team after draws on it, and a new model inherits it.`,
-    };
-  }
+  /* ADR-126: the marketing estate on two axes. No "teams" (the district
+     guard's own failure mode) and no digit the drawing composes — both
+     counts are the record's. */
   return {
     title: "01 · The work",
-    body: `${shown} of ${totals.modules} streams. A filled cartridge has a configuration on record. A crossed one is deliberately person-led.`,
+    body: `${shown} of ${totals.modules} streams: the marketing and studio work, by workstream and by how far each runs without a person. A crossed cartridge is deliberately person-led.`,
   };
 }
 
 export const pdaTotals = mapTotals;
 
-/* ── The phone's three readings (ADR-107 U2) ───────────────────────────
+/* ── The phone's two readings (ADR-107 U2, two since ADR-126) ──────────
    Below the console's gate the drawings are dropped for LISTS, one per
-   reading, keyed on the same `view` the rail selects. 01 is the stream
-   index the fallback always was; these two are the projections behind 02
-   and 03. Pure, DOM-free, walked by `tests/lib/pda-phone-readings.test.ts`
-   under the envelope — a string composed at render time is outside every
-   content scanner (ADR-070 U15's `8 TEAMS`). */
+   reading, keyed on the same `view` the rail selects. 01 is the estate by
+   workstream with each row's run; 02 is the projection behind the board.
+   Pure, DOM-free, walked by `tests/lib/pda-phone-readings.test.ts` under the
+   envelope — a string composed at render time is outside every content
+   scanner (ADR-070 U15's `8 TEAMS`). */
 
-export const PDA_PHONE_VIEW: Record<PdaView, "work" | "configuration" | "layer"> = {
+export const PDA_PHONE_VIEW: Record<PdaView, "work" | "configuration"> = {
   1: "work",
   2: "configuration",
-  3: "layer",
 };
 
 export interface PdaPhoneConfigRow {
@@ -480,34 +531,7 @@ export function phoneConfiguration(shown: readonly PdaWork[]): PdaPhoneConfigRow
   }));
 }
 
-export interface PdaPhoneShape {
-  key: CaseMapShapeKey;
-  name: string;
-  /** The shape said as a sentence — VERBATIM, sentence case (`PdaShape.meaning`). */
-  meaning: string;
-  /** The Skills encoded on the shape, the roster's own short labels, the
-   *  first encode leading — the roster's `flagship` flag, exactly one per
-   *  engine (the registry pins it), the same mark the carrier greens. */
-  skills: { id: string; short: string; flagship: boolean }[];
-}
-
-/** 03 as a list: the five shapes, their sentences, their Skills as a run.
- *  ⚠ NO COUNT PER SHAPE — a run of labels is countable, and a numeral
- *  beside it is the surface saying the same thing twice (the hub's own
- *  ruling, ADR-070 U28/U36); the record's total stays on the foot. */
-export function phoneLayer(
-  shapes: readonly CaseMapShape[],
-  skills: readonly CaseSkillEntry[]
-): PdaPhoneShape[] {
-  return shapes.map((s) => {
-    // ⚠ The flagship is the ROSTER's flag, not the shape's `first` work: that
-    // work's Skill can file under another engine (a stream that trenched
-    // Pattern runs a Validation Skill), and a lead that is not in the run it
-    // leads is a green mark on nothing. The carrier reads the same flag.
-    const run = skills
-      .filter((k) => k.engine.toLowerCase() === s.key)
-      .map((k) => ({ id: k.id, short: k.short, flagship: k.flagship === true }));
-    run.sort((a, b) => Number(b.flagship) - Number(a.flagship));
-    return { key: s.key, name: s.label.toUpperCase(), meaning: s.meaning, skills: run };
-  });
-}
+/* `phoneLayer` — the third list — left with the third reading (ADR-126).
+   The carrier and its lab stay on disk until the owner has read the two
+   readings live (ADR-070 U35); the phone's LAYER list was console wiring,
+   not the drawing, and went with the wiring. */

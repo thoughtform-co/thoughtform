@@ -3,6 +3,7 @@ import type {
   CaseMapChain,
   CaseMapDistrict,
   CaseMapShape,
+  CaseMapStream,
   CaseMapWork,
   CaseSkillEntry,
 } from "../types";
@@ -787,6 +788,19 @@ const MAP_DISTRICTS: readonly CaseMapDistrict[] = [
 ];
 
 /**
+ * THE THREE CREATIVE WORKSTREAMS (ADR-126, owner 2026-09-26): "creative
+ * production, creative operations, and creative review" — his own cluster of
+ * the marketing and studio work, and the columns of the map's WORK reading.
+ * Sentence case; the drawing uppercases. The order is the reading's
+ * (`STREAM_ORDER` in `mapProjection`, pinned equal to these keys).
+ */
+const MAP_STREAMS: readonly CaseMapStream[] = [
+  { key: "production", name: "Creative production" },
+  { key: "operations", name: "Creative operations" },
+  { key: "review", name: "Creative review" },
+];
+
+/**
  * The 27 modules. Six chip slots per district plate is the geometric ceiling
  * — Creative's five is the current worst case, and a seventh row would fall
  * off its plate rather than clip, so the registry test guards it.
@@ -803,6 +817,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-017",
     title: "Campaign copy",
     dist: "CRE",
+    stream: "production",
     lane: "Everyday",
     shapes: ["judgment", "voice", "validation"],
     seat: "ABOVE",
@@ -831,6 +846,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-021",
     title: "Creative briefing",
     dist: "CRE",
+    stream: "operations",
     lane: "Deep",
     shapes: ["judgment", "pattern", "stakeholder"],
     seat: "ABOVE",
@@ -859,6 +875,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-029",
     title: "Asset declination",
     dist: "CRE",
+    stream: "production",
     lane: "Fast",
     shapes: ["pattern", "validation"],
     seat: "EDGE",
@@ -887,6 +904,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-034",
     title: "Brand voice QA",
     dist: "CRE",
+    stream: "review",
     lane: "Everyday",
     shapes: ["voice", "validation"],
     seat: "EDGE",
@@ -914,6 +932,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-040",
     title: "Concept ideation",
     dist: "CRE",
+    stream: "production",
     lane: null,
     shapes: ["judgment", "voice"],
     seat: "PERSON",
@@ -929,6 +948,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-051",
     title: "Listing build",
     dist: "ECM",
+    stream: "operations",
     lane: "Everyday",
     shapes: ["pattern", "voice", "validation"],
     seat: "EDGE",
@@ -956,6 +976,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-056",
     title: "Marketplace SEO",
     dist: "ECM",
+    stream: "operations",
     lane: "Everyday",
     shapes: ["pattern", "voice"],
     seat: "EDGE",
@@ -983,6 +1004,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-062",
     title: "Ad variant sets",
     dist: "ECM",
+    stream: "production",
     lane: "Fast",
     shapes: ["pattern", "voice"],
     seat: "ABOVE",
@@ -1011,6 +1033,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-068",
     title: "Account health",
     dist: "ECM",
+    stream: "operations",
     lane: "Fast",
     shapes: ["validation", "pattern"],
     seat: "EDGE",
@@ -1219,6 +1242,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-011",
     title: "Packaging system",
     dist: "DES",
+    stream: "review",
     lane: "Everyday",
     shapes: ["judgment", "validation", "pattern"],
     seat: "EDGE",
@@ -1246,6 +1270,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-016",
     title: "Dieline review",
     dist: "DES",
+    stream: "review",
     lane: "Everyday",
     shapes: ["validation", "pattern"],
     seat: "EDGE",
@@ -1275,6 +1300,7 @@ const MAP_WORKS: readonly CaseMapWork[] = [
     id: "W-022",
     title: "CMF spec check",
     dist: "DES",
+    stream: "review",
     lane: "Deep",
     /* ⚠ +PATTERN (ADR-071): CMF specs are a structured-output pattern —
        tolerance bands · finish tables · sample sheets — which is what
@@ -1937,6 +1963,7 @@ export const LOOP_ATL_PRODUCTION = {
 export const LOOP_INTELLIGENCE_MAP = {
   shapes: MAP_SHAPES,
   districts: MAP_DISTRICTS,
+  streams: MAP_STREAMS,
   works: MAP_WORKS,
   skills: LOOP_SKILLS,
   envelope: "WITHIN",
@@ -2150,6 +2177,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           skills: LOOP_SKILLS,
           shapes: MAP_SHAPES,
           districts: MAP_DISTRICTS,
+          streams: MAP_STREAMS,
           works: MAP_WORKS,
           chains: MAP_CHAINS,
           envelope: "WITHIN",

@@ -209,8 +209,8 @@ no-preference)`, the exact complement of the format's `min-height` release
   tool built FOR the creative process before the three built AROUND it), pinned
   against the section list: an index pointing at beats in a different order than
   it lists them is what that constant prevents. ⚠ **Tabs switch a VIEW; the view
-  is asymmetric** — rails stay inside consoles (map 3 · tools 4 · sheets 3 ·
-  films 2) and the page's own navigation is the trajectory. Never a page-level
+  is asymmetric** — rails stay inside consoles (map 2 since ADR-126 · tools 4 ·
+  sheets 3 · films 2) and the page's own navigation is the trajectory. Never a page-level
   tab strip (owner: "if everything is in tabs, then it's not gonna work").
 - ⚠ **`rollout` IS RETIRED (ADR-079).** It plotted the SAME 2024 → now span the
   board plots, in a second grammar at the far end of the page. Its rows are

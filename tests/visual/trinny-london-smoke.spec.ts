@@ -871,11 +871,11 @@ test.describe("Trinny London pitch variant", () => {
       Math.abs(h3.watch!.bottom - h3.lastClaimBottom!),
       "the panel's last frame does not end on the record's last rule (ADR-094 U8's floor, back at U10)"
     ).toBeLessThanOrEqual(2);
-    /* 04 the company — the map's own three readings, PORTALLED into the
-       field's rail, which is also what makes them pressable here: the card
-       covers the console with a transparent layer so its wheel capture
-       cannot freeze the stack. */
-    expect(shapes[3].stations).toEqual(["WORK", "CONFIGURATION", "LAYER"]);
+    /* 04 the layer — the map's own two readings (three until ADR-126),
+       PORTALLED into the field's rail, which is also what makes them
+       pressable here: the card covers the console with a transparent layer
+       so its wheel capture cannot freeze the stack. */
+    expect(shapes[3].stations).toEqual(["WORK", "CONFIGURATION"]);
     expect(shapes[3].maps).toBe(1);
     expect(
       await page.locator('[data-pc-index="3"] .fl-pda .fl-con__rail').count(),

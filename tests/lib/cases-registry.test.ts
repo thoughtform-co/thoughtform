@@ -6,7 +6,13 @@ import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData"
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
-import { BOARD_CHIP_SLOTS } from "@/components/landing/home-v2/services/casefile/map/mapProjection";
+import {
+  BOARD_CHIP_SLOTS,
+  RUN_MODE_OF_AGENT,
+  STREAM_ORDER,
+  WORK_COLUMN_SLOTS,
+  runModeOf,
+} from "@/components/landing/home-v2/services/casefile/map/mapProjection";
 import { CASES, caseBeatMenu, caseSlugs, getCase } from "@/lib/cases/registry";
 import {
   LOOP_ATL_FILMS,
@@ -1221,6 +1227,58 @@ describe("cases registry (ADR-054)", () => {
         w.shapes.some((k) => (k as string) === engineKey),
         `${w.id} draws on ${entry.short} (${entry.engine}) but does not tap "${engineKey}" — stream shapes: ${w.shapes.join(", ")}`
       ).toBe(true);
+    }
+  });
+
+  it("files the marketing estate under three workstreams the reading can hold (ADR-126)", () => {
+    /* THE WORK READING'S TWO AXES ARE THE RECORD. The column is `stream`, the
+       owner's own three (production · operations · review); the row is the
+       run mode's rung on the ladder. Both are pinned here so the drawing can
+       trust them: the triple's keys equal `STREAM_ORDER`, every streamed
+       work names a real column, no column holds more cards than the ceiling
+       the crop is cut to, the person-led work stays on the estate, and every
+       run mode on the record — streamed or not — is one the ladder places
+       (a new mode fails BY NAME here, never as a silent row on the drawing). */
+    const loop = getCase("loop-earplugs");
+    const visual = loop?.casefile.tracks.find((t) => t.id === "ai-transformation")?.visual;
+    if (!visual || visual.kind !== "intelligence-map") return;
+
+    expect(visual.streams.map((s) => s.key)).toEqual([...STREAM_ORDER]);
+    expect(new Set(visual.streams.map((s) => s.name)).size).toBe(visual.streams.length);
+    for (const s of visual.streams) {
+      // Sentence case, the record's voice; the drawing uppercases.
+      expect(s.name, `${s.key} is shouted`).not.toBe(s.name.toUpperCase());
+      // 19 characters at the head's rung is the card's own width (176u).
+      expect(s.name.length, `${s.key}'s name will not fit its column`).toBeLessThanOrEqual(19);
+    }
+
+    const keys = new Set<string>(STREAM_ORDER);
+    const streamed = visual.works.filter((w) => w.stream !== undefined);
+    for (const w of streamed) {
+      expect(keys.has(w.stream as string), `${w.id} sits in unknown workstream "${w.stream}"`).toBe(
+        true
+      );
+    }
+    for (const key of STREAM_ORDER) {
+      const n = streamed.filter((w) => w.stream === key).length;
+      expect(n, `${key} has no work on the estate`).toBeGreaterThanOrEqual(1);
+      expect(
+        n,
+        `${key} seats ${n} cards on a ${WORK_COLUMN_SLOTS}-slot column`
+      ).toBeLessThanOrEqual(WORK_COLUMN_SLOTS);
+    }
+    expect(
+      streamed.some((w) => w.lane === null),
+      "the estate hides its person-led work"
+    ).toBe(true);
+
+    for (const w of visual.works) {
+      if (!w.cfg) continue;
+      expect(
+        RUN_MODE_OF_AGENT[w.cfg.a],
+        `${w.id} runs on "${w.cfg.a}", which the ladder does not place`
+      ).toBeDefined();
+      expect(runModeOf(w), `${w.id} has no rung`).not.toBeNull();
     }
   });
 

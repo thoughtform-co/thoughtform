@@ -60,9 +60,13 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 
 /* The CONSOLE box, not the plate: the plate carries a few px of transparent
-   clearance and a shot of it shows the page behind at the edges. */
+   clearance and a shot of it shows the page behind at the edges.
+   ⚠ SCOPED TO THE PILE'S MAP CARD (ADR-126): four consoles are mounted at
+   once on the pile, and the unscoped locator resolved to two. */
 const shot = (name) =>
-  page.locator(".fl-con__console").screenshot({ path: `${OUT}/${VW}x${VH}_${THEME}_${name}.png` });
+  page
+    .locator('[data-pc-index="3"] .fl-con__console')
+    .screenshot({ path: `${OUT}/${VW}x${VH}_${THEME}_${name}.png` });
 
 try {
   await page.goto(`http://localhost:${PORT}/${THEME === "light" ? "?theme=light" : ""}`, {
@@ -164,9 +168,7 @@ try {
   await page.waitForTimeout(200);
   await shot("02-hover-runs");
 
-  await page.locator(".fl-con__stn").nth(2).click();
-  await page.waitForTimeout(900);
-  await shot("03-substrate");
+  /* Reading 03 left the rail (ADR-126) — two stills, not three. */
 
   console.log(`opened: ${opened}`);
   console.log(`data-view after click: ${view}`);

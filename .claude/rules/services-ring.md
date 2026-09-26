@@ -236,10 +236,14 @@ its values carried nine different grammars. Legacy `readouts` normalize into
 that same 2×2 register. The right panel has no generic footer: the selected
 visual owns its full height beneath the designation rail.
 
-The Intelligence Map is the PDA console with three readings, **WORK ·
-CONFIGURATION · LAYER** (ids `work` / `configuration` / `substrate`; ADR-070,
-the third renamed 2026-09-24 by ADR-124). Reading 03 is the carrier: 47 Skill
-cells around a hub that letters one plain-language brief and no figure. The old
+The Intelligence Map is the PDA console with TWO readings since ADR-126
+(2026-09-26), **WORK · CONFIGURATION** (ids `work` / `configuration`). Reading
+01 is the MARKETING ESTATE: the twelve streams filed under the owner's three
+creative workstreams (production · operations · review), in three lettered
+columns each climbing prompt → tool → agent → by hand off the record's run
+mode. The third reading (SUBSTRATE, then LAYER from ADR-124 — the carrier, 47
+Skill cells around a hub) left the rail and stays on disk until the owner's
+live read (ADR-070 U35). The old
 CONFIGURATION · TEAM · ALLOCATION field, its `ENCODED SUBSTRATE` bus label and
 the STACK view are retired; do not restore them, a bottom shape legend, or a
 renamed Skills inventory.

@@ -161,10 +161,21 @@ a PT Mono group head per run. Both axes are the record:
 
 A strict lattice of both axes does not fit the console: a band's height is its
 worst cell, and any plausible split puts three or four streams in one cell, so
-the lattice runs eight card-rows tall and the title type lands at 3.9px at
-1280×720. Stepped groups keep both axes readable: the block is one column head,
-at most four group heads and four cards per column, 12 cards instead of 20 —
-density is the lever ADR-063 §Outstanding never had. The crop is derived from
+the lattice runs eight card-rows tall. Stepped groups keep both axes readable:
+the block is one column head, at most four group heads and four cards per
+column, 12 cards instead of 20. ⚠ **THE PILE'S FIELDS WERE NEVER IN THE
+GUARDS' TABLES** — every row was the retired casefile's box (603 × 493 at
+1280×720), and the pile's map card is 579 × 307 there, 652 × 479 at 1440×900
+and 814 × 790 at the owner's 1920×1247 (`capture-proof-stack.mjs` prints
+`mapField` now). A three-column reading is a portrait block, so on the laptop
+fields it letterboxes on purpose, as the grid of twenty did before it,
+unmeasured; `pda-viewbox` pins that the estate never renders smaller than that
+grid on those fields (title 4.7px at 1280×720 against 4.5, 7.3 against 7.0 at
+1440×900, 12.0 against 11.5 on his window) and that its letterbox runs at most
+a tenth of the panel past the grid's (0.47 against 0.39 at 1280×720, 0.27
+against 0.17 at 1440×900, none on his window). Each card dropped from a column buys ~15 % of type: nine
+cards, three per column, would letter at ~16px on his window — which nine is
+the record's call. The crop is derived from
 that CEILING (record-independent, so `VIEW_BOX[1]` stays a constant and
 `pdaFit` is untouched) and the live block is centred in it. Ragged column feet
 are the record; no rules, no accent bars.

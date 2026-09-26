@@ -10,11 +10,7 @@ import {
   configLayout,
   configurationLettering,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
-import {
-  gridRect,
-  workExt,
-  workLayout,
-} from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
+import { WORK_LAYOUT_0 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import {
   CARD,
   CARD_BOX,
@@ -30,7 +26,7 @@ import {
   wrapLines,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaGlyphs";
 import {
-  PDA_SHOWN,
+  selectWorks,
   type PdaWork,
   toPdaWork,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
@@ -77,14 +73,21 @@ const W = CARD_BOX.w;
 /* The three homes as production computes them, at the resting field. The rects
    move with the elastic layouts, so they are DERIVED here rather than typed —
    a literal would be true at exactly one field shape. */
-const GRID_RECT = gridRect(0, workLayout(workExt(0)));
+/* ⚠ THE CEILING LAYOUT'S FIRST SLOT (ADR-126): the resting reading is the
+   ceiling plan, and every slot on it is `CARD_BOX` — the box this file pins. */
+const GRID_RECT = WORK_LAYOUT_0.placed.find((p) => p.kind === "card")!.rect;
 const CONFIG_LAYOUT_0 = configLayout(configExt(0));
 
-function allWorks(): PdaWork[] {
+function mapVisual() {
   const visual = getCase("loop-earplugs")?.casefile.tracks.find(
     (t) => t.visual.kind === "intelligence-map"
   )?.visual;
   if (!visual || visual.kind !== "intelligence-map") throw new Error("no intelligence-map track");
+  return visual;
+}
+
+function allWorks(): PdaWork[] {
+  const visual = mapVisual();
   const districts: readonly CaseMapDistrict[] = visual.districts;
   const skills = visual.skills;
   return visual.works.map((w: CaseMapWork) =>
@@ -185,9 +188,15 @@ describe("the skill chip's rung matches the plate's label", () => {
 
 describe("the grid card's title fits its box", () => {
   it("every live title letters on one line", () => {
+    /* ⚠ EVERY title on the record, not only the reading's twelve: reading 02
+       seats the same glyph at CORE_K for any stream the reader opens, and
+       the pile's phone list letters all of the estate the reading shows. */
     const titles = allWorks().map((w) => w.title.toUpperCase());
-    expect(titles.length).toBeGreaterThanOrEqual(PDA_SHOWN);
-    for (const t of titles.slice(0, PDA_SHOWN)) {
+    expect(titles.length).toBe(27);
+    expect(selectWorks(mapVisual().districts, mapVisual().works, mapVisual().skills)).toHaveLength(
+      12
+    );
+    for (const t of titles) {
       /* A wrapped title collided with its own second line AND ran into the lane
          rail when the size was 12 — measured in the browser, not supposed. */
       expect(wrapLines(t, cartTitleChars(W)), `"${t}" wrapped`).toHaveLength(1);

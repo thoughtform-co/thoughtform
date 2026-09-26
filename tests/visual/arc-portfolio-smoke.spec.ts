@@ -549,10 +549,9 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       // The range every field these drawings were fitted to lives in.
       expect(box.aspect, `${label}: the panel's aspect`).toBeLessThanOrEqual(1.3);
       expect(box.aspect, `${label}: the panel's aspect`).toBeGreaterThanOrEqual(0.4);
-      expect(box.stations, `${label}: the three readings`).toEqual([
+      expect(box.stations, `${label}: the two readings (ADR-126)`).toEqual([
         "WORK",
         "CONFIGURATION",
-        "LAYER",
       ]);
       expect(box.overflowX, `${label}: horizontal overflow`).toBeLessThanOrEqual(0);
 
@@ -580,9 +579,24 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         `${label}: and it must not have changed reading either`
       ).toBe("1");
 
-      // THE RAIL IS THE NAVIGATION: reading 02 draws the switchboard,
-      // reading 03 letters all 47 Skills around the carrier.
+      // THE RAIL IS THE NAVIGATION: reading 02 draws the switchboard. (The
+      // carrier — reading 03, 47 Skills around a hub — left the rail with
+      // ADR-126; reading 01 is the marketing estate in three columns.)
       await restAt(page, "intelligence");
+      const estate = await page.evaluate(() => {
+        const host = document.querySelector<HTMLElement>("#intelligence .fl-pda")!;
+        const texts = [...host.querySelectorAll(".fl-pda__svg text")].map((t) =>
+          (t.textContent ?? "").trim()
+        );
+        return {
+          cards: host.querySelectorAll(".fl-pda__svg .fl-pda-hit").length,
+          heads: texts.filter((t) => /^CREATIVE (PRODUCTION|OPERATIONS|REVIEW)$/.test(t)).length,
+          runs: texts.filter((t) => /^(A PROMPT|A TOOL|AN AGENT|BY HAND)$/.test(t)).length,
+        };
+      });
+      expect(estate.cards, `${label}: the marketing estate's twelve cartridges`).toBe(12);
+      expect(estate.heads, `${label}: the three workstream columns`).toBe(3);
+      expect(estate.runs, `${label}: the run-mode group heads`).toBeGreaterThanOrEqual(3);
       await page.locator("#intelligence .fl-con__stn").nth(1).click();
       await page.waitForTimeout(700);
       expect(
@@ -591,20 +605,6 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         ),
         `${label}: the rail opened reading 02`
       ).toBe("2");
-      await page.locator("#intelligence .fl-con__stn").nth(2).click();
-      await page.waitForTimeout(900);
-      const carrier = await page.evaluate(() => {
-        const host = document.querySelector<HTMLElement>("#intelligence .fl-pda")!;
-        const labels = [...host.querySelectorAll("textPath")].filter(
-          (t) => (t.textContent ?? "").trim().length > 0
-        );
-        return { view: host.dataset.view, arcLabels: labels.length };
-      });
-      expect(carrier.view, `${label}: the rail opened reading 03`).toBe("3");
-      // 47 Skill cells, plus the five substrate names in the band.
-      expect(carrier.arcLabels, `${label}: the carrier letters its cells`).toBeGreaterThanOrEqual(
-        47
-      );
       await page.close();
     }
   });

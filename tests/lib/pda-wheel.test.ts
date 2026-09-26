@@ -56,7 +56,7 @@ describe("normalizeWheelDelta", () => {
 
 describe("pdaWheelStep — the release", () => {
   it("hands the wheel back at the last reading going down", () => {
-    const r = pdaWheelStep(PDA_WHEEL_REST, { deltaY: 400, deltaMode: 0, at: 1000, view: 3 });
+    const r = pdaWheelStep(PDA_WHEEL_REST, { deltaY: 400, deltaMode: 0, at: 1000, view: 2 });
     expect(r.capture).toBe(false);
     expect(r.next).toBeNull();
   });
@@ -69,7 +69,7 @@ describe("pdaWheelStep — the release", () => {
 
   it("still captures at an end when travel is INTO the readings", () => {
     expect(
-      pdaWheelStep(PDA_WHEEL_REST, { deltaY: -120, deltaMode: 0, at: 1000, view: 3 }).capture
+      pdaWheelStep(PDA_WHEEL_REST, { deltaY: -120, deltaMode: 0, at: 1000, view: 2 }).capture
     ).toBe(true);
     expect(
       pdaWheelStep(PDA_WHEEL_REST, { deltaY: 120, deltaMode: 0, at: 1000, view: 1 }).capture
@@ -77,10 +77,10 @@ describe("pdaWheelStep — the release", () => {
   });
 
   it("never leaves a run-up behind when it releases", () => {
-    // Half a gesture down at reading 2, then the reader arrives at 3 and
+    // Half a gesture down at reading 1, then the reader arrives at 2 and
     // keeps going: the release must not carry the earlier accumulation.
-    const a = pdaWheelStep(PDA_WHEEL_REST, { deltaY: 60, deltaMode: 0, at: 1000, view: 2 });
-    const b = pdaWheelStep(a.state, { deltaY: 60, deltaMode: 0, at: 1020, view: 3 });
+    const a = pdaWheelStep(PDA_WHEEL_REST, { deltaY: 60, deltaMode: 0, at: 1000, view: 1 });
+    const b = pdaWheelStep(a.state, { deltaY: 60, deltaMode: 0, at: 1020, view: 2 });
     expect(b.capture).toBe(false);
     expect(b.state.acc).toBe(0);
   });
@@ -126,26 +126,28 @@ describe("pdaWheelStep — one step per gesture", () => {
     expect(captures.every(Boolean)).toBe(true);
   });
 
-  it("steps again once the lockout has passed", () => {
+  it("steps again once the lockout has passed — up, where a reading is left", () => {
+    /* ⚠ TWO READINGS SINCE ADR-126: going DOWN the second step is the
+       release, so the second-step case runs upward from reading 2. */
     const events = [
-      { dy: 120, at: 1000 },
-      { dy: 120, at: 1000 + WHEEL_STEP_LOCKOUT_MS + 20 },
+      { dy: -120, at: 1000 },
+      { dy: -120, at: 1000 + WHEEL_STEP_LOCKOUT_MS + 20 },
     ];
-    const { steps, view } = run(events);
-    expect(steps).toEqual([2, 3]);
-    expect(view).toBe(3);
+    const { steps, view, captures } = run(events, 2);
+    expect(steps).toEqual([1]);
+    expect(view).toBe(1);
+    expect(captures).toEqual([true, false]);
   });
 
   it("reaches the last reading and then releases", () => {
     const events = [
       { dy: 120, at: 1000 },
       { dy: 120, at: 1000 + (WHEEL_STEP_LOCKOUT_MS + 20) },
-      { dy: 120, at: 1000 + (WHEEL_STEP_LOCKOUT_MS + 20) * 2 },
     ];
     const { steps, view, captures } = run(events);
-    expect(steps).toEqual([2, 3]);
-    expect(view).toBe(3);
-    expect(captures).toEqual([true, true, false]);
+    expect(steps).toEqual([2]);
+    expect(view).toBe(2);
+    expect(captures).toEqual([true, false]);
   });
 });
 
@@ -176,12 +178,9 @@ describe("pdaWheelStep — direction", () => {
   });
 
   it("walks up the readings the same way it walked down", () => {
-    const events = [
-      { dy: -120, at: 5000 },
-      { dy: -120, at: 5000 + (WHEEL_STEP_LOCKOUT_MS + 20) },
-    ];
-    const { steps, view } = run(events, 3);
-    expect(steps).toEqual([2, 1]);
+    const events = [{ dy: -120, at: 5000 }];
+    const { steps, view } = run(events, 2);
+    expect(steps).toEqual([1]);
     expect(view).toBe(1);
   });
 });

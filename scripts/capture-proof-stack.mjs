@@ -232,6 +232,23 @@ try {
             watchH: h(".pf-watch"),
             verdictH: h(".fl-verdict"),
             bayHeads: card.querySelectorAll(".pf-bay__head").length,
+            /* ADR-126: the map console's FIELD and its svg, the box every
+               reading is fitted to — the number `pda-viewbox`/`pda-flight`'s
+               FIELD tables record for the pile (the casefile's were the
+               only rows until 2026-09-26). */
+            mapField: (() => {
+              const fld = card.querySelector(".fl-pda .fl-con__field");
+              const svg = card.querySelector(".fl-pda__svg");
+              if (!fld || !svg) return null;
+              const r = fld.getBoundingClientRect();
+              const g = svg.getBoundingClientRect();
+              return {
+                w: Math.round(r.width),
+                h: Math.round(r.height),
+                svgW: Math.round(g.width),
+                svgH: Math.round(g.height),
+              };
+            })(),
           };
         })(),
         pile: (() => {

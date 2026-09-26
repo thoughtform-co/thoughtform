@@ -11,9 +11,9 @@ import type { PdaView } from "./pdaRecord";
  * The 2026-07-15 pass RETIRED a wheel-snap hijack on this same stage so that
  * scrubbing over the card ring read as continuous scroll (`ServicesStage`).
  * That ruling stands for the ring. This is a narrower thing and it is the
- * owner's ask (2026-08-06): the map is a bounded instrument with THREE
- * readings, and while the pointer is over it the wheel changes the reading
- * instead of the directory row underneath.
+ * owner's ask (2026-08-06): the map is a bounded instrument with its readings
+ * (three then, TWO since ADR-126), and while the pointer is over it the wheel
+ * changes the reading instead of the directory row underneath.
  *
  * ── THE RELEASE IS THE WHOLE SAFETY ARGUMENT ─────────────────────────────
  * Out of readings in the direction of travel, the wheel is handed straight
@@ -31,9 +31,11 @@ import type { PdaView } from "./pdaRecord";
  * reader never sees may as well be a swap.
  */
 
-/** The readings, low to high. Mirrors `PdaView`; `1` is THE WORK. */
+/** The readings, low to high. Mirrors `PdaView`; `1` is THE WORK, `2` THE
+ *  CONFIGURATION. ⚠ Two since ADR-126: the release now hands the wheel back
+ *  at reading 02, one step sooner. */
 export const PDA_VIEW_MIN = 1;
-export const PDA_VIEW_MAX = 3;
+export const PDA_VIEW_MAX = 2;
 
 /**
  * Accumulated pixels before a step. One mouse notch is 100–120px in
@@ -112,6 +114,21 @@ export function pdaWheelStep(state: PdaWheelState, input: PdaWheelInput): PdaWhe
   // A horizontal gesture (or a null one) was never ours.
   if (dir === 0) return { next: null, capture: false, state };
 
+  // Inside the lockout the wheel stays OURS (see the header) but moves
+  // nothing, and the run-up restarts from the far side of it.
+  // ⚠ BEFORE THE RELEASE, since ADR-126. With two readings a single fling
+  // from the work lands on the last reading, and releasing there mid-gesture
+  // would leak the fling's tail into a scroll-pinned page — which is the
+  // very thing the lockout exists to hold. With three readings the same
+  // fling landed one short of the end and the order never mattered.
+  if (input.at - state.steppedAt < WHEEL_STEP_LOCKOUT_MS) {
+    return {
+      next: null,
+      capture: true,
+      state: { acc: 0, steppedAt: state.steppedAt, lastAt: input.at },
+    };
+  }
+
   // THE RELEASE. No reading left this way ⇒ the page gets its wheel back, and
   // the accumulator empties so re-entering does not inherit a stale run-up.
   if (dir > 0 ? input.view >= PDA_VIEW_MAX : input.view <= PDA_VIEW_MIN) {
@@ -122,16 +139,6 @@ export function pdaWheelStep(state: PdaWheelState, input: PdaWheelInput): PdaWhe
   // scrolling back up would first have to pay off the downward accumulator.
   const fresh = input.at - state.lastAt > WHEEL_GESTURE_GAP_MS || Math.sign(state.acc) !== dir;
   const acc = fresh ? delta : state.acc + delta;
-
-  // Inside the lockout the wheel stays OURS (see the header) but moves
-  // nothing, and the run-up restarts from the far side of it.
-  if (input.at - state.steppedAt < WHEEL_STEP_LOCKOUT_MS) {
-    return {
-      next: null,
-      capture: true,
-      state: { acc: 0, steppedAt: state.steppedAt, lastAt: input.at },
-    };
-  }
 
   if (Math.abs(acc) < WHEEL_STEP_THRESHOLD) {
     return {

@@ -268,6 +268,27 @@ export interface CaseMapDistrict {
 }
 
 /**
+ * THE THREE CREATIVE WORKSTREAMS (ADR-126, owner 2026-09-26) — his own cluster
+ * of the marketing and studio work, "creative production, creative operations,
+ * and creative review", the three the proposals and questions he gets fall
+ * into. The map's WORK reading columns by it, and a stream that carries none
+ * is off that reading (legal, finance, engineering, programs, operations).
+ *
+ * ⚠ NOT A DISTRICT. Districts are departments (`MAP_DISTRICTS` is untouched
+ * — the registry pins eight, the isometric board seats exactly eight), and a
+ * workstream CROSSES departments: production spans the studio and ecommerce,
+ * review spans the studio and product design. The ordered triple is the
+ * visual's `streams`; the drawing's `STREAM_ORDER` (`mapProjection`) is
+ * pinned equal to its keys.
+ */
+export type CaseMapStreamKey = "production" | "operations" | "review";
+export interface CaseMapStream {
+  key: CaseMapStreamKey;
+  /** Sentence case, the record's own — "Creative production". */
+  name: string;
+}
+
+/**
  * A work stream's intelligence configuration — the four questions the seat is
  * chartered on, plus why this lane. Each pair is `[name, note]`; the drawing
  * renders the name and the hover card the note, so provenance is carried by
@@ -361,6 +382,12 @@ export interface CaseMapWork {
   title: string;
   /** `CaseMapDistrict["id"]`. */
   dist: string;
+  /**
+   * THE CREATIVE WORKSTREAM this stream sits in (ADR-126) — only the marketing
+   * and studio streams carry one, and the WORK reading shows exactly those,
+   * in three columns. Absent on every other department's work.
+   */
+  stream?: CaseMapStreamKey;
   /** Generic capability lane; `null` ⇔ person-led ⇔ `cfg === null`. */
   lane: CaseCapabilityTier | null;
   /** Shapes of judgment this stream draws on. */
@@ -855,6 +882,9 @@ export type CaseTrackVisual =
       shapes: readonly CaseMapShape[];
       /** The district plates, in board order. */
       districts: readonly CaseMapDistrict[];
+      /** The three creative workstreams the WORK reading columns by (ADR-126),
+       *  in reading order; the registry pins their keys to `STREAM_ORDER`. */
+      streams: readonly CaseMapStream[];
       /** Every module on the board, configured and person-led alike. */
       works: readonly CaseMapWork[];
       /** Runs of work that cross departments. Optional — the city's three

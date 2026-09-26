@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 import {
   PDA_PHONE_VIEW,
   phoneConfiguration,
-  phoneLayer,
   selectWorks,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaRecord";
 import { getCase } from "@/lib/cases/registry";
@@ -14,16 +13,17 @@ import { getCase } from "@/lib/cases/registry";
 import { ENVELOPE } from "./helpers/mapEnvelope";
 
 /**
- * THE MAP'S THREE PHONE READINGS (ADR-107 U2).
+ * THE MAP'S PHONE READINGS (ADR-107 U2; two since ADR-126).
  *
  * On the rung that hides the console (≤980px, reduced motion) the map's
  * fallback was one list — the stream index — whatever the rail said, so a
- * tap on CONFIGURATION or LAYER changed `view` and nothing visible followed.
- * The fallback is three lists now, keyed on the same `view`; this pins the
- * two new projections against the live record, and walks every string they
- * letter under the confidentiality envelope the map's own copy carries
+ * tap on CONFIGURATION changed `view` and nothing visible followed. The
+ * fallback is a list per reading now, keyed on the same `view`; this pins the
+ * projections against the live record, and walks every string they letter
+ * under the confidentiality envelope the map's own copy carries
  * (`cases-registry.test.ts`), because a projection composed at render time
- * is outside every content scanner.
+ * is outside every content scanner. The LAYER list left with the third
+ * reading.
  */
 
 const ROOT = join(__dirname, "..", "..");
@@ -41,10 +41,26 @@ describe("the phone readings' projections", () => {
   const visual = mapVisual();
   const shown = selectWorks(visual.districts, visual.works, visual.skills);
   const cfg = phoneConfiguration(shown);
-  const layer = phoneLayer(visual.shapes, visual.skills);
 
-  it("names the three readings the rail selects", () => {
-    expect(PDA_PHONE_VIEW).toEqual({ 1: "work", 2: "configuration", 3: "layer" });
+  it("names the two readings the rail selects", () => {
+    expect(PDA_PHONE_VIEW).toEqual({ 1: "work", 2: "configuration" });
+  });
+
+  it("01 letters the marketing estate by workstream, each row with its run (ADR-126)", () => {
+    expect(shown.length).toBe(12);
+    for (const w of shown) {
+      expect(w.stream, `${w.id} is on the reading without a workstream`).not.toBeNull();
+      expect(w.run, `${w.id} has no run mode`).not.toBeNull();
+      expect(["A PROMPT", "A TOOL", "AN AGENT", "BY HAND"]).toContain(w.runLabel);
+      if (!w.configured) expect(w.runLabel).toBe("BY HAND");
+    }
+    // Every workstream the record names has at least one row, in the record's order.
+    for (const s of visual.streams) {
+      expect(
+        shown.some((w) => w.stream === s.key),
+        `${s.key} has no rows`
+      ).toBe(true);
+    }
   });
 
   it("02 letters every stream on the board once, answered", () => {
@@ -73,40 +89,11 @@ describe("the phone readings' projections", () => {
     expect(cfg.filter((r) => r.configured).length).toBeGreaterThan(cfg.length / 2);
   });
 
-  it("03 letters the five shapes with their sentences and every Skill on the roster once, the first encode leading", () => {
-    expect(layer).toHaveLength(visual.shapes.length);
-    expect(layer.map((s) => s.key)).toEqual(visual.shapes.map((s) => s.key));
-    const seen = new Set<string>();
-    for (const s of layer) {
-      const shape = visual.shapes.find((x) => x.key === s.key)!;
-      expect(s.name).toBe(shape.label.toUpperCase());
-      expect(s.meaning).toBe(shape.meaning);
-      expect(s.meaning).not.toBe(s.meaning.toUpperCase());
-      expect(s.skills.length).toBe(shape.skills);
-      for (const k of s.skills) {
-        expect(seen.has(k.id), `${k.id} letters twice`).toBe(false);
-        seen.add(k.id);
-        expect(k.short.length).toBeGreaterThan(0);
-        expect(k.short.length).toBeLessThanOrEqual(14);
-      }
-      // The flagship — the roster's own flag, the pattern's first encode,
-      // exactly one per engine (`cases-registry` pins it) — leads its run.
-      const flags = s.skills.filter((k) => k.flagship);
-      expect(flags.length).toBe(1);
-      expect(s.skills[0].flagship).toBe(true);
-      const rosterFlag = visual.skills.find((k) => k.flagship && k.engine.toLowerCase() === s.key);
-      expect(s.skills[0].id).toBe(rosterFlag?.id);
-    }
-    expect(seen.size).toBe(visual.skills.length);
-  });
-
   it("letters nothing the envelope bans, and no ordinal head", () => {
     const strings: string[] = [];
     for (const r of cfg) strings.push(r.title, r.teamName, r.runs, r.reach, r.where);
-    for (const s of layer) {
-      strings.push(s.name, s.meaning);
-      for (const k of s.skills) strings.push(k.short);
-    }
+    for (const w of shown) strings.push(w.title, w.runLabel);
+    for (const s of visual.streams) strings.push(s.name);
     const blob = strings.join(" | ");
     for (const [label, re] of ENVELOPE) {
       expect(re.test(blob), `the phone readings letter ${label}`).toBe(false);
@@ -121,7 +108,7 @@ describe("the phone readings' projections", () => {
 });
 
 describe("the fallback is the rail's", () => {
-  it("the console mounts the three readings in its fallback slot, keyed on the view", () => {
+  it("the console mounts the two readings in its fallback slot, keyed on the view", () => {
     const console = read("components/landing/home-v2/services/casefile/map/pda/PdaConsole.tsx");
     expect(console).toMatch(/<PdaPhoneReadings[\s\S]*?view=\{view\}/);
     // ⚠ No rail in the fallback: `ConsoleFrame` renders it on every rung, and
@@ -139,7 +126,8 @@ describe("the fallback is the rail's", () => {
     expect(comp).toMatch(/data-pda-phone-view=\{PDA_PHONE_VIEW\[view\]\}/);
     expect(comp).toMatch(/view === 1 \?/);
     expect(comp).toMatch(/view === 2 \?/);
-    expect(comp).toMatch(/view === 3 \?/);
+    // The third list left with the third reading (ADR-126).
+    expect(comp).not.toMatch(/view === 3/);
   });
 
   it("the phone can scroll the list: the map's event layer is off ≤960 and the list releases at its bounds", () => {

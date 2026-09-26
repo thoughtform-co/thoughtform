@@ -4571,6 +4571,83 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     }
   });
 
+  test("desktop: the pile's map is the marketing estate on two axes, and nothing prints through anything (ADR-126)", async ({
+    page,
+  }) => {
+    test.skip(!SERVICES_PROOF_STACK, "the proof stack is off");
+    test.skip(!isDesktopViewport(page), "the consoles are desktop-only (≥961px)");
+    test.setTimeout(180_000);
+
+    /* THE CHECK NOTHING ELSE DOES, BACK ON THE PILE. The map's label-on-label
+       walk, its clip walk and its hit-test lived in the CASEFILE's cases,
+       skipped since ADR-096 turned that surface off — so the pile's map card
+       shipped for two weeks with no overlap walk at all. `readPda` finds the
+       one `.fl-pda` on the page, which on the pile IS the map card's. */
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 20_000 });
+    await page.waitForSelector(".pf-slot", { timeout: 20_000 });
+    expect(await seatProofCard(page, 3)).toBe("pinned");
+    await expect(page.locator(".fl-pda")).toBeVisible();
+    const rail = page.locator('[data-pc-index="3"] .fl-con__stn');
+    expect(await rail.count(), "two readings since ADR-126").toBe(2);
+
+    for (const [index, view] of ["1", "2"].entries()) {
+      await rail.nth(index).click();
+      await page.waitForTimeout(500);
+      await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
+      const drawn = await page.evaluate(readPda);
+      const where = `pile/view-${view}`;
+      expect(drawn, `${where}: the reading drew nothing`).not.toBeNull();
+      expect(drawn!.texts, `${where}: the reading lost its labels`).toBeGreaterThan(10);
+      expect(
+        drawn!.clipped,
+        `${where}: labels run outside the crop: ${drawn!.clipped.join(", ")}`
+      ).toEqual([]);
+      expect(drawn!.overlaps, `${where}: labels overlap: ${drawn!.overlaps.join(" | ")}`).toEqual(
+        []
+      );
+      expect(
+        drawn!.minPx,
+        `${where}: rendered type fell to ${drawn!.minPx}px`
+      ).toBeGreaterThanOrEqual(4.3);
+    }
+
+    /* ── THE ESTATE: three lettered columns, the ladder as group heads,
+       twelve cartridges, and nothing from another department ──────────── */
+    await rail.nth(0).click();
+    await page.waitForTimeout(500);
+    const estate = await page.evaluate(() => {
+      const host = document.querySelector<HTMLElement>('[data-pc-index="3"] .fl-pda')!;
+      const field = document.querySelector<HTMLElement>('[data-pc-index="3"] .pf-field--map')!;
+      const texts = [...host.querySelectorAll(".fl-pda__svg text")].map((t) =>
+        (t.textContent ?? "").trim()
+      );
+      return {
+        cards: host.querySelectorAll(".fl-pda__svg .fl-pda-hit").length,
+        heads: texts.filter((t) => /^CREATIVE (PRODUCTION|OPERATIONS|REVIEW)$/.test(t)),
+        runs: texts.filter((t) => /^(A PROMPT|A TOOL|AN AGENT|BY HAND)$/.test(t)),
+        teams: texts.filter((t) => /^(LEG|FIN|ENG|PRG|OPS)$/.test(t)),
+        cover: getComputedStyle(field, "::after").display,
+      };
+    });
+    expect(estate.cards, "the marketing estate's twelve cartridges").toBe(12);
+    expect(estate.heads, "the three workstream columns, in order").toEqual([
+      "CREATIVE PRODUCTION",
+      "CREATIVE OPERATIONS",
+      "CREATIVE REVIEW",
+    ]);
+    expect(estate.runs.length, "the run-mode group heads").toBeGreaterThanOrEqual(3);
+    expect(estate.teams, "a department off the marketing estate is on the reading").toEqual([]);
+    /* ⚠ THE CARTRIDGES ARE NOT PRESSABLE ON THE PILE, AND THAT IS ADR-094 U1's
+       OWN RULING: the card covers the console with a transparent layer
+       (`.pf-field--map::after`, z 2) so its wheel capture cannot freeze a
+       pinned stack, and the RAIL — portalled into the head — is the way in.
+       The casefile's centre hit-test therefore does not apply here; what is
+       pinned is that the cover is present, so a reading that lost it would
+       arm the wheel trap the cover exists to prevent. */
+    expect(estate.cover, "the map's cover left the pile").not.toBe("none");
+  });
+
   test("light: the stack's instruments carry their contrast (ADR-063 U2 · ADR-068)", async ({
     page,
   }) => {
@@ -4591,13 +4668,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.waitForSelector(".services-stage", { timeout: 20_000 });
     await page.waitForSelector(".pf-slot", { timeout: 20_000 });
 
-    // ── The map's three readings, on the map card ─────────────────────
+    // ── The map's two readings (ADR-126), on the map card ─────────────────────
     expect(await seatProofCard(page, 3)).toBe("pinned");
     await expect(page.locator(".fl-pda")).toBeVisible();
     const mapRail = page.locator('[data-pc-index="3"] .fl-con__stn');
-    expect(await mapRail.count()).toBe(3);
+    expect(await mapRail.count()).toBe(2);
 
-    for (const [index, view] of ["1", "2", "3"].entries()) {
+    for (const [index, view] of ["1", "2"].entries()) {
       await mapRail.nth(index).click();
       await page.waitForTimeout(500);
       await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);

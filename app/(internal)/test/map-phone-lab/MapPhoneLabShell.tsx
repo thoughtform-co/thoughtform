@@ -16,8 +16,7 @@ import {
 
 type Theme = "dark" | "light";
 
-const isReading = (v: string | null): v is MplReading =>
-  v === "work" || v === "configuration" || v === "layer";
+const isReading = (v: string | null): v is MplReading => v === "work" || v === "configuration";
 
 /**
  * /test/map-phone-lab — two modes on one route.

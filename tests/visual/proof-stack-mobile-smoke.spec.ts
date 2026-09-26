@@ -452,7 +452,9 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(caps.desc).toEqual(["inset(50%)", "inset(50%)", "inset(50%)", "inset(50%)"]);
   });
 
-  test("the map's field answers its rail with three readings (ADR-107 U2)", async ({ page }) => {
+  test("the map's field answers its rail with two readings (ADR-107 U2; two since ADR-126)", async ({
+    page,
+  }) => {
     await openPile(page);
     // The map's field sheet, found by what it holds — never by index.
     const idx = await page.evaluate(() => {
@@ -521,7 +523,10 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(f.after, "the map's event layer still covers the list").toBe("none");
     expect(f.view).toBe("work");
     expect(f.indexGroups).toBeGreaterThan(0);
-    expect(f.tabs).toEqual(expect.arrayContaining(["WORK", "CONFIGURATION", "LAYER"]));
+    expect(f.tabs).toEqual(expect.arrayContaining(["WORK", "CONFIGURATION"]));
+    expect(f.tabs, "the layer tab came back").not.toContain("LAYER");
+    // The estate by workstream: three groups, each row lettering its run.
+    expect(f.indexGroups).toBe(3);
     expect(f.scrolls, "the work list fits its bay — nothing to scroll").toBe(true);
     expect(f.inkOut).toEqual([]);
     const pageY = await page.evaluate(() => window.scrollY);
@@ -547,22 +552,8 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     f = await readField(scope);
     expect(f.view).toBe("configuration");
     expect(f.dataView).toBe("2");
-    expect(f.cfgRows).toBeGreaterThanOrEqual(20);
+    expect(f.cfgRows).toBe(12);
     expect(f.indexGroups).toBe(0);
-    expect(f.inkOut).toEqual([]);
-
-    // 03 · THE LAYER — five shapes, each with its sentence and its run.
-    await page.locator(`${scope} [role="tab"]`, { hasText: /layer/i }).click();
-    await page.waitForTimeout(400);
-    f = await readField(scope);
-    expect(f.view).toBe("layer");
-    expect(f.dataView).toBe("3");
-    expect(f.shapes).toHaveLength(5);
-    for (const sh of f.shapes) {
-      expect(sh.meaning).toBeGreaterThan(20);
-      expect(sh.skills).toBeGreaterThanOrEqual(1);
-    }
-    expect(f.cfgRows).toBe(0);
     expect(f.inkOut).toEqual([]);
 
     // And back: the index returns whole.

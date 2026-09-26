@@ -262,6 +262,7 @@ export function ProofField({
           <IntelligenceMapPlate
             shapes={visual.shapes}
             districts={visual.districts}
+            streams={visual.streams}
             works={visual.works}
             skills={visual.skills}
             envelope={visual.envelope}

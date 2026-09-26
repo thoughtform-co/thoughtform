@@ -134,8 +134,8 @@ describe("the map phone lab", () => {
   for (const v of DIRECTIONS)
     for (const r of MPL_READINGS)
       for (const s of model.streams) {
-        if (r === "layer") for (const sh of model.shapes) cases.push([v, r, s.id, sh.key]);
-        else cases.push([v, r, s.id, undefined]);
+        // The LAYER reading — cases per shape — left with the third reading (ADR-126).
+        cases.push([v, r, s.id, undefined]);
       }
 
   it(`letters only the record under the map's envelope (${cases.length} declarations)`, () => {
@@ -232,7 +232,7 @@ describe("the map phone lab", () => {
       "rows/work": 10,
       "rows/configuration": 11,
       "rows/layer": 22,
-      "deck/work": 8,
+      "deck/work": 10,
       "deck/configuration": 16,
       "deck/layer": 14,
     };

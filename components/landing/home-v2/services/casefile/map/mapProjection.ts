@@ -2,6 +2,7 @@ import type {
   CaseMapDistrict,
   CaseMapShape,
   CaseMapShapeKey,
+  CaseMapStreamKey,
   CaseMapWork,
 } from "@/lib/cases/types";
 
@@ -406,6 +407,67 @@ export const SEAT = {
 /** Draw meter bands, indexed by `CaseMapWork["mass"]`. Read against the
  *  workload — never a price, on any surface, in any form. */
 export const MASS_BAND = ["Nil", "Minimal", "Light", "Moderate", "Heavy", "Dense"] as const;
+
+/* ── The WORK reading's two axes (ADR-126) ──────────────────────────────
+   The marketing estate in three columns, each climbing from a prompt to an
+   agent. Both axes are the RECORD: the column is the stream's own `stream`
+   field, the row is derived from its run mode — never authored twice. */
+
+/** The columns, in reading order. Pinned equal to the visual's `streams`
+ *  keys by the registry, so the drawing and the record cannot disagree about
+ *  what a column is called or where it sits. */
+export const STREAM_ORDER: readonly CaseMapStreamKey[] = ["production", "operations", "review"];
+
+/** The ceiling on cards per column — the crop is derived from it (record-
+ *  independent, so `VIEW_BOX[1]` stays a constant) and the registry refuses a
+ *  fifth, which would fall off the column rather than clip. */
+export const WORK_COLUMN_SLOTS = 4;
+
+/**
+ * HOW FAR A STREAM RUNS WITHOUT A PERSON — the second session's ladder ("a
+ * prompt, a tool, an agent: each runs longer without you"), read off the
+ * record's own run mode (`cfg.a`). `hand` is person-led work, which stays on
+ * the reading: the negative space is what leadership reads.
+ */
+export type RunMode = "prompt" | "tool" | "agent" | "hand";
+
+/** The ladder, low to high — the order a column climbs in. */
+export const RUN_MODES: readonly RunMode[] = ["prompt", "tool", "agent", "hand"];
+
+/** The group head each run letters. Sentence case; the drawing uppercases. */
+export const RUN_MODE_LABEL: Readonly<Record<RunMode, string>> = {
+  prompt: "A prompt",
+  tool: "A tool",
+  agent: "An agent",
+  hand: "By hand",
+};
+
+/**
+ * The record's six run modes, each placed on the ladder. A chat assistant is a
+ * prompt a person asks and checks; a plugin, a briefing agent or the image
+ * suite is a tool the person operates; a scheduled or coding agent runs the
+ * loop itself.
+ *
+ * ⚠ TOTAL BY GUARD, NOT BY CONSTRUCTION. `runModeOf` answers `null` for a
+ * value not in this table, never a silent row — and `cases-registry` asserts
+ * every `cfg.a` on the record IS in it, so a new run mode fails by name the
+ * day it is authored, not on the drawing.
+ */
+export const RUN_MODE_OF_AGENT: Readonly<Record<string, RunMode>> = {
+  "Chat assistant": "prompt",
+  "Editor plugin": "tool",
+  "Briefing agent": "tool",
+  "Image + video suite": "tool",
+  "Scheduled agent": "agent",
+  "Coding agent": "agent",
+};
+
+/** Person-led → `hand`; a configured stream → its run mode's rung; an
+ *  unknown run mode → `null`. Never throws. */
+export function runModeOf(w: CaseMapWork): RunMode | null {
+  if (!w.cfg) return "hand";
+  return RUN_MODE_OF_AGENT[w.cfg.a] ?? null;
+}
 
 /* ── Sheet 03, BELOW GRADE ──────────────────────────────────────────────
    The same board, one level down. It is drawn in the SAME isometric so the

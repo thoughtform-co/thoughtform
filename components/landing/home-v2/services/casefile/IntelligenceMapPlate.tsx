@@ -1,6 +1,12 @@
 "use client";
 
-import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from "@/lib/cases/types";
+import type {
+  CaseMapDistrict,
+  CaseMapShape,
+  CaseMapStream,
+  CaseMapWork,
+  CaseSkillEntry,
+} from "@/lib/cases/types";
 
 import { PdaConsole } from "./map/pda/PdaConsole";
 
@@ -10,11 +16,11 @@ import { PdaConsole } from "./map/pda/PdaConsole";
  * The casefile's right panel is a held instrument — a chamfered console
  * frame around the drawing (the orbit ring, head badge and foot sentence
  * have all since been decluttered away — ADR-068 U1/U2).
- * Three readings, direct access, any order:
+ * Two readings since ADR-126 (three until then), direct access, any order:
  *
- *   01 THE WORK           twenty cartridges, four across
+ *   01 THE WORK           the marketing estate — twelve cartridges in three
+ *                         workstream columns, each climbing prompt → agent
  *   02 THE CONFIGURATION  one stream, with four modules seated into it
- *   03 THE SUBSTRATE      five patterns, each a card of its named Skills
  *
  * Ported from the owner's `thoughtform-intelligence-map-v18.html`; every
  * coordinate in `map/pda/**` is his. The isometric city this replaces
@@ -36,6 +42,8 @@ import { PdaConsole } from "./map/pda/PdaConsole";
 interface Props {
   shapes: readonly CaseMapShape[];
   districts: readonly CaseMapDistrict[];
+  /** The three creative workstreams reading 01 columns by (ADR-126). */
+  streams: readonly CaseMapStream[];
   works: readonly CaseMapWork[];
   /**
    * ⚠ THE SKILLS RESERVOIR IS GEOMETRY NOW, not just evidence the plate
@@ -57,6 +65,7 @@ interface Props {
 export function IntelligenceMapPlate({
   shapes,
   districts,
+  streams,
   works,
   skills,
   envelope,
@@ -66,6 +75,7 @@ export function IntelligenceMapPlate({
     <PdaConsole
       shapes={shapes}
       districts={districts}
+      streams={streams}
       works={works}
       skills={skills}
       envelope={envelope}
