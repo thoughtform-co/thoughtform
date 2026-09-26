@@ -417,3 +417,16 @@ not a rail's length.
 The lesson for the next reference decode: read the frame before copying a
 reference's chrome. The first thing the owner ruled on was the one thing the
 references gave the page that the site already had.
+
+## U2 - 2026-09-26, owner: the sheet ends as the landing does (ADR-127)
+
+Section 5's close promised the landing's footer and shipped its bare markup:
+no sheet route imported `site-footer.css`, and every gate this ADR set up
+excluded the close (0.1.2, the capture's `--exclude`, the smoke's `.ft-foot`
+skip), so nothing measured whether it painted. The wordmark also rested at the
+hero's column on pages with no hero, and four station links were bare anchors
+that exist only on `/`. All three are fixed and pinned in
+[ADR-127](127-the-sheet-ends-on-the-site-footer.md), which also gives the
+three flowing pages the landing's ending - the close welded up over a body
+that drifts a quarter of the rise under it - and records that the kit's
+sticky-panel smoke case was red on `main` before it.

@@ -850,3 +850,15 @@ each with a guard; four are the record catching up with the change.
 8. **`musings-gallery.test.ts` bounded the feed ride against a deleted constant.**
    The lab has no footer and no bottom exit; its stage releases at p 1, and the
    bound is stated against that.
+
+## Update 5 - 2026-09-26: the sheet routes load this footer's sheet since ADR-127
+
+Until ADR-127 no sheet route (`/musings`, `/musings/<slug>`, `/home-sessions`,
+the client pages, the kit) imported `site-footer.css`, so `SheetClose` rendered
+`SiteFooter`'s bare markup for two weeks while this ADR (U4 section 6) and two
+comments in the sheet said the subpages took the footer. U4's copy claim was
+true; the styling and the glide were not. Every route that mounts a close
+imports the sheet now, and on the three flowing pages the close is welded up
+over a body that drifts under it - this ending, transposed onto a document
+that pins nothing. Record and mechanism:
+[ADR-127](127-the-sheet-ends-on-the-site-footer.md).

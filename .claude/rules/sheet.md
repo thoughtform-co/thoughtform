@@ -34,9 +34,47 @@ and the first for a page that lists things.
 - [ADR-118](../../sentinel/decisions/118-the-arcs-overview-is-an-instrument.md)
   — the arcs overview as an INSTRUMENT (a monitor and a log), the `date` field,
   and rubric blocks M and L; §The arcs instrument below.
+- [ADR-127](../../sentinel/decisions/127-the-sheet-ends-on-the-site-footer.md)
+  — the sheet's ENDING (2026-09-26, owner): the wordmark docked from the first
+  frame on every sheet, the footer's own sheet loaded by every route that
+  mounts a close, root-relative station links, and the close welded up over a
+  body that drifts under it — the landing's ending on a flowing document.
 
 ## Contracts
 
+- ⚠ **EVERY ROUTE THAT MOUNTS A CLOSE IMPORTS `site-footer.css` (ADR-127),
+  after `sheet.css` and before `theme.css`.** `SheetClose` mounts the landing's
+  `SiteFooter`, and for two weeks no sheet route loaded its sheet: the footer
+  rendered as bare markup — both theme plates stacked in the band, bare lists
+  — with the rubric, the mechanical gate and the smoke all excluding the close.
+  `sheet-close.test.ts` pins the import per route and fails a new
+  `SheetRenderer` host under `app/` that is neither listed nor the closeless
+  instrument. The footer's own gate (`mechanical.mjs --scope ".ft-foot"
+--prm`) covers its contrast on a sheet; the smoke measures that it PAINTS.
+- ⚠ **THE WORDMARK IS DOCKED FROM THE FIRST FRAME ON EVERY SHEET (ADR-127).**
+  No sheet has a hero, and `.hud__brand`'s centred rest exists for the hero's
+  key visual; `.sh-root .hud__brand` declares the frame's own docked state
+  (`--hud-margin`, `scale(var(--hud-brand-dock))`) for both of its states, so
+  the half-viewport toggle paints nothing. The class stays the writers'. ⚠
+  Never in `landing.css` (`hud-brand-tokens` slices it at `.hud__brand {`);
+  the instrument's private copy is retired.
+- ⚠ **THE CLOSE RISES OVER THE BODY, AND `rise` IS OPT-IN (ADR-127).**
+  `SheetRenderer` wraps every section but the close in `.sh-body`; with `rise`
+  the body carries a weld of runway (`--ft-weld: 100svh` on `.sh-root`, the
+  landing's number declared again) and the close is welded up over it, and
+  under the landing's gate the body drifts DOWN 0.75 × the weld on its own view
+  timeline while a `--sh-ground` veil dims it to 0.4 — the pinned list's read.
+  ⚠ The WHOLE body, never the last section (a short last section drifting
+  alone opens a void above it). ⚠ The three flowing pages pass `rise`; the
+  client pages END ON THE STICKY CONSOLE, which would slide inside a drifting
+  body, so they and the kit do not, and `/arcs` has no close. ⚠ `.sh-root` is
+  `overflow: clip` on BOTH axes: a transformed body still extends scrollable
+  overflow, and the page scrolled into drifted void under the plate. ⚠ Never a
+  transform on the close, never `opacity` on the body. Firefox, the phone and
+  reduced motion get a normal footer that eats the runway exactly.
+- ⚠ **STATION LINKS IN THE FOOTER ARE ROOT-RELATIVE (`/#services`).** A bare
+  `#services` exists only on `/`; on a sheet it was a good-looking link to
+  nowhere, four times. `footer-nav.test.ts` refuses a bare `#`.
 - ⚠ **`/arcs` IS THE OWNER'S PAGE (ADR-117).** `force-dynamic`, and
   `assertOwner()` is the first thing it does — anything added to the page
   renders AFTER that call, never before it, and the page may never become
@@ -211,12 +249,13 @@ U2, U3).
   `--hud-rail-y-end`, so the monitor hangs from the first tick, sits on the
   last, and ends above the fixed wordmark; the dossier sticks at the same two
   edges. The smoke asserts both, at three viewports.
-- ⚠ **THE WORDMARK IS DOCKED FROM THE FIRST FRAME ON THE INSTRUMENT.** At
-  scroll 0 `.hud__brand` is the HERO lockup, aligned to the content column,
-  and a device as wide as the instrument band ends right over it (7px at
-  1280×720). `instrument.css` styles it as the frame's own docked state
-  (`.is-collapsed`: the rail's corner, 0.68) in both of its states; the
-  class stays the scroll writers'. The smoke asserts CLEARANCE — beside the
+- ⚠ **THE WORDMARK IS DOCKED FROM THE FIRST FRAME — ON EVERY SHEET SINCE
+  ADR-127, AND THIS IS WHERE IT WAS FOUND.** At scroll 0 `.hud__brand` was the
+  HERO lockup, aligned to the content column, and a device as wide as the
+  instrument band ended right over it (7px at 1280×720). `instrument.css`
+  styled it docked for this profile alone with a hardcoded 0.68; the rule is
+  `.sh-root .hud__brand` in `sheet.css` now, on the frame's own token, and the
+  instrument's copy is retired. The smoke still asserts CLEARANCE — beside the
   column by 16px or under it by the frame's gap — because "under the device"
   was true at 7px and passed.
 - **The graticule is DOM, never an SVG `viewBox`** — a crop letterboxes one
@@ -317,7 +356,8 @@ short form:
 ```bash
 npx vitest run tests/lib/sheet-composition.test.ts tests/lib/sheet-directions.test.ts tests/lib/sheet-arcs.test.ts tests/lib/sessions-registry.test.ts tests/lib/musings-registry.test.ts
 npx vitest run tests/lib/sheet-instrument.test.ts
-npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop
+npx vitest run tests/lib/sheet-close.test.ts tests/lib/footer-nav.test.ts   # the ending (ADR-127)
+npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop   # ⚠ the kit's sticky-panel case is red on main before ADR-127 (its own bug: it measures the panel before it sticks)
 npx playwright test tests/visual/arcs-instrument-smoke.spec.ts --project=desktop
 npx playwright test tests/visual/arc-terminal-smoke.spec.ts --project=desktop   # the arcs stay byte-identical
 node scripts/capture-subpages.mjs --dry-run

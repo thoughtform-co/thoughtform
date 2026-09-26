@@ -563,6 +563,13 @@ view())` and the rung. ⚠ Never `opacity` on the stage (glass notes,
 - ⚠ **NEVER A TRANSFORM ON THE FOOTER.** The margin is layout and the scroll
   moves it; only its key visual glides (`.ft-foot`'s own view timeline,
   site-footer.css).
+- **The PAGE `/musings` takes the same ending on the sheet's own mechanism
+  ([ADR-127](../../sentinel/decisions/127-the-sheet-ends-on-the-site-footer.md),
+  [`sheet.md`](sheet.md))**: no stage pins there, so the BODY drifts down 0.75
+  × the weld on its own view timeline while the close, welded up by the same
+  `--ft-weld` (declared again on `.sh-root`), covers it — the same quarter of
+  scroll speed, the same range token for token, pinned equal by
+  `sheet-close.test.ts`. Nothing here reads it and nothing there reads this.
 - **The capture's rise gates**: the footer's top at vh·(1 − k) at each quarter,
   the stage pinned, the list `in` and the head whole under it, the drift and
   the veil at k's share (and the veil's z above the stage's interior), no void

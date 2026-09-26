@@ -227,3 +227,11 @@ then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
 
 See ADR-114 §Verification, ADR-118 §As built, and `.claude/rules/sheet.md`
 §Verifying.
+
+The ending (ADR-127) - the footer's sheet on every route, the docked wordmark,
+the rise on the three flowing pages:
+
+```bash
+npx vitest run tests/lib/sheet-close.test.ts tests/lib/footer-nav.test.ts
+npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop -g "the ending"
+```
