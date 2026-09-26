@@ -191,3 +191,22 @@ gets out of the way of the model. The site said none of it.
 - The nuance is carried by the claims and the ledes, in the site's register;
   the owner rewrites them in his voice.
 - Moira and the keynote are unchanged; the site now shares their line.
+
+## U2 — ADR-126 takes the third reading off the rail, and the pile reorders (2026-09-26, owner)
+
+[ADR-126](126-the-proof-reads-as-the-practice.md) supersedes this record on
+three points and leaves the rest standing:
+
+- **§3's third reading, THE LAYER, is off the rail.** This record's own Left
+  open named a prompt → tool → agent reading; ADR-126 takes it up as THE
+  WORK's second axis rather than as a third station (the owner: the layer
+  "doesn't really come across … the configuration is the cleanest thing so
+  maybe we only need two tabs"). The carrier stays on disk, unmounted, until
+  his live read (ADR-070 U35).
+- **The pile's order is the practice's, not the engagement's chronology.** The
+  map card is still the last (U1's fourth step, its title unchanged); the tools
+  card moves to `02` and the studio to `03`, every title in the present tense
+  (the keynote's own four lines).
+- **The Embedded card leads the ring** (ADR-112 U1) and takes a filled name
+  plate (ADR-126 §4); its title, lede, body and hologram base from U1 are
+  untouched.

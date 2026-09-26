@@ -481,3 +481,17 @@ clean. Captured headed at 1920×1247 in both themes: reading 01 draws all
 twenty cartridges with the three person-led streams dashed and unlit; the
 hub's brief sets in a proportional sans inside a ring of mono cell labels,
 in dark and in light.
+
+## Update 3 — the grid of twenty leaves the reading (2026-09-26, ADR-126)
+
+U2's ruling — the estate at a glance is ALL TWENTY, drawn together — is
+superseded by [ADR-126 §3](126-the-proof-reads-as-the-practice.md): THE WORK is
+the MARKETING ESTATE, twelve streams in three workstream columns each climbing
+prompt → tool → agent → by hand. The subject is still the estate and it is
+still drawn together; what changed is WHICH estate the card argues (the
+marketing and studio work this practice sells into, not the whole company) and
+that both axes are now the record. The flight, the cartridge and `pda-card`'s
+pair guard are untouched; `gridRect` is `slotRect`, a rename and never an
+alias (U2's own finding, kept). The hub that speaks (this update's second
+half) left the rail with the third reading and stays on disk until the
+owner's live read.

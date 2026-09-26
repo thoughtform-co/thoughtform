@@ -252,3 +252,23 @@ node scripts/capture-services-mobile.mjs --theme dark --vp 390x681
 Then `http://localhost:3003/` (the epilogue, the four cards, card 4's two
 readings at 1920×1247 and 1280×720, the ring with the lead plate in both
 themes) and `http://localhost:3003/arcs/trinny-london/proposal`.
+
+### Verified (2026-09-26, before the owner's read)
+
+- `npm run verify`: lint 336 warnings under the 337 ratchet, tsc clean, 141
+  files / 2303 unit tests green — after one source ratchet moved with the
+  bake's call (`services-ring-mobile-gate`: the phone rung rides inside the
+  same options object as `lead`; every read of `opts` is optional-chained, so
+  the desktop still passes no rung).
+- The three desktop smokes: 43 of 48 green in one run; the four others (three
+  arc-portfolio walks of six page loads each, the ring's spec-drawer case) are
+  green rerun alone — load, with two other browser jobs on the server. The
+  one standing red is the Trinny ADR-100 board case, pre-existing (`5523384f`).
+- The two phone smokes on both iPhone profiles: 49 of 54 green in one run;
+  four of the five reruns green alone (load, as above), and the fifth was this
+  pass's own pin — the WORK list's "must scroll" was written for the index of
+  twenty, and twelve rows in three groups FIT the Pro Max's bay outright. The
+  scroll half is conditional on overflow now; `inkOut` is the proof of fit.
+- Stills: the four cards in both themes at 1920×1247 (the lead plate on
+  Embedded, three bare names), the phone band at 390×681, the pile's map card
+  at 1920×1247 and 1280×720 (read against the grid of twenty they replaced).

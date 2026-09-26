@@ -54,6 +54,50 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-26 — the proof reads as the practice, and the offer leads (ADR-126)
+
+**Trigger:** the owner, and his Wispr Flow note "Thoughtform proof services
+redesign": the three beats after the corridor read as three frameworks — the
+pile a portfolio, the ring a catalogue of four equal cards, the last card's
+third reading not saying what the practice offers. "Maybe we don't need to
+rework what we built … too radically, I do think we can harmonize the flow a
+bit"; Embedded is "the main card"; the map card wants two tabs and the work
+clustered by creative production · operations · review.
+
+- **Cycle B → ADR-126 (Proposed; his live read is the gate, no push before
+  it):** §1 the pile in the owner's order (the frontier → the tools → the team
+  runs it → the layer), present tense, the three bottlenecks on the tools
+  lede, the map card's band `BUILD`; §2 the epilogue becomes the embedding
+  goal and the masthead's intro names the embedded engagement; §3 the map
+  card's rail is two readings and THE WORK is the MARKETING ESTATE on two axes
+  (`CaseMapWork.stream`, `runModeOf`, `workPlan` / `workLayout` /
+  `workLettering`, walked by `pda-work-fit` against the RENDERED markup); §4
+  the Embedded card leads with a filled name plate (`ServicePlate.lead`,
+  `leadPlateBox`).
+- **Cycle A on ADR-124 (U2), ADR-112 (U2), ADR-085 (U3), ADR-044, ADR-116
+  (U1):** each records what ADR-126 supersedes and what stands.
+- **Q3 (a class of bug) → the rule:** the map's guard tables held the RETIRED
+  casefile's console (603 × 493 at 1280×720) for two weeks after the pile
+  replaced it, so every fit number was measured against a box the drawing no
+  longer sits in; the pile's map card is 579 × 307 there. `capture-proof-
+stack.mjs` prints `mapField` and both tables carry the pile's rows
+  (`proof.md` §The reading rail). ⚠ A plan agent's estimate is not a
+  measurement either — the first cut of those rows was the Trinny card's box.
+- **Q4 (a lockstep):** `serviceData`'s and `servicePlateData`'s `lead` are one
+  card, pinned together (`services-copy`) — the celestial lab's card and the
+  ring's bake would otherwise mark different services as the main one.
+- **Q5 (a guard whose subject moved):** the pile's `.pf-field--map::after`
+  cover keeps the cartridges unpressable on the pile by design (ADR-094 U1),
+  so the estate smoke asserts the cover rather than a click; and the wheel's
+  lockout had to move BEFORE the release once a single fling could reach the
+  last of two readings.
+- Rules: `proof.md`, `proof-stack.md`, `services-ring.md`,
+  `trinny-london.md`, `arcs.md`; `CLAUDE.md` lines 9 and 17.
+- Left open (ADR-126): the carrier's retirement commit after his read; the
+  stream assignment and every lede are drafts for his voice; creative review
+  has no tool on the tools card; the pile's map field is 579 × 307 at 1280×720
+  for any drawing (pre-existing).
+
 ### 2026-09-25 — the fourth step is the layer the agents run on, and the Embedded card says what you get (ADR-124 U1)
 
 **Trigger:** the owner, reading the day-old copy against the podcast, the

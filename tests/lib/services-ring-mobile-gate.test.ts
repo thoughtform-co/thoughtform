@@ -471,7 +471,10 @@ describe("the card fits its seat, and its type grows inside the bake (ADR-115 U2
 
   it("the phone mount alone passes the rung; the raster's phone pitch is coarser", () => {
     const ring = read("components/landing/home-v2/services/hologram/ServicesCardRing.tsx");
-    expect(ring).toMatch(/mobileProfile \? \{ rung: "phone" \} : undefined/);
+    // Since ADR-126 §4 the call also carries the lead flag, so the rung rides
+    // inside one options object; the desktop still passes NO rung (every read
+    // of `opts` in the bake is optional-chained, so `undefined` is absent).
+    expect(ring).toMatch(/rung: mobileProfile \? "phone" : undefined,\s*lead: plate\.lead/);
     // The desktop literals the phone rung substitutes for are still there.
     expect(ring).toContain("const TIGHT_LEDE_PX = 35;");
     expect(ring).toMatch(/display: \{ px: 62, lh: 74, capH: 44/);

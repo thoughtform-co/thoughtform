@@ -228,3 +228,22 @@ and the card that turns to the portrait are unchanged.
   Embedded at index 0; `services-ring-smoke` names the front card
   `Open Embedded details`, its drawer CTA `Scope an engagement`, and step 2
   `Open Workshop details`.
+
+## Update 2 (2026-09-26, owner): the lead card takes a filled name plate (ADR-126 §4)
+
+U1 put Embedded first; the owner's read the same day asked for it to be
+"highlighted a bit" as "the main card". The mark is a FILLED gold plate behind
+its display name — the ADR-029 chip material (`pal.chipFill`, the name knocked
+out in `pal.chipInk`) — beside three bare names, drawn by `bakeCardFace` when
+`ServicePlate.lead` is set and the treatment is `display` (a framed or filled
+treatment already has its box; the bled name is a wordmark). Both bakes of the
+card carry it, or the veil plane would cross-fade gold over nothing. The box is
+`leadPlateBox` in three-free `reveal.ts`: the type's own cap block padded
+`LEAD_PLATE_PAD_X` 28 a side and `LEAD_PLATE_PAD_Y` 24 above and below (the
+name frame's own vertical pad, restated), so on the desktop it runs 116–208
+bake px against a quiet head of 300 and on the phone's two-line case 116–304
+against 320 — pinned by `services-ring-reveal`. NO size change: the front
+boost, the About deck seam and the phone seat are untouched. `services-copy`
+pins ONE lead, `embedded`, on both records (`serviceData`'s flag had sat on the
+workshop since the 2026-07 celestial cards; it moved). Record:
+[ADR-126 §4](126-the-proof-reads-as-the-practice.md).

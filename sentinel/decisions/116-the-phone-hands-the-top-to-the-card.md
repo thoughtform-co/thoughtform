@@ -195,3 +195,12 @@ card, and the arc's stacked red line at 390.
   a desktop card he has read.
 - At 360px the three-station rail wraps THE RED LINE onto a second row
   (ADR-082 U27's arithmetic; pre-existing).
+
+## U1 — the epilogue's title is the embedding goal (2026-09-26, ADR-126 §2)
+
+The block's title reads `WE EMBED IN YOUR TEAM / UNTIL IT RUNS WITHOUT US.` on
+both hosts — `CorridorStationHeaders` and `MobileEpilogueSignal`, in lockstep
+— because the old line restated the services masthead's proposition one beat
+before it. The ticker, the CTA `HOW IT LOOKS IN PRACTICE`, the seat hold and
+the un-type on slot 0's `--pc-enter` are untouched. Record:
+[ADR-126 §2](126-the-proof-reads-as-the-practice.md).

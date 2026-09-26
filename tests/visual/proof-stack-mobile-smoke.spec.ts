@@ -527,24 +527,31 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(f.tabs, "the layer tab came back").not.toContain("LAYER");
     // The estate by workstream: three groups, each row lettering its run.
     expect(f.indexGroups).toBe(3);
-    expect(f.scrolls, "the work list fits its bay — nothing to scroll").toBe(true);
     expect(f.inkOut).toEqual([]);
-    const pageY = await page.evaluate(() => window.scrollY);
-    await page.mouse.move(f.box.x + f.box.w / 2, f.box.y + f.box.h / 2);
-    await page.mouse.wheel(0, 240);
-    await page.waitForTimeout(400);
-    const after = await page.evaluate(
-      (sc) => ({
-        list: document.querySelector<HTMLElement>(`${sc} .fl-pda__list`)!.scrollTop,
-        page: window.scrollY,
-      }),
-      scope
-    );
-    expect(after.list, "a wheel over the list did not scroll the list").toBeGreaterThan(0);
-    expect(
-      Math.abs(after.page - pageY),
-      "a wheel over the list scrolled the page"
-    ).toBeLessThanOrEqual(1);
+    /* Twelve rows in three groups fit the taller phone's bay outright (the
+       iPhone 14 Pro Max) and overflow the shorter one's; the index of twenty
+       always overflowed, which is what the old "must scroll" pin was written
+       for. Where the list overflows, the thumb (a wheel here) scrolls the
+       LIST and never the page; where it fits, `inkOut` above is the proof
+       that every row is inside its bay. */
+    if (f.scrolls) {
+      const pageY = await page.evaluate(() => window.scrollY);
+      await page.mouse.move(f.box.x + f.box.w / 2, f.box.y + f.box.h / 2);
+      await page.mouse.wheel(0, 240);
+      await page.waitForTimeout(400);
+      const after = await page.evaluate(
+        (sc) => ({
+          list: document.querySelector<HTMLElement>(`${sc} .fl-pda__list`)!.scrollTop,
+          page: window.scrollY,
+        }),
+        scope
+      );
+      expect(after.list, "a wheel over the list did not scroll the list").toBeGreaterThan(0);
+      expect(
+        Math.abs(after.page - pageY),
+        "a wheel over the list scrolled the page"
+      ).toBeLessThanOrEqual(1);
+    }
 
     // 02 · THE CONFIGURATION — the ledger, and the index gone.
     await page.locator(`${scope} [role="tab"]`, { hasText: /configuration/i }).click();

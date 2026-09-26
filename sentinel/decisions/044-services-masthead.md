@@ -371,3 +371,16 @@ pre-existing — the uppercase sans (×2, the owner's face since 2026-07-16), th
 gold glow (×5) and two wrapper `font-family` notes on elements that letter
 nothing (ADR-067's standing `--font-mono` trap). Stills of the parked masthead
 in both themes, read for the change: dark unmoved to the eye, light legible.
+
+## Update (2026-09-26, ADR-126) — the epilogue stops repeating the masthead; the intro names the offer
+
+The corridor's epilogue said this masthead's own line one beat earlier; it
+reads `WE EMBED IN YOUR TEAM / UNTIL IT RUNS WITHOUT US.` now and hands the
+goal to the proof (ADR-116 U1). The masthead keeps `AI CAPABILITY / YOUR TEAM
+OWNS.` — the 07-20 ruling stands, ownership over ability — and its intro names
+the embedded engagement as what is sold and the three lighter formats as the
+way in (161 characters; the ceiling is not a count but the phone band's fit
+gate — the paragraph above the 56px chrome band, the card seat above the
+paragraph — which measures 609 against 625 at 390×681). The decode, the park
+gate and the stationary-copy law are untouched. Record:
+[ADR-126 §2](126-the-proof-reads-as-the-practice.md).
