@@ -1155,6 +1155,25 @@ measured. Both were found by capture, not by the suite.
 each; the loop costs a few seconds and is the only thing standing between a
 non-default state and a silent regression.
 
+### A surface every gate excludes is a surface nobody measures
+
+Each exclusion had a good local reason. The subpages rubric never graded the
+close, because the first wave graded it as a section and failed it. The
+capture's mechanical gate excluded `.sh-sec--close`, because the footer is the
+landing's and the landing's own gate measures it. The smoke's overrun walk
+skipped `.ft-foot`, because a full-bleed plate is supposed to leave the band.
+Three sensible carve-outs, and between them nothing asked the one question
+that mattered: does the footer PAINT? For two weeks no sheet route imported
+`site-footer.css`, and every sheet page ended on the footer's bare markup —
+both theme plates stacked in the band, a body-size title, bare lists — with
+every gate green and two comments in the sheet saying it glided (ADR-127).
+
+**When a surface is excluded from a gate, name the gate that DOES cover it,
+and check that one runs on this route.** The footer's contrast gate existed
+and had never been pointed at `/musings`. And keep one cheap paint assertion
+per excluded surface — one painted plate, its rect equal to its host's — so an
+exclusion stays a carve-out and does not become a blindfold.
+
 ### Two more that only a capture will catch
 
 Neither has a cheap automated form, so they belong on the eyeball pass:
