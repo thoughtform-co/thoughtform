@@ -79,8 +79,8 @@ clustered by creative production · operations · review.
 - **Q3 (a class of bug) → the rule:** the map's guard tables held the RETIRED
   casefile's console (603 × 493 at 1280×720) for two weeks after the pile
   replaced it, so every fit number was measured against a box the drawing no
-  longer sits in; the pile's map card is 579 × 307 there. `capture-proof-
-stack.mjs` prints `mapField` and both tables carry the pile's rows
+  longer sits in; the pile's map card is 579 × 307 there. `capture-proof-stack.mjs`
+  prints `mapField` and both tables carry the pile's rows
   (`proof.md` §The reading rail). ⚠ A plan agent's estimate is not a
   measurement either — the first cut of those rows was the Trinny card's box.
 - **Q4 (a lockstep):** `serviceData`'s and `servicePlateData`'s `lead` are one
