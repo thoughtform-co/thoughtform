@@ -308,6 +308,20 @@ test.describe("subpages (ADR-114)", () => {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)
       ).toBe(true);
+      // The rise is desktop-only (ADR-127): nothing scroll-driven touches the body here.
+      expect(
+        await page.evaluate(() =>
+          document.getAnimations().some((a) => {
+            const target = (a.effect as KeyframeEffect).target;
+            return (
+              a.timeline?.constructor.name === "ViewTimeline" &&
+              target instanceof HTMLElement &&
+              target.className.includes("sh-body")
+            );
+          })
+        ),
+        "a view-timeline animation on the body on the phone"
+      ).toBe(false);
       await ready(page, "/arcs/loop");
       const pos = await page
         .locator(".sh-console__panel")
@@ -442,6 +456,224 @@ test.describe("subpages (ADR-114)", () => {
     expect(states.slice(0, 4)).toEqual(["covered", "pinned", "incoming", "incoming"]);
     const panelTopB = (await panel.boundingBox())!.y;
     expect(Math.abs(panelTopA - panelTopB)).toBeLessThanOrEqual(1);
+  });
+
+  /* ⚠ THE ENDING (ADR-127): the wordmark docked from the first frame, the
+     footer's own sheet loaded (until 2026-09-26 no sheet route loaded it, and
+     every gate here excluded the close), the close welded up over the body,
+     and the body drifting a quarter of the rise under it on the compositor.
+     Measured, never styled: a custom property is a string until something
+     lays it out, so the wordmark's seat is read through a probe box, and the
+     drift is read off the LIVE transform at two points of the rise. */
+  test.describe("the ending (ADR-127)", () => {
+    test.use({
+      viewport: { width: 1440, height: 800 },
+      contextOptions: { reducedMotion: "no-preference" },
+    });
+    const CLOSE_ROUTES = ROUTES.filter((r) => r !== "/arcs");
+    const RISE_ROUTES = new Set([
+      "/home-sessions",
+      "/musings",
+      "/musings/navigate-the-intelligence",
+    ]);
+
+    test("the wordmark sits docked in the corner from the first frame, on every sheet route", async ({
+      page,
+    }) => {
+      for (const route of ROUTES) {
+        await ready(page, route);
+        const read = await page.evaluate(() => {
+          const brand = document.querySelector(".hud__brand") as HTMLElement;
+          const probe = document.createElement("div");
+          probe.style.cssText = "position:absolute;visibility:hidden;width:var(--hud-margin)";
+          document.body.appendChild(probe);
+          const margin = probe.getBoundingClientRect().width;
+          probe.remove();
+          const cs = getComputedStyle(brand);
+          const dock = parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue("--hud-brand-dock")
+          );
+          return {
+            collapsed: brand.classList.contains("is-collapsed"),
+            transform: cs.transform,
+            left: parseFloat(cs.left),
+            margin,
+            dock,
+            painted: brand.getClientRects().length > 0,
+          };
+        });
+        expect(read.painted, `${route}: the wordmark paints`).toBe(true);
+        expect(read.collapsed, `${route}: no writer has run at scroll 0`).toBe(false);
+        expect(read.transform, `${route}: docked scale`).toBe(
+          `matrix(${read.dock}, 0, 0, ${read.dock}, 0, 0)`
+        );
+        expect(
+          Math.abs(read.left - read.margin),
+          `${route}: left ${read.left} against --hud-margin ${read.margin}`
+        ).toBeLessThanOrEqual(0.5);
+      }
+    });
+
+    test("the footer paints its plate full-bleed, one theme at a time, welded to the body's last section", async ({
+      page,
+    }) => {
+      for (const route of CLOSE_ROUTES) {
+        await ready(page, route);
+        const read = await page.evaluate(() => {
+          const close = document.querySelector(".sh-sec--close") as HTMLElement;
+          const plate = close.querySelector(".ft-foot__plate") as HTMLElement;
+          const imgs = [...close.querySelectorAll<HTMLImageElement>(".ft-foot__plate-img")];
+          const painted = imgs.filter((i) => i.getClientRects().length > 0);
+          const body = document.querySelector(".sh-body") as HTMLElement;
+          const last = [...body.querySelectorAll(":scope > .sh-sec")].pop() as HTMLElement;
+          const c = close.getBoundingClientRect();
+          const p = plate.getBoundingClientRect();
+          const title = close.querySelector(".ft-foot__title") as HTMLElement;
+          return {
+            imgs: imgs.length,
+            painted: painted.length,
+            paintedSrc: painted[0]?.currentSrc ?? "",
+            hiddenSrc: imgs.filter((i) => i.getClientRects().length === 0).map((i) => i.currentSrc),
+            plate: { left: p.left, width: p.width, top: p.top, bottom: p.bottom },
+            close: { top: c.top, bottom: c.bottom },
+            lastBottom: last.getBoundingClientRect().bottom,
+            rise: body.hasAttribute("data-sh-rise"),
+            pad: parseFloat(getComputedStyle(body).paddingBottom),
+            titleSize: parseFloat(getComputedStyle(title).fontSize),
+            vw: innerWidth,
+            vh: innerHeight,
+          };
+        });
+        expect(read.imgs, route).toBe(2);
+        expect(read.painted, `${route}: one theme's plate paints`).toBe(1);
+        expect(read.paintedSrc, `${route}: the dark plate is the hero's`).toMatch(/Gateway_v1b/);
+        for (const src of read.hiddenSrc)
+          expect(src, `${route}: the hidden theme's plate was fetched`).toBe("");
+        expect(Math.abs(read.plate.left), `${route}: the plate bleeds left`).toBeLessThanOrEqual(1);
+        expect(
+          Math.abs(read.plate.width - read.vw),
+          `${route}: the plate bleeds`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          Math.abs(read.plate.top - read.close.top),
+          `${route}: plate is the close`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          Math.abs(read.plate.bottom - read.close.bottom),
+          `${route}: plate is the close`
+        ).toBeLessThanOrEqual(1);
+        expect(
+          read.titleSize,
+          `${route}: the title is display-size, not body-size`
+        ).toBeGreaterThan(30);
+        expect(
+          Math.abs(read.close.top - read.lastBottom),
+          `${route}: the close welded to the body's last section`
+        ).toBeLessThanOrEqual(1);
+        expect(read.rise, `${route}: rise`).toBe(RISE_ROUTES.has(route));
+        if (read.rise)
+          expect(Math.abs(read.pad - read.vh), `${route}: the runway`).toBeLessThanOrEqual(1);
+        else expect(read.pad, `${route}: no runway without a rise`).toBe(0);
+      }
+    });
+
+    test("the body drifts a quarter of the rise and dims under the close, on the compositor, and the page ends on the close", async ({
+      page,
+    }) => {
+      for (const route of RISE_ROUTES) {
+        await ready(page, route);
+        const anims = await page.evaluate(() =>
+          document.getAnimations().map((a) => {
+            const effect = a.effect as KeyframeEffect;
+            const target = effect.target;
+            return {
+              timeline: a.timeline?.constructor.name ?? "none",
+              target: target instanceof HTMLElement ? target.className : "",
+              pseudo: effect.pseudoElement ?? "",
+            };
+          })
+        );
+        const viewDriven = anims.filter((a) => a.timeline === "ViewTimeline");
+        expect(
+          viewDriven.filter((a) => a.target.includes("sh-body") && !a.pseudo).length,
+          `${route}: the body's drift`
+        ).toBe(1);
+        expect(
+          viewDriven.filter((a) => a.target.includes("sh-body") && a.pseudo === "::after").length,
+          `${route}: the veil`
+        ).toBe(1);
+        expect(
+          viewDriven.filter((a) => a.target.includes("ft-foot__plate-img")).length,
+          `${route}: the glide`
+        ).toBeGreaterThanOrEqual(1);
+        const settle = () =>
+          page.evaluate(
+            () =>
+              new Promise<void>((r) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => r()))
+              )
+          );
+        const readRise = () =>
+          page.evaluate(() => {
+            const root = document.querySelector(".sh-root") as HTMLElement;
+            const body = document.querySelector(".sh-body") as HTMLElement;
+            const close = document.querySelector(".sh-sec--close")!.getBoundingClientRect();
+            return {
+              scrollHeight: document.documentElement.scrollHeight,
+              rootBottom: root.offsetTop + root.offsetHeight,
+              f: new DOMMatrixReadOnly(getComputedStyle(body).transform).f,
+              veil: parseFloat(getComputedStyle(body, "::after").opacity),
+              closeTop: close.top,
+              closeBottom: close.bottom,
+              closeDocTop: close.top + scrollY,
+              vh: innerHeight,
+            };
+          });
+        // At rest, nothing has moved.
+        const rest = await readRise();
+        expect(rest.f, `${route}: no drift at rest`).toBe(0);
+        expect(rest.veil, `${route}: no veil at rest`).toBe(0);
+        // Mid-rise: the close's top at half the frame.
+        await page.evaluate(
+          (y) => window.scrollTo({ top: y, behavior: "instant" }),
+          rest.closeDocTop - rest.vh / 2
+        );
+        await settle();
+        const mid = await readRise();
+        expect(Math.abs(mid.closeTop - mid.vh / 2), `${route}: mid-rise seat`).toBeLessThanOrEqual(
+          2
+        );
+        expect(
+          Math.abs(mid.f - 0.375 * mid.vh),
+          `${route}: drift mid-rise ${mid.f}`
+        ).toBeLessThanOrEqual(3);
+        expect(Math.abs(mid.veil - 0.2), `${route}: veil mid-rise ${mid.veil}`).toBeLessThanOrEqual(
+          0.03
+        );
+        // The document's end: the close fills the frame, the drift is done,
+        // and the drift did not extend the page past the close.
+        await page.evaluate(() =>
+          window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" })
+        );
+        await settle();
+        const end = await readRise();
+        expect(end.closeTop, `${route}: the close reached the top`).toBeLessThanOrEqual(1);
+        expect(end.closeBottom, `${route}: the close ends the page`).toBeGreaterThanOrEqual(
+          end.vh - 2
+        );
+        expect(
+          Math.abs(end.f - 0.75 * end.vh),
+          `${route}: drift at the end ${end.f}`
+        ).toBeLessThanOrEqual(3);
+        expect(
+          Math.abs(end.veil - 0.4),
+          `${route}: veil at the end ${end.veil}`
+        ).toBeLessThanOrEqual(0.03);
+        expect(end.scrollHeight, `${route}: the drift extended the page`).toBeLessThanOrEqual(
+          end.rootBottom + 1
+        );
+      }
+    });
   });
 
   test("both themes paint their own ground and hold contrast", async ({ page }) => {

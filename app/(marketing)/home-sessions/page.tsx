@@ -48,7 +48,7 @@ export default function HomeSessionsPage() {
       page="home-sessions"
       chapters={chaptersOf(sections)}
     >
-      <SheetRenderer sections={sections} />
+      <SheetRenderer sections={sections} rise />
     </SheetShell>
   );
 }

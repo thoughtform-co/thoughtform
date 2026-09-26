@@ -41,7 +41,7 @@ export default function MusingsPage() {
       page="musings"
       chapters={chaptersOf(sections)}
     >
-      <SheetRenderer sections={sections} />
+      <SheetRenderer sections={sections} rise />
     </SheetShell>
   );
 }

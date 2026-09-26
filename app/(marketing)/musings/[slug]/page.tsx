@@ -62,7 +62,7 @@ export default async function MusingPostPage({ params }: PostRouteParams) {
       page={`musings-${post.slug}`}
       chapters={chaptersOf(sections)}
     >
-      <SheetRenderer sections={sections} slots={{ article: body }} />
+      <SheetRenderer sections={sections} slots={{ article: body }} rise />
     </SheetShell>
   );
 }

@@ -107,6 +107,13 @@
   --sh-bottom-safe: 24px;
   --sh-dwell: 18svh;
   --sh-rise: clamp(40px, 7svh, 96px);
+  /* THE WELD (ADR-127): how far the close rises over the body — the landing's
+     own number (`.stations { --ft-weld: 100svh }`, site-footer.css), declared
+     here because a sheet has no `.stations` for the footer's sheet to reach.
+     Spent by §14b as the body's runway AND the close's pull, one token, so
+     the two cannot disagree; `sheet-close.test.ts` pins it equal to the
+     landing's. */
+  --ft-weld: 100svh;
 
   position: relative;
   min-height: 100svh;
@@ -116,8 +123,15 @@
   font-weight: var(--weight-text);
   letter-spacing: var(--track-copy);
   /* ⚠ `clip`, NEVER `hidden` — a scroll container kills the console's
-     sticky panel and slots (`.arc-root` carries the same clause). */
-  overflow-x: clip;
+     sticky panel and slots (`.arc-root` carries the same clause).
+     ⚠ BOTH AXES SINCE ADR-127: the body's drift (§14b) is a positive
+     `translateY`, and a transformed box still contributes to the scrollable
+     overflow, so at the rise's end the body's painted box reached 0.75 of a
+     frame past the close and the page scrolled on into drifted void under the
+     plate. `clip` on the root ends the document on the close; the fixed HUD,
+     the nav drawer and the knobs have the viewport as their containing block
+     and are not clipped by it. */
+  overflow: clip;
 }
 
 /* The injected HUD chrome is a layout no-op; the landing's fixed gold
@@ -1425,6 +1439,101 @@ a.sh-figs__item:focus-visible {
 .sh-sec--close > .ft-foot {
   flex: 1 1 auto;
   align-self: stretch;
+}
+
+/* ── 14b. the body, and the footer's rise over it (ADR-127) ─────────
+   The landing's ending (ADR-105 U4) on a flowing document. There, a sticky
+   100svh stage stays pinned for one weld of runway while `#contact`, pulled
+   up by the same weld, rises over it; the stage drifts −0.25 × the rise and
+   dims on the runway's view timeline. A sheet pins nothing, so the BODY —
+   every section but the close, `SheetRenderer`'s `.sh-body` — drifts DOWN
+   three quarters of the rise on its own view timeline while the close, welded
+   up by the weld, covers it: the reader sees content moving at a quarter of
+   scroll speed under a footer moving at full speed, which is the pinned
+   list's read exactly. The close's own key visual glides inside it on
+   `.ft-foot`'s timeline (site-footer.css), untouched.
+   ⚠ THE WHOLE BODY, NEVER THE LAST SECTION ALONE. Both musings pages end on a
+   section shorter than the rise (the table ≈ 60–70svh, the related figure
+   ≈ 75–80svh at 1247), and a short section drifting by itself opens
+   0.75 × (100svh − H) of void between it and the section above. The body's
+   top is a document away when the rise begins, so nothing opens.
+   ⚠ OPT-IN PER PAGE (`data-sh-rise`, from the renderer's `rise`): the client
+   pages end on the sticky console, and a stuck element inside a drifting
+   body slides down at 0.75× for the whole rise. Without the stamp the
+   wrapper is a layout no-op and the footer follows in flow.
+   ⚠ THE WELD PAIR NETS ZERO HEIGHT AND SITS OUTSIDE THE GATE, so Firefox (no
+   scroll timelines), the phone and reduced motion get a normal footer that
+   eats exactly the runway padding. NO GAP CAN OPEN inside the gate either:
+   at rise fraction f the body's content bottom sits at vh − 25f and the
+   close's top at vh − 100f.
+   ⚠ NEVER A TRANSFORM ON THE CLOSE (ADR-105 U4): the margin is layout and the
+   scroll moves it. ⚠ NEVER `opacity` on the body: the veil is a pseudo over
+   it, as the stage's is, so the ink dims under one ground rather than
+   through it.
+   ⚠ THE BODY IS ITS OWN TIMELINE SUBJECT, and that is safe because a view
+   timeline reads the LAYOUT box — the drift does not feed back into the
+   range. (The house pattern puts the timeline on the runway and the drift on
+   its child; here they are one element, the runway being the padding.) The
+   range is the landing's, on the same law: the body is taller than the frame,
+   so `contain 100%` is its bottom on the frame's floor — the close's top on
+   the frame's top — and the range opens one weld of scroll before it, the
+   close's top entering the floor. Independent of the close's own height,
+   which is taller than the frame at 720h.
+   ⚠ `@supports` IS LOAD-BEARING (the Trinny finding): without it a browser
+   lacking scroll timelines would run the keyframes on the document timeline. */
+.sh-body {
+  position: relative;
+  /* a stacking context in EVERY browser, so the veil's z 3 stays inside the
+     body and never outranks the close (the transform that would make one is
+     behind @supports) */
+  isolation: isolate;
+}
+.sh-body[data-sh-rise] {
+  padding-bottom: var(--ft-weld);
+}
+.sh-body[data-sh-rise] + .sh-sec--close {
+  margin-top: calc(-1 * var(--ft-weld));
+  z-index: 2;
+}
+@supports (animation-timeline: view()) {
+  @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+    .sh-body[data-sh-rise] {
+      view-timeline: --sh-run block;
+      animation: sh-under linear both;
+      animation-timeline: --sh-run;
+      animation-range: contain calc(100% - var(--ft-weld)) contain 100%;
+    }
+    .sh-body[data-sh-rise]::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      /* above every section (z 1 inside the body's context), as the stage's
+         veil sits above its interior at the same rung */
+      z-index: 3;
+      background-color: var(--sh-ground);
+      opacity: 0;
+      pointer-events: none;
+      animation: sh-under-veil linear both;
+      animation-timeline: --sh-run;
+      animation-range: contain calc(100% - var(--ft-weld)) contain 100%;
+    }
+  }
+}
+@keyframes sh-under {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(0.75 * var(--ft-weld)));
+  }
+}
+@keyframes sh-under-veil {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.4;
+  }
 }
 
 /* ── 15. the phone and the inert rung ─────────────────────────────── */
