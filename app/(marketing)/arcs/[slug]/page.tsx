@@ -29,6 +29,11 @@ import "@/components/arcs/arcs.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
 import "@/components/sheet/sheet.css";
+// The site footer (ADR-105): the close mounts `SiteFooter`, and this is its
+// sheet. Every route that mounts a close loads it (ADR-127 - until then no
+// sheet route did, and the footer rendered unstyled). BEFORE theme.css like
+// every route sheet.
+import "@/components/landing/v7/site-footer/site-footer.css";
 // Theme sheet LAST (ADR-058) — after arcs.css so the light cascade wins.
 import "@/components/landing/v7/theme.css";
 // The corner instruments (ADR-059 U6). LAST, mirroring the landing route

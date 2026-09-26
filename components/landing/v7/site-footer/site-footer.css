@@ -61,9 +61,11 @@
    #contact.station)` spends this as its rise. Equal by construction — the first
    cut declared it twice and pinned the pair by arithmetic in
    `musings-row.test.ts`, which is two edits and a test for what one declaration
-   says. `.stations` is `<main>` on the landing; the subpages' footer host has
-   neither `.stations` nor `#musings`, so the weld rule below never matches
-   there and the token is inert. */
+   says. `.stations` is `<main>` on the landing; a sheet route (ADR-127) has
+   neither `.stations` nor `#musings`, so neither this declaration nor the weld
+   rule below matches there — `.sh-root` declares its OWN `--ft-weld` and
+   spends it on its own weld pair (sheet.css §14b), the same number by law and
+   pinned equal in `sheet-close.test.ts`. */
 .stations {
   --ft-weld: 100svh;
 }
@@ -128,7 +130,11 @@
      leak like this is visible before a sentence lands in it. */
   font-family: var(--font-pp-neue-montreal);
   /* The key visual's glide (below): how far the picture lags the footer. On
-     the footer's own root, so the subpages' `SheetClose` host glides too. */
+     the footer's own root, so the sheet routes' `SheetClose` host glides too —
+     ⚠ SINCE ADR-127 (2026-09-26): until then no sheet route IMPORTED this file,
+     and their footer was the bare markup (two stacked plates, unstyled lists)
+     while this comment said it glided. Every route that mounts a close loads
+     this sheet now, and `sheet-close.test.ts` pins the import. */
   --ft-par: 25svh;
 
   /* ⚠ ITS BOX IS THE STATION'S CONTENT BOX, AND THAT IDENTITY IS
@@ -216,8 +222,11 @@ html[data-theme="light"] .ft-foot__plate-img--light {
    footer enters, so it rises at 0.75× and reads as sitting behind the frame.
    The title, the ask and the links travel 1:1, as the reference's do.
    ⚠ ON THE FOOTER'S OWN VIEW TIMELINE, ON THE COMPOSITOR. `.ft-foot` is the
-   root in both hosts (the landing's portal and the subpages' `SheetClose`), so
-   the timeline is declared there and the picture is its descendant. It is
+   root in both hosts (the landing's portal and the sheet routes' `SheetClose`,
+   which load this file since ADR-127), so the timeline is declared there and
+   the picture is its descendant. On a sheet the close is welded up over the
+   body (sheet.css §14b) and the body drifts under it; this glide is the same
+   rule on both hosts, untouched. It is
    smaller than a frame (the station's top padding is outside it), so its
    `entry` runs from its top entering the floor to its whole box being in
    view — on the landing that is the rise, ending on the document's last frame.

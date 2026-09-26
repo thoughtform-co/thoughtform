@@ -8,6 +8,11 @@ import { kitSections } from "./fixtures";
 
 import "@/components/landing/v7/landing.css";
 import "@/components/sheet/sheet.css";
+// The site footer (ADR-105): the close mounts `SiteFooter`, and this is its
+// sheet. Every route that mounts a close loads it (ADR-127 - until then no
+// sheet route did, and the footer rendered unstyled). BEFORE theme.css like
+// every route sheet.
+import "@/components/landing/v7/site-footer/site-footer.css";
 // Theme sheet LAST (ADR-058), then the corner instruments, then the lab's own chrome.
 import "@/components/landing/v7/theme.css";
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";

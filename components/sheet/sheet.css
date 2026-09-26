@@ -1381,7 +1381,14 @@ a.sh-figs__item:focus-visible {
 /* `SiteFooter` reads two padding tokens off its station and negates them to
    reach the viewport's edge with its plate; this section declares the pair
    the landing's `#contact.station` declares, so the plate lands on the
-   section's edge and the last pixel of the page is the plate's. */
+   section's edge and the last pixel of the page is the plate's.
+   ⚠ THAT PLATE IS PAINTED BY `site-footer.css`, AND THIS FILE CANNOT LOAD IT.
+   Every route that mounts a close imports it after this sheet (ADR-127) —
+   until 2026-09-26 none did, so the footer rendered as its bare markup (both
+   theme plates stacked in the band, a body-size title, bare lists) on every
+   sheet route, with the rubric, the mechanical gate and the smoke all
+   excluding the close. `sheet-close.test.ts` pins the import per route. The
+   rise over the body is §14b below. */
 .sh-sec--close {
   --station-pad-top: clamp(96px, 12svh, 168px);
   --station-pad-bottom: 0px;
