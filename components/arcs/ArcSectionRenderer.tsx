@@ -2,6 +2,7 @@ import type { ArcMotion, ArcSection } from "@/lib/arcs/types";
 
 import { ArcAnatomy } from "./ArcAnatomy";
 import { ArcBeat } from "./ArcBeat";
+import { ArcBench } from "./ArcBench";
 import { ArcBoard } from "./ArcBoard";
 import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
@@ -116,6 +117,8 @@ export function ArcSectionRenderer({
             return (
               <ArcProofCard key={section.id} section={section} index={index} motion={motion} />
             );
+          case "bench":
+            return <ArcBench key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

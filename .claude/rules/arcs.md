@@ -764,8 +764,24 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   a miss; `KIND_DESIG` letters it `PROOF`; the registry pins the track set,
   `arc` + `card` on each, the pile's order, and that an authored head never
   repeats the card's title. A change to `ProofCard` or its sheet is a
-  THREE-surface change now. `bench` (Moira's Run · Skill · Evals ported by
-  hand) is the seventh, planned.
+  THREE-surface change now. ⚠ **AND THE `bench` KIND IS BUILT (B2, the
+  SEVENTH)**: `{ head, example }`, Moira's Run · Skill · Evals module ported
+  BY HAND onto the ramp (`ArcBench`, a client island resting on RUN · input 0;
+  three tabpanels always in the DOM, the rail of four checks beside all three,
+  a picked check dimming what is not its own). States by SHAPE inside the one
+  accent — pass an outline, review dashed `--gold-line`, block filled `--gold`
+  — never green, never a traffic light; the picked tab filled (ADR-089 U4).
+  The chrome strings are constants in `bench/benchChrome.ts`, walked by
+  `arc-bench-chrome` through the copy law and the digit ban (a renderer's
+  string is outside every content scanner). The registry pins the record the
+  module's way: four checks, one result per check in order, the verdict the
+  WORST of them, a free rule with no check, `SKILL.md` first, `evals/`
+  present, regions inside the picture, images under `/arcs/` and on disk, NO
+  DIGIT but a `src` or an `alt`. ⚠ `[hidden]` is declared one level deeper
+  than the panel's `display: grid` (a bare attribute selector ties and loses).
+  ⚠ The picture is sized through its inline `aspect-ratio` and the regions
+  ride it in percent. Attributes `data-bench-*`, never `data-arc-*`; the
+  whole Pandora arc joins `arc-terminal-markup`'s walk.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

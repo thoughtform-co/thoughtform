@@ -611,7 +611,118 @@ export type ArcSection = ArcSectionBase &
         track: string;
         head?: ArcHead;
       }
+    | {
+        /**
+         * THE BENCH (ADR-128 B2): one Skill and its evals, running — Moira's
+         * workshop module ported BY HAND onto this surface's ramp (ADR-106's
+         * law: grammar is copied, never imported across repos). Three tabs on
+         * one rail: RUN shows what goes in and what comes out; SKILL shows the
+         * folder at a glance; EVALS shows how strictly each rule holds and the
+         * cases on file. The rail of named checks stays beside all three: a
+         * check returns a STATE, never a score, and the verdict is the worst
+         * of them.
+         *
+         * ⚠ THE SEVENTH ENUMERATED EXCEPTION to ADR-052's "content-only". ONE
+         * example (a proposal illustrates one checker; the workshop builds up
+         * three), and the chrome strings — the tab names, the pane flags, the
+         * state and band labels — are constants in the renderer
+         * (`bench/benchChrome.ts`), walked by their own test, never authored.
+         * No run button and no idle state: a proposal shows the finished run.
+         *
+         * ⚠ IT LETTERS NO DIGIT outside an image's src/alt (the house habit on
+         * every instrument); `arcs-registry` walks the record for it.
+         */
+        kind: "bench";
+        head: ArcHead;
+        example: ArcBenchExample;
+      }
   );
+
+/* ── The bench (ADR-128 B2) ─────────────────────────────────────────────── */
+
+/** A check returns a state, never a score. */
+export type ArcBenchState = "pass" | "review" | "block";
+/** How much room a rule leaves: none (checked word for word), some (judged),
+ *  or all of it (checked by nobody). */
+export type ArcBenchBand = "fixed" | "adapt" | "free";
+
+export interface ArcBenchCheck {
+  id: string;
+  /** ≤ 20 chars, one line on the rail. */
+  label: string;
+  /** What the check looks for, ≤ 110. */
+  line: string;
+}
+
+export type ArcBenchOutput =
+  | {
+      kind: "image";
+      image: ArcImage & { width: number; height: number };
+      /** Marked regions, as fractions of the picture's box (percent). ≤ 3. */
+      regions: readonly {
+        label: string;
+        check: string;
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+      }[];
+    }
+  | {
+      kind: "text";
+      text: string;
+      /** Marked spans of the text, each a span that occurs in it. ≤ 4. */
+      marks: readonly { span: string; check: string; state: ArcBenchState; note: string }[];
+    };
+
+export interface ArcBenchInput {
+  id: string;
+  /** The switch's label, ≤ 24. */
+  label: string;
+  /** What went in, ≤ 140. */
+  brief: string;
+  output: ArcBenchOutput;
+  /** One result per check, in the checks' order. */
+  results: readonly { check: string; state: ArcBenchState; note: string }[];
+  /** The worst of the results, and what it means. */
+  verdict: { state: ArcBenchState; label: string; line: string };
+  /** What happens next. One or two lines. */
+  actions: readonly string[];
+}
+
+export interface ArcBenchExample {
+  id: string;
+  /** What the checker does, ≤ 110. */
+  task: string;
+  /** Exactly four named checks. */
+  checks: readonly [ArcBenchCheck, ArcBenchCheck, ArcBenchCheck, ArcBenchCheck];
+  /** Two or three inputs, each with its own finished run. */
+  inputs: readonly ArcBenchInput[];
+  /** The Skill as a folder, `SKILL.md` first and `evals/` always present. */
+  skill: {
+    folder: string;
+    files: readonly {
+      name: string;
+      line: string;
+      image?: ArcImage & { width: number; height: number };
+      missing?: true;
+    }[];
+  };
+  /** Each rule by the room it leaves; a fixed or adapted rule names its
+   *  check, a free one names none. Three to six. */
+  rules: readonly { band: ArcBenchBand; line: string; check?: string }[];
+  /** The cases on file: the verdict each must get, or why a check exists. */
+  cases: readonly {
+    id: string;
+    label: string;
+    line: string;
+    quote?: string;
+    expect?: ArcBenchState;
+    checks: readonly string[];
+  }[];
+  /** Where this example comes from, ≤ 170. */
+  record: string;
+}
 
 /** One deliverable on a `steps` beat: a row on the left, a visual on the right. */
 export interface ArcStepsItem {

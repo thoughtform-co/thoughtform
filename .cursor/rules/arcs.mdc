@@ -146,9 +146,12 @@ ADR-126's proof register (films · a head over the `heimdall` dossier · sheets 
 intelligence), the first registered `board` (its tools row is ONE composed
 line — three products, never an abbreviation), a day-rate ledger from one
 constant; `arc-board-fit` walks every registered board and `sheet-instrument`
-reads the real overview on `REAL_TODAY`. Phase B adds `proof-card` and `bench`
-as the sixth and seventh exceptions. Canonical text: `.claude/rules/arcs.md`
-§The client model.
+reads the real overview on `REAL_TODAY`. Phase B built `proof-card` and
+`bench` the same day (the sixth and seventh exceptions): the homepage's folder
+card at rest inside `.pf-stack > .pf-slot`, and Moira's Run · Skill · Evals
+module ported by hand (`ArcBench`; states by shape, never green; chrome walked
+by `arc-bench-chrome`; `[hidden]` declared deeper than the panel's grid).
+Canonical text: `.claude/rules/arcs.md` §The client model.
 
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no

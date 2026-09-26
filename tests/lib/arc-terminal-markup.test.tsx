@@ -8,6 +8,7 @@ import {
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { CLAUDE_WORKSHOP_ARC } from "@/lib/arcs/content/claude-workshop";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
+import { PANDORA_PROPOSAL_ARC } from "@/lib/arcs/content/pandora-proposal";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { SURI_PROPOSAL_ARC } from "@/lib/arcs/content/suri-proposal";
 import type { ArcSection } from "@/lib/arcs/types";
@@ -46,10 +47,12 @@ const ALL: readonly ArcSection[] = [
   /* The `steps` leaf (ADR-103) publishes `data-steps-*`; same page-local
      dispatch, same reason. */
   TRINNY_OUTCOMES,
-  /* The `proof-card` leaf (ADR-128) mounts the homepage's folder card, whose
-     own attributes are `data-proof-settled` and the pile's `data-pc-*`; it
-     joins the walk so the reveal/terminal seam is measured over it too. */
-  { id: "practice-frontier", kind: "proof-card", track: "atl-films" },
+  /* The Pandora proposal (ADR-128) carries the two newest leaves: the
+     `proof-card` mounts the homepage's folder card, whose own attributes are
+     `data-proof-settled` and the pile's `data-pc-*`, and the `bench`
+     publishes `data-bench-*` from a client island with state. The whole arc
+     joins the walk so the reveal/terminal seam is measured over both. */
+  ...PANDORA_PROPOSAL_ARC.sections,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

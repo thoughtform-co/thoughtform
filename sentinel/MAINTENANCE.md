@@ -63,13 +63,19 @@ did for Trinny London, with maybe also a practical thing", in ADR-126's
 OPERATIONS and REVIEW rather than production; and "that eval thing … felt very
 abstract", against the Loop evals workshop module that landed.
 
-- **Cycle B → ADR-128 (Proposed; Phase A shipped, Phase B planned):** a flat
+- **Cycle B → ADR-128 (Proposed; Phase A shipped, Phase B built the same day):** a flat
   registered arc (`/arcs/pandora-proposal`), never a fork of the Trinny route;
   the four proof beats on the flat kinds under the "we" heads; the studio as a
   `board` (the kind's first adopter on a registered arc) and NOT a
-  `configuration`; the checker as three plates until the `bench` kind lands;
-  a day-rate ledger derived from one constant; two new kinds planned
-  (`proof-card`, `bench`) as the sixth and seventh exceptions.
+  `configuration`; the checker as three plates, then the `bench`; a day-rate
+  ledger derived from one constant; two new kinds BUILT (`proof-card`, the
+  folder card at rest; `bench`, Moira's module ported by hand) as the sixth
+  and seventh exceptions, each with its registry pins.
+- **Q3 (an attribute selector that ties) → `[hidden]` declared one level
+  deeper:** `.arc-bench__panel[data-panel="run"] { display: grid }` and a
+  bare `.arc-bench__panel[hidden]` are both (0,2,0), so the grid won on source
+  order and the hide did nothing. A `hidden` attribute is not a guarantee
+  once a rule sets `display` on the same element.
 - **Q3 (a guard that only read one record) → `arc-board-fit` walks EVERY
   registered board:** the kind was guarded "so a registered proposal can adopt
   it", and the first one to do so lettered a longer tools row than Trinny's;

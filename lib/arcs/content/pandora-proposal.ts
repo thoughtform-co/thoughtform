@@ -1,7 +1,5 @@
 import type { ArcDef } from "../types";
 
-import { MODE_LEGEND } from "./shared/loop-tools";
-
 /**
  * Pandora, the proposal, as an arc (ADR-098; the fourth cut of the format,
  * ADR-128).
@@ -182,130 +180,210 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
-      /* The bench's three tabs (Run · Skill · Evals) as three plates, until
-         the `bench` kind lands (ADR-128 Phase B). No image, no digit. */
+      /* THE BENCH (ADR-128 B2): Moira's Run · Skill · Evals module, ported by
+         hand, with the practice's own evals example — the Loop asset checker
+         on the Eclipse draw pair the owner released for this page — and
+         Pandora's own checks named in the head. The record letters no digit;
+         the chrome is the renderer's (`bench/benchChrome.ts`). */
       id: "checker",
-      kind: "list-groups",
+      kind: "bench",
       menuLabel: "The checker",
-      layout: "plates",
       head: {
         eyebrow: "Pandora · creative review",
-        title: { pre: "A checker that reads a retouch", em: "the way your retoucher does." },
-        sub: "One check, written down: what it looks at, what it is allowed to decide, and the cases it is tested against. Shown here on a Loop product image, because Pandora's own retouches are not on this page yet. For Pandora the checks are the metal shade, the sparkle on the stones, the stone colour and the composition.",
+        title: { pre: "A checker that reads", em: "like your retoucher." },
+        sub: "One check, written down: what it looks at, what it is allowed to decide, and the cases it is tested against. Shown on a Loop product image from our own evals workshop, because Pandora's retouches are not on this page yet. For Pandora the checks are the metal shade, the sparkle on the stones, the stone colour and the composition.",
       },
-      groups: [
-        {
-          id: "run",
-          label: "The run",
-          blurb: "One draw, against the reference",
-          items: [
+      example: {
+        id: "eclipse",
+        task: "Puts a generated image of the Eclipse sleep mask beside the real product and asks four named questions.",
+        checks: [
+          {
+            id: "identity",
+            label: "Identity",
+            line: "It is the Eclipse: one continuous band, two low eye pockets, the closure at the back.",
+          },
+          {
+            id: "proportions",
+            label: "Proportions",
+            line: "Two low pockets, not one dome and not two balls.",
+          },
+          {
+            id: "texture",
+            label: "Texture",
+            line: "Knit reads as knit: a matte technical knit with a fine rib, not a moulded surface.",
+          },
+          {
+            id: "colour",
+            label: "Colour",
+            line: "Teal is deep blue-green. Gone green, turquoise or navy it fails, unless the light explains it.",
+          },
+        ],
+        inputs: [
+          {
+            id: "draw-a",
+            label: "Draw A, on a train",
+            brief:
+              "A lifestyle image of the Eclipse in teal, worn, against a train window at night. The real render is attached.",
+            output: {
+              kind: "image",
+              image: {
+                src: "/arcs/pandora-proposal/mask-draw-a.webp",
+                alt: "A generated image: a person asleep against a train window, wearing a teal Loop sleep mask.",
+                width: 720,
+                height: 540,
+              },
+              regions: [
+                {
+                  label: "The cups",
+                  check: "proportions",
+                  left: 32.4,
+                  top: 29.3,
+                  width: 31.2,
+                  height: 40,
+                },
+                {
+                  label: "A clip",
+                  check: "identity",
+                  left: 62.4,
+                  top: 10.1,
+                  width: 14,
+                  height: 15.7,
+                },
+              ],
+            },
+            results: [
+              { check: "identity", state: "block", note: "A clip the product does not have." },
+              {
+                check: "proportions",
+                state: "block",
+                note: "Two domes where the band has two low pockets.",
+              },
+              {
+                check: "texture",
+                state: "pass",
+                note: "The knit reads as knit at the size it has in the frame.",
+              },
+              {
+                check: "colour",
+                state: "review",
+                note: "Bluer than the product. A person decides.",
+              },
+            ],
+            verdict: {
+              state: "block",
+              label: "Block, never keep",
+              line: "Back to the retoucher with the two failed checks named.",
+            },
+            actions: [
+              "Redraw: low pockets in the band, no domes.",
+              "One band, closure at the back. No clip.",
+            ],
+          },
+          {
+            id: "draw-b",
+            label: "Draw B, in bed",
+            brief:
+              "A lifestyle image of the Eclipse in teal, worn, in bed before sunrise. The real render is attached.",
+            output: {
+              kind: "image",
+              image: {
+                src: "/arcs/pandora-proposal/mask-draw-b.webp",
+                alt: "A generated image: a person asleep in bed, in profile, wearing a teal Loop sleep mask.",
+                width: 720,
+                height: 540,
+              },
+              regions: [],
+            },
+            results: [
+              { check: "identity", state: "pass", note: "One band, the closure at the back." },
+              { check: "proportions", state: "pass", note: "Two low pockets, as on the product." },
+              { check: "texture", state: "pass", note: "The knit holds at this size." },
+              { check: "colour", state: "pass", note: "Held. One earlier run saw it bluer." },
+            ],
+            verdict: {
+              state: "pass",
+              label: "Pass, keep",
+              line: "Clean on every check. A person still looks, against the real product.",
+            },
+            actions: ["To the review page. A person ticks it, or types what is wrong."],
+          },
+        ],
+        skill: {
+          folder: "the-asset-checker/",
+          files: [
             {
-              id: "identity",
-              tag: "Block",
-              name: "Identity",
-              body: "A clip the product does not have. The checker stops it before anyone opens the file.",
+              name: "SKILL.md",
+              line: "What the checker is for, in the reviewer's words: which product, which views, what a pass looks like, what must never pass.",
             },
             {
-              id: "proportions",
-              tag: "Block",
-              name: "Proportions",
-              body: "Two domes where the band has two low pockets.",
+              name: "references/",
+              line: "The rubric, the product sheet, the approved register, and the real render it compares against.",
+              image: {
+                src: "/arcs/pandora-proposal/mask-reference.webp",
+                alt: "The product render: a teal Loop sleep mask seen from the side, with its closure at the back.",
+                width: 720,
+                height: 540,
+              },
             },
             {
-              id: "texture",
-              tag: "Pass",
-              name: "Texture",
-              body: "The knit reads as knit at the size it has in the frame.",
+              name: "evals/",
+              line: "The cases every change to the rubric is run against, known-bad draws among them.",
             },
             {
-              id: "colour",
-              tag: "Review",
-              name: "Colour",
-              body: "Bluer than the product. A person decides.",
+              name: "scripts/",
+              line: "Grade a folder of images, build the page the reviewer ticks.",
             },
           ],
-          foot: {
-            label: "Verdict",
-            lines: ["Block. Back to the retoucher with the two failed checks named."],
-          },
         },
-        {
-          id: "skill",
-          label: "The skill",
-          blurb: "One folder the studio owns",
-          items: [
-            {
-              id: "skillmd",
-              tag: "SKILL.md",
-              name: "What the checker is for, in the retoucher's words",
-              body: "Which product, which views, what a pass looks like and what must never pass. Written with the person who reviews today.",
-            },
-            {
-              id: "references",
-              tag: "references",
-              name: "The rubric, the product sheet, the approved register",
-              body: "The real shots the checker compares against, and the list of what has already been approved.",
-            },
-            {
-              id: "evals",
-              tag: "evals",
-              name: "The cases every change to the rubric is run against",
-              body: "A retouch that must pass and one that must block. A rule change that flips either is reverted.",
-            },
-            {
-              id: "scripts",
-              tag: "scripts",
-              name: "Grade a folder, build the page the reviewer ticks",
-              body: "Runs on a folder of retouches overnight. The reviewer opens only what it flagged.",
-            },
-          ],
-          foot: {
-            label: "Where it lives",
-            lines: ["On Pandora's own Claude account, beside Primo and Figma."],
+        rules: [
+          {
+            band: "fixed",
+            line: "The cups are two low pockets formed in the band. Never a dome, never two balls.",
+            check: "proportions",
           },
-        },
-        {
-          id: "evals-rules",
-          label: "The evals",
-          blurb: "How strictly each rule holds",
-          items: [
-            {
-              id: "fixed-a",
-              tag: "Fixed",
-              name: "One continuous band, closure at the back",
-              body: "Checked word for word. Pass or block.",
-            },
-            {
-              id: "fixed-b",
-              tag: "Fixed",
-              name: "Two low pockets, never a dome",
-              body: "Pass or block.",
-            },
-            {
-              id: "adapt-a",
-              tag: "Adapt",
-              name: "Matte knit with a fine rib, judged at frame size",
-              body: "Checked with judgment. Pass or review.",
-            },
-            {
-              id: "adapt-b",
-              tag: "Adapt",
-              name: "Teal stays in its hue family; the light may shift it",
-              body: "Pass or review.",
-            },
-            {
-              id: "free",
-              tag: "Free",
-              name: "Pose, setting and light, once the product is right",
-              body: "Not checked. Left to the retoucher.",
-            },
-          ],
-          foot: {
-            label: "Cases on file",
-            lines: ["The blocked draw must block. The approved one must pass."],
+          {
+            band: "fixed",
+            line: "One continuous band with its closure at the back. No buckle, slider or clip.",
+            check: "identity",
           },
-        },
-      ],
+          {
+            band: "adapt",
+            line: "Matte knit with a fine rib, judged at the size the mask has in the frame.",
+            check: "texture",
+          },
+          {
+            band: "adapt",
+            line: "Teal stays in its hue family. The scene's light may shift it; nothing else may.",
+            check: "colour",
+          },
+          { band: "free", line: "Pose, setting and light, once the product is right." },
+        ],
+        cases: [
+          {
+            id: "pinned",
+            label: "Draw A, kept on file",
+            line: "The proportions check must fail it. A change to the rubric that lets it pass is reverted.",
+            expect: "block",
+            checks: ["proportions", "identity"],
+          },
+          {
+            id: "approved",
+            label: "Draw B, kept on file",
+            line: "Every check must hold on it. A change that fails it has gone too strict.",
+            expect: "pass",
+            checks: ["identity", "proportions", "texture", "colour"],
+          },
+          {
+            id: "light",
+            label: "The reviewer's own note",
+            quote: "It reads bluer under the window",
+            line: "Why the colour check adapts to the light rather than measuring a value: what a person said twice became the rule.",
+            checks: ["colour"],
+          },
+        ],
+        record:
+          "Loop's own asset checker on the Eclipse, from the evals workshop we gave there. At Pandora the same instrument reads a retouch against the approved shot, with the producers' rules in place of these.",
+      },
     },
     {
       id: "phases",

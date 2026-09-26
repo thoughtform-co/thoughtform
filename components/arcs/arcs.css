@@ -4839,6 +4839,630 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   }
 }
 
+/* ── THE BENCH (ADR-128 B2) ────────────────────────────────────────
+   One Skill and its evals, running: Moira's workshop module ported by hand
+   onto this ramp (ADR-106's law — grammar is copied, never imported across
+   repos). Three tabs on one rail — RUN, SKILL, EVALS — and the rail of named
+   checks beside all three. The body is one hairline housing on the plate
+   ground: whatever the tab shows on the left, the checks and the verdict on
+   the right, the rail a recessed region divided from the main by the seam
+   weight (ADR-089 U2: `--arc-seam` divides regions, `--arc-rule` rules
+   within one).
+   ⚠ STATES ARE TOLD APART BY SHAPE INSIDE THE ONE ACCENT: an outline holds
+   (pass), a dashed gold outline wants a person (review), a filled gold chip
+   stops the work (block). No traffic light, never green — green is the
+   board's word for the human on this surface.
+   ⚠ THE PICKED TAB IS FILLED, INVERSE VIDEO (ADR-089 U4), the configuration
+   tiles' own grammar; the rest are outlined.
+   ⚠ TOKENS ONLY: every colour a ramp step, every tracking a role token, no
+   weight above `--weight-lit`; `type-material-tokens` and `theme-css-sweep`
+   pin this sheet. Light re-derives the ramp at the foot of this file.
+   ⚠ `[hidden]` MUST OUTRANK THE PANEL'S OWN `display`: a panel that is a
+   grid stays a grid under a bare attribute selector of equal specificity, so
+   the hide is declared one level deeper, after the layouts. */
+.arc-sec--bench {
+  --arc-stage-pad: clamp(48px, 6vh, 96px);
+  padding-block: var(--arc-stage-pad);
+}
+.arc-sec--bench .arc-head {
+  margin-bottom: max(36px, clamp(18px, 2.6vh, 34px));
+}
+.arc-root[data-arc-format="proposal"] .arc-bench {
+  --arc-bench-h: clamp(
+    470px,
+    calc(100svh - 2 * var(--arc-stage-pad) - var(--arc-head-datum, 0px) - 300px),
+    720px
+  );
+}
+.arc-bench {
+  /* The housing's height: the frame less the head and its datum, floored
+     where the picture and four checks still fit, capped where a taller box
+     would only add air (the films console's own law). */
+  --arc-bench-h: clamp(470px, calc(100svh - 2 * var(--arc-stage-pad) - 300px), 720px);
+  --arc-bench-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --arc-bench-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --arc-bench-copy: clamp(13px, 0.95vw, 15px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 14px);
+  margin: 0;
+  min-width: 0;
+  font-family: var(--arc-bench-sans);
+  color: var(--arc-ink-90);
+}
+.arc-bench__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+}
+.arc-bench__tabs {
+  display: flex;
+  gap: 6px;
+}
+.arc-bench__tab {
+  margin: 0;
+  padding: 9px 16px;
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+  background: var(--arc-sheen);
+  border: 1px solid var(--arc-edge);
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
+}
+.arc-bench__tab:hover {
+  border-color: var(--gold-line);
+}
+.arc-bench__tab:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.arc-bench__tab[aria-selected="true"] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+.arc-bench__task {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--arc-bench-copy);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+/* The housing: main | rail, one seam between them, on the plate ground. */
+.arc-bench__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 30%, 380px);
+  min-height: var(--arc-bench-h);
+  border: 1px solid var(--arc-seam);
+  background: var(--arc-plate);
+}
+.arc-bench__main {
+  min-width: 0;
+  min-height: 0;
+}
+.arc-bench__panel {
+  height: 100%;
+  min-height: 0;
+}
+.arc-bench__panel[data-panel="run"] {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+}
+.arc-bench__panel[data-panel="evals"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.arc-bench__main > .arc-bench__panel[hidden] {
+  display: none;
+}
+.arc-bench__flag {
+  display: block;
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-bench__pane,
+.arc-bench__skill,
+.arc-bench__strict,
+.arc-bench__cases,
+.arc-bench__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(14px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px);
+}
+.arc-bench__pane[data-pane="input"],
+.arc-bench__strict {
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-bench__inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.arc-bench__input {
+  margin: 0;
+  padding: 8px 11px;
+  font-family: var(--arc-bench-sans);
+  font-weight: var(--weight-text);
+  font-size: var(--arc-bench-copy);
+  line-height: 1.3;
+  text-align: left;
+  color: var(--arc-ink-62);
+  background: var(--arc-sheen);
+  border: 1px solid var(--arc-edge);
+  cursor: pointer;
+}
+.arc-bench__input:hover {
+  color: var(--arc-ink);
+  border-color: var(--gold-line);
+}
+.arc-bench__input:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.arc-bench__input[aria-pressed="true"] {
+  font-weight: var(--weight-lit);
+  color: var(--arc-ink);
+  border-color: var(--gold-line);
+  box-shadow: inset 3px 0 0 var(--gold-line);
+}
+.arc-bench__brief {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: var(--arc-bench-copy);
+  line-height: 1.45;
+  color: var(--arc-ink-80);
+  border: 1px solid var(--arc-rule);
+}
+.arc-bench__out {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.arc-bench__out[hidden] {
+  display: none;
+}
+/* The picture at its own aspect (inline, from the record's width and
+   height), width-led and capped by the housing's height through the ratio;
+   the regions ride it in percent, so they stay where they belong at any
+   size. */
+.arc-bench__picture {
+  position: relative;
+  display: block;
+  flex: none;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(var(--arc-bench-h) - 110px);
+  align-self: flex-start;
+  overflow: hidden;
+  border: 1px solid var(--arc-rule);
+}
+.arc-bench__picture img,
+.arc-bench__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.arc-bench__region {
+  position: absolute;
+  border: 1px solid var(--gold-line);
+  transition: opacity 320ms ease;
+}
+.arc-bench__region-label {
+  position: absolute;
+  left: -1px;
+  bottom: 100%;
+  padding: 2px 6px;
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-contrast);
+  background: var(--gold);
+}
+.arc-bench__text {
+  display: block;
+  font-size: clamp(16px, 1.3vw, 20px);
+  font-weight: var(--weight-lit);
+  line-height: 1.5;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+}
+.arc-bench__mark {
+  color: inherit;
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 -2px 0 var(--gold-line);
+  transition: opacity 320ms ease;
+}
+.arc-bench__mark[data-bench-state="pass"] {
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--arc-rule);
+}
+.arc-bench__notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-bench__noteline {
+  padding-left: 11px;
+  font-size: var(--arc-bench-copy);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+  box-shadow: inset 2px 0 0 var(--gold-line);
+  transition: opacity 320ms ease;
+}
+.arc-bench__noteline[data-bench-state="pass"] {
+  box-shadow: inset 2px 0 0 var(--arc-rule);
+}
+/* A picked check dims what is not its own. */
+.arc-bench [data-dim="true"] {
+  opacity: 0.28;
+}
+/* SKILL: the folder, at a glance — a name, one line per thing in it, on a
+   hairline tree. A part the skill does not have yet is drawn dashed. */
+.arc-bench__folder {
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-lit);
+  font-size: 13px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  color: var(--arc-ink);
+}
+.arc-bench__tree {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 12px);
+  margin: 0 0 0 7px;
+  padding: 0 0 0 20px;
+  list-style: none;
+  border-left: 1px solid var(--arc-rule);
+}
+.arc-bench__file {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.34fr) minmax(0, 1fr);
+  column-gap: 18px;
+  row-gap: 8px;
+  align-items: baseline;
+  padding: clamp(8px, 1.3vh, 12px) 14px;
+  background: var(--arc-sheen);
+  border: 1px solid var(--arc-edge);
+}
+.arc-bench__file::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -21px;
+  width: 20px;
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-bench__file[data-bench-missing="true"] {
+  background: none;
+  border-style: dashed;
+  border-color: var(--arc-rule-dash);
+}
+.arc-bench__filename {
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  color: var(--gold-ink);
+}
+.arc-bench__fileline {
+  font-size: var(--arc-bench-copy);
+  line-height: 1.4;
+  color: var(--arc-ink-80);
+}
+.arc-bench__thumb {
+  grid-column: 2;
+  display: block;
+  width: min(100%, clamp(120px, 16vh, 180px));
+  overflow: hidden;
+  border: 1px solid var(--arc-rule);
+}
+/* EVALS, left: each rule by the room it leaves, and the check that holds it. */
+.arc-bench__band {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.arc-bench__bandhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.arc-bench__bandlabel {
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-bench__band[data-bench-band="fixed"] .arc-bench__bandlabel {
+  color: var(--gold-ink);
+}
+.arc-bench__bandline {
+  font-size: calc(var(--arc-bench-copy) * 0.92);
+  line-height: 1.4;
+  color: var(--arc-ink-50);
+}
+.arc-bench__rules {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-bench__rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  padding: 6px 10px;
+  background: var(--arc-sheen);
+  border: 1px solid var(--arc-edge);
+  transition: opacity 320ms ease;
+}
+.arc-bench__band[data-bench-band="fixed"] .arc-bench__rule {
+  box-shadow: inset 3px 0 0 var(--gold-line);
+}
+/* What is left free is checked by nobody: no ground, a dashed edge. */
+.arc-bench__band[data-bench-band="free"] .arc-bench__rule {
+  background: none;
+  border-style: dashed;
+  border-color: var(--arc-rule-dash);
+}
+.arc-bench__ruleline {
+  flex: 1 1 200px;
+  font-size: var(--arc-bench-copy);
+  line-height: 1.35;
+  color: var(--arc-ink-80);
+}
+.arc-bench__usedby,
+.arc-bench__expect,
+.arc-bench__chip {
+  padding: 2px 7px;
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--arc-ink-62);
+  border: 1px solid var(--arc-rule);
+}
+/* EVALS, right: the cases on file, each with the verdict it must get. */
+.arc-bench__case {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 0 0;
+  transition: opacity 320ms ease;
+}
+.arc-bench__case + .arc-bench__case {
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-bench__expect {
+  align-self: flex-start;
+  color: var(--gold-ink);
+  border-color: var(--gold-line);
+}
+.arc-bench__expect[data-bench-state="review"] {
+  border-style: dashed;
+}
+.arc-bench__expect[data-bench-state="block"] {
+  color: var(--gold-contrast);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.arc-bench__casehead {
+  font-size: var(--arc-bench-copy);
+  font-weight: var(--weight-lit);
+  line-height: 1.3;
+  color: var(--arc-ink);
+}
+.arc-bench__quote {
+  font-size: clamp(14px, 1.05vw, 17px);
+  font-weight: var(--weight-lit);
+  line-height: 1.3;
+  letter-spacing: var(--track-display);
+  color: var(--gold-ink);
+}
+.arc-bench__caseline {
+  font-size: calc(var(--arc-bench-copy) * 0.92);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+/* THE RAIL: a recessed region, the seam weight dividing it from the main. */
+.arc-bench__rail {
+  gap: 8px;
+  background: var(--arc-sheen);
+  border-left: 1px solid var(--arc-seam);
+}
+.arc-bench__checks {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--arc-rule);
+  border: 1px solid var(--arc-rule);
+}
+.arc-bench__check {
+  background: var(--arc-plate);
+}
+.arc-bench__checkbtn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  row-gap: 3px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 9px 7px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.arc-bench__checkbtn:hover {
+  background: var(--arc-gold-wash);
+}
+.arc-bench__checkbtn:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: -2px;
+}
+.arc-bench__checkbtn[aria-pressed="true"] {
+  background: var(--arc-gold-wash);
+  box-shadow: inset 3px 0 0 var(--gold-line);
+}
+.arc-bench__checklabel {
+  grid-area: 1 / 1;
+  font-size: var(--arc-bench-copy);
+  font-weight: var(--weight-lit);
+  line-height: 1.3;
+  color: var(--arc-ink);
+}
+.arc-bench__chip {
+  grid-area: 1 / 2;
+  align-self: start;
+}
+/* Three states by shape, inside the one accent. */
+.arc-bench__chip[data-bench-state="review"] {
+  color: var(--gold-ink);
+  border: 1px dashed var(--gold-line);
+}
+.arc-bench__chip[data-bench-state="block"] {
+  color: var(--gold-contrast);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.arc-bench__checknote {
+  grid-area: 2 / 1 / 3 / 3;
+  font-size: calc(var(--arc-bench-copy) * 0.9);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+.arc-bench__verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 9px;
+  border: 1px solid var(--arc-rule);
+}
+.arc-bench__verdict[data-bench-state="review"],
+.arc-bench__verdict[data-bench-state="block"] {
+  background: var(--arc-gold-wash);
+  border-color: transparent;
+  box-shadow: inset 3px 0 0 var(--gold-line);
+}
+.arc-bench__verdictlabel {
+  font-size: clamp(15px, 1.05vw, 17px);
+  font-weight: var(--weight-lit);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+}
+.arc-bench__verdictline,
+.arc-bench__actions {
+  font-size: calc(var(--arc-bench-copy) * 0.9);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+.arc-bench__flag--actions {
+  margin-top: 4px;
+}
+.arc-bench__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-bench__record {
+  margin: 0;
+  font-family: var(--arc-bench-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: var(--track-label);
+  color: var(--arc-ink-50);
+}
+/* On the desktop tier the housing takes its height and the panes scroll
+   inside it, so the verdict never leaves the frame; below it the bench flows
+   and the rail follows the main. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .arc-bench__body {
+    height: var(--arc-bench-h);
+  }
+  .arc-bench__pane,
+  .arc-bench__skill,
+  .arc-bench__strict,
+  .arc-bench__cases,
+  .arc-bench__rail {
+    overflow: auto;
+  }
+}
+@media (max-width: 960px) {
+  .arc-bench__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-bench__panel[data-panel="run"],
+  .arc-bench__panel[data-panel="evals"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-bench__pane[data-pane="input"],
+  .arc-bench__strict {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  .arc-bench__rail {
+    border-left: 0;
+    border-top: 1px solid var(--arc-seam);
+  }
+  .arc-bench__picture {
+    width: 100%;
+    max-height: none;
+  }
+}
+
 /* ── THE CONFIGURATION, AS ONE INSTRUMENT (ADR-098) ──────────────
    The pitch page's drawing (ADR-094 U7), rebuilt on this surface's own
    ramp. Three bands on one hairline plate: the LAYER the client owns,

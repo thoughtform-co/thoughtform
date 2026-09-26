@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -809,6 +809,143 @@ describe("arcs registry (ADR-052)", () => {
       /* The sequence is the pile's, filtered to what the page carries. */
       const expected = PROOF_STACK_ORDER.filter((id) => ids.includes(id));
       expect(ids, `${arc.slug}: proof cards out of the record's order`).toEqual(expected);
+    }
+  });
+
+  it("a bench is one Skill and its evals, running, and it letters no figure (ADR-128 B2)", () => {
+    /* Moira's `superRefine` as assertions, on the arcs' side of the copy. The
+       renderer trusts the record for four things it cannot recover: that
+       every result names a check IN THE CHECKS' ORDER (the rail reads them by
+       index), that the verdict is the WORST of them (a verdict that
+       disagrees with its own checks is the module's one lie), that a rule
+       left FREE names no check (nobody checks it) while a fixed or adapted
+       one names exactly one, and that the folder opens on `SKILL.md` and
+       carries `evals/`. And no digit on the drawing but a `src` or an `alt`:
+       a figure on a checker reads as a score, and a check returns a state. */
+    const RANK: Record<string, number> = { pass: 0, review: 1, block: 2 };
+    const STATES = Object.keys(RANK);
+    const BANDS = ["fixed", "adapt", "free"];
+    const KEYS = ["id", "kind", "menuLabel", "menuPrimary", "ariaLabel", "head", "example"];
+    const onDisk = (src: string) => existsSync(join(process.cwd(), "public", src));
+    const digits = (v: unknown, at: string) => {
+      if (typeof v === "string") {
+        expect(/\d/.test(v), `${at}: a figure on the drawing ("${v}")`).toBe(false);
+      } else if (Array.isArray(v)) {
+        v.forEach((x, i) => digits(x, `${at}[${i}]`));
+      } else if (v && typeof v === "object") {
+        for (const [key, x] of Object.entries(v)) {
+          if (key === "src" || key === "alt") continue;
+          digits(x, `${at}.${key}`);
+        }
+      }
+    };
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "bench") continue;
+        const at = `${arc.slug}/${s.id}`;
+        for (const key of Object.keys(s))
+          expect(KEYS, `${at}: unknown key "${key}"`).toContain(key);
+        const ex = s.example;
+        digits(ex, at);
+        expect(ex.checks.length, `${at}: four checks`).toBe(4);
+        const checkIds = ex.checks.map((c) => c.id);
+        expect(new Set(checkIds).size, `${at}: a check twice`).toBe(4);
+        for (const c of ex.checks) {
+          expect(c.label.length, `${at}: check "${c.id}" label`).toBeLessThanOrEqual(16);
+          expect(c.line.length, `${at}: check "${c.id}" line`).toBeLessThanOrEqual(110);
+        }
+        expect(ex.task.length, `${at}: task`).toBeLessThanOrEqual(130);
+        expect(ex.inputs.length, `${at}: two or three inputs`).toBeGreaterThanOrEqual(2);
+        expect(ex.inputs.length, `${at}: two or three inputs`).toBeLessThanOrEqual(3);
+        expect(new Set(ex.inputs.map((i) => i.id)).size, `${at}: an input twice`).toBe(
+          ex.inputs.length
+        );
+        for (const inp of ex.inputs) {
+          const here = `${at}/${inp.id}`;
+          expect(inp.label.length, `${here}: label`).toBeLessThanOrEqual(24);
+          expect(inp.brief.length, `${here}: brief`).toBeLessThanOrEqual(160);
+          expect(
+            inp.results.map((r) => r.check),
+            `${here}: one result per check, in the checks' order`
+          ).toEqual(checkIds);
+          for (const r of inp.results) {
+            expect(STATES, `${here}: state "${r.state}"`).toContain(r.state);
+            expect(r.note.length, `${here}: note on ${r.check}`).toBeLessThanOrEqual(90);
+          }
+          const worst = inp.results.reduce<string>(
+            (w, r) => (RANK[r.state]! > RANK[w]! ? r.state : w),
+            "pass"
+          );
+          expect(inp.verdict.state, `${here}: the verdict is the worst check`).toBe(worst);
+          expect(inp.verdict.label.length, `${here}: verdict label`).toBeLessThanOrEqual(24);
+          expect(inp.verdict.line.length, `${here}: verdict line`).toBeLessThanOrEqual(110);
+          expect(inp.actions.length, `${here}: one or two actions`).toBeGreaterThanOrEqual(1);
+          expect(inp.actions.length, `${here}: one or two actions`).toBeLessThanOrEqual(2);
+          if (inp.output.kind === "image") {
+            const { image, regions } = inp.output;
+            expect(image.src.startsWith("/arcs/"), `${here}: ${image.src} under /arcs/`).toBe(true);
+            expect(onDisk(image.src), `${here}: ${image.src} is not on disk`).toBe(true);
+            expect(image.width > 0 && image.height > 0, `${here}: a sized image`).toBe(true);
+            for (const r of regions) {
+              expect(checkIds, `${here}: region "${r.label}" names an unknown check`).toContain(
+                r.check
+              );
+              expect(
+                r.left >= 0 && r.top >= 0 && r.left + r.width <= 100 && r.top + r.height <= 100,
+                `${here}: region "${r.label}" leaves the picture`
+              ).toBe(true);
+              expect(r.label.length, `${here}: region "${r.label}"`).toBeLessThanOrEqual(14);
+            }
+          } else {
+            const { text, marks } = inp.output;
+            for (const m of marks) {
+              expect(checkIds, `${here}: mark "${m.span}" names an unknown check`).toContain(
+                m.check
+              );
+              expect(text.includes(m.span), `${here}: mark "${m.span}" is not in the text`).toBe(
+                true
+              );
+              expect(STATES, `${here}: mark state`).toContain(m.state);
+            }
+          }
+        }
+        expect(ex.skill.files[0]?.name, `${at}: the folder opens on SKILL.md`).toBe("SKILL.md");
+        expect(
+          ex.skill.files.some((f) => f.name === "evals/"),
+          `${at}: a Skill without evals/ is a prompt`
+        ).toBe(true);
+        for (const f of ex.skill.files) {
+          expect(f.line.length, `${at}: ${f.name}`).toBeLessThanOrEqual(140);
+          if (f.image) {
+            expect(f.image.src.startsWith("/arcs/"), `${at}: ${f.image.src} under /arcs/`).toBe(
+              true
+            );
+            expect(onDisk(f.image.src), `${at}: ${f.image.src} is not on disk`).toBe(true);
+          }
+        }
+        expect(ex.rules.length, `${at}: three to six rules`).toBeGreaterThanOrEqual(3);
+        expect(ex.rules.length, `${at}: three to six rules`).toBeLessThanOrEqual(6);
+        for (const r of ex.rules) {
+          expect(BANDS, `${at}: band "${r.band}"`).toContain(r.band);
+          expect(r.line.length, `${at}: rule "${r.line}"`).toBeLessThanOrEqual(110);
+          if (r.band === "free") {
+            expect(r.check, `${at}: a free rule names a check ("${r.line}")`).toBeUndefined();
+          } else {
+            expect(r.check, `${at}: rule "${r.line}" names no check`).toBeTruthy();
+            expect(checkIds, `${at}: rule "${r.line}" names an unknown check`).toContain(r.check);
+          }
+        }
+        expect(ex.cases.length, `${at}: two to four cases`).toBeGreaterThanOrEqual(2);
+        expect(ex.cases.length, `${at}: two to four cases`).toBeLessThanOrEqual(4);
+        for (const c of ex.cases) {
+          expect(c.checks.length, `${at}: case "${c.id}" names no check`).toBeGreaterThan(0);
+          for (const id of c.checks) expect(checkIds, `${at}: case "${c.id}"`).toContain(id);
+          if (c.expect) expect(STATES, `${at}: case "${c.id}" expects`).toContain(c.expect);
+          expect(c.label.length, `${at}: case "${c.id}" label`).toBeLessThanOrEqual(32);
+          expect(c.line.length, `${at}: case "${c.id}" line`).toBeLessThanOrEqual(130);
+        }
+        expect(ex.record.length, `${at}: record`).toBeLessThanOrEqual(240);
+      }
     }
   });
 
