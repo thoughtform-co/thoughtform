@@ -115,19 +115,22 @@
    bracket yields the corner while a mark is there. */
 .arc-hud-client {
   position: fixed;
-  top: calc(var(--hud-margin, 24px) + 4px);
-  left: calc(var(--hud-margin, 24px) + 2px);
+  top: var(--hud-margin, 24px);
+  left: var(--hud-margin, 24px);
   z-index: 21;
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 48px;
+  gap: 10px;
+  /* The mark keeps to the corner zone the bracket it replaces occupied, so
+     a section eyebrow scrolled to the top never runs under it. */
+  height: var(--hud-corner-zone, 40px);
   pointer-events: auto;
 }
 .arc-hud-client img {
   display: block;
-  width: 102px;
-  height: 48px;
+  height: 100%;
+  width: auto;
+  max-width: 120px;
   object-fit: contain;
   object-position: left center;
 }
