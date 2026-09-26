@@ -129,6 +129,25 @@
   display: none;
 }
 
+/* THE WORDMARK SITS DOCKED FROM THE FIRST FRAME (ADR-127, owner 2026-09-26).
+   `.hud__brand` rests at the hero's content column at full size and docks to
+   the rail's corner (`.is-collapsed`: `left: --hud-margin`, `scale(--hud-
+   brand-dock)`, landing.css) only once a scroll writer has seen half a
+   viewport — a rest position that exists for the hero's key visual, and no
+   sheet has a hero. So the docked state is declared for BOTH of its states
+   here: same values, so the 0.4s transition has nothing to animate and the
+   half-viewport toggle paints nothing. `(0,2,0)` ties `.hud__brand.is-
+   collapsed` and wins on order (this sheet follows landing.css on every
+   route); the class stays the writers' (`useArcScroll`, `ArcHudNav`). ≤960
+   hides the wordmark outright (landing.css). ADR-043's centred rest is
+   HERO-only from here; the instrument (ADR-118) had this rule to itself with
+   a hardcoded 0.68 until this one took it. ⚠ NEVER IN landing.css —
+   `hud-brand-tokens.test.ts` slices that file at `.hud__brand {`. */
+.sh-root .hud__brand {
+  left: var(--hud-margin);
+  transform: scale(var(--hud-brand-dock));
+}
+
 .sh-root,
 .sh-root * {
   overflow-anchor: none;

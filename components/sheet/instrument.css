@@ -83,24 +83,12 @@
   min-height: 100svh;
 }
 
-/* ⚠ THE FRAME'S WORDMARK SITS DOCKED FROM THE FIRST FRAME HERE. Until half
-   a screen of scroll it is the HERO lockup (`.hud__brand`, landing.css):
-   150px wide at 1920, aligned to the content column — i.e. directly UNDER
-   the monitor's bottom-left corner, which ends on the rails' last tick. The
-   rails never had to clear it, because a rail runs down the gutter and the
-   lockup sits inboard of it; a device as wide as the instrument band is the
-   first thing on the site to span both. Measured on wave 03's first shoot:
-   the lockup's top 15px under the monitor's rule at 1920 × 1247 and 7px at
-   1280 × 720, inside the frame's own breathing gap, on every monitor still.
-   The fix is the frame's EXISTING docked state (`.hud__brand.is-collapsed`
-   — the rail's corner, 0.68), shown from the first frame, so the monitor
-   keeps its datum on both rail ends and nothing new is drawn. The class
-   stays the scroll writers' (`useArcScroll`, `ArcHudNav`); this only styles
-   both of its states alike. ≤960 hides the wordmark anyway. */
-.sh-root[data-sh-profile="instrument"] .hud__brand {
-  left: var(--hud-margin);
-  transform: scale(0.68);
-}
+/* THE WORDMARK IS DOCKED FROM THE FIRST FRAME — ON EVERY SHEET, NOT HERE.
+   ADR-118 found it on the instrument (the hero lockup sat 7px under the
+   monitor's rule at 1280 × 720) and styled it for this profile alone with a
+   hardcoded 0.68; ADR-127 made it the sheet's law, since no sheet has a hero
+   for the centred rest to work with. The rule is `.sh-root .hud__brand` in
+   sheet.css, reading the frame's own `--hud-brand-dock`. Nothing here. */
 
 /* The mono chrome every strip, label and reading shares. ⚠ A new mono class
    left out of this list inherits the sans: the family and the transform live
