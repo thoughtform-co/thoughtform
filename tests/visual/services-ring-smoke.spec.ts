@@ -2343,7 +2343,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Generous timeout: cold dev-server compile + texture bakes + the
     // parked-anchor gate all precede the first publish.
     await expect(page.locator(".svc-ring-hits")).toHaveCount(1);
-    const frontCard = page.getByRole("button", { name: "Open Keynote details" });
+    const frontCard = page.getByRole("button", { name: "Open Embedded details" });
     await expect(frontCard).toBeVisible({ timeout: 20_000 });
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     // The bottom readout strip is RETIRED (owner, 2026-07-16) — the
@@ -2369,7 +2369,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
 
-    const frontCard = page.getByRole("button", { name: "Open Keynote details" });
+    const frontCard = page.getByRole("button", { name: "Open Embedded details" });
     await expect(frontCard).toBeVisible({ timeout: 20_000 });
 
     // ── The ghost fence (ADR-050's blocking flaw) ────────────────────────
@@ -2377,8 +2377,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // published, no shimmed CTA or close control, no screen-reader copy.
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Book a keynote" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Close Keynote details" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Scope an engagement" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close Embedded details" })).toHaveCount(0);
 
     // ── Open ─────────────────────────────────────────────────────────────
     // The drawer faces bake LAZILY on this first click, so the shims can
@@ -2389,10 +2389,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // (services.css keys --svc-plate-dim off this attribute).
     await expect(page.locator(".services-stage")).toHaveAttribute("data-plate-open", "1");
     // The drawer's baked CTA, reachable as a real link on the second rect.
-    await expect(page.getByRole("link", { name: "Book a keynote" })).toBeVisible({
+    await expect(page.getByRole("link", { name: "Scope an engagement" })).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByRole("button", { name: "Close Keynote details" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Close Embedded details" })).toBeVisible();
     // The baked spec copy, readable.
     await expect(page.locator(".svc-ring-hits__sr")).toContainText("Duration:");
 
@@ -2401,7 +2401,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(frontCard).toHaveAttribute("aria-expanded", "false");
     await expect(page.locator(".services-stage")).not.toHaveAttribute("data-plate-open", "1");
     await expect(page.locator(".svc-ring-hits__sr")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Book a keynote" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Scope an engagement" })).toHaveCount(0);
 
     // ── Runway scroll dismisses ──────────────────────────────────────────
     // The drawer is welded to its card and rotates away with it, so moving
@@ -2676,21 +2676,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // chip, rather than the CTA link the full face used to bake.)
     // Arrival remap (2026-07-17): the ring holds the first slot through the
     // short arrival, then rotates. `data-active-step` = the front-card index
-    // (0..3). Occupancy since the 2026-09-19 re-cut (ADR-112): Keynote /
-    // Workshop / Embedded / Home session. p=0.18 is in the arrival window →
-    // Keynote front (step 0).
+    // (0..3). Occupancy since 2026-09-26 (owner: Embedded leads): Embedded /
+    // Keynote / Workshop / Home session. p=0.18 is in the arrival window →
+    // Embedded front (step 0).
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "0");
-    await expect(page.getByRole("button", { name: "Open Keynote details" })).toBeVisible({
+    await expect(page.getByRole("button", { name: "Open Embedded details" })).toBeVisible({
       timeout: 20_000,
     });
 
-    // p=0.58 → the ring has turned two quarter-turns: the Embedded plate is
+    // p=0.58 → the ring has turned two quarter-turns: the Workshop plate is
     // front (step 2).
     expect(await scrollServicesRunway(page, 0.58)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.getByRole("button", { name: "Open Embedded details" })).toBeVisible({
+    await expect(page.getByRole("button", { name: "Open Workshop details" })).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");

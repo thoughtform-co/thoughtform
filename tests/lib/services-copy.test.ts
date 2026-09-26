@@ -21,7 +21,8 @@ import {
 
 /**
  * The four services (ADR-112, owner, 2026-09-19): Keynote · Workshop ·
- * Embedded (with Advisory folded in) · Home session. The records were the lab's
+ * Embedded (with Advisory folded in) · Home session — and since 2026-09-26
+ * (owner) EMBEDDED LEADS the ring: Embedded · Keynote · Workshop · Home session. The records were the lab's
  * `serviceRecut` module until the owner read them live on the portrait row
  * and promoted them; this test walked them THERE first and walks production
  * now — the FIT and the COPY LAW are asserted on the strings the site serves
@@ -31,24 +32,24 @@ import {
 describe("the four services (ADR-112)", () => {
   it("keeps the four slot ids, in the ring's order, on both records", () => {
     expect(SERVICE_PLATES.map((p) => p.id)).toEqual([
+      "embedded",
       "keynote",
       "workshop",
-      "embedded",
       "guided-build",
     ]);
     expect(SERVICES.map((s) => s.id)).toEqual(SERVICE_PLATES.map((p) => p.id));
   });
 
   it("names the merged offer EMBEDDED and carries the title ADR-124 U1 ruled", () => {
-    const e = SERVICE_PLATES[2];
+    const e = SERVICE_PLATES[0];
     expect(e.id).toBe("embedded");
     expect(e.chip).toBe("Embedded");
     expect(e.title).toBe("A setup your team runs itself.");
     // The leadership altitude entered, once on the plate (the bullet and the
     // includes name it; nothing else may).
     expect(plateCopyStrings(e).filter((s) => /leadership/i.test(s))).toHaveLength(2);
-    expect(SERVICES[2].name).toBe("Embedded");
-    expect(serviceCopyStrings(SERVICES[2]).some((s) => /leadership/i.test(s))).toBe(true);
+    expect(SERVICES[0].name).toBe("Embedded");
+    expect(serviceCopyStrings(SERVICES[0]).some((s) => /leadership/i.test(s))).toBe(true);
   });
 
   it("puts the home session on the guided-build slot, on the table photograph, with no digit", () => {

@@ -77,11 +77,14 @@ export interface Service {
  *
  * RE-CUT 2026-09-19 (ADR-112, owner): Strategic Advisory folds INTO the
  * embedded offer (the standing session with leadership is the third
- * workstream's own altitude) and the fourth slot hosts the HOME SESSION. The
- * id → service mapping is now:
- *   keynote      → 01 Keynote
- *   workshop     → 02 Workshop
- *   embedded     → 03 Embedded
+ * workstream's own altitude) and the fourth slot hosts the HOME SESSION.
+ *
+ * REORDERED 2026-09-26 (owner): EMBEDDED LEADS — array order is ring order
+ * (index 0 is front on arrival), so the embedded record heads both arrays
+ * and the ordinals follow the new sequence:
+ *   embedded     → 01 Embedded
+ *   keynote      → 02 Keynote
+ *   workshop     → 03 Workshop
  *   guided-build → 04 Home session
  * `guided-build` hosting the home session is the same documented misnomer
  * that hosted Advisory — the id is a spatial key, do not rename it (rack
@@ -140,45 +143,8 @@ export const SERVICES_MASTHEAD = {
 
 export const SERVICES: readonly Service[] = [
   {
-    id: "keynote",
-    index: "01",
-    verb: "KEYNOTE",
-    name: "Keynote",
-    kicker: "A SHARED FRAME FOR AI",
-    tagline: "A shared frame for AI.",
-    body: "A grounded argument for treating AI as intelligence rather than software, and for designing its role in work accordingly.",
-    meta: [
-      { label: "Runs", value: "Navigate" },
-      { label: "Format", value: "30–90 min · NL/EN" },
-      { label: "Leaves", value: "A shared language" },
-    ],
-    phase: "navigate",
-    ctaLabel: "Book a keynote",
-    ctaHref: "#contact",
-    shapeKey: "loop-forming",
-  },
-  {
-    id: "workshop",
-    index: "02",
-    verb: "WORKSHOP",
-    name: "Workshop",
-    kicker: "A FIRST WORKING AI SETUP",
-    tagline: "A first working AI setup.",
-    body: "A hands-on session around one real workflow, producing an encoded practice, a working first setup and a clear build path.",
-    meta: [
-      { label: "Runs", value: "Navigate · Encode" },
-      { label: "Format", value: "Half-day to multi-day" },
-      { label: "Leaves", value: "First skills + build list" },
-    ],
-    phase: "navigate-encode",
-    ctaLabel: "Book a workshop",
-    ctaHref: "#contact",
-    lead: true,
-    shapeKey: "loop-encoding",
-  },
-  {
     id: "embedded",
-    index: "03",
+    index: "01",
     verb: "EMBEDDED",
     name: "Embedded",
     kicker: "A SETUP YOUR TEAM RUNS ITSELF",
@@ -202,6 +168,43 @@ export const SERVICES: readonly Service[] = [
     ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
     shapeKey: "loop-crystallized",
+  },
+  {
+    id: "keynote",
+    index: "02",
+    verb: "KEYNOTE",
+    name: "Keynote",
+    kicker: "A SHARED FRAME FOR AI",
+    tagline: "A shared frame for AI.",
+    body: "A grounded argument for treating AI as intelligence rather than software, and for designing its role in work accordingly.",
+    meta: [
+      { label: "Runs", value: "Navigate" },
+      { label: "Format", value: "30–90 min · NL/EN" },
+      { label: "Leaves", value: "A shared language" },
+    ],
+    phase: "navigate",
+    ctaLabel: "Book a keynote",
+    ctaHref: "#contact",
+    shapeKey: "loop-forming",
+  },
+  {
+    id: "workshop",
+    index: "03",
+    verb: "WORKSHOP",
+    name: "Workshop",
+    kicker: "A FIRST WORKING AI SETUP",
+    tagline: "A first working AI setup.",
+    body: "A hands-on session around one real workflow, producing an encoded practice, a working first setup and a clear build path.",
+    meta: [
+      { label: "Runs", value: "Navigate · Encode" },
+      { label: "Format", value: "Half-day to multi-day" },
+      { label: "Leaves", value: "First skills + build list" },
+    ],
+    phase: "navigate-encode",
+    ctaLabel: "Book a workshop",
+    ctaHref: "#contact",
+    lead: true,
+    shapeKey: "loop-encoding",
   },
   {
     id: "guided-build",

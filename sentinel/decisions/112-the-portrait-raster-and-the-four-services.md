@@ -201,3 +201,30 @@ parallel against one dev server fail nine and pass nine on their own.
 - The strategy skill's own record of the fold (another repo).
 - ADR-086's `poster` band, its constellation drawing and the `card` face stay
   in the lab as V8, one word away.
+
+## Update 1 (2026-09-26, owner): Embedded leads
+
+> "on our homepage, the services, i feel that embedded should be the first one"
+
+Array order IS ring order: index 0 is the card front-centre on arrival and
+beats 1..3 bring the rest (`RING_STEP_COUNT`, `RING_ENTRANCE_WINDOWS`). So the
+embedded record moved to the head of both `SERVICE_PLATES` and `SERVICES`, and
+the other three kept their relative order: **Embedded · Keynote · Workshop ·
+Home session**. The Home session stays last, so the exit stack, the deck flip
+and the card that turns to the portrait are unchanged.
+
+- **The ids did not move.** They are spatial keys (rack position, anchor pick,
+  designation set, scan note, edge rule, portrait), so everything keyed by id
+  travels with its service. Only what is keyed by POSITION changed hands: the
+  entrance direction and window, the orbit radius, the arrival beat.
+- **The ordinals were renumbered to the sequence** — `index` 01–04,
+  `statusCode` BLD-01 · NAV-02 · ENC-03 · NAV-04, `feedLabel` Feed 01–04 (the
+  feed labels had been out of order since the re-cut: Embedded read Feed 04,
+  the Home session Feed 03).
+- **No copy changed.** The masthead intro still reads "From a keynote to an
+  embedded engagement" — a range of depth, not the card order; left for the
+  owner's read.
+- Guards moved with it: `services-copy.test.ts` pins the new order and finds
+  Embedded at index 0; `services-ring-smoke` names the front card
+  `Open Embedded details`, its drawer CTA `Scope an engagement`, and step 2
+  `Open Workshop details`.

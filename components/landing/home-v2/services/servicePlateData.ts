@@ -79,7 +79,7 @@ export interface ServicePlate {
   breakdown: string[];
   /** The `02 / HOW` qualification grid. OPEN STATE ONLY (see ServiceSpec). */
   spec: ServiceSpec;
-  /** Feed caption under the photo, e.g. "Feed 01 · On stage". MOBILE PLATE
+  /** Feed caption under the photo, e.g. "Feed 02 · On stage". MOBILE PLATE
    *  ONLY — dropped from the WebGL bake 2026-07-17. */
   feedLabel: string;
   /** Feed status, e.g. "Live" / "Locked". MOBILE PLATE ONLY. */
@@ -140,14 +140,20 @@ const photo = (id: ServicePhotoAssetId, alt: string, position: string) => ({
  * (the doctrine's own flagship word, spanning both altitudes) — and the fourth
  * slot hosts the HOME SESSION, new on the site: six to eight people at the
  * owner's table in Antwerp for one morning, the argument in full and then
- * the skill by hand. The id → service mapping is now:
- *   keynote  slot (left rack, top)    → 01 Keynote       (keynote photo)
- *   workshop slot (left rack, bottom) → 02 Workshop      (workshop photo)
- *   embedded slot (right rack, top)   → 03 Embedded      (embedded photo)
+ * the skill by hand.
+ *
+ * REORDERED 2026-09-26 (owner): EMBEDDED LEADS. Array order is ring order —
+ * index 0 is the card front-centre on arrival, beats 1..3 bring the rest —
+ * so the embedded record moved to the head of both arrays and the other three
+ * kept their relative order. The ids did not move with it (they are spatial
+ * keys, below); the ordinals were renumbered to the new sequence:
+ *   embedded slot (right rack, top)   → 01 Embedded      (embedded photo)
+ *   keynote  slot (left rack, top)    → 02 Keynote       (keynote photo)
+ *   workshop slot (left rack, bottom) → 03 Workshop      (workshop photo)
  *   guided   slot (right rack, bottom)→ 04 Home session  (strategic photo — the
  *                                       one shot at a table, the slot's own asset)
- * Status codes are phase + index (NAV-01 / ENC-02 / BLD-03 / NAV-04) so the
- * mobile chrome reads the progression. Keeping the ids as slot keys avoids
+ * Status codes are phase + index (BLD-01 / NAV-02 / ENC-03 / NAV-04) so the
+ * mobile chrome reads the sequence. Keeping the ids as slot keys avoids
  * re-tuning every spatial map; the photo for each slot is pointed at the
  * correct asset by hand. All four slots carry photos since the 2026-07-10
  * `-2` reshoot (ADR-029 card ring); the schematic dot-grid fallback stays
@@ -167,63 +173,9 @@ const photo = (id: ServicePhotoAssetId, alt: string, position: string) => ({
  * starts crowding the title band (`LEDE_MAX_CH`, tested). */
 export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
-    id: "keynote",
-    chip: "Keynote",
-    statusCode: "NAV-01",
-    title: "A shared frame for AI.",
-    lede: [
-      "A grounded argument for treating AI as intelligence rather than software, and for designing its role in work accordingly.",
-    ],
-    breakdown: [
-      "Built on your industry's cases, not generic AI slides",
-      "Live demos, so the room sees the work happen",
-      "A take-home deck the team can reuse",
-    ],
-    spec: {
-      duration: "30 to 90 minutes",
-      participants: "Any room size",
-      format: "Live demos, built for your industry",
-      language: "NL / EN",
-      leavesWith: "A shared language for AI",
-    },
-    feedLabel: "Feed 01 · On stage",
-    feedStatus: "Live",
-    includes: ["Live demos", "Custom cases", "Take-home deck", "NL / EN"],
-    ctaLabel: "Book a keynote",
-    ctaHref: "#contact",
-    photo: photo("keynote", "Vince Buyssens delivering a keynote on stage", "50% 22%"),
-  },
-  {
-    id: "workshop",
-    chip: "Workshop",
-    statusCode: "ENC-02",
-    title: "A first working AI setup.",
-    lede: [
-      "A hands-on session around one real workflow, producing an encoded practice, a working first setup and a clear build path.",
-    ],
-    breakdown: [
-      "We map your team's real workflows before touching a tool",
-      "They build their first working AI tools in the room",
-      "A follow-up session once the first patterns have run",
-    ],
-    spec: {
-      duration: "Half day to multi-day, plus follow-up",
-      participants: "Up to 8 per session",
-      format: "Hands-on, on your own work",
-      language: "NL / EN",
-      leavesWith: "First skills and a build list",
-    },
-    feedLabel: "Feed 02 · On the floor",
-    feedStatus: "Standby",
-    includes: ["Workflow mapping", "First skills", "Build list", "NL / EN"],
-    ctaLabel: "Book a workshop",
-    ctaHref: "#contact",
-    photo: photo("workshop", "Vince Buyssens working with a team in a studio session", "50% 18%"),
-  },
-  {
     id: "embedded",
     chip: "Embedded",
-    statusCode: "BLD-03",
+    statusCode: "BLD-01",
     /* ADR-124 U1 (owner, 2026-09-25): practical, what a buyer can expect. */
     title: "A setup your team runs itself.",
     /* ADR-124 (owner, 2026-09-24): the card says what the work IS, in the
@@ -260,12 +212,66 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
       language: "NL / EN",
       leavesWith: "The layer, and the team that runs it",
     },
-    feedLabel: "Feed 04 · On site",
+    feedLabel: "Feed 01 · On site",
     feedStatus: "Standby",
     includes: ["Three workstreams", "Your own keys", "Leadership session", "Dated handover"],
     ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
     photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 45%"),
+  },
+  {
+    id: "keynote",
+    chip: "Keynote",
+    statusCode: "NAV-02",
+    title: "A shared frame for AI.",
+    lede: [
+      "A grounded argument for treating AI as intelligence rather than software, and for designing its role in work accordingly.",
+    ],
+    breakdown: [
+      "Built on your industry's cases, not generic AI slides",
+      "Live demos, so the room sees the work happen",
+      "A take-home deck the team can reuse",
+    ],
+    spec: {
+      duration: "30 to 90 minutes",
+      participants: "Any room size",
+      format: "Live demos, built for your industry",
+      language: "NL / EN",
+      leavesWith: "A shared language for AI",
+    },
+    feedLabel: "Feed 02 · On stage",
+    feedStatus: "Live",
+    includes: ["Live demos", "Custom cases", "Take-home deck", "NL / EN"],
+    ctaLabel: "Book a keynote",
+    ctaHref: "#contact",
+    photo: photo("keynote", "Vince Buyssens delivering a keynote on stage", "50% 22%"),
+  },
+  {
+    id: "workshop",
+    chip: "Workshop",
+    statusCode: "ENC-03",
+    title: "A first working AI setup.",
+    lede: [
+      "A hands-on session around one real workflow, producing an encoded practice, a working first setup and a clear build path.",
+    ],
+    breakdown: [
+      "We map your team's real workflows before touching a tool",
+      "They build their first working AI tools in the room",
+      "A follow-up session once the first patterns have run",
+    ],
+    spec: {
+      duration: "Half day to multi-day, plus follow-up",
+      participants: "Up to 8 per session",
+      format: "Hands-on, on your own work",
+      language: "NL / EN",
+      leavesWith: "First skills and a build list",
+    },
+    feedLabel: "Feed 03 · On the floor",
+    feedStatus: "Standby",
+    includes: ["Workflow mapping", "First skills", "Build list", "NL / EN"],
+    ctaLabel: "Book a workshop",
+    ctaHref: "#contact",
+    photo: photo("workshop", "Vince Buyssens working with a team in a studio session", "50% 18%"),
   },
   {
     id: "guided-build",
@@ -287,7 +293,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
       language: "NL / EN",
       leavesWith: "The skill, and the people you sat with",
     },
-    feedLabel: "Feed 03 · At the table",
+    feedLabel: "Feed 04 · At the table",
     feedStatus: "Standby",
     includes: ["Six to eight seats", "One morning", "Antwerp", "NL / EN"],
     ctaLabel: "Reserve a seat",

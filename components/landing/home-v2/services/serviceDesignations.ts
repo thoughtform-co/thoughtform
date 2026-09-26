@@ -79,26 +79,28 @@ const D = (
  * with their services while the spatial params (featureId / side / dx / dy)
  * stay tuned to the rack position they were placed for — the same split the
  * 2026-07-09 remap established:
- *   keynote  slot → 01 Keynote
- *   workshop slot → 02 Workshop
- *   embedded slot → 03 Embedded      (Advisory folded in, ADR-112)
- *   guided   slot → 04 Home session  (ADR-112) */
+ *   embedded slot → 01 Embedded      (Advisory folded in, ADR-112)
+ *   keynote  slot → 02 Keynote
+ *   workshop slot → 03 Workshop
+ *   guided   slot → 04 Home session  (ADR-112)
+ * The ordinals are RING order since 2026-09-26 (owner: Embedded leads); the
+ * record order below stays slot order — it is a map, not a sequence. */
 export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation[]> = {
-  // 01 Keynote
+  // 02 Keynote
   keynote: [
     D("crown", "SHARED FRAME", "how the room sees AI", "right", 36, -26),
     D("upper-left-arm", "LIVE DEMOS", "on the room's work", "right", 24, -60),
     D("lower-right-arm", "SHARED LANGUAGE", "what the room keeps", "left", 24, 60),
     D("base", "NAVIGATE", "the operating posture", "left", 36, 36),
   ],
-  // 02 Workshop
+  // 03 Workshop
   workshop: [
     D("crown", "REAL BACKLOG", "the team's own briefs", "left", 36, -26),
     D("upper-right-arm", "JUDGMENT POINTS", "where humans decide", "left", 24, -60),
     D("lower-left-arm", "ENCODED SKILLS", "kept after we leave", "right", 24, 60),
     D("base", "ENCODE", "capture what works", "right", 36, 36),
   ],
-  // 03 Embedded
+  // 01 Embedded
   embedded: [
     // The crown's detail names the scope (ADR-124): the three stages run
     // from production to review.
