@@ -94,6 +94,16 @@ export interface ServicePlate {
    * pre-2026-07-09, adding `.svc-plate__cta--solid`). Kept for possible
    * future per-card emphasis; wire a new consumer before relying on it. */
   focus?: boolean;
+  /**
+   * THE LEAD CARD (ADR-126 §4, owner 2026-09-26: Embedded is "the main card
+   * … I think we can also highlight it a bit"). The one service the ring
+   * leads on takes a FILLED gold name plate on its baked face — the ADR-029
+   * chip material, the name knocked out — beside three bare names. Exactly one
+   * record carries it, and it is `embedded` (`services-copy` pins both, on
+   * both records). No size change: the front boost, the About deck seam and
+   * the phone seat are untouched.
+   */
+  lead?: boolean;
   /** Optional — services without a shipped hologram photo render a schematic
    * dot-grid placeholder in both the seed feed band and the open photo
    * window (`ServicePlateCard` handles the fallback). Drop the photo in and
@@ -175,6 +185,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
     id: "embedded",
     chip: "Embedded",
+    lead: true,
     statusCode: "BLD-01",
     /* ADR-124 U1 (owner, 2026-09-25): practical, what a buyer can expect. */
     title: "A setup your team runs itself.",

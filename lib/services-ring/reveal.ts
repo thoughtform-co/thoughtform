@@ -46,6 +46,34 @@ export const RASTER_QUIET_LEVEL = 0.25;
  *  carries dark noise the synthetic fields never did. */
 export const RASTER_SKIP_LUM = 0.06;
 
+/* ── The lead plate (ADR-126 §4) ────────────────────────────────────────
+   The ring's LEAD card takes a FILLED gold plate behind its display name —
+   the ADR-029 chip material, the name knocked out — beside three bare names.
+   The box is the type's own, padded, and it has to sit INSIDE the raster's
+   quiet head so the glyphs never print through the gold; pure here so the
+   bake and `services-ring-reveal.test.ts` share one arithmetic. */
+
+/** Air either side of the name on the lead plate (bake px). */
+export const LEAD_PLATE_PAD_X = 28;
+/** Air above the cap and below the last baseline — the name frame's own
+ *  `NAME_FRAME_PAD_Y` (24, `ServicesCardRing`), restated: the plate is that
+ *  frame's box, filled. */
+export const LEAD_PLATE_PAD_Y = 24;
+
+/** The plate's vertical box for a name whose cap block starts at `capTop`
+ *  (bake px), `lines` lines of cap `capH` on a leading `lh`. */
+export function leadPlateBox(
+  capTop: number,
+  capH: number,
+  lines: number,
+  lh: number
+): { top: number; bottom: number } {
+  return {
+    top: capTop - LEAD_PLATE_PAD_Y,
+    bottom: capTop + capH + (lines - 1) * lh + LEAD_PLATE_PAD_Y,
+  };
+}
+
 /** The raster's alpha multiplier at a bake-space y: the quiet level inside
  *  the two type bands, 1 in the field, eased over `RASTER_QUIET_EASE` at
  *  each edge (the ease sits inside the field, so the bands themselves are

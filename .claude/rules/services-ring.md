@@ -117,6 +117,17 @@ it with the four services it was baked on.
   same test. The designations (AT THE TABLE · THE ARGUMENT · THE SKILL ·
   NAVIGATE), the scan note and the smoke's role-name pins moved with the
   chips; the lab's `serviceRecut` module dissolved — no alias.
+- **The LEAD card takes a filled name plate (ADR-126 §4, owner 2026-09-26:
+  Embedded is "the main card … highlight it a bit").** `ServicePlate.lead`
+  (exactly one, `embedded`, in lockstep with `serviceData`'s — `services-copy`
+  pins both) and the bake draws `pal.chipFill` behind the display name with the
+  name knocked out in `pal.chipInk`: the ADR-029 chip material, one plate among
+  three bare names (not ADR-089 U4's fill-among-outlines literally — this face
+  has no outlines to be among). Both bakes of the card pass `lead` (the reveal
+  texture must carry the plate, or the bands cross-fade gold over nothing).
+  The box is `leadPlateBox` in three-free `reveal.ts`, pinned inside the
+  raster's quiet head on both rungs. NO size change: the front boost, the About
+  deck seam and the phone seat are untouched.
 - Dials left for the owner's read: the rest raster's base alpha (dim in
   dark, 15–41 % band coverage), the scan cadence, the ink (the cell's toned
   colour is one line away).
@@ -387,7 +398,10 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   `TIGHT_EXPAND_SIZE` / `TIGHT_EXPAND_INSET` derive from `DRAWER_CLOSE_*`
   so open and close occupy one corner at one scale. Visual only — the
   whole face is already a full-rect `onOpenFront` button.
-- **⚠ The NAME FRAME is measured, and shares the chit's stroke.** Hairline
+- **⚠ The NAME FRAME is measured, and shares the chit's stroke.** ⚠ THIS IS
+  ADR-050's `tight` FACE — the live `raster-photo` face sets the name BARE in
+  `TITLE_STYLE.display` (no box, no mark), and the one plate on the live ring
+  is the LEAD card's (ADR-126 §4, §The portrait raster above). Hairline
   `pal.goldA(0.55)` at 2px — **identical to the chit's**, so the two
   objects bracketing the header band are one chrome family. Outlined, not
   filled: the filled ADR-029 block is what made the old chip read as a tag

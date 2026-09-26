@@ -122,6 +122,14 @@ describe("the four services (ADR-112)", () => {
     }
   });
 
+  it("names ONE lead card on each record, and it is embedded (ADR-126 §4)", () => {
+    /* The ring bakes the lead plate off the PLATE record; the celestial lab's
+       card reads the DOM record. One lead, the same one, on both — or the two
+       surfaces would mark different cards as the main one. */
+    expect(SERVICE_PLATES.filter((p) => p.lead).map((p) => p.id)).toEqual(["embedded"]);
+    expect(SERVICES.filter((s) => s.lead).map((s) => s.id)).toEqual(["embedded"]);
+  });
+
   it("obeys the services copy law on every record", () => {
     const violations = [
       ...SERVICE_PLATES.flatMap((p) =>

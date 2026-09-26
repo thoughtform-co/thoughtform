@@ -8,6 +8,9 @@ import {
   RASTER_QUIET_HEAD,
   RASTER_QUIET_HEAD_PHONE,
   RASTER_QUIET_LEVEL,
+  LEAD_PLATE_PAD_X,
+  LEAD_PLATE_PAD_Y,
+  leadPlateBox,
   REVEAL_DAMP_RATE,
   REVEAL_GRID_MIN,
   REVEAL_POP_GRID,
@@ -113,6 +116,28 @@ describe("the reveal's ramps", () => {
       level += (1 - level) * Math.min(1, REVEAL_DAMP_RATE / 60);
     expect(level).toBeGreaterThan(0.4);
     expect(level).toBeLessThan(0.6);
+  });
+});
+
+describe("the lead plate sits inside the raster's quiet head (ADR-126 §4)", () => {
+  /* The display name's cap block on both rungs, restated from the ring's
+     private constants (see TITLE_BOTTOM above): cap top 140 on both; the
+     desktop's cap 44 on a 74 leading, the phone's 52 on 88 (FACE_PHONE_RUNGS). */
+  it("on the desktop, one line", () => {
+    const box = leadPlateBox(140, 44, 1, 74);
+    expect(box.top).toBe(140 - LEAD_PLATE_PAD_Y);
+    expect(box.bottom).toBe(140 + 44 + LEAD_PLATE_PAD_Y);
+    expect(box.bottom).toBeLessThanOrEqual(RASTER_QUIET_HEAD);
+  });
+  it("on the phone, even at two lines", () => {
+    expect(leadPlateBox(140, 52, 1, 88).bottom).toBeLessThanOrEqual(RASTER_QUIET_HEAD_PHONE);
+    expect(leadPlateBox(140, 52, 2, 88).bottom).toBeLessThanOrEqual(RASTER_QUIET_HEAD_PHONE);
+  });
+  it("pads the name, never the card", () => {
+    // The plate is the type's box padded — narrower than the card by any
+    // margin, so it can never read as a band across the face.
+    expect(LEAD_PLATE_PAD_X).toBeLessThan(60);
+    expect(LEAD_PLATE_PAD_Y).toBe(24);
   });
 });
 

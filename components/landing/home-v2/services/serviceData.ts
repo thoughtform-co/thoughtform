@@ -52,7 +52,11 @@ export interface Service {
   ctaLabel: string;
   /** CTA href — usually #contact. */
   ctaHref: string;
-  /** Marks the visually emphasised "lead" card (gold accent). */
+  /** Marks the visually emphasised "lead" card. ⚠ Since ADR-126 it is the
+   *  EMBEDDED card (it sat on the workshop from the 2026-07 celestial cards
+   *  on), in lockstep with `servicePlateData`'s `lead` — the ring bakes the
+   *  lead plate off THAT record; this flag reaches the `brandmark-reflective`
+   *  lab's celestial card alone. */
   lead?: boolean;
   /** Shape identifier consumed by ServiceSigilField. */
   shapeKey: "loop-forming" | "loop-encoding" | "loop-crystallized";
@@ -180,6 +184,7 @@ export const SERVICES: readonly Service[] = [
     phase: "all",
     ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
+    lead: true,
     shapeKey: "loop-crystallized",
   },
   {
@@ -216,7 +221,6 @@ export const SERVICES: readonly Service[] = [
     phase: "navigate-encode",
     ctaLabel: "Book a workshop",
     ctaHref: "#contact",
-    lead: true,
     shapeKey: "loop-encoding",
   },
   {

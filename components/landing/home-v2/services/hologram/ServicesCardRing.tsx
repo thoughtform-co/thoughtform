@@ -72,6 +72,8 @@ import {
   RASTER_QUIET_HEAD_PHONE,
   REVEAL_DAMP_RATE,
   rasterQuietAt,
+  LEAD_PLATE_PAD_X,
+  leadPlateBox,
 } from "@/lib/services-ring/reveal";
 import { isFigureSlot } from "@/lib/services-ring/serviceFigures";
 import { TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
@@ -1015,9 +1017,13 @@ function bakeCardFace(
      `bakeCardBack` and `bakePortraitBack` alike.
      `rung` (ADR-115 U2) is the PHONE's: the display name at the bled
      treatment's own rungs, the lede at `FACE_PHONE_RUNGS.lede`, the raster
-     at `RASTER_PX_PHONE` under its own quiet bands. The desktop passes none
-     and every branch below falls to its literal — byte-identical. */
-  opts?: { photoOnly?: boolean; rung?: FaceRung }
+     at `RASTER_PX_PHONE` under its own quiet bands. The desktop passes no
+     rung and every branch below falls to its literal — byte-identical.
+     `lead` (ADR-126 §4) is the LEAD card's: a filled gold plate behind its
+     display name, the name knocked out. Both bakes of a card pass it (the
+     reveal texture must carry the plate, or the bands cross-fade gold over
+     nothing). */
+  opts?: { photoOnly?: boolean; rung?: FaceRung; lead?: boolean }
 ): HTMLCanvasElement {
   const phoneRung = opts?.rung === "phone";
   const canvas = document.createElement("canvas");
@@ -1300,6 +1306,19 @@ function bakeCardFace(
        hairline box would read as a caption in a frame. */
     const ts = TITLE_STYLE[comp.bled ? "display" : (comp.pin ?? titleStyle)] ?? TITLE_STYLE.framed;
     const framed = ts.box !== "none";
+    /* THE LEAD PLATE (ADR-126 §4, owner: Embedded is "the main card … highlight
+       it a bit"). The one card the ring leads on takes a FILLED plate behind
+       its bare display name — the ADR-029 chip material (`pal.chipFill`, the
+       name knocked out in `pal.chipInk`) — beside three bare names. Only the
+       DISPLAY treatment takes it (a framed or filled treatment already has its
+       box; the bled name is a wordmark), and only when the plate says so. The
+       type stays the datum: the plate wraps the cap block wherever the anchor
+       put it, `LEAD_PLATE_PAD_X` a side, `leadPlateBox` above and below —
+       pure in `reveal.ts`, where the test pins it inside the raster's quiet
+       head on both rungs. Not ADR-089 U4's fill-among-outlines literally: on
+       this face there are no outlines to be among, so the read is one plate
+       among three bare names. */
+    const leadPlate = !!opts?.lead && ts.box === "none" && !comp.bled;
 
     /* THE PHONE FACE (ADR-115 U2): on the phone bake the DISPLAY name takes
        the bled treatment's own rungs and the lede lifts to the phone rung —
@@ -1380,6 +1399,12 @@ function bakeCardFace(
     } else if (ts.box === "fill") {
       ctx.fillStyle = pal.chipFill;
       ctx.fillRect(frameX, frameY, frameW, frameH);
+    } else if (leadPlate) {
+      const plateW = nameTextW + LEAD_PLATE_PAD_X * 2;
+      const plateX = titleCentre ? (BAKE_W - plateW) / 2 : PAD_X - LEAD_PLATE_PAD_X;
+      const box = leadPlateBox(nameTop - nameCapH, nameCapH, nameLines.length, nameLh);
+      ctx.fillStyle = pal.chipFill;
+      ctx.fillRect(plateX, box.top, plateW, box.bottom - box.top);
     }
 
     const nameTextX = frameX + frameLead;
@@ -1389,9 +1414,10 @@ function bakeCardFace(
       // same x. Centring the block but not its lines is the tell of a layout
       // that was moved rather than re-anchored.
       const x = titleCentre && !framed ? (BAKE_W - lineW) / 2 : nameTextX;
-      // On a FILLED chip the name is knocked out of the gold, not painted on it
-      // — ink on gold measures ~8.2:1, gold on gold measures nothing.
-      const ink = ts.box === "fill" ? pal.chipInk : pal.gold;
+      // On a FILLED chip — or the lead plate — the name is knocked out of the
+      // gold, not painted on it: ink on gold measures ~8.2:1, gold on gold
+      // measures nothing.
+      const ink = ts.box === "fill" || leadPlate ? pal.chipInk : pal.gold;
       drawRunLine(ctx, line, x, nameTop + i * nameLh, ink, ink);
     });
 
@@ -3041,15 +3067,10 @@ export function ServicesCardRing({
             /* ADR-115 U2: the phone mount bakes its face at the phone rung
                (`FACE_PHONE_RUNGS`); the desktop passes no options and the
                bake is source-identical to the line before this pass. */
-            face: bakeCardFace(
-              plate,
-              img,
-              faceVariant,
-              facePal,
-              titleStyle,
-              bakeScale,
-              mobileProfile ? { rung: "phone" } : undefined
-            ),
+            face: bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale, {
+              rung: mobileProfile ? "phone" : undefined,
+              lead: plate.lead,
+            }),
             /* The REVEAL (round four): the same composition without the glyph
                pass, from the same image, so the type lands on the same
                pixels. Full size on purpose — a 0.75 twin would soften the
@@ -3058,6 +3079,7 @@ export function ServicesCardRing({
               revealOn && img
                 ? bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale, {
                     photoOnly: true,
+                    lead: plate.lead,
                   })
                 : null,
           };
