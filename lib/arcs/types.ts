@@ -586,6 +586,31 @@ export type ArcSection = ArcSectionBase &
         head: ArcHead;
         items: readonly ArcStepsItem[];
       }
+    | {
+        /**
+         * ONE Loop project as the promoted FOLDER CARD (ADR-097), at REST, at
+         * page width (ADR-128): the claim (`track.arc.title`), the four-claims
+         * register and the closed evidence frame, in the one housing the
+         * homepage's pile and the Trinny pitch already say it in. On a
+         * flowing proposal the four beats read in `PROOF_STACK_ORDER` as the
+         * practice a reader could see itself in, with Loop as the illustration.
+         *
+         * ⚠ THE SIXTH ENUMERATED EXCEPTION to ADR-052's "new arcs are
+         * content-only" (dossier · configuration · flow · board · steps ·
+         * proof-card). It carries NO data: the record is `CASES`' Loop
+         * casefile, resolved by the renderer through the pile's own
+         * `proofStackTracks` law — a missing id THROWS rather than falls out.
+         *
+         * ⚠ THE CARD IS THE HEAD. Its band letters the client and its title
+         * letters the arc line, so `head` is optional and, when authored, a
+         * masthead ABOVE the card that may never repeat the card's own title
+         * (`arcs-registry` pins it).
+         */
+        kind: "proof-card";
+        /** A `CaseTrack.id` on the Loop casefile — `PROOF_STACK_ORDER`'s vocabulary. */
+        track: string;
+        head?: ArcHead;
+      }
   );
 
 /** One deliverable on a `steps` beat: a row on the left, a visual on the right. */

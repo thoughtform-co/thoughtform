@@ -64,6 +64,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   configuration: "SETUP",
   board: "BOARD",
   steps: "OUTCOMES",
+  "proof-card": "PROOF",
 };
 
 /**

@@ -109,6 +109,38 @@
 .arc-hud-root {
   display: contents;
 }
+/* The client's mark in the HUD's top-left corner (the design skill's
+   client shell, `ArcShell.clientMark`): a 102x48 slot inside the corner
+   zone, the mark contained, a 30px hairline as its terminator. The plain
+   bracket yields the corner while a mark is there. */
+.arc-hud-client {
+  position: fixed;
+  top: calc(var(--hud-margin, 24px) + 4px);
+  left: calc(var(--hud-margin, 24px) + 2px);
+  z-index: 21;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  pointer-events: auto;
+}
+.arc-hud-client img {
+  display: block;
+  width: 102px;
+  height: 48px;
+  object-fit: contain;
+  object-position: left center;
+}
+.arc-hud-client::after {
+  content: "";
+  display: block;
+  width: 30px;
+  height: 1px;
+  background: var(--dawn-30, rgba(255, 255, 255, 0.3));
+}
+.arc-root:has(.arc-hud-client) .hud__corner--tl {
+  display: none;
+}
 .arc-section {
   position: relative;
   z-index: 1;
@@ -4748,6 +4780,60 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
 .arc-films .fl-con__console {
   opacity: 1;
   transition: none;
+}
+
+/* ── THE PROOF CARD, AT REST (ADR-128) ─────────────────────────────
+   The homepage's folder card (ADR-097, `proof-stack.css`) mounted whole on a
+   flowing proposal, one Loop project a beat. Nothing in the module changes:
+   the card is seated by `.pf-stack .pf-slot`'s own DECLARED rest state
+   (`--pc-enter: 1; --pc-cover: 0; --pc-depth: 0`), so with no hook every
+   arrival channel resolves finished — the plate at full opacity, no rise, no
+   recession, the record and the field in place. What this host supplies is
+   the BOX: the slot's sticky seat and its runway-derived height belong to the
+   pile, so here the slot is static and takes the films console's height law
+   (a definite height, aspect-capped so a wide band does not letterbox the
+   field). ⚠ Colour needs no bridge: the module is token-only over the swapped
+   triples and theme.css already re-derives `--pf-bloom-a` / `--pf-head-a` in
+   light; this is the card's third host after the pile and the Trinny pitch.
+   ⚠ (0,3,0) over the sheet's (0,2,0), and only inside `.arc-proof`, so the
+   pile and the pitch are byte-identical. */
+.arc-sec--proof {
+  --arc-stage-pad: clamp(56px, 8vh, 120px);
+  padding-block: var(--arc-stage-pad);
+}
+.arc-sec--proof .arc-head {
+  margin-bottom: clamp(18px, 2.6vh, 34px);
+}
+.arc-proof {
+  /* The films law, floored higher: this card carries its own head band and a
+     record column beside the field, so the honest box is taller than a bare
+     console's. Headless (the card IS the head) it fits one viewport. */
+  --arc-proof-h: min(clamp(560px, 72svh, 880px), calc(100svh - 2 * var(--arc-stage-pad)));
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  max-width: min(var(--instrument-max, 1440px), calc(var(--arc-proof-h) * 1.7));
+}
+/* Under an authored head on a proposal the beat budgets for the datum, the
+   studio consoles' own second term (ADR-099 U2). */
+.arc-root[data-arc-format="proposal"] .arc-sec--proof:has(> .arc-band > .arc-head) .arc-proof {
+  --arc-proof-h: min(
+    clamp(560px, 72svh, 880px),
+    calc(100svh - var(--arc-head-datum) - var(--arc-stage-pad) - 148px - clamp(18px, 2.6vh, 34px))
+  );
+}
+/* The slot is the pile's sticky seat; here it is a static box of the beat's
+   height and the card's `height: 100%` fills it. Gated to the complement of
+   the module's own inert rung (≤960 / ≤680h / PRM), which already parks the
+   card in flow with a definite field. */
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .arc-proof .pf-stack .pf-slot {
+    position: static;
+    top: auto;
+    height: var(--arc-proof-h);
+    margin-bottom: 0;
+  }
 }
 
 /* ── THE CONFIGURATION, AS ONE INSTRUMENT (ADR-098) ──────────────

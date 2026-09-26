@@ -25,6 +25,11 @@ import "@/components/landing/home-v2/services/casefile/console/console.css";
 // two sheets above it: `.fl-pda*`-scoped, so an arc without the beat
 // gets bytes and no matching rule.
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
+// The proof card's own sheet (ADR-128): a `proof-card` beat mounts the
+// homepage's folder card at rest, and this is its skin. `.pf-stack`-scoped,
+// so an arc without the beat gets bytes and no matching rule. Route-level for
+// the same reason as the three above, ahead of arcs.css, which hosts it.
+import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
 import "@/components/arcs/arcs.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
@@ -157,6 +162,7 @@ export default async function ArcPage({ params }: ArcRouteParams) {
         curtain={arc.hero.curtain ?? false}
         format={arc.format}
         lock={arc.theme}
+        clientMark={arc.client ? getClient(arc.client)?.mark : undefined}
       >
         <ArcHero hero={arc.hero} />
         <ArcSectionRenderer sections={arc.sections} motion={motion} />

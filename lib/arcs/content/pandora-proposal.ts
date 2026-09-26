@@ -83,59 +83,39 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Part one · how it looks in practice",
         title: { pre: "Four things we do inside a creative team,", em: "at Loop." },
-        sub: "In the order every team goes through them. Loop is the illustration: about 700 paid-social assets a month from two designers and one copywriter, a briefing that moves from the board into Figma without being retyped, a checker that took most of the manual review off the art director, and a program manager who gave himself a week back a month with a planning tool he built in Claude. The setup is what Pandora would own.",
+        sub: "In the order every team goes through them, with Loop as the illustration: about 700 paid-social assets a month from two designers and one copywriter, a briefing that moves from the board into Figma without being retyped, a checker that took most of the manual review off the art director, and a program manager who gave himself a week back a month with a planning tool he built in Claude. The line Loop drew where photography stays real is the line Pandora has already drawn for itself, and the operations tool on the second card is where Pandora's studio is jammed. The setup is what Pandora would own.",
       },
     },
+    /* ⚠ THE FOUR PROOF BEATS ARE THE HOMEPAGE'S OWN FOLDER CARDS, AT REST
+       (ADR-128 Phase B): one Loop project a beat, in the pile's order, the
+       card lettering the arc line as its title and Loop's own claims beneath.
+       No head on any of them — the card is the head — and the chapter above
+       says why they are here. Phase A drew the same four as `films` · a head
+       over the `heimdall` dossier · `sheets` · `intelligence`; the record is
+       the same, the housing is the one the owner is "really happy with". */
     {
-      id: "frontier",
-      kind: "films",
+      id: "practice-frontier",
+      kind: "proof-card",
       menuLabel: "Films",
-      ariaLabel: "The above-the-line films Loop made with AI",
-      head: {
-        eyebrow: "Loop Earplugs · the frontier",
-        title: { pre: "We push the frontiers of", em: "AI creative." },
-        sub: "Two thirty-second films by the same creative team, made with generative models to the craft bar of live action and run as paid media. And a line drawn where photography stays real, which is the line Pandora has already drawn for itself: no generated people in anything a customer sees.",
-      },
+      track: "atl-films",
     },
     {
-      id: "tools-head",
-      kind: "head",
-      head: {
-        eyebrow: "Loop Earplugs · the tools",
-        title: { pre: "We build the tools", em: "the work needs." },
-        sub: "Built with the people who run the workflow, where creative work jams: production, operations and the review between them. The one below is the operations tool, the briefing that goes from the board into Figma with nothing retyped, because operations is where Pandora's studio is jammed.",
-      },
+      id: "practice-tools",
+      kind: "proof-card",
+      menuLabel: "Tools",
+      track: "tooling",
     },
     {
-      /* The operations tool is the beat this proposal turns on, because the
-         ask is operations. It is Loop's own record, by reference. */
-      id: "studio-pm",
-      kind: "dossier",
-      menuLabel: "Own software",
-      toolId: "heimdall",
-      legend: MODE_LEGEND.Repair,
-    },
-    {
-      id: "studio",
-      kind: "sheets",
+      id: "practice-studio",
+      kind: "proof-card",
       menuLabel: "Studio",
-      ariaLabel: "Loop Studio, the output, the rule and the limit",
-      head: {
-        eyebrow: "Loop Earplugs · the studio",
-        title: { pre: "We embed until the team", em: "runs it alone." },
-        sub: "Creative technology inside the studio until the team briefs, makes, judges and ships without a specialist in the loop. Half of what a conservative brand has to trust is what the setup may not make: the line and the red line below are how Loop decided that, and Pandora's own lines are the same kind of decision, written down first.",
-      },
+      track: "studio",
     },
     {
-      id: "layer",
-      kind: "intelligence",
+      id: "practice-layer",
+      kind: "proof-card",
       menuLabel: "The layer",
-      ariaLabel: "The layer Loop's agents run on: the work, and the configuration",
-      head: {
-        eyebrow: "Loop Earplugs · the layer",
-        title: { pre: "We build the layer", em: "the agents run on." },
-        sub: "Team by team, what each one knows is written down once, as the briefing every agent inherits, with checks it runs on its own work and a person with the last word. The map below is Loop's marketing work by workstream, and by how far each stream runs without a person.",
-      },
+      track: "ai-transformation",
     },
     {
       id: "turn",

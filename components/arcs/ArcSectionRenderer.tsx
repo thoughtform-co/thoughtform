@@ -9,6 +9,7 @@ import { ArcConfiguration } from "./ArcConfiguration";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
 import { ArcProgramBoard } from "./ArcProgramBoard";
+import { ArcProofCard } from "./ArcProofCard";
 import { ArcIntelligence } from "./ArcIntelligence";
 import { ArcInterstitial } from "./ArcInterstitial";
 import { ArcListGroups } from "./ArcListGroups";
@@ -111,6 +112,10 @@ export function ArcSectionRenderer({
             return <ArcBoard key={section.id} section={section} index={index} motion={motion} />;
           case "steps":
             return <ArcSteps key={section.id} section={section} index={index} motion={motion} />;
+          case "proof-card":
+            return (
+              <ArcProofCard key={section.id} section={section} index={index} motion={motion} />
+            );
           default: {
             const exhaustive: never = section;
             return exhaustive;

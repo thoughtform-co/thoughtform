@@ -46,6 +46,10 @@ const ALL: readonly ArcSection[] = [
   /* The `steps` leaf (ADR-103) publishes `data-steps-*`; same page-local
      dispatch, same reason. */
   TRINNY_OUTCOMES,
+  /* The `proof-card` leaf (ADR-128) mounts the homepage's folder card, whose
+     own attributes are `data-proof-settled` and the pile's `data-pc-*`; it
+     joins the walk so the reveal/terminal seam is measured over it too. */
+  { id: "practice-frontier", kind: "proof-card", track: "atl-films" },
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

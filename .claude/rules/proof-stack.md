@@ -12,7 +12,22 @@ description: The proof card and its scroll-stacked pile — the site's evidence 
 
 Four projects from one casefile as a scroll-stacked pile of cards. Built for
 `/arcs/trinny-london/proposal` (ADR-094) and promoted to the homepage's evidence beat in the
-casefile's place (ADR-096). **One module, one sheet, two hosts.**
+casefile's place (ADR-096). **One module, one sheet, three hosts** since
+ADR-128: the pile on `/`, the pile on `/arcs/trinny-london/proposal`, and the
+card AT REST on a registered arc through the `proof-card` section kind
+(`components/arcs/ArcProofCard.tsx`, first on `/arcs/pandora-proposal`).
+
+⚠ **THE THIRD HOST MOUNTS THE CARD WHOLE AND CHANGES NOTHING IN THE MODULE.**
+Its wrapper is `.pf-stack > .pf-slot`, because every selector in this sheet is
+scoped to that pair and the slot's DECLARED rest state (`--pc-enter: 1;
+--pc-cover: 0; --pc-depth: 0`) is what seats every arrival channel with no
+hook: no `data-pc-*`, no runway, no `--i`. What the arc supplies is the BOX
+(`arcs.css` `.arc-proof`, (0,3,0) over this sheet's (0,2,0) and only inside
+`.arc-proof`): the slot goes static at the films console's height law, gated
+to the complement of this sheet's own inert rung (≤960 / ≤680h / PRM), which
+already parks the card in flow below it. The route imports this sheet ahead of
+`arcs.css`. A change to `ProofCard` or to this sheet is a THREE-surface change
+now — `services-ring-smoke`, `trinny-london-smoke` and the Pandora capture.
 
 **Read first**
 
@@ -32,7 +47,9 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   apparatus, the chamfer, the 4:5 cut, the type ladder.
 - [`.claude/rules/proof.md`](proof.md) — the record, the plates and the
   confidentiality envelope, all unchanged.
-- [`.claude/rules/trinny-london.md`](trinny-london.md) — the other host.
+- [`.claude/rules/trinny-london.md`](trinny-london.md) — the second host.
+- [`.claude/rules/arcs.md`](arcs.md) §The client model — the third host, the
+  `proof-card` kind (ADR-128).
 
 ## Contracts
 

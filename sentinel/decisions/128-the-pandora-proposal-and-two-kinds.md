@@ -1,9 +1,10 @@
 # ADR-128: The Pandora proposal is the fourth cut of the proposal format, and two kinds
 
 - **Status:** Proposed (2026-09-26, owner) — Phase A shipped and guarded
-  (content on existing kinds); Phase B (the `proof-card` and `bench` kinds)
-  planned below and not yet built; flips to Accepted once the owner has read
-  the page live and Phase B has landed behind the same URL.
+  (content on existing kinds), then Phase B1 the same day: the `proof-card`
+  kind built and the four proof beats swapped onto it; Phase B2 (the `bench`
+  kind) planned below and not yet built. Flips to Accepted once the owner has
+  read the page live and B2 has landed behind the same URL.
 - **Surface:** `/arcs/pandora-proposal` and `/arcs/pandora` —
   `lib/arcs/content/pandora-proposal.ts` (new), `lib/arcs/clients.ts`
   (`PANDORA_CLIENT`), `lib/arcs/registry.ts`, `lib/theme/themeLock.ts` +
@@ -141,9 +142,9 @@ engagement as "filed after now" — a real violation on a fake day. The real
 overview now has its own pinned `REAL_TODAY`, separate from the axis tests'
 `TODAY`, and it moves forward when a newer arc files.
 
-## Phase B (planned, not built)
+## Phase B
 
-- **`proof-card`** `{ kind: "proof-card"; track: string; head?: ArcHead }` —
+- **`proof-card` — BUILT (B1, 2026-09-26).** `{ kind: "proof-card"; track: string; head?: ArcHead }`,
   the sixth enumerated exception: the promoted folder card (`ProofCard` from
   `components/landing/home-v2/services/proof-stack/`) at REST, at page width,
   one Loop track per beat, four beats in `PROOF_STACK_ORDER`. The wrapper is
@@ -153,14 +154,18 @@ overview now has its own pinned `REAL_TODAY`, separate from the axis tests'
   `arcs.css` gives the card the films console's height law. No colour bridge:
   the sheet is token-only over the swapped triples and light already
   re-derives it. The registry pins the track set and the order.
-- **`bench`** `{ kind: "bench"; head: ArcHead; example: ArcBenchExample }` —
+- **`bench` — planned (B2).** `{ kind: "bench"; head: ArcHead; example: ArcBenchExample }`,
   the seventh: one example, the chrome strings constants in the renderer
   (walked through the copy law and the digit ban), three panels always in the
   DOM with `data-bench-*` state, states told apart by SHAPE inside the one
   accent (never a traffic light, never green), assets under
   `public/arcs/pandora-proposal/`.
-- The swap-in is content only; a new `arc-proposal-smoke` walks the page at
-  the three reference viewports.
+- The swap-in is content only: the four proof beats moved onto `proof-card`
+  in B1 (measured at 1280×720 and 1920×1080 off a production build: the card
+  fills its box, the claims' sentences show from 1070h as on the pile, the
+  layer beat no longer runs past the frame at 1080h); the checker follows in
+  B2. A new `arc-proposal-smoke` walks the page at the three reference
+  viewports once B2 lands.
 
 ## Alternatives rejected
 
@@ -190,8 +195,8 @@ overview now has its own pinned `REAL_TODAY`, separate from the axis tests'
 
 - Two shared files (`clients.ts`, `registry.ts`) were being scaffolded by two
   sessions at once in one tree; the commit order had to be negotiated.
-- Until Phase B, the four proof beats are the flat kinds under new heads, not
-  the folder card the owner is "really happy with".
+- Until B2, the checker is three plates in prose rather than the bench with
+  its picture pair.
 
 ## Left open
 

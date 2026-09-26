@@ -6,6 +6,10 @@ import { describe, expect, it } from "vitest";
 import { caseModeLabel, dossierHead } from "@/components/arcs/ArcDossier";
 import { TOOL_ORDER } from "@/components/arcs/ArcToolIndex";
 import { arcTitleText } from "@/components/arcs/chrome";
+import {
+  PROOF_STACK_CASE,
+  PROOF_STACK_ORDER,
+} from "@/components/landing/home-v2/services/proof-stack/proofOrder";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
@@ -19,6 +23,7 @@ import { ARCS, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
 import { LIGHT_LOCKED_ROUTES } from "@/lib/theme/themeLock";
 import { ROLLOUT_ROWS } from "@/lib/cases/content/loop-earplugs";
+import { getCase } from "@/lib/cases/registry";
 
 /**
  * Arc registry integrity (ADR-052) — the contracts the /arcs routes and
@@ -767,6 +772,43 @@ describe("arcs registry (ADR-052)", () => {
           });
         }
       }
+    }
+  });
+
+  it("a proof card is one Loop project, by reference, in the pile's own order (ADR-128)", () => {
+    /* The homepage's folder card on a flowing page. The record is the Loop
+       casefile's, resolved by the renderer the pile's own way; what the arc
+       authors is WHICH track and in WHAT order — and the order is the record's
+       (`PROOF_STACK_ORDER`, the arc steps), never a page preference. */
+    const loop = getCase(PROOF_STACK_CASE);
+    expect(loop, `the ${PROOF_STACK_CASE} casefile`).toBeTruthy();
+    const tracks = loop!.casefile.tracks;
+    for (const arc of ARCS) {
+      const cards = arc.sections.filter((s) => s.kind === "proof-card");
+      if (cards.length === 0) continue;
+      const ids = cards.map((c) => c.track);
+      expect(new Set(ids).size, `${arc.slug}: a project twice`).toBe(ids.length);
+      for (const card of cards) {
+        const at = `${arc.slug}/${card.id}`;
+        const track = tracks.find((t) => t.id === card.track);
+        expect(track, `${at}: "${card.track}" is not on the casefile`).toBeTruthy();
+        /* The card letters `arc.title` as its title and `card.lede` under it;
+           a track without both would render a card with a project name for a
+           claim and no sentence — the pile requires the same two fields. */
+        expect(track?.arc, `${at}: the track carries no arc line`).toBeTruthy();
+        expect(track?.card, `${at}: the track carries no card lede`).toBeTruthy();
+        /* An authored head is a masthead ABOVE the card and may not say what
+           the card's own title says (the surface's said-twice rule). */
+        if (card.head && track?.arc) {
+          expect(
+            arcTitleText(card.head.title).toLowerCase(),
+            `${at}: the head repeats the card's title`
+          ).not.toBe(track.arc.title.toLowerCase());
+        }
+      }
+      /* The sequence is the pile's, filtered to what the page carries. */
+      const expected = PROOF_STACK_ORDER.filter((id) => ids.includes(id));
+      expect(ids, `${arc.slug}: proof cards out of the record's order`).toEqual(expected);
     }
   });
 

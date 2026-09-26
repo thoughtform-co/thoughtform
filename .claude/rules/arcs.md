@@ -754,10 +754,18 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   filing — a monitor read on a day before a filing reports "filed after now".
   Bump it when a newer arc files; never the axis tests' `TODAY`. The fee is a
   day-rate `ledger` (`["Month", "Days on the work", "Fee"]`) derived from one
-  constant that the deck's generator shares. Phase B (planned): `proof-card`
-  (the homepage's folder card at rest, `.pf-stack > .pf-slot`'s declared rest
-  state, `proof-stack.css` imported at the route) and `bench` (Moira's Run ·
-  Skill · Evals ported by hand) as the sixth and seventh exceptions.
+  constant that the deck's generator shares. ⚠ **THE `proof-card` KIND IS
+  BUILT (B1, the SIXTH exception)**: `{ track, head? }`, `ArcProofCard`
+  mounts the homepage's `ProofCard` WHOLE inside `.pf-stack > .pf-slot`, whose
+  declared rest state seats every arrival channel with no hook; the arc adds
+  only the box (`.arc-proof`, the films height law, static slot, gated to the
+  complement of the module's inert rung) and imports `proof-stack.css` at the
+  route ahead of `arcs.css`; the record resolves the pile's way and THROWS on
+  a miss; `KIND_DESIG` letters it `PROOF`; the registry pins the track set,
+  `arc` + `card` on each, the pile's order, and that an authored head never
+  repeats the card's title. A change to `ProofCard` or its sheet is a
+  THREE-surface change now. `bench` (Moira's Run · Skill · Evals ported by
+  hand) is the seventh, planned.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,
