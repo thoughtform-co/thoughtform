@@ -29,7 +29,7 @@ import type { SheetSection } from "@/lib/sheet/types";
  * five chapters. The rubric's block F asks the same of a still.
  */
 
-const NOW = new Date("2026-09-20T09:00:00Z");
+const NOW = new Date("2026-09-26T09:00:00Z");
 
 function post(slug: string, over: Partial<MusingPost> = {}): MusingPost {
   return {
@@ -53,7 +53,7 @@ const POSTS = [post("one", { featured: true }), post("two", { date: "2026-09-07"
 const LADDERS: Record<string, SheetSection[]> = {
   /* The overview is the instrument since ADR-118 — the variety law defers
      to `instrumentViolations` for it (sheet-instrument.test.ts). */
-  arcs: arcsInstrumentSections("2026-09-20"),
+  arcs: arcsInstrumentSections("2026-09-26"),
   ...Object.fromEntries(
     CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0).map((c) => [
       `arcs/${c.slug}`,

@@ -69,6 +69,13 @@ export interface ClientDef {
    * own reading of when each conversation started, not a signed date.
    */
   since?: string;
+  /**
+   * The client's mark for the HUD's top-left corner (the design skill's
+   * client shell): drawn by `ArcShell` on every arc bound to this client,
+   * white on the dark chrome, `object-fit: contain` in a 102x48 slot. Absent
+   * on a client whose vector mark is not on file, and the plain bracket stays.
+   */
+  mark?: { src: string; alt: string };
 }
 
 export const TRINNY_CLIENT: ClientDef = {
@@ -123,9 +130,28 @@ export const HUNGRY_MINDS_CLIENT: ClientDef = {
   since: "2026",
 };
 
+export const PANDORA_CLIENT: ClientDef = {
+  slug: "pandora",
+  name: "Pandora",
+  lede: "A jewellery brand in Copenhagen, and a brand creative studio that would run its own operations and its own review on one setup.",
+  // The year the relationship began (ADR-114): the intro call of 2026-09-25.
+  since: "2026",
+};
+
+export const PLOPSA_CLIENT: ClientDef = {
+  slug: "plopsa",
+  name: "Plopsa",
+  lede: "A theme-park group in Belgium and Germany, and a content team that would make its own campaign visuals at volume, on its own setup.",
+  // The year the relationship began (ADR-114): the first workshops of July 2026.
+  since: "2026",
+  mark: { src: "/plopsa/plopsa-mark.svg", alt: "Plopsa" },
+};
+
 /** Every client with an engagement on the site, in the order the overview
  *  reads them. */
 export const CLIENTS: readonly ClientDef[] = [
+  PLOPSA_CLIENT,
+  PANDORA_CLIENT,
   HUNGRY_MINDS_CLIENT,
   PERFECT_TED_CLIENT,
   TRINNY_CLIENT,

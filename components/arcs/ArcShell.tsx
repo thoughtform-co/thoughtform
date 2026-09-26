@@ -65,6 +65,13 @@ interface ArcShellProps {
    * lock without that rule leaves a control that visibly does nothing.
    */
   lock?: "light";
+  /**
+   * The client's mark (`ClientDef.mark`), drawn in the HUD's top-left
+   * corner in place of the plain bracket: the design skill's client shell
+   * (slot 102x48, `object-fit: contain`, a 30px terminator rule). A leaf:
+   * one anchor, no state, nothing when absent.
+   */
+  clientMark?: { src: string; alt: string };
   children: ReactNode;
 }
 
@@ -96,6 +103,7 @@ export function ArcShell({
   curtain = false,
   format,
   lock,
+  clientMark,
   children,
 }: ArcShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -173,6 +181,15 @@ export function ArcShell({
           only existed above 1101×760 and left 1280×720 with no
           navigation at all (ADR-055's ruling, one surface later). */}
       {variant === "detail" && menu && menu.length > 0 ? <ArcHudNav items={menu} /> : null}
+      {/* The client's mark, top-left, on a client-bound arc (the design
+          skill's client shell). It replaces the plain bracket there;
+          `arcs.css` hides that corner when the mark is present. */}
+      {clientMark ? (
+        <a className="arc-hud-client" href="#hero" aria-label={clientMark.alt}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={clientMark.src} alt={clientMark.alt} />
+        </a>
+      ) : null}
       {/* THE TWO WORKING CORNERS (ADR-059 U6) — the chapters top-left, the
           exit mark + session + theme switch bottom-right, the switch centred
           on the right rail's track. It replaces the standalone toggle on any
