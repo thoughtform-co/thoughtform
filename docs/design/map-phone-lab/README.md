@@ -1,6 +1,6 @@
 # /test/map-phone-lab — the map card on a phone
 
-Look-dev for the proof card _We built the layer the agents run on_ at phone
+Look-dev for the proof card _We build the layer the agents run on_ at phone
 size (2026-09-25, owner: _"On mobile it just looks like a lot of text and a
 lot of frames … a super simplified, mobile-friendly version of our work,
 configuration and layer … make a test page and some designs"_). He chose three

@@ -204,7 +204,7 @@ copy so the pile is self-contained on either host.
   either way: the rung flips `position` to `static` and the hook parks.
 - **Content by REFERENCE, order by ROUTE — and since U2 the order IS the
   record's arc.** `proofOrder.ts` names four track ids on the Loop casefile
-  (**`atl-films · studio · tooling · ai-transformation`**) and THROWS on a
+  (**`atl-films · tooling · studio · ai-transformation`** since ADR-126) and THROWS on a
   missing one. The card is `track.project` · `track.card.lede` (≤180, a record
   field beside the brief, inside the envelope scan) · the four `blocks[]` as
   `title` + `desc` with their `ProofGlyph` · and `track.arc` in the head.
@@ -223,7 +223,12 @@ copy so the pile is self-contained on either host.
   two cards: it is what earned the studio the right to run AI itself, and a
   stack opening on the studio has the consequence before the cause. The
   casefile's directory order is untouched — a directory is an index, this is a
-  narrative. ⚠ No `data-m` on anything the stack renders — `useRevealMotion`
+  narrative. ⚠ **AND SINCE ADR-126 (2026-09-26, owner) THE TOOLS COME BEFORE
+  THE STUDIO, IN THE PRESENT TENSE** — the pile reads as the practice a reader
+  could see itself in (prompting → the tools the work needs → a team that runs
+  it alone → the layer the agents run on), illustrated by Loop; the four titles
+  are the Dublin keynote's word for word. The smoke's `shapes[1]` is the tools
+  card and `shapes[2]` the studio. ⚠ No `data-m` on anything the stack renders — `useRevealMotion`
   collects its targets at `LandingPage` mount and a nested root's nodes rest at
   opacity 0 forever; entrance rides `--pc-enter`.
 - **The field follows the FIELD's aspect, not the viewport's.** `.tl-card__field`

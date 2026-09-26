@@ -752,17 +752,18 @@ test.describe("Trinny London pitch variant", () => {
       Math.abs(shapes[0].housing.frame!.bottom - shapes[0].housing.lastClaimBottom!),
       "the film's frame does not end on the record's last rule"
     ).toBeLessThanOrEqual(2);
-    /* 02 the studio — THREE SHEETS on the rail (U3, owner: "we also should
+    /* 03 the studio (02 until ADR-126, which put the tools before it) — THREE
+       SHEETS on the rail (U3, owner: "we also should
        have tabs, just like on the homepage, where we have our guidelines on
        where not to use AI, governance and the red line"). The record held
        all three and this card was rendering the ad wall alone.
        ⚠ THE RAIL IS PORTALLED: `SheetsPlate` owns which sheet is open, so
        `proofTabs` returns null for this kind and the stations arrive in the
        card's slot from the plate — which is what `stationsInSlot` proves. */
-    expect(shapes[1].stations).toEqual(["THE WORK", "THE GOVERNANCE", "THE RED LINE"]);
-    expect(shapes[1].stationsInSlot).toBe(3);
-    expect(shapes[1].stills).toBeGreaterThan(1);
-    expect(shapes[1].verdicts, "each sheet ends on its verdict").toBe(1);
+    expect(shapes[2].stations).toEqual(["THE WORK", "THE GOVERNANCE", "THE RED LINE"]);
+    expect(shapes[2].stationsInSlot).toBe(3);
+    expect(shapes[2].stills).toBeGreaterThan(1);
+    expect(shapes[2].verdicts, "each sheet ends on its verdict").toBe(1);
     /* ⚠ THE VERDICT IS THE PANEL'S FOOT FRAME (ADR-097 U10, owner: it "needs
        to be a separate frame, a bit higher … a horizontal divider so it
        really feels like a separate frame/block"). Portalled by the plate into
@@ -770,7 +771,7 @@ test.describe("Trinny London pitch variant", () => {
        the closed frame, its bottom on the record's last rule. A COUNT of one
        was all this surface had on the verdict; its SEAT is pinned now. Every
        delta ÷ k — this card is read covered and receded. */
-    const h2 = shapes[1].housing;
+    const h2 = shapes[2].housing;
     expect(h2.frameClosed, "the ads' frame is not a closed box (U10)").toBe(true);
     expect(h2.verdictInFoot, "the verdict is not the panel's foot frame").toBe(true);
     expect(
@@ -790,7 +791,7 @@ test.describe("Trinny London pitch variant", () => {
        BOTH directions: a centred box that outgrows its cell spills through
        the TOP as well, where `scrollHeight` never reports it. */
     const red = await page.evaluate(async () => {
-      const card = document.querySelector('[data-pc-index="1"]');
+      const card = document.querySelector('[data-pc-index="2"]');
       const stn = [...(card?.querySelectorAll(".fl-con__stn") ?? [])].find((b) =>
         /RED LINE/i.test(b.textContent ?? "")
       ) as HTMLElement | undefined;
@@ -828,10 +829,10 @@ test.describe("Trinny London pitch variant", () => {
     expect(red?.dy ?? 9, "the hub is on the crossing, y").toBeLessThanOrEqual(1);
     expect(red?.spills, "a quadrant's ink outside its cell").toEqual([]);
 
-    // 03 the tools — ONE drawing at a time, its walkthrough as the panel's foot.
-    expect(shapes[2].stations).toHaveLength(4);
-    expect(shapes[2].wires).toBe(1);
-    expect(shapes[2].watchBars).toBe(1);
+    // 02 the tools (03 until ADR-126) — ONE drawing at a time, its walkthrough as the panel's foot.
+    expect(shapes[1].stations).toHaveLength(4);
+    expect(shapes[1].wires).toBe(1);
+    expect(shapes[1].watchBars).toBe(1);
     /* ⚠ ADR-097 U10 — THE PANEL IS A TERMINAL OF FRAMES (owner, beside the
        Cyberpunk panels and Starfield's TRAVEL DATA: "in that terminal
        interface you have different frames … the tabs don't need to have a
@@ -844,7 +845,7 @@ test.describe("Trinny London pitch variant", () => {
        the button is one gap under the box, spans it, is ≥44px tall, and its
        bottom is the record's last rule — ADR-094 U8's one floor, back, after
        U9 had let the two floors drift `--pf-card-py` apart. */
-    const h3 = shapes[2].housing;
+    const h3 = shapes[1].housing;
     expect(h3.box, "the tools field draws its box").not.toBeNull();
     expect(h3.frameClosed, "the tools box is not a closed frame (U10)").toBe(true);
     expect(h3.bayHeads, "the apparatus head came back — U10 deleted it").toBe(0);
@@ -995,11 +996,11 @@ test.describe("Trinny London pitch variant", () => {
        · the page cannot scroll under it (`overflow: hidden` on `<html>` is
          NOT a scroll lock — the non-passive handlers are, ADR-056 U8);
        · Escape closes it. */
-    /* ⚠ RE-SEAT CARD 3 FIRST — its controls are in the FIELD now, under the
+    /* ⚠ RE-SEAT CARD 2 (the tools, index 1) FIRST — its controls are in the FIELD now, under the
        card above. See `seatPinnedFromTop` for why `seatSlot` alone cannot. */
-    await seatPinnedFromTop(page, 2);
+    await seatPinnedFromTop(page, 1);
 
-    await page.locator('[data-pc-index="2"] .pf-watch').click();
+    await page.locator('[data-pc-index="1"] .pf-watch').click();
     const player = await page.evaluate(() => {
       const lb = document.querySelector<HTMLElement>(".fl-lightbox");
       const v = lb?.querySelector("video");
@@ -1034,11 +1035,11 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator(".fl-lightbox")).toHaveCount(0);
 
     // A station click swaps the field and moves the mark.
-    const toolTabs = page.locator('[data-pc-index="2"] .fl-con__stn');
+    const toolTabs = page.locator('[data-pc-index="1"] .fl-con__stn');
     await toolTabs.nth(2).click();
     await expect(toolTabs.nth(2)).toHaveAttribute("data-on", "true");
-    expect((await cardShape(page, 2)).on).toBe(1);
-    expect((await cardShape(page, 2)).wires).toBe(1);
+    expect((await cardShape(page, 1)).on).toBe(1);
+    expect((await cardShape(page, 1)).wires).toBe(1);
 
     /* ADR-095 — THE TURN, and ADR-095 U1's ground + decoded line. A
        transparent station the canvas lives through: its stage pins, the

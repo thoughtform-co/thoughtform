@@ -3881,11 +3881,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        a bordered BOX, the open one FILLED, no ramp and no chamfer. ⚠ Pinned
        from BOTH ends — `background-image: none` AND `clip-path: none` — or a
        gradient returns under cover of a ruling that only restored a colour. */
-    expect(await seatProofCard(page, 2)).toBe("pinned");
-    const rail = page.locator('[data-pc-index="2"] .fl-con__stn');
+    expect(await seatProofCard(page, 1)).toBe("pinned");
+    const rail = page.locator('[data-pc-index="1"] .fl-con__stn');
     expect(await rail.count()).toBe(4);
     const railSkin = await page.evaluate(() =>
-      [...document.querySelectorAll<HTMLElement>('[data-pc-index="2"] .fl-con__stn')].map((el) => {
+      [...document.querySelectorAll<HTMLElement>('[data-pc-index="1"] .fl-con__stn')].map((el) => {
         const cs = getComputedStyle(el);
         return { bg: cs.backgroundImage, clip: cs.clipPath, on: el.hasAttribute("data-on") };
       })
@@ -3904,7 +3904,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        the wireframe straight into its own apparatus. */
     const bayLabels = () =>
       page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('[data-pc-index="2"] .pf-wire *')]
+        [...document.querySelectorAll<HTMLElement>('[data-pc-index="1"] .pf-wire *')]
           .filter((el) => !el.children.length && (el.textContent ?? "").trim())
           .map((el) => (el.textContent ?? "").trim())
           .sort()
@@ -3921,14 +3921,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        `IN SERVICE {year}` was pinned PRESENT here; it is pinned ABSENT now —
        the inversion this surface's smokes make rather than dropping a read,
        so a head row drifting back is what this line catches. */
-    await expect(page.locator('[data-pc-index="2"] .pf-bay__head')).toHaveCount(0);
+    await expect(page.locator('[data-pc-index="1"] .pf-bay__head')).toHaveCount(0);
 
     /* ── THE CARD IS A CHAMFERED HOUSING, AND ITS CHILDREN ARE SQUARE ──
        ADR-065's canonical TR + BL, drawn as a CLIPPED RING because a clip
        cuts a border and never strokes one. Rule 4 comes with it, which is
        why the console inside takes `clip-path: none` on this route. */
     const corners = await page.evaluate(() => {
-      const card = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-card');
+      const card = document.querySelector<HTMLElement>('[data-pc-index="1"] .pf-card');
       const con = document.querySelector<HTMLElement>('[data-pc-index="3"] .fl-con__console');
       if (!card) return null;
       const before = getComputedStyle(card, "::before");
@@ -3956,7 +3956,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        alpha, whether the engine serialises `color-mix()` as `rgba()` or
        `color(srgb …)`; the plate's alpha is under 1. Read on card 2, seated. */
     const folder = await page.evaluate(() => {
-      const card = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-card');
+      const card = document.querySelector<HTMLElement>('[data-pc-index="1"] .pf-card');
       const head = card?.querySelector<HTMLElement>(".pf-card__head");
       if (!card || !head) return null;
       const c = card.getBoundingClientRect();
@@ -3971,8 +3971,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const tabs = card.querySelector<HTMLElement>(".pf-card__tabs")?.getBoundingClientRect();
       const headRails = head.querySelectorAll(".pf-card__headrail").length;
       /* The framed kinds draw their box two ways — the shared console frame
-         (sheets, map) and the tools' own apparatus bay. Card 2 is the tools
-         card, so this resolves to the bay; the selector covers both. */
+         (sheets, map) and the tools' own apparatus bay. Card 1 is the tools
+         card (ADR-126: the tools before the studio), so this resolves to the
+         bay; the selector covers both. */
       const frameEl = card.querySelector<HTMLElement>(".fl-con__console, .pf-field--tools");
       const frame = frameEl?.getBoundingClientRect();
       /* U10 — the panel's FOOT (the walkthrough button on this card), the
@@ -4273,7 +4274,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(clip!.footShown, `card ${i}: the foot row disagrees with its kind`).toBe(
         i === 1 || i === 2
       );
-      if (i === 1) {
+      if (i === 2) {
         expect(clip!.verdictInFoot, "the studio's verdict is not the panel's foot frame").toBe(
           true
         );
@@ -4671,15 +4672,15 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     }
 
     // ── And all four authored wireframes, on the same parchment ───────
-    expect(await seatProofCard(page, 2)).toBe("pinned");
-    const toolRail = page.locator('[data-pc-index="2"] .fl-con__stn');
+    expect(await seatProofCard(page, 1)).toBe("pinned");
+    const toolRail = page.locator('[data-pc-index="1"] .fl-con__stn');
     for (const stn of WIREFRAME_STATIONS) {
       if (stn.kind !== "wire") continue;
       await toolRail.nth(stn.idx).click();
       await page.waitForTimeout(700);
 
       const wire = await page.evaluate(() => {
-        const root = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-field--tools');
+        const root = document.querySelector<HTMLElement>('[data-pc-index="1"] .pf-field--tools');
         if (!root) return null;
         const parse = (c: string) => {
           const m = String(c).match(/rgba?\(([^)]+)\)/);
@@ -4756,7 +4757,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        is the card's glass over the page). Whichever fill the owner settles
        on, this is the read that keeps its ink legible in light. */
     const button = await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-watch__label');
+      const el = document.querySelector<HTMLElement>('[data-pc-index="1"] .pf-watch__label');
       if (!el) return null;
       const parse = (c: string) => {
         const m = String(c).match(/rgba?\(([^)]+)\)/);

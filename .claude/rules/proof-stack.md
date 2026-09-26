@@ -174,7 +174,9 @@ and (prefers-reduced-motion: no-preference)` — the park rung's first term
   phone projects) is the guard; `capture-proof-stack.mjs --mobile --pairs
 --headless` is the look.
 - **`tracks` is a PROP.** Content by reference, ORDER by route (`proofOrder.ts`,
-  shared today). ⚠ The pile's order and each card's `arc.step` can disagree with
+  shared today — `atl-films · tooling · studio · ai-transformation` since
+  ADR-126: the tools before the studio, the titles in the present tense, the
+  pile read as the practice with Loop as the illustration). ⚠ The pile's order and each card's `arc.step` can disagree with
   nothing failing — pinned arithmetically by `trinny-proof-order.test.ts` and on
   the rendered page by the smoke.
 - ⚠ **EVERY SELECTOR IS SCOPED BY `.pf-stack`, AND THE SCOPE IS LOAD-BEARING.**

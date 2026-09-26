@@ -2208,7 +2208,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         // The board is the system of record and is NAMED, never linked — the
         // confidentiality envelope bans the domain outright.
         source: "Source — adoption board · rev 2026.07",
-        stamp: { ord: "01", phase: "Navigate", ref: "NAV-01" },
+        /* `phase` is what the proof card's head band prints beside the client
+           (`LOOP EARPLUGS · BUILD`). It read NAVIGATE beside three BUILD bands
+           until ADR-126 — a leftover from before the card became "we build the
+           layer". `ref` identifies the record and never moves. */
+        stamp: { ord: "01", phase: "Build", ref: "NAV-01" },
         // THE ONLY PER-TRACK BRIEF (2026-08-01, ADR-056 U11). The standing
         // casefile brief has to serve all eight rows, so it can only describe
         // the engagement — it cannot make this row's claim.
@@ -2254,7 +2258,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
            intelligence, with a person keeping the last word. For one day it
            claimed the expansion; before that it described the map, which the
            console beside it still draws. */
-        arc: { step: "04", title: "We built the layer the agents run on" },
+        arc: { step: "04", title: "We build the layer the agents run on" },
       },
       {
         id: "tooling",
@@ -2318,10 +2322,14 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           ". Four internal tools grew from live bottlenecks in generation, orchestration, briefing intelligence and localization. Each is built for the few people who need it—and designed so those teams can keep extending it.",
         ],
         card: {
-          lede: "Four tools built with the people who run the workflow, for jobs no product roadmap would take on: briefing, image and video, localisation, studio operations. Owned by those teams.",
+          /* ADR-126: the three bottlenecks of creative work, named — the
+             owner's own cluster (production · operations · review), the same
+             three the map card's WORK reading columns by. A draft in the
+             site's register, for his voice. */
+          lede: "Four tools built with the people who run the workflow, where creative work jams: production, operations and the review between them. Owned by those teams.",
         },
-        /* Beat three — see `atl-films` for the sequence. */
-        arc: { step: "03", title: "We built the tools the work needed" },
+        /* Beat two — see `atl-films` for the sequence. */
+        arc: { step: "02", title: "We build the tools the work needs" },
       },
       {
         id: "studio",
@@ -2367,10 +2375,13 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing and judging it. Paid social moves faster, buying back time for the live-action craft AI should not replace.",
         ],
         card: {
-          lede: "Creative technology embedded in the studio. The team briefs, generates, judges and ships paid social with AI as the default, and a clear line where photography stays real.",
+          /* ADR-126: the end state the embed leaves behind — the team runs
+             it alone. The boundary line moved to the films card, whose beat
+             is where it was drawn; the governance sheets stay here. */
+          lede: "Creative technology embedded in the studio until the team runs it alone: briefing, generating, judging and shipping paid social with AI as the default.",
         },
-        /* Beat two — see `atl-films` for the sequence. */
-        arc: { step: "02", title: "We made the creative team self-sufficient" },
+        /* Beat three — see `atl-films` for the sequence. */
+        arc: { step: "03", title: "We make the creative team self-sufficient" },
       },
       {
         id: "atl-films",
@@ -2416,16 +2427,25 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           ". The project took relatable, acquisition-minded stories into paid media on YouTube and connected TV—expanding the formats Loop could test without treating AI as a replacement for live action.",
         ],
         card: {
-          lede: "Two 30-second films made with generative image and video models by the same creative team, to the same craft bar as live action, run as paid media on YouTube and connected TV.",
+          /* ADR-126: the frontier AND the boundary in one breath (owner: "we
+             push the frontiers of creative work and set boundaries"). */
+          lede: "Two 30-second films by the same creative team, made with generative models to the craft bar of live action, run as paid media, and a line drawn where photography stays real.",
         },
         /* ── THE ARC OPENS HERE (ADR-094 U2, owner 2026-09-10) ───────────
            Four Loop projects that had been four unrelated records now carry
            the engagement's own through-line, and this is beat one:
 
-             01  We pushed the frontiers of AI creative      (atl-films)
-             02  We made the creative team self-sufficient   (studio)
-             03  We built the tools the work needed          (tooling)
-             04  We took it to the rest of the company       (ai-transformation)
+             01  We push the frontiers of AI creative       (atl-films)
+             02  We build the tools the work needs          (tooling)
+             03  We make the creative team self-sufficient  (studio)
+             04  We build the layer the agents run on       (ai-transformation)
+
+           ⚠ PRESENT TENSE, AND THE TOOLS BEFORE THE STUDIO (ADR-126, owner
+           2026-09-26): the pile reads as the practice a reader could see
+           itself in, illustrated by Loop — not a portfolio of what was done.
+           The four lines are the Dublin keynote's, word for word, so the
+           site and the talk share one vocabulary. Card 3's "self-sufficient"
+           is the owner's one allowed use of the word (ADR-124, left open).
 
            ⚠ THE ORDER IS THE ARGUMENT, and it REVERSES the first two rows
            of the casefile's own directory. The frontier work came first and
@@ -2438,7 +2458,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
            ⚠ THIS IS NOT A RENAME. `project` stays "AI Above-the-Line" and
            must keep matching `file`; the arc line is a second register, in
            the first person plural, that says what the project WAS FOR. */
-        arc: { step: "01", title: "We pushed the frontiers of AI creative" },
+        arc: { step: "01", title: "We push the frontiers of AI creative" },
       },
       /* Rows 05–08 (workshop rollout · governance · metrics · mission
          report) were TRIMMED here 2026-08-02 (owner) — see the ORDER note

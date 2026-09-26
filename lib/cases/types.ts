@@ -963,9 +963,11 @@ export interface CaseTrack {
    * AI Studio self-sufficiency and the AI tools I've built with the AI
    * adoption"_).
    *
-   * The four beats are the engagement's own order — we pushed the frontier,
-   * the team became self-sufficient, they wrote their own software, the rest
-   * of the company followed — and `step` is what orders them. A surface that
+   * The four beats are the practice as it ran at Loop — we push the frontier,
+   * we build the tools the work needs, the team runs it alone, we build the
+   * layer the agents run on — in the PRESENT tense since ADR-126 (the proof
+   * reads as the practice; Loop is the illustration), and `step` is what
+   * orders them. A surface that
    * shows several tracks at once reads this instead of inventing a sequence.
    *
    * ⚠ IT IS NOT A RENAME. `project` and `file` name the same thing as each

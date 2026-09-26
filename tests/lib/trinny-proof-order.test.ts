@@ -68,10 +68,10 @@ describe("the trinny proof order", () => {
     // person plural. Pinned literally: a reword is a copy decision and lands
     // here in the same commit.
     expect(tracks.map((t) => t.arc!.title)).toEqual([
-      "We pushed the frontiers of AI creative",
-      "We made the creative team self-sufficient",
-      "We built the tools the work needed",
-      "We built the layer the agents run on",
+      "We push the frontiers of AI creative",
+      "We build the tools the work needs",
+      "We make the creative team self-sufficient",
+      "We build the layer the agents run on",
     ]);
   });
 

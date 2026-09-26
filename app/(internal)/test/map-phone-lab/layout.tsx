@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 /**
  * /test/map-phone-lab — look-dev for the last proof card's field on a phone
- * ("We built the layer the agents run on"). Owner, 2026-09-25: "on mobile it
+ * ("We build the layer the agents run on"). Owner, 2026-09-25: "on mobile it
  * just looks like a lot of text and a lot of frames … a super simplified,
  * mobile-friendly version of our work, configuration and layer."
  *

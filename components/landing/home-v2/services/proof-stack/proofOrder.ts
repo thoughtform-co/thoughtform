@@ -26,12 +26,19 @@ export const PROOF_STACK_CASE = "loop-earplugs";
  * not a route preference. Each track carries `arc.step`, and this array is
  * those four beats in order:
  *
- *   01 the frontier · 02 self-sufficiency · 03 the tools · 04 the company
+ *   01 the frontier · 02 the tools · 03 the team runs it · 04 the layer
  *
  * ⚠ IT IS NOT THE CASEFILE'S DIRECTORY ORDER, and that is deliberate. The
  * frontier work (`atl-films`) is what earned the studio the right to run AI
  * itself, so a stack that opened on the studio was showing the consequence
  * before the cause. A directory is an INDEX; this is a narrative.
+ *
+ * ⚠ AND SINCE ADR-126 (2026-09-26, owner) THE TOOLS COME BEFORE THE STUDIO.
+ * The pile tells the trajectory every team is on — prompting, then the tools
+ * the work needs, then a team that runs it alone, then the layer the agents
+ * run on — in the PRESENT tense, as the practice a reader could see itself
+ * in, with Loop as the illustration. At Loop the studio (Dec 2025) preceded
+ * the tools (Feb 2026); the cards carry no dates and the record keeps them.
  *
  * ⚠ AND THE TWO CAN DISAGREE WITH NOTHING FAILING, which is why
  * `trinny-proof-order.test.ts` asserts this array equals the tracks sorted by
@@ -39,7 +46,7 @@ export const PROOF_STACK_CASE = "loop-earplugs";
  * pile is ordered by this list, so a re-order here alone would letter
  * `03 · 01 · 02` down a scroll and every other guard would stay green.
  */
-export const PROOF_STACK_ORDER = ["atl-films", "studio", "tooling", "ai-transformation"] as const;
+export const PROOF_STACK_ORDER = ["atl-films", "tooling", "studio", "ai-transformation"] as const;
 
 export function proofStackTracks(): readonly CaseTrack[] {
   const def = getCase(PROOF_STACK_CASE);

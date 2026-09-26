@@ -76,7 +76,7 @@ export default function ProofCardHeadLab() {
      rail sits. The tools card is drawn underneath at the winning treatment
      only, because four stations is the width case. */
   const films = tracks[0];
-  const tools = tracks[2];
+  const tools = tracks[1];
 
   return (
     <main className="pchl" data-theme="dark">
