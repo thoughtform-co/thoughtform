@@ -318,16 +318,18 @@ export function MobileEpilogueSignal() {
       ref={ref}
       className="home-v2-mobile-signal"
       role="region"
-      aria-label="AI capability your team owns"
+      aria-label="We embed in your team until it runs without us"
       aria-hidden="false"
     >
       {/* ⚠ KEEP IN LOCKSTEP WITH `SIGNAL_CONTENT.titleHtml`
           (CorridorStationHeaders) — same beat, two surfaces, and the full
           reasoning for this copy lives there. In short: the title is the
-          CAPABILITY in the services masthead's own words (owner,
-          2026-09-14), the race demoted to the ticker that was already its
-          evidence, and the word "self-sufficient" is banned in copy — say
-          the behaviour. The aria-label above is the third thing to move. */}
+          GOAL the arc hands to the proof — we embed, until the team runs it
+          without us (owner, 2026-09-26, ADR-126; the proposition line moved
+          back to the services masthead alone) — the race demoted to the
+          ticker that was already its evidence, and the word
+          "self-sufficient" is banned in copy — say the behaviour. The
+          aria-label above is the third thing to move. */}
       {/* ⚠ NO AUTHORED `<br>` HERE — the one place this surface may diverge
           from the desktop string, for fit rather than copy: the desktop's
           two authored lines are set against a phone-width box, and the GOLD
@@ -335,7 +337,7 @@ export function MobileEpilogueSignal() {
           previous title bound its compound noun with an NBSP; this one has
           none.) */}
       <h2 className="home-v2-mobile-signal__title">
-        AI CAPABILITY <em>YOUR TEAM OWNS.</em>
+        WE EMBED IN YOUR TEAM <em>UNTIL IT RUNS WITHOUT US.</em>
       </h2>
       <div className="home-v2-mobile-signal__actions">
         {/* `#services`, not `#contact` — see the note beside the desktop

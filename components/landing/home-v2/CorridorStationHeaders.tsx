@@ -839,7 +839,18 @@ const SIGNAL_CONTENT: StationContent = {
   // the word outright: say the behaviour, because the abstraction hides
   // the mechanics that make it real. "Your team owns" is the behaviour;
   // "a self-sufficient team" is the abstraction.
-  titleHtml: "AI CAPABILITY<br><em>YOUR TEAM OWNS.</em>",
+  //
+  // ⚠ THE TITLE IS THE GOAL THE ARC HANDS TO THE PROOF (owner, 2026-09-26,
+  // ADR-126 — supersedes the 2026-09-14 line above on THIS surface only).
+  // "AI CAPABILITY / YOUR TEAM OWNS." printed twice: here and as the
+  // services masthead, with the whole proof pile between. The masthead
+  // keeps it (it is the proposition, above the offer); this beat says what
+  // the pile beneath it illustrates — we embed, until the team runs it
+  // without us — which is also what the ticker's four headlines argue
+  // for. "Runs without us" is the behaviour, said the language bank's way.
+  // The ticker and the CTA (HOW IT LOOKS IN PRACTICE) are untouched. A
+  // draft in the site's register, for the owner's voice.
+  titleHtml: "WE EMBED IN YOUR TEAM<br><em>UNTIL IT RUNS WITHOUT US.</em>",
 };
 
 interface SignalTickerItem {

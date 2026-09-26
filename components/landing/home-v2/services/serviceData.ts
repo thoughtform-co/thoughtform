@@ -120,10 +120,23 @@ export const SERVICES_MASTHEAD = {
     { text: "AI CAPABILITY", em: false },
     { text: "YOUR TEAM OWNS.", em: true },
   ],
-  // Owner copy, 2026-08-02 (harmonization pass): two sentences, no dash —
-  // the second sentence is the section's whole claim, kept as its own beat.
+  // Owner copy, 2026-08-02 (harmonization pass), was: "From a keynote to an
+  // embedded engagement, the work stays grounded in real decisions and
+  // workflows. What gets built stays with the people who own the work."
+  //
+  // ⚠ REWRITTEN 2026-09-26 (ADR-126, owner: the services "feel like a
+  // portfolio … the services card [Embedded] is actually the main card").
+  // The old intro read as a RANGE ("from a keynote to an embedded
+  // engagement") over four equal cards; this one names the embedded
+  // engagement as what is sold and the other three formats as the way in.
+  // The three bottlenecks (production · operations · review) are the thread
+  // the tools card and the map card's WORK reading carry too. "Creative" is
+  // allowed here — the ban is the baked face and the phone back (ADR-111).
+  // ~160ch: the phone band's fit gate (`services-ring-mobile-smoke`) is the
+  // ceiling (the card seat between the two texts is what a longer intro
+  // shrinks). A draft in the site's register, for the owner's voice.
   intro:
-    "From a keynote to an embedded engagement, the work stays grounded in real decisions and workflows. What gets built stays with the people who own the work.",
+    "We embed in your marketing team and build the setup it runs by itself, from creative production to review. A keynote, a workshop or a home session is the way in.",
   /**
    * M2 "survey plate" chrome (design handoff "Band Masthead — M2", 2026-07-21).
    * The title + brief read as two surveyed panels of the instrument, each
