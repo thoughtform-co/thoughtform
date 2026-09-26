@@ -68,10 +68,20 @@ function entry(id: ManifestEntryId) {
   return row;
 }
 
-/** A station link, labelled and targeted by the manifest itself. */
+/**
+ * A station link, labelled and targeted by the manifest itself.
+ *
+ * ⚠ ROOT-RELATIVE (`/#services`), NEVER A BARE ANCHOR (ADR-127). The footer
+ * has two hosts: the landing, where every station id exists, and the sheet
+ * routes (`SheetClose`), where none does — a bare `#services` on `/musings`
+ * rendered as a perfectly good link to nowhere, four times over. On `/` a
+ * `/#services` href is a same-document fragment jump, identical to the bare
+ * form (nothing on the landing delegates `a[href^="#"]` clicks). The test pins
+ * the prefix.
+ */
 function station(id: ManifestEntryId, label?: string): FooterLink {
   const row = entry(id);
-  return { label: label ?? row.name, href: `#${row.targetId}` };
+  return { label: label ?? row.name, href: `/#${row.targetId}` };
 }
 
 /**
@@ -79,7 +89,7 @@ function station(id: ManifestEntryId, label?: string): FooterLink {
  * and points at the mount — the same collapse the corner readout makes.
  */
 function arcLink(): FooterLink {
-  return { label: "The Arc", href: `#${CORRIDOR_MOUNT_ID}` };
+  return { label: "The Arc", href: `/#${CORRIDOR_MOUNT_ID}` };
 }
 
 const social = (icon: SocialIcon): FooterLink | null => {

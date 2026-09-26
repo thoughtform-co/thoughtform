@@ -54,10 +54,10 @@ describe("the footer's link grid (ADR-105 U2)", () => {
     }
   });
 
-  it("every href is an anchor, an internal path, a mailto, or absolute https", () => {
+  it("every href is a root-relative anchor, an internal path, a mailto, or absolute https", () => {
     for (const link of published.flatMap((c) => c.links)) {
       expect(
-        /^#[a-z0-9-]+$/i.test(link.href) ||
+        /^\/#[a-z0-9-]+$/i.test(link.href) ||
           /^\/[a-z0-9\-/]*$/i.test(link.href) ||
           link.href.startsWith("mailto:") ||
           link.href.startsWith("https://"),
@@ -66,13 +66,32 @@ describe("the footer's link grid (ADR-105 U2)", () => {
     }
   });
 
+  /* ⚠ ROOT-RELATIVE, NEVER BARE (ADR-127). The footer has two hosts — the
+     landing and every sheet route — and a bare `#services` is a dead link on
+     the second: four of them shipped on `/musings` as perfectly good links to
+     nowhere. `/#services` jumps the same fragment on `/` and reaches it from
+     anywhere else. */
+  it("every station anchor is root-relative, so it resolves from a sheet route too", () => {
+    for (const link of published.flatMap((c) => c.links)) {
+      expect(link.href.startsWith("#"), `${link.label} -> ${link.href} is a bare anchor`).toBe(
+        false
+      );
+    }
+  });
+
   it("every anchor resolves against the parsed production DOM", () => {
     const { bodyHtml } = getV7Content(PRODUCTION_PARSE_OPTIONS);
     const ids = new Set(Array.from(bodyHtml.matchAll(/\bid="([^"]+)"/g)).map((m) => m[1]));
+    let anchors = 0;
     for (const link of published.flatMap((c) => c.links)) {
-      if (!link.href.startsWith("#")) continue;
-      expect(ids.has(link.href.slice(1)), `${link.label} -> ${link.href}`).toBe(true);
+      const hash = link.href.replace(/^\//, "");
+      if (!hash.startsWith("#")) continue;
+      anchors += 1;
+      expect(ids.has(hash.slice(1)), `${link.label} -> ${link.href}`).toBe(true);
     }
+    // The walk must have walked something: a prefix change that hid every
+    // anchor from this loop would pass it vacuously.
+    expect(anchors).toBeGreaterThanOrEqual(4);
   });
 
   /* ⚠ THE ASSERTION THAT MAKES AN /arcs LINK UNMERGEABLE. `/arcs/*` is
@@ -82,8 +101,10 @@ describe("the footer's link grid (ADR-105 U2)", () => {
   it("every internal path is a route the sitemap publishes", () => {
     for (const link of published.flatMap((c) => c.links)) {
       if (!link.href.startsWith("/")) continue;
+      // `/#services` is the landing's path plus a fragment; the sitemap knows the path.
+      const path = link.href.split("#")[0];
       expect(
-        sitemapPaths.has(link.href.replace(/\/$/, "") || "/"),
+        sitemapPaths.has(path.replace(/\/$/, "") || "/"),
         `${link.href} is not in app/sitemap.ts — if it is noindexed client ` +
           `material (every /arcs route is), it may not be linked from the footer`
       ).toBe(true);
