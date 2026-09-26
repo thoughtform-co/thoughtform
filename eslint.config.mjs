@@ -11,6 +11,7 @@ const config = [
       // Alternate NEXT_DIST_DIR verification builds (see next.config.mjs) —
       // without these, `npx eslint .` after a verify build lints build output.
       "**/.next-verify/**",
+      "**/.next-dev*/**",
       "**/.next-build/**",
       "**/node_modules/**",
       "**/dist/**",
