@@ -46,6 +46,11 @@ const page = await browser.newPage({ viewport: { width: W, height: H }, deviceSc
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
 await page.goto(`${BASE}/arcs/${SLUG}`, { waitUntil: "networkidle" });
 await page.evaluate(() => document.fonts.ready);
+// The dev server's own badge is not the page; a production build has none.
+await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+// The hero boots in (the landing's own terminal boot): give it time to land,
+// or page one is shot with its actions half-drawn.
+await page.waitForTimeout(3500);
 // Reveal every beat once so nothing is mid-transition in a shot; the sweep
 // below still scrolls each into view so IntersectionObserver-gated work runs.
 const ids = await page.evaluate(() =>
