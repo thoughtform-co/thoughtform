@@ -6,7 +6,7 @@ import { SheetShell } from "@/components/sheet/SheetShell";
 import { renderPostBody } from "@/lib/musings/mdx";
 import { allPosts, getPost, postSlugs, relatedTo } from "@/lib/musings/registry";
 import { chaptersOf } from "@/lib/sheet/composition";
-import { musingPostSections } from "@/lib/sheet/musings";
+import { MUSINGS_CORNER, musingPostSections } from "@/lib/sheet/musings";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
@@ -61,6 +61,7 @@ export default async function MusingPostPage({ params }: PostRouteParams) {
       bodyClass={slice.bodyClass}
       page={`musings-${post.slug}`}
       chapters={chaptersOf(sections)}
+      corner={MUSINGS_CORNER}
     >
       <SheetRenderer sections={sections} slots={{ article: body }} rise />
     </SheetShell>

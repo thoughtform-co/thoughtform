@@ -120,6 +120,13 @@ from the resolver would have passed it vacuously).
 
 ### 4. The body drifts under the close — the rise on a flowing document
 
+> **Update, ADR-129 (2026-09-27):** the split is the body's SIBLING now, drawn
+> before `.sh-body` on every sheet — for exactly the reason this section's own
+> bullet on the client pages gives (a stuck element inside a drifting body
+> slides for the whole rise), since the musings head pins. "Every section but
+> the close renders inside `.sh-body`" below reads "every section but the head
+> and the close".
+
 The landing's ending (ADR-105 U4) needs a sticky stage: `#musings` stays pinned
 for one weld of runway while `#contact`, pulled up by the same weld, rises over
 it; the stage drifts −0.25 × the rise and dims on the runway's view timeline.

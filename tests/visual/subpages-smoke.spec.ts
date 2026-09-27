@@ -322,6 +322,16 @@ test.describe("subpages (ADR-114)", () => {
         ),
         "a view-timeline animation on the body on the phone"
       ).toBe(false);
+      // The pinned head flows on a phone (ADR-129): the survey keeps its eyebrow.
+      await ready(page, "/musings");
+      const head = await page.evaluate(() => ({
+        position: getComputedStyle(document.querySelector(".sh-sec--split")!).position,
+        desig: getComputedStyle(document.querySelector(".sh-split__desig")!).position,
+        marks: [...document.querySelectorAll(".sh-split__mark")].filter(
+          (e) => e.getClientRects().length > 0
+        ).length,
+      }));
+      expect(head).toEqual({ position: "relative", desig: "static", marks: 0 });
       await ready(page, "/arcs/loop");
       const pos = await page
         .locator(".sh-console__panel")
@@ -675,6 +685,197 @@ test.describe("subpages (ADR-114)", () => {
       }
     });
   });
+
+  /* ⚠ THE MUSINGS HEAD IS THE MASTHEAD'S (ADR-129): the survey chrome, the head
+     pinned under the header while the body passes under it, and one word in
+     the corner. Measured, never styled — the seat is arithmetic against a
+     header row declared on a selector the sheet cannot read, and the only
+     proof it clears is the two rects. */
+  for (const [w, h] of [
+    [1280, 720],
+    [1920, 1247],
+  ] as const) {
+    test.describe(`the pinned survey head (ADR-129) at ${w}x${h}`, () => {
+      test.use({
+        viewport: { width: w, height: h },
+        contextOptions: { reducedMotion: "no-preference" },
+      });
+      const MUSINGS = ["/musings", "/musings/navigate-the-intelligence"];
+
+      test("the chrome paints on the shared line, clear of the corner, which reads MUSINGS", async ({
+        page,
+      }) => {
+        for (const route of MUSINGS) {
+          await ready(page, route);
+          /* ⚠ THE COPY BLOCK IS A `.sh-reveal` — a 14px rise until `is-in` and
+             its transition — so a rect read before it lands is the animation,
+             not the line (measured 2.3px off on one run, 0 on the next). */
+          await page.waitForFunction(() => {
+            const copy = document.querySelector(".sh-split__copy");
+            return copy?.classList.contains("is-in") && copy.getAnimations().length === 0;
+          });
+          const r = await page.evaluate(() => {
+            const box = (el: Element | null) => {
+              const b = el?.getBoundingClientRect();
+              return b ? { t: b.top, b: b.bottom, l: b.left, r: b.right } : null;
+            };
+            const painted = (sel: string) =>
+              [...document.querySelectorAll(sel)].filter((e) => e.getClientRects().length > 0)
+                .length;
+            return {
+              desigs: [...document.querySelectorAll(".sh-split__desig")].map(box),
+              state: box(document.querySelector(".sh-split__state")),
+              lead: box(document.querySelector(".sh-split__lead")),
+              copy: box(document.querySelector(".sh-split__copy")),
+              row: box(document.querySelector(".hud__nav__inline")),
+              rail: box(document.querySelectorAll(".hud__rail")[1] ?? null),
+              close: box(document.querySelector(".sh-split__mark--close")),
+              marks: painted(".sh-split__mark"),
+              coords: painted(".sh-split__coord"),
+              grids: painted(".sh-split__grid"),
+              names: document.querySelectorAll(".sh-split__name").length,
+              links: [...document.querySelectorAll(".hud__nav__inline__link")].map((a) =>
+                a.textContent?.trim()
+              ),
+              collapsed: document.querySelector(".hud__brand")?.classList.contains("is-collapsed"),
+            };
+          });
+          expect(r.desigs, `${route}: two designations`).toHaveLength(2);
+          expect(r.state, `${route}: the state chip`).not.toBeNull();
+          expect([r.marks, r.coords, r.grids], `${route}: marks, coords, grids`).toEqual([2, 2, 2]);
+          expect(r.names, `${route}: no name kicker`).toBe(0);
+          // the shared top line: both blocks start on one row
+          expect(Math.abs(r.lead!.t - r.copy!.t), `${route}: shared line`).toBeLessThanOrEqual(1);
+          expect(Math.abs(r.desigs[0]!.t - r.desigs[1]!.t)).toBeLessThanOrEqual(1);
+          // clear of the header's row, by air, both designations and the chip
+          for (const d of [...r.desigs, r.state])
+            expect(d!.t - r.row!.b, `${route}: under the corner row`).toBeGreaterThanOrEqual(7.5);
+          // the close cross never lands on the right rail
+          expect(r.close!.r, `${route}: close cross clear of the rail`).toBeLessThanOrEqual(
+            r.rail!.l
+          );
+          expect(r.links, `${route}: the corner`).toEqual(["Musings"]);
+          expect(r.collapsed, `${route}: the wordmark's writer has not run`).toBe(false);
+        }
+      });
+
+      test("the overview's head holds under the header while the body passes under it, and the readout says MUSINGS", async ({
+        page,
+      }) => {
+        for (const route of ["/musings"]) {
+          await ready(page, route);
+          const settle = () =>
+            page.evaluate(
+              () =>
+                new Promise<void>((res) =>
+                  requestAnimationFrame(() => requestAnimationFrame(() => res()))
+                )
+            );
+          const read = () =>
+            page.evaluate(() => {
+              const split = document.querySelector(".sh-sec--split") as HTMLElement;
+              const s = split.getBoundingClientRect();
+              const under = [...document.querySelectorAll(".sh-body .sh-sec")]
+                .map((e) => e.getBoundingClientRect())
+                .find((b) => b.top < s.bottom - 1 && b.bottom > s.top + 1);
+              let onTop: string | null = null;
+              if (under) {
+                const y = (Math.max(s.top, under.top, 0) + Math.min(s.bottom, under.bottom)) / 2;
+                const hit = document.elementsFromPoint(innerWidth / 2, y)[0];
+                onTop = hit?.closest(".sh-sec")?.className ?? null;
+              }
+              return {
+                position: getComputedStyle(split).position,
+                top: s.top,
+                stickyTop: parseFloat(getComputedStyle(split).top),
+                bottom: s.bottom,
+                under: Boolean(under),
+                onTop,
+              };
+            });
+          for (const k of [1.2, 1.6]) {
+            await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), h * k);
+            await settle();
+            const r = await read();
+            expect(r.position, `${route}`).toBe("sticky");
+            expect(Math.abs(r.top - r.stickyTop), `${route} @${k}vh: stuck`).toBeLessThanOrEqual(1);
+            expect(r.stickyTop, `${route}: the offset is never positive`).toBeLessThanOrEqual(0.5);
+            if (r.under)
+              expect(r.onTop ?? "", `${route} @${k}vh: the head paints over the body`).toContain(
+                "sh-sec--split"
+              );
+          }
+          await page.waitForFunction(
+            () => document.querySelector(".hud__nav__sector__name")?.textContent === "MUSINGS",
+            undefined,
+            { timeout: 6000 }
+          );
+        }
+      });
+
+      /* ⚠ THE ARTICLE IS READ, NOT BROWSED (ADR-129 U1, owner: the pinned head
+         "overlapping too much with the text and it breaks the flow"). Its head
+         scrolls away and its own metadata column holds its own seat. */
+      test("an article's head scrolls away, and its metadata column sticks at its own seat", async ({
+        page,
+      }) => {
+        await ready(page, "/musings/navigate-the-intelligence");
+        const art = await page.evaluate(() => {
+          const a = document.querySelector("#article")!.getBoundingClientRect();
+          return { top: a.top + scrollY, h: a.height };
+        });
+        // well into the article: its top above the frame, most of it still below
+        await page.evaluate(
+          (y) => window.scrollTo({ top: y, behavior: "instant" }),
+          art.top + art.h * 0.4
+        );
+        await page.evaluate(
+          () =>
+            new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+        );
+        const r = await page.evaluate(() => {
+          const split = document.querySelector(".sh-sec--split")!;
+          const meta = document.querySelector(".sh-prose__meta")!;
+          return {
+            pinned: split.hasAttribute("data-sh-pin"),
+            position: getComputedStyle(split).position,
+            // the head is the page's first box, so flowing means top === −scrollY
+            drift: split.getBoundingClientRect().top + scrollY,
+            head: split.getBoundingClientRect().bottom,
+            meta: meta.getBoundingClientRect().top,
+            seat: parseFloat(getComputedStyle(meta).top),
+          };
+        });
+        expect(r.pinned, "no pin on an article").toBe(false);
+        expect(r.position, "the head flows").not.toBe("sticky");
+        expect(Math.abs(r.drift), "the head moves with the page").toBeLessThanOrEqual(1);
+        expect(r.head, "the head has scrolled away").toBeLessThanOrEqual(0);
+        expect(
+          Math.abs(r.meta - r.seat),
+          "the column is stuck at its own seat"
+        ).toBeLessThanOrEqual(1);
+      });
+
+      test("a sheet without a survey keeps its name kicker and its first seam", async ({
+        page,
+      }) => {
+        await ready(page, "/home-sessions");
+        const r = await page.evaluate(() => {
+          const first = document.querySelector(".sh-body .sh-sec .sh-band");
+          const seam = first ? getComputedStyle(first, "::before") : null;
+          return {
+            names: document.querySelectorAll(".sh-split__name").length,
+            desigs: document.querySelectorAll(".sh-split__desig").length,
+            pinned: document.querySelectorAll("[data-sh-pin]").length,
+            seam: seam ? { content: seam.content, h: seam.height } : null,
+          };
+        });
+        expect([r.names, r.desigs, r.pinned]).toEqual([1, 0, 0]);
+        expect(r.seam?.content).not.toBe("none");
+        expect(r.seam?.h).toBe("1px");
+      });
+    });
+  }
 
   test("both themes paint their own ground and hold contrast", async ({ page }) => {
     const grounds: string[] = [];

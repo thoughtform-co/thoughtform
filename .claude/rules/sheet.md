@@ -75,6 +75,37 @@ and the first for a page that lists things.
 - ⚠ **STATION LINKS IN THE FOOTER ARE ROOT-RELATIVE (`/#services`).** A bare
   `#services` exists only on `/`; on a sheet it was a good-looking link to
   nowhere, four times. `footer-nav.test.ts` refuses a bare `#`.
+- ⚠ **A SPLIT MAY CARRY THE MASTHEAD'S SURVEY CHROME (ADR-129).**
+  `survey: { code, state }`, authored UPPERCASE; the renderer letters
+  `${code} / TITLE · 01`, `${code} / BRIEF · 02` and the coord stamps
+  (`components/sheet/chrome.ts`, `coordStamp` pinned equal to the homepage
+  station's). The chrome is COPIED from `musings.css` onto `--sh-*` tokens;
+  with it the name kicker is not drawn, both blocks sit on one top line and
+  declare themselves containing blocks (`.sh-reveal` is a transform), and the
+  `head` knob is inert. The musings pages carry it; nothing else does.
+- ⚠ **THE HEAD IS THE BODY'S SIBLING, AND `pin` STICKS IT (ADR-129).** The
+  renderer draws the split before `.sh-body` on every sheet (a stuck element
+  inside the drifting body slides 0.75× during the rise); the body's first
+  section draws its seam through a second rule, since it has no `.sh-sec`
+  before it. With `pin` the split is sticky inside the complement of the inert
+  rung, at z 1 under the close's z 2, its title seated on `--sh-pin-head` =
+  `--hud-margin + 1.6 × --sh-nav-link + 42px`. ⚠ **`--nav-link-size` is
+  declared on `.hud__nav`, not `:root`**, so the sheet mirrors it
+  (`--sh-nav-link`, pinned to the original) — a `var()` of it on `.sh-root` is
+  invalid and would zero the head's padding. The head's padding is floored at
+  the seat, so the sticky offset is never positive. The head dims with the body
+  during the rise through `timeline-scope: --sh-run` on the root.
+  ⚠ **A PINNED HEAD IS FOR A PAGE THAT IS BROWSED, NEVER ONE THAT IS READ**
+  (ADR-129 U1, owner, on the article: "overlapping too much with the text and
+  it breaks the flow … technically it's working but it just doesn't work").
+  Only the musings OVERVIEW pins; an article's head scrolls away. A page that
+  holds its own sticky column (a post's metadata) collides with a pinned head —
+  the column sticks inside the band and vanishes — so pinning a page with prose
+  is the question U1 answered, not a seat to re-solve.
+- **THE CORNER MAY PRINT ONE WORD (ADR-129).** `SheetShell`'s `corner` →
+  `ArcHudNav`'s `label`: the row is one link and the collapsed readout says the
+  same word; the drawer is unchanged. The musings routes pass `MUSINGS_CORNER`;
+  no arc passes a label.
 - ⚠ **`/arcs` IS THE OWNER'S PAGE (ADR-117).** `force-dynamic`, and
   `assertOwner()` is the first thing it does — anything added to the page
   renders AFTER that call, never before it, and the page may never become
@@ -357,6 +388,7 @@ short form:
 npx vitest run tests/lib/sheet-composition.test.ts tests/lib/sheet-directions.test.ts tests/lib/sheet-arcs.test.ts tests/lib/sessions-registry.test.ts tests/lib/musings-registry.test.ts
 npx vitest run tests/lib/sheet-instrument.test.ts
 npx vitest run tests/lib/sheet-close.test.ts tests/lib/footer-nav.test.ts   # the ending (ADR-127)
+npx vitest run tests/lib/sheet-split-survey.test.tsx   # the survey head, the pin, the corner (ADR-129)
 npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop   # ⚠ the kit's sticky-panel case is red on main before ADR-127 (its own bug: it measures the panel before it sticks)
 npx playwright test tests/visual/arcs-instrument-smoke.spec.ts --project=desktop
 npx playwright test tests/visual/arc-terminal-smoke.spec.ts --project=desktop   # the arcs stay byte-identical

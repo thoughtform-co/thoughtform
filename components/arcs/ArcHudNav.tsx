@@ -41,9 +41,17 @@ import { useArcActiveSection } from "./useArcActiveSection";
  * ⚠ INLINE = CHAPTERS ONLY. A deck runs to ten menu sections and ten
  * inline links do not fit a hero; the drawer takes all of them and the
  * row takes the ones the content marks `menuPrimary` (registry-capped).
+ * ⚠ OR ONE PAGE LABEL ON A SHEET (ADR-129, owner: the musings corner "now
+ * says 'Featured all posts.' We just need 'Musings.'"). With `label` the row
+ * is that one link and the readout says the same word after the collapse —
+ * a page with no subsections, which is ADR-055's own rule for the readout.
+ * The drawer still lists every section and still marks the active one. No
+ * arc passes it, so every deck is byte-identical.
  */
 interface ArcHudNavProps {
   items: readonly ArcMenuItem[];
+  /** One page label in place of the chapter row and the section readout. */
+  label?: { text: string; href: string };
 }
 
 /** Seconds the readout's decode waits on arrival — matches the CSS
@@ -53,7 +61,7 @@ const READOUT_ARRIVE_DELAY_S = 0.17;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export function ArcHudNav({ items }: ArcHudNavProps) {
+export function ArcHudNav({ items, label }: ArcHudNavProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -62,7 +70,7 @@ export function ArcHudNav({ items }: ArcHudNavProps) {
   const sectorRef = useRef<HTMLSpanElement>(null);
   const activeIdx = useArcActiveSection(items);
   const active = items[activeIdx];
-  const label = (active?.label ?? "").toUpperCase();
+  const readout = (label?.text ?? active?.label ?? "").toUpperCase();
   const primary = items.filter((item) => item.primary);
 
   // Collapse once the hero has largely scrolled out of view — the
@@ -134,7 +142,7 @@ export function ArcHudNav({ items }: ArcHudNavProps) {
     }
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     if (reduced) {
-      el.textContent = label;
+      el.textContent = readout;
       return;
     }
     const jobs: ScrambleJob[] = [];
@@ -142,7 +150,7 @@ export function ArcHudNav({ items }: ArcHudNavProps) {
     // readout's own fade-in delay so the boot is seen. A section change
     // mid-page starts at once, from whatever is on screen.
     const lead = el.textContent ? 0 : READOUT_ARRIVE_DELAY_S;
-    queueScramble(jobs, el, label, performance.now() / 1000 + lead);
+    queueScramble(jobs, el, readout, performance.now() / 1000 + lead);
     if (jobs.length === 0) return;
     let raf = 0;
     const tick = () => {
@@ -154,7 +162,7 @@ export function ArcHudNav({ items }: ArcHudNavProps) {
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [collapsed, label]);
+  }, [collapsed, readout]);
 
   // The closed drawer is INERT, not merely invisible: opacity alone left
   // its links in the tab order behind a closed menu.
@@ -208,7 +216,22 @@ export function ArcHudNav({ items }: ArcHudNavProps) {
         {/* The chapter row — visible while the hero is on screen. Each
             link carries its index (`--i`) so the morph can stagger them
             as they peel off toward the trigger. */}
-        {primary.length > 0 ? (
+        {label ? (
+          /* One page label (ADR-129): a route link the browser follows, or an
+             in-page anchor the header scrolls to like a chapter. */
+          <div className="hud__nav__inline">
+            <a
+              href={label.href}
+              className="hud__nav__inline__link"
+              style={{ "--i": 0 } as CSSProperties}
+              onClick={
+                label.href.startsWith("#") ? (e) => navigate(e, label.href.slice(1)) : undefined
+              }
+            >
+              {label.text}
+            </a>
+          </div>
+        ) : primary.length > 0 ? (
           <div className="hud__nav__inline">
             {primary.map((item, i) => (
               <a
@@ -253,7 +276,8 @@ export function ArcHudNav({ items }: ArcHudNavProps) {
               visible label, so voice control can address the control by
               what it reads (WCAG 2.5.3 label-in-name). */}
           <span className="visually-hidden">
-            {open ? "Close navigation" : "Open navigation"} — current section: {label}
+            {open ? "Close navigation" : "Open navigation"} — current {label ? "page" : "section"}:{" "}
+            {readout}
           </span>
         </button>
 

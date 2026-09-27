@@ -4,7 +4,7 @@ import { SheetRenderer } from "@/components/sheet/SheetRenderer";
 import { SheetShell } from "@/components/sheet/SheetShell";
 import { featuredPosts, listedPosts } from "@/lib/musings/registry";
 import { chaptersOf } from "@/lib/sheet/composition";
-import { musingsIndexSections } from "@/lib/sheet/musings";
+import { MUSINGS_CORNER, musingsIndexSections } from "@/lib/sheet/musings";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
@@ -40,6 +40,7 @@ export default function MusingsPage() {
       bodyClass={slice.bodyClass}
       page="musings"
       chapters={chaptersOf(sections)}
+      corner={MUSINGS_CORNER}
     >
       <SheetRenderer sections={sections} rise />
     </SheetShell>

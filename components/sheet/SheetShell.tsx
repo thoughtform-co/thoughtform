@@ -30,6 +30,9 @@ interface SheetShellProps {
   /** `instrument` for the arcs overview's monitor and log (ADR-118): the
    *  capture's probe reads it to know which law a still answers to. */
   profile?: "document" | "instrument";
+  /** One page label in the header's corner in place of the chapter row and
+   *  the section readout (ADR-129) — `/musings` reads MUSINGS there. */
+  corner?: { text: string; href: string };
   children: ReactNode;
 }
 
@@ -60,6 +63,7 @@ export function SheetShell({
   chapters,
   knobs = SH_DEFAULTS,
   profile = "document",
+  corner,
   children,
 }: SheetShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -127,7 +131,7 @@ export function SheetShell({
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: hudHtml }}
       />
-      {hasChapters ? <ArcHudNav items={chapters} /> : null}
+      {hasChapters ? <ArcHudNav items={chapters} label={corner} /> : null}
       {THEME_TOGGLE &&
         (RAIL_INSTRUMENTS && hasChapters ? (
           <ArcRailInstruments containerRef={rootRef} menu={chapters} />

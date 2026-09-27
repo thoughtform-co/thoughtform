@@ -29,18 +29,27 @@ import { SheetTimeline } from "./SheetTimeline";
  * `slots` carries the one thing a record cannot: compiled MDX for a
  * `prose` section, keyed by the section's id.
  *
- * THE BODY AND THE CLOSE ARE SIBLINGS (ADR-127). Every section but the close
- * renders inside `.sh-body`, and the close follows it — so the landing's
- * ending can be drawn on a flowing document: with `rise`, the body carries
- * `data-sh-rise` and sheet.css §14b welds the close up over its last viewport
- * while the body drifts under it on a view timeline. Without `rise` the
- * wrapper is a layout no-op and the footer follows the content in flow.
+ * THE HEAD, THE BODY AND THE CLOSE ARE SIBLINGS (ADR-127, ADR-129). The split
+ * renders first, then every other section inside `.sh-body`, then the close —
+ * so the landing's ending can be drawn on a flowing document: with `rise`, the
+ * body carries `data-sh-rise` and sheet.css §14b welds the close up over its
+ * last viewport while the body drifts under it on a view timeline. Without
+ * `rise` the wrapper is a layout no-op and the footer follows in flow.
+ * ⚠ THE HEAD IS OUTSIDE THE BODY ON EVERY SHEET (ADR-129), because a stuck
+ * element inside a drifting body slides down 0.75× for the whole rise
+ * (ADR-127 §4's own finding) and a split with `pin` sticks under the header.
+ * DOM order is unchanged — split · the body's sections · close — so the
+ * composition law and both DOM readers hold. The split is SKIPPED in the
+ * body's map, never filtered out of `sections`: `ordinalOf` walks the full
+ * array. ⚠ The one selector that keys on the wrapper is the seam the body's
+ * first section draws (sheet.css §1): with the head outside, that section has
+ * no `.sh-sec` sibling before it.
  * ⚠ `rise` IS OPT-IN, NOT DERIVED: the client pages end on the sticky console
  * and a stuck element inside a drifting body slides for the whole rise, so
  * they and the kit do not pass it; the three flowing pages do. The wrapper is
- * invisible to every reader — the capture, the smoke and the law all query
- * `.sh-sec[data-sh-arrangement]` as descendants, and no selector in this
- * folder is a child or `:scope` combinator.
+ * invisible to every other reader — the capture, the smoke and the law all
+ * query `.sh-sec[data-sh-arrangement]` as descendants, and no selector in
+ * this folder is a child or `:scope` combinator.
  */
 export function SheetRenderer({
   sections,
@@ -52,34 +61,41 @@ export function SheetRenderer({
   /** The footer rises over the body (sheet.css §14b). Flowing pages only. */
   rise?: boolean;
 }) {
+  const split = sections.find((section) => section.kind === "split");
   const close = sections.find((section) => section.kind === "close");
+  const draw = (section: SheetSection, index: number) => {
+    const ordinal = ordinalOf(sections, index);
+    const kicker = section.kicker ?? section.menuLabel ?? section.kind;
+    return (
+      <section
+        key={section.id}
+        id={section.id}
+        className={`sh-sec sh-sec--${section.kind}`}
+        data-sh-arrangement={section.kind}
+        aria-label={section.ariaLabel ?? section.menuLabel ?? undefined}
+        {...(section.kind === "split" && section.pin ? { "data-sh-pin": "" } : null)}
+      >
+        <div className="sh-band">
+          {section.kind === "split" ? null : <SheetHead ordinal={ordinal} kicker={kicker} />}
+          <SectionBody section={section} slot={slots?.[section.id]} />
+        </div>
+      </section>
+    );
+  };
   return (
     <>
+      {split ? draw(split, sections.indexOf(split)) : null}
       <div className="sh-body" {...(rise && close ? { "data-sh-rise": "" } : null)}>
         {sections.map((section, index) => {
-          // Drawn after the body, as its sibling (below).
-          if (section.kind === "close") return null;
+          // The head is drawn before the body and the close after it, as its
+          // siblings (above and below) — skipped here, never filtered.
+          if (section.kind === "split" || section.kind === "close") return null;
           // The instrument's two frames draw their own section: no band, no head,
           // no ordinal (ADR-118).
           if (section.kind === "monitor")
             return <SheetMonitor key={section.id} section={section} />;
           if (section.kind === "log") return <SheetLog key={section.id} section={section} />;
-          const ordinal = ordinalOf(sections, index);
-          const kicker = section.kicker ?? section.menuLabel ?? section.kind;
-          return (
-            <section
-              key={section.id}
-              id={section.id}
-              className={`sh-sec sh-sec--${section.kind}`}
-              data-sh-arrangement={section.kind}
-              aria-label={section.ariaLabel ?? section.menuLabel ?? undefined}
-            >
-              <div className="sh-band">
-                {section.kind === "split" ? null : <SheetHead ordinal={ordinal} kicker={kicker} />}
-                <SectionBody section={section} slot={slots?.[section.id]} />
-              </div>
-            </section>
-          );
+          return draw(section, index);
         })}
       </div>
       {close ? <SheetClose id={close.id} /> : null}
