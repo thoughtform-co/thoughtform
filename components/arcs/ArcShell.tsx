@@ -71,7 +71,7 @@ interface ArcShellProps {
    * (slot 102x48, `object-fit: contain`, a 30px terminator rule). A leaf:
    * one anchor, no state, nothing when absent.
    */
-  clientMark?: { src: string; alt: string };
+  clientMark?: { src: string; srcLight?: string; alt: string };
   children: ReactNode;
 }
 
@@ -187,7 +187,16 @@ export function ArcShell({
       {clientMark ? (
         <a className="arc-hud-client" href="#hero" aria-label={clientMark.alt}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={clientMark.src} alt={clientMark.alt} />
+          <img className="arc-hud-client__dark" src={clientMark.src} alt={clientMark.alt} />
+          {clientMark.srcLight ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="arc-hud-client__light"
+              src={clientMark.srcLight}
+              alt=""
+              aria-hidden="true"
+            />
+          ) : null}
         </a>
       ) : null}
       {/* THE TWO WORKING CORNERS (ADR-059 U6) — the chapters top-left, the

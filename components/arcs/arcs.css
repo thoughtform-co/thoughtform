@@ -141,6 +141,17 @@
   height: 1px;
   background: var(--dawn-30, rgba(255, 255, 255, 0.3));
 }
+/* Two marks when the client has a light variant: the white one on the dark
+   chrome, the client's colour one on the cream. */
+.arc-hud-client__light {
+  display: none !important;
+}
+html[data-theme="light"] .arc-hud-client:has(.arc-hud-client__light) .arc-hud-client__dark {
+  display: none !important;
+}
+html[data-theme="light"] .arc-hud-client__light {
+  display: block !important;
+}
 .arc-root:has(.arc-hud-client) .hud__corner--tl {
   display: none;
 }
