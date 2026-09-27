@@ -81,6 +81,24 @@ for (const [i, id] of ids.entries()) {
   }, id);
   const tall = h > H;
   if (tall) {
+    // Walk the beat a viewport at a time first: its reveals are gated on
+    // IntersectionObserver, so a card below the fold is still transparent
+    // when the element is shot from its top. The handout of 2026-09-27 went
+    // out with a blank half page that way.
+    for (let y = H / 2; y < h; y += H / 2) {
+      await page.evaluate(({ id, y }) => {
+        const el = id === "hero" ? document.querySelector("main .arc-hero") : document.getElementById(id);
+        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY + y, behavior: "instant" });
+      }, { id, y });
+      await page.waitForTimeout(300);
+    }
+    await page.evaluate(async (id) => {
+      const el = id === "hero" ? document.querySelector("main .arc-hero") : document.getElementById(id);
+      const pending = () => [...(el?.querySelectorAll(".arc-reveal") ?? [])].filter((n) => !n.classList.contains("is-in"));
+      for (let t = 0; t < 40 && pending().length; t++) await new Promise((r) => setTimeout(r, 50));
+      el?.scrollIntoView({ block: "start", behavior: "instant" });
+    }, id);
+    await page.waitForTimeout(400);
     const el = id === "hero" ? page.locator("main .arc-hero") : page.locator(`#${id}`);
     await el.screenshot({ path: file });
   } else {
