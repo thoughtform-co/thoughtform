@@ -46,7 +46,11 @@ LOCAL = Path(__file__).resolve().parent / ".env"
 #: ONE call (ADR-082 U41): the face edit's GPT Image 2 branch — the skill's own
 #: "identity rescue when face drifts" route, documented since U1 and never
 #: coded. Same law: read by name, printed as a length, never a fallback.
-WANTED = ("GEMINI_API_KEY", "OPENAI_API_KEY")
+#: ⚠ `FAL_API_KEY` joined for `morph.py` (the era-transition probe, 2026-09-24):
+#: LTX-2.3 runs on fal. It is read from the SAME canonical file as the others
+#: and nowhere else — the site repo's own `.env` holds a copy from 2026-08, and
+#: this chain does not go and fetch it; `morph.py check` says which file lacks it.
+WANTED = ("GEMINI_API_KEY", "OPENAI_API_KEY", "FAL_API_KEY")
 
 _LINE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
 _loaded: dict[str, str] | None = None
