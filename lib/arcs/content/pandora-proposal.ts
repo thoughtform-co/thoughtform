@@ -55,8 +55,8 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
   cardImage: { src: "/images/services/embedded.webp", alt: "" },
   hero: {
     eyebrow: "Proposal · Pandora · September 2026",
-    title: { pre: "We embed in your studio", em: "until it runs without us." },
-    lede: "A proposal for Pandora's Global Brand Creative Studio, from Vince Buyssens and Rob Weston. What three years inside Loop's creative team taught us, brought to Copenhagen for three months: first the workflows run with AI, a person pressing the button. Then the same workflows run for agents, with a person keeping the last word.",
+    title: { pre: "We embed", em: "until it runs without us." },
+    lede: "Three months in your studio: first the workflows run with AI, then for agents, with a person keeping the last word.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",

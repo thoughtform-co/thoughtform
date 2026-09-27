@@ -69,9 +69,8 @@ export const ${CONST}: ArcDef = {
   hero: {
     eyebrow: ${q(`Proposal · ${N}`)},
     title: { pre: "Creative teams that", em: "scale themselves." },
-    lede: ${q(
-      `A proposal for ${N}. Three years of building AI capability inside a creative team, turned into phases for ${N}'s own team.`
-    )},
+    // One sentence, at most 120 characters: the homepage's measure (copyLaw.ts).
+    lede: ${q(`Three years of AI capability inside a creative team, turned into phases for ${N}'s own.`)},
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",

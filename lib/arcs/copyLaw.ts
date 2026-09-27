@@ -27,6 +27,39 @@ export const PROPOSAL_COPY_BANS: readonly (readonly [RegExp, string])[] = [
   [/\[(?!Next team)[^\]]+\]/, "an unfilled scaffold placeholder"],
 ];
 
+/**
+ * The hero's measure: the homepage hero's own, for every arc.
+ *
+ * The owner, 2026-09-27, on the Plopsa workshop's hero: "the hero section
+ * text should be much more concise. That should be a uniform rule." The
+ * homepage is the measure because the arc hero IS the homepage hero
+ * (ADR-075): its tagline is 37 characters, its description one sentence of
+ * 113. Measured at 1280×720 before the rule, a 49-character title set four
+ * lines and the ledes ran five to nine lines of mono capitals; the one
+ * lede already in measure (107 characters, one sentence) set three.
+ *
+ * A title is at most 40 characters as it reads (`arcTitleText`), a lede one
+ * sentence of at most 120. Who the page is from and for belongs to the
+ * eyebrow and the sections, never to the lede.
+ */
+export const HERO_MEASURE = { title: 40, lede: 120 } as const;
+
+/** What a hero breaks of `HERO_MEASURE`, one line per fault. */
+export function heroMeasureFaults(title: string, lede: string): string[] {
+  const faults: string[] = [];
+  if (title.length > HERO_MEASURE.title) {
+    faults.push(`title is ${title.length} characters, the measure is ${HERO_MEASURE.title}`);
+  }
+  if (lede.length > HERO_MEASURE.lede) {
+    faults.push(`lede is ${lede.length} characters, the measure is ${HERO_MEASURE.lede}`);
+  }
+  // A sentence ends at . ! or ? followed by a space and a capital; a
+  // decimal, an abbreviation mid-sentence or a closing full stop do not.
+  const sentences = lede.split(/(?<=[.!?])\s+(?=\p{Lu})/u).length;
+  if (sentences > 1) faults.push(`lede is ${sentences} sentences, the measure is one`);
+  return faults;
+}
+
 /** Walk every string in a record, reporting a dotted path for each. */
 export function scanStrings(
   value: unknown,

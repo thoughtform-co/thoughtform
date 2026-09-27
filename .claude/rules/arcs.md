@@ -91,6 +91,12 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - **The hero BOOTS from `useHeroBoot`** — the landing's own effect, shared.
   Its collector recurses, so a headline's `<em>` decodes too; both shapes
   are pinned in `tests/lib/hero-boot.test.tsx`.
+- **THE HERO KEEPS THE HOMEPAGE'S MEASURE** (owner, 2026-09-27: "much more
+  concise. That should be a uniform rule"). Every arc, every format: the
+  title at most 40 characters as it reads, the lede ONE sentence of at most 120. The homepage sets it (tagline 37, description one sentence of 113).
+  Who the page is from and for goes in the eyebrow and the sections, never
+  the lede. `HERO_MEASURE` in `lib/arcs/copyLaw.ts`; the registry test
+  names every hero that breaks it, and the scaffold starts inside it.
 - **THE PORTFOLIO FLOWS; THE `-v2` DECKS ARE PINNED** (ADR-076). `motion`
   is absent on `PORTFOLIO_ARC` — a deck is presented, a portfolio is
   scrolled — and the reveal grammar is the shards pages' own (IO,

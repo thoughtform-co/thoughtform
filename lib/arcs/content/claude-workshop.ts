@@ -22,8 +22,8 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
   cardImage: { src: "/images/services/workshop.webp", alt: "Claude workshop" },
   hero: {
     eyebrow: "Thoughtform · Claude workshop",
-    title: { pre: "The intelligence layer for AI", em: "inside the work." },
-    lede: "Every team’s way of working, encoded into a layer any AI can use. Built inside the work, owned by the team, survives any model change.",
+    title: { pre: "The intelligence layer", em: "inside the work." },
+    lede: "Every team’s way of working, encoded into a layer any AI can use, owned by the team.",
     actions: [
       { id: "see-layer", label: "See the layer", href: "#substrate-map", primary: true },
       { id: "receipts", label: "See the receipts", href: "#skills-engine" },

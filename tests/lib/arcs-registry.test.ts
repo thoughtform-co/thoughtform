@@ -18,7 +18,7 @@ import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
-import { PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
+import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
 import { ARCS, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
 import { LIGHT_LOCKED_ROUTES } from "@/lib/theme/themeLock";
@@ -121,6 +121,19 @@ describe("arcs registry (ADR-052)", () => {
         }
       }
     }
+  });
+
+  it("every hero keeps the homepage's measure: a short title, one sentence under it", () => {
+    /* The owner, 2026-09-27: the hero's text "should be much more concise.
+       That should be a uniform rule." Every arc, every format, every status:
+       the measure and its reasons are in `lib/arcs/copyLaw.ts`. */
+    const offenders: string[] = [];
+    for (const arc of ARCS) {
+      for (const fault of heroMeasureFaults(arcTitleText(arc.hero.title), arc.hero.lede)) {
+        offenders.push(`${arc.slug}: ${fault}`);
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 
   it("no italic markup smuggled into copy strings", () => {

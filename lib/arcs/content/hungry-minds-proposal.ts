@@ -44,7 +44,7 @@ export const HUNGRY_MINDS_PROPOSAL_ARC: ArcDef = {
   hero: {
     eyebrow: "Proposal · Hungry Minds · September 2026",
     title: { pre: "The brief is where", em: "the work starts." },
-    lede: "A proposal for Hungry Minds, from Vince Buyssens and the creative director. Three years of building AI capability inside a creative team, pointed at the part of this one that is a research problem and not a drawing problem.",
+    lede: "Three years of AI capability inside a creative team, pointed at the part of yours that is research, not drawing.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",

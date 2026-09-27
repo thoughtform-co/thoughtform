@@ -933,7 +933,9 @@ export interface ArcDef {
   hero: {
     /** PT Mono designation above the headline, e.g. "THOUGHTFORM · CLAUDE WORKSHOP". */
     eyebrow?: string;
+    /** At most 40 characters as it reads: the homepage's measure (`HERO_MEASURE`, copyLaw.ts). */
     title: ArcTitle;
+    /** ONE sentence of at most 120 characters. Who the page is from and for is the eyebrow's. */
     lede: string;
     actions?: readonly ArcAction[];
     image: ArcImage & { width: number; height: number };

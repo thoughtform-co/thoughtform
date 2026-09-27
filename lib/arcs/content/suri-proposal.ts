@@ -49,7 +49,7 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
   hero: {
     eyebrow: "Proposal · Suri · September 2026",
     title: { pre: "Creative teams that", em: "scale themselves." },
-    lede: "A proposal for Suri, from Rob Weston and Vince Buyssens. Three years of building AI capability inside Loop's creative team, turned into three phases for Suri's own team.",
+    lede: "Three years of building AI capability inside Loop's creative team, turned into three phases for Suri's own team.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",

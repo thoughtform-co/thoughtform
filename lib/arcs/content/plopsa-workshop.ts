@@ -29,8 +29,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Plopsa · Workshop III · 28 september 2026",
-    title: { pre: "Van beelden maken naar", em: "een setup die beelden maakt." },
-    lede: "Zes templates, vijf plekken, drie soorten platen, één regel over copy. Vandaag bouwen we de setup die jullie campagnebeelden in elk formaat maakt, met het juiste logo, en die jullie zelf draaien.",
+    title: { pre: "Een setup die", em: "jullie beelden maakt." },
+    lede: "Vandaag bouwen we hem op jullie eigen templates, en daarna draaien jullie hem zelf.",
     actions: [
       { id: "start", label: "Waar we staan", href: "#waar-we-staan", primary: true },
       { id: "live", label: "Live", href: "#live" },

@@ -29,7 +29,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
   hero: {
     eyebrow: "Thoughtform · Creative AI keynote",
     title: { pre: "Make AI work", em: "the way you do." },
-    lede: "On its own, AI is pretty good, and pretty good is generic. The judgment that makes the work yours is stuck in people’s heads. Encode it once, and everything you build on top runs on it.",
+    lede: "Encode the judgment that makes the work yours once, and everything you build on top runs on it.",
     actions: [
       { id: "see-how", label: "See how it works", href: "#about-vince", primary: true },
       { id: "proof", label: "See the proof", href: "#proof-ai-atl" },

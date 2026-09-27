@@ -32,7 +32,7 @@ export const PERFECT_TED_PROPOSAL_ARC: ArcDef = {
   hero: {
     eyebrow: "Proposal · Perfect Ted",
     title: { pre: "Creative teams that", em: "scale themselves." },
-    lede: "A proposal for Perfect Ted. Three years of building AI capability inside a creative team, turned into phases for the team that makes the matcha, the lattes and the cans look like themselves.",
+    lede: "Three years of AI capability inside a creative team, turned into phases for the one behind the matcha and the cans.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",
