@@ -77,6 +77,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "hungry-minds-proposal",
       "perfect-ted-proposal",
       "suri-proposal",
+      "suri-workshop",
       "trinny-london-pitch",
     ]);
   });
@@ -108,6 +109,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "perfect-ted-proposal": {
         rows: ["Imagery|M1|", "Composition|M2|", "Ads|M3|"],
         links: ["Claude×3", "Image generation×1", "Figma×1"],
+      },
+      /* The sprint's kickoff: a workshop, so no phase tags; the two
+         workstreams Suri asked for, and operations as the ghost. */
+      "suri-workshop": {
+        rows: ["Briefing||", "Statics||", "Operations||ghost"],
+        links: ["Claude×2", "Figma×1", "Monday×1"],
       },
       "trinny-london-pitch": {
         rows: [

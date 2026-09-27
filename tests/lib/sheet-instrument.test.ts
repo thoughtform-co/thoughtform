@@ -123,7 +123,7 @@ describe("the axis (ADR-118)", () => {
  * violation on a fake day. Bump this when a newer arc files; never the axis
  * clock.
  */
-const REAL_TODAY = "2026-09-26";
+const REAL_TODAY = "2026-09-27";
 
 describe("the instrument's law (ADR-118)", () => {
   const real = arcsInstrumentSections(REAL_TODAY);

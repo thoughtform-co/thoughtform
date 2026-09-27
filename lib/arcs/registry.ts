@@ -8,6 +8,7 @@ import { PERFECT_TED_PROPOSAL_ARC } from "./content/perfect-ted-proposal";
 import { HUNGRY_MINDS_PROPOSAL_ARC } from "./content/hungry-minds-proposal";
 import { PANDORA_PROPOSAL_ARC } from "./content/pandora-proposal";
 import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
+import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import type { ArcDef } from "./types";
 
 /**
@@ -26,6 +27,7 @@ import type { ArcDef } from "./types";
  * dates, so the order and the dates cannot tell two stories.
  */
 export const ARCS: readonly ArcDef[] = [
+  SURI_WORKSHOP_ARC,
   PLOPSA_WORKSHOP_ARC,
   PANDORA_PROPOSAL_ARC,
   HUNGRY_MINDS_PROPOSAL_ARC,

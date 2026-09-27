@@ -79,6 +79,7 @@ describe("hero preload", () => {
       "/arcs/hungry-minds-proposal",
       "/arcs/pandora-proposal",
       "/arcs/plopsa-workshop",
+      "/arcs/suri-workshop",
     ]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });
