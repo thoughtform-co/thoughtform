@@ -75,7 +75,13 @@ export interface ClientDef {
    * white on the dark chrome, `object-fit: contain` in a 102x48 slot. Absent
    * on a client whose vector mark is not on file, and the plain bracket stays.
    */
-  mark?: { src: string; alt: string };
+  mark?: {
+    src: string;
+    /** The light theme's variant (the client's colour mark on the cream
+     *  chrome); absent, the one `src` serves both themes. */
+    srcLight?: string;
+    alt: string;
+  };
 }
 
 export const TRINNY_CLIENT: ClientDef = {
@@ -144,7 +150,11 @@ export const PLOPSA_CLIENT: ClientDef = {
   lede: "A theme-park group in Belgium and Germany, and a content team that would make its own campaign visuals at volume, on its own setup.",
   // The year the relationship began (ADR-114): the first workshops of July 2026.
   since: "2026",
-  mark: { src: "/plopsa/plopsa-mark.svg", alt: "Plopsa" },
+  mark: {
+    src: "/plopsa/plopsa-mark.svg",
+    srcLight: "/plopsa/plopsa-mark-color.svg",
+    alt: "Plopsa",
+  },
 };
 
 /** Every client with an engagement on the site, in the order the overview

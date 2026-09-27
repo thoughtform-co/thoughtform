@@ -41,6 +41,12 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       width: 2400,
       height: 1350,
     },
+    /* The homepage's own key visual, delivered the landing's way (ADR-075):
+       the gateway plate, theme-dependent, which earns the route its
+       `HERO_ROUTES` row and drops the static preload. The curtain is
+       declared, as on the proposals (ADR-078 U1). */
+    plate: "gateway",
+    curtain: true,
   },
   meta: {
     title: "Plopsa · workshop III — Thoughtform",
