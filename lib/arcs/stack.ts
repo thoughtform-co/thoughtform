@@ -63,7 +63,8 @@ export const STACK: readonly StackItem[] = [
     id: "image-generation",
     kind: "model",
     name: "Image generation",
-    match: /\bimage generation\b/i,
+    // The Dutch word too: a client page in Dutch says "beeldgeneratie".
+    match: /\bimage generation\b|\bbeeldgeneratie\b/i,
   },
   {
     id: "video-generation",
