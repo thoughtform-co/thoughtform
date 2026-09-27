@@ -111,26 +111,6 @@ export function SheetShell({
     };
   }, []);
 
-  /* THE PINNED HEAD'S HEIGHT (ADR-129), for what sticks UNDER it. A post's
-     metadata column is itself sticky (`.sh-prose__meta`), and with the head
-     pinned over the top of the frame it stuck BEHIND the head and vanished;
-     sheet.css seats it at the head's stuck bottom, which depends on the head's
-     own content and so cannot be a CSS token. A ResizeObserver, never a scroll
-     writer: the box changes on resize and font load, and nothing else. */
-  useEffect(() => {
-    const root = rootRef.current;
-    const head = root?.querySelector<HTMLElement>(".sh-sec--split[data-sh-pin]");
-    if (!root || !head) return;
-    const write = () => root.style.setProperty("--sh-head-h", `${head.offsetHeight}px`);
-    write();
-    const ro = new ResizeObserver(write);
-    ro.observe(head);
-    return () => {
-      ro.disconnect();
-      root.style.removeProperty("--sh-head-h");
-    };
-  }, []);
-
   const hasChapters = chapters.length > 0;
 
   return (

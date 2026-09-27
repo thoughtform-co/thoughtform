@@ -215,6 +215,35 @@ npx playwright test tests/visual/arc-portfolio-smoke.spec.ts tests/visual/arc-te
 From PowerShell: `node scripts/design-eval/mechanical.mjs --url /musings --theme dark --scope ".sh-root" --exclude ".sh-hud-root, .hud-nav-overlay, .rin-host, .sh-sec--close" --vp 1280x720 --prm` (and light) — two known findings, the stamps.
 
 Then look at 1920×1247 and 1280×720 in both themes: the chrome at rest, the head
-held while the featured cards, the table or the article pass under its fade, the
-corner reading MUSINGS before and after the collapse, the post's metadata column
-under the head, the footer rising over the body with the head dimming.
+held on the overview while the featured cards and the table pass under its fade, the
+corner reading MUSINGS before and after the collapse, the post's head scrolling
+away with its metadata column at its own seat (U1), the footer rising over the
+body with the head dimming.
+
+## U1 - 2026-09-27, owner: the article does not pin
+
+> On the individual musing page I don't want a sticky thing. It doesn't work.
+> It's not having the effect I wanted because it's overlapping too much with
+> the text and it breaks the flow. Technically it's working but it just doesn't
+> work.
+
+The post's split drops `pin`; it keeps its survey chrome (`MUS / TITLE · 01`,
+`ON RECORD`, the crosses, the stamps) and the corner's MUSINGS, and its head
+scrolls away with the page. The OVERVIEW keeps its pinned head: it is a page
+that is browsed, and the band holds its title over cards and a table. An
+article is read, and a band over a column of prose is a band over the reading.
+
+What went with it: the metadata column's seat under the head (`--sh-head-h`,
+the ResizeObserver in `SheetShell` and the `.sh-prose__meta` rule under
+`[data-sh-pin]`). The column is sticky at its own `--sh-pin-top` again, as it
+was before this ADR. The finding it answered stays on record in sheet.css: a
+page with its own sticky column and a pinned head stack two pins, and the
+column vanishes behind the band.
+
+Guards moved with it: `sheet-split-survey` asserts the overview pins and the
+article does not, and that nothing references `--sh-head-h`; the smoke's hold
+test runs on the overview only, and its article test asserts the head moves
+with the page (its top equals minus the scroll) and the metadata column sits
+on its own seat. The chrome test now waits for the paragraph block's reveal to
+land before measuring the shared line — it read 2.3px off mid-transition on one
+run and 0 on the next, which is the kind of pass a timing lucks into.

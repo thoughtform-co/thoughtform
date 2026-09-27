@@ -93,10 +93,15 @@ and the first for a page that lists things.
   declared on `.hud__nav`, not `:root`**, so the sheet mirrors it
   (`--sh-nav-link`, pinned to the original) — a `var()` of it on `.sh-root` is
   invalid and would zero the head's padding. The head's padding is floored at
-  the seat, so the sticky offset is never positive. ⚠ **Anything that sticks
-  under the head seats below it**: the post's metadata column reads the head's
-  height (`--sh-head-h`, a ResizeObserver in `SheetShell`). The head dims with
-  the body during the rise through `timeline-scope: --sh-run` on the root.
+  the seat, so the sticky offset is never positive. The head dims with the body
+  during the rise through `timeline-scope: --sh-run` on the root.
+  ⚠ **A PINNED HEAD IS FOR A PAGE THAT IS BROWSED, NEVER ONE THAT IS READ**
+  (ADR-129 U1, owner, on the article: "overlapping too much with the text and
+  it breaks the flow … technically it's working but it just doesn't work").
+  Only the musings OVERVIEW pins; an article's head scrolls away. A page that
+  holds its own sticky column (a post's metadata) collides with a pinned head —
+  the column sticks inside the band and vanishes — so pinning a page with prose
+  is the question U1 answered, not a seat to re-solve.
 - **THE CORNER MAY PRINT ONE WORD (ADR-129).** `SheetShell`'s `corner` →
   `ArcHudNav`'s `label`: the row is one link and the collapsed readout says the
   same word; the drawer is unchanged. The musings routes pass `MUSINGS_CORNER`;

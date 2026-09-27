@@ -80,13 +80,16 @@ describe("the musings head is the masthead's (ADR-129)", () => {
   const index = musingsIndexSections(POSTS, POSTS.slice(0, 1));
   const postLadder = musingPostSections(POSTS[0], POSTS.slice(1));
 
-  it("both musings heads carry the survey and the pin, and no other sheet does", () => {
+  it("both musings heads carry the survey, only the overview pins, and no other sheet does either", () => {
     const i = splitOf(index)!;
     const p = splitOf(postLadder)!;
     expect(i.survey).toEqual({ code: "MUS", state: "OPEN" });
     expect(p.survey).toEqual({ code: "MUS", state: "ON RECORD" });
+    expect(i.pin).toBe(true);
+    // ⚠ THE ARTICLE IS READ, NOT BROWSED (U1, owner): a pinned head sat on the
+    // text and broke the flow. It scrolls away.
+    expect(p.pin).toBeUndefined();
     for (const s of [i, p]) {
-      expect(s.pin).toBe(true);
       // authored UPPERCASE: nothing transforms the strings on a phone rung
       expect(s.survey!.code).toBe(s.survey!.code.toUpperCase());
       expect(s.survey!.state).toBe(s.survey!.state.toUpperCase());
@@ -215,15 +218,10 @@ describe("the survey chrome and the pin, in the sheet (ADR-129)", () => {
     for (const b of blocks(stripComments(sheet)))
       if (b.path.includes("[data-sh-pin]") && !b.path.includes(gate))
         expect(flat(b.decls), b.path).not.toContain("position:sticky");
-    // what sticks under the head seats below it, on the measured height
-    expect(
-      declsIn(sheet, " .sh-sec--split[data-sh-pin] + .sh-body .sh-prose__meta", gate)
-    ).toContain(
-      "top:calc(var(--sh-pin-head)-var(--sh-split-pad)+var(--sh-head-h,0px)+var(--sh-pin-fade)+var(--sh-head-gap))"
-    );
-    expect(read("components/sheet/SheetShell.tsx")).toContain(
-      'root.style.setProperty("--sh-head-h"'
-    );
+    // U0's seat for a sticky column under the head went with the article's
+    // pin (U1): no pinned page holds prose, so nothing may reach for it.
+    expect(stripComments(sheet)).not.toContain("--sh-head-h");
+    expect(read("components/sheet/SheetShell.tsx")).not.toContain("--sh-head-h");
   });
 
   it("the head dims with the body on the body's own clock, lifted to the root", () => {

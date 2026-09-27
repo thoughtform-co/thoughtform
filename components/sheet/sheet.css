@@ -670,19 +670,14 @@
     background: linear-gradient(var(--sh-ground), transparent);
     pointer-events: none;
   }
-  /* ⚠ WHAT STICKS UNDER THE HEAD SEATS BELOW IT. A post's metadata column is
-     sticky at `--sh-pin-top` (§13), which is inside the pinned band — it stuck
-     BEHIND the head and vanished. Its seat is the head's stuck bottom
-     (offset + its measured height, `--sh-head-h`, written by SheetShell's
-     ResizeObserver), past the fade, plus the head gap. Without the measure
-     (no script) it falls back to the head's top, i.e. the old behaviour. */
-  .sh-sec--split[data-sh-pin] + .sh-body .sh-prose__meta {
-    top: calc(
-      var(--sh-pin-head) - var(--sh-split-pad) + var(--sh-head-h, 0px) + var(--sh-pin-fade) +
-        var(--sh-head-gap)
-    );
-  }
 }
+/* ⚠ A PINNED HEAD IS FOR A PAGE THAT IS BROWSED, NEVER ONE THAT IS READ
+   (ADR-129 U1, owner, on the article: "it's overlapping too much with the text
+   and it breaks the flow … technically it's working but it just doesn't
+   work"). An article's head scrolls away. And a page that holds its own sticky
+   column (a post's metadata, §13) collides with a pinned head: the column
+   sticks at `--sh-pin-top`, inside the band, and vanishes behind it — U0
+   seated it on the head's measured height, and that seat went with the pin. */
 
 /* ── 5. row — ordinal · title · tags · paragraph · figure ─────────── */
 .sh-rows {

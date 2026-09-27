@@ -707,6 +707,13 @@ test.describe("subpages (ADR-114)", () => {
       }) => {
         for (const route of MUSINGS) {
           await ready(page, route);
+          /* ⚠ THE COPY BLOCK IS A `.sh-reveal` — a 14px rise until `is-in` and
+             its transition — so a rect read before it lands is the animation,
+             not the line (measured 2.3px off on one run, 0 on the next). */
+          await page.waitForFunction(() => {
+            const copy = document.querySelector(".sh-split__copy");
+            return copy?.classList.contains("is-in") && copy.getAnimations().length === 0;
+          });
           const r = await page.evaluate(() => {
             const box = (el: Element | null) => {
               const b = el?.getBoundingClientRect();
@@ -752,10 +759,10 @@ test.describe("subpages (ADR-114)", () => {
         }
       });
 
-      test("the head holds under the header while the body passes under it, and the readout says MUSINGS", async ({
+      test("the overview's head holds under the header while the body passes under it, and the readout says MUSINGS", async ({
         page,
       }) => {
-        for (const route of MUSINGS) {
+        for (const route of ["/musings"]) {
           await ready(page, route);
           const settle = () =>
             page.evaluate(
@@ -806,27 +813,47 @@ test.describe("subpages (ADR-114)", () => {
         }
       });
 
-      test("a post's metadata column sticks below the head, not behind it", async ({ page }) => {
+      /* ⚠ THE ARTICLE IS READ, NOT BROWSED (ADR-129 U1, owner: the pinned head
+         "overlapping too much with the text and it breaks the flow"). Its head
+         scrolls away and its own metadata column holds its own seat. */
+      test("an article's head scrolls away, and its metadata column sticks at its own seat", async ({
+        page,
+      }) => {
         await ready(page, "/musings/navigate-the-intelligence");
         const art = await page.evaluate(() => {
           const a = document.querySelector("#article")!.getBoundingClientRect();
           return { top: a.top + scrollY, h: a.height };
         });
+        // well into the article: its top above the frame, most of it still below
         await page.evaluate(
           (y) => window.scrollTo({ top: y, behavior: "instant" }),
-          art.top + art.h * 0.35 - h * 0.3
+          art.top + art.h * 0.4
         );
         await page.evaluate(
           () =>
             new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
         );
         const r = await page.evaluate(() => {
-          const split = document.querySelector(".sh-sec--split")!.getBoundingClientRect();
-          const meta = document.querySelector(".sh-prose__meta")!.getBoundingClientRect();
-          return { head: split.bottom, meta: meta.top, bottom: meta.bottom, vh: innerHeight };
+          const split = document.querySelector(".sh-sec--split")!;
+          const meta = document.querySelector(".sh-prose__meta")!;
+          return {
+            pinned: split.hasAttribute("data-sh-pin"),
+            position: getComputedStyle(split).position,
+            // the head is the page's first box, so flowing means top === −scrollY
+            drift: split.getBoundingClientRect().top + scrollY,
+            head: split.getBoundingClientRect().bottom,
+            meta: meta.getBoundingClientRect().top,
+            seat: parseFloat(getComputedStyle(meta).top),
+          };
         });
-        expect(r.meta - r.head, "the column clears the head").toBeGreaterThanOrEqual(16);
-        expect(r.bottom, "the column stays inside the frame").toBeLessThanOrEqual(r.vh);
+        expect(r.pinned, "no pin on an article").toBe(false);
+        expect(r.position, "the head flows").not.toBe("sticky");
+        expect(Math.abs(r.drift), "the head moves with the page").toBeLessThanOrEqual(1);
+        expect(r.head, "the head has scrolled away").toBeLessThanOrEqual(0);
+        expect(
+          Math.abs(r.meta - r.seat),
+          "the column is stuck at its own seat"
+        ).toBeLessThanOrEqual(1);
       });
 
       test("a sheet without a survey keeps its name kicker and its first seam", async ({

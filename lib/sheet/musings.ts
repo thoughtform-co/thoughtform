@@ -103,7 +103,9 @@ export function musingPostSections(
       paragraphs: [post.summary],
       // A filed note reads as the casefile's own state word (ADR-129).
       survey: { code: "MUS", state: "ON RECORD" },
-      pin: true,
+      // ⚠ NO `pin` ON AN ARTICLE (ADR-129 U1, owner 2026-09-27): "it's
+      // overlapping too much with the text and it breaks the flow". The head
+      // scrolls away with the page; only the overview holds it.
     },
     {
       kind: "prose",
