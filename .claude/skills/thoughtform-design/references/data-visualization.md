@@ -44,6 +44,12 @@ Charting rules, line weights, and semantic color mapping. Graphs and telemetry s
 ## Grid & Background
 
 - **Grid lines:** 1px, dawn-04 or dawn-08. Horizontal and vertical only; no diagonal unless it encodes data.
+  - ⚠ **THE ONE SANCTIONED CASE IS AN AXONOMETRIC AXIS**, where the diagonal IS
+    the depth (ADR-130 U1). If a record has height, layers or depth, the drawing
+    is an isometric wireframe on a ruled grid plane —
+    `references/isometric-wireframe-grammar.md` — and its datum takes the
+    ordinary rule rung, not the dash rung: a dashed line already loses half its
+    ink to its gaps, and at the quieter alpha the plane measures as nothing.
 - **Background:** void or surface-0. No gradient fills in chart area unless brand-approved for a specific viz.
 
 ---

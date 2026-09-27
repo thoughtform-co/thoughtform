@@ -120,6 +120,24 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           },
         },
       ],
+      /* The thing the record leads to and the day works on, drawn once between
+         the two panels (ADR-130 U1): ONE template as an exploded axonometric
+         stack. These are the real top-level layers of the Meta-ads template
+         Bert sent on 25 September, top of the stack first, in the same
+         vocabulary the `#een-psd-ontleed` beat already uses ("Plaat",
+         "Tagline", "Vrije zone") — one word for one thing across the page.
+         ⚠ NO FILENAME: it carries a year and a format, and every string in a
+         record is scanned for digits. */
+      exploded: {
+        label: "Eén template, vijf lagen",
+        layers: [
+          { id: "zone", label: "Vrije zone", note: "Waar niets mag staan", dashed: true },
+          { id: "tagline", label: "Tagline", note: "Tagline, datum of prijs, per taal" },
+          { id: "logo", label: "Logo's", note: "Parklogo en campagnemerk" },
+          { id: "schaduw", label: "Schaduw", note: "Wat de tekst leesbaar houdt" },
+          { id: "plaat", label: "Plaat", note: "Wat de setup tekent" },
+        ],
+      },
     },
     {
       id: "drie-manieren",

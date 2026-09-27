@@ -7,14 +7,13 @@ import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
 import {
-  AGENT_RUN,
-  AXIS,
   HORIZON_VB,
-  TRACK_A_Y,
-  TRACK_B_Y,
-  along,
+  agentRun,
   checksAt,
-  horizonFraction,
+  gateAt,
+  horizonDust,
+  horizonGrid,
+  horizonSeats,
   operatedRuns,
   retryLoop,
 } from "./framing/horizonLayout";
@@ -28,15 +27,16 @@ interface ArcHorizonProps {
 const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at }) as CSSProperties;
 
 /**
- * ArcHorizon — the same stretch of time, twice (ADR-130). Above, a tool you
- * operate: short runs, a person after every one, until the repetition is the
- * point. Below, an agent on one long task: a person sets the goal and the
- * checks, the run passes the model's own two gates (it checks its work, it
- * steps back and retries), stops for a person once, and a person judges the
- * end. The long gold run is the drawing's one bright object.
+ * ArcHorizon — the same stretch of time, twice (ADR-130, redrawn in U1). Two
+ * lanes over one isometric datum. Far and above, a tool you operate: short
+ * runs, a person after every one, until the repetition is the point. Near and
+ * on the plane, an agent on one long task — a person sets the goal and the
+ * checks, the run passes three GATE FRAMES standing on the floor (it checks
+ * its work, it steps back and retries, it stops and asks), and a person judges
+ * the end. The long gold run is the drawing's one bright object.
  *
  * ⚠ THE DIAL'S LAW FOR EVERY MARK (ADR-106): a FILLED node is a person's
- * hand, an OPEN one the model. That is the whole reading — nine filled nodes
+ * hand, an OPEN one the model. That is the whole reading — eight filled nodes
  * above, two open gates below — and it needs no legend.
  *
  * ⚠ THE NODES ARE DOM, seated by fraction, so they stay 7px at every width
@@ -47,7 +47,8 @@ const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at })
  */
 export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProps) {
   const { axis, operated, agent, note } = section;
-  const checks = checksAt(operated.steps);
+  const grid = horizonGrid();
+  const seats = horizonSeats(operated.steps, agent.gates);
   const retry = agent.gates.find((g) => g.kind === "retry");
   const loop = retry ? retryLoop(retry.at) : null;
   return (
@@ -74,115 +75,102 @@ export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProp
               preserveAspectRatio="none"
               aria-hidden="true"
             >
-              {checks.map((cx) => (
-                <line
-                  key={`g${cx}`}
-                  className="arc-hz__grat"
-                  x1={cx}
-                  y1={TRACK_A_Y - 36}
-                  x2={cx}
-                  y2={AXIS.y}
-                />
+              {grid.along.map((d, i) => (
+                <path key={`ga${i}`} className="arc-hz__grat" d={d} />
               ))}
-              {operatedRuns(operated.steps).map((r) => (
-                <line
-                  key={`s${r.x1}`}
-                  className="arc-hz__step"
-                  x1={r.x1}
-                  y1={TRACK_A_Y}
-                  x2={r.x2}
-                  y2={TRACK_A_Y}
-                />
+              {grid.across.map((d, i) => (
+                <path key={`gc${i}`} className="arc-hz__grat" d={d} />
               ))}
-              <path
-                className="arc-hz__run"
-                d={`M${AGENT_RUN.x1} ${TRACK_B_Y} L${AGENT_RUN.x2} ${TRACK_B_Y}`}
-                pathLength={100}
-              />
+              {horizonDust().map((p, i) => (
+                <rect key={`d${i}`} className="arc-hz__mote" x={p.x} y={p.y} width="1" height="1" />
+              ))}
+              {operatedRuns(operated.steps).map((d, i) => (
+                <path key={`s${i}`} className="arc-hz__step" d={d} />
+              ))}
+              {agent.gates.map((g) => {
+                const gate = gateAt(g.at);
+                return (
+                  <g key={g.kind} data-horizon-gate={g.kind}>
+                    <path className="arc-hz__drop" d={gate.drop} />
+                    <path className="arc-hz__gate-frame" d={gate.frame} />
+                  </g>
+                );
+              })}
               {loop ? (
                 <>
                   <path className="arc-hz__loop" d={loop.loop} />
                   <path className="arc-hz__loop" d={loop.head} />
                 </>
               ) : null}
-              <line className="arc-hz__axis" x1={AXIS.x0} y1={AXIS.y} x2={AXIS.x1} y2={AXIS.y} />
+              <path className="arc-hz__run" d={agentRun()} pathLength={100} />
             </svg>
 
-            {/* The operated track: a person after every step. */}
-            <span className="arc-hz__track" style={seat(horizonFraction(0, TRACK_A_Y))}>
+            {/* The operated lane: a person after every step. */}
+            <span className="arc-hz__track" style={seat(seats.operatedLabel)}>
               {operated.label}
             </span>
-            {checks.map((cx) => (
-              <span key={`c${cx}`}>
-                <i
-                  className="arc-hz__node"
-                  data-horizon-by="person"
-                  aria-hidden="true"
-                  style={seat(horizonFraction(cx, TRACK_A_Y))}
-                />
-                <span className="arc-hz__check" style={seat(horizonFraction(cx, TRACK_A_Y + 14))}>
-                  {operated.check}
-                </span>
-              </span>
+            {seats.checks.map((p, i) => (
+              <i
+                key={`c${i}`}
+                className="arc-hz__node"
+                data-horizon-by="person"
+                aria-hidden="true"
+                style={seat(p)}
+              />
             ))}
+            {/* ⚠ LETTERED ONCE, at the last check. Eight repetitions of the
+                same three words along an isometric lane is the map city's
+                plaque defect in a new place; the eight filled nodes already
+                say how often, and the phone list carries the sentence. */}
+            <span className="arc-hz__check" style={seat(seats.check)}>
+              {operated.check}
+            </span>
 
-            {/* The agent's track: two people at the ends, three gates between. */}
+            {/* The agent's lane: two people at the ends, three gates between. */}
             <span
               className="arc-hz__track"
               data-horizon-track="agent"
-              style={seat(horizonFraction(0, TRACK_B_Y))}
+              style={seat(seats.agentLabel)}
             >
               {agent.label}
             </span>
-            <i
-              className="arc-hz__node"
-              data-horizon-by="person"
-              aria-hidden="true"
-              style={seat(horizonFraction(AXIS.x0, TRACK_B_Y))}
-            />
-            <i
-              className="arc-hz__node"
-              data-horizon-by="person"
-              aria-hidden="true"
-              style={seat(horizonFraction(AXIS.x1, TRACK_B_Y))}
-            />
-            {agent.gates.map((g) => (
+            {seats.agentEnds.map((p, i) => (
+              <i
+                key={`e${i}`}
+                className="arc-hz__node"
+                data-horizon-by="person"
+                aria-hidden="true"
+                style={seat(p)}
+              />
+            ))}
+            {agent.gates.map((g, i) => (
               <span key={g.kind}>
                 <i
                   className="arc-hz__node"
                   data-horizon-by={g.kind === "ask" ? "person" : "model"}
                   data-horizon-gate={g.kind}
                   aria-hidden="true"
-                  style={seat(horizonFraction(along(g.at), TRACK_B_Y))}
+                  style={seat(seats.gates[i])}
                 />
                 <span
                   className="arc-hz__gate"
                   data-horizon-gate={g.kind}
-                  style={seat(horizonFraction(along(g.at), TRACK_B_Y - 16))}
+                  style={seat(seats.gateLabels[i])}
                 >
                   {g.label}
                 </span>
               </span>
             ))}
-            <span
-              className="arc-hz__person"
-              style={seat(horizonFraction(AXIS.x0 - 4, TRACK_B_Y + 18))}
-            >
+            <span className="arc-hz__person" style={seat(seats.start)}>
               {agent.start}
             </span>
-            <span
-              className="arc-hz__person arc-hz__person--end"
-              style={seat(horizonFraction(AXIS.x1 + 4, TRACK_B_Y + 18))}
-            >
+            <span className="arc-hz__person arc-hz__person--end" style={seat(seats.end)}>
               {agent.end}
             </span>
-            <span className="arc-hz__axislbl" style={seat(horizonFraction(AXIS.x0, AXIS.y + 8))}>
+            <span className="arc-hz__axislbl" style={seat(seats.from)}>
               {axis.from}
             </span>
-            <span
-              className="arc-hz__axislbl arc-hz__axislbl--end"
-              style={seat(horizonFraction(AXIS.x1, AXIS.y + 8))}
-            >
+            <span className="arc-hz__axislbl arc-hz__axislbl--end" style={seat(seats.to)}>
               {axis.to}
             </span>
           </div>

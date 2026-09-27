@@ -1,6 +1,7 @@
 import type { ArcListGroup, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcExploded } from "./ArcExploded";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ladder, rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -48,7 +49,10 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
           sectionId={section.id}
           motion={motion}
         />
-        <div className={`arc-groups arc-groups--${section.layout}`}>
+        <div
+          className={`arc-groups arc-groups--${section.layout}`}
+          data-readout-exploded={readout && section.exploded ? "" : undefined}
+        >
           {section.groups.map((group, gi) =>
             readout ? (
               <ArcReadout
@@ -57,6 +61,7 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
                 lead={gi === section.groups.length - 1}
                 motion={motion}
                 gi={gi}
+                side={gi === 0 ? "record" : "index"}
               />
             ) : plates ? (
               <ArcPlate key={group.id} group={group} lead={gi === 0} motion={motion} gi={gi} />
@@ -94,6 +99,9 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
               </section>
             )
           )}
+          {readout && section.exploded ? (
+            <ArcExploded label={section.exploded.label} layers={section.exploded.layers} />
+          ) : null}
         </div>
         {section.closing ? (
           <p className="arc-receipt arc-reveal" {...rung(motion, 0.52, 0, 22)}>
@@ -196,17 +204,20 @@ function ArcReadout({
   lead,
   motion,
   gi,
+  side,
 }: {
   group: ArcListGroup;
   lead: boolean;
   motion: ArcMotion;
   gi: number;
+  side: "record" | "index";
 }) {
   return (
     <section
       className="arc-groups__group arc-plate arc-readout arc-reveal"
       aria-label={group.label}
       data-readout-group={group.id}
+      data-readout-side={side}
       {...rung(motion, ladder(0.16, 0.08, gi, 0.5), 0, 36)}
     >
       <header className="arc-plate__head">

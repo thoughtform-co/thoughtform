@@ -211,6 +211,14 @@ pattern onto, so it is the shared language between this skill and the MCP.
 
 `references/celestial-diagram-grammar.md` — the parametric diagram system.
 
+`references/isometric-wireframe-grammar.md` — the THIRD drawing register, for a
+record with height, layers or depth: wireframe machines on a ruled grid plane,
+1980s vector-display grammar. ⚠ It carries the house's **one sanctioned
+diagonal** — an axonometric axis encodes depth, which is the single case where a
+diagonal is data rather than decoration — and its one hard law: **nothing is
+ever lettered on a face** (labels are DOM on fractions, with leaders, and their
+non-overlap is a build gate).
+
 ---
 
 ## Layer 3 — Format archetypes
@@ -297,6 +305,7 @@ API: `references/primitives-api.md`. Figma nodes: `references/figma-codex-map.md
 | **Data viz**                 | 1px hairlines, diamond markers, semantic gold/green/alert. `references/data-visualization.md`  |
 | **Particles / icons**        | `references/particle-icon-grammar.md`                                                          |
 | **Diagram / connector**      | `references/celestial-diagram-grammar.md`                                                      |
+| **Height / layers / depth**  | `references/isometric-wireframe-grammar.md` — the one lawful diagonal; never letter on a face  |
 | **Interpreting a reference** | `references/semantic-methodology.md` — anchor scores, translation distance, preserve/transform |
 | **Judging a candidate**      | `eval/rubric.md` — mechanical checks first, then the vision judge                              |
 
@@ -366,39 +375,40 @@ factor from `min(w,h)/1080` · both themes verified.
 
 ## Reference map
 
-| Concern                            | File                                      | Tier   |
-| ---------------------------------- | ----------------------------------------- | ------ |
-| **Card / panel composition**       | `references/ui-composition.md`            | MEDIUM |
-| **Semantic anchors**               | `references/semantic-anchors.md`          | LOW    |
-| **Semantic method (translation)**  | `references/semantic-methodology.md`      | MEDIUM |
-| Cross-format shell (fixed canvas)  | `references/cross-format-shell.md`        | MEDIUM |
-| Web HUD adaptation (scroll-driven) | `references/web-hud-adaptation.md`        | MEDIUM |
-| Web format patterns                | `references/web-format-patterns.md`       | MEDIUM |
-| Mobile format patterns             | `references/mobile-format-patterns.md`    | MEDIUM |
-| Format adaptation matrix           | `references/format-adaptation-matrix.md`  | MEDIUM |
-| Title system                       | `references/title-system.md`              | MEDIUM |
-| Proposal / editorial patterns      | `references/proposal-patterns.md`         | MEDIUM |
-| HUD implementation (Figma parity)  | `references/hud-frame-implementation.md`  | LOW    |
-| Primitive API surface              | `references/primitives-api.md`            | LOW    |
-| Specimen recipes                   | `references/specimen-recipes.md`          | MEDIUM |
-| Figma-to-code workflow             | `references/figma-to-code-playbook.md`    | LOW    |
-| Figma node IDs                     | `references/figma-codex-map.md`           | LOW    |
-| Navigation grammar (12 primitives) | `references/navigation-grammar.md`        | MEDIUM |
-| Navigation tree / grid             | `references/navigation-tree-grid.md`      | MEDIUM |
-| Tokens (semantic)                  | `references/tokens.md`                    | LOW    |
-| Colour theory + tiers              | `references/color-system.md`              | LOW    |
-| Identity, logo, vectors            | `references/identity-system.md`           | LOW    |
-| Brand marks, exact SVG path data   | `references/brand-elements.md`            | LOW    |
-| Typography                         | `references/typography-system.md`         | LOW    |
-| Spatial / grid / density           | `references/spatial-system.md`            | MEDIUM |
-| Motion                             | `references/motion-system.md`             | LOW    |
-| Voice / UX copy                    | `references/voice-and-tone.md`            | MEDIUM |
-| Components                         | `references/components.md`                | MEDIUM |
-| Presentations / slides             | `references/presentation-patterns.md`     | MEDIUM |
-| Data visualization                 | `references/data-visualization.md`        | MEDIUM |
-| Particle icons                     | `references/particle-icon-grammar.md`     | LOW    |
-| Celestial diagram grammar          | `references/celestial-diagram-grammar.md` | MEDIUM |
-| Depth corridor (home-v2)           | `references/depth-corridor-grammar.md`    | LOW    |
-| Promoted inspiration extractions   | `references/inspiration-extractions.md`   | HIGH   |
-| Philosophy                         | `references/brand-philosophy.md`          | HIGH   |
-| **Design eval rubric**             | `eval/rubric.md`                          | LOW    |
+| Concern                            | File                                        | Tier   |
+| ---------------------------------- | ------------------------------------------- | ------ |
+| **Card / panel composition**       | `references/ui-composition.md`              | MEDIUM |
+| **Semantic anchors**               | `references/semantic-anchors.md`            | LOW    |
+| **Semantic method (translation)**  | `references/semantic-methodology.md`        | MEDIUM |
+| Cross-format shell (fixed canvas)  | `references/cross-format-shell.md`          | MEDIUM |
+| Web HUD adaptation (scroll-driven) | `references/web-hud-adaptation.md`          | MEDIUM |
+| Web format patterns                | `references/web-format-patterns.md`         | MEDIUM |
+| Mobile format patterns             | `references/mobile-format-patterns.md`      | MEDIUM |
+| Format adaptation matrix           | `references/format-adaptation-matrix.md`    | MEDIUM |
+| Title system                       | `references/title-system.md`                | MEDIUM |
+| Proposal / editorial patterns      | `references/proposal-patterns.md`           | MEDIUM |
+| HUD implementation (Figma parity)  | `references/hud-frame-implementation.md`    | LOW    |
+| Primitive API surface              | `references/primitives-api.md`              | LOW    |
+| Specimen recipes                   | `references/specimen-recipes.md`            | MEDIUM |
+| Figma-to-code workflow             | `references/figma-to-code-playbook.md`      | LOW    |
+| Figma node IDs                     | `references/figma-codex-map.md`             | LOW    |
+| Navigation grammar (12 primitives) | `references/navigation-grammar.md`          | MEDIUM |
+| Navigation tree / grid             | `references/navigation-tree-grid.md`        | MEDIUM |
+| Tokens (semantic)                  | `references/tokens.md`                      | LOW    |
+| Colour theory + tiers              | `references/color-system.md`                | LOW    |
+| Identity, logo, vectors            | `references/identity-system.md`             | LOW    |
+| Brand marks, exact SVG path data   | `references/brand-elements.md`              | LOW    |
+| Typography                         | `references/typography-system.md`           | LOW    |
+| Spatial / grid / density           | `references/spatial-system.md`              | MEDIUM |
+| Motion                             | `references/motion-system.md`               | LOW    |
+| Voice / UX copy                    | `references/voice-and-tone.md`              | MEDIUM |
+| Components                         | `references/components.md`                  | MEDIUM |
+| Presentations / slides             | `references/presentation-patterns.md`       | MEDIUM |
+| Data visualization                 | `references/data-visualization.md`          | MEDIUM |
+| Particle icons                     | `references/particle-icon-grammar.md`       | LOW    |
+| Celestial diagram grammar          | `references/celestial-diagram-grammar.md`   | MEDIUM |
+| Isometric wireframe grammar        | `references/isometric-wireframe-grammar.md` | MEDIUM |
+| Depth corridor (home-v2)           | `references/depth-corridor-grammar.md`      | LOW    |
+| Promoted inspiration extractions   | `references/inspiration-extractions.md`     | HIGH   |
+| Philosophy                         | `references/brand-philosophy.md`            | HIGH   |
+| **Design eval rubric**             | `eval/rubric.md`                            | LOW    |

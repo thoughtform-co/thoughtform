@@ -155,6 +155,40 @@ html[data-theme="light"] .arc-hud-client__light {
 .arc-root:has(.arc-hud-client) .hud__corner--tl {
   display: none;
 }
+/* ⚠ TWO SEATS, AND THE GLIDE IS THE WORDMARK'S OWN (ADR-130 U1, owner
+   2026-09-27: "top left, just a bit more inwards so it's vertically aligned
+   with the Thoughtform wordmark"). At rest the client's mark shares the
+   wordmark's LEFT EDGE — `--hud-content-inset`, the very token `.hud__brand`
+   rests on, so the two read as one column on the hero — and it docks back to
+   the corner (`--hud-margin`, where it has always sat) as the wordmark
+   collapses. Purely horizontal: the mark stays on the top row throughout, so
+   ADR-130's head clamp (no eyebrow through the hairline at y ≈ 44px, 1280×720)
+   is untouched.
+
+   ⚠ KEYED ON `.hud__brand.is-collapsed`, NOT `data-arc-scrolled`. `HudNav`
+   writes the class at 0.5vh and the attribute lands at 1vh (`useArcScroll`),
+   and the two marks must move on ONE frame — a 0.5vh gap is half a viewport
+   of the mark sitting inboard with the wordmark already docked. No new
+   writer (ADR-002); the condition is the DOM the existing one writes.
+
+   ⚠ ≤960 THE WORDMARK DOES NOT PAINT (`display: none` since 2026-09-01), so
+   there is nothing to align to and the mark keeps the corner. The rule is
+   scoped to the rung rather than reset inside it, because a rest seat that
+   only applies where its datum exists cannot be left behind by a later
+   phone pass. */
+@media (min-width: 961px) {
+  .arc-hud-client {
+    transition: left 0.4s var(--ease-out);
+  }
+  .arc-root:not(:has(.hud__brand.is-collapsed)) .arc-hud-client {
+    left: var(--hud-content-inset);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arc-hud-client {
+    transition: none;
+  }
+}
 .arc-section {
   position: relative;
   z-index: 1;
@@ -6261,6 +6295,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 /* A figure's dot matrix: the head's own lift, masked so it fades rather
    than stops. On a pseudo so the mask never reaches the marks. */
 .arc-floor__stage::before,
+.arc-xp__stage::before,
 .arc-curve__stage::before,
 .arc-hz__stage::before,
 .arc-q__stage::before {
@@ -6366,6 +6401,216 @@ a.arc-readout__hit:focus-visible {
   margin-top: auto;
 }
 
+/* ── THE ISOMETRIC LINE LADDER (ADR-130 U1) ────────────────────────
+   The owner read the flat register live and asked for the brandworld's own
+   retro-futuristic instruments: isometric wireframe machines on a grid plane,
+   drawn the way a 1980s vector display drew them. One basis for all four
+   framing drawings (`framing/iso.ts`), and one line ladder for all four here,
+   so a beat cannot invent a fifth weight.
+
+   THE LADDER, quietest first: the DATUM's grid (dashed, the plane a machine
+   stands on) · a HIDDEN edge (dashed, what the solid is in front of) · a TIE
+   or a LEADER (the drawing's own wiring) · a FACE's silhouette · the RUN (the
+   one line that draws on). ⚠ GOLD BUYS ONE THING PER DRAWING: the object the
+   beat is about.
+
+   ⚠ STATIC LINE WORK TAKES `vector-effect`, A DRAW-ON RUN MAY NOT (ADR-106):
+   under `non-scaling-stroke` the browser ignores `pathLength`, and the draw
+   breaks into partial arcs instead of running once. So the hairlines are one
+   device pixel at every width and the runs are scaled strokes, on purpose. */
+.arc-floor,
+.arc-curve,
+.arc-hz,
+.arc-xp {
+  /* ⚠ THE DATUM IS THE `--arc-rule` RUNG, NOT `--arc-rule-dash`. A dashed line
+     already loses half its ink to the gaps, so at .10 the plane a machine
+     stands on measured as nothing on the still — the drawing read as three
+     boxes floating in void, which is the reference's opposite. */
+  --arc-iso-grid: var(--arc-rule);
+  --arc-iso-edge: var(--arc-seam);
+  --arc-iso-hidden: var(--arc-rule);
+  --arc-iso-tie: var(--arc-ink-22);
+  --arc-iso-gold: var(--gold-line);
+  /* A hidden edge of the LIT object: gold, but a rung quieter, so the dash
+     still reads as behind-the-solid rather than as a second bright line.
+     `color-mix` is what lets a solid token carry an alpha (the dial's own). */
+  --arc-iso-gold-hidden: color-mix(in srgb, var(--gold-line) 55%, transparent);
+  --arc-iso-dust: var(--arc-grid);
+}
+.arc-floor__grat,
+.arc-curve__grat,
+.arc-hz__grat,
+.arc-xp__grat {
+  fill: none;
+  stroke: var(--arc-iso-grid);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-floor__hidden,
+.arc-curve__hidden,
+.arc-hz__hidden,
+.arc-xp__hidden {
+  fill: none;
+  stroke: var(--arc-iso-hidden);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-floor__tie,
+.arc-curve__tie,
+.arc-hz__drop,
+.arc-xp__tie,
+.arc-floor__leader,
+.arc-curve__leader,
+.arc-hz__leader,
+.arc-xp__leader {
+  fill: none;
+  stroke: var(--arc-iso-tie);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-xp__tie,
+.arc-hz__drop {
+  stroke-dasharray: 2 5;
+}
+.arc-floor__mote,
+.arc-curve__mote,
+.arc-hz__mote,
+.arc-xp__mote {
+  fill: var(--arc-iso-dust);
+}
+
+/* ── 01b · The template, exploded ──────────────────────────────────
+   Between the two panels: one campaign template lifted into its layers, an
+   exploded CAD assembly in the house's line work. Five wireframe plates on
+   four dashed verticals over the datum, each named to the right on a single
+   straight leader; the base plate — what the setup draws — is the drawing's
+   one gold object, and the top layer is the free zone, DASHED, because a
+   safety margin is a rule the artwork obeys rather than ink the setup paints.
+
+   ⚠ THE DRAWING IS COLUMN 2 AND IS LAST IN THE DOM. The reading order is the
+   record, the day, then the figure that sits between them — so the columns are
+   assigned rather than left to auto-placement, and a reader on a screen reader
+   is not handed a wireframe in the middle of a sentence. */
+.arc-groups--readout[data-readout-exploded] {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+/* ⚠ EVERY CHILD DECLARES ITS ROW TOO. Auto-placement is SPARSE: once the index
+   plate is placed in column 3, the cursor has passed column 2, so a figure that
+   names only its column is pushed onto a second row — the beat then measured
+   1021px against a 720px viewport, `data-arc-tall` came on and the curtain
+   disarmed itself, with nothing failing. */
+.arc-groups--readout[data-readout-exploded] > [data-readout-side="record"] {
+  grid-row: 1;
+  grid-column: 1;
+}
+.arc-groups--readout[data-readout-exploded] > .arc-xp {
+  grid-row: 1;
+  grid-column: 2;
+}
+.arc-groups--readout[data-readout-exploded] > [data-readout-side="index"] {
+  grid-row: 1;
+  grid-column: 3;
+}
+.arc-xp {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(8px, 1.2vh, 14px);
+}
+.arc-xp__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 360 / 460;
+}
+.arc-xp__svg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-xp__face {
+  fill: var(--arc-plate);
+  stroke: none;
+}
+.arc-xp__side {
+  fill: none;
+  stroke: var(--arc-iso-edge);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-xp__run {
+  fill: none;
+  stroke: var(--arc-iso-edge);
+  stroke-width: 1.4;
+  stroke-linejoin: miter;
+}
+/* The base plate: what the setup draws. */
+.arc-xp__plate[data-readout-base] .arc-xp__face {
+  fill: var(--arc-gold-wash);
+}
+.arc-xp__plate[data-readout-base] .arc-xp__run,
+.arc-xp__plate[data-readout-base] .arc-xp__side {
+  stroke: var(--arc-iso-gold);
+}
+.arc-xp__plate[data-readout-base] .arc-xp__hidden {
+  stroke: var(--arc-iso-gold-hidden);
+}
+/* The free zone: a guide, not ink. ⚠ A DASHED RUN CANNOT DRAW ON (its own
+   dash array is the transition's channel), so this plate's outline is the
+   static `__side` weight and its run is dashed and left drawn. */
+.arc-xp__plate[data-readout-dashed] .arc-xp__face {
+  fill: none;
+}
+.arc-xp__plate[data-readout-dashed] .arc-xp__run {
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-xp__lbl {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  width: calc(var(--xw, 160) / 360 * 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+.arc-xp__name {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(8.5px, 0.6vw, 11px);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+}
+.arc-xp__note {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(10px, 0.72vw, 13px);
+  line-height: 1.3;
+  color: var(--arc-ink-50);
+}
+.arc-xp__cap {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(8.5px, 0.6vw, 11px);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--arc-ink-50);
+}
+
 /* ── 02 · The three stages ──────────────────────────────────────────
    Three machined housings on a graticule (R4's module: the corner pair,
    a head band ruled at its floor, a 2-unit rule stopping at the cut), the
@@ -6379,8 +6624,10 @@ a.arc-readout__hit:focus-visible {
   --arc-floor-band: rgba(var(--dawn-rgb), 0.05);
   --arc-floor-gold: var(--gold-line);
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: clamp(24px, 4vw, 72px);
+  /* The drawing is width-bound (twelve units of time plus three of depth), so
+     the only lever on how large it renders is its share of the row. */
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: clamp(24px, 3vw, 56px);
   align-items: center;
 }
 .arc-floor__figure {
@@ -6390,7 +6637,7 @@ a.arc-readout__hit:focus-visible {
 .arc-floor__stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 960 / 540;
+  aspect-ratio: 960 / 460;
 }
 .arc-floor__svg,
 .arc-curve__svg,
@@ -6403,20 +6650,10 @@ a.arc-readout__hit:focus-visible {
   height: 100%;
   overflow: visible;
 }
-.arc-floor__grat {
-  stroke: var(--arc-floor-line);
-  stroke-width: 1;
-  stroke-dasharray: 2 4;
-  vector-effect: non-scaling-stroke;
-}
-.arc-floor__tick,
-.arc-floor__bandrule {
-  stroke: var(--arc-floor-tick);
+.arc-floor__tick {
+  stroke: var(--arc-iso-tie);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-}
-.arc-floor__bandrule {
-  stroke: var(--arc-floor-line);
 }
 .arc-floor__axis {
   fill: none;
@@ -6424,32 +6661,28 @@ a.arc-readout__hit:focus-visible {
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.arc-floor__plate {
-  fill: var(--arc-plate);
-}
-.arc-floor__wash {
+/* A prism's top face carries the only fill on the drawing, and only when it
+   is the lit one — a wireframe machine that is filled everywhere is a solid,
+   and the argument here is that you can see through all three. */
+.arc-floor__face {
   fill: none;
 }
-.arc-floor__band {
-  fill: var(--arc-floor-band);
-}
-.arc-floor__outline {
+.arc-floor__edge {
   fill: none;
-  stroke: var(--arc-seam);
-  stroke-width: 1;
+  stroke: var(--arc-iso-edge);
+  stroke-width: 1.4;
+  stroke-linejoin: miter;
   vector-effect: non-scaling-stroke;
 }
-.arc-floor__rule {
-  stroke: var(--arc-seam);
-  stroke-width: 2;
-}
-.arc-floor__housing[data-stages-lit] .arc-floor__wash,
-.arc-floor__housing[data-stages-lit] .arc-floor__band {
+.arc-floor__housing[data-stages-lit] .arc-floor__face {
   fill: var(--arc-gold-wash);
 }
-.arc-floor__housing[data-stages-lit] .arc-floor__outline,
-.arc-floor__housing[data-stages-lit] .arc-floor__rule {
+.arc-floor__housing[data-stages-lit] .arc-floor__edge {
   stroke: var(--arc-floor-gold);
+  stroke-width: 1.6;
+}
+.arc-floor__housing[data-stages-lit] .arc-floor__hidden {
+  stroke: var(--arc-iso-gold-hidden);
 }
 .arc-floor__tag,
 .arc-floor__word,
@@ -6514,28 +6747,24 @@ a.arc-readout__hit:focus-visible {
 }
 .arc-curve__stage {
   position: relative;
-  width: min(100%, calc(40svh * 1000 / 380));
-  aspect-ratio: 1000 / 380;
+  width: min(100%, calc(46svh * 1000 / 400));
+  aspect-ratio: 1000 / 400;
   margin-inline: auto;
 }
-.arc-curve__grat {
-  stroke: var(--arc-curve-grid);
-  stroke-width: 1;
-  stroke-dasharray: 2 4;
-  vector-effect: non-scaling-stroke;
-}
 .arc-curve__tread {
+  fill: none;
   stroke: var(--arc-curve-tread);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 .arc-curve__axis {
+  fill: none;
   stroke: var(--arc-curve-axis);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.arc-curve__ref,
-.arc-curve__now {
+.arc-curve__ref {
+  fill: none;
   stroke: var(--arc-curve-ref);
   stroke-width: 1;
   stroke-dasharray: 4 5;
@@ -6588,8 +6817,11 @@ a.arc-readout__hit:focus-visible {
 .arc-curve__desig--y {
   translate: -100% -50%;
 }
+/* ⚠ SET FROM ITS RIGHT EDGE. The seat is the crop's own right margin and the
+   run is 36 characters, so a left-anchored span walks straight out of the
+   stage — past the right rail, where nothing clips it and no box reports it. */
 .arc-curve__desig--along {
-  translate: 0 -50%;
+  translate: -100% -50%;
   padding: 1px 4px;
   background: var(--void, #0a0908);
   color: var(--arc-ink-50);
@@ -6630,19 +6862,22 @@ a.arc-readout__hit:focus-visible {
 }
 .arc-hz__stage {
   position: relative;
-  width: min(100%, calc(40svh * 1200 / 360));
-  aspect-ratio: 1200 / 360;
+  width: min(100%, calc(44svh * 1200 / 440));
+  aspect-ratio: 1200 / 440;
   margin-inline: auto;
 }
-.arc-hz__grat {
-  stroke: var(--arc-hz-grid);
-  stroke-width: 1;
-  stroke-dasharray: 1 4;
-  vector-effect: non-scaling-stroke;
-}
 .arc-hz__step {
+  fill: none;
   stroke: var(--arc-hz-step);
   stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+/* A gate is an open hoop the run passes through — dawn, because the frame is
+   the model's own check and the filled node inside it is what says "a person". */
+.arc-hz__gate-frame {
+  fill: none;
+  stroke: var(--arc-iso-edge);
+  stroke-width: 1.2;
   vector-effect: non-scaling-stroke;
 }
 .arc-hz__run {
@@ -6653,11 +6888,6 @@ a.arc-readout__hit:focus-visible {
 .arc-hz__loop {
   fill: none;
   stroke: var(--arc-hz-run);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.arc-hz__axis {
-  stroke: var(--arc-hz-axis);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
@@ -6692,9 +6922,12 @@ a.arc-readout__hit:focus-visible {
   text-transform: uppercase;
   pointer-events: none;
 }
+/* ⚠ SET FROM ITS RIGHT EDGE, so the lane's name ends where the lane begins.
+   Left-anchored it ran straight over its own rail and its first node. */
 .arc-hz__track {
-  translate: 0 -50%;
-  max-width: calc(100% * 150 / 1200);
+  translate: -100% -50%;
+  max-width: calc(100% * 160 / 1200);
+  text-align: right;
   font-size: clamp(9px, 0.65vw, 12px);
   color: var(--arc-ink-62);
 }
@@ -6727,8 +6960,12 @@ a.arc-readout__hit:focus-visible {
 .arc-hz__gate {
   translate: -50% -100%;
   width: max-content;
-  max-width: clamp(200px, 12vw, 240px);
-  font-size: clamp(13px, 0.9vw, 17px);
+  /* ⚠ THREE GATES SHARE ONE LANE and sit ~200px apart at the binding
+     viewport, so the label's measure is what keeps them off each other —
+     wrapped to two short lines rather than run out to 240px, where all three
+     printed through their neighbours. */
+  max-width: clamp(112px, 8.5vw, 150px);
+  font-size: clamp(12px, 0.82vw, 15px);
   text-align: center;
   color: var(--arc-ink-90);
 }
@@ -6964,6 +7201,21 @@ a.arc-readout__hit:focus-visible {
   }
   .is-arc-js .arc-hz.is-in .arc-hz__run,
   .is-arc-js .arc-curve.is-in .arc-curve__ladder {
+    stroke-dashoffset: 0;
+  }
+  /* The exploded stack assembles from the base up: `pathLength` 1, so the
+     channel is normalised and one delay ladder serves every plate whatever
+     its perimeter. ⚠ THE DASHED PLATE IS EXCLUDED — a dashed run cannot draw
+     on, because its own dash array IS the transition's channel; and the
+     exclusion has to be in the SELECTOR, since the two rules tie on
+     specificity and this block is declared later. */
+  .is-arc-js .arc-xp .arc-xp__plate:not([data-readout-dashed]) .arc-xp__run {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 0.9s cubic-bezier(0.65, 0, 0.35, 1)
+      calc(0.3s + var(--i, 0) * 0.12s);
+  }
+  .is-arc-js .arc-sec--readout.is-in .arc-xp__plate:not([data-readout-dashed]) .arc-xp__run {
     stroke-dashoffset: 0;
   }
 }

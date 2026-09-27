@@ -767,6 +767,41 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   `clamp(28px, 18vh − 100px, 112px)` so no eyebrow runs through the client
   mark's hairline at 1280×720. ⚠ Plopsa's `configuration` beat is gone, so the
   `/arcs` dossier draws no board for it until a `questions` reader lands.
+  ⚠ **U1 (2026-09-27, owner: the instruments "look boring af"; the panels are
+  "glorified powerpoint panels") REDRAWS ALL FOUR IN THE BRANDWORLD'S ISOMETRIC
+  REGISTER, REVERSING DECISION 3'S OWN RULING** — wireframe machines on a ruled
+  grid plane, 1980s vector-display grammar. **`components/arcs/framing/iso.ts`
+  is the ONE projection under `components/arcs`** (pure, zero-import): a CABINET
+  oblique, because under the map's 2:1 a depth of `d` costs `0.5·d` of HEIGHT
+  and no `svh`-capped beat can pay it; `ISO_BASIS_2TO1` is kept byte-equal to
+  `mapProjection.iso()` and pinned, COPIED never imported (ADR-106). ⚠ **NO
+  LABEL EVER SITS ON AN AXONOMETRIC FACE** — the map city's plaques printed
+  through their own plates 10–13 times a sheet with every guard green
+  (`.claude/rules/proof.md` §The BOARD archetype) — so each layout exports
+  `…Labels()`, the renderer seats DOM spans from exactly that list with a
+  one-elbow leader, and `tests/lib/arc-iso.test.ts` walks every PAIR (with a
+  negative case: a guard that has never failed is a guard nobody has checked).
+  ⚠ **PAINT ORDER IS DEPTH ORDER** (`isoDepth` ascending; SVG has no z-buffer)
+  and hidden edges are DASHED — exactly the three meeting the far-bottom vertex.
+  ⚠ **A CHAMFER ON A PROJECTED FACE CUTS THE SCREEN'S DIAGONAL, NOT THE
+  WORLD'S**: under this basis screen x rises with both axes, so the lawful
+  TR + BL pair is `(a+w, b+d)` and `(a, b)`. ⚠ **STATIC LINE WORK TAKES
+  `vector-effect`, A DRAW-ON RUN MAY NOT**, and a DASHED run cannot draw on at
+  all (its dash array is the channel) — exclude it in the SELECTOR, since the
+  draw-on block is declared last and ties on specificity. ⚠ **A WIDTH-BOUND
+  DRAWING'S CROP HEIGHT IS PURE LETTERBOX**: trimming it deletes dead band and
+  does NOT shrink the drawing; only the column's share does. ⚠ **`exploded` is a
+  FIELD on the `readout` layout** (`ArcStackLayer`, 3–5, ≤1 dashed, label ≤16,
+  note ≤40, digit-free) — one template drawn between the two panels, the base
+  plate the one gold object; ⚠ **every child of its three-column grid declares
+  its `grid-row`**, because auto-placement is SPARSE and a figure naming only
+  its column lands on a second row, which turned the beat tall and disarmed the
+  curtain with nothing failing. ⚠ **THE CLIENT MARK HAS TWO SEATS**: at rest the
+  wordmark's own left edge (`--hud-content-inset`), docked at `--hud-margin`,
+  keyed on `.arc-root:not(:has(.hud__brand.is-collapsed))` — the wordmark's 0.5vh
+  flip, NEVER `data-arc-scrolled` (1vh), so the two move on one frame; scoped to
+  `min-width: 961px` and guarded by `tests/lib/arc-hud-client-seats.test.ts`.
+  Grammar: [`.claude/skills/thoughtform-design/references/isometric-wireframe-grammar.md`](../skills/thoughtform-design/references/isometric-wireframe-grammar.md).
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

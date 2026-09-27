@@ -7,18 +7,14 @@ import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
 import {
-  AXIS_Y,
   CURVE_VB,
-  GRID_TOP,
   LETTERED_TREADS,
-  NOW_X,
-  TREADS,
-  X0,
-  X1,
-  curveFraction,
-  ladderPath,
-  treadY,
-  yearX,
+  curveDust,
+  curveGrid,
+  curveSeats,
+  ladder,
+  referencePlane,
+  yearPosts,
 } from "./framing/curveLayout";
 
 interface ArcCurveProps {
@@ -30,14 +26,15 @@ interface ArcCurveProps {
 const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at }) as CSSProperties;
 
 /**
- * ArcCurve — the longer the task, per release (ADR-130). METR's finding in
- * the program board's register: a dated graticule, seven treads (one per
- * doubling), and a step ladder with a riser every seven months that arrives
- * at NOW — the drawing's one gold mark. A dashed reference names the length
- * of the work this room is here to hand over, so the ladder is read against
- * something the reader owns.
+ * ArcCurve — the longer the task, per release (ADR-130, redrawn in U1).
+ * METR's finding in the brandworld's isometric register: a dated floor with a
+ * year post at each mark, and the step ladder EXTRUDED into a stepped relief —
+ * one tread per doubling, a riser every seven months — arriving at NOW, the
+ * drawing's one gold mark. A dashed reference plane cuts through the relief at
+ * the length of work this room is here to hand over, so the ladder is read
+ * against something the reader owns.
  *
- * ⚠ THE LADDER IS INK, NOT GOLD, and it draws on once (`pathLength` 100 on a
+ * ⚠ THE CREST IS INK, NOT GOLD, and it draws on once (`pathLength` 100 on a
  * path that never takes `vector-effect`). The static line work does take it,
  * so a hairline is one device pixel at every width.
  *
@@ -46,8 +43,9 @@ const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at })
  */
 export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
   const { years, now, treads, axis, reference, note } = section;
-  const top = treadY(TREADS - 1);
-  const refY = treadY(reference.tread);
+  const relief = ladder();
+  const grid = curveGrid();
+  const seats = curveSeats(years.length);
   return (
     <ArcBeat
       id={section.id}
@@ -72,45 +70,40 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
               preserveAspectRatio="none"
               aria-hidden="true"
             >
-              {years.map((year, i) => (
-                <line
-                  key={`y${year}`}
-                  className="arc-curve__grat"
-                  x1={yearX(i)}
-                  y1={GRID_TOP}
-                  x2={yearX(i)}
-                  y2={AXIS_Y}
+              {grid.along.map((d, i) => (
+                <path key={`ga${i}`} className="arc-curve__grat" d={d} />
+              ))}
+              {grid.across.map((d, i) => (
+                <path key={`gc${i}`} className="arc-curve__grat" d={d} />
+              ))}
+              {curveDust().map((p, i) => (
+                <rect
+                  key={`d${i}`}
+                  className="arc-curve__mote"
+                  x={p.x}
+                  y={p.y}
+                  width="1"
+                  height="1"
                 />
               ))}
-              {Array.from({ length: TREADS }, (_, i) => treadY(i)).map((y) => (
-                <line
-                  key={`t${y.toFixed(1)}`}
-                  className="arc-curve__tread"
-                  x1={X0}
-                  y1={y}
-                  x2={X1}
-                  y2={y}
-                />
+              {yearPosts(years.length).map((d, i) => (
+                <path key={`p${i}`} className="arc-curve__tie" d={d} />
               ))}
-              <line
-                className="arc-curve__ref"
-                data-curve-ref=""
-                x1={X0}
-                y1={refY}
-                x2={X1}
-                y2={refY}
-              />
-              <line className="arc-curve__axis" x1={X0} y1={AXIS_Y} x2={X1} y2={AXIS_Y} />
-              <line className="arc-curve__axis" x1={X0} y1={GRID_TOP} x2={X0} y2={AXIS_Y} />
-              <line className="arc-curve__now" x1={NOW_X} y1={top} x2={NOW_X} y2={AXIS_Y} />
-              <path className="arc-curve__ladder" d={ladderPath()} pathLength={100} />
+              <path className="arc-curve__hidden" d={relief.footHidden} />
+              <path className="arc-curve__ref" data-curve-ref="" d={referencePlane(reference.tread)} />
+              {relief.ties.map((d, i) => (
+                <path key={`t${i}`} className="arc-curve__tread" d={d} />
+              ))}
+              <path className="arc-curve__tread" d={relief.far} />
+              <path className="arc-curve__axis" d={relief.footVisible} />
+              <path className="arc-curve__ladder" d={relief.crest} pathLength={100} />
             </svg>
 
             {LETTERED_TREADS.map((t, i) => (
               <span
                 key={treads[i]}
                 className="arc-curve__lbl arc-curve__lbl--tread"
-                style={seat(curveFraction(X0 - 12, treadY(t)))}
+                style={seat(seats.treads[i])}
               >
                 {treads[i]}
               </span>
@@ -119,37 +112,27 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
               <span
                 key={year}
                 className="arc-curve__lbl arc-curve__lbl--year"
-                style={seat(curveFraction(yearX(i), AXIS_Y + 8))}
+                style={seat(seats.years[i])}
               >
                 {year}
               </span>
             ))}
-            <span
-              className="arc-curve__lbl arc-curve__lbl--now"
-              style={seat(curveFraction(NOW_X, AXIS_Y + 8))}
-            >
+            <span className="arc-curve__lbl arc-curve__lbl--now" style={seat(seats.now)}>
               {now}
             </span>
-            <i
-              className="arc-curve__seat"
-              aria-hidden="true"
-              style={seat(curveFraction(NOW_X, top))}
-            />
-            <span
-              className="arc-curve__desig arc-curve__desig--y"
-              style={seat(curveFraction(X0 - 12, GRID_TOP - 16))}
-            >
+            <i className="arc-curve__seat" aria-hidden="true" style={seat(seats.seat)} />
+            <span className="arc-curve__desig arc-curve__desig--y" style={seat(seats.axisY)}>
               {axis.y}
             </span>
             <span
               className="arc-curve__desig arc-curve__desig--along"
-              style={seat(curveFraction(X0 + 24, (treadY(5) + top) / 2))}
+              style={seat(seats.axisAlong)}
             >
               {axis.along}
             </span>
             <span
               className="arc-curve__lbl arc-curve__lbl--ref"
-              style={seat(curveFraction(X1, refY - 8))}
+              style={seat(seats.reference(reference.tread))}
             >
               {reference.label}
             </span>
