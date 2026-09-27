@@ -962,6 +962,108 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("the workshop's framing kinds hold their records (ADR-130)", () => {
+    /* Four leaves and one layout, each with a fixed geometry and authored
+       words. What is pinned is what the drawings assume and cannot check at
+       render time: the counts the geometry is built for, the one lit object,
+       the gate order, measures a label was set against, and NO DIGIT on an
+       instrument's lettering (the house habit; the curve's years excepted,
+       as on the program board). */
+    const noDigits = (value: unknown, at: string) =>
+      scanArc(value, at, (s, p) => expect(s, `${p} letters a digit`).not.toMatch(/\d/));
+
+    for (const arc of ARCS) {
+      const ids = new Set(arc.sections.map((s) => s.id));
+      for (const s of arc.sections) {
+        const at = `${arc.slug}#${s.id}`;
+
+        if (s.kind === "list-groups" && s.layout === "readout") {
+          expect(s.groups, `${at}: two panels`).toHaveLength(2);
+          for (const g of s.groups) {
+            expect(g.foot, `${at}/${g.id}: a readout plate ends on its foot`).toBeDefined();
+            for (const item of g.items) {
+              expect(item.tag, `${at}/${item.id}: a readout row has a key`).toBeTruthy();
+              expect(item.name.length, `${at}/${item.id}: value`).toBeLessThanOrEqual(40);
+              expect(item.body, `${at}/${item.id}: no prose inside a panel`).toBeUndefined();
+              if (item.href) {
+                expect(item.href, `${at}/${item.id}: an in-page link`).toMatch(/^#/);
+                expect(ids.has(item.href.slice(1)), `${at}/${item.id}: ${item.href}`).toBe(true);
+              }
+            }
+          }
+        }
+
+        if (s.kind === "stages") {
+          const lit = s.stages.filter((st) => st.lit);
+          expect(lit, `${at}: exactly one lit stage`).toHaveLength(1);
+          expect(s.stages[2].lit, `${at}: the lit stage is the last`).toBe(true);
+          expect(new Set(s.stages.map((st) => st.id)).size, `${at}: ids`).toBe(3);
+          for (const st of s.stages) {
+            expect(st.label.length, `${at}/${st.id}: label`).toBeLessThanOrEqual(14);
+            expect(st.name.length, `${at}/${st.id}: name`).toBeLessThanOrEqual(40);
+            expect(st.body.length, `${at}/${st.id}: body`).toBeLessThanOrEqual(130);
+          }
+          noDigits({ axes: s.axes, ends: s.ends, stages: s.stages }, at);
+        }
+
+        if (s.kind === "curve") {
+          const years = s.years.map(Number);
+          for (const y of s.years) expect(y, `${at}: a year`).toMatch(/^\d{4}$/);
+          expect(years, `${at}: four consecutive years`).toEqual(years.map((_, i) => years[0] + i));
+          expect(Number.isInteger(s.reference.tread), `${at}: reference tread`).toBe(true);
+          expect(s.reference.tread).toBeGreaterThanOrEqual(0);
+          expect(s.reference.tread).toBeLessThanOrEqual(6);
+          expect(s.note.length, `${at}: the note is the figure's licence`).toBeGreaterThan(0);
+          noDigits({ now: s.now, treads: s.treads, axis: s.axis, ref: s.reference.label }, at);
+        }
+
+        if (s.kind === "horizon") {
+          expect(
+            s.agent.gates.map((g) => g.kind),
+            `${at}: the gates in order`
+          ).toEqual(["check", "retry", "ask"]);
+          const ats = s.agent.gates.map((g) => g.at);
+          expect(ats, `${at}: gates sorted`).toEqual([...ats].sort((a, b) => a - b));
+          for (const a of ats) expect(a > 0 && a < 1, `${at}: gate inside the run`).toBe(true);
+          expect(Number.isInteger(s.operated.steps), `${at}: steps`).toBe(true);
+          expect(s.operated.steps).toBeGreaterThanOrEqual(6);
+          expect(s.operated.steps).toBeLessThanOrEqual(10);
+          for (const g of s.agent.gates) {
+            expect(g.label.length, `${at}/${g.kind}: label`).toBeLessThanOrEqual(32);
+          }
+          noDigits({ axis: s.axis, operated: { ...s.operated, steps: "" }, agent: s.agent }, at);
+        }
+
+        if (s.kind === "questions") {
+          const all = [...s.left, ...s.right];
+          expect(new Set(all.map((q) => q.id)).size, `${at}: six unique questions`).toBe(6);
+          const litIdx = s.left.flatMap((q, i) => (q.lit ? [i] : []));
+          expect(
+            s.right.some((q) => q.lit),
+            `${at}: the lit pair is on the left`
+          ).toBe(false);
+          expect(litIdx, `${at}: two lit, adjacent`).toHaveLength(2);
+          expect(litIdx[1] - litIdx[0], `${at}: the lit pair is adjacent`).toBe(1);
+          expect(all.filter((q) => q.human).length, `${at}: one owner`).toBeLessThanOrEqual(1);
+          expect(s.tag.length, `${at}: tag`).toBeLessThanOrEqual(22);
+          expect(s.work.name.length, `${at}: the work's name`).toBeLessThanOrEqual(24);
+          for (const q of all) {
+            expect(q.answer.length, `${at}/${q.id}: answer`).toBeLessThanOrEqual(60);
+            expect(q.question.length, `${at}/${q.id}: question`).toBeLessThanOrEqual(24);
+          }
+          if (s.work.image) {
+            expect(s.work.image.src, `${at}: the work's image`).toMatch(/^\/arcs\//);
+            expect(
+              existsSync(join(process.cwd(), "public", s.work.image.src)),
+              `${at}: ${s.work.image.src} on disk`
+            ).toBe(true);
+          }
+          noDigits({ work: { ...s.work, image: undefined }, left: s.left, right: s.right }, at);
+        }
+      }
+    }
+  });
+
   it("a proposal holds the client-facing copy law (ADR-098)", () => {
     /* A proposal is read by the person being asked to buy it, so the deck's
        own law applies to every string on the page: say the behaviour, never

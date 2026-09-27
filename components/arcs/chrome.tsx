@@ -66,6 +66,10 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   steps: "OUTCOMES",
   "proof-card": "PROOF",
   bench: "BENCH",
+  stages: "STAGES",
+  curve: "CURVE",
+  horizon: "HORIZON",
+  questions: "CONFIG",
 };
 
 /**

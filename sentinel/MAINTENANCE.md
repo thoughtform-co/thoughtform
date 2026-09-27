@@ -54,6 +54,28 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-27 — the Plopsa workshop frames the loop before it shows it (ADR-130)
+
+**Trigger:** the owner, the day before workshop III: the page "is missing a bit
+of context"; fold the recap and the quote into "two super clean panels … not a
+glorified PowerPoint", then the Moira workshop's framing (prompt · tool · agent,
+the curve, person or agent, the horizon, six questions around one piece of work)
+in the house's own drawings with Plopsa's examples.
+
+- **Cycle B → ADR-130 (Proposed):** the `readout` layout on `list-groups` and four
+  kinds (`stages` · `curve` · `horizon` · `questions`, ADR-052's eighth to
+  eleventh exceptions), pure geometry in `components/arcs/framing/`, the workshop
+  clause on ADR-078 U1, the configuration picker and the Krea beat retired on
+  this page. `.claude/rules/arcs.md` carries the bullet.
+- **Cycle A, three traps found by measuring, recorded in the ADR:** the first
+  beat is seated on `--arc-stage-pad` (the curtain's), not the beat token; a
+  centred beat moves its head by HALF the height it loses, and a full head margin
+  put five eyebrows through the client mark's hairline at 1280×720; `arc-stage` is
+  a banned substring in reveal markup (`arc-terminal-markup`), which a class
+  prefix `arc-stages` tripped.
+- **Guards:** `arcs-registry` (the framing pins), `arc-terminal-markup` (the arc
+  joins the walk), `sheet-config-fit` (Plopsa leaves the configuration list).
+
 ### 2026-09-26 — the Pandora proposal, the fourth cut of the format (ADR-128)
 
 **Trigger:** the owner, after the 25 September call with Pandora's Global Brand

@@ -229,8 +229,16 @@ export type ArcSection = ArcSectionBase &
          * `columns` is three naked columns of dashed rows. The owner read the
          * latter as chaotic on the proposal's three modules (2026-09-13); the
          * difference is exactly the borders and dividers.
+         *
+         * `readout` (ADR-130) is the workshop's two panels: two plates side
+         * by side whose rows are READOUT rows — the key framed and filled,
+         * the value framed beside it and set right (Starfield's travel data,
+         * the /arcs dossier's own row). An item with an in-page `href`
+         * becomes a link to that beat, so the right-hand plate is the day's
+         * own index. Not a new kind: the same `ArcListGroup` records, drawn
+         * as the instrument the owner asked for instead of a card grid.
          */
-        layout: "stack" | "columns" | "plates";
+        layout: "stack" | "columns" | "plates" | "readout";
         groups: readonly ArcListGroup[];
         closing?: string;
       }
@@ -652,7 +660,165 @@ export type ArcSection = ArcSectionBase &
         head: ArcHead;
         example: ArcBenchExample;
       }
+    | {
+        /**
+         * THE THREE STAGES (ADR-130): a prompt, a tool, an agent, each
+         * running longer without you. The Moira workshop's opening picture
+         * (`from-prompt-to-agent`, ADR-050 there), redrawn in the house's
+         * own grammar: three machined housings standing on a graticule, the
+         * width how long each runs without you, the height how much of the
+         * work it holds, beside the three rows that say what each is.
+         *
+         * ⚠ THE EIGHTH ENUMERATED EXCEPTION to ADR-052's "content-only", and
+         * the first of four the workshop's framing chapter adds. One leaf, no
+         * state, no listener, no script. The geometry is fixed in
+         * `framing/stagesLayout.ts`; the content letters the words only.
+         *
+         * ⚠ AN ARGUMENT, NOT A RECORD, and ADR-130 says where that is lawful:
+         * a workshop teaches the frame before it shows the work, and the
+         * rows name Plopsa's own three steps (July, the tool, the loop).
+         */
+        kind: "stages";
+        head: ArcHead;
+        /** The two axes, as words: along the floor, and up the side. */
+        axes: { time: string; work: string };
+        /** The axes' ends: the floor's near and far end, the side's top. */
+        ends: { near: string; far: string; top: string };
+        stages: readonly [ArcStage, ArcStage, ArcStage];
+      }
+    | {
+        /**
+         * THE CURVE (ADR-130): the longer the task a model finishes, per
+         * release — METR's finding (the task length an agent completes half
+         * the time doubles about every seven months), drawn as the program
+         * board's step ladder on a dated axis. No vendors, no prices, no
+         * lanes: those are Loop's, and this beat is the argument, not a
+         * catalogue.
+         *
+         * ⚠ THE NINTH ENUMERATED EXCEPTION. The geometry is fixed (a riser
+         * every seven months, 2023 → now); the content letters the words.
+         * ⚠ The years are the one digit it letters, as on the program board.
+         */
+        kind: "curve";
+        head: ArcHead;
+        /** The dated axis' four year marks, oldest first. */
+        years: readonly [string, string, string, string];
+        /** The seat's word, e.g. "Nu". */
+        now: string;
+        /** The task length at treads one, three, five and seven, bottom up. */
+        treads: readonly [string, string, string, string];
+        /** The two designations: the vertical axis, and the ladder's pitch. */
+        axis: { y: string; along: string };
+        /** A dashed reference across the field at one tread (0 → 6): the
+         *  length of the work this room is here to hand over. */
+        reference: { label: string; tread: number };
+        /** The source and the licence: what the figure pictures. Required. */
+        note: string;
+      }
+    | {
+        /**
+         * THE HORIZON (ADR-130): the same stretch of time, twice — a tool
+         * you operate, checked by a person after every step, above an agent
+         * on one long task that passes three gates of its own. Moira's
+         * figure (ADR-041 there), with the dial's own law for the marks
+         * (ADR-106): a filled node is a person's hand, an open one the model.
+         *
+         * ⚠ THE TENTH ENUMERATED EXCEPTION. One leaf, no state.
+         */
+        kind: "horizon";
+        head: ArcHead;
+        axis: { from: string; to: string };
+        operated: {
+          label: string;
+          /** The word under each check. */
+          check: string;
+          /** How many checks the operated track draws. */
+          steps: number;
+          /** The same track as one sentence, for the phone. */
+          line: string;
+        };
+        agent: {
+          label: string;
+          start: string;
+          gates: readonly [ArcHorizonGate, ArcHorizonGate, ArcHorizonGate];
+          end: string;
+        };
+        note?: string;
+      }
+    | {
+        /**
+         * ONE PIECE OF WORK, SIX QUESTIONS AROUND IT (ADR-130): the
+         * configuration as the Moira workshop's board draws it — the work at
+         * the centre, six plates wired to it by eight-wire ribbons (the R4
+         * grammar), the two the team writes lit. On a workshop it REPLACES
+         * the `configuration` picker: two configuration instruments on one
+         * page is the house's said-twice defect.
+         *
+         * ⚠ THE ELEVENTH ENUMERATED EXCEPTION, and NOT a third mode of the
+         * `board` kind: `arc-board-fit` pins that kind's two-state tuple on
+         * every registered board, and a third mode would branch every
+         * assertion in it. One leaf, no state; the plates are DOM on the
+         * house's `.arc-plate` material, the SVG carries only the ribbons.
+         */
+        kind: "questions";
+        head: ArcHead;
+        work: {
+          label: string;
+          name: string;
+          line: string;
+          /** The work itself, pictured — the card centre carries the work. */
+          image?: ArcImage;
+          bar: { label: string; line: string };
+        };
+        /** Top to bottom. The owner's layout: the model, the context, the
+         *  evaluations on the left; the data, the interface, the owner on the
+         *  right. */
+        left: readonly [ArcQuestion, ArcQuestion, ArcQuestion];
+        right: readonly [ArcQuestion, ArcQuestion, ArcQuestion];
+        /** The mark on the two lit plates, e.g. "Van jullie". */
+        tag: string;
+        /** The drawing's accessible name. */
+        alt: string;
+      }
   );
+
+/* ── The workshop's framing (ADR-130) ─────────────────────────────────── */
+
+/** One of the three stages. The label rides the housing and heads the row. */
+export interface ArcStage {
+  id: string;
+  /** Mono, on the housing's band and as the row's kicker. */
+  label: string;
+  /** The row's name: what you do with it. */
+  name: string;
+  body: string;
+  /** The last stage — the one bright object. Exactly one. */
+  lit?: true;
+}
+
+/** A gate on the agent's run. `check` and `retry` are the model's own (an
+ *  open node); `ask` stops for a person (a filled one). */
+export interface ArcHorizonGate {
+  kind: "check" | "retry" | "ask";
+  /** Where on the run, 0 → 1. */
+  at: number;
+  label: string;
+}
+
+/** One of the six questions around the work. */
+export interface ArcQuestion {
+  id: string;
+  /** Mono kicker, e.g. "De context". */
+  title: string;
+  /** The question it answers, e.g. "Wat het weet". */
+  question: string;
+  /** This work's answer. */
+  answer: string;
+  /** One of the two the team writes: lit gold, and carries the tag. */
+  lit?: true;
+  /** The person who answers for it: green, the human and nothing else. */
+  human?: true;
+}
 
 /* ── The bench (ADR-128 B2) ─────────────────────────────────────────────── */
 

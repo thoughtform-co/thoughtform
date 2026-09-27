@@ -22,15 +22,21 @@ interface ArcListGroupsProps {
  * directory read); column groups alternate sides so the map converges on
  * its own centre — which is also the slit the iris closes on; plates rise
  * from below in sequence, the cards' own rung.
+ *
+ * `readout` (ADR-130) = two plates whose rows are framed readout rows, the
+ * workshop's "what we covered · what we do today". It takes its own beat
+ * class so its air can be tightened without a format selector (the workshop
+ * format is shared by three pages).
  */
 export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGroupsProps) {
   const columns = section.layout === "columns";
   const plates = section.layout === "plates";
+  const readout = section.layout === "readout";
   return (
     <ArcBeat
       id={section.id}
       kind="list-groups"
-      className="arc-section arc-sec"
+      className={readout ? "arc-section arc-sec arc-sec--readout" : "arc-section arc-sec"}
       ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
       motion={motion}
     >
@@ -44,7 +50,15 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
         />
         <div className={`arc-groups arc-groups--${section.layout}`}>
           {section.groups.map((group, gi) =>
-            plates ? (
+            readout ? (
+              <ArcReadout
+                key={group.id}
+                group={group}
+                lead={gi === section.groups.length - 1}
+                motion={motion}
+                gi={gi}
+              />
+            ) : plates ? (
               <ArcPlate key={group.id} group={group} lead={gi === 0} motion={motion} gi={gi} />
             ) : (
               <section
@@ -144,16 +158,85 @@ function ArcPlate({
           </li>
         ))}
       </ul>
-      {group.foot ? (
-        <footer className="arc-plate__foot">
-          <span className="arc-plate__foot-label">{group.foot.label}</span>
-          {group.foot.lines.map((line) => (
-            <span key={line} className="arc-plate__foot-line">
-              {line}
-            </span>
-          ))}
-        </footer>
-      ) : null}
+      {group.foot ? <PlateFoot foot={group.foot} /> : null}
+    </section>
+  );
+}
+
+/** A plate's foot: the mono label over its lines, on the plate's gold wash. */
+function PlateFoot({ foot }: { foot: NonNullable<ArcListGroup["foot"]> }) {
+  return (
+    <footer className="arc-plate__foot">
+      <span className="arc-plate__foot-label">{foot.label}</span>
+      {foot.lines.map((line) => (
+        <span key={line} className="arc-plate__foot-line">
+          {line}
+        </span>
+      ))}
+    </footer>
+  );
+}
+
+/**
+ * One readout plate (ADR-130): the plate's own head band, then one framed
+ * readout row per item — the key cell filled and outlined, the value outlined
+ * on the shared edge and set right (Starfield's TRAVEL DATA, the /arcs
+ * dossier's own row, owner 2026-09-21) — and the foot seated at the floor.
+ *
+ * ⚠ AN ITEM WITH AN `href` IS A LINK TO A BEAT ON THIS PAGE, and the whole
+ * row is the target: the plate is then the day's index, the tool-index
+ * grammar (ADR-079) at plate scale. In-page, so never `target="_blank"` —
+ * the plate branch's external-link idiom would open the agenda in a new tab.
+ *
+ * ⚠ NO PROSE INSIDE THE PANEL. The head's sub carries the sentence; a panel
+ * that repeats it as a paragraph is the slide the owner ruled out.
+ */
+function ArcReadout({
+  group,
+  lead,
+  motion,
+  gi,
+}: {
+  group: ArcListGroup;
+  lead: boolean;
+  motion: ArcMotion;
+  gi: number;
+}) {
+  return (
+    <section
+      className="arc-groups__group arc-plate arc-readout arc-reveal"
+      aria-label={group.label}
+      data-readout-group={group.id}
+      {...rung(motion, ladder(0.16, 0.08, gi, 0.5), 0, 36)}
+    >
+      <header className="arc-plate__head">
+        <span className="arc-plate__kicker" data-lead={lead || undefined}>
+          {group.label}
+        </span>
+        {group.blurb ? <span className="arc-plate__name">{group.blurb}</span> : null}
+      </header>
+      <ul className="arc-readout__rows">
+        {group.items.map((item) => {
+          const cells = (
+            <>
+              <span className="arc-readout__key">{item.tag}</span>
+              <span className="arc-readout__val">{item.name}</span>
+            </>
+          );
+          return (
+            <li key={item.id} className="arc-readout__row" data-readout-row={item.id}>
+              {item.href ? (
+                <a className="arc-readout__hit" href={item.href}>
+                  {cells}
+                </a>
+              ) : (
+                <div className="arc-readout__hit">{cells}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {group.foot ? <PlateFoot foot={group.foot} /> : null}
     </section>
   );
 }

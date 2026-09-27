@@ -6206,6 +6206,831 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   display: none;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   THE WORKSHOP'S FRAMING (ADR-130)
+   ══════════════════════════════════════════════════════════════════════
+   Five beats the Plopsa workshop opens on before it shows any tool: the two
+   panels (what we covered, what we do today), then the Moira workshop's
+   argument redrawn in the house's register — a prompt, a tool, an agent;
+   the curve; the horizon; one piece of work with six questions around it.
+
+   ⚠ EACH BEAT PAYS FOR ITS INSTRUMENT OUT OF ITS OWN AIR, never the
+   format's: `data-arc-format="workshop"` is shared by three pages (the
+   Claude workshop, the Suri kickoff and this one), so a format selector
+   would retune two pages that were never measured against it. `.arc-sec`
+   reads the token (ADR-079), so a beat class is all it takes.
+
+   ⚠ EVERY FIGURE HOLDS ITS CROP'S ASPECT AND IS CAPPED IN `svh`, so the
+   beat fits one viewport at 1280×720 and the DOM labels — seated by
+   `--ax` / `--at` fractions over an SVG that letters nothing — land on the
+   marks they name at every width. No `transform` on any SVG node.
+
+   ⚠ EVERY COLOUR IS AN ALIAS OF THE ADR-077 RAMP, declared on the figure;
+   the two washes that are alphas of their own are re-derived in the light
+   foot below. Gold buys ONE thing per drawing. */
+.arc-sec--readout,
+.arc-sec--stages,
+.arc-sec--curve,
+.arc-sec--horizon,
+.arc-sec--questions {
+  --arc-sec-pad: clamp(28px, 4vh, 72px);
+}
+/* ⚠ A FRAMING HEAD SITS BELOW THE CLIENT'S MARK. A centred beat seats its
+   head at half the air its content leaves, and at 1280×720 a full head
+   margin put five eyebrows through the mark's hairline in the top-left
+   corner (y ≈ 44px) — in the frame the handout shoots. The head's breath
+   is paid back as the frame grows: 28px at 720h, the house's 112 by 1247h,
+   so the owner's viewport keeps the rhythm of every other beat. */
+.arc-sec--readout .arc-head,
+.arc-sec--stages .arc-head,
+.arc-sec--curve .arc-head,
+.arc-sec--horizon .arc-head,
+.arc-sec--questions .arc-head {
+  margin-bottom: clamp(28px, 18vh - 100px, 112px);
+}
+/* ⚠ THE READOUT IS THE FIRST BEAT, AND THE CURTAIN SEATS THE FIRST BEAT ON
+   `--arc-stage-pad`, not on the beat token (ADR-076: the held band and the
+   flow box it hands over to must be one box). So the tighter air is the
+   stage token, declared on the section: both the band and the box read it,
+   and the section stays exactly one viewport, which is what keeps
+   `data-arc-tall` off and the seam invisible. */
+.arc-sec--readout {
+  --arc-stage-pad: clamp(28px, 4vh, 72px);
+}
+
+/* A figure's dot matrix: the head's own lift, masked so it fades rather
+   than stops. On a pseudo so the mask never reaches the marks. */
+.arc-floor__stage::before,
+.arc-curve__stage::before,
+.arc-hz__stage::before,
+.arc-q__stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--arc-grid) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(120% 110% at 50% 55%, #000 45%, transparent 100%);
+  mask-image: radial-gradient(120% 110% at 50% 55%, #000 45%, transparent 100%);
+}
+
+/* ── 01 · The two panels: readout plates ───────────────────────────
+   Two of the house's notched plates, side by side, the gap as the divider
+   (no vertical rule: the rails are the page's verticals). Each is the
+   plate's own head band, then READOUT ROWS — the key framed and filled,
+   the value framed on the shared edge and set right (Starfield's travel
+   data, the /arcs dossier's row) — and the foot seated at the floor, so
+   the two plates land their feet on one line whatever their row counts.
+   ⚠ A row with an `href` is a link to a beat on this page, and the WHOLE
+   row is the target (the tool index's grammar, ADR-079). */
+.arc-groups--readout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 48px);
+  align-items: stretch;
+}
+.arc-readout {
+  --arc-readout-well: rgba(var(--dawn-rgb), 0.05);
+}
+.arc-readout__rows {
+  list-style: none;
+  margin: 0;
+  padding: clamp(12px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.arc-readout__hit {
+  display: grid;
+  grid-template-columns: minmax(0, 36%) minmax(0, 1fr);
+  color: inherit;
+  text-decoration: none;
+}
+.arc-readout__key {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-readout-well);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(9.5px, 0.6vw, 11px);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-62);
+}
+.arc-readout__val {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 6px 12px;
+  border: 1px solid var(--arc-rule);
+  border-left: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13.5px, 0.85vw, 16px);
+  line-height: 1.3;
+  text-align: right;
+  color: var(--arc-ink-90);
+}
+/* A link row carries a chevron — the flow's border-drawn head, one row
+   over: it OPENS a beat, it does not describe one. */
+a.arc-readout__hit .arc-readout__val::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid var(--arc-ink-40);
+  border-right: 1px solid var(--arc-ink-40);
+  rotate: 45deg;
+}
+a.arc-readout__hit:hover .arc-readout__key,
+a.arc-readout__hit:focus-visible .arc-readout__key {
+  background: rgba(var(--gold-rgb), 0.1);
+}
+a.arc-readout__hit:hover .arc-readout__val,
+a.arc-readout__hit:focus-visible .arc-readout__val {
+  color: var(--gold-ink, #caa554);
+}
+a.arc-readout__hit:hover .arc-readout__val::after,
+a.arc-readout__hit:focus-visible .arc-readout__val::after {
+  border-color: var(--gold-ink, #caa554);
+}
+a.arc-readout__hit:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.arc-readout > .arc-plate__foot {
+  margin-top: auto;
+}
+
+/* ── 02 · The three stages ──────────────────────────────────────────
+   Three machined housings on a graticule (R4's module: the corner pair,
+   a head band ruled at its floor, a 2-unit rule stopping at the cut), the
+   width how long each runs without you, the height how much of the work
+   it holds; beside them, three rows in the plates' own head-band
+   material, the agent's lit and the other two ring-only (ADR-089 U4). */
+.arc-floor {
+  --arc-floor-line: var(--arc-rule);
+  --arc-floor-axis: var(--arc-seam);
+  --arc-floor-tick: var(--arc-ink-22);
+  --arc-floor-band: rgba(var(--dawn-rgb), 0.05);
+  --arc-floor-gold: var(--gold-line);
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 72px);
+  align-items: center;
+}
+.arc-floor__figure {
+  margin: 0;
+  min-width: 0;
+}
+.arc-floor__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 960 / 540;
+}
+.arc-floor__svg,
+.arc-curve__svg,
+.arc-hz__svg,
+.arc-q__wires {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-floor__grat {
+  stroke: var(--arc-floor-line);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-floor__tick,
+.arc-floor__bandrule {
+  stroke: var(--arc-floor-tick);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-floor__bandrule {
+  stroke: var(--arc-floor-line);
+}
+.arc-floor__axis {
+  fill: none;
+  stroke: var(--arc-floor-axis);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-floor__plate {
+  fill: var(--arc-plate);
+}
+.arc-floor__wash {
+  fill: none;
+}
+.arc-floor__band {
+  fill: var(--arc-floor-band);
+}
+.arc-floor__outline {
+  fill: none;
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-floor__rule {
+  stroke: var(--arc-seam);
+  stroke-width: 2;
+}
+.arc-floor__housing[data-stages-lit] .arc-floor__wash,
+.arc-floor__housing[data-stages-lit] .arc-floor__band {
+  fill: var(--arc-gold-wash);
+}
+.arc-floor__housing[data-stages-lit] .arc-floor__outline,
+.arc-floor__housing[data-stages-lit] .arc-floor__rule {
+  stroke: var(--arc-floor-gold);
+}
+.arc-floor__tag,
+.arc-floor__word,
+.arc-floor__end {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(8.5px, 0.6vw, 11px);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.arc-floor__tag {
+  translate: 0 -50%;
+  color: var(--arc-ink-90);
+}
+.arc-floor__tag[data-stages-lit] {
+  color: var(--gold-ink, #caa554);
+}
+.arc-floor__word {
+  translate: -50% 0;
+  color: var(--arc-ink-50);
+}
+.arc-floor__word--work {
+  translate: -50% -50%;
+  rotate: -90deg;
+}
+.arc-floor__end {
+  color: var(--arc-ink-40);
+}
+.arc-floor__end--far {
+  translate: -100% 0;
+}
+.arc-floor__end--top {
+  translate: -50% -50%;
+}
+.arc-floor__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 16px);
+  min-width: 0;
+}
+
+/* ── 03 · The curve ─────────────────────────────────────────────────
+   The program board's step ladder on a dated graticule: seven treads, a
+   riser every seven months, the seat at now the one gold mark. */
+.arc-curve {
+  --arc-curve-grid: var(--arc-rule-dash);
+  --arc-curve-tread: var(--arc-edge);
+  --arc-curve-axis: var(--arc-seam);
+  --arc-curve-ink: var(--arc-ink-62);
+  --arc-curve-ref: var(--arc-ink-40);
+  margin: 0;
+}
+.arc-curve__stage {
+  position: relative;
+  width: min(100%, calc(40svh * 1000 / 380));
+  aspect-ratio: 1000 / 380;
+  margin-inline: auto;
+}
+.arc-curve__grat {
+  stroke: var(--arc-curve-grid);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-curve__tread {
+  stroke: var(--arc-curve-tread);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-curve__axis {
+  stroke: var(--arc-curve-axis);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-curve__ref,
+.arc-curve__now {
+  stroke: var(--arc-curve-ref);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+  vector-effect: non-scaling-stroke;
+}
+/* ⚠ THE LADDER MAY NOT TAKE `vector-effect` — it draws on by `pathLength`,
+   which the browser ignores under a non-scaling stroke (ADR-106). */
+.arc-curve__ladder {
+  fill: none;
+  stroke: var(--arc-curve-ink);
+  stroke-width: 2;
+  stroke-linejoin: miter;
+}
+.arc-curve__lbl,
+.arc-curve__desig {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(8.5px, 0.6vw, 11px);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.arc-curve__lbl--tread {
+  translate: -100% -50%;
+  color: var(--arc-ink-50);
+}
+.arc-curve__lbl--year {
+  translate: -50% 0;
+  color: var(--arc-ink-50);
+}
+.arc-curve__lbl--now {
+  translate: -50% 0;
+  color: var(--gold-ink, #caa554);
+}
+.arc-curve__lbl--ref {
+  translate: -100% -100%;
+  padding: 1px 4px;
+  background: var(--void, #0a0908);
+  color: var(--arc-ink-62);
+}
+.arc-curve__desig {
+  color: var(--arc-ink-40);
+}
+.arc-curve__desig--y {
+  translate: -100% -50%;
+}
+.arc-curve__desig--along {
+  translate: 0 -50%;
+  padding: 1px 4px;
+  background: var(--void, #0a0908);
+  color: var(--arc-ink-50);
+}
+.arc-curve__seat {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 3;
+  width: 9px;
+  height: 9px;
+  translate: -50% -50%;
+  rotate: 45deg;
+  background: var(--gold, #caa554);
+}
+.arc-curve__phone {
+  display: none;
+  margin: 12px 0 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+
+/* ── 05 · The horizon ───────────────────────────────────────────────
+   Two tracks on one axis. A FILLED node is a person's hand, an OPEN one
+   the model (the dial's law, ADR-106); the long run is the one gold. */
+.arc-hz {
+  --arc-hz-grid: var(--arc-rule-dash);
+  --arc-hz-step: var(--arc-seam);
+  --arc-hz-run: var(--gold-line);
+  --arc-hz-axis: var(--arc-rule);
+  --arc-hz-hand: var(--arc-ink-90);
+  --arc-hz-open: var(--arc-ink-60);
+  margin: 0;
+}
+.arc-hz__stage {
+  position: relative;
+  width: min(100%, calc(40svh * 1200 / 360));
+  aspect-ratio: 1200 / 360;
+  margin-inline: auto;
+}
+.arc-hz__grat {
+  stroke: var(--arc-hz-grid);
+  stroke-width: 1;
+  stroke-dasharray: 1 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hz__step {
+  stroke: var(--arc-hz-step);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hz__run {
+  fill: none;
+  stroke: var(--arc-hz-run);
+  stroke-width: 2.4;
+}
+.arc-hz__loop {
+  fill: none;
+  stroke: var(--arc-hz-run);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hz__axis {
+  stroke: var(--arc-hz-axis);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hz__node {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 3;
+  width: 8px;
+  height: 8px;
+  translate: -50% -50%;
+  border: 1px solid var(--arc-hz-open);
+  border-radius: 50%;
+  background: var(--void, #0a0908);
+}
+.arc-hz__node[data-horizon-by="person"] {
+  border-color: var(--arc-hz-hand);
+  background: var(--arc-hz-hand);
+}
+.arc-hz__track,
+.arc-hz__check,
+.arc-hz__axislbl {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(8.5px, 0.6vw, 11px);
+  line-height: 1.35;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.arc-hz__track {
+  translate: 0 -50%;
+  max-width: calc(100% * 150 / 1200);
+  font-size: clamp(9px, 0.65vw, 12px);
+  color: var(--arc-ink-62);
+}
+.arc-hz__track[data-horizon-track="agent"] {
+  color: var(--gold-ink, #caa554);
+}
+.arc-hz__check {
+  translate: -50% 0;
+  white-space: nowrap;
+  color: var(--arc-ink-40);
+}
+.arc-hz__axislbl {
+  white-space: nowrap;
+  color: var(--arc-ink-40);
+}
+.arc-hz__axislbl--end {
+  translate: -100% 0;
+}
+.arc-hz__gate,
+.arc-hz__person {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  line-height: 1.3;
+  pointer-events: none;
+}
+.arc-hz__gate {
+  translate: -50% -100%;
+  width: max-content;
+  max-width: clamp(200px, 12vw, 240px);
+  font-size: clamp(13px, 0.9vw, 17px);
+  text-align: center;
+  color: var(--arc-ink-90);
+}
+.arc-hz__person {
+  font-size: clamp(12.5px, 0.85vw, 16px);
+  white-space: nowrap;
+  color: var(--arc-ink-70);
+}
+.arc-hz__person--end {
+  translate: -100% 0;
+}
+.arc-hz__lists {
+  display: none;
+}
+.arc-hz__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+}
+.arc-hz__listhead {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-hz__list[data-horizon-track="agent"] .arc-hz__listhead {
+  color: var(--gold-ink, #caa554);
+}
+.arc-hz__listline,
+.arc-hz__liststeps {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--arc-ink-80);
+}
+.arc-hz__liststeps {
+  padding-left: 18px;
+}
+
+/* ── 06 · One piece of work, six questions around it ────────────────
+   The work at the centre on the plate's own TR notch (one notch means
+   CONNECTED, and every ribbon meets it); six plates cut on the lawful
+   TR + BL pair around it, joined by eight-wire ribbons. Gold is what the
+   team writes, green is the human (the board's law, ADR-100).
+   ⚠ THE MODULES' CUT IS THE R4 MODULE'S, NOT THE PLATE RUNG: at the plate
+   rung (up to 26px) the BL chamfer bites the answer's last line, and a cut
+   is free only where nothing is set against it (ADR-098 U5). */
+.arc-q {
+  --arc-q-quiet: var(--arc-seam);
+  --arc-q-gold: var(--gold-line);
+  --arc-q-green: var(--atreides-light, #5b7a4e);
+  --arc-q-green-wash: rgba(var(--atreides-rgb), 0.07);
+  --arc-q-band: rgba(var(--dawn-rgb), 0.05);
+}
+.arc-q__stage {
+  position: relative;
+  width: min(100%, calc(59svh * 2));
+  aspect-ratio: 1200 / 600;
+  margin-inline: auto;
+}
+.arc-q__wires {
+  z-index: 0;
+}
+.arc-q__ribbon {
+  fill: none;
+  stroke: var(--arc-q-quiet);
+  stroke-width: 1;
+  opacity: 0.85;
+}
+.arc-q__ribbon path {
+  vector-effect: non-scaling-stroke;
+}
+.arc-q__ribbon[data-questions-tone="lit"] {
+  stroke: var(--arc-q-gold);
+}
+.arc-q__ribbon[data-questions-tone="human"] {
+  stroke: var(--arc-q-green);
+}
+.arc-q__card,
+.arc-q__mod {
+  position: absolute;
+  left: var(--qx);
+  top: var(--qy);
+  width: var(--qw);
+  height: var(--qh);
+  z-index: 1;
+}
+.arc-plate--pair {
+  --arc-plate-ch: clamp(10px, 1vw, 14px);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--arc-plate-ch)) 0,
+    100% var(--arc-plate-ch),
+    100% 100%,
+    var(--arc-plate-ch) 100%,
+    0 calc(100% - var(--arc-plate-ch))
+  );
+}
+.arc-plate--pair::before {
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--arc-plate-ch)) 0,
+    100% var(--arc-plate-ch),
+    100% 100%,
+    var(--arc-plate-ch) 100%,
+    0 calc(100% - var(--arc-plate-ch)),
+    1px 1px,
+    calc(100% - 1px - var(--arc-plate-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--arc-plate-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--arc-plate-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--arc-plate-ch-in))
+  );
+}
+.arc-q__mod::before {
+  background: var(--arc-q-quiet);
+}
+.arc-q__mod .arc-plate__head {
+  gap: 3px;
+  padding: 9px 14px 8px;
+  background: var(--arc-q-band);
+}
+.arc-q__mod .arc-plate__head::before {
+  background: var(--arc-q-quiet);
+}
+.arc-q__mod .arc-plate__kicker {
+  color: var(--arc-ink-62);
+}
+.arc-q__mod .arc-plate__name {
+  font-size: clamp(14px, 0.9vw, 17px);
+}
+.arc-q__kickrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.arc-q__tag {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-ink, #caa554);
+}
+.arc-q__answer,
+.arc-q__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.85vw, 16px);
+  line-height: 1.4;
+  color: var(--arc-ink-80);
+}
+.arc-q__answer {
+  padding: 8px 14px 10px;
+}
+/* The two the team writes: the chip's own gold wash across the whole
+   plate, the ring and the rule in gold. */
+.arc-q__mod[data-questions-tone="lit"] {
+  background: linear-gradient(0deg, var(--arc-gold-wash), var(--arc-gold-wash)), var(--arc-plate);
+}
+.arc-q__mod[data-questions-tone="lit"]::before,
+.arc-q__mod[data-questions-tone="lit"] .arc-plate__head::before {
+  background: var(--arc-q-gold);
+}
+.arc-q__mod[data-questions-tone="lit"] .arc-plate__head {
+  background: var(--arc-gold-wash);
+}
+.arc-q__mod[data-questions-tone="lit"] .arc-plate__kicker {
+  color: var(--gold-ink, #caa554);
+}
+/* The owner: green, the human and nothing else. */
+.arc-q__mod[data-questions-tone="human"] {
+  background:
+    linear-gradient(0deg, var(--arc-q-green-wash), var(--arc-q-green-wash)), var(--arc-plate);
+}
+.arc-q__mod[data-questions-tone="human"]::before,
+.arc-q__mod[data-questions-tone="human"] .arc-plate__head::before {
+  background: var(--arc-q-green);
+}
+.arc-q__mod[data-questions-tone="human"] .arc-plate__kicker {
+  color: var(--atreides-ink, #7a9e6a);
+}
+/* The work: the built thing, and what every ribbon meets. */
+.arc-q__card {
+  background: linear-gradient(0deg, var(--arc-gold-wash), var(--arc-gold-wash)), var(--arc-plate);
+}
+.arc-q__card::before {
+  background: var(--arc-q-gold);
+}
+.arc-q__cardbody {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+}
+.arc-q__media {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--arc-rule);
+}
+.arc-q__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── The framing's one motion: two lines draw on, once ─────────────
+   The horizon's run and the curve's ladder, on the arrival the reveal
+   observer already writes (`.is-in`). Without JS, and under reduced
+   motion, both render drawn. */
+@media (prefers-reduced-motion: no-preference) {
+  .is-arc-js .arc-hz .arc-hz__run,
+  .is-arc-js .arc-curve .arc-curve__ladder {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    transition: stroke-dashoffset 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.35s;
+  }
+  .is-arc-js .arc-hz.is-in .arc-hz__run,
+  .is-arc-js .arc-curve.is-in .arc-curve__ladder {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── The framing on a phone ────────────────────────────────────────
+   The two panels stack; the stages' rows are the picture; the horizon is
+   two lists; the curve keeps its drawing and folds its words into one
+   line; the board loses its wires and falls into one column, the work
+   first and the two the team writes next. */
+@media (max-width: 900px) {
+  .arc-groups--readout,
+  .arc-floor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-floor__figure,
+  .arc-hz__stage {
+    display: none;
+  }
+  .arc-hz__lists {
+    display: grid;
+    gap: 14px;
+  }
+  .arc-curve__stage {
+    width: 100%;
+  }
+  .arc-curve__lbl--tread,
+  .arc-curve__desig {
+    display: none;
+  }
+  .arc-curve__phone {
+    display: block;
+  }
+  .arc-q__stage {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    aspect-ratio: auto;
+  }
+  .arc-q__stage::before,
+  .arc-q__wires {
+    display: none;
+  }
+  .arc-q__card,
+  .arc-q__mod {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    order: 3;
+  }
+  .arc-q__card {
+    order: 0;
+  }
+  .arc-q__mod[data-questions-tone="lit"] {
+    order: 1;
+  }
+  .arc-q__mod[data-questions-tone="human"] {
+    order: 2;
+  }
+  .arc-q__media {
+    flex: none;
+    aspect-ratio: 16 / 9;
+  }
+}
+
 /* ── LIGHT: THE RAMP RE-DERIVED (ADR-077) ────────────────────────
    ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP (ADR-063 U2, and
    console.css's `--con-edge` note). `rgba(ink, .08)` recedes toward BLACK
@@ -6296,4 +7121,19 @@ html[data-theme="light"] .arc-root .arc-board {
 html[data-theme="light"] .arc-root .arc-dial {
   --arc-dial-gold: color-mix(in srgb, var(--gold-line) 78%, transparent);
   --arc-dial-gold-soft: color-mix(in srgb, var(--gold-line) 48%, transparent);
+}
+
+/* The workshop's framing (ADR-130). Every mark aliases a rung the block
+   above already re-derives; the three WELLS are alphas of their own (a
+   readout key, a stage's head band, a module's head band), and the owner's
+   green wash follows the board's own lift. */
+html[data-theme="light"] .arc-root .arc-readout {
+  --arc-readout-well: rgba(var(--dawn-rgb), 0.07);
+}
+html[data-theme="light"] .arc-root .arc-floor {
+  --arc-floor-band: rgba(var(--dawn-rgb), 0.07);
+}
+html[data-theme="light"] .arc-root .arc-q {
+  --arc-q-band: rgba(var(--dawn-rgb), 0.07);
+  --arc-q-green-wash: rgba(var(--atreides-rgb), 0.1);
 }

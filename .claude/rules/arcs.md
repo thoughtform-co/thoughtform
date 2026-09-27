@@ -742,6 +742,31 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   pins that no row restates a phase's name or deliverable line — the owner:
   "not a simulacrum of those three modules". Rules for the scene it lives in:
   `.claude/rules/trinny-london.md` §The head decodes.
+- ⚠ **THE WORKSHOP FRAMES THE LOOP BEFORE IT SHOWS IT (ADR-130, Proposed
+  2026-09-27).** `/arcs/plopsa-workshop` opens on two panels and Moira's
+  argument in the house's drawings. **`list-groups` `layout: "readout"`** is two
+  notched plates of READOUT ROWS (key framed and filled, value framed and set
+  right), an item's in-page `href` making the row a link to that beat; a layout,
+  not a kind, and no prose inside a panel (the registry pins both). **Four
+  kinds, ADR-052's eighth to eleventh exceptions**: `stages` (three R4 housings
+  on a graticule, width = how long without you, height = how much of the work;
+  classes `arc-floor*` because `arc-stage` is a banned substring in reveal
+  markup), `curve` (the program board's step ladder, a riser every seven months,
+  the seat at NOW the one gold), `horizon` (Moira's two tracks copied by hand, a
+  FILLED node a person's hand and an OPEN one the model), `questions` (the work at
+  the centre on the TR notch, six TR + BL plates, eight-wire ribbons; gold is what
+  the team writes, green the owner; NOT a third `board` mode, which would branch
+  `arc-board-fit`). Geometry is pure in `components/arcs/framing/*Layout.ts`;
+  the SVG letters nothing, DOM labels ride `--ax`/`--at` over a stage that holds
+  its crop's aspect; no `transform` on any SVG node. ⚠ **THE WORKSHOP CLAUSE**:
+  ADR-078 U1 still binds proposals and portfolios; a workshop may draw an
+  ARGUMENT provided the figure names its source or its own record in its words.
+  ⚠ **EVERY FRAMING BEAT PAYS OUT OF ITS OWN AIR** (per-beat classes; the
+  workshop format is shared by three pages), the first beat on the STAGE token
+  (`--arc-stage-pad`, the curtain's), and the heads on
+  `clamp(28px, 18vh − 100px, 112px)` so no eyebrow runs through the client
+  mark's hairline at 1280×720. ⚠ Plopsa's `configuration` beat is gone, so the
+  `/arcs` dossier draws no board for it until a `questions` reader lands.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

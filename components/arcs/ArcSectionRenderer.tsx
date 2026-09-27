@@ -7,8 +7,10 @@ import { ArcBoard } from "./ArcBoard";
 import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
 import { ArcConfiguration } from "./ArcConfiguration";
+import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
+import { ArcHorizon } from "./ArcHorizon";
 import { ArcProgramBoard } from "./ArcProgramBoard";
 import { ArcProofCard } from "./ArcProofCard";
 import { ArcIntelligence } from "./ArcIntelligence";
@@ -16,7 +18,9 @@ import { ArcInterstitial } from "./ArcInterstitial";
 import { ArcListGroups } from "./ArcListGroups";
 import { ArcMediaSection } from "./ArcMediaSection";
 import { ArcPortrait } from "./ArcPortrait";
+import { ArcQuestions } from "./ArcQuestions";
 import { ArcSectionHead } from "./ArcSectionHead";
+import { ArcStages } from "./ArcStages";
 import { ArcSteps } from "./ArcSteps";
 import { ArcStudioFilms } from "./ArcStudioFilms";
 import { ArcStudioSheets } from "./ArcStudioSheets";
@@ -119,6 +123,16 @@ export function ArcSectionRenderer({
             );
           case "bench":
             return <ArcBench key={section.id} section={section} index={index} motion={motion} />;
+          case "stages":
+            return <ArcStages key={section.id} section={section} index={index} motion={motion} />;
+          case "curve":
+            return <ArcCurve key={section.id} section={section} index={index} motion={motion} />;
+          case "horizon":
+            return <ArcHorizon key={section.id} section={section} index={index} motion={motion} />;
+          case "questions":
+            return (
+              <ArcQuestions key={section.id} section={section} index={index} motion={motion} />
+            );
           default: {
             const exhaustive: never = section;
             return exhaustive;
