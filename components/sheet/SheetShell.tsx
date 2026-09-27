@@ -30,6 +30,9 @@ interface SheetShellProps {
   /** `instrument` for the arcs overview's monitor and log (ADR-118): the
    *  capture's probe reads it to know which law a still answers to. */
   profile?: "document" | "instrument";
+  /** One page label in the header's corner in place of the chapter row and
+   *  the section readout (ADR-129) — `/musings` reads MUSINGS there. */
+  corner?: { text: string; href: string };
   children: ReactNode;
 }
 
@@ -60,6 +63,7 @@ export function SheetShell({
   chapters,
   knobs = SH_DEFAULTS,
   profile = "document",
+  corner,
   children,
 }: SheetShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -107,6 +111,26 @@ export function SheetShell({
     };
   }, []);
 
+  /* THE PINNED HEAD'S HEIGHT (ADR-129), for what sticks UNDER it. A post's
+     metadata column is itself sticky (`.sh-prose__meta`), and with the head
+     pinned over the top of the frame it stuck BEHIND the head and vanished;
+     sheet.css seats it at the head's stuck bottom, which depends on the head's
+     own content and so cannot be a CSS token. A ResizeObserver, never a scroll
+     writer: the box changes on resize and font load, and nothing else. */
+  useEffect(() => {
+    const root = rootRef.current;
+    const head = root?.querySelector<HTMLElement>(".sh-sec--split[data-sh-pin]");
+    if (!root || !head) return;
+    const write = () => root.style.setProperty("--sh-head-h", `${head.offsetHeight}px`);
+    write();
+    const ro = new ResizeObserver(write);
+    ro.observe(head);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--sh-head-h");
+    };
+  }, []);
+
   const hasChapters = chapters.length > 0;
 
   return (
@@ -127,7 +151,7 @@ export function SheetShell({
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: hudHtml }}
       />
-      {hasChapters ? <ArcHudNav items={chapters} /> : null}
+      {hasChapters ? <ArcHudNav items={chapters} label={corner} /> : null}
       {THEME_TOGGLE &&
         (RAIL_INSTRUMENTS && hasChapters ? (
           <ArcRailInstruments containerRef={rootRef} menu={chapters} />

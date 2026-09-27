@@ -663,6 +663,24 @@ async function shootWave(browser, ship, waveDir) {
           top: Math.round(s.getBoundingClientRect().top + scrollY),
         }))
       );
+      /* ⚠ A PINNED HEAD COVERS THE SEAT (ADR-129). On a page whose split sticks
+         under the header, `PIN` (96) lands every later section's head band
+         BEHIND the head. Read the head's stuck bottom once (past its pin, then
+         back) and seat later sections under it, past its fade and some air. */
+      const pinSeat = await page.evaluate(async () => {
+        const head = document.querySelector(".sh-sec--split[data-sh-pin]");
+        if (!head || getComputedStyle(head).position !== "sticky") return 0;
+        const y0 = scrollY;
+        const frames = () =>
+          new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+        window.scrollTo({ top: innerHeight * 1.5, behavior: "instant" });
+        await frames();
+        const bottom = head.getBoundingClientRect().bottom;
+        window.scrollTo({ top: y0, behavior: "instant" });
+        await frames();
+        return Math.ceil(bottom + 32 + 24);
+      });
+      const seat = Math.max(PIN, pinSeat);
       /* One still per section; the arcs log adds a SECOND still after another
          engagement is picked (the swap state), so the dossier is judged on a
          face the server did not author. */
@@ -678,7 +696,7 @@ async function shootWave(browser, ship, waveDir) {
         let stack = null;
         let drive = null;
         if (state === "rest") {
-          await scrollToY(page, i === 0 ? 0 : Math.max(0, s.top - (PIN_BY_KIND[s.kind] ?? PIN)));
+          await scrollToY(page, i === 0 ? 0 : Math.max(0, s.top - (PIN_BY_KIND[s.kind] ?? seat)));
           await stillLife(page, s.id);
           if (s.kind === "console" && knobs.card === "stack") {
             stack = await driveStack(page, s.id, VIEWPORT);

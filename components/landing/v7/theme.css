@@ -1195,4 +1195,9 @@ html[data-theme="light"] .sh-root {
   --sh-well: rgba(var(--dawn-rgb), 0.08);
   --sh-band-from: rgba(var(--gold-rgb), 0.22);
   --sh-band-to: rgba(var(--gold-rgb), 0.055);
+  /* the survey head's three rungs (ADR-129), lifted as the sheet's own line
+     and well rungs are (--sh-rule .12 → .22, --sh-well .07 → .08) */
+  --sh-survey-faint: rgba(var(--dawn-rgb), 0.26);
+  --sh-survey-mark: rgba(var(--dawn-rgb), 0.62);
+  --sh-survey-grid: rgba(var(--dawn-rgb), 0.08);
 }

@@ -320,6 +320,16 @@ export type SheetSection = SheetSectionBase &
         paragraphs: readonly string[];
         readout?: readonly SheetReadoutRow[];
         stations?: SheetStations;
+        /** The homepage masthead's survey chrome (ADR-129): `code` prefixes the
+         *  two designations (`MUS / TITLE · 01`, `MUS / BRIEF · 02`), `state` is
+         *  the one gold chip. Both authored UPPERCASE; the renderer letters the
+         *  strings and the coord stamps (ADR-114: chrome is lettered by
+         *  renderers, never authored). With it the `name` kicker is not drawn —
+         *  the designation IS the eyebrow. */
+        survey?: { code: string; state: string };
+        /** The head holds under the header while the body scrolls under it
+         *  (ADR-129). Rendered as the body's sibling, never inside it. */
+        pin?: true;
       }
     | {
         kind: "row";

@@ -22,3 +22,29 @@ export const figLabel = (n: number) => `[ FIG. ${String(n).padStart(2, "0")} ]`;
 export const CLIENT_DESIG = "// Client";
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * The survey head's designation (ADR-129): `MUS / TITLE · 01` over the title,
+ * `MUS / BRIEF · 02` over the paragraph — the services masthead's data readout,
+ * lettered here from the split's `survey.code`.
+ */
+export const surveyDesig = (code: string, slot: 1 | 2) =>
+  `${code} / ${slot === 1 ? "TITLE" : "BRIEF"} · ${pad2(slot)}`;
+
+/**
+ * The survey's coord stamp — a HASH of the section id, so it is stable across
+ * SSR and hydration. ⚠ COPIED from `lib/musings/mastheadData.ts` (itself a copy
+ * of `components/arcs/chrome.tsx`): the grammar is copied, never imported, and
+ * that module is the landing's. `sheet-split-survey.test.ts` pins this copy
+ * against its original, so the page and the station letter the same stamps.
+ */
+export function coordStamp(seed: string, salt: number): string {
+  let h = (2166136261 ^ salt) >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  const a = (h >>> 12) % 4096;
+  const b = h % 4096;
+  return `${String(a).padStart(4, "0")} / ${String(b).padStart(4, "0")}`;
+}

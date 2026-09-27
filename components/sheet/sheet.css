@@ -114,6 +114,38 @@
      the two cannot disagree; `sheet-close.test.ts` pins it equal to the
      landing's. */
   --ft-weld: 100svh;
+  /* THE SURVEY HEAD (ADR-129): the homepage masthead's chrome, copied onto the
+     sheet's ramp. The designation's ink is `--sh-ink-50` (.54, light .62 — the
+     station's own `--mu-ink-3` pair exactly), so these are the three rungs the
+     sheet did not have: the coord stamp (the station's `--mu-rule`), the close
+     cross (`--mu-draw`) and the dot lift. Light rows in theme.css. */
+  --sh-survey-faint: rgba(var(--dawn-rgb), 0.16);
+  --sh-survey-mark: rgba(var(--dawn-rgb), 0.5);
+  --sh-survey-grid: rgba(var(--dawn-rgb), 0.07);
+  /* the masthead's two PT Mono rungs, copied (services.css, musings.css) */
+  --sh-survey-desig: 9.5px;
+  --sh-survey-coord: 8px;
+  /* the head's lift over the header's row — was a literal in its padding */
+  --sh-split-lift: clamp(48px, 7svh, 96px);
+  /* ⚠ THE HEADER ROW'S TYPE, MIRRORED. `--nav-link-size` is declared on
+     `.hud__nav` (landing.css), NOT on :root, so `.sh-root` cannot read it: a
+     `var()` of it here is invalid at computed time and would have taken the
+     head's padding to ZERO with nothing erroring. The copy is pinned equal to
+     the original by `sheet-split-survey.test.ts`. */
+  --sh-nav-link: clamp(15px, 0.7rem + 0.44vw, 22px);
+  /* THE PINNED HEAD'S SEAT (ADR-129): where the stuck title's top lands. The
+     header's inline row sits `--hud-margin` down and is one line box tall
+     (base.css `body { line-height: 1.6 }` × the link size); then 8px of air;
+     then the designation's 34px hang above the title. 104.9 / 110.0 / 127.4
+     at 1280×720 / 1440×800 / 1920×1247. The 1.6 is pinned from both ends. */
+  --sh-pin-head: calc(var(--hud-margin) + 1.6 * var(--sh-nav-link) + 42px);
+  /* the head's top padding is FLOORED at the seat, so the sticky offset
+     (`seat − padding`, §4b) is ≤ 0 by construction: on a wide-and-short
+     window (1920×700) the rhythm padding falls under the seat and a positive
+     offset would shove the head down at rest. */
+  --sh-split-pad: max(calc(var(--sh-sec-pad) + var(--sh-split-lift)), var(--sh-pin-head));
+  /* the fade under the pinned head the sections read through — the arcs' 32px */
+  --sh-pin-fade: 32px;
 
   position: relative;
   min-height: 100svh;
@@ -175,8 +207,9 @@
   padding-block: var(--sh-sec-pad);
 }
 .sh-sec--split {
-  /* the page head clears the header's inline chapter row */
-  padding-block-start: calc(var(--sh-sec-pad) + clamp(48px, 7svh, 96px));
+  /* the page head clears the header's inline chapter row; floored at the
+     pinned head's seat (§0) */
+  padding-block-start: var(--sh-split-pad);
 }
 
 /* THE FRAME'S RAILS ARE THE PAGE'S ONLY VERTICALS (owner, 2026-09-20: the
@@ -192,7 +225,12 @@
   padding-inline: var(--band-margin, var(--hud-content-inset, 48px));
 }
 /* THE SEAM between sections spans the band — the region divider. */
-.sh-sec + .sh-sec .sh-band::before {
+.sh-sec + .sh-sec .sh-band::before,
+/* ⚠ THE HEAD IS THE BODY'S SIBLING SINCE ADR-129, so the body's FIRST section
+   has no `.sh-sec` before it and the rule above never reaches it — every sheet
+   lost its first seam until this line drew it. No child or `:scope`
+   combinator: the renderer's own note says none exists in this folder. */
+.sh-sec--split + .sh-body .sh-sec:first-child .sh-band::before {
   content: "";
   position: absolute;
   top: calc(-1 * var(--sh-sec-pad));
@@ -470,6 +508,180 @@
   grid-column: 5 / 13;
   grid-row: 2;
   align-self: start;
+}
+
+/* ── 4a. the survey head — the homepage masthead's chrome (ADR-129) ───
+   The owner, 2026-09-27: "the little eyebrow elements we also have on our
+   homepage … the little crosses and a bit of data readout above the H1 and a
+   paragraph". COPIED from musings.css's head (itself a copy of the services
+   masthead), never imported, onto the sheet's tokens: a designation hung 34px
+   over each block, the gold state chip at the brief's head-right, the gold
+   origin cross top-left of the title and the dawn close cross bottom-right of
+   the brief (one diagonal), a coord stamp under each block's foot, a masked
+   dot-grid lift under each. Every rung is a token — the type ratchet pins
+   this sheet at zero literal tracking. */
+/* ⚠ BOTH BLOCKS ARE DECLARED CONTAINING BLOCKS: `.sh-reveal` is a transform,
+   which contains an absolute child only until `is-in` (ADR-090's finding on
+   the arcs), so the chrome would jump when the reveal lands. */
+.sh-split[data-sh-survey] .sh-split__lead,
+.sh-split[data-sh-survey] .sh-split__copy {
+  position: relative;
+}
+/* THE SHARED TOP LINE: both designations hang from one row, as the masthead's
+   two blocks share one `top` — the base split seats the copy on the lead's
+   FOOT, which would put the two eyebrows at different heights. */
+.sh-split[data-sh-survey] .sh-split__copy {
+  align-self: start;
+}
+/* above the grid lift, which sits at z 0 inside each block */
+.sh-split[data-sh-survey] .sh-split__title,
+.sh-split[data-sh-survey] .sh-split__p {
+  position: relative;
+  z-index: 1;
+}
+.sh-split__desig,
+.sh-split__state {
+  position: absolute;
+  top: -34px;
+  left: 0;
+  font-family: var(--font-pt-mono);
+  font-size: var(--sh-survey-desig);
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--sh-ink-50);
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* the one gold survey element */
+.sh-split__state {
+  left: auto;
+  right: 0;
+  color: var(--gold-ink);
+}
+.sh-split__coord {
+  position: absolute;
+  top: calc(100% + 22px);
+  left: 0;
+  font-family: var(--font-pt-mono);
+  font-size: var(--sh-survey-coord);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  color: var(--sh-survey-faint);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.sh-split__coord--r {
+  left: auto;
+  right: 32px;
+}
+/* the registration crosses — 1px arms on ::before / ::after */
+.sh-split__mark {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.sh-split__mark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: currentcolor;
+}
+.sh-split__mark::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: currentcolor;
+}
+.sh-split__mark--origin {
+  top: -26px;
+  left: -24px;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+}
+.sh-split__mark--close {
+  top: calc(100% + 22px);
+  right: -24px;
+  transform: translate(50%, -50%);
+  color: var(--sh-survey-mark);
+}
+.sh-split__grid {
+  position: absolute;
+  inset: -16px -22px;
+  z-index: 0;
+  background-image: radial-gradient(var(--sh-survey-grid) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  pointer-events: none;
+}
+/* ⚠ THE `head` KNOB IS INERT ON A SURVEY HEAD. `head=stack` gives the lead
+   `display: contents`, which deletes the box every piece of chrome above is
+   positioned against — the crosses and stamps would land on the band. The
+   survey head is a fixed composition; direction SD reaches it and draws the
+   house layout here. */
+.sh-root[data-sh-head="stack"] .sh-split[data-sh-survey] .sh-split__lead {
+  display: block;
+  grid-column: 1 / 6;
+}
+.sh-root[data-sh-head="stack"] .sh-split[data-sh-survey] .sh-split__title {
+  grid-column: auto;
+  grid-row: auto;
+}
+.sh-root[data-sh-head="stack"] .sh-split[data-sh-survey] .sh-split__copy {
+  grid-column: 7 / 13;
+  grid-row: auto;
+}
+
+/* ── 4b. the pinned head — the head holds, the work moves (ADR-129) ───
+   The owner, 2026-09-27, asked which of two forms "sticky" meant, chose a
+   band pinned at the top over a sticky left column: the arcs' tall-beat law
+   (arcs.css, `[data-arc-tall] .arc-head`) on the sheet. The head is the
+   body's SIBLING (the renderer), so the footer's rise never drags it; it
+   sits at z 1 over the body's context (z auto) and under the close (z 2),
+   which covers it as it rises. Its containing block is `.sh-root`, whose box
+   ends on the close's last pixel, so it never releases.
+   ⚠ `top` IS ≤ 0 BY CONSTRUCTION (the padding floor, §0): the title's top
+   lands on `--sh-pin-head` and the band's rhythm padding tucks above the
+   frame — −3 / −10 / −60px at the three reference viewports.
+   ⚠ THE GATE IS THE EXACT COMPLEMENT OF §15's INERT RUNG: on a phone, a short
+   window or under reduced motion the head flows with the page. */
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .sh-sec--split[data-sh-pin] {
+    position: sticky;
+    top: calc(var(--sh-pin-head) - var(--sh-split-pad));
+    z-index: 1;
+  }
+  /* the fade the sections read through as they pass under */
+  .sh-sec--split[data-sh-pin]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: var(--sh-pin-fade);
+    background: linear-gradient(var(--sh-ground), transparent);
+    pointer-events: none;
+  }
+  /* ⚠ WHAT STICKS UNDER THE HEAD SEATS BELOW IT. A post's metadata column is
+     sticky at `--sh-pin-top` (§13), which is inside the pinned band — it stuck
+     BEHIND the head and vanished. Its seat is the head's stuck bottom
+     (offset + its measured height, `--sh-head-h`, written by SheetShell's
+     ResizeObserver), past the fade, plus the head gap. Without the measure
+     (no script) it falls back to the head's top, i.e. the old behaviour. */
+  .sh-sec--split[data-sh-pin] + .sh-body .sh-prose__meta {
+    top: calc(
+      var(--sh-pin-head) - var(--sh-split-pad) + var(--sh-head-h, 0px) + var(--sh-pin-fade) +
+        var(--sh-head-gap)
+    );
+  }
 }
 
 /* ── 5. row — ordinal · title · tags · paragraph · figure ─────────── */
@@ -1517,6 +1729,28 @@ a.sh-figs__item:focus-visible {
       animation-timeline: --sh-run;
       animation-range: contain calc(100% - var(--ft-weld)) contain 100%;
     }
+    /* THE PINNED HEAD DIMS WITH THE BODY (ADR-129). It is the body's sibling,
+       so it does not drift — it is the pinned part — but a head at full ink
+       over a dimmed body reads as a second plane, where the landing's veil
+       dims its whole stage. `timeline-scope` lifts the body's named timeline
+       to the root, the two elements' common ancestor, so the head's veil
+       reads the SAME clock on the same range. A browser with `view()` but no
+       `timeline-scope` leaves the head undimmed, which is harmless. */
+    .sh-root {
+      timeline-scope: --sh-run;
+    }
+    .sh-sec--split[data-sh-pin]::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background-color: var(--sh-ground);
+      opacity: 0;
+      pointer-events: none;
+      animation: sh-under-veil linear both;
+      animation-timeline: --sh-run;
+      animation-range: contain calc(100% - var(--ft-weld)) contain 100%;
+    }
   }
 }
 @keyframes sh-under {
@@ -1590,9 +1824,25 @@ a.sh-figs__item:focus-visible {
   .sh-split__copy,
   .sh-root[data-sh-head="stack"] .sh-split__name,
   .sh-root[data-sh-head="stack"] .sh-split__title,
-  .sh-root[data-sh-head="stack"] .sh-split__copy {
+  .sh-root[data-sh-head="stack"] .sh-split__copy,
+  .sh-root[data-sh-head="stack"] .sh-split[data-sh-survey] .sh-split__lead,
+  .sh-root[data-sh-head="stack"] .sh-split[data-sh-survey] .sh-split__copy {
     grid-column: 1 / -1;
     grid-row: auto;
+  }
+  /* The survey head on a phone (ADR-129): the station's own phone rule — the
+     crosses, stamps, grid lifts and the chip go, the designation stays as a
+     static eyebrow over each block. */
+  .sh-split__mark,
+  .sh-split__coord,
+  .sh-split__grid,
+  .sh-split__state {
+    display: none;
+  }
+  .sh-split__desig {
+    position: static;
+    display: inline-block;
+    margin-bottom: 12px;
   }
   .sh-row {
     grid-template-columns: minmax(0, 1fr);

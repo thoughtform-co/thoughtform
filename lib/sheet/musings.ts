@@ -24,6 +24,14 @@ export function allTags(posts: readonly MusingPost[]): string[] {
   return Array.from(new Set(posts.flatMap((p) => p.tags))).sort();
 }
 
+/**
+ * The header corner on every musings page (ADR-129, owner: "We just need
+ * 'Musings.'") — one label in place of the chapter row and the section
+ * readout, linking back to the index from a post. One constant for both
+ * routes, so the index and a post cannot print two different words.
+ */
+export const MUSINGS_CORNER = { text: "Musings", href: "/musings" } as const;
+
 export function musingsIndexSections(
   posts: readonly MusingPost[],
   featured: readonly MusingPost[]
@@ -38,6 +46,10 @@ export function musingsIndexSections(
         "What the work teaches, written down as it happens: how a team navigates intelligence, what it encodes, what it builds and keeps.",
         "Short, dated, and in the order they were written.",
       ],
+      // The homepage station's own code and state (ADR-129), so the page and
+      // the station letter the same survey, stamps included.
+      survey: { code: "MUS", state: "OPEN" },
+      pin: true,
     },
     {
       kind: "figure",
@@ -89,6 +101,9 @@ export function musingPostSections(
       name: "Musing",
       title: { pre: post.title },
       paragraphs: [post.summary],
+      // A filed note reads as the casefile's own state word (ADR-129).
+      survey: { code: "MUS", state: "ON RECORD" },
+      pin: true,
     },
     {
       kind: "prose",
