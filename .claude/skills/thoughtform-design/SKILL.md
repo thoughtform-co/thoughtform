@@ -20,9 +20,10 @@ demands the specificity.
 
 > **Canonical location.** This tree, in the thoughtform.co repo, is THE skill — it sits
 > beside the ADRs, the tokens and the CSS it governs, so it can be corrected in the same
-> commit as the code. Copies at `~/.cursor/skills/`, in the Claude plugin cache and in the
-> `.thoughtform-brandworld` repo are **pointer stubs**; if one of them disagrees with this
-> file, this file is right.
+> commit as the code. Copies at `~/.cursor/skills/` and in the `.thoughtform-brandworld`
+> repo are **pointer stubs**. The `thoughtform` plugin (thoughtform-co/thoughtform-plugins)
+> carries a full one-way mirror of `SKILL.md`, `references/` and `eval/rubric.md`, which is
+> how this skill reaches claude.ai. If any copy disagrees with this file, this file is right.
 
 ---
 
@@ -38,7 +39,10 @@ Type = readouts and bearings. Motion = mechanical feedback. Copy = precise and g
 ### Identity
 
 Brandmark (gateway + compass), wordmark (vector lockup, code-generated SVG paths), vectors
-as north stars. Full rules: `references/identity-system.md`.
+as north stars. Full rules: `references/identity-system.md`. **To place a mark** (brandmark,
+the six star glyphs, the wordmark and its variants, the horizontal and vertical lockups) on a
+slide, proposal or page, take its path data verbatim from `references/brand-elements.md`,
+which also says which mark goes where and how it scales. Never redraw or tidy a path.
 
 ### The corner law (ADR-065) — LOW freedom
 
@@ -384,6 +388,7 @@ factor from `min(w,h)/1080` · both themes verified.
 | Tokens (semantic)                  | `references/tokens.md`                    | LOW    |
 | Colour theory + tiers              | `references/color-system.md`              | LOW    |
 | Identity, logo, vectors            | `references/identity-system.md`           | LOW    |
+| Brand marks, exact SVG path data   | `references/brand-elements.md`            | LOW    |
 | Typography                         | `references/typography-system.md`         | LOW    |
 | Spatial / grid / density           | `references/spatial-system.md`            | MEDIUM |
 | Motion                             | `references/motion-system.md`             | LOW    |
