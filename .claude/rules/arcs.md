@@ -802,6 +802,42 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   flip, NEVER `data-arc-scrolled` (1vh), so the two move on one frame; scoped to
   `min-width: 961px` and guarded by `tests/lib/arc-hud-client-seats.test.ts`.
   Grammar: [`.claude/skills/thoughtform-design/references/isometric-wireframe-grammar.md`](../skills/thoughtform-design/references/isometric-wireframe-grammar.md).
+  ⚠ **U2 (2026-09-27, owner: the drawings "feel very flat … you didn't use any
+  of our particle systems, none of the 3D visualizations"; the copy is "AI
+  slop … even in Dutch") MAKES ALL FOUR LIVE AND REWRITES THE PAGE.** The SVG
+  above becomes the FALLBACK it was always meant to be — `data-holo` absent /
+  `"static"` / `"live"` on ADR-080's tri-state, with the printed handout on the
+  fallback by design (`pdf-arc.mjs` is headless). **`components/holo-stage/` is
+  the SECOND sanctioned dynamic three seam**, and the doctrine test pins both
+  leaves by name while closing the hole ADR-080 U3 left open: a STATIC import
+  of any three-full holo module under `components/arcs/**` now fails.
+  ⚠ **ONE SHELL, FOUR SCENES — the drawing is DATA** (`HoloStageSpec`: world
+  polylines, translucent faces, seeded motes, label anchors), because ADR-080's
+  component-per-object let its lab and its page drift into two compositions
+  with every guard green. ⚠ **THE LIVE POSE REPRODUCES THE STATIC BASIS**
+  (azimuth 30°, elevation 24° ⇒ a (0.866, −0.203) · b (0.5, 0.352) · z
+  (0, 0.914) against cabinet's (1,0) · (0.433,0.25) · (0,1)) — close, NOT
+  identical, and the guard says so; `b` maps to three's **−z** or the record
+  draws back to front with nothing failing. ⚠ **A PER-CANVAS ANCHOR CHANNEL** —
+  `holoAnchorsRef` is a module singleton and this page mounts four.
+  ⚠ **NO BLEED ON THESE FOUR**: the shared `.arc-holo[data-live]` negates the
+  instrument margin for a full-width object, and three of these beats are a
+  drawing BESIDE their record, where an opaque canvas does not overlap a plate
+  but ERASES it (150px measured). ⚠ **THE FIGURE GROWS ONLY UNTIL THE HEAD
+  WOULD LOSE ITS SEAT** — U3's `1fr` remainder was built and rejected here, the
+  beat being `align-content: center`: a band that fills leaves centring no
+  slack and the head lands on the padding (y 207 → 43, its mark to y 8, through
+  the HUD row). ⚠ **THE LABEL'S WIDTH IS WRITTEN FROM THE SOLVER'S METRIC** and
+  **the drop pass measures `getBoundingClientRect()`**, not `blockH` — the
+  model-of-the-drawing defect, a fourth time. ⚠ **TEST LIGHT THROUGH THE
+  SWITCH, NEVER `data-theme`** (ADR-093): the painters read the STORE.
+  ⚠ **AND THE COPY LAW GREW A DUTCH HALF**: ADR-078 U1's title regexes are
+  English and walk the portfolio alone, so eight counting pairs shipped on this
+  page. `arcs-registry` walks the Dutch arcs by SLUG against a DE-ACCENTED
+  skeleton — ⚠ its own first cut missed "Eén", whose capital `E` no case-fold
+  of `é` reaches. Two claims that overstated the record were corrected with it
+  (the 28 checks are in ENGLISH; both Live picks are `unstable`, quorum 2).
+  Grammar: [`hologram-stage-grammar.md`](../skills/thoughtform-design/references/hologram-stage-grammar.md).
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

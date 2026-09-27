@@ -33,7 +33,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
   date: "2026-09-26",
   cardTitle: "Plopsa · workshop III",
   cardLede:
-    "Van beelden maken naar een setup die beelden maakt: de campagneplaat, de checks en de plugin.",
+    "De setup die jullie campagnebeelden tekent en opmaakt, en die jullie zelf draaien.",
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Plopsa · Workshop III · 28 september 2026",
@@ -59,7 +59,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
   meta: {
     title: "Plopsa · workshop III — Thoughtform",
     description:
-      "De setup die Plopsa's campagnebeelden op schaal maakt: de plaat, de checks, de composite en de plugin.",
+      "Hoe de setup die Plopsa's campagnebeelden tekent in elkaar zit, en wie hem draait.",
   },
   sections: [
     {
@@ -70,8 +70,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       layout: "readout",
       head: {
         eyebrow: "01 · Vandaag",
-        title: { pre: "Tot nu toe,", em: "en vandaag." },
-        sub: "In juli leerden jullie prompten en zetten we Claude op. Op 22 september kwam de vraag die we vandaag beantwoorden.",
+        title: { pre: "Vandaag bouwen we", em: "de setup eromheen." },
+        sub: "In juli leerden jullie prompten en zetten we Claude op. Op 22 september vroegen jullie om visuals en ads aan de lopende band; dat is wat we vandaag opzetten.",
       },
       groups: [
         {
@@ -88,7 +88,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           ],
           foot: {
             label: "Stand",
-            lines: ["De skills staan klaar. De setup die ze draait, komt vandaag."],
+            lines: ["De skills staan er al. Vandaag komt de setup die ze draait."],
           },
         },
         {
@@ -145,9 +145,9 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Drie manieren",
       menuPrimary: true,
       head: {
-        eyebrow: "02 · Drie manieren om ermee te werken",
-        title: { pre: "Prompt, tool, agent.", em: "Elk draait langer zonder jou." },
-        sub: "In juli vroegen jullie één plaat per prompt en keken elke plaat na. Vandaag geven we de setup het doel en de checks, en beoordelen jullie de galerij.",
+        eyebrow: "02 · Prompt, tool, agent",
+        title: { pre: "Hoe lang iets draait", em: "zonder dat jij kijkt." },
+        sub: "Toen was het één plaat per prompt, en elke plaat zelf nagekeken. Vandaag geven we de setup het doel en de checks, en kijken jullie de galerij na.",
       },
       axes: { time: "Hoe lang, zonder jou", work: "Hoeveel van het werk" },
       ends: { near: "minuten", far: "een halve dag", top: "alles" },
@@ -156,13 +156,13 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           id: "prompt",
           label: "Een prompt",
           name: "Vraag, en kijk na",
-          body: "Juli: één plaat per prompt, en elke plaat zelf nagekeken.",
+          body: "Eén plaat per prompt, en elke plaat zelf nagekeken.",
         },
         {
           id: "tool",
           label: "Een tool",
-          name: "Het bouwt, jij bedient",
-          body: "De visuals-skill en de composite die logo, tagline en datum uit jullie bestanden zet. Jij drukt, jij kijkt na.",
+          name: "Jij bedient het",
+          body: "De visuals-skill en de composite die logo, tagline en datum uit jullie bestanden zet. Jij drukt op de knop en kijkt na.",
         },
         {
           id: "agent",
@@ -178,16 +178,16 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       kind: "curve",
       menuLabel: "De curve",
       head: {
-        eyebrow: "03 · Intelligentie als grondstof",
-        title: { pre: "Hoe slimmer het model,", em: "hoe langer de taak." },
-        sub: "Werk dat uren duurt, lukt alleen als je AI als een intelligentie inzet: met een doel, context en checks. Elke release maakt minder kleine fouten, en komt dus verder op lang werk.",
+        eyebrow: "03 · De curve",
+        title: { pre: "Waarom lang werk", em: "nu pas lukt." },
+        sub: "Elke release maakt minder kleine fouten. En een taak van uren is honderd kleine stappen achter elkaar, dus elke fout minder telt door tot het einde.",
       },
       years: ["2023", "2024", "2025", "2026"],
       now: "Nu",
       treads: ["minuten", "een kwartier", "een uur", "een halve dag"],
       axis: { y: "Taaklengte", along: "Elke zeven maanden twee keer zo lang" },
       reference: { label: "Een campagnefamilie door de loop", tread: 3 },
-      note: "Bron: METR. De taak die een agent in de helft van de gevallen afwerkt, verdubbelt ongeveer elke zeven maanden. Een beeld van die vaststelling, geen meting per model.",
+      note: "Bron: METR. De taak die een agent in de helft van de gevallen afwerkt, verdubbelt ongeveer elke zeven maanden. Deze tekening is een beeld van die vaststelling; ze meet geen modellen.",
     },
     {
       id: "mens-of-agent",
@@ -199,16 +199,16 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
         em: "of voor een agent?",
       },
       subline:
-        "Op schaal maken zonder checks is op schaal nakijken. Voor een mens teken je elke stap uit; voor een agent schrijf je op wat goed is, en laat je de stappen aan hem.",
+        "Voor een mens teken je elke stap uit; voor een agent schrijf je op wat goed is, en laat je de stappen aan hem. Dat tweede schrijven we vandaag samen op.",
     },
     {
       id: "de-horizon",
       kind: "horizon",
       menuLabel: "De horizon",
       head: {
-        eyebrow: "05 · Waarom het checks nodig heeft",
-        title: { pre: "Met context werkt het", em: "urenlang zonder jou." },
-        sub: "De modellen zijn slim genoeg voor uren werk. Zonder context en checks weet een agent alleen niet wat goed is, en dan kijkt een mens alles na.",
+        eyebrow: "05 · De poorten",
+        title: { pre: "Waar de agent", em: "vanzelf stopt." },
+        sub: "Slim genoeg is hij intussen wel. Wat hij niet heeft is jullie oordeel; daarom zetten we dat als poorten in de loop.",
       },
       axis: { from: "vijf minuten", to: "een halve dag" },
       operated: {
@@ -227,7 +227,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
         ],
         end: "Jij beoordeelt het resultaat",
       },
-      note: "De drie poorten zijn de loop zelf: de grader die elke plaat drie keer leest, de plaat die bij een retry opnieuw getekend wordt, en de galerij waar de designers kiezen.",
+      note: "Deze drie poorten zijn jullie loop: de grader leest elke plaat drie keer, een retry laat ze opnieuw tekenen, en in de galerij kiezen de designers.",
     },
     {
       id: "de-configuratie",
@@ -235,21 +235,21 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       menuLabel: "De configuratie",
       menuPrimary: true,
       head: {
-        eyebrow: "06 · De configuratie",
-        title: { pre: "Eén stuk werk,", em: "zes vragen eromheen." },
-        sub: "Zes antwoorden per stuk werk. Vier worden voor iedereen gekozen; de context en de checks komen van het team dat het werk doet.",
+        eyebrow: "06 · Zes vragen",
+        title: { pre: "De configuratie", em: "van één campagnefamilie." },
+        sub: "Zes antwoorden per stuk werk. Vier kiezen wij voor iedereen; de context en de checks komen van het team dat het werk doet.",
       },
       work: {
         label: "Het werk",
         name: "Een campagnefamilie",
-        line: "Eén template, vijf plekken, drie soorten platen, elke taal.",
+        line: "Eén template, vijf plekken, drie soorten platen.",
         image: {
           src: "/arcs/plopsa/plate-village-wide.webp",
           alt: "Een gegenereerde brede plaat van Plopsaland Village",
         },
         bar: {
           label: "Goed ziet eruit als",
-          line: "De plek zoals ze bestaat, een schone plaat, geen figuur.",
+          line: "Een plaat die een vreemde meteen herkent.",
         },
       },
       left: [
@@ -270,7 +270,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           id: "evaluaties",
           title: "De evaluaties",
           question: "Hoe we het nakijken",
-          answer: "Achtentwintig checks, in gewoon Nederlands.",
+          answer: "Achtentwintig checks, elk één zin.",
           lit: true,
         },
       ],
@@ -284,7 +284,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
         {
           id: "interface",
           title: "De interface",
-          question: "Waar je het ontmoet",
+          question: "Waar jullie het openen",
           answer: "Claude met de plugin, en de galerij waar jullie kiezen.",
         },
         {
@@ -304,9 +304,9 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       menuLabel: "De regels",
       layout: "plates",
       head: {
-        eyebrow: "07 · Waar jullie greep hebben",
-        title: { pre: "Hier hebben jullie", em: "de meeste greep." },
-        sub: "Het model, de data en de interface worden voor iedereen gekozen. Wat de setup weet en wat goed is, komt alleen van jullie, en staat nu als regel in de setup: elke regel is één check.",
+        eyebrow: "07 · De regels",
+        title: { pre: "De regels die", em: "alleen van jullie komen." },
+        sub: "Deze regels komen uit jullie eigen bestanden en uit de mail van Bert. Elke regel hieronder is ook een check die de grader leest.",
       },
       groups: [
         {
@@ -318,7 +318,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
               id: "plek",
               tag: "GATE",
               name: "De plek zoals ze bestaat",
-              body: "Een attractie of gebouw verschijnt alleen zoals het gebouwd is, met een foto als referentie. Geen foto, geen beeld.",
+              body: "Een attractie of gebouw verschijnt alleen zoals het gebouwd is, met een foto als referentie. Zonder foto tekent hij niets.",
             },
             {
               id: "schoon",
@@ -333,7 +333,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
               body: "Geen Studio 100-figuur, geen mascotte, geen kostuum. Die worden geplaatst uit het officiële materiaal.",
             },
           ],
-          foot: { label: "Faalt", lines: ["Het beeld wordt niet bewaard. Opnieuw tekenen."] },
+          foot: { label: "Faalt", lines: ["Het beeld wordt niet bewaard en gaat opnieuw de wave in."] },
         },
         {
           id: "copy",
@@ -350,7 +350,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
               id: "info",
               tag: "OK",
               name: "Datum, plaats en prijs",
-              body: "Informatie is geen uitnodiging. Van 17 oktober tot en met 8 november mag altijd.",
+              body: "Van 17 oktober tot en met 8 november staat er gewoon. Het wordt pas een call to action als je erbij vraagt om te komen.",
             },
             {
               id: "vraag",
@@ -370,19 +370,19 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
               id: "logo",
               tag: "CODE",
               name: "Logo per park, op contrast",
-              body: "Wit op foto, parkkleur op crème, zwart waar de parkkleur wegvalt. Uit het bestand, nooit hertekend.",
+              body: "Wit op foto, parkkleur op crème, zwart waar de parkkleur wegvalt. Het komt uit het bestand en wordt nooit hertekend.",
             },
             {
               id: "zone",
               tag: "CODE",
               name: "De vrije zone",
-              body: "Boven 30 procent bij een staand beeld, links 45 procent bij een liggend beeld. De template's veiligheidszone is de waarheid.",
+              body: "Boven 30 procent bij een staand beeld, links 45 procent bij een liggend beeld. De veiligheidszone in jullie template bepaalt het.",
             },
             {
               id: "font",
               tag: "CODE",
               name: "Semplicita en Proxima Nova",
-              body: "Uit de licentie op de laptop. Zonder licentie zegt elke composite stand-in op zijn gezicht.",
+              body: "Uit de licentie op de laptop. Zonder licentie zet de composite een vervangend lettertype, en dat zie je meteen.",
             },
           ],
           foot: {
@@ -399,8 +399,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       menuPrimary: true,
       head: {
         eyebrow: "08 · Een template ontleed",
-        title: { pre: "Van één template naar", em: "elke taal." },
-        sub: "Zes templates, één bouwwijze: een plaat, het parklogo, het campagnemerk, een tagline, een datum of een prijs. De setup tekent de plaat; de code zet de rest, per taal en per formaat, uit jullie eigen bestanden.",
+        title: { pre: "Hoe de code", em: "de rest eromheen zet." },
+        sub: "In alle zes de templates die jullie stuurden zit dezelfde opbouw. De setup tekent de plaat; de code zet het logo, de tagline en de datum erover, per taal en per formaat.",
       },
       brief: {
         label: "De template",
@@ -445,8 +445,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       layout: "columns",
       head: {
         eyebrow: "09 · De loop",
-        title: { pre: "Brief, wave, checks,", em: "en dan jij." },
-        sub: "Eén loop, op één campagnefamilie. Wij zetten hem vandaag op en draaien hem mee tot jullie hem zonder ons draaien.",
+        title: { pre: "De loop die", em: "jullie straks zelf draaien." },
+        sub: "We draaien hem vandaag op de chalets, de hospitality-familie. Wij zetten hem op en draaien mee tot jullie hem zonder ons draaien.",
       },
       groups: [
         {
@@ -464,13 +464,13 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
               id: "wave",
               tag: "Wave",
               name: "Twee versies per slot",
-              body: "Vijf plekken, drie soorten platen, in drie minuten getekend.",
+              body: "Vijf plekken, drie soorten platen, dertig beelden in één run.",
             },
             {
               id: "checks",
               tag: "Checks",
               name: "Drie keer gegradeerd",
-              body: "Achtentwintig checks in gewoon Nederlands. De grader adviseert, hij beslist niet.",
+              body: "Achtentwintig checks, elke plaat drie keer gelezen. De grader adviseert; beslissen doen jullie.",
             },
             {
               id: "compositie",
@@ -528,7 +528,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       head: {
         eyebrow: "10 · Live, in het lokaal",
         title: { pre: "Eén campagnefamilie", em: "door de loop." },
-        sub: "Twintig minuten: een brief, de prompt, een wave, drie grades, een pick, en de compositie in elk formaat. Dit kwam er uit de eerste wave, getekend op jullie eigen foto's.",
+        sub: "Twintig minuten, van de brief tot de opgemaakte bestanden. Dit zijn twee platen uit de eerste wave, getekend op jullie eigen foto's.",
       },
       cards: [
         {
@@ -542,7 +542,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           title: "Heidi The Ride",
           body: "De houten structuur en de afdaling zoals op de foto. Links rust voor het merk en de titel.",
           metaRows: [
-            { label: "Oordeel", value: "Pass, drie keer" },
+            { label: "Oordeel", value: "Pass, twee van drie runs" },
             { label: "Model", value: "Nano Banana Pro" },
           ],
         },
@@ -557,7 +557,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           title: "Studio 100 Chalets",
           body: "De blauwe planken en de luiken met het hart. De familie die we vandaag live doorlopen.",
           metaRows: [
-            { label: "Oordeel", value: "Pass, drie keer" },
+            { label: "Oordeel", value: "Pass, twee van drie runs" },
             { label: "Model", value: "Nano Banana Pro" },
           ],
         },
@@ -570,8 +570,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       columns: 4,
       head: {
         eyebrow: "11 · Zelf doen",
-        title: { pre: "Een uur aan het stuur,", em: "in jullie eigen bestanden." },
-        sub: "Niet kijken maar doen. Vier oefeningen, elk op een echt bestand, elk met een eigen resultaat dat in de setup blijft.",
+        title: { pre: "Een uur", em: "aan het stuur." },
+        sub: "Vier oefeningen op jullie eigen bestanden. Wat je schrijft blijft in de setup staan, ook na vandaag.",
       },
       cards: [
         {
@@ -579,27 +579,27 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           n: "01",
           kicker: "15 min",
           title: "Schrijf één check",
-          body: "Kies een fout die je in juli zag. Schrijf in gewoon Nederlands wat er fout aan is. De grader leest die zin bij de volgende wave.",
+          body: "Kies een fout die je in juli zag. Schrijf in één zin op wat er mis mee is. De grader leest die zin bij de volgende wave.",
         },
         {
           id: "wave",
           n: "02",
           kicker: "15 min",
           title: "Draai één wave",
-          body: "Kies een plek en een type. Twee draws. Kijk naar de sheet vóór je naar een beeld kijkt.",
+          body: "Kies een plek en een type, twee draws. Kijk naar de sheet vóór je naar een beeld kijkt.",
         },
         {
           id: "verdict",
           n: "03",
           kicker: "15 min",
           title: "Decodeer één verdict",
-          body: "Zeg wat je van een plaat vindt, in je eigen woorden. Die woorden worden een regel als je ze twee keer zegt.",
+          body: "Zeg wat je van een plaat vindt, in je eigen woorden. Wij schrijven mee terwijl je het zegt.",
         },
         {
           id: "copy",
           n: "04",
           kicker: "15 min",
-          title: "Grade één caption",
+          title: "Kijk één caption na",
           body: "Schrijf een caption voor een K3-post en laat de copycheck erover gaan. Herschrijf tot het door is.",
         },
       ],
@@ -610,9 +610,9 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       menuLabel: "IT",
       columns: 3,
       head: {
-        eyebrow: "12 · Wat IT installeert",
-        title: { pre: "Drie dingen,", em: "in deze volgorde." },
-        sub: "De plugin, de sleutels en de organisatie. Alles in naam van Plopsa, niets in de onze. Vandaag installeren we de plugin als zip; na het gesprek met IT synchroniseert hij vanuit GitHub.",
+        eyebrow: "12 · Voor IT",
+        title: { pre: "Wat IT moet", em: "aanzetten." },
+        sub: "Alles staat op naam van Plopsa. Vandaag installeren we de plugin als zip; na het gesprek met IT haalt hij zichzelf op uit GitHub.",
       },
       cards: [
         {
@@ -634,7 +634,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           n: "03",
           kicker: "Sleutels",
           title: "Twee API-sleutels",
-          body: "Een Gemini-sleutel en een OpenAI-sleutel op naam van Plopsa, in een .env op de laptop die waves draait. Nooit in de repository. Gefactureerd door de leverancier, in de lage honderden per maand.",
+          body: "Een Gemini-sleutel en een OpenAI-sleutel op naam van Plopsa, in een .env op de laptop die waves draait. Nooit in de repository. De leverancier factureert per aanroep.",
         },
       ],
       /* The 22 September question (Krea's node canvas, or a setup of their
@@ -655,8 +655,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Wat volgt",
       head: {
         eyebrow: "13 · Wat volgt",
-        title: { pre: "Vier weken,", em: "en dan draait het bij jullie." },
-        sub: "Week 1: de eerste campagne door de loop, met de designers aan de knoppen. Week 2: de copy en de campagneteams erbij. Week 3: de tweede familie, en de checks die inmiddels gelden. Week 4: de overdracht, met een datum. Daarna een check-in na één maand en na drie.",
+        title: { pre: "Daarna draait het", em: "bij jullie." },
+        sub: "De eerste week gaat de eerste campagne door de loop, met de designers aan de knoppen. Daarna komen de copy en de campagneteams erbij, dan de tweede familie met de checks die er intussen bij staan. In week vier dragen we over, met een datum erop; een maand en drie maanden later komen we nog eens kijken.",
       },
       actions: [
         {

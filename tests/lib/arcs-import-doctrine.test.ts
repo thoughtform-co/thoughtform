@@ -29,15 +29,31 @@ const BANNED = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/, /^@s
 /**
  * The enumerated exceptions, and why each is safe:
  *
- *  - `ArcHoloProgramMount.tsx` reaches the scene through `next/dynamic`, so
- *    the graph is a lazy chunk (ADR-080). Its own static imports are still
- *    walked — only the specifier below is forgiven.
- *  - `holoProgramGeom` / `hoverRef` are the scene's THREE-FREE modules (pure
- *    arithmetic and a module-scope ref, the `journeyScalars` transport
- *    pattern), so importing them statically costs nothing.
+ *  - `ArcHoloProgramMount.tsx` reaches the trajectory's scene through
+ *    `next/dynamic`, so the graph is a lazy chunk (ADR-080). Its own static
+ *    imports are still walked — only the specifiers below are forgiven.
+ *  - `ArcHoloStageMount.tsx` does the same for the workshop's four framing
+ *    beats (ADR-130 U2), on the same terms and through the same mechanism.
+ *  - The THREE-FREE modules of both folders (pure arithmetic, a label solver,
+ *    a channel factory — the `journeyScalars` transport pattern) cost nothing
+ *    to import statically.
+ *
+ * ⚠ THE SCENE MODULES ARE BANNED STATICALLY TOO, AND THAT IS NEW. ADR-080 U3
+ * recorded this as left open: the old `HOLO_FREE` branch was an `else if …
+ * continue` with no assertion, so a static
+ * `import … from "@/components/holo-program/HoloProgramScene"` inside
+ * `components/arcs/**` would have passed CI and dragged three into the route's
+ * First Load JS — a ban whose one mechanism did not cover its own neighbour.
  */
-const HOLO_SCENE = /@\/components\/holo-program\/HoloProgramCanvas/;
-const HOLO_FREE = /@\/components\/holo-program\/(holoProgramGeom|hoverRef)/;
+const HOLO_FREE =
+  /@\/components\/holo-(program\/(holoProgramGeom|hoverRef|holoLabelLayout|holoAnchorsRef|holoPalette)|stage\/(stageGeom|stageFit|stageAnchors))/;
+/** Anything else under either folder is three-full until proven otherwise. */
+const HOLO_TREE = /@\/components\/holo-(program|stage)\//;
+/** The leaves the ADRs name, and the only files that may reach a scene. */
+const HOLO_MOUNTS = [
+  "components/arcs/ArcHoloProgramMount.tsx",
+  "components/arcs/ArcHoloStageMount.tsx",
+];
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -79,31 +95,28 @@ describe("the arcs' import doctrine", () => {
     expect(offenders, offenders.join("\n")).toEqual([]);
   });
 
-  it("keeps the holo seam DYNAMIC, and in exactly one file", () => {
+  it("keeps both holo seams DYNAMIC, and in the leaves the ADRs name", () => {
     const staticReaches: string[] = [];
-    let dynamicReaches = 0;
+    const dynamicReaches: string[] = [];
 
     for (const file of files) {
       const rel = relative(ROOT, file).split(sep).join("/");
       const source = readFileSync(file, "utf8");
 
       for (const spec of staticSpecifiers(source)) {
-        if (HOLO_SCENE.test(spec)) staticReaches.push(`${rel} → ${spec}`);
-        // The three-free modules are always fine; named so a reader can see
-        // the distinction is deliberate rather than an oversight.
-        else if (HOLO_FREE.test(spec)) continue;
+        if (HOLO_FREE.test(spec)) continue; // pure, and named so on purpose
+        if (HOLO_TREE.test(spec)) staticReaches.push(`${rel} → ${spec}`);
       }
 
-      if (/import\(\s*["']@\/components\/holo-program\/HoloProgramCanvas["']\s*\)/.test(source)) {
-        dynamicReaches++;
-        expect(rel).toBe("components/arcs/ArcHoloProgramMount.tsx");
-      }
+      const dyn =
+        /import\(\s*["']@\/components\/holo-(program\/HoloProgramCanvas|stage\/HoloStageCanvas)["']\s*\)/;
+      if (dyn.test(source)) dynamicReaches.push(rel);
     }
 
-    // The scene may only ever be reached lazily…
+    /* ⚠ EVERY three-FULL MODULE, not just the two canvases. A static reach for
+       a SCENE rather than its canvas is the hole ADR-080 U3 left open. */
     expect(staticReaches, staticReaches.join("\n")).toEqual([]);
-    // …and through the one leaf the ADR names.
-    expect(dynamicReaches).toBe(1);
+    expect(dynamicReaches.sort()).toEqual(HOLO_MOUNTS);
   });
 
   it("lets no CLIENT file under the sheet import a registry (ADR-117, ADR-118)", () => {

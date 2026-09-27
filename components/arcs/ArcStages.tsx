@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ladder, rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -70,6 +71,22 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
         />
         <div className="arc-floor">
           <figure className="arc-floor__figure arc-reveal" {...rung(motion, 0.14)}>
+            {/* The same drawing, turned: the SVG below is what every reader
+                without WebGL gets, and `data-holo="live"` is the only state
+                that hides it (ADR-130 U2, on ADR-080's tri-state). */}
+            <ArcHoloStageMount
+              scene={{
+                kind: "stages",
+                data: { stages: stages.map((s) => ({ id: s.id, lit: s.lit })) },
+              }}
+              labels={[
+                ...stages.map((s) => ({ id: s.id, key: s.label, text: s.name, priority: 0 })),
+                { id: "top", text: ends.top, priority: 2 },
+                { id: "near", text: ends.near, priority: 3 },
+                { id: "far", text: ends.far, priority: 3 },
+              ]}
+              gutters={{ top: 8, bottom: 8 }}
+            />
             <div className="arc-floor__stage">
               <svg
                 className="arc-floor__svg"

@@ -1,5 +1,11 @@
 # Isometric wireframe grammar
 
+> **This is the STATIC half of the register.** When the drawing has three
+> quantities, a floor and a record worth turning, it can also go live as a
+> WebGL object — and the flat drawing below is then the fallback every reader
+> without GL gets, including the printed handout. The two must read as ONE
+> picture: [hologram-stage-grammar.md](hologram-stage-grammar.md).
+
 The house's third drawing register, beside the celestial connector and the ring
 dial. Reach for it when a record has **height, layers or depth** — something
 stands on something, something is made of stacked parts, something runs longer

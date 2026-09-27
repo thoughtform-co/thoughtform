@@ -394,3 +394,211 @@ and light, with zero live label overlaps and no label outside its stage.
   handout; the owner's live read decides.
 - `scripts/pdf-arc.mjs` needs PyMuPDF to assemble; the stills render and the
   per-beat `tall` report is what this pass used. Pre-existing.
+
+## Update 2 (2026-09-27, owner) — the four framing beats go live, and the page is written again
+
+> "I looked at the output, and I'm not satisfied. It feels very flat and not
+> what I want. If I look at the Moira, the V2 evals workshop, that looks much
+> cleaner. Also, you didn't use any of our particle systems, none of the
+> 3D/3GS visualizations. I really want you to go back to the drawing board and
+> redo it properly this time … Also, we have a Thoughtform TOV skill that does
+> tone of voice. Even though it's English, we can also do Dutch, so really make
+> text as functional as possible. Everything needs to connect, but I don't want
+> it to be like AI slop as it is now, even in Dutch."
+
+U1 shipped a cabinet-oblique SVG at one hairline weight, no faces, no glow and
+no motion beyond a draw-on, in about 40 % of each beat. Measured against the
+six reference boards he had sent — an exploded MEP floorplan, the CERN L3 event
+display, a Tron grid plane, an orange terrain relief, a magenta orbit HUD —
+every one of them has luminous strokes, a floor that recedes, translucent
+faces, several weights in one drawing and dust. **It was a two-dimensional
+chart wearing a three-dimensional costume.** And the repo already owned the
+thing he meant by "our 3D": ADR-080's WebGL instrument, with its dust shader,
+bloom, orbit controls and DOM labels tracking projected anchors — sanctioned on
+an arc, and left on the shelf.
+
+⚠ **THE "EVALS V2 WORKSHOP" COULD NOT BE RE-READ.** `github.com/tensalir/moira`
+now answers 404 and the local checkout holds no workshop surface at all — its
+`lib/holo/**` is a spend-configurator's object. What was available is that
+module, and it is worth more than the deck would have been: four numeric
+disciplines, adopted here verbatim. One size-encoded quantity per drawing.
+Decorative strokes at a third of structural opacity. Few long dashes rather
+than many short ones. And a label solver that **drops** a block by priority
+rather than letting two print through. Its fifth rule was already ours:
+nothing is drawn that has no number behind it.
+
+### Decision 1 — the SVG becomes the fallback it was always meant to be
+
+Each framing beat mounts a canvas on ADR-080's tri-state. `data-holo` absent is
+the server render; `"static"` is reduced motion, ≤900px, no WebGL or a dead
+canvas; only `"live"` hides the figure, written from the scene's FIRST
+COMMITTED FRAME. **The printed handout goes out on the fallback by design** —
+`scripts/pdf-arc.mjs` is headless, so it shoots the drawing U1 shipped, which
+is why that drawing was not touched. Verified: GL off and PRM both render
+`data-holo="static"` with every path present and `data-arc-tall` absent.
+
+### Decision 2 — one shell, four scenes, and the drawing is DATA
+
+`components/holo-stage/` is `HoloProgramCanvas` generalised. A scene is a
+`HoloStageSpec` — world-space polylines, translucent faces, seeded motes and
+label anchors — built by three-free functions from the record; `HoloStageScene`
+is the only component that knows how to paint one. ADR-080's own scene is a
+component per object, and its record says twice what that cost: the lab and the
+page drifted into two compositions with every guard green. **Four beats cannot
+afford four of those.** Palette, dust shader, post stack, life constants, orbit
+damping and the fit law are IMPORTED from `holo-program`, not copied.
+
+### Decision 3 — the live pose reproduces the static basis
+
+⚠ **THE FALLBACK AND THE HOLOGRAM ARE ONE DRAWING, AND THE CAMERA IS WHAT
+MAKES THAT TRUE.** `framing/iso.ts` draws these beats in a cabinet oblique;
+at azimuth 30° and elevation 24° a perspective camera projects
+
+    a → ( 0.866, −0.203)     b → ( 0.500, +0.352)     z → ( 0, +0.914)
+
+against cabinet's (1, 0) · (0.433, 0.25) · (0, 1). ⚠ **NOT the same angle, and
+the first cut of the guard claimed it was**: cabinet's depth runs at a screen
+ratio of 1.73 and this camera's at 1.42, so the live depth is a little steeper.
+Both read as the same object from the same corner; asserting an identity that
+is not there would have made the guard a fiction. `b` maps to three's **−z**,
+because +z comes toward the camera at this azimuth and mapping depth onto it
+would draw the record back to front with nothing failing.
+
+### Decision 4 — a per-canvas anchor channel, and the doctrine test grows a second leaf
+
+`holoAnchorsRef` is a module singleton, correct while one canvas publishes.
+This page mounts FOUR: they would overwrite one another every frame and the
+labels of whichever rendered last would land on all of them — silently, since
+every write is valid and every read returns something. `createAnchorChannel()`
+is passed to the canvas and to the label layer.
+
+`arcs-import-doctrine.test.ts` now pins the dynamic reaches to
+`["ArcHoloProgramMount.tsx", "ArcHoloStageMount.tsx"]` — and **closes the hole
+ADR-080 U3 left open**: the old `HOLO_FREE` branch was an `else if … continue`
+with no assertion, so a static import of `HoloProgramScene` inside
+`components/arcs/**` would have passed CI and dragged three into First Load JS.
+Every three-full module under either folder now fails statically. Proved by
+adding such an import, watching the test fail by name, and removing it.
+
+### What was measured, and what it corrected
+
+- ⚠ **THE SHARED BLEED ERASED THE BEAT'S OWN RECORD.** `.arc-holo[data-live]`
+  negates the instrument margin, because the trajectory is ONE full-width
+  object with its chrome floating on it. Three of these beats are a drawing
+  BESIDE its record, and the canvas paints an opaque ground — so the bleed did
+  not overlap the readout's two plates, it blanked 150px of each. The four
+  beats reset `inset: 0`.
+- ⚠ **THE OBVIOUS FIX FOR "TOO SMALL" PUT THE HEAD UNDER THE NAV.** ADR-080
+  U3's remainder — band one viewport less its padding, figure the `1fr` row —
+  cannot trip `data-arc-tall` at any size and is the right answer there. Built
+  here and REJECTED: the beat is `align-content: center`, so a band that fills
+  leaves centring no slack and the head lands on the section's padding.
+  Measured at 1920×1080 the head went from y 207 to y **43** and its origin
+  mark overhung to y **8**, through the HUD row and across the client mark's
+  hairline — the exact defect U1's head clamp exists to prevent, arriving from
+  the other side. **The slack is the budget**: `clamp(320px, 50svh, 700px)`
+  seats the head at 128 and still hands the object 540px against 478.
+- ⚠ **THE SOLVER AND THE STYLESHEET SIZED DIFFERENT BOXES.** The declutter
+  separates blocks `m.blockW` wide; the sheet capped them at a literal, so at
+  1194px of canvas it pushed 98px apart while the text ran to 200 — `retry`
+  printing through `ask` with the lane reporting clean. The width is WRITTEN
+  from the solver's own metric now. Mirroring the clamp in CSS is the other way
+  round, and a second place for one number to be wrong.
+- ⚠ **AND THE DROP PASS MEASURED A MODEL OF THE LABEL RATHER THAN THE LABEL** —
+  this estate's fourth time (ADR-070 U34, ADR-069 U1, ADR-080 U3). `blockH` is
+  one nominal block; a gate's label wraps to three lines and stands half again
+  as tall, so a model-based walk reported a clean board while two sentences
+  overlapped. It reads `getBoundingClientRect()` on the placed elements now.
+- ⚠ **THE GATES OUTRANKED THE PEOPLE ONLY AFTER THE FIRST SHOOT.** All three
+  gate labels dropped while "Jij zet het doel" kept its slot: a drop rule is
+  only as good as its order.
+- ⚠ **THE LANE'S NAME AND THE PERSON AT ITS START WERE ONE POINT.** Both were
+  the rail's first vertex, so they projected to one pixel and the declutter had
+  nothing to separate. The name steps forward in depth.
+- ⚠ **AN ANCHOR OUTSIDE THE BOUNDS IS A LEADER THE LENS NEVER PROMISED TO
+  KEEP ON SCREEN**, and three were — found by the new unit guard on its first
+  run. `specBounds` takes the anchors.
+- ⚠ **THE EIGHT HAND-OFFS ARE DRAWN, NOT ONLY LETTERED.** Only the last one
+  letters (a repeated plaque is the map city's defect in a new place), so
+  without a mark per check the far lane read as one dashed line and the
+  repetition — which IS that lane's argument — was simply absent.
+- ⚠ **THE RETRY LOOP SAT INSIDE THE GATE IT RETURNS THROUGH.** Run in the
+  rail's own horizontal plane it was invisible at every pose in the band;
+  lifted, it reads as the step back it is.
+- ⚠ **A TAG LEANING OFF A FACE'S CENTRE LANDS ON THE VOLUME IT NAMES**, because
+  a prism here is as tall as the label is far. The stage tags lean off the top
+  face's FAR edge, so the stand-off is up AND right, clear of the object.
+- ⚠ **LIGHT IS TESTED THROUGH THE SWITCH, NEVER THE ATTRIBUTE** (ADR-093). The
+  first light shoot stamped `data-theme` and produced a black plate on
+  parchment with invisible labels — a defect in the harness, not the page: the
+  GL painters read the STORE. Through the toggle, light is an ink drawing on
+  parchment, flush with the ground.
+
+### Decision 5 — the page is written again, whole
+
+Every string on all thirteen beats went through `thoughtform-tov`: translate,
+then voice, then a fidelity repair against the sources. The diagnosis was
+structural, not lexical. **Eight of thirteen titles shared one shape** — `A, B`
+— with ten replacement contrasts ("Niet kijken maar doen", "De grader
+adviseert, hij beslist niet"), triads throughout, five colon-titles, and five
+aphorisms the page had coined for itself ("Informatie is geen uitnodiging",
+"elke regel is één check"). Titles are NAMES now, in his forms: a plain claim,
+a fronted "waar/hoe/waarom", a real question kept as one.
+
+⚠ **TWO CLAIMS OVERSTATED THE RECORD AND BOTH ARE CORRECTED.** The page said
+"Achtentwintig checks, in gewoon Nederlands" **twice** — there are exactly 28
+checks and the rubric is written in **English** ("**It is this place, built as
+in image 1.**"); it reads "elk één zin" now, which is true. And both Live cards
+claimed "Pass, drie keer" for frames that sit in `qa_results.json`'s `unstable`
+array: the three runs DISAGREED and the verdict came by `quorum: 2`. They read
+"Pass, twee van drie runs". **A number on a client's page is a thing they can
+check**, and these two were on the cards the room looks at hardest.
+
+⚠ **THE DISPLAY-TITLE GUARD LEARNED DUTCH.** ADR-078 U1's regexes are English
+and walk the PORTFOLIO alone, which is how eight counting pairs shipped. The
+new case walks the Dutch arcs by slug — a `lang` field the record does not
+carry would make the guard's reach depend on the copy it guards — and compares
+on a DE-ACCENTED skeleton. ⚠ **The first cut missed its own worst case**:
+Dutch capitalises the numeral "Eén", whose first character is a plain `E` that
+no case-fold of `é` reaches, so "Eén stuk werk, zes vragen eromheen." passed.
+**A guard written against one spelling of its own keyword reports green on the
+string it was written for.** Calibrated both ways: six old shapes caught,
+thirteen new titles and his own question clean. ⚠ `een` is in the PAIR set and
+out of the OPENER set — de-accented it is both the numeral and the article, so
+it reads as a count only when a second numeral answers it across the comma.
+
+### Guards
+
+`tests/lib/holo-stage-geom.test.ts` (24 cases): the pose against the cabinet
+basis, the azimuth band never crossing the axis, finite world, one gold donor
+per spec, every anchor inside its own bounds and leaning on a different point,
+a lens inside `[FIT_FOV_MIN, FIT_FOV_MAX]` at the four reference shapes, a
+wider canvas never needing a longer lens, a mark per hand-off with the gates in
+the record's order, the exploded stack built base-first with the base gold and
+the guide dashed, determinism per seed, and the channel not being a singleton.
+`arcs-import-doctrine` and `arcs-registry` as above; `arc-iso`,
+`arc-terminal-markup` and `arc-terminal-smoke` pass untouched.
+
+### Measured
+
+All four beats `data-holo="live"`, `data-arc-tall` absent, zero horizontal
+overflow and **zero label collisions** at 1280×720, 1440×800, 1920×1080 and
+1920×1247. With GL disabled and under reduced motion all four fall back to the
+SVG with every path present. `npm run verify` green (2392 tests, 145 files);
+`arc-terminal-smoke` 10 passed. ⚠ Two failures in `subpages-smoke` and
+`arcs-instrument-smoke` are PRE-EXISTING and confirmed unchanged.
+
+### Left open
+
+- **The eighth hand-off's label drops at 1280×720 and 1440×800.** Ten blocks on
+  a 1016×360 canvas do not fit, and it is the lowest-priority string on the
+  beat: the eight drawn diamonds carry the repetition and the note spells the
+  three gates out. Named rather than hidden.
+- **A label may still overlap the translucent volume it names** on the smallest
+  prism, where the block is wider than the box. The register's law is about
+  lettering baked ONTO a face; a DOM block with a halo over a wireframe is what
+  the trajectory beat does too. The owner's live read decides.
+- **`scripts/pdf-arc.mjs` still needs PyMuPDF** to assemble, and it shoots the
+  fallback by design. Pre-existing.
+- **The Moira deck itself.** If the repo comes back, its `evals v2` framing is
+  worth re-reading against these four beats.

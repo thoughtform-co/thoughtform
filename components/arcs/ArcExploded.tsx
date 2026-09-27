@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 
 import type { ArcStackLayer } from "@/lib/arcs/types";
 
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
+
 import {
   LABEL_X,
   XP_VB,
@@ -46,6 +48,21 @@ export function ArcExploded({ label, layers }: ArcExplodedProps) {
   const last = layers.length - 1;
   return (
     <figure className="arc-xp" data-readout-figure="">
+      {/* The client's own template, exploded and turned (ADR-130 U2). It is
+          the first beat, so it arms on SCROLL DEPTH rather than on arrival:
+          the ADR-076 curtain holds this band under the hero, where an
+          IntersectionObserver intersects from frame one. */}
+      <ArcHoloStageMount
+        scene={{ kind: "exploded", data: { layers: layers.map((l) => ({ id: l.id, dashed: l.dashed })) } }}
+        labels={layers.map((l, i) => ({
+          id: l.id,
+          key: l.label,
+          text: l.note ?? "",
+          priority: i,
+        }))}
+        arm="curtain"
+        gutters={{ top: 8, bottom: 8 }}
+      />
       <div className="arc-xp__stage">
         <svg
           className="arc-xp__svg"

@@ -468,6 +468,63 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("a Dutch title is a name too (ADR-130 U2)", () => {
+    /* ⚠ THE ADR-078 GUARD ABOVE IS ENGLISH, AND IT WALKS THE PORTFOLIO ALONE.
+       So the counting pair went on shipping in Dutch: the Plopsa workshop had
+       EIGHT of thirteen titles on one shape — "Eén stuk werk, zes vragen
+       eromheen.", "Drie dingen, in deze volgorde.", "Vier weken, en dan …" —
+       and the owner read the page as generated copy (2026-09-27: "I don't
+       want it to be like AI slop as it is now, even in Dutch").
+
+       Two shapes, on the DUTCH-language arcs only:
+
+         · the counting title   a spelled numeral opening either half of the pair
+         · the replacement pair "niet X maar Y", "X, niet Y", "geen X maar Y"
+
+       ⚠ TITLES ONLY, exactly as ADR-078 U1 rules it — a readout ROW may still
+       say "Zes vragen, twee die jullie schrijven", because a record is not a
+       claim. And the list is by SLUG rather than by a language field: the
+       record carries no `lang`, and inferring one from the copy would make the
+       guard's reach depend on the copy it is guarding. */
+    const DUTCH_ARCS = new Set(["plopsa-workshop", "suri-workshop", "suri-kickoff"]);
+    /* ⚠ COMPARE ON A DE-ACCENTED SKELETON. The first cut matched the numeral
+       "één" literally and MISSED the worst title on the page — "Eén stuk werk,
+       zes vragen eromheen." — because Dutch capitalises the word "Eén", whose
+       first character is a plain `E` that no case-fold of `é` ever reaches. A
+       guard written against one spelling of its own keyword is a guard that
+       reports green on the string it was written for. */
+    const skeleton = (t: string) =>
+      t
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    /* ⚠ "een" IS IN THE PAIR SET AND OUT OF THE OPENER SET. De-accented it is
+       both the numeral "één" and the indefinite article, so it can only be read
+       as a count when a SECOND numeral answers it across the comma; "Een uur
+       aan het stuur." is a name, not a tally. */
+    const NUM_PAIR =
+      "een|twee|drie|vier|vijf|zes|zeven|acht|negen|tien|elf|twaalf|dertien|twintig|dertig|veertig|vijftig|honderd";
+    const NUM_OPEN = NUM_PAIR.replace("een|", "");
+    const countingPair = new RegExp(`^\\s*(${NUM_PAIR})\\b[^,.]*[,.]\\s*(${NUM_PAIR})\\b`);
+    const countingOpen = new RegExp(`^\\s*(${NUM_OPEN})\\s+\\w+,`);
+    const replacement =
+      /\bniet\s+\w[^,.]*,\s*maar\b|,\s*niet\s+\w+\.?$|\bgeen\s+\w[^,.]*,\s*maar\b/;
+
+    for (const arc of ARCS) {
+      if (!DUTCH_ARCS.has(arc.slug)) continue;
+      for (const section of arc.sections) {
+        const head = "head" in section ? section.head : undefined;
+        if (!head) continue;
+        const title = arcTitleText(head.title);
+        const flat = skeleton(title);
+        const at = `${arc.slug}#${section.id}: "${title}"`;
+        expect(countingPair.test(flat), `${at} is a counting pair`).toBe(false);
+        expect(countingOpen.test(flat), `${at} opens on a count`).toBe(false);
+        expect(replacement.test(flat), `${at} is a replacement contrast`).toBe(false);
+      }
+    }
+  });
+
   it("the trajectory is the page's ONE chronology, and its contents (ADR-079)", () => {
     /* ⚠ THE `rollout` SECTION IS RETIRED. It plotted the SAME 2024 → now
        span the program board plots, in a second grammar, at the opposite

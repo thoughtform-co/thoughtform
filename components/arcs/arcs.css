@@ -7220,6 +7220,183 @@ a.arc-readout__hit:focus-visible {
   }
 }
 
+/* ── The framing beats, LIVE (ADR-130 U2) ───────────────────────────
+   The four drawings above are the record in two dimensions and they are
+   what every reader without WebGL gets — reduced motion, ≤900px, no GL,
+   a dead canvas, and the printed handout. `data-holo="live"` is the one
+   state that hides them, and the mount writes it from the scene's FIRST
+   COMMITTED FRAME: a class set before there are pixels is exactly what
+   makes a flat-to-canvas swap pop (ADR-080's tri-state).
+
+   ⚠ EVERY RULE HERE IS SCOPED TO A SECTION IN LIVE MODE. The `.arc-holo`
+   host and its bleed are the program beat's own, shared; nothing below
+   reaches `/arcs/loop-earplugs`, whose smoke runs with GL disabled and
+   measures the flat board. */
+.arc-sec--readout[data-holo="live"] .arc-xp__stage,
+.arc-sec--stages[data-holo="live"] .arc-floor__stage,
+.arc-sec--curve[data-holo="live"] .arc-curve__stage,
+.arc-sec--horizon[data-holo="live"] .arc-hz__stage {
+  /* ⚠ `visibility`, NEVER `display: none`. The stage box is what gives the
+     figure its height, and the canvas is absolutely positioned inside that
+     figure — dropping it from flow would collapse the beat to its chrome
+     and hand the drawing a zero-height box to solve a lens against. */
+  visibility: hidden;
+}
+/* The figure is the canvas's containing block. ⚠ DECLARED, not inherited:
+   left implicit it depends on whichever descendant happens to be
+   positioned, which is how a host ends up resolving against the viewport. */
+.arc-sec--readout[data-holo="live"] .arc-xp,
+.arc-sec--stages[data-holo="live"] .arc-floor__figure,
+.arc-sec--curve[data-holo="live"] .arc-curve,
+.arc-sec--horizon[data-holo="live"] .arc-hz {
+  position: relative;
+}
+/* ⚠ THE CROP'S LETTERBOX IS RECLAIMED. The SVG reserves a label column —
+   162 of the exploded crop's 360 units — because its words are seated
+   inside the drawing. Live, the words are DOM over the canvas, so the
+   object gets the whole box: at the same beat height the record renders
+   materially larger without a pixel of extra flow. */
+/* ⚠ NO BLEED ON THESE FOUR, AND THAT IS A CORRECTNESS RULE. The shared
+   `.arc-holo[data-live]` host negates the instrument margin, because the
+   trajectory beat is ONE full-width object with its chrome floating on it.
+   Three of these beats are two-column — a drawing beside its own record —
+   and the canvas paints an OPAQUE ground, so a bleed does not overlap the
+   panels, it ERASES them. Measured at 1920×1080: the readout's index plate
+   lost 150px of its left edge and the record plate its right. */
+.arc-sec--readout[data-holo="live"] .arc-holo[data-live],
+.arc-sec--stages[data-holo="live"] .arc-holo[data-live],
+.arc-sec--curve[data-holo="live"] .arc-holo[data-live],
+.arc-sec--horizon[data-holo="live"] .arc-holo[data-live] {
+  inset: 0;
+}
+
+/* ⚠ THE DRAWING GROWS UNTIL THE HEAD WOULD LOSE ITS SEAT, AND NOT FURTHER.
+   The obvious move is ADR-080 U3's: make the band one viewport less its
+   padding and give the figure the `1fr` remainder, which cannot trip
+   `data-arc-tall` at any size. Built, measured, REJECTED here — the beat is
+   `align-content: center`, so a band that fills leaves centring no slack and
+   the head lands on the section's padding: measured at 1920×1080 the head
+   went from y 207 to y 43 and its own origin MARK overhung to y 8, through
+   the HUD row and across the client mark's hairline. That is the exact
+   defect ADR-130's head clamp exists to prevent, arriving from the other
+   side.
+   ⚠ SO THE SLACK IS THE BUDGET. The clamp is solved backwards from the head:
+   at 1080 it leaves ~194px of slack, which seats the head at ~140 — clear of
+   the mark's hairline at ~44 and of the nav row above it — and still hands
+   the object 540px against the 478 it had. Re-measure the HEAD, not the
+   canvas, if this value moves. */
+.arc-sec--curve[data-holo="live"] .arc-curve,
+.arc-sec--horizon[data-holo="live"] .arc-hz {
+  min-height: 0;
+}
+.arc-sec--curve[data-holo="live"] .arc-curve__stage,
+.arc-sec--horizon[data-holo="live"] .arc-hz__stage {
+  width: 100%;
+  aspect-ratio: auto;
+  height: clamp(320px, 50svh, 700px);
+}
+/* The stages beat is a row, so its figure takes the row's own height. */
+.arc-sec--stages[data-holo="live"] .arc-floor__stage {
+  aspect-ratio: auto;
+  height: clamp(300px, 44svh, 580px);
+}
+
+/* ── The words ──────────────────────────────────────────────────────
+   Real DOM in the page's own type, tracking anchors the scene publishes
+   every frame. ⚠ NOTHING IS LETTERED ON THE OBJECT: the Intelligence Map
+   city printed its plaques through their own plates 10–13 times a sheet
+   with every containment guard green, and this register's one hard law
+   came out of it. */
+.arc-holo__labels {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* The layer is a pass-through; each label takes the pointer back, so a
+     drag anywhere between them still reaches the canvas. */
+  pointer-events: none;
+}
+.arc-holo__labels > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-holo__leads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-holo__leads path {
+  fill: none;
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+}
+.arc-holo__lbl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* ⚠ NO `transform` HERE. The layer writes the WHOLE transform inline,
+     centring included, because an inline write REPLACES the cascade's —
+     the lab's own recorded bug, one folder over. The WIDTH is written too,
+     from the solver's own metric, so the box the declutter separates and the
+     box the reader sees are one box. */
+  width: 156px;
+  opacity: 0;
+  text-align: center;
+}
+.arc-holo__lbl[data-dropped] {
+  /* A full board DROPS rather than printing through (Moira's rule). The
+     block stays in the a11y tree and in `textContent`; every string is
+     also in the beat's own copy, which is what makes dropping honest. */
+  visibility: hidden;
+}
+.arc-holo__hit {
+  display: block;
+  pointer-events: auto;
+  color: inherit;
+  text-decoration: none;
+}
+.arc-holo__key,
+.arc-holo__text {
+  display: block;
+  /* ⚠ THE HALO PAIR. A console can be opaque; a drawing cannot — the Arc
+     caption cards' own treatment over live WebGL. */
+  text-shadow:
+    0 0 3px rgb(var(--void-deep-rgb) / 0.95),
+    0 0 9px rgb(var(--void-deep-rgb) / 0.85);
+}
+.arc-holo__key {
+  font-family: var(--font-pt-mono), ui-monospace, monospace;
+  font-size: clamp(10px, 0.76vw, 12px);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-62);
+}
+.arc-holo__text {
+  font-family: var(--font-pp-neue-montreal), system-ui, sans-serif;
+  font-size: clamp(12.5px, 1.05vw, 16px);
+  line-height: 1.3;
+  color: var(--arc-ink-90);
+}
+/* ADR-106's dial law travels with the horizon: a FILLED node is a
+   person's hand, an OPEN one the model. The whole reading, no legend. */
+.arc-holo__node {
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin: 5px auto 0;
+  border: 1px solid var(--arc-ink-90);
+  border-radius: 0;
+  rotate: 45deg;
+}
+.arc-holo__lbl[data-by="person"] .arc-holo__node {
+  background: var(--arc-ink-90);
+}
+.arc-holo__lbl[data-by="model"] .arc-holo__node {
+  background: none;
+}
+
 /* ── The framing on a phone ────────────────────────────────────────
    The two panels stack; the stages' rows are the picture; the horizon is
    two lists; the curve keeps its drawing and folds its words into one

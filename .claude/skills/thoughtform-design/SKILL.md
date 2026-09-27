@@ -219,6 +219,15 @@ diagonal is data rather than decoration — and its one hard law: **nothing is
 ever lettered on a face** (labels are DOM on fractions, with leaders, and their
 non-overlap is a build gate).
 
+`references/hologram-stage-grammar.md` — the LIVE half of that register. When a
+drawing has three quantities, a floor and a record worth turning, it also
+mounts as a WebGL object the reader drags, and the flat drawing becomes the
+fallback every reader without GL gets — including the printed handout. ⚠ The
+two are **one picture**: the camera pose is chosen to reproduce the static
+basis. ⚠ Gold is the record's one lit object and the only bloom donor; the
+words stay DOM on a per-canvas channel and **drop by priority rather than
+printing through**.
+
 ---
 
 ## Layer 3 — Format archetypes
@@ -306,6 +315,7 @@ API: `references/primitives-api.md`. Figma nodes: `references/figma-codex-map.md
 | **Particles / icons**        | `references/particle-icon-grammar.md`                                                          |
 | **Diagram / connector**      | `references/celestial-diagram-grammar.md`                                                      |
 | **Height / layers / depth**  | `references/isometric-wireframe-grammar.md` — the one lawful diagonal; never letter on a face  |
+| **An object to be turned**   | `references/hologram-stage-grammar.md` — the live half; the flat drawing is its fallback       |
 | **Interpreting a reference** | `references/semantic-methodology.md` — anchor scores, translation distance, preserve/transform |
 | **Judging a candidate**      | `eval/rubric.md` — mechanical checks first, then the vision judge                              |
 
@@ -408,6 +418,7 @@ factor from `min(w,h)/1080` · both themes verified.
 | Particle icons                     | `references/particle-icon-grammar.md`       | LOW    |
 | Celestial diagram grammar          | `references/celestial-diagram-grammar.md`   | MEDIUM |
 | Isometric wireframe grammar        | `references/isometric-wireframe-grammar.md` | MEDIUM |
+| Hologram stage (the live register) | `references/hologram-stage-grammar.md`      | MEDIUM |
 | Depth corridor (home-v2)           | `references/depth-corridor-grammar.md`      | LOW    |
 | Promoted inspiration extractions   | `references/inspiration-extractions.md`     | HIGH   |
 | Philosophy                         | `references/brand-philosophy.md`            | HIGH   |

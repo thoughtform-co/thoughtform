@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -63,6 +64,24 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
           motion={motion}
         />
         <figure className="arc-curve arc-reveal" data-curve-figure="" {...rung(motion, 0.14)}>
+          {/* The relief, in three dimensions. The SVG below is the fallback
+              and the printed handout (ADR-130 U2). */}
+          <ArcHoloStageMount
+            scene={{
+              kind: "curve",
+              data: { years: section.years, reference: { tread: section.reference.tread } },
+            }}
+            labels={[
+              { id: "now", text: section.now, priority: 0 },
+              { id: "reference", text: section.reference.label, priority: 1 },
+              { id: "axis-y", text: section.axis.y, priority: 2 },
+              ...[0, 2, 4, 6]
+                .filter((k) => section.treads[k] !== undefined)
+                .map((k) => ({ id: `tread-${k}`, text: section.treads[k] as string, priority: 3 })),
+              ...section.years.map((y, i) => ({ id: `year-${i}`, text: y, priority: 4 })),
+            ]}
+            gutters={{ top: 8, bottom: 8 }}
+          />
           <div className="arc-curve__stage">
             <svg
               className="arc-curve__svg"

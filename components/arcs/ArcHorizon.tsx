@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -68,6 +69,47 @@ export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProp
           motion={motion}
         />
         <figure className="arc-hz arc-reveal" data-horizon-figure="" {...rung(motion, 0.14)}>
+          {/* Two rails and three standing gates, turned (ADR-130 U2). ⚠ The
+              dial's law travels with them: a FILLED node is a person's hand
+              and an OPEN one the model, which is the whole reading and needs
+              no legend (ADR-106). */}
+          <ArcHoloStageMount
+            scene={{
+              kind: "horizon",
+              data: {
+                operated: { steps: operated.steps },
+                agent: { gates: agent.gates.map((g) => ({ kind: g.kind, at: g.at })) },
+              },
+            }}
+            labels={[
+              { id: "operated", text: operated.label, priority: 0 },
+              { id: "agent", text: agent.label, priority: 0 },
+              /* ⚠ THE GATES OUTRANK THE TWO PEOPLE AT THE ENDS. They are what
+                 this beat argues — the agent checks, retries and asks — and on
+                 the first live shoot all three dropped while "Jij zet het doel"
+                 kept its slot. A drop rule is only as good as its order. */
+              ...agent.gates.map((g) => ({
+                id: g.kind,
+                text: g.label,
+                by: (g.kind === "ask" ? "person" : "model") as "person" | "model",
+                priority: 1,
+              })),
+              { id: "start", text: agent.start, by: "person" as const, priority: 2 },
+              { id: "end", text: agent.end, by: "person" as const, priority: 2 },
+              /* ⚠ LETTERED ONCE, on the last check. Eight repetitions of the
+                 same three words along a lane is the map city's plaque defect
+                 in a new place; the eight filled nodes already say how often. */
+              {
+                id: `check-${operated.steps - 1}`,
+                text: operated.check,
+                by: "person" as const,
+                priority: 4,
+              },
+              { id: "from", text: axis.from, priority: 5 },
+              { id: "to", text: axis.to, priority: 5 },
+            ]}
+            gutters={{ top: 8, bottom: 8 }}
+          />
           <div className="arc-hz__stage">
             <svg
               className="arc-hz__svg"
