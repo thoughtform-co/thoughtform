@@ -331,7 +331,9 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       kind: "cards",
       menuLabel: "Live",
       menuPrimary: true,
-      columns: 3,
+      // Two, not three: at the room's 1280 the house grid is two columns,
+      // and a third card would sit alone under the fold.
+      columns: 2,
       head: {
         eyebrow: "07 · Live, in het lokaal",
         title: { pre: "Eén campagnefamilie", em: "door de loop." },
@@ -354,23 +356,8 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           ],
         },
         {
-          id: "village",
-          n: "02",
-          kicker: "Brede plaat",
-          image: {
-            src: "/arcs/plopsa/plate-village-wide.webp",
-            alt: "Een gegenereerde brede plaat van Plopsaland Village",
-          },
-          title: "Plopsaland Village",
-          body: "De gevels, de groene luiken en de toren erachter. Geen tekst, geen figuur.",
-          metaRows: [
-            { label: "Oordeel", value: "Pass, drie keer" },
-            { label: "Model", value: "Nano Banana Pro" },
-          ],
-        },
-        {
           id: "chalet",
-          n: "03",
+          n: "02",
           kicker: "Brede plaat",
           image: {
             src: "/arcs/plopsa/plate-chalet-wide.webp",
