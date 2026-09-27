@@ -50,6 +50,19 @@ interface ArcConfigurationProps {
 const KEYS = ["owner", "runs", "bar", "reach", "where"] as const;
 
 export function ArcConfiguration({ section, index, motion = "reveal" }: ArcConfigurationProps) {
+  // The board's words: English unless the page letters its own.
+  const L = {
+    layer: "The layer",
+    adoption: "Adoption",
+    automation: "Automation",
+    configuration: "the intelligence configuration",
+    owner: "Who owns it",
+    runs: "What runs it",
+    bar: "The bar",
+    reach: "What it can reach",
+    where: "Where it runs",
+    ...section.labels,
+  };
   const rootRef = useRef<HTMLDivElement>(null);
   const first = section.teams[0];
 
@@ -142,7 +155,7 @@ export function ArcConfiguration({ section, index, motion = "reveal" }: ArcConfi
         >
           <div className="arc-cfg__band arc-cfg__band--layer">
             <div className="arc-cfg__lhead">
-              <strong>The layer</strong>
+              <strong>{L.layer}</strong>
               <span>{section.owner}</span>
             </div>
             <ul className="arc-cfg__layers" role="list">
@@ -161,12 +174,12 @@ export function ArcConfiguration({ section, index, motion = "reveal" }: ArcConfi
 
           <div className="arc-cfg__band arc-cfg__band--seam">
             <div className="arc-cfg__arrow arc-cfg__arrow--adopt">
-              <span className="arc-cfg__word">Adoption</span>
+              <span className="arc-cfg__word">{L.adoption}</span>
               <i aria-hidden="true" />
               <span className="arc-cfg__note">{section.seam.adoption}</span>
             </div>
             <div className="arc-cfg__arrow arc-cfg__arrow--auto">
-              <span className="arc-cfg__word">Automation</span>
+              <span className="arc-cfg__word">{L.automation}</span>
               <i aria-hidden="true" />
               <span className="arc-cfg__note">{section.seam.automation}</span>
             </div>
@@ -205,27 +218,27 @@ export function ArcConfiguration({ section, index, motion = "reveal" }: ArcConfi
             </div>
             <div className="arc-cfg__cfg" role="tabpanel" aria-live="polite">
               <div className="arc-cfg__chead">
-                <span data-cfg-out="name">{first.name}</span> · the intelligence configuration
+                <span data-cfg-out="name">{first.name}</span> · {L.configuration}
               </div>
               <dl className="arc-cfg__kv">
                 <div>
-                  <dt>Who owns it</dt>
+                  <dt>{L.owner}</dt>
                   <dd data-cfg-out="owner">{first.owner}</dd>
                 </div>
                 <div>
-                  <dt>What runs it</dt>
+                  <dt>{L.runs}</dt>
                   <dd data-cfg-out="runs">{first.runs}</dd>
                 </div>
                 <div>
-                  <dt>The bar</dt>
+                  <dt>{L.bar}</dt>
                   <dd data-cfg-out="bar">{first.bar}</dd>
                 </div>
                 <div>
-                  <dt>What it can reach</dt>
+                  <dt>{L.reach}</dt>
                   <dd data-cfg-out="reach">{first.reach}</dd>
                 </div>
                 <div>
-                  <dt>Where it runs</dt>
+                  <dt>{L.where}</dt>
                   <dd data-cfg-out="where">{first.where}</dd>
                 </div>
               </dl>

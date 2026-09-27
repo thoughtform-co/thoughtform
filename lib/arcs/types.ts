@@ -540,6 +540,22 @@ export type ArcSection = ArcSectionBase &
         next?: { name: string; work: string };
         /** The foot: three short mono lines at most. */
         kickers?: readonly string[];
+        /**
+         * The board's own words, for a page written in another language.
+         * Absent (or any key absent) ⇒ the English the board was drawn in.
+         */
+        labels?: {
+          layer?: string;
+          adoption?: string;
+          automation?: string;
+          /** The suffix after the picked team's name, e.g. "the intelligence configuration". */
+          configuration?: string;
+          owner?: string;
+          runs?: string;
+          bar?: string;
+          reach?: string;
+          where?: string;
+        };
       }
     | {
         /**

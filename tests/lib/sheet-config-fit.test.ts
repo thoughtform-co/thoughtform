@@ -72,6 +72,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
     expect(withBoard.sort()).toEqual([
       "hungry-minds-proposal",
       "perfect-ted-proposal",
+      "plopsa-workshop",
       "suri-proposal",
       "trinny-london-pitch",
     ]);
@@ -104,6 +105,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "perfect-ted-proposal": {
         rows: ["Imagery|M1|", "Composition|M2|", "Ads|M3|"],
         links: ["Claude×3", "Image generation×1", "Figma×1"],
+      },
+      /* A workshop, not a proposal: its board is the one the room builds, so
+         it carries no phase tags. */
+      "plopsa-workshop": {
+        rows: ["Creative||", "Campagne||", "Web||ghost"],
+        links: ["Claude×2", "Image generation×1"],
       },
       "trinny-london-pitch": {
         rows: [
