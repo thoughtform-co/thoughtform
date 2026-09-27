@@ -430,3 +430,12 @@ that exist only on `/`. All three are fixed and pinned in
 three flowing pages the landing's ending - the close welded up over a body
 that drifts a quarter of the rise under it - and records that the kit's
 sticky-panel smoke case was red on `main` before it.
+
+## U3 - 2026-09-27, owner: the musings head is the masthead's, and it pins (ADR-129)
+
+The split may carry the homepage masthead's survey chrome (`survey: { code,
+state }`, lettered by the renderer), and with `pin` it holds under the header
+while the body scrolls under it; the musings pages take both, and the header's
+corner prints `MUSINGS` there in place of the chapter row. The head is drawn as
+the body's sibling on every sheet, and the `head` knob does not move a survey
+head. Record: [ADR-129](129-the-musings-head-is-the-masthead-and-it-pins.md).

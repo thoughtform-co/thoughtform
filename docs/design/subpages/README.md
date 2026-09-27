@@ -235,3 +235,12 @@ the rise on the three flowing pages:
 npx vitest run tests/lib/sheet-close.test.ts tests/lib/footer-nav.test.ts
 npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop -g "the ending"
 ```
+
+The musings head (ADR-129) - the survey chrome, the pinned band, one word in the
+corner; the capture seats later sections under a pinned head, and the mechanical
+gate reports the two 8px coord stamps on `/musings` as known:
+
+```bash
+npx vitest run tests/lib/sheet-split-survey.test.tsx
+npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop -g "pinned survey head"
+```

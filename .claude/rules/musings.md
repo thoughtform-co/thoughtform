@@ -65,7 +65,11 @@ space he named. Three rungs:
 ⚠ The PAGE `/musings` is a different surface with a different grammar — the
 SHEET (ADR-114), [`.claude/rules/sheet.md`](sheet.md). This station is a
 landing STATION and answers to the corridor's grammar and the corner law, not
-to the sheet's variety law. They share exactly one thing: the record.
+to the sheet's variety law. They share exactly one thing: the record — and,
+since [ADR-129](../../sentinel/decisions/129-the-musings-head-is-the-masthead-and-it-pins.md),
+this station's head chrome, COPIED onto the page's split (`MUS / TITLE · 01`,
+`OPEN`, the two crosses, the stamps, which the test pins equal to
+`MUSINGS_COORDS`). The page pins its head; nothing here reads that.
 
 **Read first**
 
