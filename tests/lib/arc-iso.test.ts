@@ -14,22 +14,7 @@ import {
   labelCollisions,
 } from "@/components/arcs/framing/iso";
 import { frameAround } from "@/components/arcs/framing/floor";
-import {
-  CURVE_FRAME,
-  CURVE_VB,
-  NOW_A,
-  TREADS,
-  curveExtent,
-  curveLabels,
-  treadBox,
-  treadZ,
-} from "@/components/arcs/framing/curveLayout";
-import {
-  HORIZON_VB,
-  HZ_FRAME,
-  horizonExtent,
-  horizonLabels,
-} from "@/components/arcs/framing/horizonLayout";
+import { DH, DW, MARGIN, extent as curveExtent } from "@/components/arcs/framing/curveSurface";
 import {
   STAGES_FRAME,
   STAGES_VB,
@@ -58,7 +43,7 @@ const UNIT: IsoFrame = { w: 200, h: 200, ox: 0, oy: 0, k: 100, basis: ISO_BASIS_
  * 1280×720: the span's ~11–13px over the figure's scale there (the stages
  * figure is ~620px wide, the curve and the horizon ~50svh tall).
  */
-const TYPE = { stages: 17, curve: 15, horizon: 13.5 } as const;
+const TYPE = { stages: 17 } as const;
 
 const section = <K extends ArcSectionKind>(id: string) =>
   PLOPSA_WORKSHOP_ARC.sections.find((s) => s.id === id) as ArcSectionOf<K>;
@@ -153,11 +138,14 @@ describe("the stages build up", () => {
   });
 });
 
-describe("the staircase", () => {
-  it("rises once per tread, never descends, and ends at now", () => {
-    for (let k = 1; k < TREADS; k += 1) expect(treadZ(k)).toBeGreaterThan(treadZ(k - 1));
-    const last = treadBox(TREADS - 1);
-    expect(last.a + last.w).toBeCloseTo(NOW_A, 9);
+describe("the curve (Moira's surface, ported)", () => {
+  it("keeps every point of the surface MARGIN inside its box", () => {
+    for (const p of curveExtent()) {
+      expect(p.x).toBeGreaterThanOrEqual(MARGIN);
+      expect(p.x).toBeLessThanOrEqual(DW - MARGIN);
+      expect(p.y).toBeGreaterThanOrEqual(MARGIN);
+      expect(p.y).toBeLessThanOrEqual(DH - MARGIN);
+    }
   });
 });
 
@@ -204,22 +192,6 @@ describe("every drawing fits its crop, and no two labels overlap", () => {
         );
       })(),
       type: TYPE.stages,
-    },
-    {
-      name: "curve",
-      vb: CURVE_VB,
-      frame: CURVE_FRAME,
-      extent: curveExtent(),
-      labels: curveLabels(section<"curve">("de-curve")),
-      type: TYPE.curve,
-    },
-    {
-      name: "horizon",
-      vb: HORIZON_VB,
-      frame: HZ_FRAME,
-      extent: horizonExtent(),
-      labels: horizonLabels(section<"horizon">("de-horizon")),
-      type: TYPE.horizon,
     },
   ];
 

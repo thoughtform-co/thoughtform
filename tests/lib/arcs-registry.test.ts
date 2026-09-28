@@ -525,6 +525,22 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it('the Dutch copy never says "plaat" (owner, 2026-09-28)', () => {
+    /* "Don't ever use the word plaat in Dutch; we don't say that in Flemish."
+       An image is a "beeld". Walked over every string a Dutch arc carries,
+       head to close, so it holds in a panel row as well as a title; "plaats"
+       and "geplaatst" are other words and pass. */
+    const DUTCH_ARCS = new Set(["plopsa-workshop", "suri-workshop", "suri-kickoff"]);
+    const plaat = /\bplaat(je|jes)?\b|\bplaten\b/i;
+    for (const arc of ARCS) {
+      if (!DUTCH_ARCS.has(arc.slug)) continue;
+      const hits = JSON.stringify({ hero: arc.hero, sections: arc.sections })
+        .split(/"[^"]*":/)
+        .filter((chunk) => plaat.test(chunk));
+      expect(hits, `/arcs/${arc.slug}`).toEqual([]);
+    }
+  });
+
   it("the trajectory is the page's ONE chronology, and its contents (ADR-079)", () => {
     /* ⚠ THE `rollout` SECTION IS RETIRED. It plotted the SAME 2024 → now
        span the program board plots, in a second grammar, at the opposite
@@ -1074,14 +1090,28 @@ describe("arcs registry (ADR-052)", () => {
         }
 
         if (s.kind === "curve") {
-          const years = s.years.map(Number);
-          for (const y of s.years) expect(y, `${at}: a year`).toMatch(/^\d{4}$/);
-          expect(years, `${at}: four consecutive years`).toEqual(years.map((_, i) => years[0] + i));
-          expect(Number.isInteger(s.reference.tread), `${at}: reference tread`).toBe(true);
-          expect(s.reference.tread).toBeGreaterThanOrEqual(0);
-          expect(s.reference.tread).toBeLessThanOrEqual(6);
+          /* ADR-130 U5: the Moira workshop's curve, ported. Three lanes in
+             the house order, each naming at least one model with a list
+             price in and out; the other vendor's points sit on the curve. */
+          expect(
+            s.lanes.map((l) => l.id),
+            `${at}: the three lanes in order`
+          ).toEqual(["fast", "everyday", "frontier"]);
+          for (const lane of s.lanes) {
+            expect(lane.models.length, `${at}/${lane.id}: a model`).toBeGreaterThan(0);
+            for (const m of lane.models) {
+              expect(m.input > 0 && m.output > m.input, `${at}/${m.name}: prices`).toBe(true);
+            }
+          }
+          for (const series of s.others) {
+            for (const p of series.points) {
+              expect(p.t > 0 && p.t < 1, `${at}/${p.model.name}: on the curve`).toBe(true);
+              expect(p.model.output > p.model.input, `${at}/${p.model.name}: prices`).toBe(true);
+            }
+          }
+          expect(s.effort.levels, `${at}: three effort levels`).toHaveLength(3);
           expect(s.note.length, `${at}: the note is the figure's licence`).toBeGreaterThan(0);
-          noDigits({ now: s.now, treads: s.treads, axis: s.axis, ref: s.reference.label }, at);
+          noDigits({ axes: s.axes, step: s.step, effort: s.effort, show: s.prices.show }, at);
         }
 
         if (s.kind === "horizon") {

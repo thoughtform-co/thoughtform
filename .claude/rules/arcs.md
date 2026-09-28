@@ -853,6 +853,17 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   1920x1247). The three drawings share one floor and one time edge; the curve
   is a staircase, the horizon two lanes on the floor. `vandaag` lost its
   exploded stack and is three rows and four links.
+  ⚠ **U5 (2026-09-28, owner) REPLACES THE CURVE AND THE HORIZON WITH THE
+  MOIRA WORKSHOP'S OWN FIGURES** ("use that graph and copy the
+  functionalities"): `ArcCurve` is her frontier chart (lanes, models, list
+  prices, the step band, the effort surface) with `ArcCurveSteps` (two
+  buttons, `data-step` 0 → 2, drops to the front edge on first view), on
+  `framing/curveSurface.ts`; `ArcHorizon` is her two tracks. Copied, never
+  imported; house colours (gold lanes, the frontier filled, the other vendor
+  dawn, people green). The live stage serves the stages beat alone. On a frame
+  under 960px tall the curve's caption goes BESIDE the stage, or the stage
+  falls to 532px at 1280x720 and the head runs through the client mark.
+  ⚠ **NEVER "plaat" / "platen" IN DUTCH COPY** (owner): "beeld" / "beelden".
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

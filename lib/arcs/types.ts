@@ -700,31 +700,54 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE CURVE (ADR-130): the longer the task a model finishes, per
-         * release — METR's finding (the task length an agent completes half
-         * the time doubles about every seven months), drawn as the program
-         * board's step ladder on a dated axis. No vendors, no prices, no
-         * lanes: those are Loop's, and this beat is the argument, not a
-         * catalogue.
+         * THE CURVE (ADR-130 U5, owner 2026-09-28): the Moira workshop's own
+         * figure — "Each release finishes longer work, and each costs more per
+         * token" — ported. Two vendors climbing one curve, the lanes and their
+         * models as points on the front edge with a list price under every
+         * name, a warm strip for the step change, and the second dial (effort)
+         * as a surface behind the front edge. Two buttons bring the prices and
+         * the surface in; the whole figure is what no-JS, reduced motion and
+         * paper get.
          *
-         * ⚠ THE NINTH ENUMERATED EXCEPTION. The geometry is fixed (a riser
-         * every seven months, 2023 → now); the content letters the words.
-         * ⚠ The years are the one digit it letters, as on the program board.
+         * ⚠ THIS ONE BEAT NAMES MODELS AND PRICES, dated in its `note`. U1's
+         * "no vendors, no prices, no lanes" is reversed by the owner: "it
+         * doesn't show the models".
          */
         kind: "curve";
         head: ArcHead;
-        /** The dated axis' four year marks, oldest first. */
-        years: readonly [string, string, string, string];
-        /** The seat's word, e.g. "Nu". */
-        now: string;
-        /** The task length at treads one, three, five and seven, bottom up. */
-        treads: readonly [string, string, string, string];
-        /** The two designations: the vertical axis, and the ladder's pitch. */
-        axis: { y: string; along: string };
-        /** A dashed reference across the field at one tread (0 → 6): the
-         *  length of the work this room is here to hand over. */
-        reference: { label: string; tread: number };
-        /** The source and the licence: what the figure pictures. Required. */
+        /** The vertical axis and the intelligence edge. */
+        axes: { y: string; x: string };
+        /** The step change's name in the key. */
+        step: string;
+        /** The key's name for the curve the lanes sit on. */
+        key: { own: string };
+        prices: {
+          /** The first button. */
+          show: string;
+          /** The key's unit line, e.g. "per million tokens". */
+          unit: string;
+          /** The flag on a promotional price. */
+          promo: string;
+          /** The two words in a price line, e.g. "in" and "uit". */
+          words: readonly [string, string];
+        };
+        effort: {
+          /** The effort edge's word. */
+          axis: string;
+          levels: readonly [string, string, string];
+          /** The second button. */
+          show: string;
+          /** The sentence that arrives with the surface. */
+          note: string;
+        };
+        /** The three lanes on the front edge, cheapest first. */
+        lanes: readonly [ArcCurveLane, ArcCurveLane, ArcCurveLane];
+        /** The other vendor's dated points, on its own curve. */
+        others: readonly {
+          label: string;
+          points: readonly { t: number; model: ArcCurveModel }[];
+        }[];
+        /** The source and the date of every price. Required. */
         note: string;
       }
     | {
@@ -793,6 +816,24 @@ export type ArcSection = ArcSectionBase &
         alt: string;
       }
   );
+
+/* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */
+
+/** A model as the curve names it, with its list price per million tokens. */
+export interface ArcCurveModel {
+  name: string;
+  input: number;
+  output: number;
+  /** The vendor lists the price as promotional. */
+  promo?: true;
+}
+
+export interface ArcCurveLane {
+  id: "fast" | "everyday" | "frontier";
+  /** The lane's chip, e.g. "FAST". */
+  label: string;
+  models: readonly ArcCurveModel[];
+}
 
 /* ── The workshop's framing (ADR-130) ─────────────────────────────────── */
 

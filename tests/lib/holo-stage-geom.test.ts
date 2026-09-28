@@ -9,12 +9,7 @@ import {
   stageToCrop,
   toThree,
 } from "@/components/holo-stage/stageFit";
-import {
-  curveSpec,
-  horizonSpec,
-  stagesSpec,
-  type HoloStageSpec,
-} from "@/components/holo-stage/stageGeom";
+import { stagesSpec, type HoloStageSpec } from "@/components/holo-stage/stageGeom";
 import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 
 const section = <K extends string>(id: K) => {
@@ -25,18 +20,9 @@ const section = <K extends string>(id: K) => {
 
 function specs(): Record<string, HoloStageSpec> {
   const stages = section("drie-manieren");
-  const curve = section("de-curve");
-  const horizon = section("de-horizon");
   if (stages.kind !== "stages") throw new Error("stages");
-  if (curve.kind !== "curve") throw new Error("curve");
-  if (horizon.kind !== "horizon") throw new Error("horizon");
   return {
     stages: stagesSpec({ stages: stages.stages.map((s) => ({ id: s.id, lit: s.lit })) }),
-    curve: curveSpec({ years: curve.years, reference: { tread: curve.reference.tread } }),
-    horizon: horizonSpec({
-      operated: { steps: horizon.operated.steps },
-      agent: { gates: horizon.agent.gates.map((g) => ({ kind: g.kind, at: g.at })) },
-    }),
   };
 }
 

@@ -692,3 +692,62 @@ clear of the client mark. `npm run verify` green.
 Left open: the owner's live read at the room's screen; ghost blocks on the
 curve's treads (built into the plan, not taken); the stages head clears the
 mark by 11px at 1280x720, where the ADR asked for 104px of seat.
+
+## Update 5 (2026-09-28, owner) - the curve and the horizon are the Moira workshop's own figures
+
+The owner read U4 live and rejected two of its three drawings: the curve
+"is like blocks but it doesn't show the models", and for both it and the
+horizon he named the source outright - the "From prompt to agent" workshop
+in `loop-moira` (`/workshops/from-prompt-to-agent`): "use that graph and
+copy the functionalities". And no "plaat" anywhere in the Dutch: it is not
+a Flemish word for an image.
+
+### Decision 1 - the curve is Moira's frontier chart, ported whole
+
+`ArcCurve` is `Curve.tsx` copied by hand (ADR-106: copied, never
+imported): two vendors on one curve, the three lanes and their models as
+points on its front edge with a list price under every name, a warm strip
+of floor for the step change, and the second dial (effort) as the same
+curve drawn again behind it, a surface. `ArcCurveSteps` is her
+`CurveSteps`: the figure drops to its front edge the first time it is 60 %
+on screen, and two buttons bring in the prices and the surface; the server
+render, no-JS, reduced motion and paper get the whole figure. The geometry
+is `framing/curveSurface.ts` (her `depth.ts` + `curve.ts`). The record
+changed shape to carry it: `lanes` (fast · everyday · frontier, each with
+models and prices), `others` (the other vendor's points), `prices`,
+`effort`, `axes`, `key`; the staircase fields, `curveLayout.ts` and the
+hologram scene are deleted.
+
+⚠ THE COLOURS ARE THE HOUSE'S: Claude and its lanes gold, the frontier
+the one filled chip and dot among outlines (ADR-089 U4), the other vendor
+dawn, the step a gold wash. Moira's lane hues do not travel; green is the
+human here.
+
+### Decision 2 - the horizon is Moira's two tracks, ported whole
+
+`ArcHorizon` is `Horizon.tsx` copied by hand: a person after every step on
+the tool's track; one long gold run between two people on the agent's,
+with its three gates, the retry loop and the person it stops to ask. The
+people are green (the house's human). The record is unchanged, so the
+Pandora proposal's horizon takes the same figure. `horizonLayout.ts` and
+the hologram scene are deleted; the live stage (U4) now serves the stages
+beat alone.
+
+### Decision 3 - on a short frame the curve's caption goes beside it
+
+Under the stage at the stage's width, the key and the two notes ran to
+five lines at 1280x720, the stage fell to 532px (Moira's own is about 630
+there) and the head rode up through the client mark. Below 960px of
+height the caption is a column beside the stage (64 % / the rest), the
+buttons sit at the top of that column and the intelligence word takes the
+stage's bottom-right corner. Measured: stage 650x354 at 1280x720, 733x399
+at 1440x800, 881x480 at 1920x1080, 1187x647 at 1920x1247; head eyebrow at
+71 / 73 / 100 / 91; zero word-on-word collisions at all four in both
+themes; every beat exactly one viewport.
+
+The horizon's check labels take `--track-label` (.08em, Moira's own):
+at the eyebrow rung the eight "jij kijkt na" ran together at 1280x720.
+
+Left open: the owner's read on the room's screen. `arc-marks` is red on
+the Pandora arc from 79bea85c (its `close` lost its menu label); not this
+pass.

@@ -6295,8 +6295,6 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 /* A figure's dot matrix: the head's own lift, masked so it fades rather
    than stops. On a pseudo so the mask never reaches the marks. */
 .arc-floor__stage::before,
-.arc-curve__stage::before,
-.arc-hz__stage::before,
 .arc-q__stage::before {
   content: "";
   position: absolute;
@@ -6417,9 +6415,7 @@ a.arc-readout__hit:focus-visible {
    under `non-scaling-stroke` the browser ignores `pathLength`, and the draw
    breaks into partial arcs instead of running once. So the hairlines are one
    device pixel at every width and the runs are scaled strokes, on purpose. */
-.arc-floor,
-.arc-curve,
-.arc-hz {
+.arc-floor {
   /* ⚠ THE DATUM IS THE `--arc-rule` RUNG, NOT `--arc-rule-dash`. A dashed line
      already loses half its ink to the gaps, so at .10 the plane a machine
      stands on measured as nothing on the still — the drawing read as three
@@ -6449,57 +6445,36 @@ a.arc-readout__hit:focus-visible {
   /* The words sit over the floor's grid, so they carry the ground as a halo. */
   --arc-iso-halo: 0 0 3px var(--void, #0a0908), 0 0 8px var(--void, #0a0908);
 }
-.arc-floor__face,
-.arc-curve__face {
+.arc-floor__face {
   stroke: none;
 }
-.arc-floor__face[data-face="top"],
-.arc-curve__face[data-face="top"] {
+.arc-floor__face[data-face="top"] {
   fill: var(--arc-iso-top);
 }
-.arc-floor__face[data-face="left"],
-.arc-curve__face[data-face="left"] {
+.arc-floor__face[data-face="left"] {
   fill: var(--arc-iso-left);
 }
-.arc-floor__face[data-face="right"],
-.arc-curve__face[data-face="right"] {
+.arc-floor__face[data-face="right"] {
   fill: var(--arc-iso-right);
 }
-.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="top"],
-.arc-curve__tread[data-curve-lit] .arc-curve__face[data-face="top"] {
+.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="top"] {
   fill: var(--arc-iso-gold-top);
 }
-.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="left"],
-.arc-curve__tread[data-curve-lit] .arc-curve__face[data-face="left"] {
+.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="left"] {
   fill: var(--arc-iso-gold-left);
 }
-.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="right"],
-.arc-curve__tread[data-curve-lit] .arc-curve__face[data-face="right"] {
+.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="right"] {
   fill: var(--arc-iso-gold-right);
 }
-.arc-curve__edge {
-  fill: none;
-  stroke: var(--arc-iso-edge);
-  stroke-width: 1.2;
-  stroke-linejoin: miter;
-  vector-effect: non-scaling-stroke;
-}
-.arc-curve__tread[data-curve-lit] .arc-curve__edge {
-  stroke: var(--arc-iso-gold);
-  stroke-width: 1.6;
-}
-.arc-floor__grat,
-.arc-curve__grat,
-.arc-hz__grat {
+
+.arc-floor__grat {
   fill: none;
   stroke: var(--arc-iso-grid);
   stroke-width: 1;
   stroke-dasharray: 2 4;
   vector-effect: non-scaling-stroke;
 }
-.arc-floor__hidden,
-.arc-curve__hidden,
-.arc-hz__hidden {
+.arc-floor__hidden {
   fill: none;
   stroke: var(--arc-iso-hidden);
   stroke-width: 1;
@@ -6507,22 +6482,14 @@ a.arc-readout__hit:focus-visible {
   vector-effect: non-scaling-stroke;
 }
 .arc-floor__tie,
-.arc-curve__tie,
-.arc-hz__drop,
-.arc-floor__leader,
-.arc-curve__leader,
-.arc-hz__leader {
+.arc-floor__leader {
   fill: none;
   stroke: var(--arc-iso-tie);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.arc-hz__drop {
-  stroke-dasharray: 2 5;
-}
-.arc-floor__mote,
-.arc-curve__mote,
-.arc-hz__mote {
+
+.arc-floor__mote {
   fill: var(--arc-iso-dust);
 }
 
@@ -6556,8 +6523,6 @@ a.arc-readout__hit:focus-visible {
   width: 100%;
 }
 .arc-floor__svg,
-.arc-curve__svg,
-.arc-hz__svg,
 .arc-q__wires {
   position: absolute;
   inset: 0;
@@ -6641,286 +6606,624 @@ a.arc-readout__hit:focus-visible {
   min-width: 0;
 }
 
-/* ── 03 · The curve ─────────────────────────────────────────────────
-   The program board's step ladder on a dated graticule: seven treads, a
-   riser every seven months, the seat at now the one gold mark. */
-.arc-curve {
-  --arc-curve-grid: var(--arc-rule-dash);
-  --arc-curve-tread: var(--arc-edge);
-  --arc-curve-axis: var(--arc-seam);
-  --arc-curve-ink: var(--arc-ink-62);
-  --arc-curve-ref: var(--arc-ink-40);
-  margin: 0;
-}
-/* ⚠ `--vb-ar` IS THE LAYOUT'S DERIVED CROP, written inline by the renderer. */
-.arc-curve__stage {
-  position: relative;
-  /* ⚠ 38svh, SOLVED FROM THE HEAD, NOT THE DRAWING: at 1280x720 a taller
-     figure centres the beat's head up onto the client mark's hairline (the
-     first U4 shoot measured the eyebrow at y 53, through it). */
-  width: min(100%, calc(38svh * var(--vb-ar, 2)));
-  aspect-ratio: var(--vb-ar, 2);
-  margin-inline: auto;
-}
-.arc-curve__contour {
-  fill: none;
-  stroke: var(--arc-iso-tie);
-  stroke-width: 1;
-  stroke-dasharray: 2 4;
-  vector-effect: non-scaling-stroke;
-}
-.arc-curve__axis {
-  fill: none;
-  stroke: var(--arc-curve-axis);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.arc-curve__ref {
-  fill: none;
-  stroke: var(--arc-curve-ref);
-  stroke-width: 1;
-  stroke-dasharray: 4 5;
-  vector-effect: non-scaling-stroke;
-}
-.arc-curve__lbl,
-.arc-curve__desig {
-  position: absolute;
-  left: calc(var(--ax, 0) * 100%);
-  top: calc(var(--at, 0) * 100%);
-  z-index: 2;
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-weight: var(--weight-text);
-  font-size: clamp(8.5px, 0.6vw, 11px);
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  white-space: nowrap;
-  pointer-events: none;
-  text-shadow: var(--arc-iso-halo);
-}
-.arc-curve__lbl--tread {
-  translate: 0 -50%;
-  color: var(--arc-ink-50);
-}
-.arc-curve__lbl--year {
-  translate: -50% 0;
-  color: var(--arc-ink-50);
-}
-.arc-curve__lbl--now {
-  translate: -50% 0;
-  color: var(--gold-ink, #caa554);
-}
-.arc-curve__lbl--ref {
-  translate: -100% -50%;
-  width: 13em;
-  white-space: normal;
-  text-align: right;
-  color: var(--arc-ink-62);
-}
-.arc-curve__desig {
-  color: var(--arc-ink-40);
-}
-.arc-curve__desig--y {
-  translate: -50% -100%;
-}
-/* ⚠ SET FROM ITS RIGHT EDGE. The seat is the crop's own right margin and the
-   run is 36 characters, so a left-anchored span walks straight out of the
-   stage — past the right rail, where nothing clips it and no box reports it. */
-.arc-curve__desig--along {
-  translate: -50% -50%;
-  rotate: var(--rot, 0deg);
-  color: var(--arc-ink-50);
-}
-.arc-curve__phone {
-  display: none;
-  margin: 12px 0 0;
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-weight: var(--weight-text);
-  font-size: 9.5px;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--arc-ink-50);
-}
+/* ── 03 · The curve: Moira's figure, ported (ADR-130 U5) ───────────
+   The "From prompt to agent" workshop's frontier chart, copied by hand
+   (`loop-moira/components/workshops/visuals/Curve.tsx` + its sheet): two
+   vendors climbing one curve, the lanes and their models as points on its
+   front edge with a list price under every name, a warm strip of floor for
+   the step change, and the second dial (effort) as the same curve drawn
+   again behind it, a surface. Two buttons bring the prices and the surface
+   in (`ArcCurveSteps`, `data-step` 0 → 2).
 
-/* ── 05 · The horizon ───────────────────────────────────────────────
-   Two tracks on one axis. A FILLED node is a person's hand, an OPEN one
-   the model (the dial's law, ADR-106); the long run is the one gold. */
-.arc-hz {
-  --arc-hz-grid: var(--arc-rule-dash);
-  --arc-hz-step: var(--arc-seam);
-  --arc-hz-run: var(--gold-line);
-  --arc-hz-axis: var(--arc-rule);
-  --arc-hz-hand: var(--arc-ink-90);
-  --arc-hz-open: var(--arc-ink-60);
+   ⚠ THE COLOURS ARE THE HOUSE'S, NOT MOIRA'S: Claude and its lanes in gold,
+   the frontier the one FILLED chip and dot among outlines (ADR-089 U4), the
+   other vendor in dawn, the step a gold wash. Moira's lane hues do not
+   travel — green is the human on this site and nothing else.
+
+   ⚠ THE STAGE HOLDS THE DRAWING'S ASPECT (780 / 425) and takes the height a
+   frame has left once the head and the caption are paid, so the beat fits
+   one viewport and the head clears the client mark at 1280×720. The SVG is
+   `preserveAspectRatio="none"` inside a box of exactly its own aspect, and
+   every word is HTML placed over it by percentage, so the type never
+   scales. */
+.arc-cv {
+  --arc-cv-own: var(--gold-line);
+  --arc-cv-own-ink: var(--gold-ink, #caa554);
+  --arc-cv-other: var(--arc-ink-50);
+  --arc-cv-ground: var(--void, #0a0908);
+  --arc-cv-halo: 0 0 3px var(--void, #0a0908), 0 0 8px var(--void, #0a0908);
+  --arc-cv-w: min(100%, calc((100svh - 600px) * 1.8353));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 1.8vh, 16px);
   margin: 0;
 }
-/* ⚠ `--vb-ar` IS THE LAYOUT'S DERIVED CROP, written inline by the renderer. */
-.arc-hz__stage {
+.arc-cv__stage {
   position: relative;
-  /* The gate sentences are measured against the stage, not the viewport:
-     three gates sit a tenth of the stage apart at every size. */
-  container-type: inline-size;
-  width: min(100%, calc(38svh * var(--vb-ar, 2.6)));
-  aspect-ratio: var(--vb-ar, 2.6);
-  margin-inline: auto;
+  width: var(--arc-cv-w);
+  aspect-ratio: 780 / 425;
 }
-.arc-hz__axis {
+.arc-cv__plot {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.arc-cv__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-cv__axis,
+.arc-cv__floor {
   fill: none;
   stroke: var(--arc-seam);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.arc-hz__step {
+.arc-cv__grid {
   fill: none;
-  stroke: var(--arc-hz-step);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-/* A gate is an open hoop the run passes through — dawn, because the frame is
-   the model's own check and the filled node inside it is what says "a person". */
-.arc-hz__gate-frame {
-  fill: none;
-  stroke: var(--arc-iso-edge);
-  stroke-width: 1.2;
-  vector-effect: non-scaling-stroke;
-}
-.arc-hz__run {
-  fill: none;
-  stroke: var(--arc-hz-run);
-  stroke-width: 2.4;
-}
-.arc-hz__loop {
-  fill: none;
-  stroke: var(--arc-hz-run);
+  stroke: var(--arc-rule);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.arc-hz__node {
+/* The second dial: a sheet between each pair of effort lines, fading to the
+   back, and the mesh over it. It rises in on the second step. */
+.arc-cv__depth {
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.arc-cv__sheet {
+  fill: var(--arc-cv-own);
+  stroke: none;
+}
+.arc-cv__mesh {
+  fill: none;
+  stroke: var(--arc-cv-own);
+  stroke-width: 1;
+  opacity: 0.35;
+  vector-effect: non-scaling-stroke;
+}
+.arc-cv__mesh[data-level="true"] {
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+/* Each lane, from its lowest effort to its highest. */
+.arc-cv__riser {
+  fill: none;
+  stroke: var(--arc-cv-own);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+.arc-cv__tip {
+  fill: var(--arc-cv-ground);
+  stroke: var(--arc-cv-own);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.arc-cv__tip[data-lane="frontier"] {
+  fill: var(--arc-cv-own);
+}
+.arc-cv__tick {
+  fill: var(--arc-ink-50);
+}
+.arc-cv__line {
+  fill: none;
+  stroke: var(--arc-cv-own);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-cv__line[data-series="other"] {
+  stroke: var(--arc-cv-other);
+  stroke-width: 1.75;
+}
+.arc-cv__dot {
+  fill: var(--arc-cv-ground);
+  stroke: var(--arc-cv-own);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.arc-cv__dot[data-lane="frontier"] {
+  fill: var(--arc-cv-own);
+}
+.arc-cv__dot[data-series="other"] {
+  fill: var(--arc-cv-other);
+  stroke: var(--arc-cv-other);
+}
+/* The step change: a warm strip of floor under the frontier points. */
+.arc-cv__band {
+  fill: var(--arc-gold-wash);
+}
+.arc-cv__bandedge {
+  fill: none;
+  stroke: var(--arc-cv-own);
+  stroke-width: 1;
+  opacity: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+.arc-cv__tag {
   position: absolute;
-  left: calc(var(--ax, 0) * 100%);
-  top: calc(var(--at, 0) * 100%);
-  z-index: 3;
-  width: 8px;
-  height: 8px;
-  translate: -50% -50%;
-  border: 1px solid var(--arc-hz-open);
-  border-radius: 50%;
-  background: var(--void, #0a0908);
-}
-.arc-hz__node[data-horizon-by="person"] {
-  border-color: var(--arc-hz-hand);
-  background: var(--arc-hz-hand);
-}
-.arc-hz__track,
-.arc-hz__check,
-.arc-hz__axislbl {
-  position: absolute;
-  left: calc(var(--ax, 0) * 100%);
-  top: calc(var(--at, 0) * 100%);
-  z-index: 2;
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-weight: var(--weight-text);
-  font-size: clamp(8.5px, 0.6vw, 11px);
-  line-height: 1.35;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  pointer-events: none;
-  text-shadow: var(--arc-iso-halo);
-}
-/* ⚠ SET FROM ITS RIGHT EDGE, so the lane's name ends where the lane begins.
-   Left-anchored it ran straight over its own rail and its first node. */
-.arc-hz__track {
-  translate: -100% -50%;
-  width: 12em;
-  text-align: right;
-  font-size: clamp(9px, 0.65vw, 12px);
-  color: var(--arc-ink-62);
-}
-.arc-hz__track[data-horizon-track="agent"] {
-  color: var(--gold-ink, #caa554);
-}
-.arc-hz__check {
-  translate: -50% -100%;
-  white-space: nowrap;
-  color: var(--arc-ink-40);
-}
-.arc-hz__axislbl {
-  white-space: nowrap;
-  color: var(--arc-ink-40);
-}
-.arc-hz__axislbl--end {
-  translate: 0 -50%;
-}
-.arc-hz__gate,
-.arc-hz__person {
-  position: absolute;
-  left: calc(var(--ax, 0) * 100%);
-  top: calc(var(--at, 0) * 100%);
-  z-index: 2;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: var(--weight-text);
-  line-height: 1.3;
-  pointer-events: none;
-  text-shadow: var(--arc-iso-halo);
-}
-.arc-hz__gate {
-  translate: -50% -100%;
-  width: max-content;
-  /* ⚠ THREE GATES SHARE ONE LANE and sit ~200px apart at the binding
-     viewport, so the label's measure is what keeps them off each other —
-     wrapped to two short lines rather than run out to 240px, where all three
-     printed through their neighbours. */
-  /* ⚠ THE MEASURE IS THE GATES' OWN PITCH (9.9 % of the crop), less a gap:
-     at 1280x720 the stage is ~736px wide, the gates 73px apart, and a
-     viewport-sized measure printed each sentence through its neighbour. */
-  max-width: min(118px, 9cqi);
-  font-size: clamp(11px, 1.3cqi, 15px);
-  text-align: center;
-  color: var(--arc-ink-90);
-}
-.arc-hz__person {
-  width: max-content;
-  max-width: clamp(130px, 9.5vw, 180px);
-  font-size: clamp(12px, 0.82vw, 15px);
-  color: var(--arc-ink-70);
-}
-/* The start's sentence ends at the front corner; the end's starts under its node. */
-.arc-hz__person:not(.arc-hz__person--end) {
-  translate: -100% 0;
-  text-align: right;
-}
-.arc-hz__lists {
-  display: none;
-}
-.arc-hz__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
-  border: 1px solid var(--arc-edge);
-  background: var(--arc-plate);
+  gap: 3px;
+  white-space: nowrap;
+  text-shadow: var(--arc-cv-halo);
 }
-.arc-hz__listhead {
+/* The other vendor's tags stand over the surface, so they carry the ground
+   under their words. */
+.arc-cv__tag[data-series="other"] {
+  padding: 3px 6px;
+  background: color-mix(in srgb, var(--void, #0a0908) 88%, transparent);
+  text-shadow: none;
+}
+.arc-cv__tag[data-place="over"] {
+  align-items: center;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.arc-cv__tag[data-place="out"] {
+  align-items: flex-start;
+  text-align: left;
+}
+.arc-cv__tag[data-place="over"] .arc-cv__name {
+  align-items: center;
+}
+.arc-cv__tag[data-place="over"] .arc-cv__price {
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.arc-cv__tag[data-place="out"] .arc-cv__name {
+  align-items: flex-start;
+}
+/* A lane: an outlined chip, and the frontier the one filled among them. */
+.arc-cv__lanetag {
+  align-self: flex-start;
+  padding: 2px 8px;
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
   font-weight: var(--weight-text);
-  font-size: 9.5px;
+  line-height: 1.3;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-cv-own-ink);
+  border: 1px solid var(--arc-cv-own);
+  background: var(--arc-cv-ground);
+  text-shadow: none;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.arc-cv__lanetag[data-lane="frontier"] {
+  color: var(--gold-contrast, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.arc-cv__name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-90);
+}
+/* The lanes low on the curve have the floor's width below them: each name
+   keeps its price on its own row, so the tag stays short enough. */
+.arc-cv__tag[data-row="true"] .arc-cv__name {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+}
+.arc-cv__price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: var(--weight-lit);
+  font-variant-numeric: tabular-nums;
+  color: var(--arc-cv-own-ink);
+  transition:
+    opacity 450ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 450ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.arc-cv__tag[data-series="other"] .arc-cv__price {
+  color: var(--arc-ink-70);
+}
+.arc-cv__promo {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: var(--weight-text);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
-.arc-hz__list[data-horizon-track="agent"] .arc-hz__listhead {
+.arc-cv[data-step="0"] .arc-cv__price,
+.arc-cv[data-step="0"] .arc-cv__unit {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.arc-cv__unit,
+.arc-cv__effort,
+.arc-cv__level,
+.arc-cv__note {
+  transition: opacity 450ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.arc-cv[data-step="0"] .arc-cv__depth,
+.arc-cv[data-step="1"] .arc-cv__depth,
+.arc-cv[data-step="0"] .arc-cv__effort,
+.arc-cv[data-step="1"] .arc-cv__effort,
+.arc-cv[data-step="0"] .arc-cv__level,
+.arc-cv[data-step="1"] .arc-cv__level,
+.arc-cv[data-step="0"] .arc-cv__note,
+.arc-cv[data-step="1"] .arc-cv__note {
+  opacity: 0;
+}
+/* The two buttons, stacked in the stage's empty top-right corner. */
+.arc-cv__shows {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.arc-cv__show {
+  padding: 7px 11px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10.5px;
+  font-weight: var(--weight-text);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-cv-own-ink);
+  background: var(--arc-cv-ground);
+  border: 1px solid var(--arc-cv-own);
+  border-radius: 0;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.arc-cv__show:hover {
+  background: var(--arc-gold-wash);
+}
+.arc-cv__show[aria-pressed="true"] {
+  color: var(--gold-contrast, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.arc-cv__show:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.arc-cv__axislabel,
+.arc-cv__level,
+.arc-cv__key {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10.5px;
+  font-weight: var(--weight-text);
+  line-height: 1.3;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+}
+.arc-cv__axislabel {
+  position: absolute;
+  color: var(--arc-ink-62);
+  white-space: nowrap;
+  text-shadow: var(--arc-cv-halo);
+}
+.arc-cv__level {
+  position: absolute;
+  color: var(--arc-cv-own-ink);
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  text-shadow: var(--arc-cv-halo);
+}
+.arc-cv__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: var(--arc-cv-w);
+}
+.arc-cv__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  color: var(--arc-ink-62);
+}
+.arc-cv__keyitem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.arc-cv__swatch {
+  display: inline-block;
+  width: 12px;
+  height: 8px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.arc-cv__swatch[data-swatch="own"] {
+  background: var(--arc-cv-own);
+}
+.arc-cv__swatch[data-swatch="other"] {
+  background: var(--arc-cv-other);
+}
+.arc-cv__swatch[data-swatch="step"] {
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold-line) 45%, transparent);
+}
+.arc-cv__captionline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+/* On its own line: before the surface is up it is a blank line above the
+   caption, never a gap at the start of it. */
+.arc-cv__note {
+  display: block;
+  color: var(--arc-ink-90);
+}
+/* ⚠ ON A SHORT FRAME THE CAPTION GOES BESIDE THE STAGE, NOT UNDER IT. Under
+   it, at the stage's own width, the key and the two notes ran to five lines
+   and the stage fell to 532px at 1280x720 (Moira's own is ~630 there), with
+   the head pushed up through the client mark. Beside it, the stage takes
+   Moira's scale and the head keeps its seat. */
+@media (min-width: 1100px) and (max-height: 959px) {
+  .arc-cv {
+    --arc-cv-w: min(64%, calc((100svh - 366px) * 1.8353));
+    display: grid;
+    grid-template-columns: var(--arc-cv-w) minmax(0, 1fr);
+    align-items: end;
+    column-gap: clamp(20px, 2.4vw, 40px);
+  }
+  .arc-cv__stage,
+  .arc-cv__caption {
+    width: 100%;
+  }
+  .arc-cv__caption {
+    gap: 12px;
+  }
+  .arc-cv__key {
+    flex-direction: column;
+    gap: 7px;
+  }
+  /* The buttons leave the stage for the caption column's empty top, and the
+     intelligence word takes the stage's bottom-right corner (Moira's own
+     narrow seat): at this scale both sat on the frontier tags. */
+  .arc-cv__shows {
+    right: auto;
+    left: calc(100% + clamp(20px, 2.4vw, 40px));
+    align-items: flex-start;
+  }
+  .arc-cv__axislabel[data-axis="x"] {
+    top: auto !important;
+    right: 0;
+    bottom: 0;
+    left: auto !important;
+  }
+}
+
+/* ── 05 · The horizon: Moira's figure, ported (ADR-130 U5) ─────────
+   The same stretch of time, twice (`loop-moira/.../Horizon.tsx`): on the
+   top track a person operates a tool and checks after every step, the
+   people repeating until the repetition is the point; on the bottom track
+   an agent runs one long task between a person who sets the goal and one
+   who judges the result, passing three gates of its own. The long gold run
+   is the one bright object; the people are green (the house's human).
+   A picture of the argument, not a measurement: the axis has two words and
+   no scale. */
+.arc-hzm {
+  --arc-hzm-halo: 0 0 3px var(--void, #0a0908), 0 0 8px var(--void, #0a0908);
+  --arc-hzm-w: min(100%, calc((100svh - 440px) * 3.3333));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.arc-hzm__stage {
+  position: relative;
+  width: var(--arc-hzm-w);
+  aspect-ratio: 1200 / 360;
+}
+.arc-hzm__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-hzm__steps line {
+  stroke: var(--arc-ink-40);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzm__run {
+  stroke: var(--gold-line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzm__gates line {
+  stroke: var(--gold-ink, #caa554);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzm__loop {
+  fill: none;
+  stroke: var(--gold-line);
+  stroke-width: 1.75;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzm__axis {
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzm__person circle,
+.arc-hzm__person path {
+  fill: var(--atreides-ink, #7a9e6a);
+}
+.arc-hzm__track,
+.arc-hzm__gate,
+.arc-hzm__who {
+  position: absolute;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  line-height: 1.25;
+  text-shadow: var(--arc-hzm-halo);
+}
+.arc-hzm__track {
+  left: 0;
+  width: 12.5%;
+  font-size: 14px;
+  font-weight: var(--weight-lit);
+  color: var(--arc-ink-90);
+  transform: translateY(-50%);
+}
+.arc-hzm__track[data-track="agent"] {
   color: var(--gold-ink, #caa554);
 }
-.arc-hz__listline,
-.arc-hz__liststeps {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--arc-ink-80);
+/* ⚠ THE BASE RUNG, NOT THE EYEBROW'S (Moira's own .08em): eight checks share
+   one track, ~95px apart at 1280x720, and at .15em "JIJ KIJKT NA" ran into
+   its neighbour. */
+.arc-hzm__check,
+.arc-hzm__axislabel {
+  position: absolute;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: var(--weight-text);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: var(--arc-hzm-halo);
 }
-.arc-hz__liststeps {
-  padding-left: 18px;
+.arc-hzm__check {
+  color: var(--arc-ink-62);
+  transform: translateX(-50%);
+}
+.arc-hzm__gate {
+  font-size: 14px;
+  font-weight: var(--weight-lit);
+  text-align: center;
+  color: var(--gold-ink, #caa554);
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.arc-hzm__who {
+  max-width: 24%;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--arc-ink-90);
+}
+.arc-hzm__who[data-at="end"] {
+  text-align: right;
+}
+.arc-hzm__axislabel {
+  color: var(--arc-ink-50);
+}
+.arc-hzm__lists {
+  display: none;
+}
+.arc-hzm__caption {
+  max-width: 70ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--arc-ink-62);
+}
+
+@media screen and (max-width: 1099px) {
+  .arc-cv__name,
+  .arc-cv__tag[data-series="other"] {
+    display: none;
+  }
+  .arc-cv__axislabel[data-axis="x"] {
+    top: auto !important;
+    right: 0;
+    bottom: 0;
+    left: auto !important;
+  }
+}
+@media screen and (max-width: 720px) {
+  .arc-hzm__stage {
+    display: none;
+  }
+  .arc-hzm__lists {
+    display: grid;
+    gap: 16px;
+    width: 100%;
+  }
+  .arc-hzm__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--arc-edge);
+    background: var(--arc-plate);
+  }
+  .arc-hzm__list[data-track="agent"] {
+    border-color: var(--gold-line);
+  }
+  .arc-hzm__listhead {
+    font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+    font-size: 10.5px;
+    letter-spacing: var(--track-eyebrow);
+    text-transform: uppercase;
+    color: var(--arc-ink-62);
+  }
+  .arc-hzm__list[data-track="agent"] .arc-hzm__listhead {
+    color: var(--gold-ink, #caa554);
+  }
+  .arc-hzm__listline,
+  .arc-hzm__liststeps {
+    margin: 0;
+    padding-left: 18px;
+    font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--arc-ink-80);
+  }
+  .arc-hzm__listline {
+    padding-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arc-cv__price,
+  .arc-cv__unit,
+  .arc-cv__depth,
+  .arc-cv__effort,
+  .arc-cv__level,
+  .arc-cv__note {
+    transition: none;
+  }
+}
+@media print {
+  .arc-cv__show {
+    display: none !important;
+  }
+  .arc-cv .arc-cv__price,
+  .arc-cv .arc-cv__unit {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .arc-cv .arc-cv__depth,
+  .arc-cv .arc-cv__effort,
+  .arc-cv .arc-cv__level,
+  .arc-cv .arc-cv__note {
+    opacity: 1 !important;
+  }
+  .arc-cv,
+  .arc-hzm {
+    --arc-cv-w: 86%;
+    --arc-hzm-w: 100%;
+  }
 }
 
 /* ── 06 · One piece of work, six questions around it ────────────────
@@ -7100,21 +7403,6 @@ a.arc-readout__hit:focus-visible {
   object-fit: cover;
 }
 
-/* ── The framing's one motion: two lines draw on, once ─────────────
-   The horizon's run and the curve's ladder, on the arrival the reveal
-   observer already writes (`.is-in`). Without JS, and under reduced
-   motion, both render drawn. */
-@media (prefers-reduced-motion: no-preference) {
-  .is-arc-js .arc-hz .arc-hz__run {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-    transition: stroke-dashoffset 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.35s;
-  }
-  .is-arc-js .arc-hz.is-in .arc-hz__run {
-    stroke-dashoffset: 0;
-  }
-}
-
 /* ── The framing beats, LIVE (ADR-130 U2, re-cut in U4) ─────────────
    The drawings above are what every reader without WebGL gets — reduced
    motion, <=900px, no GL, a dead canvas, and the printed handout.
@@ -7125,9 +7413,7 @@ a.arc-readout__hit:focus-visible {
    the fallback's DOM words stay exactly where they are. Live hides the SVG's
    geometry and keeps its words, its leaders and the horizon's nodes: one set
    of words, never a second tracked layer over the first. */
-.arc-sec--stages[data-holo="live"] .arc-floor__svg > :not(.arc-floor__leader),
-.arc-sec--curve[data-holo="live"] .arc-curve__svg,
-.arc-sec--horizon[data-holo="live"] .arc-hz__svg > :not(.arc-hz__leader) {
+.arc-sec--stages[data-holo="live"] .arc-floor__svg > :not(.arc-floor__leader) {
   visibility: hidden;
 }
 /* ⚠ NO BLEED, AND NO POINTER. The shared `.arc-holo[data-live]` negates the
@@ -7135,15 +7421,11 @@ a.arc-readout__hit:focus-visible {
    pointer for its drag; these stages are the size of their crop and nothing
    on them turns (owner: "how … should people be able to discern what this
    represents?"). */
-.arc-sec--stages[data-holo="live"] .arc-holo[data-live],
-.arc-sec--curve[data-holo="live"] .arc-holo[data-live],
-.arc-sec--horizon[data-holo="live"] .arc-holo[data-live] {
+.arc-sec--stages[data-holo="live"] .arc-holo[data-live] {
   inset: 0;
   pointer-events: none;
 }
-.arc-sec--stages .arc-holo__gl,
-.arc-sec--curve .arc-holo__gl,
-.arc-sec--horizon .arc-holo__gl {
+.arc-sec--stages .arc-holo__gl {
   cursor: auto;
 }
 
@@ -7253,24 +7535,10 @@ a.arc-readout__hit:focus-visible {
   .arc-floor {
     grid-template-columns: minmax(0, 1fr);
   }
-  .arc-floor__figure,
-  .arc-hz__stage {
+  .arc-floor__figure {
     display: none;
   }
-  .arc-hz__lists {
-    display: grid;
-    gap: 14px;
-  }
-  .arc-curve__stage {
-    width: 100%;
-  }
-  .arc-curve__lbl--tread,
-  .arc-curve__desig {
-    display: none;
-  }
-  .arc-curve__phone {
-    display: block;
-  }
+
   .arc-q__stage {
     display: flex;
     flex-direction: column;

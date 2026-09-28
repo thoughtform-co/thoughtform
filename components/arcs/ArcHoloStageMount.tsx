@@ -31,14 +31,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
-import {
-  curveSpec,
-  horizonSpec,
-  stagesSpec,
-  type CurveData,
-  type HorizonData,
-  type StagesData,
-} from "@/components/holo-stage/stageGeom";
+import { stagesSpec, type StagesData } from "@/components/holo-stage/stageGeom";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { probeWebGL } from "@/lib/webgl/probe";
 
@@ -50,10 +43,10 @@ import { ArcHoloLabels, type HoloLabelSpec } from "./ArcHoloLabels";
    terminal grammar's 960. Both numbers exist on this surface. */
 const STAGE_MEDIA = "(min-width: 901px) and (prefers-reduced-motion: no-preference)";
 
-export type StageScene =
-  | { kind: "stages"; data: StagesData }
-  | { kind: "curve"; data: CurveData }
-  | { kind: "horizon"; data: HorizonData };
+/* ⚠ ONE SCENE SINCE ADR-130 U5: the curve and the horizon are the Moira
+   workshop's own flat figures now (owner, 2026-09-28), so only the three
+   stages go live. */
+export type StageScene = { kind: "stages"; data: StagesData };
 
 const HoloStageCanvas = dynamic(
   () => import("@/components/holo-stage/HoloStageCanvas").then((m) => m.HoloStageCanvas),
@@ -88,16 +81,7 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
   const [live, setLive] = useState(false);
 
   const channel = useMemo(() => createAnchorChannel(), []);
-  const spec = useMemo(() => {
-    switch (scene.kind) {
-      case "stages":
-        return stagesSpec(scene.data);
-      case "curve":
-        return curveSpec(scene.data);
-      case "horizon":
-        return horizonSpec(scene.data);
-    }
-  }, [scene]);
+  const spec = useMemo(() => stagesSpec(scene.data), [scene]);
 
   useEffect(() => {
     /* eslint-disable-next-line react-hooks/set-state-in-effect --
