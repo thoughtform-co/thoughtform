@@ -33,6 +33,14 @@ import type { ArcDef } from "../types";
  * frontiers of AI creative"); this page looks back at what was done at Loop,
  * so each `proof-card` carries its own `title` ("We pushed …"). The record's
  * lines are untouched: they are the Dublin keynote's, word for word.
+ *
+ * ⚠ THE SPINE SINCE THE OWNER'S 2026-09-28 READ: Loop (part one) · the turn ·
+ * the studio today and configured (the board) · THE GOAL (a `horizon`, the
+ * approach from adoption to automation, before the plan) · the plan · the
+ * checker ON PANDORA'S OWN PICTURE · who is in the room · what you keep, which
+ * IS the configuration (the board's five facts in words) · the fee · the four
+ * numbers we count and never promise · who does it · next steps. The readout
+ * beat and the Loop-numbers appendix are gone; see each beat's comment.
  */
 
 const DAY_RATE = 1500;
@@ -137,7 +145,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       eyebrow: "Part two · Pandora",
       line: { pre: "Pandora does not need", em: "three years of this." },
       subline:
-        "The products, the brand and the producers' eye are already Pandora's. We bring the order to do it in, starting with the operational work around the creative: first the workflows run with AI and a person presses the button, then an agent runs them on a schedule and the team checks in every hour instead of every five minutes.",
+        "The products, the brand and the producers' eye are already Pandora's. We bring the order to do it in, starting with the operational work around the creative.",
     },
     {
       id: "today",
@@ -193,6 +201,43 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           reach: { label: "Where it scales", value: "into the rest of marketing" },
         },
       ],
+    },
+    {
+      /* THE GOAL (owner, 2026-09-28): the approach from adoption to
+         automation, shown BEFORE the plan — "to allow people to steer agents
+         that can do longer-horizon tasks … so more time becomes available for
+         them". Moira's own figure (ADR-130's `horizon`: a tool you operate,
+         checked by a person after every step, above an agent on one long
+         task with the model's own gates on it), on a proposal by his ruling.
+         ADR-078 U1 asks a drawing here to stand on a record: the note names
+         the plan's own two months, which is the record this one stands on.
+         The freelancer count is deliberately NOT in this beat (owner). */
+      id: "goal",
+      kind: "horizon",
+      menuLabel: "The goal",
+      head: {
+        eyebrow: "Pandora · where this goes",
+        title: { pre: "From the button", em: "to the goal." },
+        sub: "Today the operational work is done by hand, or with a prompt and a person checking every step. With the studio's context and its checks written down, the same work runs for hours on its own and the team checks in at the end. The hours that go on it today go back to the creative, and that is what the three months are for.",
+      },
+      axis: { from: "five minutes", to: "half a day" },
+      operated: {
+        label: "A tool you operate",
+        check: "you check",
+        steps: 8,
+        line: "A person checks after every step, eight times in a row.",
+      },
+      agent: {
+        label: "An agent on a long task",
+        start: "You set the goal and the checks",
+        gates: [
+          { kind: "check", at: 0.27, label: "Checks its own work" },
+          { kind: "retry", at: 0.52, label: "Steps back and retries" },
+          { kind: "ask", at: 0.77, label: "Stops and asks you" },
+        ],
+        end: "You judge the result",
+      },
+      note: "Month one builds the top lane: the filing, the recap and the schedule run with AI and a PM presses the button. Month three moves them to the bottom one: the same workflows on a schedule, the checker on every upload, and the team checking in every hour instead of every five minutes.",
     },
     {
       id: "phases",
@@ -312,92 +357,97 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
     },
     {
       /* THE BENCH (ADR-128 B2): Moira's Run · Skill · Evals module, ported by
-         hand, with the practice's own evals example — the Loop asset checker
-         on the Eclipse draw pair the owner released for this page — and
-         Pandora's own checks named in the head. The record letters no digit;
-         the chrome is the renderer's (`bench/benchChrome.ts`). */
+         hand. ON PANDORA'S OWN PICTURE since 2026-09-28 (owner: "a loop
+         example is a bit weird"): the rings group from Pandora's own press
+         library (`cdn.media.amplience.net/i/pandora/AW23_E_Pandora_Diamonds_
+         Rings_Group_19_RGB`, cropped 4:3), with a retouch slip put into it IN
+         CODE for the mockup — the two silver rings' mid-tones pushed warm and
+         one stone's points of light compressed — and a clean second pass. A
+         retouch defect is a curve on the pixels, never a re-render (Armada's
+         law: finishing an approved frame is editing it; a second draw is a
+         second subject). The Eclipse pair stays on disk, unreferenced. The
+         record letters no digit; the chrome is the renderer's
+         (`bench/benchChrome.ts`). */
       id: "checker",
       kind: "bench",
       menuLabel: "The checker",
       head: {
         eyebrow: "Pandora · creative review",
         title: { pre: "A checker that reads", em: "like your retoucher." },
-        sub: "One check, written down: what it looks at, what it may decide, and the cases it is tested against. It is shown on a Loop product image from our own evals workshop, because Pandora's retouches are not on this page yet. For Pandora the checks start where the producers' reviews do: the metal's shade and the sparkle on the diamond.",
+        sub: "One check, written down: what it looks at, what it may decide, and the cases it is tested against, shown on one of Pandora's own pictures. The two questions Kristin asked on the call come first: is the metal the right shade, and is the sparkle the right sparkle.",
       },
       example: {
-        id: "eclipse",
-        task: "Puts a generated image of the Eclipse sleep mask beside the real product and asks four named questions.",
+        id: "rings",
+        task: "Puts a retouched picture beside the approved shot of the same rings and asks four named questions.",
         checks: [
+          {
+            id: "metal",
+            label: "Metal shade",
+            line: "Each ring is its own metal, as in the approved shot: the silver cool and white, the gold warm. No cast.",
+          },
+          {
+            id: "sparkle",
+            label: "Sparkle",
+            line: "Every stone keeps its points of light. Flattened to a grey disc, or blown into a starburst, it fails.",
+          },
           {
             id: "identity",
             label: "Identity",
-            line: "It is the Eclipse: one continuous band, two low eye pockets, the closure at the back.",
+            line: "The same six rings, in the same places, with the same settings. Nothing added, nothing straightened away.",
           },
           {
-            id: "proportions",
-            label: "Proportions",
-            line: "Two low pockets, not one dome and not two balls.",
-          },
-          {
-            id: "texture",
-            label: "Texture",
-            line: "Knit reads as knit: a matte technical knit with a fine rib, not a moulded surface.",
-          },
-          {
-            id: "colour",
-            label: "Colour",
-            line: "Teal is deep blue-green. Gone green, turquoise or navy it fails, unless the light explains it.",
+            id: "retouch",
+            label: "The retouch",
+            line: "Cleaned, never redrawn: a prong or a band keeps its edge, a reflection stays where the light put it.",
           },
         ],
         inputs: [
           {
-            id: "draw-a",
-            label: "Draw A, on a train",
+            id: "retouch-a",
+            label: "Retouch A",
             brief:
-              "A lifestyle image of the Eclipse in teal, worn, against a train window at night. The real render is attached.",
+              "The rings group from the shoot, back from retouching for the product page. The approved shot is attached.",
             output: {
               kind: "image",
               image: {
-                src: "/arcs/pandora-proposal/mask-draw-a.webp",
-                alt: "A generated image: a person asleep against a train window, wearing a teal Loop sleep mask.",
+                src: "/arcs/pandora-proposal/ring-retouch-a.webp",
+                alt: "A retouched product shot of six Pandora diamond rings on a white ground: the two silver rings have gone warm and one large stone has lost its sparkle.",
                 width: 720,
                 height: 540,
               },
               regions: [
+                { label: "Top silver", check: "metal", left: 34, top: 14, width: 26, height: 22 },
                 {
-                  label: "The cups",
-                  check: "proportions",
-                  left: 32.4,
-                  top: 29.3,
-                  width: 31.2,
-                  height: 40,
+                  label: "The stone",
+                  check: "sparkle",
+                  left: 56.5,
+                  top: 33.5,
+                  width: 12,
+                  height: 16,
                 },
-                {
-                  label: "A clip",
-                  check: "identity",
-                  left: 62.4,
-                  top: 10.1,
-                  width: 14,
-                  height: 15.7,
-                },
+                { label: "Solitaire", check: "metal", left: 31, top: 65, width: 24, height: 19 },
               ],
             },
             results: [
-              { check: "identity", state: "block", note: "A clip the product does not have." },
               {
-                check: "proportions",
+                check: "metal",
                 state: "block",
-                note: "Two domes where the band has two low pockets.",
+                note: "Both silver rings read warm.",
               },
               {
-                check: "texture",
+                check: "sparkle",
+                state: "block",
+                note: "The large stone has gone to a flat grey disc.",
+              },
+              {
+                check: "identity",
                 state: "pass",
-                note: "The knit reads as knit at the size it has in the frame.",
+                note: "Six rings, the same six, in their places.",
               },
               {
-                check: "colour",
+                check: "retouch",
                 state: "review",
-                note: "Bluer than the product. A person decides.",
+                note: "Edges hold. A person looks at the prongs.",
               },
             ],
             verdict: {
@@ -406,172 +456,281 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
               line: "Back to the retoucher with the two failed checks named.",
             },
             actions: [
-              "Redraw: low pockets in the band, no domes.",
-              "One band, closure at the back. No clip.",
+              "Silver back to cool white on both rings.",
+              "The stone's points of light put back.",
             ],
           },
           {
-            id: "draw-b",
-            label: "Draw B, in bed",
+            id: "retouch-b",
+            label: "Retouch B",
             brief:
-              "A lifestyle image of the Eclipse in teal, worn, in bed before sunrise. The real render is attached.",
+              "The same rings group, second pass from retouching. The approved shot is attached.",
             output: {
               kind: "image",
               image: {
-                src: "/arcs/pandora-proposal/mask-draw-b.webp",
-                alt: "A generated image: a person asleep in bed, in profile, wearing a teal Loop sleep mask.",
+                src: "/arcs/pandora-proposal/ring-retouch-b.webp",
+                alt: "A retouched product shot of six Pandora diamond rings on a white ground, the silver cool and every stone sharp.",
                 width: 720,
                 height: 540,
               },
               regions: [],
             },
             results: [
-              { check: "identity", state: "pass", note: "One band, the closure at the back." },
-              { check: "proportions", state: "pass", note: "Two low pockets, as on the product." },
-              { check: "texture", state: "pass", note: "The knit holds at this size." },
-              { check: "colour", state: "pass", note: "Held. One earlier run saw it bluer." },
+              {
+                check: "metal",
+                state: "pass",
+                note: "Silver cool, gold warm, each as the approved shot.",
+              },
+              { check: "sparkle", state: "pass", note: "Every stone keeps its points of light." },
+              { check: "identity", state: "pass", note: "The same six rings, in their places." },
+              {
+                check: "retouch",
+                state: "pass",
+                note: "The ground lifted a touch. Nothing on a ring redrawn.",
+              },
             ],
             verdict: {
               state: "pass",
               label: "Pass, keep",
-              line: "Clean on every check. A person still looks, against the real product.",
+              line: "Clean on every check. A producer still looks, against the approved shot.",
             },
-            actions: ["To the review page. A person ticks it, or types what is wrong."],
+            actions: ["To the review page. A producer ticks it, or types what is wrong."],
           },
         ],
         skill: {
-          folder: "the-asset-checker/",
+          folder: "the-retouch-checker/",
           files: [
             {
               name: "SKILL.md",
-              line: "What the checker is for, in the reviewer's words: which product, which views, what a pass looks like, what must never pass.",
+              line: "What the checker is for, in the producers' words: which pieces, which views, what a pass looks like, what must never pass.",
             },
             {
               name: "references/",
-              line: "The rubric, the product sheet, the approved register, and the real render it compares against.",
+              line: "The rules, the metal and stone references, and the approved shots it compares against.",
               image: {
-                src: "/arcs/pandora-proposal/mask-reference.webp",
-                alt: "The product render: a teal Loop sleep mask seen from the side, with its closure at the back.",
+                src: "/arcs/pandora-proposal/ring-reference.webp",
+                alt: "The approved shot: six Pandora diamond rings in gold and silver on a white ground.",
                 width: 720,
                 height: 540,
               },
             },
             {
               name: "evals/",
-              line: "The cases every change to the rubric is run against, known-bad draws among them.",
+              line: "The cases every change to the rules is run against, known-bad retouches among them.",
             },
             {
               name: "scripts/",
-              line: "Grade a folder of images, build the page the reviewer ticks.",
+              line: "Grade a batch of retouches, build the page the producer ticks.",
             },
           ],
         },
         rules: [
           {
             band: "fixed",
-            line: "The cups are two low pockets formed in the band. Never a dome, never two balls.",
-            check: "proportions",
+            line: "Each metal keeps its shade against the approved shot: silver cool and white, gold warm. A cast fails it.",
+            check: "metal",
           },
           {
             band: "fixed",
-            line: "One continuous band with its closure at the back. No buckle, slider or clip.",
+            line: "The pieces in the approved shot, and only those. Nothing added, moved or straightened away.",
             check: "identity",
           },
           {
             band: "adapt",
-            line: "Matte knit with a fine rib, judged at the size the mask has in the frame.",
-            check: "texture",
+            line: "Sparkle is judged at the size the stone has in the frame; a crop shows more points than a full shot.",
+            check: "sparkle",
           },
           {
             band: "adapt",
-            line: "Teal stays in its hue family. The scene's light may shift it; nothing else may.",
-            check: "colour",
+            line: "Dust, scratches and a stray reflection may go. An edge, a prong or a facet may not be redrawn.",
+            check: "retouch",
           },
-          { band: "free", line: "Pose, setting and light, once the product is right." },
+          {
+            band: "free",
+            line: "Crop, ground and the direction of the light, once the pieces are right.",
+          },
         ],
         cases: [
           {
             id: "pinned",
-            label: "Draw A, kept on file",
-            line: "The proportions check must fail it. A change to the rubric that lets it pass is reverted.",
+            label: "Retouch A, kept on file",
+            line: "The metal check must fail it. A change to the rules that lets it pass is reverted.",
             expect: "block",
-            checks: ["proportions", "identity"],
+            checks: ["metal", "sparkle"],
           },
           {
             id: "approved",
-            label: "Draw B, kept on file",
+            label: "Retouch B, kept on file",
             line: "Every check must hold on it. A change that fails it has gone too strict.",
             expect: "pass",
-            checks: ["identity", "proportions", "texture", "colour"],
+            checks: ["metal", "sparkle", "identity", "retouch"],
           },
           {
-            id: "light",
-            label: "The reviewer's own note",
-            quote: "It reads bluer under the window",
-            line: "Why the colour check adapts to the light rather than measuring a value: what a person said twice became the rule.",
-            checks: ["colour"],
+            id: "call",
+            label: "Kristin's own question",
+            quote: "Is the metal the correct shade? Is the sparkle the right sparkle?",
+            line: "From the call: where the producers' reviews start, and how the next checks get written. What is said twice becomes a check.",
+            checks: ["metal", "sparkle"],
           },
         ],
         record:
-          "Loop's own asset checker on the Eclipse, from the evals workshop we gave there. At Pandora the same checker reads a retouch against the approved shot, with the producers' rules in place of these.",
+          "Pandora's own press picture of its lab-grown diamond rings, with a retouch slip we put into it for this page. The rules are our starting set; in month two the producers' words replace them, on the studio's own reference shots.",
       },
     },
     {
-      /* HOW WE WORK, WHAT WE NEED AND WHAT YOU KEEP WERE TWO SECTIONS OF ONE
-         OBJECT (owner, 2026-09-28: they "look too similar … simplify them"):
-         two columns of tagged rows with a sentence each, about sixty lines.
-         Now one beat of two readout panels (ADR-130's layout: a framed key,
-         its value set right, no prose). The loop's four rows went, because
-         the board, the plan and the checker already say who owns it, what
-         runs it, the bar and where it runs; what Pandora has to provide moved
-         into the next steps, where it is asked for. */
+      /* WHO IS IN THE ROOM (owner, 2026-09-28, on the readout version: "too
+         condensed … two different fonts … rework this section so it's super
+         clear for the stakeholders"). Suri's own grammar for this beat
+         (`columns`, a name, one sentence on what the person does, the time it
+         costs them as the meta line), which he called the core. What Pandora
+         has to provide stays in the next steps, where it is asked for. */
       id: "how-we-work",
       kind: "list-groups",
-      menuLabel: "How we work",
-      layout: "readout",
+      menuLabel: "Who is in the room",
+      layout: "columns",
       head: {
         eyebrow: "Pandora · how we work",
-        title: { pre: "How we work", em: "with your team." },
-        sub: "Who is in the room and how much of their time it takes, and what the studio keeps when we leave.",
+        title: { pre: "Who is in the room,", em: "and for how long." },
+        sub: "We set the loop up in week one and run it beside the team until they run it without us: about five days a month in Copenhagen, the rest in the team's own channels.",
       },
       groups: [
         {
-          id: "people",
-          label: "Who is in the room",
-          blurb: "And how much of their time",
+          id: "pandora",
+          label: "From Pandora",
+          blurb: "Four people and the task force, and what the three months ask of each.",
           items: [
-            { id: "kristin", tag: "Kristin", name: "One session a week" },
-            { id: "taskforce", tag: "The AI task force", name: "Two sessions a week in month one" },
-            { id: "pms", tag: "PMs and producers", name: "In the workflows from week one" },
-            { id: "jenny", tag: "Jenny", name: "The kickoff, and month three" },
-            { id: "vince", tag: "Vince", name: "About twenty days a month" },
-            { id: "rob", tag: "Rob", name: "One session a month" },
+            {
+              id: "kristin",
+              tag: "Pandora",
+              name: "Kristin, head of the studio and the last gate",
+              body: "Decides what runs and what stays by hand, signs off the review rules in week one and reads each month's result.",
+              meta: "One session a week",
+            },
+            {
+              id: "taskforce",
+              tag: "Pandora",
+              name: "The AI task force, the first to run it",
+              body: "In the sessions from week one. Each member encodes one workflow of their own in month one, then gives the sessions themselves.",
+              meta: "Two sessions a week in month one, then one",
+            },
+            {
+              id: "pms",
+              tag: "Pandora",
+              name: "The PMs and producers, whose week it is",
+              body: "In the workflows from week one: the PM who files a campaign into Primo, the producer who grades a retouch batch.",
+              meta: "Inside their normal week",
+            },
+            {
+              id: "jenny",
+              tag: "Pandora",
+              name: "Jenny, on the scope and the business case",
+              body: "The kickoff and the scope, then month three's blueprint for the wider marketing organisation.",
+              meta: "The kickoff, and month three",
+            },
           ],
-          foot: {
-            label: "On site",
-            lines: ["About five days a month in Copenhagen, the rest in the team's own channels."],
-          },
         },
         {
-          id: "keeps",
-          label: "What you keep",
-          blurb: "When we leave",
+          id: "thoughtform",
+          label: "From Thoughtform",
+          blurb: "Vince inside the studio, Rob behind it.",
           items: [
-            { id: "skills", tag: "The Skills", name: "Files the studio owns and edits" },
-            { id: "workflows", tag: "The workflows", name: "On Pandora's own accounts" },
             {
-              id: "checker",
-              tag: "The checker",
-              name: "On Pandora's own reference shots",
-              href: "#checker",
+              id: "vince",
+              tag: "Thoughtform",
+              name: "Vince, on AI and creative technology",
+              body: "Five days a month in Copenhagen, the rest remote. Runs the sessions, writes the Skills with the team, then steps back.",
+              meta: "About twenty days a month",
             },
-            { id: "team", tag: "The team", name: "Giving its own sessions" },
-            { id: "blueprint", tag: "The blueprint", name: "For the wider marketing organisation" },
+            {
+              id: "rob",
+              tag: "Thoughtform",
+              name: "Rob, on the organisation and the business case",
+              body: "Mostly in the background; in the room for the kickoff, the business case and the senior conversations.",
+              meta: "One session a month",
+            },
           ],
-          foot: {
-            label: "Afterwards",
-            lines: ["No retainer, and check-ins at one month and at three."],
-          },
+        },
+      ],
+    },
+    {
+      /* WHAT YOU KEEP IS THE CONFIGURATION (owner, 2026-09-28: "that's
+         basically our product, our offering: that configuration … it needs to
+         be tied together. Otherwise it's just another section with a random
+         block"). So the first column IS the board's right-hand side in words:
+         its five facts, in the order the board draws them, as they stand on
+         the last day. The second column is what that means once we are out
+         of the room. The needs list stays folded into the next steps. */
+      id: "what-you-keep",
+      kind: "list-groups",
+      menuLabel: "What you keep",
+      layout: "columns",
+      head: {
+        eyebrow: "Pandora · what you keep",
+        title: { pre: "What you keep is", em: "the configuration." },
+        sub: "The right-hand side of the board above, in the studio's own hands: someone whose job it is, the context written down, the workflows on your accounts, inside the tools you already use. That is the product. We build it with the team, and it stays when we leave.",
+      },
+      groups: [
+        {
+          id: "parts",
+          label: "The configuration, part by part",
+          blurb: "The five facts the board draws, as they stand on the last day of month three.",
+          items: [
+            {
+              id: "owner",
+              tag: "Who owns it",
+              name: "The studio lead, with Kristin's sign-off",
+              body: "One person whose job it is: decides what runs, what is checked and what stays by hand.",
+            },
+            {
+              id: "capability",
+              tag: "The capability",
+              name: "AI capability the studio owns",
+              body: "The operational workflows and the retouching checker as Skills the team edits itself, on Pandora's own Claude account.",
+            },
+            {
+              id: "context",
+              tag: "The context",
+              name: "Rules, examples, sources, loops",
+              body: "The naming convention, the review rules in the producers' words, the brand book and the approved shots, and the loop that turns a note said twice into a check.",
+            },
+            {
+              id: "where",
+              tag: "Where it runs",
+              name: "Figma, Primo and Hub Planner",
+              body: "Inside the tools the studio already pays for. Nothing new to license, nothing of ours in the middle.",
+            },
+            {
+              id: "scale",
+              tag: "Where it scales",
+              name: "Into the rest of marketing",
+              body: "The blueprint with Jenny: the same shape written down for the next team, and the task force to bring it there.",
+            },
+          ],
+        },
+        {
+          id: "after",
+          label: "After month three",
+          blurb: "What keeps running with us out of the room.",
+          items: [
+            {
+              id: "team",
+              tag: "The team",
+              name: "Gives its own sessions",
+              body: "The task force runs the lunch-and-learns. The handover is a production week the team runs on its own.",
+            },
+            {
+              id: "next",
+              tag: "The next workflow",
+              name: "Built by the studio",
+              body: "Kristin's list of the next three, and the people who built the first ones.",
+            },
+            {
+              id: "nodep",
+              tag: "No retainer",
+              name: "Nothing stops when we stop answering",
+              body: "Check-ins at one month and at three. Model usage on Pandora's own account, billed by the provider.",
+            },
+          ],
         },
       ],
     },
@@ -634,6 +793,49 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
+      /* THE BUSINESS CASE WITHOUT A NUMBER (owner, 2026-09-28: the appendix
+         "feels a bit random … I don't want to promise any absolute numbers").
+         Kristin asked on the call for something Jenny can take to the business
+         case, so this is the counting, promised, and no figure: four numbers
+         read from Pandora's own systems, beside the fee. The Loop figures are
+         on the proof cards' own registers and are not repeated here. */
+      id: "measures",
+      kind: "cards",
+      menuLabel: "How you will know",
+      columns: 4,
+      head: {
+        eyebrow: "Pandora · the business case",
+        title: { pre: "Counted in week one,", em: "read every month." },
+        sub: "Four numbers from Pandora's own bookings, files and calendars, set beside that month's fee. We promise the counting; the numbers are yours to read.",
+      },
+      cards: [
+        {
+          id: "hours",
+          kicker: "Hours",
+          title: "Operational hours a week",
+          body: "What the PMs and producers spend on naming, uploads, the schedule, the recaps and resourcing.",
+        },
+        {
+          id: "days",
+          kicker: "Days",
+          title: "Freelance days on operational work",
+          body: "Read from the bookings, month by month, beside the month's fee.",
+        },
+        {
+          id: "cycle",
+          kicker: "Cycle",
+          title: "A retouch batch, from in to verdict",
+          body: "How long a batch waits for a producer today, and how long once the checker has read it first.",
+        },
+        {
+          id: "rounds",
+          kicker: "Rounds",
+          title: "Retouch rounds per asset",
+          body: "How often an asset goes back before a producer approves it.",
+        },
+      ],
+    },
+    {
       id: "people",
       kind: "cards",
       menuLabel: "Who does it",
@@ -680,7 +882,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           id: "claude",
           n: "02",
           title: "Claude access, in Pandora's name",
-          body: "The enterprise conversation with D&T, with Jenny's support; the appendix below is written for it. Figma, Primo, Asana and Hub Planner opened in Pandora's name too, so nothing needs migrating later.",
+          body: "The enterprise conversation with D&T, with Jenny's support. Figma, Primo, Asana and Hub Planner opened in Pandora's name too, so nothing needs migrating later.",
         },
         {
           id: "scope",
@@ -689,81 +891,6 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           body: "The studio alone, or the wider marketing organisation from month three. The plan is the same either way; only the blueprint gets bigger.",
         },
       ],
-    },
-    {
-      id: "business-case",
-      kind: "list-groups",
-      menuLabel: "Appendix",
-      layout: "columns",
-      head: {
-        eyebrow: "Appendix · the business case",
-        title: { pre: "Measured on", em: "your numbers." },
-        sub: "We take a baseline in the first week and read it again at each month end, so Jenny sees a before and an after, beside what the same work measured at Loop.",
-      },
-      groups: [
-        {
-          id: "measures",
-          label: "What we measure",
-          items: [
-            {
-              id: "hours",
-              tag: "Hours",
-              name: "The operational hours a week",
-              body: "What the PMs and producers spend on naming, uploads, the schedule, recaps and resourcing. Counted in week one, counted again at each month end.",
-            },
-            {
-              id: "freelance",
-              tag: "Days",
-              name: "Freelance days booked against operational work",
-              body: "The budget Kristin wants back. Read from the bookings, month by month.",
-            },
-            {
-              id: "review",
-              tag: "Cycle",
-              name: "A retouch batch, from in to verdict",
-              body: "How long a batch waits for a producer today, and how long once the checker has read it first.",
-            },
-            {
-              id: "rounds",
-              tag: "Rounds",
-              name: "Retouch rounds per asset",
-              body: "Fewer rounds when the first version is checked against the rules the retoucher already knows.",
-            },
-          ],
-        },
-        {
-          id: "loop",
-          label: "What it measured at Loop",
-          items: [
-            {
-              id: "assets",
-              tag: "Loop",
-              name: "About 700 paid-social assets a month",
-              body: "From two designers and one copywriter, with 97% of the briefings involving AI and the campaigns beating their return target.",
-            },
-            {
-              id: "checker",
-              tag: "Loop",
-              name: "Manual review down about tenfold",
-              body: "The asset checker reads every generated image against the real product before the art director opens the sheet.",
-            },
-            {
-              id: "planning",
-              tag: "Loop",
-              name: "A week a month, given back",
-              body: "A program manager who was not a developer built a resource-planning tool in Claude over a set of convoluted boards.",
-            },
-            {
-              id: "briefing",
-              tag: "Loop",
-              name: "Nothing retyped between the board and Figma",
-              body: "The briefing plugin took the copy-and-paste out of the project managers' day. Copywriters became copy editors and brand storytellers.",
-            },
-          ],
-        },
-      ],
-      closing:
-        "Pandora's numbers will come from Pandora's own bookings, files and calendars, which is why the first week goes on counting.",
     },
     {
       id: "close",

@@ -5,7 +5,10 @@
   kind built and the four proof beats swapped onto it; B2, the `bench` kind
   built and the checker swapped onto it. Both behind the same URL. Flips to
   Accepted once the owner has read the page live; B4 (the proposal smoke) is
-  still open.
+  still open. ⚠ **U1 (2026-09-28, owner's read) re-cuts the spine** — see
+  §Update 1 at the foot: the goal beat (a `horizon` on a proposal), the checker
+  on Pandora's own picture, who is in the room, what you keep as the
+  configuration, and the business case without a number.
 - **Surface:** `/arcs/pandora-proposal` and `/arcs/pandora` —
   `lib/arcs/content/pandora-proposal.ts` (new), `lib/arcs/clients.ts`
   (`PANDORA_CLIENT`), `lib/arcs/registry.ts`, `lib/theme/themeLock.ts` +
@@ -264,3 +267,136 @@ overview now has its own pinned `REAL_TODAY`, separate from the axis tests'
   the start months.
 - The `/arcs` dossier board for an arc with a `board` and no `configuration`
   (`configurationFromBoard` is reached only through `PAGE_CONFIGURATIONS`).
+
+## Update 1 (2026-09-28, owner): the spine after his read
+
+Content-only (`lib/arcs/content/pandora-proposal.ts` and three pictures under
+`public/arcs/pandora-proposal/`); nothing under `components/` changes. The
+same day's earlier passes had already put Part one and the turn back on the
+Suri spine, the four cards in the past tense, the plan before the checker, and
+folded how-we-work / needs / keeps into one readout beat. His read of that:
+
+> I think we need a new section that really shows that approach from adoption
+> to automation … to allow people to steer agents that can do longer-horizon
+> tasks … before we show the three blocks with the planning. […] We now have
+> a Pandora checker, but with a loop example … a loop example is a bit weird.
+> […] The How We Work section … it's a bit too condensed … in two different
+> fonts. […] when we leave, that's basically that configuration … that's our
+> product, our offering … it needs to be tied together. […] the appendix, and
+> the business keys … feels just a bit random. I don't want to promise any
+> absolute numbers.
+
+### 1. The goal is a `horizon`, and it sits between the board and the plan
+
+The spine is now Loop (Part one) · the turn · the studio today and configured
+(the board) · **the goal** · the plan · the checker · who is in the room · what
+you keep · the fee · the four numbers · who does it · next steps · close.
+
+The goal beat is ADR-130's `horizon` kind, unchanged: a tool you operate with
+a person after every one of eight steps, above an agent on one long task with
+the model's three gates on it (checks its own work · steps back and retries ·
+stops and asks you), five minutes to half a day. It is Moira's figure, which is
+the section he pointed at, and it is **the first framing kind on a page that
+is not a workshop**. ADR-078 U1 asks a drawing on a proposal to stand on a
+record; ADR-130's workshop clause lets a workshop draw an argument that names
+its source. Here the owner's ruling puts the argument on a proposal, and the
+beat's note pays the record clause in the page's own terms: month one builds
+the operated lane (the filing, the recap and the schedule run with AI and a PM
+presses the button), month three moves them to the agent's (the same
+workflows on a schedule, the checker on every upload, the team checking in
+every hour instead of every five minutes). ⚠ The freelancer count that
+motivates the engagement is deliberately absent from this beat (owner: "let's
+not mention that here"). The turn's subline lost its with-AI-then-for-agents
+sentence, because the goal now shows it. Measured headed: the beat is one
+frame at 1920×1247 and at 1280×720, `data-holo="live"`, the title two lines
+("From the button / to the goal." — the first cut, "From a tool you operate /
+to an agent you steer.", ran three at both viewports; the two-line budget is
+copy).
+
+### 2. The checker reads one of Pandora's own pictures
+
+The bench keeps its head, its id and its module; the example is Pandora's.
+The picture is the rings group from Pandora's own press library
+(`cdn.media.amplience.net/i/pandora/AW23_E_Pandora_Diamonds_Rings_Group_19_RGB`,
+the corporate site's public media library — pandora.net itself refuses a
+fetch and the ad library is a login wall), cropped 4:3 to 720×540 like the
+Eclipse pair: six lab-grown diamond rings, four gold and two silver, which is
+both of Kristin's questions in one frame.
+
+⚠ **THE SLIP IS A CURVE ON THE PIXELS, NEVER A RE-RENDER**, and no paid call
+was made. Armada's law for an approved frame is that a note on it is an edit
+to those pixels and a second draw is a second subject; a retouch defect is
+exactly such an edit, so Retouch A is the reference with the two silver rings'
+mid-tones pushed warm (the cast gated to the metal's own tones — a first cut
+that warmed the whole ellipse put a yellow halo on the white ground, which no
+retoucher's slip does) and the large stone's points of light compressed to a
+dull disc; Retouch B is the reference with a benign lift of the ground. The
+four checks are the two Kristin named on the call (**metal shade**, **sparkle**)
+and the two every retouch checker carries (**identity**, **the retouch**: cleaned,
+never redrawn); Retouch A blocks on the first two, identity passes, the retouch
+goes to review; B is clean. The Skill folder is `the-retouch-checker/` with
+the approved shot in `references/`; the evals pin A and B and carry Kristin's
+own question from the call as the quote case. The record line says plainly
+that the slip was put in for this page and that the producers' words replace
+these rules in month two. The Eclipse pair stays on disk, unreferenced.
+Measured: the rail sits 68px inside its housing at 1920×1247 and 91px at
+1280×720 — the first cut's notes wrapped and ran the verdict's last action
+through the housing's floor at 1920, so four notes were shortened to a line.
+
+### 3. Who is in the room is Suri's grammar, not a readout
+
+The readout beat (two plates of framed key/value rows, the same day's earlier
+pass) is retired: read cold it was "too condensed" and its key and value in
+two faces read as "two different fonts". The beat is `list-groups` `columns`
+in the Suri proposal's own grammar, which he calls the core — a name, one
+sentence on what the person does, the time it costs them as the meta line —
+in two groups, from Pandora (Kristin · the AI task force · the PMs and
+producers · Jenny) and from Thoughtform (Vince · Rob). The needs stay folded
+into the next steps. At 1280×720 the beat runs 778px, ADR-099's named cost
+for a long list beat.
+
+### 4. What you keep IS the configuration
+
+A new beat, `what-you-keep`, `columns`. Its first column is the board's
+right-hand side in words: the five facts the board draws, in the board's own
+order and under the board's own keys (who owns it · the capability · the
+context · where it runs · where it scales), as they stand on the last day of
+month three. The second column is what that means with us out of the room
+(the team gives its own sessions · the next workflow is built by the studio ·
+no retainer). The head says it in one line: "What you keep is / the
+configuration." — the strategy skill's own sentence ("the configuration is
+what is sold") on a client page for the first time, tied to the instrument
+that draws it.
+
+### 5. The business case without a number
+
+The appendix (two columns: four measures beside four Loop figures, a closing
+line) is retired. In its place, after the fee, a `cards` beat of the four
+measures alone — operational hours a week · freelance days on operational work
+· a retouch batch from in to verdict · retouch rounds per asset — counted in
+week one and read at each month end beside the month's fee, with no Loop
+figure and no target: "We promise the counting; the numbers are yours to
+read." Kristin's action item from the call (something Jenny can take to the
+business case) is answered by the counting, not by a promised saving. The Loop
+figures live on the proof cards' registers already.
+
+### Verification
+
+`arcs-registry` (the bench pins, the horizon pins, the copy law, the hero
+measure), `arc-board-fit`, `arc-bench-chrome`, `arc-terminal-markup` (the whole
+arc), `sheet-instrument`, `sheet-config-fit`; the tov grader on the page's 76
+paragraphs (mechanical PASS, no gate failed); a headed shoot of every changed
+beat at 1920×1247 and 1280×720 (`scratchpad/shoot4.cjs`, `shoot5.cjs`) with the
+title line counts and the rail-against-housing measurement above.
+
+### Left open after U1
+
+- The deck (`pandora-proposal-v02`) still carries the earlier spine; the page
+  is the proposal he reads first, the deck follows on his word.
+- The mockup picture is Pandora's own press image, altered for the page and
+  addressed to Pandora; the studio's own reference shots replace it in month
+  two. If the page stays live and public beyond the proposal, revisit.
+- `.claude/rules/arcs.md`'s Pandora bullet does not yet say a `horizon` may sit
+  on a proposal by owner ruling (the file was held by a parallel session).
+- B4 (the proposal smoke) is still to write; the bench beat runs ~80px past a
+  720 frame by its housing's floor, as before.
