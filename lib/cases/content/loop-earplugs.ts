@@ -2278,7 +2278,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           ". The board lays out the estate: work streams as modules, clustered by the team that owns them. Open one and it comes apart into its configuration. Below grade runs the shared substrate — encoded once for one team, tapped by the next.",
         ],
         card: {
-          lede: "Across Loop, team by team. Then what we build turned: a briefing the intelligence inherits, checks it runs on its own work, and a person with the last word.",
+          lede: "Across Loop, team by team. Then we started building for the agents: briefings they read, checks they run on their own work, and a person who signs off.",
         },
         /* The arc's last beat — the sequence itself is documented on
            `atl-films`, which opens it. The fourth step is the turn (owner
@@ -2352,9 +2352,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         card: {
           /* ADR-126: the three bottlenecks of creative work, named — the
              owner's own cluster (production · operations · review), the same
-             three the map card's WORK reading columns by. A draft in the
-             site's register, for his voice. */
-          lede: "Four tools built with the people who run the workflow, where creative work jams: production, operations and the review between them. Owned by those teams.",
+             three the map card's WORK reading columns by. Rewritten in his
+             voice 2026-09-28 (the thoughtform-tov pass on the Pandora page,
+             which mounts this card): "jams" and the verbless last sentence
+             went. */
+          lede: "Four tools built with the people who run the work, where creative work gets stuck: production, operations and the review between them. Those teams own them.",
         },
         /* Beat two — see `atl-films` for the sequence. */
         arc: { step: "02", title: "We build the tools the work needs" },
