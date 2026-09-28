@@ -95,6 +95,7 @@ export const HERO_ROUTES = [
   "/arcs/pandora-proposal",
   "/arcs/plopsa-workshop",
   "/arcs/suri-workshop",
+  "/arcs/thoughtform-workshop",
 ] as const;
 
 /**

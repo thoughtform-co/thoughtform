@@ -80,6 +80,7 @@ describe("hero preload", () => {
       "/arcs/pandora-proposal",
       "/arcs/plopsa-workshop",
       "/arcs/suri-workshop",
+      "/arcs/thoughtform-workshop",
     ]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });

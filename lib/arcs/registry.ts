@@ -9,6 +9,7 @@ import { HUNGRY_MINDS_PROPOSAL_ARC } from "./content/hungry-minds-proposal";
 import { PANDORA_PROPOSAL_ARC } from "./content/pandora-proposal";
 import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
 import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
+import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import type { ArcDef } from "./types";
 
 /**
@@ -33,6 +34,9 @@ export const ARCS: readonly ArcDef[] = [
   HUNGRY_MINDS_PROPOSAL_ARC,
   PERFECT_TED_PROPOSAL_ARC,
   SURI_PROPOSAL_ARC,
+  /* The house formats. THE ARCHETYPE LEADS THEM: the client workshops above
+     are cuts of it, so it is the page to read before any of them. */
+  THOUGHTFORM_WORKSHOP_ARC,
   CLAUDE_WORKSHOP_ARC,
   AI_KEYNOTE_ARC,
   CLAUDE_WORKSHOP_V2_ARC,

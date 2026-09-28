@@ -864,6 +864,38 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   under 960px tall the curve's caption goes BESIDE the stage, or the stage
   falls to 532px at 1280x720 and the head runs through the client mark.
   ⚠ **NEVER "plaat" / "platen" IN DUTCH COPY** (owner): "beeld" / "beelden".
+- ⚠ **THE WORKSHOP IS A HOUSE ARC AND THE CLIENT PAGES ARE CUTS OF IT
+  (ADR-131, Proposed 2026-09-28, owner).** `/arcs/thoughtform-workshop` carries
+  no `client` — ADR-052's own reading of that field — and leads the house block.
+  Five chapters (the registry CAP exactly, so the first fork wanting a sixth
+  fails loudly), fifteen beats, four figures each in its own beat: `stages`,
+  `curve`, `horizon` (ADR-130) and `bench` (ADR-128). No `questions` board, so
+  `sheet-config-fit`'s pinned list does not move. ⚠ **THE LAW IS THE PRACTICE'S
+  OWN, PUBLISHED** (`practice-snapshot`'s evals workshop shell): one idea per
+  section, ONE picture per section, a picture-less section is a BEAT, one screen
+  at 1280x720, seven to sixteen sections — and **a sentence that does not fit is
+  a sentence to CUT, never a column to widen**. ⚠ **SELF-SUFFICIENCY IS THE
+  CHAPTER HEAD'S CLAIM, NEVER A CARD'S**: the four `proof-card` beats are the
+  four MOVES, the `studio` card is retitled through `title` to what its pictures
+  show, and the homepage record is UNTOUCHED. ⚠ **THE BENCH'S EXAMPLE IS TEXT**
+  — the image branch's only on-disk pictures are a client's, and the base every
+  fork starts from may not carry another client's evidence. ⚠ **EVERY SHIPPED
+  WORKSHOP OVERFLOWS ONE SCREEN AT 1280x720 AND NOTHING MEASURES IT** (claude 16
+  beats to +1075, plopsa 6 to +225, this one 3 to +65): the flat kinds carry
+  `--arc-sec-pad` at 100.8px a side there, 28 % of the viewport, where a framing
+  beat overrides it out of its own class — so the overflow is the FORMAT'S air,
+  not the copy, and no rule was written because `cards`/`list-groups` have no
+  beat class and the token is shared with three byte-identical pages.
+  ⚠ **`--arc-bench-h` DOES NOT BIND** (floor 470, content 561): a lever that is
+  not the binding constraint is not a fix. ⚠ **MARKS MAY NOT NEST** — a `voice`
+  span containing a `hype` span put two highlights on one phrase with every
+  guard green (the registry checks only that a span occurs in the text); found
+  by LOOKING. ⚠ **A NEW FILING BUMPS `REAL_TODAY`** in both `sheet-instrument`
+  and `sheet-composition`, or the monitor reports "filed after now".
+  ⚠ **`arc-iso`'s LABEL WALK IS PER PAGE** — the geometry is fixed but a label's
+  box is its TEXT, so a second page mounting the same drawing needs its own row.
+  ⚠ **THE DEV SERVER CACHES `generateStaticParams`**: a correctly registered
+  route 404s until it restarts.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

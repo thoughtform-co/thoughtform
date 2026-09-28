@@ -23,7 +23,8 @@ import {
   stagesLabels,
 } from "@/components/arcs/framing/stagesLayout";
 import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
-import type { ArcSectionKind, ArcSectionOf } from "@/lib/arcs/types";
+import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
+import type { ArcDef, ArcSectionKind, ArcSectionOf } from "@/lib/arcs/types";
 
 /**
  * The workshop framing's one projection (ADR-130 U1, re-cut in U4).
@@ -45,8 +46,29 @@ const UNIT: IsoFrame = { w: 200, h: 200, ox: 0, oy: 0, k: 100, basis: ISO_BASIS_
  */
 const TYPE = { stages: 17 } as const;
 
-const section = <K extends ArcSectionKind>(id: string) =>
-  PLOPSA_WORKSHOP_ARC.sections.find((s) => s.id === id) as ArcSectionOf<K>;
+/* ⚠ THE WORDS ARE THE DRAWING'S, AND EACH PAGE HAS ITS OWN SET. The figure's
+   geometry is fixed, but a label's BOX is its text: the Dutch stages and the
+   English ones are different string sets at the same seats, so a walk over one
+   says nothing about the other. Every page that mounts a framing leaf is
+   listed below. */
+const section = <K extends ArcSectionKind>(arc: ArcDef, id: string) =>
+  arc.sections.find((s) => s.id === id) as ArcSectionOf<K>;
+
+const stagesCase = (name: string, arc: ArcDef, id: string) => {
+  const s = section<"stages">(arc, id);
+  return {
+    name,
+    vb: STAGES_VB,
+    frame: STAGES_FRAME,
+    extent: stagesExtent(),
+    labels: stagesLabels(
+      s.stages.map((x) => x.label),
+      s.axes,
+      s.ends
+    ),
+    type: TYPE.stages,
+  };
+};
 
 describe("the projection", () => {
   it("keeps the map's own 2:1 available, byte-for-byte", () => {
@@ -178,21 +200,8 @@ describe("a derived crop", () => {
 
 describe("every drawing fits its crop, and no two labels overlap", () => {
   const cases = [
-    {
-      name: "stages",
-      vb: STAGES_VB,
-      frame: STAGES_FRAME,
-      extent: stagesExtent(),
-      labels: (() => {
-        const s = section<"stages">("drie-manieren");
-        return stagesLabels(
-          s.stages.map((x) => x.label),
-          s.axes,
-          s.ends
-        );
-      })(),
-      type: TYPE.stages,
-    },
+    stagesCase("stages · plopsa", PLOPSA_WORKSHOP_ARC, "drie-manieren"),
+    stagesCase("stages · archetype", THOUGHTFORM_WORKSHOP_ARC, "three-ways"),
   ];
 
   for (const c of cases) {

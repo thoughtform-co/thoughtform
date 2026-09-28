@@ -118,12 +118,13 @@ describe("the axis (ADR-118)", () => {
 /**
  * ⚠ THE REAL OVERVIEW IS READ ON A DAY AT OR AFTER ITS NEWEST FILING. The axis
  * tests above pin `TODAY` so their tick arithmetic never moves; the registry,
- * though, keeps filing (Pandora, 2026-09-26), and a monitor read on a day
+ * though, keeps filing (the workshop archetype, 2026-09-28), and a monitor
+ * read on a day
  * BEFORE a filing reports that engagement as "filed after now" — a real
  * violation on a fake day. Bump this when a newer arc files; never the axis
  * clock.
  */
-const REAL_TODAY = "2026-09-27";
+const REAL_TODAY = "2026-09-28";
 
 describe("the instrument's law (ADR-118)", () => {
   const real = arcsInstrumentSections(REAL_TODAY);

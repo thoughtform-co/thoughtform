@@ -12,6 +12,7 @@ import { PANDORA_PROPOSAL_ARC } from "@/lib/arcs/content/pandora-proposal";
 import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { SURI_PROPOSAL_ARC } from "@/lib/arcs/content/suri-proposal";
+import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import type { ArcSection } from "@/lib/arcs/types";
 
 /**
@@ -59,6 +60,11 @@ const ALL: readonly ArcSection[] = [
      `data-curve-*`, `data-horizon-*` and `data-questions-*` — and the
      `readout` layout's `data-readout-*`. */
   ...PLOPSA_WORKSHOP_ARC.sections,
+  /* The workshop ARCHETYPE is the first page to carry the framing leaves,
+     the `proof-card` and the `bench` TOGETHER, so it is the only place the
+     reveal/terminal seam is measured over that combination — and it is the
+     base every client fork starts from, which multiplies anything wrong. */
+  ...THOUGHTFORM_WORKSHOP_ARC.sections,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

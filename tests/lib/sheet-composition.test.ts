@@ -53,7 +53,9 @@ const POSTS = [post("one", { featured: true }), post("two", { date: "2026-09-07"
 const LADDERS: Record<string, SheetSection[]> = {
   /* The overview is the instrument since ADR-118 — the variety law defers
      to `instrumentViolations` for it (sheet-instrument.test.ts). */
-  arcs: arcsInstrumentSections("2026-09-27"),
+  /* ⚠ AT OR AFTER THE NEWEST FILING — `sheet-instrument`'s `REAL_TODAY`
+     carries the reason; the two move together. */
+  arcs: arcsInstrumentSections("2026-09-28"),
   ...Object.fromEntries(
     CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0).map((c) => [
       `arcs/${c.slug}`,
