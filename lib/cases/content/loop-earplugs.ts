@@ -2474,8 +2474,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
            2026-09-26): the pile reads as the practice a reader could see
            itself in, illustrated by Loop — not a portfolio of what was done.
            The four lines are the Dublin keynote's, word for word, so the
-           site and the talk share one vocabulary. Card 3's "self-sufficient"
-           is the owner's one allowed use of the word (ADR-124, left open).
+           site and the talk share one vocabulary. "Self-sufficient" is
+           allowed in copy since 2026-09-28 (owner; the copy law's ban is
+           deleted). A proposal that mounts these cards looks BACK at Loop and
+           says them in the past tense through its own `proof-card` title
+           (the Pandora arc); the lines here stay present.
 
            ⚠ THE ORDER IS THE ARGUMENT, and it REVERSES the first two rows
            of the casefile's own directory. The frontier work came first and

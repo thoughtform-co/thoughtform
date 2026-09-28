@@ -28,9 +28,11 @@ import type { ArcDef } from "../types";
  * ⚠ EVERY FEE DERIVES FROM ONE CONSTANT (`DAY_RATE`), the same number the
  * deck's generator carries; change it in both in one commit.
  *
- * ⚠ THE BANNED WORD is said as the behaviour everywhere ("runs it alone",
- * "without us in the room"); the homepage's own card title is not repeated
- * on this page's copy for that reason.
+ * ⚠ THE FOUR CARDS SPEAK IN THE PAST TENSE HERE (owner, 2026-09-28). The
+ * homepage says the arc lines as the practice's offer ("We push the
+ * frontiers of AI creative"); this page looks back at what was done at Loop,
+ * so each `proof-card` carries its own `title` ("We pushed …"). The record's
+ * lines are untouched: they are the Dublin keynote's, word for word.
  */
 
 const DAY_RATE = 1500;
@@ -105,24 +107,28 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       kind: "proof-card",
       menuLabel: "Films",
       track: "atl-films",
+      title: "We pushed the frontiers of AI creative",
     },
     {
       id: "practice-tools",
       kind: "proof-card",
       menuLabel: "Tools",
       track: "tooling",
+      title: "We built the tools the work needed",
     },
     {
       id: "practice-studio",
       kind: "proof-card",
       menuLabel: "Studio",
       track: "studio",
+      title: "We made the creative team self-sufficient",
     },
     {
       id: "practice-layer",
       kind: "proof-card",
       menuLabel: "The layer",
       track: "ai-transformation",
+      title: "We built the layer the agents run on",
     },
     {
       id: "turn",
@@ -185,6 +191,122 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
             ],
           },
           reach: { label: "Where it scales", value: "into the rest of marketing" },
+        },
+      ],
+    },
+    {
+      id: "phases",
+      kind: "list-groups",
+      menuLabel: "Phases",
+      menuPrimary: true,
+      layout: "plates",
+      head: {
+        eyebrow: "Pandora · the three months",
+        title: { pre: "The plan,", em: "month by month." },
+        sub: "Operations first, because that is where the studio's week goes, then the review, then the same workflows handed to agents and shown to the next team. Each month ends on something that has to work before the next one starts, and you can stop after any of them.",
+      },
+      groups: [
+        {
+          id: "m1",
+          label: "M1 · about four weeks",
+          blurb: "Operations",
+          items: [
+            {
+              id: "m1w1",
+              tag: "Week 1 · Copenhagen",
+              name: "Watch before building",
+              body: "The stack, the PM and producer meetings, the freelancers' week written down as it is. The task force kicks off. Claude access sorted with D&T",
+            },
+            {
+              id: "m1w2",
+              tag: "Week 2",
+              name: "File naming and the Primo upload, as one Skill",
+              body: "Run by a PM pressing the button, on the studio's own Claude account",
+            },
+            {
+              id: "m1w3",
+              tag: "Week 3",
+              name: "The recap after a creative review, and the schedule",
+              body: "Who said what, the decisions, the next steps with dates, written from the review notes. The Asana schedule read from the same notes",
+            },
+            {
+              id: "m1w4",
+              tag: "Week 4",
+              name: "Resource planning, briefed like a new planner",
+              body: "Hub Planner read from Asana. One lunch-and-learn a week throughout, homework in between",
+            },
+          ],
+          foot: {
+            label: "Done when",
+            lines: [
+              "A PM files a campaign into Primo with the right names and writes the review recap without us",
+              "Each task-force member has encoded one workflow of their own",
+            ],
+          },
+        },
+        {
+          id: "m2",
+          label: "M2 · about four weeks",
+          blurb: "Review",
+          items: [
+            {
+              id: "m2w1",
+              tag: "Weeks 1 and 2",
+              name: "The retouching checker, with the producers",
+              body: "Pandora's own reference shots and the producers' rules in their words, starting with the metal shade and the sparkle. Every retouch graded before a producer opens it",
+            },
+            {
+              id: "m2w2",
+              tag: "Week 3",
+              name: "The brief into Figma, without the deck",
+              body: "The email managers' brief goes into the Figma template as a page the designers work from. Nobody rebuilds a PowerPoint",
+            },
+            {
+              id: "m2w3",
+              tag: "Week 4",
+              name: "The recap in daily use, the checker on every batch",
+              body: "A producer still signs off every batch, and a note they keep repeating becomes a new check",
+            },
+          ],
+          foot: {
+            label: "Done when",
+            lines: [
+              "The producers grade a retouch batch with the checker and change one rule themselves",
+              "A brief arrives in Figma without being retyped",
+            ],
+          },
+        },
+        {
+          id: "m3",
+          label: "M3 · about four weeks",
+          blurb: "Agents and scaling",
+          items: [
+            {
+              id: "m3w1",
+              tag: "Weeks 1 and 2",
+              name: "From a button to a schedule",
+              body: "The filing, the schedule and the recap run on their own and the team checks in every hour. The checker runs on every upload to Primo",
+            },
+            {
+              id: "m3w2",
+              tag: "Week 3",
+              name: "Pandora's Skills, written down as files the studio owns",
+              body: "Brand nuance, tone, the CMO's read, the review rules. The blueprint for the wider marketing organisation, with Jenny",
+            },
+            {
+              id: "m3w3",
+              tag: "Week 4 · Copenhagen",
+              name: "Handover: a production week with us out of the room",
+              body: "Check-ins at one month and at three",
+            },
+          ],
+          foot: {
+            label: "Done when",
+            lines: [
+              "The team runs the month without us",
+              "Kristin has the next three workflows listed",
+            ],
+          },
         },
       ],
     },
@@ -395,302 +517,61 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       },
     },
     {
-      id: "phases",
-      kind: "list-groups",
-      menuLabel: "Phases",
-      menuPrimary: true,
-      layout: "plates",
-      head: {
-        eyebrow: "Pandora · the three months",
-        title: { pre: "The plan,", em: "month by month." },
-        sub: "Operations first, because that is where the studio's week goes, then the review, then the same workflows handed to agents and shown to the next team. Each month ends on something that has to work before the next one starts, and you can stop after any of them.",
-      },
-      groups: [
-        {
-          id: "m1",
-          label: "M1 · about four weeks",
-          blurb: "Operations",
-          items: [
-            {
-              id: "m1w1",
-              tag: "Week 1 · Copenhagen",
-              name: "Watch before building",
-              body: "The stack, the PM and producer meetings, the freelancers' week written down as it is. The task force kicks off. Claude access sorted with D&T",
-            },
-            {
-              id: "m1w2",
-              tag: "Week 2",
-              name: "File naming and the Primo upload, as one Skill",
-              body: "Run by a PM pressing the button, on the studio's own Claude account",
-            },
-            {
-              id: "m1w3",
-              tag: "Week 3",
-              name: "The recap after a creative review, and the schedule",
-              body: "Who said what, the decisions, the next steps with dates, written from the review notes. The Asana schedule read from the same notes",
-            },
-            {
-              id: "m1w4",
-              tag: "Week 4",
-              name: "Resource planning, briefed like a new planner",
-              body: "Hub Planner read from Asana. One lunch-and-learn a week throughout, homework in between",
-            },
-          ],
-          foot: {
-            label: "Done when",
-            lines: [
-              "A PM files a campaign into Primo with the right names and writes the review recap without us",
-              "Each task-force member has encoded one workflow of their own",
-            ],
-          },
-        },
-        {
-          id: "m2",
-          label: "M2 · about four weeks",
-          blurb: "Review",
-          items: [
-            {
-              id: "m2w1",
-              tag: "Weeks 1 and 2",
-              name: "The retouching checker, with the producers",
-              body: "Pandora's own reference shots and the producers' rules in their words, starting with the metal shade and the sparkle. Every retouch graded before a producer opens it",
-            },
-            {
-              id: "m2w2",
-              tag: "Week 3",
-              name: "The brief into Figma, without the deck",
-              body: "The email managers' brief goes into the Figma template as a page the designers work from. Nobody rebuilds a PowerPoint",
-            },
-            {
-              id: "m2w3",
-              tag: "Week 4",
-              name: "The recap in daily use, the checker on every batch",
-              body: "A producer still signs off every batch, and a note they keep repeating becomes a new check",
-            },
-          ],
-          foot: {
-            label: "Done when",
-            lines: [
-              "The producers grade a retouch batch with the checker and change one rule themselves",
-              "A brief arrives in Figma without being retyped",
-            ],
-          },
-        },
-        {
-          id: "m3",
-          label: "M3 · about four weeks",
-          blurb: "Agents and scaling",
-          items: [
-            {
-              id: "m3w1",
-              tag: "Weeks 1 and 2",
-              name: "From a button to a schedule",
-              body: "The filing, the schedule and the recap run on their own and the team checks in every hour. The checker runs on every upload to Primo",
-            },
-            {
-              id: "m3w2",
-              tag: "Week 3",
-              name: "Pandora's Skills, written down as files the studio owns",
-              body: "Brand nuance, tone, the CMO's read, the review rules. The blueprint for the wider marketing organisation, with Jenny",
-            },
-            {
-              id: "m3w3",
-              tag: "Week 4 · Copenhagen",
-              name: "Handover: a production week with us out of the room",
-              body: "Check-ins at one month and at three",
-            },
-          ],
-          foot: {
-            label: "Done when",
-            lines: [
-              "The team runs the month without us",
-              "Kristin has the next three workflows listed",
-            ],
-          },
-        },
-      ],
-    },
-    {
+      /* HOW WE WORK, WHAT WE NEED AND WHAT YOU KEEP WERE TWO SECTIONS OF ONE
+         OBJECT (owner, 2026-09-28: they "look too similar … simplify them"):
+         two columns of tagged rows with a sentence each, about sixty lines.
+         Now one beat of two readout panels (ADR-130's layout: a framed key,
+         its value set right, no prose). The loop's four rows went, because
+         the board, the plan and the checker already say who owns it, what
+         runs it, the bar and where it runs; what Pandora has to provide moved
+         into the next steps, where it is asked for. */
       id: "how-we-work",
       kind: "list-groups",
-      menuLabel: "The loop",
-      layout: "columns",
+      menuLabel: "How we work",
+      layout: "readout",
       head: {
-        eyebrow: "Pandora · inside every phase",
+        eyebrow: "Pandora · how we work",
         title: { pre: "How we work", em: "with your team." },
-        sub: "We set up one loop in week one and run it beside your team until they run it on their own.",
+        sub: "Who is in the room and how much of their time it takes, and what the studio keeps when we leave.",
       },
       groups: [
-        {
-          id: "loop",
-          label: "The loop, on one workstream",
-          blurb: "Creative review, M2. The operational workflows of M1 run on the same loop.",
-          items: [
-            {
-              id: "owns",
-              tag: "Who owns it",
-              name: "The producers, and Kristin as the last gate",
-              body: "The producers decide what passes a retouch. Kristin decides what the checker may decide alone.",
-            },
-            {
-              id: "runs",
-              tag: "What runs it",
-              name: "Pandora's Skills, in Claude",
-              body: "The review rules, the product facts and the naming conventions as plain files, on Pandora's own account.",
-            },
-            {
-              id: "bar",
-              tag: "The bar",
-              name: "The producers' rubric, in their words",
-              body: "Every retouch is graded against it before anyone opens the file. What they say twice becomes a check.",
-            },
-            {
-              id: "where",
-              tag: "Where it runs",
-              name: "Claude, reading Primo and Figma",
-              body: "Connected to the asset library, to the design files and to the schedule in Asana.",
-            },
-          ],
-        },
         {
           id: "people",
-          label: "In the loop, and how much",
-          blurb: "Who is in the room, and what it costs them in time.",
+          label: "Who is in the room",
+          blurb: "And how much of their time",
           items: [
-            {
-              id: "kristin",
-              tag: "Pandora",
-              name: "Kristin, owner and sponsor",
-              body: "The kickoff and the handover, one session a week in between, and the monthly read with Jenny.",
-              meta: "One session a week",
-            },
-            {
-              id: "taskforce",
-              tag: "Pandora",
-              name: "The AI task force, the first to learn it",
-              body: "In every session in month one. From month two they give the sessions to their colleagues.",
-              meta: "Two sessions a week in M1, then their own",
-            },
-            {
-              id: "pms",
-              tag: "Pandora",
-              name: "The PMs and producers, who run the work",
-              body: "In the workflows from week one. The producers' review time is what the checker learns from, so it is not optional.",
-              meta: "Sessions in months one and two",
-            },
-            {
-              id: "jenny",
-              tag: "Pandora",
-              name: "Jenny, on scope and the wider organisation",
-              body: "The kickoff, and the blueprint in month three.",
-              meta: "Two sessions",
-            },
-            {
-              id: "vince",
-              tag: "Thoughtform",
-              name: "Vince, on AI and creative technology",
-              body: "About five days a month in Copenhagen, the rest in the team's own channels. Builds the Skills with the studio, then steps back.",
-              meta: "About twenty days a month",
-            },
-            {
-              id: "rob",
-              tag: "Thoughtform",
-              name: "Rob, on structure and the senior conversations",
-              body: "Mostly in the background, and in the room when a senior voice helps: the business case, the read with Jenny, and what the new work changes in the team's roles.",
-              meta: "One session a month",
-            },
+            { id: "kristin", tag: "Kristin", name: "One session a week" },
+            { id: "taskforce", tag: "The AI task force", name: "Two sessions a week in month one" },
+            { id: "pms", tag: "PMs and producers", name: "In the workflows from week one" },
+            { id: "jenny", tag: "Jenny", name: "The kickoff, and month three" },
+            { id: "vince", tag: "Vince", name: "About twenty days a month" },
+            { id: "rob", tag: "Rob", name: "One session a month" },
           ],
-        },
-      ],
-    },
-    {
-      id: "needs-keeps",
-      kind: "list-groups",
-      menuLabel: "Needs and keeps",
-      layout: "columns",
-      head: {
-        eyebrow: "Pandora · the terms of the work",
-        title: { pre: "What we need, and", em: "what you keep." },
-        sub: "What we need before week one, and what stays with the studio when we leave.",
-      },
-      groups: [
-        {
-          id: "needs",
-          label: "What this needs from Pandora",
-          items: [
-            {
-              id: "claude",
-              tag: "01",
-              name: "Claude for the studio",
-              body: "The enterprise access Kristin is pursuing with D&T, with Jenny's support. The workflows need it; until it lands, the task force's own seats are enough to start week one.",
-            },
-            {
-              id: "access",
-              tag: "02",
-              name: "Access, in Pandora's name",
-              body: "A Figma seat, read access to Primo and the MRM, Asana and Hub Planner, a shared folder and a place to keep versions. Opened in Pandora's name so nothing needs migrating later.",
-            },
-            {
-              id: "record",
-              tag: "03",
-              name: "The record as it stands",
-              body: "The last quarter's review recaps, a handful of reference shots and retouched assets with the producers' verdicts, the brand book, the tone of voice and the naming convention.",
-            },
-            {
-              id: "week",
-              tag: "04",
-              name: "A first week of watching",
-              body: "Nothing is built in week one. We join the meetings, read the tools and write down how the work runs today.",
-            },
-            {
-              id: "time",
-              tag: "05",
-              name: "The studio's time",
-              body: "Kristin's and the task force's, and the producers' review time. The checker learns from what they send back.",
-            },
-          ],
+          foot: {
+            label: "On site",
+            lines: ["About five days a month in Copenhagen, the rest in the team's own channels."],
+          },
         },
         {
           id: "keeps",
-          label: "What Pandora has at the end",
+          label: "What you keep",
+          blurb: "When we leave",
           items: [
-            {
-              id: "skills",
-              tag: "Keeps",
-              name: "The Skills",
-              body: "Naming, the upload, the recap, the schedule, resourcing and the review rules, as files Pandora owns and edits.",
-            },
-            {
-              id: "workflows",
-              tag: "Keeps",
-              name: "The workflows, on Pandora's own accounts",
-              body: "Running inside Figma, Primo and Asana. No platform to license beyond the tools the studio already has.",
-            },
+            { id: "skills", tag: "The Skills", name: "Files the studio owns and edits" },
+            { id: "workflows", tag: "The workflows", name: "On Pandora's own accounts" },
             {
               id: "checker",
-              tag: "Keeps",
-              name: "The retouching checker",
-              body: "On Pandora's own reference shots, with the producers as the last gate.",
+              tag: "The checker",
+              name: "On Pandora's own reference shots",
+              href: "#checker",
             },
-            {
-              id: "team",
-              tag: "Keeps",
-              name: "A team that runs it",
-              body: "The task force gives its own sessions, and the handover is a production week the team runs on its own.",
-            },
-            {
-              id: "blueprint",
-              tag: "Keeps",
-              name: "The blueprint for the wider marketing organisation",
-              body: "Which teams next, what each would write down first, and what it would save.",
-            },
-            {
-              id: "nodep",
-              tag: "Keeps",
-              name: "No fee to us afterwards",
-              body: "There is no retainer, and nothing stops working if we stop answering. Check-ins at one month and at three.",
-            },
+            { id: "team", tag: "The team", name: "Giving its own sessions" },
+            { id: "blueprint", tag: "The blueprint", name: "For the wider marketing organisation" },
           ],
+          foot: {
+            label: "Afterwards",
+            lines: ["No retainer, and check-ins at one month and at three."],
+          },
         },
       ],
     },
@@ -793,13 +674,13 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           id: "week",
           n: "01",
           title: "Confirm the first week in Copenhagen",
-          body: "Five days of watching before anything is built, planned around the producers' calendar.",
+          body: "Five days of watching before anything is built, planned around the producers' calendar. Before it: last quarter's review recaps, a handful of retouched assets with the producers' verdicts, the brand book and the naming convention.",
         },
         {
           id: "claude",
           n: "02",
           title: "Claude access, in Pandora's name",
-          body: "The enterprise conversation with D&T, with Jenny's support. The appendix below is written for it.",
+          body: "The enterprise conversation with D&T, with Jenny's support; the appendix below is written for it. Figma, Primo, Asana and Hub Planner opened in Pandora's name too, so nothing needs migrating later.",
         },
         {
           id: "scope",

@@ -873,7 +873,17 @@ describe("arcs registry (ADR-052)", () => {
           expect(
             arcTitleText(card.head.title).toLowerCase(),
             `${at}: the head repeats the card's title`
-          ).not.toBe(track.arc.title.toLowerCase());
+          ).not.toBe((card.title ?? track.arc.title).toLowerCase());
+        }
+        /* A page's own line for the card (the proposal's past tense, owner
+           2026-09-28) fits the record's budget: ≤44 measured (the head is a
+           `nowrap` bar), no digit, and never the record's line restated. */
+        if (card.title !== undefined) {
+          expect(card.title.length, `${at}: title`).toBeLessThanOrEqual(44);
+          expect(card.title, `${at}: a digit on the card's title`).not.toMatch(/\d/);
+          expect(card.title, `${at}: the override IS the record's line`).not.toBe(
+            track?.arc?.title
+          );
         }
       }
       /* The sequence is the pile's, filtered to what the page carries. */

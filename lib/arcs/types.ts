@@ -660,6 +660,18 @@ export type ArcSection = ArcSectionBase &
         /** A `CaseTrack.id` on the Loop casefile — `PROOF_STACK_ORDER`'s vocabulary. */
         track: string;
         head?: ArcHead;
+        /**
+         * The card's title ON THIS PAGE, in place of `track.arc.title`
+         * (owner, 2026-09-28). The homepage's four arc lines are the
+         * practice's OFFER, in the present tense ("We push the frontiers of
+         * AI creative"); a proposal that shows the same cards is looking
+         * BACK at Loop, so it says them in the past ("We pushed …"). The
+         * record's line is untouched — it is the keynote's, word for word.
+         * ⚠ It is the ARC's string, so the proposal copy law walks it
+         * (`arcs-registry` pins the rest: ≤44, no digit, never the record's
+         * own line).
+         */
+        title?: string;
       }
     | {
         /**

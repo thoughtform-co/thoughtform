@@ -51,12 +51,20 @@ interface ArcProofCardProps {
 export function ArcProofCard({ section, index, motion = "reveal" }: ArcProofCardProps) {
   const def = getCase(PROOF_STACK_CASE);
   if (!def) throw new Error(`[arc proof-card] case "${PROOF_STACK_CASE}" is not in CASES`);
-  const track = def.casefile.tracks.find((t) => t.id === section.track);
-  if (!track) {
+  const record = def.casefile.tracks.find((t) => t.id === section.track);
+  if (!record) {
     throw new Error(
       `[arc proof-card] track "${section.track}" is not on the ${PROOF_STACK_CASE} casefile`
     );
   }
+  /* A page may say the card's line in its own tense (`section.title`, owner
+     2026-09-28): the card reads `arc.title`, so the override is a copy of
+     the record with that one field replaced, never a prop on `ProofCard`
+     (whose markup the pile and the Trinny pitch share). */
+  const track =
+    section.title && record.arc
+      ? { ...record, arc: { ...record.arc, title: section.title } }
+      : record;
   const client = proofStackClient();
   const accent = client.accentRgb
     ? ({ "--pf-accent-rgb": client.accentRgb } as CSSProperties)

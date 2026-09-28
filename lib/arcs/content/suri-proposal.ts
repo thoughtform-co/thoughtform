@@ -289,9 +289,9 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
          blocks, a week per ruled row, the deliverable as an inverse foot.
          Content is `suri-proposal-v25.pptx` slide 9, mapped by shape
          position (the "Creative strategy, tone of voice…" line sits under
-         M1's week 2). ⚠ Two of its lines are rewritten to the BEHAVIOUR —
-         "self-sufficient" is banned by this surface's own copy law, and
-         "autonomously" is the same word one door down. */
+         M1's week 2). Two of its lines were rewritten to the BEHAVIOUR while
+         the copy law banned "self-sufficient" (lifted 2026-09-28, owner);
+         they stay as the page reads now. */
       id: "phases",
       kind: "list-groups",
       menuLabel: "Phases",

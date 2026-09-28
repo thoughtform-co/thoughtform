@@ -542,7 +542,8 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
 - **`--tl-brand-rgb` is a route-local token** (240, 104, 80, the Naked Ambition
   tube). Never a re-derivation of `--gold`: the WebGL golds are exempt from CSS
   by design and would go out of step.
-- **The proposal letters no Arc vocabulary, no digit, no "self-sufficient"** —
+- **The proposal letters no Arc vocabulary and no digit** ("self-sufficient"
+  is allowed since 2026-09-28, owner, and left `PROPOSAL_COPY_BANS`) —
   `trinny-offer.test.ts` walks `TRINNY_BOARD` (ADR-100; `TRINNY_CONFIGURATION`
   before it) with `PROPOSAL_COPY_BANS` (it was the parse guard's job while the
   record lived in the HTML). Connectors on the offer are 1px DIVS (the wireframe

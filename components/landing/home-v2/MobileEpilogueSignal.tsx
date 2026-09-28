@@ -327,9 +327,10 @@ export function MobileEpilogueSignal() {
           GOAL the arc hands to the proof — we embed, until the team runs it
           without us (owner, 2026-09-26, ADR-126; the proposition line moved
           back to the services masthead alone) — the race demoted to the
-          ticker that was already its evidence, and the word
-          "self-sufficient" is banned in copy — say the behaviour. The
-          aria-label above is the third thing to move. */}
+          ticker that was already its evidence. The aria-label above is the
+          third thing to move. (The word "self-sufficient" is allowed in
+          copy since 2026-09-28, owner; this title says the behaviour by
+          choice.) */}
       {/* ⚠ NO AUTHORED `<br>` HERE — the one place this surface may diverge
           from the desktop string, for fit rather than copy: the desktop's
           two authored lines are set against a phone-width box, and the GOLD

@@ -258,8 +258,7 @@ export const TRINNY_PHASES: ArcSection = {
  * ⚠ DRAFT COPY, HIS PHRASES (the deck's own lede, the Suri `what-we-build`
  * cards noun-swapped, the discovery call's "not the founder for every
  * asset"). He rewrites it. `name` ≤ 40 characters: the scene's carrier
- * letters it on ONE line while it travels. ⚠ "self-sufficient" is banned by
- * the copy law — say what the team does, not the word.
+ * letters it on ONE line while it travels.
  *
  * ⚠ THE FIRST STAGE IS THE SCAN — a generated packshot read by a machine,
  * the checks the studio's grading actually gates called out as the edge
