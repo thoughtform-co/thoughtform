@@ -765,8 +765,12 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   workshop format is shared by three pages), the first beat on the STAGE token
   (`--arc-stage-pad`, the curtain's), and the heads on
   `clamp(28px, 18vh − 100px, 112px)` so no eyebrow runs through the client
-  mark's hairline at 1280×720. ⚠ Plopsa's `configuration` beat is gone, so the
-  `/arcs` dossier draws no board for it until a `questions` reader lands.
+  mark's hairline at 1280×720. ⚠ Plopsa's `configuration` beat is gone, and
+  since ADR-130 U3 the `/arcs` dossier reads the `questions` beat instead
+  (`configurationFromQuestions`): ONE row, the work's name (its `line` is a
+  sentence and overran the die's one-line note), and the stack items the six
+  ANSWERS name. **An edit to an answer moves a chip on the owner's page**, and
+  `sheet-config-fit` pins it; an arc carries a picker OR a board, never both.
   ⚠ **U1 (2026-09-27, owner: the instruments "look boring af"; the panels are
   "glorified powerpoint panels") REDRAWS ALL FOUR IN THE BRANDWORLD'S ISOMETRIC
   REGISTER, REVERSING DECISION 3'S OWN RULING** — wireframe machines on a ruled

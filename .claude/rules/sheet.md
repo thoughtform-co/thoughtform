@@ -245,7 +245,9 @@ U2, U3).
   is authored for it**: rows are `configuration.teams[]`, links are
   `lib/arcs/stack.ts`'s matchers run over each workstream's own `where`/`runs`
   sentence, pinned `toEqual` per proposal in `sheet-config-fit`; a bracketed
-  `[Next team]` is the scaffold's placeholder and is dropped. Trinny's board is
+  `[Next team]` is the scaffold's placeholder and is dropped. A workshop that
+  draws the six-question board (`questions`, ADR-130 U3) is read too: one row,
+  the work's name, and the stack items its six answers name. Trinny's board is
   its own configured board's tools over its phases, read from
   `lib/arcs/content/trinny-london-offer.ts` (the route re-exports it). ⚠ **FOUR
   CROPS, A CONTAINER QUERY PICKS ONE** (`CROP_SWITCH`, mirrored by hand in

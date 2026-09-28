@@ -157,7 +157,8 @@ function registryRecord() {
       title: a.cardTitle,
       chip: a.format,
       sections: a.sections.length,
-      configured: a.sections.some((s) => s.kind === "configuration"),
+      // A proposal's picker, or a workshop's six-question board (ADR-130).
+      configured: a.sections.some((s) => s.kind === "configuration" || s.kind === "questions"),
     });
   return out;
 }

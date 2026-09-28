@@ -63,8 +63,10 @@ export const STACK: readonly StackItem[] = [
     id: "image-generation",
     kind: "model",
     name: "Image generation",
-    // The Dutch word too: a client page in Dutch says "beeldgeneratie".
-    match: /\bimage generation\b|\bbeeldgeneratie\b/i,
+    // The Dutch word too: a client page in Dutch says "beeldgeneratie". And
+    // the models by name, as a workshop's model answer spells them (ADR-130's
+    // "Nano Banana Pro en GPT Image"): the chip still letters the class.
+    match: /\bimage generation\b|\bbeeldgeneratie\b|\bNano Banana\b|\bGPT Image\b/i,
   },
   {
     id: "video-generation",

@@ -32,7 +32,11 @@ import { arcsOf, houseArcs } from "@/lib/arcs/registry";
 import type { ArcDef, ArcKind } from "@/lib/arcs/types";
 
 import { atOnWindow, axisWindow } from "./axis";
-import { configurationFromBoard, configurationFromSection } from "./configuration";
+import {
+  configurationFromBoard,
+  configurationFromQuestions,
+  configurationFromSection,
+} from "./configuration";
 import { letterDateShort } from "./dates";
 import type {
   SheetConfiguration,
@@ -226,9 +230,15 @@ const PAGE_CONFIGURATIONS: Record<string, () => SheetConfiguration> = {
   },
 };
 
+/** An arc's configuration: its `configuration` picker, or — a workshop that
+ *  draws the six-question board instead (ADR-130) — its `questions` beat. A
+ *  page carries one or the other; two would be the said-twice defect. */
 function arcConfiguration(arc: ArcDef): SheetConfiguration | null {
-  const s = arc.sections.find((x) => x.kind === "configuration");
-  return s?.kind === "configuration" ? configurationFromSection(s) : null;
+  for (const s of arc.sections) {
+    if (s.kind === "configuration") return configurationFromSection(s);
+    if (s.kind === "questions") return configurationFromQuestions(s);
+  }
+  return null;
 }
 
 /** Every engagement on the overview exactly once, in LOG order: each client's

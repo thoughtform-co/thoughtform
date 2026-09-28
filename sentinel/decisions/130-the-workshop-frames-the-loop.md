@@ -602,3 +602,34 @@ SVG with every path present. `npm run verify` green (2392 tests, 145 files);
   fallback by design. Pre-existing.
 - **The Moira deck itself.** If the repo comes back, its `evals v2` framing is
   worth re-reading against these four beats.
+
+## Update 3 (2026-09-28) — the `/arcs` dossier reads the six-question board
+
+Closes Decision 5's consequence and the first item under **Left open**: the
+owner's overview drew no configuration for Plopsa once its picker became the
+board. `lib/sheet/configuration.ts` gains `configurationFromQuestions`, and
+`arcConfiguration()` (`lib/sheet/arcs.ts`) takes a `configuration` section or,
+failing one, a `questions` section.
+
+- **One row, because the board has one piece of work at its centre**: the
+  work's `name`, no note. ⚠ The work's `line` is a SENTENCE where a proposal's
+  note is a phrase, and the die letters a note on one unwrapped line — it ran
+  4px past the narrow crop and 74px out of the die on the wide one. Measured by
+  `sheet-config-fit`, not guessed.
+- **The links are what the six ANSWERS name**, through `lib/arcs/stack.ts`'s
+  matchers, each used by the one row. All six are read, not the three whose ids
+  happen to say `model` / `data` / `interface`: ids are authored per page, and
+  a reader keyed on them goes blind the day Loop's copy spells one in English.
+- ⚠ **The image-generation matcher learned the models' names** (`Nano Banana`,
+  `GPT Image`): the model answer names the models, not the class, so without
+  them the board drew Claude alone. The chip still letters the class, as the
+  vocabulary requires. No other page's reading moved (every pin `toEqual`).
+- **Plopsa's dossier now reads** `Een campagnefamilie` · Claude × 1 · Image
+  generation × 1, pinned; before ADR-130 it read three workstreams off the
+  picker (Creative, Campagne, Web as the ghost).
+- **Guards**: `sheet-config-fit` puts Plopsa back on the list of boards and
+  derives the list from BOTH kinds, and a new case fails any arc carrying a
+  picker AND a board (the said-twice defect, now a test); `sheet-arcs`
+  recomputes "configured" over both kinds. The board fits all four crops.
+- Verified on `/arcs#arc=plopsa-workshop` at 1920×1247 and 1280×720, dark and
+  light.

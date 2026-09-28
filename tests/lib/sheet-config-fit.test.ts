@@ -63,23 +63,29 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
     const withBoard = realLog.dossiers.filter((d) => d.configuration).map((d) => d.id);
     expect(withBoard.sort()).toEqual(
       [
-        ...ARCS.filter((a) => a.sections.some((s) => s.kind === "configuration")).map(
-          (a) => a.slug
-        ),
+        ...ARCS.filter((a) =>
+          a.sections.some((s) => s.kind === "configuration" || s.kind === "questions")
+        ).map((a) => a.slug),
         "trinny-london-pitch",
       ].sort()
     );
-    /* ⚠ PLOPSA LEFT THIS LIST WITH ADR-130: its workshop draws the
-       configuration as the six-question board (`questions`), which this
-       reader does not read yet, so the owner's dossier carries no board for
-       it until a `configurationFromQuestions` reader lands. */
+    /* Plopsa left this list with ADR-130 (its picker became the six-question
+       board) and came back with `configurationFromQuestions`. */
     expect(withBoard.sort()).toEqual([
       "hungry-minds-proposal",
       "perfect-ted-proposal",
+      "plopsa-workshop",
       "suri-proposal",
       "suri-workshop",
       "trinny-london-pitch",
     ]);
+  });
+
+  it("reads one configuration per arc: a picker or a six-question board, never both", () => {
+    for (const a of ARCS) {
+      const n = a.sections.filter((s) => s.kind === "configuration" || s.kind === "questions");
+      expect(n.length, `${a.slug}: two configuration instruments on one page`).toBeLessThan(2);
+    }
   });
 
   it("pins what each proposal's own prose says it runs on and inside", () => {
@@ -115,6 +121,13 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "suri-workshop": {
         rows: ["Briefing||", "Statics||", "Operations||ghost"],
         links: ["Claude×2", "Figma×1", "Monday×1"],
+      },
+      /* The six-question board (ADR-130): one piece of work at the centre,
+         and what its answers name — Claude in the interface's, the image
+         models by name in the model's. */
+      "plopsa-workshop": {
+        rows: ["Een campagnefamilie||"],
+        links: ["Claude×1", "Image generation×1"],
       },
       "trinny-london-pitch": {
         rows: [

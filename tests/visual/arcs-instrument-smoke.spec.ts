@@ -57,7 +57,9 @@ const NEWEST = [...RECORD].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date
 const CONFIGURED = new Set([
   "hungry-minds-proposal",
   "perfect-ted-proposal",
+  "plopsa-workshop",
   "suri-proposal",
+  "suri-workshop",
   "trinny-london-pitch",
 ]);
 /** An arc's readout carries its section count; a client's page has none. */

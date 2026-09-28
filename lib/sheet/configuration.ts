@@ -8,6 +8,9 @@
  * the setup is for — the proposal's own workstreams — and AROUND it are what
  * it runs on and inside (`lib/arcs/stack.ts`).
  *
+ * A workshop that draws the six-question board instead of a picker (ADR-130)
+ * is read the same way: its centre work is the row, its answers the sentences.
+ *
  * ⚠ EVERY VALUE IS THE PROPOSAL'S OWN. A row is a workstream's `name` and its
  * `work` line; a link is a stack item the workstream's `where` or `runs`
  * sentence NAMES. Nothing is authored for the drawing, so the drawing cannot
@@ -30,6 +33,7 @@ import type { ArcSection } from "@/lib/arcs/types";
 import type { SheetConfigLink, SheetConfigRow, SheetConfiguration } from "./types";
 
 type ConfigurationSection = Extract<ArcSection, { kind: "configuration" }>;
+type QuestionsSection = Extract<ArcSection, { kind: "questions" }>;
 type BoardSection = Extract<ArcSection, { kind: "board" }>;
 type ListGroupsSection = Extract<ArcSection, { kind: "list-groups" }>;
 
@@ -77,6 +81,29 @@ export function configurationFromSection(s: ConfigurationSection): SheetConfigur
   const links = STACK.map((item) =>
     link(item, s.teams.filter((t) => item.match.test(`${t.where} ${t.runs}`)).length)
   ).filter((l) => l.users > 0);
+  return { rows, links: ordered(links) };
+}
+
+/**
+ * A workshop's six-question board, drawn (ADR-130) — the Plopsa workshop,
+ * whose `questions` beat replaced its `configuration` picker.
+ *
+ * The board has ONE piece of work at its centre, so the drawing has one row:
+ * the work's name, and no note. ⚠ The work's `line` is a SENTENCE ("Eén
+ * template, vijf plekken, drie soorten platen.") where a proposal's note is a
+ * phrase ("stills and video"), and the die letters a note on one unwrapped
+ * line: it ran 4px past the narrow crop and 74px out of the die on the wide
+ * one (`sheet-config-fit`). The links are the stack items the
+ * six ANSWERS name — the board's own sentences about what the work runs on,
+ * reaches and is opened in — each used by that one row. All six are read, not
+ * the three whose ids happen to say `model` / `data` / `interface`: an id is
+ * authored per page, and a reader keyed on it would go blind the day a page
+ * spells one in English.
+ */
+export function configurationFromQuestions(s: QuestionsSection): SheetConfiguration {
+  const answers = [...s.left, ...s.right].map((q) => q.answer).join(" ");
+  const rows: SheetConfigRow[] = [{ id: "work", name: s.work.name }];
+  const links = STACK.filter((item) => item.match.test(answers)).map((item) => link(item, 1));
   return { rows, links: ordered(links) };
 }
 
