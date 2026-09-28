@@ -3,6 +3,7 @@ import {
   type LetterSpec,
 } from "@/components/landing/home-v2/services/casefile/map/pda/pdaLetters";
 import {
+  bend,
   polylineLength,
   type Pt,
 } from "@/components/landing/home-v2/services/casefile/map/pda/ribbon";
@@ -23,15 +24,26 @@ import type { CircuitGlyphKey } from "./circuitGlyphData";
  *
  *   a  TODAY, AND CONFIGURED. Left, the work alone on a plain plate: typed up
  *      by hand. Right, the same work wired: the owner above it on a green
- *      drop, the model, the context and the evaluations to its left, what it
- *      reaches and where you meet it to its right. Two kinds of object — a
+ *      drop, the model, the context and the evaluations to its left, the
+ *      connectors and the interface to its right. Two kinds of object — a
  *      lone plate and a wired board — and nothing about today drawn as a gap.
- *   b  THE TEAM OWNS IT. The lone plate closes; the owner and the two written
- *      plates come forward and the rest recedes: the owner's bus feeds what
- *      the team writes, and what the team writes feeds the work.
+ *   b  THE TEAM OWNS IT. ONE COLUMN headed by the owner: the two plates the
+ *      team writes open under it, the three it is given FOLD to their bands
+ *      under those, and the work stays where it was. The owner's drop feeds
+ *      what the team writes, that feeds the work, and the draft runs back up
+ *      to the owner, who sits above the loop.
  *   c  THE LARGER WHOLE. The work shrinks to a chip among the studio's other
  *      workflows, six small circuits in a ring, every one wired to the same
  *      two shared plates at the centre — written once, owned by the team.
+ *
+ * ⚠ THE DOCTRINE IS THE RECORD (intelligence-architect, thoughtform-strategy):
+ * a configuration is one piece of work and five things — what runs it, what
+ * it inherits, what it can reach, how much it decides alone, who owns it.
+ * Moira's board says it in six plates; the fifth field rides the OWNER's
+ * plate as its second line ("it drafts, the PM sends"), as Moira's does. And
+ * "evals carry what good looks like", so the bar is the EVALUATIONS' answer
+ * and never the card's: the second cut printed it on the work and the owner
+ * sent it back.
  *
  * ⚠ A POSE IS `translate(tx, ty) scale(k)` ABOUT THE VIEWBOX ORIGIN on the
  * object's HOME geometry; identity at its home state, where the guard reads.
@@ -135,6 +147,9 @@ export interface Pose {
   o: number;
   /** Closed on its centre-out aperture (the caption card's, ADR-097 U12). */
   shut?: true;
+  /** FOLDED to its head band: the fraction of its height it keeps. A fold
+   *  is present and legible, where a recede reads as disabled. */
+  fold?: number;
 }
 
 export type PartGroup =
@@ -146,6 +161,7 @@ export type PartGroup =
   | "core"
   | "core-name"
   | "core-x"
+  | "core-pads"
   | "chip"
   | "layer"
   | "socket";
@@ -283,7 +299,12 @@ function wire(
   ends: readonly [string, string],
   wires = 8
 ): CirWire {
-  return { id, pts, wires, pitch: 4, paint, len: polylineLength(pts), on, delays, ends };
+  /* ⚠ `--l` IS PADDED BY THE RIBBON'S WIDTH: an outer conductor runs longer
+     than the base path at every bend, and a dash sized to the base leaves
+     that conductor's tail painted on an undrawn wire — a stray tick where
+     no wire is (found on the still, beside the owner). */
+  const len = polylineLength(pts) + wires * 4;
+  return { id, pts, wires, pitch: 4, paint, len, on, delays, ends };
 }
 
 /** A level stub off one edge, a 45° jog to the target's height, a level run
@@ -307,38 +328,86 @@ function jog(x0: number, y0: number, x1: number, y1: number, dir: 1 | -1, stub =
 
 /* ── The geometry ─────────────────────────────────────────────────────── */
 
+/** ONE WIDTH for the owner, the six plates and the work: Moira's board has
+ *  one plate size, and a board whose plates are three sizes reads as three
+ *  kinds of thing. */
+export const W = 304;
+
 /** State a: the lone plate on the left, the board on the right. */
-export const TODAY_COL = { x: INSET, w: 376 } as const;
-export const BOARD = { x: 440, right: CIR_VB.w - INSET } as const;
-export const BOARD_CX = (BOARD.x + BOARD.right) / 2; // 908
-/** State b centres the board in the crop once the lone plate has closed. */
-export const B_SHIFT = CIR_VB.w / 2 - BOARD_CX; // -208
-
-export const CORE: Rect = { x: BOARD_CX - 150, y: 188, w: 300, h: 200 };
+export const TODAY_CARD: Rect = { x: 34, y: 188, w: 260, h: 200 };
+export const BOARD = { x: 330, right: CIR_VB.w - INSET } as const;
+export const LEFT_X = 340;
+export const RIGHT_X = 1072;
+export const CORE: Rect = { x: 708, y: 188, w: W, h: 200 };
 export const CORE_CUT = 18;
-export const TODAY_CARD: Rect = { x: TODAY_COL.x + 38, y: CORE.y, w: 300, h: CORE.h };
-export const OWNER: Rect = { x: BOARD_CX - 150, y: 24, w: 300, h: 92 };
-export const PLATE = { w: 248, h: 96, band: 30 } as const;
-export const LEFT_X = BOARD.x + 10; // 450
-export const RIGHT_X = BOARD.right - 10 - PLATE.w; // 1118
-export const LEFT_TOPS = [116, 252, 372] as const; // model · context · evals
-export const RIGHT_TOPS = [190, 310] as const; // reach · interface
+export const BOARD_CX = CORE.x + CORE.w / 2; // 860
+export const OWNER: Rect = { x: CORE.x, y: 24, w: W, h: 116 };
+export const PLATE = { w: W, h: 104, band: 30 } as const;
+export const LEFT_TOPS = [124, 256, 372] as const; // model · context · evals
+export const RIGHT_TOPS = [190, 308] as const; // connectors · interface
 /** Where the left column's ribbons meet the work, top to bottom. */
-const LEFT_PORTS = [220, 296, 364] as const;
-const RIGHT_PORTS = [262, 330] as const;
+const LEFT_PORTS = [214, 300, 368] as const;
+const RIGHT_PORTS = [262, 340] as const;
+/** Where the work's name sits on the card — the one line that travels. */
+const NAME_DY = 94;
 
-/** State c: six chips in a ring around the two shared plates. */
-export const CHIP = { w: 200, h: 56, cut: 10 } as const;
-export const SHARED: Rect = { x: 540, y: 224, w: 320, h: 66 };
-export const SHARED_BAND = 24;
-const RING: readonly Rect[] = [
-  { x: 300, y: 64, w: CHIP.w, h: CHIP.h },
-  { x: 900, y: 64, w: CHIP.w, h: CHIP.h },
-  { x: 120, y: 258, w: CHIP.w, h: CHIP.h },
-  { x: 1080, y: 258, w: CHIP.w, h: CHIP.h },
-  { x: 300, y: 436, w: CHIP.w, h: CHIP.h },
-  { x: 900, y: 436, w: CHIP.w, h: CHIP.h },
-];
+/** What a folded plate keeps: its head band and the rule under it. */
+export const FOLD = (PLATE.band + 1) / PLATE.h;
+
+/** State b: TWO COLUMNS (owner: "highlight who owns it; the other elements
+ *  … go into the background or collapse under it"). Left, the person's side:
+ *  the owner at the head, LARGER than anything else in the beat, and under
+ *  it the two plates the team writes, open, in their frame. Right, the
+ *  machine's side: the work, and under it the three plates the team is
+ *  given, FOLDED to their bands — the model, the data and the tools are set
+ *  up once; what it knows and what good looks like can only come from the
+ *  team (Moira's leverage beat). */
+export const B_OWNER_K = 1.15;
+const B_LEFT_CX = 420;
+const B_WORK_DX = 120;
+const B_TOP = {
+  owner: 36,
+  context: 214,
+  evals: 330,
+  model: 412,
+  reach: 448,
+  interface: 484,
+} as const;
+
+/** State c: THE BACKPLANE. Every workflow is a chip carrying its own six
+ *  answers as six pads; the two the team writes are gold and wire into the
+ *  same two shared bars, which run out to one dashed socket. A bus, where a
+ *  is a hub and b a column: three beats, three shapes, one record. */
+export const CHIP = { w: 212, h: 84, cut: 10 } as const;
+const CHIP_CX = [215, 565, 915] as const;
+const CHIP_TOP = 44;
+const CHIP_BOTTOM = 432;
+export const CTX_BAR: Rect = { x: 40, y: 200, w: 1050, h: 62 };
+export const EV_BAR: Rect = { x: 40, y: 290, w: 1050, h: 62 };
+export const BAR_BAND = 24;
+export const SOCKET: Rect = { x: 1134, y: 228, w: 242, h: 96 };
+const chipAt = (i: number): Rect => ({
+  x: CHIP_CX[i % 3] - CHIP.w / 2,
+  y: i < 3 ? CHIP_TOP : CHIP_BOTTOM,
+  w: CHIP.w,
+  h: CHIP.h,
+});
+/** The six pads on a chip, in the questions' order. */
+const PAD = 14;
+const padRect = (chip: Rect, i: number): Rect => ({
+  x: chip.x + 16 + i * (PAD + 8),
+  y: chip.y + 52,
+  w: PAD,
+  h: PAD,
+});
+const PAD_TONE: Record<string, PadTone> = {
+  owner: "green",
+  context: "gold",
+  evals: "gold",
+  model: "ring-dawn",
+  reach: "ring-dawn",
+  interface: "ring-dawn",
+};
 
 export function circuitGeom(s: CircuitSection): CircuitGeom {
   const parts: CirPart[] = [];
@@ -347,11 +416,17 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
     string,
     (typeof s.questions)[number]
   >;
+  const qIds = s.questions.map((q) => q.id);
   const configIds = s.machine.configs.map((c) => c.id);
-  const ringOf = new Map<string, Rect>();
-  configIds.forEach((id, i) => ringOf.set(id, RING[i % RING.length]));
-  const coreC = ringOf.get(s.work.id);
+  const chipOf = new Map<string, Rect>();
+  configIds.forEach((id, i) => chipOf.set(id, chipAt(i)));
+  const coreC = chipOf.get(s.work.id);
   if (!coreC) throw new Error(`circuit: the work "${s.work.id}" is not one of the workflows`);
+  const pads = (chip: Rect): CirMark[] =>
+    qIds.map((id, i) => {
+      const r = padRect(chip, i);
+      return { kind: "pad", x: r.x, y: r.y, w: r.w, h: r.h, tone: PAD_TONE[id] };
+    });
 
   /* ── The bed: the board's dot field; the whole crop's in b and c. */
   parts.push({
@@ -404,7 +479,7 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         TRACK.chrome,
         TODAY_CARD.w - 40,
         TODAY_CARD.x + 20,
-        TODAY_CARD.y + 34,
+        TODAY_CARD.y + 50,
         "ink2"
       ),
       ...sans(
@@ -413,7 +488,7 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         FS.name,
         TODAY_CARD.w - 40,
         TODAY_CARD.x + 20,
-        TODAY_CARD.y + 74,
+        TODAY_CARD.y + NAME_DY,
         "ink",
         1,
         true
@@ -424,41 +499,30 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         FS.answer,
         TODAY_CARD.w - 40,
         TODAY_CARD.x + 20,
-        TODAY_CARD.y + 110,
+        TODAY_CARD.y + NAME_DY + 38,
         "ink2",
         3
       ),
     ],
   });
 
-  /* ── The ghost die around the work, and its vias. */
+  /* ── The ghost die around the work; it rides with the work in b. */
   const die: Rect = { x: CORE.x - 18, y: CORE.y - 16, w: CORE.w + 36, h: CORE.h + 32 };
-  const vias: CirMark[] = [];
-  for (const [sx, sy] of [
-    [-1, -1],
-    [1, -1],
-    [-1, 1],
-    [1, 1],
-  ] as const) {
-    const cx = sx < 0 ? die.x - 14 : die.x + die.w + 14;
-    const cy = sy < 0 ? die.y + 10 : die.y + die.h - 10;
-    vias.push({ kind: "via", cx, cy, r: 2.6 });
-    vias.push({ kind: "via", cx, cy: cy - sy * 12, r: 2.6 });
-  }
   parts.push({
     id: "die",
     group: "die",
-    poses: { a: ID, b: at(B_SHIFT, 0), c: HIDE },
-    delays: d3(440, 200, 0),
+    poses: { a: ID, b: at(B_WORK_DX, 0), c: HIDE },
+    delays: d3(440, 300, 0),
     modules: [{ id: "die", rect: die, cut: 28, paint: "die" }],
-    marks: vias,
+    marks: [],
     letters: [],
   });
 
-  /* ── The six plates. Each: a head band with the plate's name, the
-     question under it, this work's answer. The two the team writes are
-     gold; the owner is green; the other three are the plate. */
-  const plateRect = (id: string): Rect => {
+  /* ── The six plates. Each: a head band with the plate's name and its
+     mark, the question under it, this work's answer. The two the team
+     writes are gold; the owner is green; the three the team is given are
+     the plate. */
+  const home = (id: string): Rect => {
     switch (id) {
       case "owner":
         return OWNER;
@@ -474,76 +538,117 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         return { x: RIGHT_X, y: RIGHT_TOPS[1], w: PLATE.w, h: PLATE.h };
     }
   };
-  /* State b re-seats the left column: the owner comes down to head it, the
-     two written plates follow, and the model joins the right column's foot
-     — so the team and what it writes are one lit column and everything the
-     work merely runs on is the other, receded. */
-  const B_LEFT_TOPS: Record<string, number> = { owner: 96, context: 216, evals: 336 };
-  const B_COL_X = LEFT_X - 20;
-  const B_RIGHT: Record<string, Rect> = {
-    reach: { x: RIGHT_X, y: 170, w: PLATE.w, h: PLATE.h },
-    interface: { x: RIGHT_X, y: 278, w: PLATE.w, h: PLATE.h },
-    model: { x: RIGHT_X, y: 380, w: PLATE.w, h: PLATE.h },
-  };
-  const B_RIGHT_PORTS = [262, 330, 380] as const;
   const written = new Set(["context", "evals"]);
-  const bRect = (id: string): Rect =>
-    id in B_LEFT_TOPS
-      ? { x: B_COL_X, y: B_LEFT_TOPS[id], w: OWNER.w, h: id === "owner" ? OWNER.h : PLATE.h }
-      : B_RIGHT[id];
-  const bPose = (id: string): Pose => {
-    const home = plateRect(id);
-    const to = bRect(id);
-    const lit = id === "owner" || written.has(id);
-    // The left column keeps its width in b (the owner's plate is wider than
-    // a question plate); a pose is a translate, so the owner lands at the
-    // column's x and the written plates under its left edge.
-    return at(B_SHIFT + to.x - home.x, to.y - home.y, lit ? 1 : 0.32);
+  const given = new Set(["model", "reach", "interface"]);
+  const coreB: Rect = { ...CORE, x: CORE.x + B_WORK_DX };
+  const bLeft = (w: number) => B_LEFT_CX - w / 2;
+  const bPose = (id: keyof typeof B_TOP): Pose => {
+    const r = home(id);
+    if (id === "owner") {
+      const k = B_OWNER_K;
+      return { tx: bLeft(r.w * k) - k * r.x, ty: B_TOP.owner - k * r.y, k, o: 1 };
+    }
+    const x = given.has(id) ? coreB.x : bLeft(r.w);
+    const p = at(x - r.x, B_TOP[id] - r.y);
+    return given.has(id) ? { ...p, fold: FOLD } : p;
+  };
+  /* The evolution into b, in order: the lone plate closes and the three
+     given plates fold and drop under the work; the owner comes across to
+     head the person's side and grows; the written pair rises under it; then
+     the wiring draws, the owner's drop first and the draft's return last. */
+  const bDelay: Record<keyof typeof B_TOP, number> = {
+    owner: 420,
+    model: 120,
+    context: 560,
+    evals: 600,
+    reach: 180,
+    interface: 240,
+  };
+  const bOwner: Rect = {
+    x: bLeft(OWNER.w * B_OWNER_K),
+    y: B_TOP.owner,
+    w: OWNER.w * B_OWNER_K,
+    h: OWNER.h * B_OWNER_K,
   };
 
-  /* ── The frame and tag on the two written plates (Moira's frame). */
-  const cR = plateRect("context");
-  const eR = plateRect("evals");
+  /* ── The frame and tag on the two written plates (Moira's frame). The tag
+     hangs on the frame's FLOOR, where nothing is seated against it: on its
+     top it printed into the plate above. */
+  const cR = home("context");
+  const eR = home("evals");
   const frame: Rect = { x: cR.x - 10, y: cR.y - 10, w: cR.w + 20, h: eR.y + eR.h - cR.y + 20 };
   const tagW = monoWidth(s.tag, FS.chrome, TRACK.key) + 24;
+  const tag: Rect = { x: frame.x + 12, y: frame.y + frame.h - 13, w: tagW, h: 26 };
+  const frameB = at(bLeft(PLATE.w) - cR.x, B_TOP.context - cR.y);
   parts.push({
     id: "frame",
     group: "frame",
-    poses: { a: ID, b: at(B_SHIFT - 20, B_LEFT_TOPS.context - cR.y), c: HIDE },
-    delays: d3(1100, 600, 0),
+    poses: { a: ID, b: frameB, c: HIDE },
+    delays: d3(1100, bDelay.context, 0),
     modules: [
       { id: "frame", rect: frame, cut: 0, paint: "frame" },
-      {
-        id: "tag",
-        rect: { x: frame.x + 12, y: frame.y - 16, w: tagW, h: 26 },
-        cut: 0,
-        paint: "gold-fill",
-      },
+      { id: "tag", rect: tag, cut: 0, paint: "gold-fill" },
     ],
     marks: [],
     letters: [
-      mono("tag", s.tag, FS.chrome, TRACK.key, tagW - 20, frame.x + 22, frame.y + 2, "on-gold"),
+      mono("tag", s.tag, FS.chrome, TRACK.key, tagW - 20, tag.x + 10, tag.y + 18, "on-gold"),
     ],
   });
 
   s.questions.forEach((q, i) => {
-    const r = plateRect(q.id);
-    const paint: Paint = q.id === "owner" ? "green" : written.has(q.id) ? "gold" : "plate";
-    const answerInk: Ink = q.id === "owner" ? "green-ink" : "ink";
+    const r = home(q.id);
+    const isOwner = q.id === "owner";
+    const paint: Paint = isOwner ? "green" : written.has(q.id) ? "gold" : "plate";
+    const glyph: CirMark = isOwner
+      ? { kind: "person", x: r.x + r.w - 14 - 7 * 3, y: r.y + 4.5, cell: 3 }
+      : { kind: "glyph", key: q.id, x: r.x + r.w - 14 - 7 * 3, y: r.y + 4.5, cell: 3 };
+    const answer = sans(
+      `plate.${q.id}.a`,
+      q.answer,
+      FS.answer,
+      r.w - 28,
+      r.x + 14,
+      r.y + PLATE.band + 48,
+      isOwner ? "green-ink" : "ink",
+      1,
+      true
+    );
+    const detail = q.detail
+      ? sans(
+          `plate.${q.id}.d`,
+          q.detail,
+          FS.answer,
+          r.w - 28,
+          r.x + 14,
+          r.y + PLATE.band + 48 + 22,
+          "ink2"
+        )
+      : [];
+    /* c: each plate flies into ITS OWN PAD on the work's chip — the board
+       compressed into the chip's six answers, so the leitmotif arrives in
+       the network still carrying its configuration. */
+    const pad = padRect(coreC, i);
     parts.push({
       id: `plate-${q.id}`,
       group: "plate",
-      poses: { a: ID, b: bPose(q.id), c: toward(center(r), center(coreC), 0.3, 0) },
-      delays: d3(560 + i * 70, q.id === "owner" ? 0 : written.has(q.id) ? 520 : 200, 0),
+      poses: {
+        a: ID,
+        b: bPose(q.id),
+        c: {
+          ...toward(center(r), center(pad), 0.06, 0),
+          ...(given.has(q.id) ? { fold: FOLD } : {}),
+        },
+      },
+      delays: d3(560 + i * 70, bDelay[q.id], 120 + i * 40),
       modules: [{ id: `plate-${q.id}`, rect: r, cut: 12, paint, head: PLATE.band }],
-      marks: [],
+      marks: [glyph],
       letters: [
         mono(
           `plate.${q.id}.key`,
           q.key,
           FS.chrome,
           TRACK.chrome,
-          r.w - 28,
+          r.w - 28 - 7 * 3 - 12,
           r.x + 14,
           r.y + 20,
           "ink"
@@ -557,22 +662,13 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
           r.y + PLATE.band + 22,
           "ink2"
         ),
-        ...sans(
-          `plate.${q.id}.a`,
-          q.answer,
-          FS.answer,
-          r.w - 28,
-          r.x + 14,
-          r.y + PLATE.band + 48,
-          answerInk,
-          1,
-          true
-        ),
+        ...answer,
+        ...detail,
       ],
     });
   });
 
-  /* ── Their ribbons to the work: the owner's green drop from above; the
+  /* ── a · the ribbons to the work: the owner's green drop from above; the
      left column's gold runs in; the right column's out. */
   const onA = d3(1, 0, 0);
   wires.push(
@@ -589,42 +685,104 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
     )
   );
   (["model", "context", "evals"] as const).forEach((id, i) => {
-    const r = plateRect(id);
+    const r = home(id);
     wires.push(
       wire(
         `w-${id}`,
         jog(r.x + r.w, r.y + r.h / 2, CORE.x, LEFT_PORTS[i], 1, 4),
         "gold",
         onA,
-        d3(820 + i * 60, written.has(id) ? 700 : 200, 0),
+        d3(820 + i * 60, 0, 0),
         [`plate-${id}`, "core"]
       )
     );
   });
   (["reach", "interface"] as const).forEach((id, i) => {
-    const r = plateRect(id);
+    const r = home(id);
     wires.push(
       wire(
         `w-${id}`,
         jog(r.x, r.y + r.h / 2, CORE.x + CORE.w, RIGHT_PORTS[i], -1),
         "gold",
         onA,
-        d3(900 + i * 60, 200, 0),
+        d3(900 + i * 60, 0, 0),
         [`plate-${id}`, "core"]
       )
     );
   });
 
+  /* ── b · the wiring of the two sides, in b's own coordinates (wires are
+     not posed): the owner's green drop onto what the team writes; the two
+     written plates across into the work; one short stub from the work down
+     into its folded three; and the draft back UP to the owner, who sits
+     above the loop. */
+  const frameTopB = frame.y + frameB.ty;
+  const pairR = bLeft(PLATE.w) + PLATE.w;
+  wires.push(
+    wire(
+      "b-owner",
+      [
+        [B_LEFT_CX, bOwner.y + bOwner.h],
+        [B_LEFT_CX, frameTopB],
+      ],
+      "green",
+      d3(0, 1, 0),
+      d3(0, 1400, 0),
+      ["plate-owner", "frame"]
+    )
+  );
+  (["context", "evals"] as const).forEach((id, i) => {
+    const y = B_TOP[id] + PLATE.h / 2;
+    const port = id === "context" ? 250 : 350;
+    wires.push(
+      wire(
+        `b-${id}`,
+        jog(pairR, y, coreB.x, port, 1, 120),
+        "gold",
+        d3(0, 1, 0),
+        d3(0, 1560 + i * 90, 0),
+        [`plate-${id}`, "core"]
+      )
+    );
+  });
+  wires.push(
+    wire(
+      "b-given",
+      [
+        [coreB.x + coreB.w / 2, coreB.y + coreB.h],
+        [coreB.x + coreB.w / 2, B_TOP.model],
+      ],
+      "gold",
+      d3(0, 0.55, 0),
+      d3(0, 1760, 0),
+      ["core", "plate-model"],
+      4
+    )
+  );
+  const retX = coreB.x + coreB.w - 48;
+  const retY = bOwner.y + bOwner.h / 2;
+  wires.push(
+    wire(
+      "b-return",
+      bend(retX, coreB.y, bOwner.x + bOwner.w, retY, "v", 12),
+      "green",
+      d3(0, 1, 0),
+      d3(0, 1900, 0),
+      ["core", "plate-owner"],
+      4
+    )
+  );
+
   /* ── THE WORK: the plate that morphs, the name that travels, the rest
-     that withdraws. */
-  const coreB: Rect = { x: CORE.x + B_SHIFT, y: CORE.y, w: CORE.w, h: CORE.h };
-  const namePose = (to: Rect, k: number): Pose =>
-    toward([CORE.x + 20, CORE.y + 74], [to.x + 16, to.y + 36], k, 1);
+     that withdraws. ⚠ THE CARD CARRIES THE WORK AND NOTHING ELSE: its name
+     and when it runs. What good looks like is the EVALUATIONS' answer
+     (doctrine: "evals carry what good looks like"); printed on the card it
+     is said twice, on the wrong object. */
   parts.push({
     id: "core",
     group: "core",
     poses: { a: ID, b: ID, c: ID },
-    delays: d3(240, 240, 260),
+    delays: d3(240, 300, 260),
     modules: [{ id: "core", rect: CORE, cut: CORE_CUT, paint: "gold" }],
     marks: [],
     letters: [],
@@ -634,11 +792,13 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
       c: housing(coreC.x, coreC.y, coreC.w, coreC.h, CHIP.cut),
     },
   });
+  const namePose = (to: Rect, k: number): Pose =>
+    toward([CORE.x + 20, CORE.y + NAME_DY], [to.x + 16, to.y + 34], k, 1);
   parts.push({
     id: "core-name",
     group: "core-name",
-    poses: { a: ID, b: at(B_SHIFT, 0), c: namePose(coreC, FS.answer / FS.name) },
-    delays: d3(240, 240, 260),
+    poses: { a: ID, b: at(B_WORK_DX, 0), c: namePose(coreC, FS.answer / FS.name) },
+    delays: d3(240, 300, 260),
     modules: [],
     marks: [],
     letters: sans(
@@ -647,7 +807,7 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
       FS.name,
       ((CHIP.w - 32) * FS.name) / FS.answer,
       CORE.x + 20,
-      CORE.y + 74,
+      CORE.y + NAME_DY,
       "ink",
       1,
       true
@@ -656,16 +816,20 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
   parts.push({
     id: "core-x",
     group: "core-x",
-    poses: { a: ID, b: at(B_SHIFT, 0), c: { ...namePose(coreC, FS.answer / FS.name), o: 0 } },
-    delays: d3(600, 240, 0),
+    poses: {
+      a: ID,
+      b: at(B_WORK_DX, 0),
+      c: { ...namePose(coreC, FS.answer / FS.name), o: 0 },
+    },
+    delays: d3(600, 300, 0),
     modules: [],
     marks: [
       {
         kind: "rule",
         x1: CORE.x + 20,
-        y1: CORE.y + 96,
+        y1: CORE.y + NAME_DY + 22,
         x2: CORE.x + CORE.w - 20,
-        y2: CORE.y + 96,
+        y2: CORE.y + NAME_DY + 22,
         tone: "line",
       },
     ],
@@ -677,211 +841,144 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         TRACK.chrome,
         CORE.w - 40,
         CORE.x + 20,
-        CORE.y + 34,
-        "gold-ink"
-      ),
-      mono(
-        "core.goodkey",
-        "Good looks like",
-        FS.chrome,
-        TRACK.chrome,
-        CORE.w - 40,
-        CORE.x + 20,
-        CORE.y + 126,
+        CORE.y + 50,
         "gold-ink"
       ),
       ...sans(
-        "core.good",
-        s.work.good,
+        "core.when",
+        s.work.when,
         FS.answer,
         CORE.w - 40,
         CORE.x + 20,
-        CORE.y + 154,
-        "ink",
-        2
+        CORE.y + NAME_DY + 54,
+        "ink2"
       ),
     ],
   });
-
-  /* ── b · THE TEAM'S BUS: the owner's plate feeds the two written plates,
-     under them (an opaque plate hides a wire's passage, R4's order), and
-     those feed the work. Drawn in b's own coordinates: the wires are not
-     posed, so each state's wires are their own. */
-  const bOwner = { x: B_COL_X + B_SHIFT, y: B_LEFT_TOPS.owner, w: OWNER.w, h: OWNER.h };
-  const bx = bOwner.x + 30;
-  wires.push(
-    wire(
-      "b-bus",
-      [
-        [bx, bOwner.y + bOwner.h],
-        [bx, B_LEFT_TOPS.evals + PLATE.h / 2],
-      ],
-      "green",
-      d3(0, 1, 0),
-      d3(0, 380, 0),
-      ["plate-owner", "plate-evals"]
-    )
-  );
-  (["context", "evals"] as const).forEach((id, i) => {
-    const y = B_LEFT_TOPS[id] + PLATE.h / 2;
-    wires.push(
-      wire(
-        `b-${id}`,
-        jog(B_COL_X + B_SHIFT + PLATE.w, y, coreB.x, LEFT_PORTS[i + 1], 1),
-        "gold",
-        d3(0, 1, 0),
-        d3(0, 900 + i * 120, 0),
-        [`plate-${id}`, "core"]
-      )
-    );
-  });
-  (["reach", "interface", "model"] as const).forEach((id, i) => {
-    const r = B_RIGHT[id];
-    wires.push(
-      wire(
-        `b-${id}`,
-        jog(r.x + B_SHIFT, r.y + r.h / 2, coreB.x + coreB.w, B_RIGHT_PORTS[i], -1),
-        "gold",
-        d3(0, 0.32, 0),
-        d3(0, 200, 0),
-        [`plate-${id}`, "core"]
-      )
-    );
+  /* The work's own six pads, arriving on its chip as its six plates land.
+     ⚠ AFTER THE MORPH ENDS (260 + 900ms): earlier, the pads printed at the
+     chip's seat while the card was still in flight beside it. */
+  parts.push({
+    id: "core-pads",
+    group: "core-pads",
+    poses: { a: HIDE, b: HIDE, c: ID },
+    delays: d3(0, 0, 1180),
+    modules: [],
+    marks: pads(coreC),
+    letters: [],
   });
 
-  /* ── c · THE OTHER WORKFLOWS, chips in the ring; the two shared plates
-     at the centre; the one socket outside. */
+  /* ── c · THE OTHER WORKFLOWS, each a chip with its own six pads; the two
+     shared bars they all wire into; the one socket at the bars' end. */
   const names = new Map(s.machine.configs.map((c) => [c.id, c.name]));
   configIds.forEach((id, i) => {
     if (id === s.work.id) return;
-    const r = ringOf.get(id) ?? RING[i];
+    const r = chipOf.get(id) ?? chipAt(i);
+    const from = toward(center(r), center(CORE), 0.4, 0);
     parts.push({
       id: `chip-${id}`,
       group: "chip",
-      poses: {
-        a: toward(center(r), center(CORE), 0.4, 0),
-        b: toward(center(r), center(coreB), 0.4, 0),
-        c: ID,
-      },
+      poses: { a: from, b: from, c: ID },
       delays: d3(0, 0, 420 + i * 60),
       modules: [{ id: `chip-${id}`, rect: r, cut: CHIP.cut, paint: "gold" }],
-      marks: [],
+      marks: pads(r),
       letters: sans(
         `chip.${id}`,
         names.get(id) ?? id,
         FS.answer,
         CHIP.w - 32,
         r.x + 16,
-        r.y + 36,
+        r.y + 34,
         "ink",
         1,
         true
       ),
     });
   });
-  const ctxR: Rect = { ...SHARED };
-  const evR: Rect = { ...SHARED, y: SHARED.y + SHARED.h + 14 };
-  parts.push({
-    id: "layer",
+  const bar = (
+    id: string,
+    part: string,
+    r: Rect,
+    key: string,
+    line: string,
+    delay: number
+  ): CirPart => ({
+    id: part,
     group: "layer",
     poses: { a: SHUT, b: SHUT, c: ID },
-    delays: d3(0, 0, 800),
-    modules: [{ id: "shared-context", rect: ctxR, cut: 10, paint: "gold", head: SHARED_BAND }],
+    delays: d3(0, 0, delay),
+    modules: [{ id, rect: r, cut: 12, paint: "gold", head: BAR_BAND }],
     marks: [],
     letters: [
-      mono(
-        "layer.ctx.key",
-        byId.context?.key ?? "The context",
-        FS.chrome,
-        TRACK.chrome,
-        ctxR.w - 28,
-        ctxR.x + 14,
-        ctxR.y + 17,
-        "gold-ink"
-      ),
-      ...sans(
-        "layer.ctx",
-        s.machine.layer.context,
-        FS.chrome,
-        ctxR.w - 28,
-        ctxR.x + 14,
-        ctxR.y + SHARED_BAND + 26,
-        "ink",
-        1,
-        true
-      ),
+      mono(`${part}.key`, key, FS.chrome, TRACK.chrome, 360, r.x + 14, r.y + 17, "gold-ink"),
+      ...sans(`${part}.line`, line, FS.answer, 560, r.x + 14, r.y + BAR_BAND + 26, "ink", 1, true),
     ],
   });
-  parts.push({
-    id: "layer-ev",
-    group: "layer",
-    poses: { a: SHUT, b: SHUT, c: ID },
-    delays: d3(0, 0, 900),
-    modules: [{ id: "shared-evals", rect: evR, cut: 10, paint: "gold", head: SHARED_BAND }],
-    marks: [],
-    letters: [
-      mono(
-        "layer.ev.key",
-        byId.evals?.key ?? "The evaluations",
-        FS.chrome,
-        TRACK.chrome,
-        evR.w - 28,
-        evR.x + 14,
-        evR.y + 17,
-        "gold-ink"
-      ),
-      ...sans(
-        "layer.ev",
-        s.machine.layer.evals,
-        FS.chrome,
-        evR.w - 28,
-        evR.x + 14,
-        evR.y + SHARED_BAND + 26,
-        "ink",
-        1,
-        true
-      ),
-    ],
-  });
-  // Every chip's two taps into the shared pair, from the ring.
+  parts.push(
+    bar(
+      "shared-context",
+      "layer",
+      CTX_BAR,
+      byId.context?.key ?? "The context",
+      s.machine.layer.context,
+      700
+    ),
+    bar(
+      "shared-evals",
+      "layer-ev",
+      EV_BAR,
+      byId.evals?.key ?? "The evaluations",
+      s.machine.layer.evals,
+      780
+    )
+  );
+  /* Every chip's two gold pads tap the two bars: a top chip drops into the
+     context and on, behind it, into the evaluations; a bottom chip rises
+     into the evaluations and on into the context. */
+  const ctxI = qIds.indexOf("context");
+  const evI = qIds.indexOf("evals");
   configIds.forEach((id, i) => {
-    const r = ringOf.get(id) ?? RING[i];
-    const [cx, cy] = center(r);
-    const left = cx < SHARED.x;
-    const x0 = left ? r.x + r.w : r.x;
-    const x1 = left ? SHARED.x : SHARED.x + SHARED.w;
-    const dir: 1 | -1 = left ? 1 : -1;
+    const r = chipOf.get(id) ?? chipAt(i);
+    const top = r.y < CTX_BAR.y;
     const end = id === s.work.id ? "core" : `chip-${id}`;
-    // The top row into the context, the bottom row into the evaluations,
-    // the middle row level into the seam between the two.
-    const row = cy < SHARED.y ? "top" : cy > evR.y + evR.h ? "bottom" : "mid";
-    const ty =
-      row === "top"
-        ? ctxR.y + ctxR.h / 2
-        : row === "bottom"
-          ? evR.y + evR.h / 2
-          : (ctxR.y + ctxR.h + evR.y) / 2;
-    const plate = row === "bottom" ? "layer-ev" : "layer";
+    const px = (k: number) => padRect(r, k).x + PAD / 2;
+    const y0 = top ? r.y + r.h : r.y;
+    const ctxY = top ? CTX_BAR.y : CTX_BAR.y + CTX_BAR.h;
+    const evY = top ? EV_BAR.y : EV_BAR.y + EV_BAR.h;
     wires.push(
       wire(
-        `c-${id}`,
-        jog(x0, cy, x1, ty, dir, 8),
+        `c-${id}-ctx`,
+        [
+          [px(ctxI), y0],
+          [px(ctxI), ctxY],
+        ],
         "gold",
         d3(0, 0, 1),
-        d3(0, 0, 900 + i * 40),
-        [end, plate],
-        4
+        d3(0, 0, 980 + i * 50),
+        [end, "layer"],
+        2
+      ),
+      wire(
+        `c-${id}-ev`,
+        [
+          [px(evI), y0],
+          [px(evI), evY],
+        ],
+        "gold",
+        d3(0, 0, 1),
+        d3(0, 0, 1010 + i * 50),
+        [end, "layer-ev"],
+        2
       )
     );
   });
-  // The socket: below the centre, dashed — a system that does not exist yet.
-  const sock: Rect = { x: 530, y: 470, w: 340, h: 66 };
+  // The socket: at the bars' end, dashed — a system that does not exist yet.
   parts.push({
     id: "socket",
     group: "socket",
-    poses: { a: at(0, 24, 0), b: at(0, 24, 0), c: ID },
+    poses: { a: at(24, 0, 0), b: at(24, 0, 0), c: ID },
     delays: d3(0, 0, 1300),
-    modules: [{ id: "socket", rect: sock, cut: 10, paint: "future", head: 26 }],
+    modules: [{ id: "socket", rect: SOCKET, cut: 12, paint: "future", head: 26 }],
     marks: [],
     letters: [
       mono(
@@ -889,41 +986,44 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         s.machine.socket.key,
         FS.chrome,
         TRACK.chrome,
-        sock.w - 28,
-        sock.x + 14,
-        sock.y + 18,
+        SOCKET.w - 28,
+        SOCKET.x + 14,
+        SOCKET.y + 18,
         "ink2"
       ),
       ...sans(
         "socket.name",
         s.machine.socket.name,
         FS.answer,
-        sock.w - 28,
-        sock.x + 14,
-        sock.y + 52,
-        "ink2"
+        // Seventeen characters a line, so the name breaks as a phrase
+        // ("a brand system / for all marketing"), not after "all".
+        160,
+        SOCKET.x + 14,
+        SOCKET.y + 52,
+        "ink2",
+        2
       ),
     ],
   });
+  const seamY = (CTX_BAR.y + CTX_BAR.h + EV_BAR.y) / 2;
   wires.push(
     wire(
       "c-socket",
       [
-        [SHARED.x + SHARED.w / 2, evR.y + evR.h],
-        [SHARED.x + SHARED.w / 2, sock.y],
+        [CTX_BAR.x + CTX_BAR.w, seamY],
+        [SOCKET.x, seamY],
       ],
       "gold",
       d3(0, 0, 1),
       d3(0, 0, 1250),
-      ["layer-ev", "socket"],
-      4
+      ["layer", "socket"]
     )
   );
 
   /* The work paints LAST: it is the one object that travels across the
      others, and a traveller under its own siblings reads as a layering
      fault mid-flight. */
-  const work = new Set<PartGroup>(["core", "core-name", "core-x"]);
+  const work = new Set<PartGroup>(["core", "core-name", "core-x", "core-pads"]);
   parts.sort((p, q) => Number(work.has(p.group)) - Number(work.has(q.group)));
   return { vb: { ...CIR_VB }, parts, wires };
 }

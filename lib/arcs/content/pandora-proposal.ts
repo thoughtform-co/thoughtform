@@ -249,8 +249,12 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
          questions around it; owner: "I like the simplicity of this") in the
          proof's R4 material (the reading he called "super clear"). Beat a:
          the recap after a review as it is done today, a lone plate, beside
-         the same work configured. Beat b: the team owns it (the owner and
-         what the team writes come forward; the rest recedes). Beat c: every
+         the same work configured. Beat b: the team owns it (one column
+         headed by the owner: what the team writes open under it, what it is
+         given folded under that; the draft runs back up to the owner, above
+         the loop). ⚠ THE BAR IS THE EVALUATIONS' ANSWER, never the card's
+         ("evals carry what good looks like"), and the owner's second line is
+         the fifth field, how much it decides alone. Beat c: every
          workflow as its own small circuit, all wired to the same written
          context and checks, and the one socket outside the studio, dashed.
          ⚠ WRITTEN FOR A CMO WHO DOES NOT KNOW AI: every plate is a question a
@@ -265,12 +269,12 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · the review recap",
         title: { pre: "Today,", em: "and configured." },
-        sub: "Left, the recap after a creative review as it happens today: someone types it up. Right, the same recap set up once, with six things written down around it: who answers for it, what runs it, what it knows, how it is checked, what it can reach and where the team meets it. Then it runs.",
+        sub: "Left, the recap after a creative review as it happens today: someone types it up. Right, the same recap set up once, with six things written down around it: who answers for it, what runs it, what it knows, what good looks like, what it can reach and where the team meets it. Then it runs.",
       },
       work: {
         id: "recap",
         name: "The review recap",
-        good: "Every note in, nothing made up, each next step owned",
+        when: "After every creative review",
         today: "Typed up after every review by whoever ran it, from their notes",
       },
       questions: [
@@ -279,6 +283,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           key: "The owner",
           question: "Who answers for it",
           answer: "The PM who ran the review",
+          detail: "It drafts, the PM sends",
         },
         {
           id: "model",
@@ -290,17 +295,17 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           id: "context",
           key: "The context",
           question: "What it knows",
-          answer: "The notes and the brief",
+          answer: "How the team writes a recap",
         },
         {
           id: "evals",
           key: "The evaluations",
-          question: "How we know it is good",
-          answer: "Checked on past recaps",
+          question: "What good looks like",
+          answer: "Every note in, nothing made up",
         },
         {
           id: "reach",
-          key: "The reach",
+          key: "The connectors",
           question: "What it can reach",
           answer: "Figma comments and Asana",
         },
@@ -341,8 +346,8 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         socket: { key: "Later", name: "A brand system for all marketing" },
       },
       alts: {
-        a: "The review recap as it is done today, typed up by whoever ran the review, beside the same recap configured: the PM who ran it answers for it, Claude on Pandora's own account runs it, it knows the review notes and the brief, it is checked against past recaps, it reaches Figma comments and Asana, and the team meets it as a draft in their inbox.",
-        b: "The same drawing with the owner and the two things the team writes, the context and the evaluations, brought forward on one green bus, and the model, the reach and the interface receded.",
+        a: "The review recap as it is done today, typed up by whoever ran the review, beside the same recap configured: the PM who ran it answers for it and sends what it drafts, Claude on Pandora's own account runs it, it knows how the team writes a recap, what good looks like is written down as every note in and nothing made up, it reaches Figma comments and Asana, and the team meets it as a draft in their inbox.",
+        b: "The same drawing as one column headed by the owner, the PM: under the owner the two things the team writes, how a recap is written and what good looks like, and under those the model, the connectors and the interface, folded away. The work runs on what the team wrote, and the draft comes back up to the PM.",
         c: "Six workflows as small circuits in a ring, filing and upload, the review recap, the schedule, resourcing, the retouch check and the brief into Figma, every one wired to the same two shared plates, the context and the evaluations, with a dashed socket below for a brand system for all of marketing.",
       },
     },

@@ -104,7 +104,55 @@ team sets the goal and the checks once, the work runs for hours, a person
 looks at the result; that is where the time comes back, and it only works once
 the team trusts it, which is why the checks come first.
 
+## Update 1 (2026-09-28, owner): the doctrine is the record, and B and C are redrawn
+
+His read of the second cut, on a still of beat b: "what is this? and why is
+'good looks like' inside the work card? did you actually check the
+intelligence-architect / thoughtform-strategy skills? The astrolabe?"
+
+The doctrine, read this time (intelligence-architect, thoughtform-strategy,
+and the Astrolabe's `loop-ai-operating-model-intelligence-configuration`): a
+configuration describes one piece of work and what performs it, five things,
+always: what runs it, what it inherits, what it can reach, how much it
+decides alone, who owns it. And "Skills carry the team's tacit knowledge and
+evals carry what good looks like". The drawing broke both: the bar sat on the
+work card, and the fifth field was absent.
+
+- **The card letters the work alone**: its name, and when it runs (`when`
+  replaces `good` on `CircuitWork`). **The evaluations plate asks "What good
+  looks like" and answers it** ("Every note in, nothing made up"). The
+  context answers with the team's own way of working ("How the team writes a
+  recap"). The owner carries the fifth field as a second line, `detail`
+  ("It drafts, the PM sends"), where Moira's board carries it. `reach` is
+  lettered THE CONNECTORS, his word. One plate width for all seven objects.
+- **b is two sides.** The owner comes across to head the person's side at
+  1.15×, the largest object in the beat, over the two written plates in their
+  frame; the work stays on the machine's side and the model, the connectors
+  and the interface FOLD to their bands under it. A green return runs from the
+  work back to the owner: the person sits above the loop, which is the
+  doctrine's own line on where the value is. The second cut receded those
+  three plates to a third of their ink, and a receded plate reads as disabled.
+- **c is a backplane.** The second cut drew a ring around two plates, a hub
+  like a, so every beat looked alike. Each workflow is now a chip carrying its
+  own six answers as six pads (green the owner, gold the two the team writes,
+  outlined the three it is given); every chip's two gold pads wire into two
+  shared bars; the bars run out to the dashed socket. The recap's six plates
+  fly into its own six pads, so the leitmotif arrives still carrying its
+  configuration.
+
 ## Findings worth keeping
+
+- ⚠ **READ THE DOCTRINE BEFORE DRAWING ITS OBJECT.** Both defects of the
+  second cut were answers the owner's own skills already held, and a
+  reference board (Moira's, whose card carries its bar) is a composition to
+  adopt, never a ruling on where a field belongs.
+- ⚠ **A FOLD IS A CLIP TO THE BAND, AND THE GUARD HAS TO KNOW IT.** The
+  overlap walk measured the folded tabs at full height and would have failed a
+  stack that paints cleanly; it now takes a folded part's band as its box and
+  prints only the letters on it.
+- ⚠ **A PART THAT ARRIVES AT ANOTHER PART'S SEAT WAITS FOR IT.** The work's
+  pads first printed on the chip's seat while the card was still in flight
+  beside it; their delay is now past the morph's end.
 
 - ⚠ **A PLAN APPROVAL IS NOT A DESIGN APPROVAL.** The first cut matched its
   approved plan line by line and was unreadable; one still of the first beat,
@@ -130,5 +178,7 @@ the team trusts it, which is why the checks come first.
 - `ArcQuestions` (Plopsa, the house workshop) could adopt the circuit's
   material; not done, both pages being live and read.
 - The deck (v02 in Drive) still carries the old spine.
+- The owner's read of U1: whether b's two sides say "your team owns it"
+  without a label, and whether c's pads need one.
 - Pre-existing, not this pass's: `arc-marks.test.ts` fails on Pandora at HEAD
   (its last menu item, `next-steps`, is a chapter, so the arc has no exit mark).

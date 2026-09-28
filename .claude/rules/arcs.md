@@ -919,19 +919,40 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
     travel is one attribute write on the compositor. **a:** the work alone on
     a plain plate ("typed up by whoever ran it") beside the same work wired:
     the owner above (green), model · context · evaluations left (the last two
-    gold, in a dashed frame tagged WRITTEN BY THE TEAM), reach · interface
-    right. **b:** the owner heads the left column over the two written plates
-    on one green bus; the rest recedes to a third of its ink. **c:** the work
-    shrinks to a chip (a `d` morph, one `housing()` structure) in a ring of
-    six workflows around two shared plates, THE CONTEXT and THE EVALUATIONS,
-    with one dashed socket, LATER · a brand system, the Defyner argument drawn
-    generic. It replaces the `board` on Pandora only.
+    gold, in a dashed frame tagged WRITTEN BY THE TEAM), connectors ·
+    interface right. **b (U1):** TWO SIDES. The owner heads the person's side,
+    the largest object in the beat, with the two written plates under it;
+    the work stays on the machine's side with the three given plates FOLDED
+    to their bands under it (`Pose.fold`, a clip to the band); the draft
+    runs back up to the owner, who sits above the loop. **c (U1):** a
+    BACKPLANE: six workflow chips, each carrying its own six answers as six
+    pads, wired into two shared bars, THE CONTEXT and THE EVALUATIONS, which
+    run out to one dashed socket, LATER · a brand system, the Defyner
+    argument drawn generic. The work's plates fly into its own pads. It
+    replaces the `board` on Pandora only.
+  - ⚠ **THE DOCTRINE IS THE RECORD (U1, owner: "why is 'good looks like'
+    inside the work card? did you check the intelligence-architect /
+    thoughtform-strategy skills?").** A configuration is one piece of work
+    and five fields: what runs it, what it inherits, what it can reach, how
+    much it decides alone, who owns it. **The card letters the work alone**
+    (its name and when it runs, `CircuitWork.when`); **the bar is the
+    EVALUATIONS' answer** ("evals carry what good looks like"); **the fifth
+    field rides the OWNER's plate** as `CircuitQuestion.detail` ("It drafts,
+    the PM sends"), as Moira's board has it. `arc-circuit-fit` pins all
+    three. ⚠ **A RECEDED PLATE READS AS DISABLED; A FOLDED ONE READS AS
+    PUT AWAY**, which is what "into the background or collapse under it"
+    asked for. ⚠ **THREE BEATS, THREE SHAPES** (a hub, two columns, a bus):
+    the second cut drew c as a second hub and every beat looked alike.
   - ⚠ **FEWER THAN A DOZEN OBJECTS A BEAT, PINNED** (`arc-circuit-fit`). The
     first cut carried forty lettered things in one state and he could not say
     what the section was about. ⚠ **A "TODAY" IS NEVER A COLUMN OF THE
     CLIENT'S GAPS**: one neutral line on the work carries the comparison.
     ⚠ **WRITTEN FOR A CMO WHO DOES NOT KNOW AI**: a name, a question, one
-    plain answer per plate; no lane meter, no model family, no digit.
+    plain answer per plate; no lane meter, no digit. The model plate names
+    the tool the proposal already names everywhere (Claude, on Pandora's own
+    account). ⚠ **A WIRE'S DASH IS PADDED BY ITS RIBBON'S WIDTH**: an outer
+    conductor runs longer than the base path at a bend, and a dash sized to
+    the base left a stray tick on an undrawn wire.
   - ⚠ **THE SCENE ARMS ITSELF** (`data-circuit-scene`, desktop plus motion): a
     sticky 100svh stage, two runway markers read by ONE IntersectionObserver
     at the frame's midline (never a scroll listener), the head decoding in

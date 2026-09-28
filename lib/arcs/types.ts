@@ -917,6 +917,10 @@ export interface CircuitQuestion<I extends CircuitQuestionId = CircuitQuestionId
   question: string;
   /** This work's answer, one line. */
   answer: string;
+  /** An optional second line under the answer. The OWNER's carries the
+   *  doctrine's fifth field, how much the work decides alone and where a
+   *  person gates it (Moira's own "It flags, a lawyer decides"). */
+  detail?: string;
 }
 
 export interface CircuitWork {
@@ -924,8 +928,11 @@ export interface CircuitWork {
   id: string;
   /** e.g. "The review recap". */
   name: string;
-  /** What good looks like, one line. */
-  good: string;
+  /** When it runs, one line on the card. ⚠ NEVER the bar: what good looks
+   *  like is the EVALUATIONS' answer ("evals carry what good looks like"),
+   *  and on the card it is said twice, on the wrong object (owner,
+   *  2026-09-28). */
+  when: string;
   /** How it is done today, one line on the lone plate. */
   today: string;
 }

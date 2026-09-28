@@ -73,6 +73,20 @@ const overlap = (a: Rect, b: Rect, slack = 0.5) =>
   a.y < b.y + b.h - slack &&
   b.y < a.y + a.h - slack;
 const visible = (p: CirPart, s: CircuitState) => p.poses[s].o > 0 && !p.poses[s].shut;
+/** A part's first module as it PAINTS in a state: posed, and cut to its band
+ *  where it is folded. */
+const paintedRect = (p: CirPart, s: CircuitState): Rect => {
+  const r = p.modules[0].rect;
+  const fold = p.poses[s].fold;
+  return posed(fold ? { ...r, h: r.h * fold } : r, p.poses[s]);
+};
+/** A folded part prints only the letters on its band. */
+const printed = (p: CirPart, l: CirLetter, s: CircuitState) => {
+  const fold = p.poses[s].fold;
+  if (!fold) return true;
+  const r = p.modules[0].rect;
+  return l.y <= r.y + r.h * fold;
+};
 /** The path's own box — the morphing plate's box per state, walked command
  *  by command (an `H` or `V` carries one number, not a pair). */
 function pathBox(d: string): Rect {
@@ -118,7 +132,7 @@ describe("the circuit (ADR-133)", () => {
 
       for (const st of CIRCUIT_STATES) {
         describe(`state ${st}`, () => {
-          const live = letters.filter(({ p }) => visible(p, st));
+          const live = letters.filter(({ p, l }) => visible(p, st) && printed(p, l, st));
           const objects = g.parts.filter((p) => visible(p, st) && p.group !== "bed");
 
           it("shows fewer than a dozen objects", () => {
@@ -162,7 +176,7 @@ describe("the circuit (ADR-133)", () => {
               .filter((p) => p.modules.length > 0 && p.group !== "die" && p.group !== "frame")
               .map((p) => ({
                 id: p.id,
-                b: p.morph ? pathBox(p.morph[st]) : posed(p.modules[0].rect, p.poses[st]),
+                b: p.morph ? pathBox(p.morph[st]) : paintedRect(p, st),
               }));
             for (let i = 0; i < rects.length; i += 1) {
               for (let j = i + 1; j < rects.length; j += 1) {
@@ -176,9 +190,8 @@ describe("the circuit (ADR-133)", () => {
           it("every wire drawn lands on the objects it joins", () => {
             const rects = new Map<string, Rect>();
             for (const p of g.parts) {
-              const r = p.modules[0]?.rect;
-              if (!r) continue;
-              rects.set(p.id, p.morph ? pathBox(p.morph[st]) : posed(r, p.poses[st]));
+              if (!p.modules[0]) continue;
+              rects.set(p.id, p.morph ? pathBox(p.morph[st]) : paintedRect(p, st));
             }
             const near = (pt: readonly [number, number], r: Rect) =>
               pt[0] >= r.x - 16 &&
@@ -198,6 +211,20 @@ describe("the circuit (ADR-133)", () => {
           });
         });
       }
+
+      it("the card letters the work alone: the bar is the evaluations' answer", () => {
+        // Doctrine: "evals carry what good looks like". The second cut
+        // printed the bar on the work card and the owner sent it back.
+        const card = letters.filter(({ p }) => p.group.startsWith("core"));
+        for (const { l } of card) expect(l.text, l.slot).not.toMatch(/good looks like/i);
+        const evals = s.questions.find((q) => q.id === "evals");
+        expect(evals?.question).toMatch(/good/i);
+      });
+
+      it("the owner's plate says how much the work decides alone", () => {
+        // The doctrine's fifth field, on the owner as Moira's board has it.
+        expect(s.questions.find((q) => q.id === "owner")?.detail ?? "").not.toBe("");
+      });
 
       it("the work is one of the workflows", () => {
         expect(s.machine.configs.map((c) => c.id)).toContain(s.work.id);
@@ -222,6 +249,7 @@ describe("the circuit (ADR-133)", () => {
           "core-name": "a",
           "core-x": "a",
           chip: "c",
+          "core-pads": "c",
           layer: "c",
           socket: "c",
         };

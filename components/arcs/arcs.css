@@ -6279,18 +6279,17 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   transform: var(--pc);
   opacity: var(--oc);
 }
-/* The aperture: only the ledger and the layer open and close on it — a
-   clip on every part would trim glyph overhang at the group's own box. */
-.arc-cir[data-cir-state="a"] .cq--ledger,
-.arc-cir[data-cir-state="a"] .cq--layer {
+/* The aperture and the fold: the lone plate and the layer open and close
+   on the centre-out aperture, and a given plate FOLDS to its head band in b.
+   Only these groups clip — every letter on them sits inside its plate, and a
+   clip on a part whose ink overhangs its box would trim the overhang. */
+.arc-cir[data-cir-state="a"] :is(.cq--today, .cq--plate, .cq--layer) {
   clip-path: var(--ca);
 }
-.arc-cir[data-cir-state="b"] .cq--ledger,
-.arc-cir[data-cir-state="b"] .cq--layer {
+.arc-cir[data-cir-state="b"] :is(.cq--today, .cq--plate, .cq--layer) {
   clip-path: var(--cb);
 }
-.arc-cir[data-cir-state="c"] .cq--ledger,
-.arc-cir[data-cir-state="c"] .cq--layer {
+.arc-cir[data-cir-state="c"] :is(.cq--today, .cq--plate, .cq--layer) {
   clip-path: var(--cc);
 }
 .arc-cir[data-cir-state="a"] .arc-cir__morph {

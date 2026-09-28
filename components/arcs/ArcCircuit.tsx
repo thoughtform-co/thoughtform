@@ -112,7 +112,7 @@ function CircuitList({ section, beat }: { section: ArcSectionOf<"circuit">; beat
           <div>
             <dt>Configured</dt>
             <dd>
-              <strong>{section.work.name}</strong> · {section.work.good}
+              <strong>{section.work.name}</strong> · {section.work.when}
             </dd>
           </div>
           {section.questions.map((q) => (
@@ -120,6 +120,7 @@ function CircuitList({ section, beat }: { section: ArcSectionOf<"circuit">; beat
               <dt>{q.key}</dt>
               <dd>
                 {q.answer}
+                {q.detail ? `. ${q.detail}` : null}
                 <span className="arc-cir-list__was">{q.question}</span>
               </dd>
             </div>
@@ -140,6 +141,7 @@ function CircuitList({ section, beat }: { section: ArcSectionOf<"circuit">; beat
               <dt>{q.key}</dt>
               <dd>
                 {q.answer}
+                {q.detail ? `. ${q.detail}` : null}
                 <span className="arc-cir-list__was">{q.question}</span>
               </dd>
             </div>

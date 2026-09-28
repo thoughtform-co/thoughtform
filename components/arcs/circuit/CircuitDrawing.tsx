@@ -54,7 +54,11 @@ function partVars(part: CirPart): CSSProperties {
     const p = part.poses[s];
     v[`--p${s}`] = poseTransform(p);
     v[`--o${s}`] = String(p.o);
-    v[`--c${s}`] = p.shut ? "inset(0 50% 0 50%)" : "inset(0 0 0 0)";
+    v[`--c${s}`] = p.shut
+      ? "inset(0 50% 0 50%)"
+      : p.fold
+        ? `inset(0 0 ${Math.round((1 - p.fold) * 1000) / 10}% 0)`
+        : "inset(0 0 0 0)";
     v[`--d${s}`] = `${part.delays[s]}ms`;
     if (part.morph) v[`--x${s}`] = `path("${part.morph[s]}")`;
   }
