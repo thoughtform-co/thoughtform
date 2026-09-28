@@ -5,10 +5,8 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcBench } from "./ArcBench";
 import { ArcBoard } from "./ArcBoard";
 import { ArcCards } from "./ArcCards";
-import { ArcCircuit } from "./ArcCircuit";
 import { ArcClose } from "./ArcClose";
 import { ArcConfiguration } from "./ArcConfiguration";
-import { ArcCrew } from "./ArcCrew";
 import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
@@ -135,10 +133,6 @@ export function ArcSectionRenderer({
             return (
               <ArcQuestions key={section.id} section={section} index={index} motion={motion} />
             );
-          case "circuit":
-            return <ArcCircuit key={section.id} section={section} index={index} motion={motion} />;
-          case "crew":
-            return <ArcCrew key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

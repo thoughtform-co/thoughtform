@@ -20,13 +20,10 @@ import type { ArcDef } from "../types";
  * The films, the operations tool, the sheets and the map resolve the
  * casefile's records; nothing about Loop is retyped here.
  *
- * ⚠ THE STUDIO TODAY IS A CIRCUIT SINCE ADR-133 (owner, 2026-09-28, after
- * Rob's read): one configuration drawing that TRAVELS through three beats of
- * one pinned scene — the studio today and one configured piece of work, what
- * the team gets back, the studio's AI capability plugged into the larger
- * machine. It replaced the board here (the board still draws Trinny), and it
- * letters NO digit. The configuration's picker stays out: it is the
- * instrument the owner replaced on Trinny ("a lot of things to look at").
+ * ⚠ THE STUDIO TODAY IS A BOARD, NOT A CONFIGURATION. The argument is
+ * operations → review → agents, one studio, one setup; the configuration's
+ * picker over workstreams is the instrument the owner replaced on Trinny
+ * ("a lot of things to look at"). The board letters NO digit.
  *
  * ⚠ EVERY FEE DERIVES FROM ONE CONSTANT (`DAY_RATE`), the same number the
  * deck's generator carries; change it in both in one commit.
@@ -37,14 +34,13 @@ import type { ArcDef } from "../types";
  * so each `proof-card` carries its own `title` ("We pushed …"). The record's
  * lines are untouched: they are the Dublin keynote's, word for word.
  *
- * ⚠ THE SPINE SINCE ADR-133 (2026-09-28): Loop (part one) · the turn · THE
- * CIRCUIT (the studio today and configured → what the team gets back → the
- * studio's AI capability, one pinned scene) · THE GOAL (a `horizon`, the
+ * ⚠ THE SPINE SINCE THE OWNER'S 2026-09-28 READ: Loop (part one) · the turn ·
+ * the studio today and configured (the board) · THE GOAL (a `horizon`, the
  * approach from adoption to automation, before the plan) · the plan · the
  * checker ON PANDORA'S OWN PICTURE · who is in the room · what you keep, which
- * IS the configuration (the drawing's parts in words) · the fee · THE RETURN
- * (a `crew`: Loop's record drawn beside the four numbers we count and never
- * promise) · who does it · next steps. See each beat's comment.
+ * IS the configuration (the board's five facts in words) · the fee · the four
+ * numbers we count and never promise · who does it · next steps. The readout
+ * beat and the Loop-numbers appendix are gone; see each beat's comment.
  */
 
 const DAY_RATE = 1500;
@@ -152,163 +148,59 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         "The products, the brand and the producers' eye are already Pandora's. We bring the order to do it in, starting with the operational work around the creative.",
     },
     {
-      /* THE CIRCUIT (ADR-133, owner 2026-09-28): ONE configuration drawing
-         that TRAVELS through three beats of one pinned scene, which together
-         are the offer from adoption to automation. (a) the studio today as a
-         ruled ledger beside one piece of work configured, the review recap
-         Kristin named on the call, with its six questions wired around it
-         (the house grammar of the Moira workshop and the Dublin keynote);
-         (b) the same work shrunk to one configuration among its siblings,
-         each plugged into the team it gives time back to, which is her
-         specific ask: her team does more and the operational freelance tail
-         goes (the count and her target stay off the page); (c) every
-         configuration on one shared layer, the studio's AI capability,
-         plugged into what runs around the studio and into a brand system for
-         all of marketing. That last socket is Rob's partner's ground, drawn
-         GENERIC by owner ruling: the page speaks to Pandora. We start with
-         the people because they steer it; the layer we write is what a
-         system like that reads. The drawing letters no digit. */
       id: "today",
-      kind: "circuit",
+      kind: "board",
       menuLabel: "Pandora today",
       menuPrimary: true,
       head: {
         eyebrow: "Pandora · where the studio stands",
         title: { pre: "The studio today, and", em: "configured." },
-        sub: "Left, one piece of the studio's operational work as it runs today: the recap after a creative review, typed up by hand and written down nowhere. Right, the same work configured: someone who answers for it, the context and the checks written down, running in the tools the studio already uses.",
+        sub: "Left, the Global Brand Creative Studio as it runs today: the operational work done by hand, much of it by freelancers, and nothing about the way of working written down. Right, the same studio once the AI work has an owner and its rules are written down, running in the tools it already uses.",
       },
-      work: {
-        id: "recap",
-        name: "The review recap",
-        good: "Every note in, nothing made up",
-        today: "Typed up after every review",
-      },
-      questions: [
+      states: [
         {
-          id: "context",
-          key: "The context",
-          question: "What it knows",
-          answer: "The notes and the brief",
-          today: "In people's heads",
+          mode: "today",
+          label: "As it runs today",
+          alt: "Pandora's brand creative studio as it runs today, written out as a ledger: nobody owns AI as their day job, the operational work is done by hand and held up by freelancers, the way of working is not written down, three tools that nothing connects, and nothing that reaches past the studio.",
+          seat: { q: "Who owns it", a: "Nobody, as their day job" },
+          card: { name: "The work", work: "by hand, held up by freelancers" },
+          layer: { label: "The context", sub: "not written down", rows: [] },
+          tools: {
+            label: "The tools",
+            items: [
+              { id: "figma", name: "Figma" },
+              { id: "primo", name: "Primo" },
+              { id: "hub-planner", name: "Hub Planner" },
+            ],
+          },
+          reach: { label: "Where it scales", value: "not past the studio" },
         },
         {
-          id: "owner",
-          key: "The owner",
-          question: "Who answers for it",
-          answer: "The PM who ran it",
-          today: "Whoever was in the room",
-        },
-        {
-          id: "evals",
-          key: "The evals",
-          question: "How we know it is good",
-          answer: "Past recaps, replayed",
-          today: "The next review",
-        },
-        {
-          id: "model",
-          key: "The model",
-          question: "What runs it",
-          answer: "The everyday lane",
-          today: "Copilot, now and then",
-        },
-        {
-          id: "reach",
-          key: "The reach",
-          question: "What it can reach",
-          answer: "Figma notes and Asana",
-          today: "Notes and an inbox",
-        },
-        {
-          id: "interface",
-          key: "The interface",
-          question: "Where you meet it",
-          answer: "A draft, ready to send",
-          today: "A blank email",
+          mode: "configured",
+          label: "With a configuration",
+          alt: "The same studio once its AI work is set up: the studio lead owns it with Kristin's sign-off, an AI capability the studio owns runs at the centre on Pandora's own account, it reads the context the studio keeps, it runs inside the tools the studio already uses, and it scales into the rest of marketing.",
+          seat: { q: "Who owns it", a: "The studio lead, with Kristin's sign-off." },
+          card: { name: "AI capability", work: "owned by the studio" },
+          layer: {
+            label: "The context",
+            rows: [
+              { id: "rules", tag: "Rules" },
+              { id: "examples", tag: "Examples" },
+              { id: "sources", tag: "Sources" },
+              { id: "loops", tag: "Loops" },
+            ],
+          },
+          tools: {
+            label: "Where it runs",
+            items: [
+              { id: "figma", name: "Figma" },
+              { id: "primo", name: "Primo" },
+              { id: "hub-planner", name: "Hub Planner" },
+            ],
+          },
+          reach: { label: "Where it scales", value: "into the rest of marketing" },
         },
       ],
-      rails: {
-        context: [
-          { key: "Rules", value: "The recap's format" },
-          { key: "Examples", value: "Recaps that worked" },
-          { key: "Sources", value: "Notes, brief, Asana" },
-        ],
-        evals: [
-          { key: "Cases", value: "Past reviews" },
-          { key: "Checks", value: "Every note owned" },
-          { key: "Gates", value: "A PM sends it" },
-        ],
-      },
-      people: {
-        head: {
-          eyebrow: "Pandora · the team",
-          title: { pre: "What the team", em: "gets back." },
-          sub: "Each configuration takes one piece of the operational work off someone's week, from the Primo upload to the review recap. The PMs still press the button and the producers still sign off. The hours go back to the creative work and the people, and the freelance days that carried this work can go to the shoot instead.",
-        },
-        teams: [
-          {
-            id: "pms",
-            name: "The PMs",
-            hand: "Press the button",
-            configs: ["filing", "recap", "schedule", "resourcing"],
-            freed: "The relationships",
-          },
-          {
-            id: "producers",
-            name: "The producers",
-            hand: "Sign off the batch",
-            configs: ["retouch"],
-            freed: "The shoot and the talent",
-          },
-          {
-            id: "designers",
-            name: "The designers",
-            hand: "Work from the page",
-            configs: ["brief"],
-            freed: "The concept",
-          },
-          {
-            id: "email",
-            name: "The email managers",
-            hand: "Write the brief",
-            configs: ["brief"],
-            freed: "The strategy",
-          },
-        ],
-        freedKey: "More time for",
-      },
-      machine: {
-        head: {
-          eyebrow: "Pandora · the larger machine",
-          title: { pre: "The studio's", em: "AI capability." },
-          sub: "Each workflow is its own configuration, and every one of them reads one layer: the context and the checks the team writes once. That layer is machine-readable, so it plugs into what runs around the studio, and into a brand system for all of marketing when Pandora builds one. We start with the people, because they are the ones who steer it.",
-        },
-        configs: [
-          { id: "filing", name: "Filing and upload" },
-          { id: "recap", name: "The review recap" },
-          { id: "schedule", name: "The schedule" },
-          { id: "resourcing", name: "Resourcing" },
-          { id: "retouch", name: "The retouch check" },
-          { id: "brief", name: "Brief into Figma" },
-        ],
-        layer: {
-          name: "The studio's AI capability",
-          line: "The context and the checks, machine-readable and shared",
-          chips: ["Written once", "Owned by the team", "Outlives the model"],
-        },
-        sockets: [
-          { id: "dam", key: "Your DAM", name: "Primo, and the MRM on it" },
-          { id: "projects", key: "Projects", name: "Asana, across marketing" },
-          { id: "adaptation", key: "Adaptation", name: "Your adaptation agency" },
-          { id: "marketing", key: "Marketing", name: "The rest of marketing" },
-          { id: "brand", key: "Brand system", name: "One for all of marketing", future: true },
-        ],
-      },
-      alts: {
-        a: "One piece of the studio's work, the review recap, written out as a ledger of how it runs today, beside the same work configured: an owner, the context and the checks the team writes, the model it runs on, what it can reach and where you meet it.",
-        b: "The same configuration among its siblings, each wired to the team it gives time back to: the PMs, the producers, the designers and the email managers, and what each of them gets more time for.",
-        c: "Every configuration on one shared layer, the studio's AI capability, plugged into Primo, Asana, the adaptation agency, the rest of marketing and a brand system for all of marketing that does not exist yet.",
-      },
     },
     {
       /* THE GOAL (owner, 2026-09-28): the approach from adoption to
@@ -775,43 +667,43 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · what you keep",
         title: { pre: "What you keep is", em: "the configuration." },
-        sub: "The configurations above, in the studio's own hands: someone whose job each one is, the context and the checks written down, the workflows on your accounts, inside the tools you already use. That is the product. We build it with the team, and it stays when we leave.",
+        sub: "The right-hand side of the board above, in the studio's own hands: someone whose job it is, the context written down, the workflows on your accounts, inside the tools you already use. That is the product. We build it with the team, and it stays when we leave.",
       },
       groups: [
         {
           id: "parts",
           label: "The configuration, part by part",
-          blurb: "What the drawings above show, as it stands on the last day of month three.",
+          blurb: "The five facts the board draws, as they stand on the last day of month three.",
           items: [
             {
               id: "owner",
-              tag: "The owner",
-              name: "A person for every workflow",
-              body: "The one who decides what runs, what is checked and what stays by hand, with the studio lead and Kristin signing off.",
+              tag: "Who owns it",
+              name: "The studio lead, with Kristin's sign-off",
+              body: "One person whose job it is: decides what runs, what is checked and what stays by hand.",
+            },
+            {
+              id: "capability",
+              tag: "The capability",
+              name: "AI capability the studio owns",
+              body: "The operational workflows and the retouching checker as Skills the team edits itself, on Pandora's own Claude account.",
             },
             {
               id: "context",
               tag: "The context",
-              name: "Rules, examples, sources",
+              name: "Rules, examples, sources, loops",
               body: "The naming convention, the review rules in the producers' words, the brand book and the approved shots, and the loop that turns a note said twice into a check.",
-            },
-            {
-              id: "evals",
-              tag: "The evals",
-              name: "Cases, checks, gates",
-              body: "Past work replayed against those rules, so the team can see a workflow still does what it did before anyone changes it.",
             },
             {
               id: "where",
               tag: "Where it runs",
               name: "Figma, Primo and Hub Planner",
-              body: "Inside the tools the studio already pays for, on Pandora's own Claude account. Nothing new to license, nothing of ours in the middle.",
+              body: "Inside the tools the studio already pays for. Nothing new to license, nothing of ours in the middle.",
             },
             {
-              id: "layer",
-              tag: "The layer",
-              name: "The studio's AI capability",
-              body: "Every workflow reads the same written context and checks, in a form a brand system for all of marketing can plug into. The blueprint with Jenny takes it to the next team.",
+              id: "scale",
+              tag: "Where it scales",
+              name: "Into the rest of marketing",
+              body: "The blueprint with Jenny: the same shape written down for the next team, and the task force to bring it there.",
             },
           ],
         },
@@ -901,99 +793,47 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
-      /* THE RETURN, DRAWN (ADR-133, owner 2026-09-28, after Rob's read: the
-         marketing director will ask about the impact). "It's not about exact
-         numbers ... it should be a visual thing they can see", and the
-         reasoning is Loop's own team shape: two designers and 700 assets, the
-         PMs pre-filling copy that one copy editor checks. So the left half is
-         Loop's RECORD, the printable figures only (the three spoken on the
-         call plus the copy editor), each output drawn as the quantity it is;
-         the right half is the same shape in the studio with the four measures
-         we count in week one, FRAMED AND EMPTY. No Pandora estimate, no
-         calculator. */
-      id: "return",
-      kind: "crew",
-      menuLabel: "The return",
+      /* THE BUSINESS CASE WITHOUT A NUMBER (owner, 2026-09-28: the appendix
+         "feels a bit random … I don't want to promise any absolute numbers").
+         Kristin asked on the call for something Jenny can take to the business
+         case, so this is the counting, promised, and no figure: four numbers
+         read from Pandora's own systems, beside the fee. The Loop figures are
+         on the proof cards' own registers and are not repeated here. */
+      id: "measures",
+      kind: "cards",
+      menuLabel: "How you will know",
+      columns: 4,
       head: {
         eyebrow: "Pandora · the business case",
-        title: { pre: "What it returned", em: "at Loop." },
-        sub: "Left, four things the same work did at Loop, from the record: a few people, one configuration each, and what came out. Right, the same shape in the studio, with the four numbers we count in week one and read beside every month's fee. We promise the counting; the numbers are yours to read.",
+        title: { pre: "Counted in week one,", em: "read every month." },
+        sub: "Four numbers from Pandora's own bookings, files and calendars, set beside that month's fee. We promise the counting; the numbers are yours to read.",
       },
-      record: {
-        label: "At Loop, from the record",
-        rows: [
-          {
-            id: "assets",
-            who: "Two designers and a copywriter",
-            people: 3,
-            config: "The studio's Skills",
-            output: { kind: "field", count: 700 },
-            value: "About 700",
-            unit: "paid-social assets a month",
-          },
-          {
-            id: "copy",
-            who: "The PMs",
-            people: 2,
-            config: "The briefing sync",
-            output: { kind: "funnel", lines: 12 },
-            value: "One copy editor",
-            unit: "checks what they pre-fill",
-          },
-          {
-            id: "review",
-            who: "The head of design",
-            people: 1,
-            config: "The review agent",
-            output: { kind: "tenfold" },
-            value: "About ten times",
-            unit: "less review by hand",
-          },
-          {
-            id: "planning",
-            who: "A program manager",
-            people: 1,
-            config: "The planning tool",
-            output: { kind: "month" },
-            value: "A week a month",
-            unit: "back from resource planning",
-          },
-        ],
-      },
-      plan: {
-        label: "In the studio, counted from week one",
-        rows: [
-          {
-            id: "hours",
-            who: "The PMs and producers",
-            config: "Filing, recap, schedule",
-            measure: "Operational hours a week",
-            source: "Read from their calendars",
-          },
-          {
-            id: "days",
-            who: "The freelancers",
-            config: "The same, on a schedule",
-            measure: "Freelance days on operations",
-            source: "Read from the bookings",
-          },
-          {
-            id: "cycle",
-            who: "The producers",
-            config: "The retouch check",
-            measure: "A batch, in to verdict",
-            source: "How long a batch waits",
-          },
-          {
-            id: "rounds",
-            who: "The retouchers",
-            config: "The retouch check",
-            measure: "Rounds per asset",
-            source: "How often one goes back",
-          },
-        ],
-      },
-      alt: "The business case as two halves. At Loop, from the record: two designers and a copywriter making about 700 paid-social assets a month with the studio's Skills; the PMs pre-filling copy through the briefing sync for one copy editor to check; the head of design's review agent taking about ten times less review by hand; a program manager's planning tool giving back a week a month. In the studio, the same shape with four measures counted from week one and left empty: operational hours a week, freelance days on operations, a retouch batch from in to verdict, and rounds per asset.",
+      cards: [
+        {
+          id: "hours",
+          kicker: "Hours",
+          title: "Operational hours a week",
+          body: "What the PMs and producers spend on naming, uploads, the schedule, the recaps and resourcing.",
+        },
+        {
+          id: "days",
+          kicker: "Days",
+          title: "Freelance days on operational work",
+          body: "Read from the bookings, month by month, beside the month's fee.",
+        },
+        {
+          id: "cycle",
+          kicker: "Cycle",
+          title: "A retouch batch, from in to verdict",
+          body: "How long a batch waits for a producer today, and how long once the checker has read it first.",
+        },
+        {
+          id: "rounds",
+          kicker: "Rounds",
+          title: "Retouch rounds per asset",
+          body: "How often an asset goes back before a producer approves it.",
+        },
+      ],
     },
     {
       id: "people",
