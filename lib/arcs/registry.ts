@@ -10,6 +10,7 @@ import { PANDORA_PROPOSAL_ARC } from "./content/pandora-proposal";
 import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
 import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
+import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import type { ArcDef } from "./types";
 
 /**
@@ -37,6 +38,7 @@ export const ARCS: readonly ArcDef[] = [
   /* The house formats. THE ARCHETYPE LEADS THEM: the client workshops above
      are cuts of it, so it is the page to read before any of them. */
   THOUGHTFORM_WORKSHOP_ARC,
+  AI_STORYTELLING_ARC,
   CLAUDE_WORKSHOP_ARC,
   AI_KEYNOTE_ARC,
   CLAUDE_WORKSHOP_V2_ARC,

@@ -903,6 +903,12 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   rows in the same order** (Drop in · Ask · You get · The check), so a fork
   swaps words, never shape. `what-you-build` lost its chapter slot to it; the
   page is 22 sections against the shell's 16, each half inside it.
+- ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
+  2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
+  a readout, one quote beat, one `anatomy` beat per week with the same four rows
+  (Objective · You make · The gate · The tool), a close. The student builds one
+  brand world all term, around themselves or a fictional product. ⚠ Motion is
+  held to week eight on purpose, once the world has rules a film can obey.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's
