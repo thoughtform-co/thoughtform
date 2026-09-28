@@ -896,6 +896,13 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   box is its TEXT, so a second page mounting the same drawing needs its own row.
   ⚠ **THE DEV SERVER CACHES `generateStaticParams`**: a correctly registered
   route 404s until it restarts.
+  ⚠ **U1 (same day, owner) — THE BUILD CHAPTER IS THE PRACTICALS.** A
+  `readout` sets up once (app, plugin, keys, IT's network egress — the blocker
+  the Plopsa morning hit) and indexes five `anatomy` rungs: one image, a brief,
+  formats and layers, motion, make it a skill. ⚠ **Every rung is the same four
+  rows in the same order** (Drop in · Ask · You get · The check), so a fork
+  swaps words, never shape. `what-you-build` lost its chapter slot to it; the
+  page is 22 sections against the shell's 16, each half inside it.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

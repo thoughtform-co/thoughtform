@@ -136,3 +136,53 @@ blast radius, so it is a decision, not a cleanup.
 the arc's terminal section") — its `close` carries no `menuLabel`. Confirmed red
 on a clean tree before this work. Not fixed here: it is the Pandora arc's
 content and may be deliberate.
+
+## U1 (2026-09-28, owner): the practicals are the build
+
+**The Plopsa morning validated the shape.** A three-hour session on 28 September
+ran the story first and then handed the room its own files, inside Claude
+Cowork with the studio plugin (a `mother` skill, a `brand` skill, evals) and an
+`.env` of image and video keys. Within the hour the team was making stop-motion
+spots, cutting edits from rushes and building layered photo files. The owner's
+reading: the practical half is where people see it, so it is the proof of the
+product, and it needs a structure to build on rather than more theory.
+
+**The Build chapter is now the practicals.** A `readout` beat (`#practicals`)
+sets up once — the app, the plugin, the keys, and IT allowing network egress —
+and indexes a ladder of five `anatomy` rungs: one image, a brief, formats and
+layers, motion, make it a skill. It starts small on purpose ("instead of trying
+to use eval for everything, let's first start with an image and then create a
+brief") and ends on the eval idea without opening on it.
+
+⚠ **EVERY RUNG IS THE SAME FOUR ROWS, IN THE SAME ORDER** — Drop in · Ask · You
+get · The check. The room learns the shape once, and a client fork swaps the
+words and never the structure. No new kind: `anatomy` already draws labelled
+rows under a badge.
+
+⚠ **THE EGRESS ROW IS WHAT THE MORNING PAID FOR.** The video keys failed until
+IT enabled network egress in Claude's admin settings, mid-session. It is on the
+page as a setup row and the plate's foot, so the next room asks a week ahead.
+
+⚠ **THE CHAPTER CAP HELD BY FOLDING, NOT GROWING.** `what-you-build` lost its
+`menuPrimary` and rides under Encode with `delegate-down`; the freed slot is
+named Build, so the house arc — navigate, encode, build — stays whole, with the
+theory's build talk closing Encode and Build being where the room makes things.
+
+⚠ **THE SESSION LENGTH IS GONE FROM THE COPY.** "Fifty minutes" was true of the
+session the note described and false of the morning that validated it. The
+card, the Today title and its row now say "the story first, then hands on".
+Owner may want a number back per fork.
+
+**Measured at 1280x720 and 1920x1247: all six new beats fit one screen.** The
+three theory beats already over (the bench, what you build, delegate down) are
+unchanged.
+
+⚠ **THE PAGE IS TWENTY-TWO SECTIONS AND THE SHELL SAYS SIXTEEN.** That ceiling
+was written for one short session; this is two halves of a morning, and each
+half sits inside it (the story sixteen with its close, the practicals six).
+Recorded rather than forced.
+
+**Left for later:** a practicals plugin kit in `thoughtform-plugins` — a starter
+prompt and sample files per rung — so a team repeats the ladder without Vince;
+and the split-screen ad skill and motion reference, waiting on files from the
+client.

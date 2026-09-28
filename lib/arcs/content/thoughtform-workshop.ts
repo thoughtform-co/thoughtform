@@ -31,6 +31,16 @@ import type { ArcDef } from "../types";
  * Moira workshop argues with, ported by ADR-130 (stages, curve, horizon), and
  * the bench ported by ADR-128. No `questions` board — a picker or a board,
  * never both, and this page carries neither.
+ *
+ * ⚠ TWO HALVES: THE STORY, THEN HANDS ON (ADR-131 U1, owner 2026-09-28). The
+ * Plopsa morning proved the shape: within the hour of the practical half the
+ * team was making stop-motion spots, cutting edits from rushes and building
+ * layered files. So the BUILD chapter is the practicals, a ladder of five
+ * rungs that starts small (one image, then a brief) and ends on the skill,
+ * and the theory's own build talk rides under Encode. Every rung is the same
+ * four rows — drop in · ask · you get · the check — so a fork swaps the words
+ * and never the shape. Each half sits inside the shell's sixteen; the page as
+ * a whole does not, because the shell was written for one short session.
  */
 export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
   slug: "thoughtform-workshop",
@@ -41,7 +51,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
   date: "2026-09-28",
   cardTitle: "The Thoughtform workshop",
   cardLede:
-    "Fifty minutes from what this technology is to the configuration your team runs without me.",
+    "The story first, then hands on: from one picture to a skill your team runs without me.",
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Workshop",
@@ -80,7 +90,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       layout: "readout",
       head: {
         eyebrow: "01 · Today",
-        title: { pre: "Fifty minutes,", em: "and what you keep." },
+        title: { pre: "The story first,", em: "then hands on." },
         sub: "We go from what this technology actually is to the configuration your own team runs. Nothing on this page asks you to buy a tool.",
       },
       groups: [
@@ -90,7 +100,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
           blurb: "What this is",
           items: [
             { id: "who", tag: "Who", name: "Your team, and the work you already do" },
-            { id: "long", tag: "How long", name: "Fifty minutes, four chapters" },
+            { id: "long", tag: "How it runs", name: "The story, then your own files" },
             { id: "keep", tag: "You keep", name: "A configuration your team runs" },
           ],
           foot: {
@@ -124,8 +134,8 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
             {
               id: "build",
               tag: "Build",
-              name: "Inside what you already pay for",
-              href: "#what-you-build",
+              name: "Hands on, from an image to a skill",
+              href: "#practicals",
             },
           ],
           foot: {
@@ -564,13 +574,14 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
         "Engineers embedded in a client's team, encoding how that team works so the models can use it. The models cannot supply that, and it is the part nobody has had to write down before.",
     },
 
-    /* ── Chapter five · BUILD ────────────────────────────────────────────
-       Where it goes, and why it goes there rather than into a subscription. */
+    /* Encode's close: where it goes, and why it goes there rather than into a
+       subscription. ⚠ NOT A CHAPTER SINCE ADR-131 U1 — the row is at its cap
+       of five, and the BUILD chapter is the practicals below, where the room
+       makes things instead of hearing about them. */
     {
       id: "what-you-build",
       kind: "list-groups",
       menuLabel: "What you build",
-      menuPrimary: true,
       layout: "plates",
       head: {
         eyebrow: "09 · What you build",
@@ -708,12 +719,235 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
         },
       ],
     },
+
+    /* ── Chapter five · BUILD — the practicals ───────────────────────────
+       Part two of the morning (ADR-131 U1). The setup once, then a ladder of
+       five rungs, each built on the one before. Every rung is the same four
+       rows in the same order, so the room learns the shape once. */
+    {
+      id: "practicals",
+      kind: "list-groups",
+      menuLabel: "Build",
+      menuPrimary: true,
+      layout: "readout",
+      head: {
+        eyebrow: "11 · Hands on",
+        title: { pre: "Now you", em: "drive." },
+        sub: "Five rungs on your own files, each one built on the last. Start with a picture, end with a skill that checks its own work.",
+      },
+      /* ⚠ THE EGRESS ROW IS THE ONE THE PLOPSA MORNING PAID FOR: the video
+         keys failed until IT allowed network egress in Claude's admin
+         settings, mid-session. It belongs on the page before the day. */
+      groups: [
+        {
+          id: "setup",
+          label: "Set up once",
+          blurb: "Before the first rung",
+          items: [
+            { id: "app", tag: "App", name: "Claude desktop, in Cowork" },
+            { id: "plugin", tag: "Plugin", name: "Your studio plugin, dragged in" },
+            { id: "keys", tag: "Keys", name: "The .env with the image and video keys" },
+            { id: "it", tag: "IT", name: "Network egress allowed, before the day" },
+          ],
+          foot: {
+            label: "The blocker",
+            lines: ["Without network egress the video keys fail. Ask IT a week ahead."],
+          },
+        },
+        {
+          id: "ladder",
+          label: "The ladder",
+          blurb: "One rung at a time",
+          items: [
+            { id: "image", tag: "Rung one", name: "One image", href: "#rung-image" },
+            { id: "brief", tag: "Rung two", name: "A brief", href: "#rung-brief" },
+            {
+              id: "formats",
+              tag: "Rung three",
+              name: "Formats and layers",
+              href: "#rung-formats",
+            },
+            { id: "motion", tag: "Rung four", name: "Motion", href: "#rung-motion" },
+            { id: "skill", tag: "Rung five", name: "Make it a skill", href: "#rung-skill" },
+          ],
+          foot: {
+            label: "The rule",
+            lines: ["Each rung keeps what the one before it proved."],
+          },
+        },
+      ],
+    },
+    {
+      id: "rung-image",
+      kind: "anatomy",
+      menuLabel: "One image",
+      badge: "Rung one · Image",
+      head: {
+        eyebrow: "12 · One image",
+        title: { pre: "Start with", em: "one picture." },
+        sub: "A real photograph you already own. Nothing is made from nothing, and that is the first rule.",
+      },
+      rows: [
+        {
+          id: "drop",
+          label: "Drop in",
+          body: "One photograph of your own: a place, a product, a room.",
+        },
+        {
+          id: "ask",
+          label: "Ask",
+          body: "Make this work as a vertical story, and keep everything in it real.",
+        },
+        {
+          id: "get",
+          label: "You get",
+          body: "The same scene, re-framed, with the edges it had to invent marked.",
+        },
+        {
+          id: "check",
+          label: "The check",
+          body: "Nothing in it the photograph does not show. An invented forest fails.",
+        },
+      ],
+    },
+    {
+      id: "rung-brief",
+      kind: "anatomy",
+      menuLabel: "A brief",
+      badge: "Rung two · Brief",
+      head: {
+        eyebrow: "13 · A brief",
+        title: { pre: "Let it write", em: "the brief." },
+        sub: "The picture answers a brief nobody wrote down. Write it down, and the brief becomes the thing you keep.",
+      },
+      rows: [
+        {
+          id: "drop",
+          label: "Drop in",
+          body: "The picture from rung one, and one line on who it is for.",
+        },
+        {
+          id: "ask",
+          label: "Ask",
+          body: "Write the brief this picture answers, then make three more from it.",
+        },
+        {
+          id: "get",
+          label: "You get",
+          body: "A brief in your own format, and three pictures made from it, not from you.",
+        },
+        {
+          id: "check",
+          label: "The check",
+          body: "Would your team sign the brief before seeing a single picture?",
+        },
+      ],
+    },
+    {
+      id: "rung-formats",
+      kind: "anatomy",
+      menuLabel: "Formats",
+      badge: "Rung three · Formats",
+      head: {
+        eyebrow: "14 · Formats and layers",
+        title: { pre: "One visual,", em: "every format." },
+        sub: "The slow part of the week is rarely the picture. It is the same picture again, in every size, with the logo in the right place.",
+      },
+      rows: [
+        {
+          id: "drop",
+          label: "Drop in",
+          body: "One layered file you already made: a PSD or a Figma frame.",
+        },
+        {
+          id: "ask",
+          label: "Ask",
+          body: "Learn how this is built, then make it in every format we publish.",
+        },
+        {
+          id: "get",
+          label: "You get",
+          body: "Each format as an editable file, its layers named, nothing flattened.",
+        },
+        {
+          id: "check",
+          label: "The check",
+          body: "Logo, colour and call to action placed by your rule, never by eye.",
+        },
+      ],
+    },
+    {
+      id: "rung-motion",
+      kind: "anatomy",
+      menuLabel: "Motion",
+      badge: "Rung four · Motion",
+      head: {
+        eyebrow: "15 · Motion",
+        title: { pre: "From rushes", em: "to an edit." },
+        sub: "It watches a video the way it reads a file: the cuts, the rhythm, the sound. Then it builds the timeline itself.",
+      },
+      rows: [
+        {
+          id: "drop",
+          label: "Drop in",
+          body: "Raw footage, or a finished spot you like as a reference.",
+        },
+        {
+          id: "ask",
+          label: "Ask",
+          body: "Watch this, cut a short spot from it, and put our text on it.",
+        },
+        {
+          id: "get",
+          label: "You get",
+          body: "A timeline it built itself, text cued to the frame, no editor opened.",
+        },
+        {
+          id: "check",
+          label: "The check",
+          body: "The cut keeps the reference's rhythm, and the text stays on brand.",
+        },
+      ],
+    },
+    {
+      id: "rung-skill",
+      kind: "anatomy",
+      menuLabel: "Make it a skill",
+      badge: "Rung five · Skill",
+      head: {
+        eyebrow: "16 · Make it a skill",
+        title: { pre: "Now make it", em: "a skill." },
+        sub: "Every note you gave today was a rule nobody had written down. This is where it gets written down.",
+      },
+      rows: [
+        {
+          id: "drop",
+          label: "Drop in",
+          body: "Every note you gave on the four rungs before this one.",
+        },
+        {
+          id: "ask",
+          label: "Ask",
+          body: "Turn my notes into checks, update the skill, and run it again.",
+        },
+        {
+          id: "get",
+          label: "You get",
+          body: "A skill with its own evals, checking the next picture before you do.",
+        },
+        {
+          id: "check",
+          label: "The check",
+          body: "The second run needs fewer notes than the first. That is the point.",
+        },
+      ],
+    },
     {
       id: "close",
       kind: "close",
       menuLabel: "What follows",
       head: {
-        eyebrow: "11 · What follows",
+        eyebrow: "17 · What follows",
         title: { pre: "Then it runs", em: "without me." },
         sub: "The first workstream goes through the loop with your own team at the controls. Then a second, with the checks that have accumulated. Then we hand over, with a date on it, and come back once to see what changed.",
       },
