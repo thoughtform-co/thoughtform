@@ -1,7 +1,6 @@
 import type { ArcListGroup, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
-import { ArcExploded } from "./ArcExploded";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ladder, rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -49,10 +48,7 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
           sectionId={section.id}
           motion={motion}
         />
-        <div
-          className={`arc-groups arc-groups--${section.layout}`}
-          data-readout-exploded={readout && section.exploded ? "" : undefined}
-        >
+        <div className={`arc-groups arc-groups--${section.layout}`}>
           {section.groups.map((group, gi) =>
             readout ? (
               <ArcReadout
@@ -99,9 +95,6 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
               </section>
             )
           )}
-          {readout && section.exploded ? (
-            <ArcExploded label={section.exploded.label} layers={section.exploded.layers} />
-          ) : null}
         </div>
         {section.closing ? (
           <p className="arc-receipt arc-reveal" {...rung(motion, 0.52, 0, 22)}>

@@ -842,6 +842,17 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   of `é` reaches. Two claims that overstated the record were corrected with it
   (the 28 checks are in ENGLISH; both Live picks are `unstable`, quorum 2).
   Grammar: [`hologram-stage-grammar.md`](../skills/thoughtform-design/references/hologram-stage-grammar.md).
+  ⚠ **U4 (2026-09-28, owner) SUPERSEDES U1's CABINET AND U2's PERSPECTIVE
+  POSE ON THESE BEATS**: one parallel projection (`ISO_BASIS_STAGE`, Moira's
+  22-degree view from the floor's front corner), an orthographic camera that
+  frames the SVG's own crop (`stageFrustum`, the canvas mounted in the stage
+  box, the fallback's DOM words kept, no `ArcHoloLabels`), no drag, opaque
+  shaded faces, crops derived by `framing/floor.ts` `frameAround`, and
+  `holo-stage-geom` walking every spec point into its crop — the guard U2's
+  clamped lens never had (its agent block ran 85px off the canvas at
+  1920x1247). The three drawings share one floor and one time edge; the curve
+  is a staircase, the horizon two lanes on the floor. `vandaag` lost its
+  exploded stack and is three rows and four links.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

@@ -33,11 +33,9 @@ import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
 import {
   curveSpec,
-  explodedSpec,
   horizonSpec,
   stagesSpec,
   type CurveData,
-  type ExplodedData,
   type HorizonData,
   type StagesData,
 } from "@/components/holo-stage/stageGeom";
@@ -55,8 +53,7 @@ const STAGE_MEDIA = "(min-width: 901px) and (prefers-reduced-motion: no-preferen
 export type StageScene =
   | { kind: "stages"; data: StagesData }
   | { kind: "curve"; data: CurveData }
-  | { kind: "horizon"; data: HorizonData }
-  | { kind: "exploded"; data: ExplodedData };
+  | { kind: "horizon"; data: HorizonData };
 
 const HoloStageCanvas = dynamic(
   () => import("@/components/holo-stage/HoloStageCanvas").then((m) => m.HoloStageCanvas),
@@ -65,25 +62,24 @@ const HoloStageCanvas = dynamic(
 
 export interface ArcHoloStageMountProps {
   scene: StageScene;
-  labels: readonly HoloLabelSpec[];
+  /**
+   * Tracked DOM words, for a scene whose words move with it. ⚠ The framing
+   * beats pass NONE since ADR-130 U4: their camera frames the SVG's own crop,
+   * so the fallback's fixed spans are already on the hologram, and a second
+   * layer would print every word twice.
+   */
+  labels?: readonly HoloLabelSpec[];
   /**
    * `curtain` arms on scroll depth — the first beat is held under the hero by
    * the ADR-076 curtain, so an IntersectionObserver is useless there: it
    * intersects from frame one. Everything below the fold arms on arrival.
    */
   arm?: "curtain" | "io";
-  /** Chrome the drawing may not run under, in CSS pixels. */
-  gutters?: { top: number; bottom: number };
 }
 
 const ARM_AT = 0.55;
 
-export function ArcHoloStageMount({
-  scene,
-  labels,
-  arm = "io",
-  gutters = { top: 0, bottom: 0 },
-}: ArcHoloStageMountProps) {
+export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloStageMountProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery(STAGE_MEDIA);
   const [gl, setGl] = useState<boolean | null>(null);
@@ -100,8 +96,6 @@ export function ArcHoloStageMount({
         return curveSpec(scene.data);
       case "horizon":
         return horizonSpec(scene.data);
-      case "exploded":
-        return explodedSpec(scene.data);
     }
   }, [scene]);
 
@@ -187,10 +181,9 @@ export function ArcHoloStageMount({
           channel={channel}
           armed={armed}
           onReady={() => setLive(true)}
-          gutters={gutters}
         />
       </CanvasErrorBoundary>
-      <ArcHoloLabels channel={channel} labels={labels} />
+      {labels.length > 0 ? <ArcHoloLabels channel={channel} labels={labels} /> : null}
     </div>
   );
 }

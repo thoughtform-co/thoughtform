@@ -10,10 +10,9 @@ import { arcTitleText } from "./chrome";
 import {
   HORIZON_VB,
   agentRun,
-  checksAt,
-  gateAt,
-  horizonDust,
+  horizonAxis,
   horizonGrid,
+  horizonLeaders,
   horizonSeats,
   operatedRuns,
   retryLoop,
@@ -28,21 +27,19 @@ interface ArcHorizonProps {
 const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at }) as CSSProperties;
 
 /**
- * ArcHorizon — the same stretch of time, twice (ADR-130, redrawn in U1). Two
- * lanes over one isometric datum. Far and above, a tool you operate: short
- * runs, a person after every one, until the repetition is the point. Near and
- * on the plane, an agent on one long task — a person sets the goal and the
- * checks, the run passes three GATE FRAMES standing on the floor (it checks
- * its work, it steps back and retries, it stops and asks), and a person judges
- * the end. The long gold run is the drawing's one bright object.
+ * ArcHorizon — where the agent stops of its own accord (ADR-130, redrawn in
+ * U4 on the Moira workshop's own figure). The same stretch of time, twice, as
+ * two lanes marked on the stage's floor along the same time edge as the two
+ * drawings before it: a tool you operate, short runs with a person after
+ * every one; and an agent on a long task, one gold run between a person who
+ * sets the goal and a person who judges the result, with the model's own
+ * gates on it (it checks its work, it steps back and retries, it stops and
+ * asks you).
  *
  * ⚠ THE DIAL'S LAW FOR EVERY MARK (ADR-106): a FILLED node is a person's
- * hand, an OPEN one the model. That is the whole reading — eight filled nodes
- * above, two open gates below — and it needs no legend.
- *
- * ⚠ THE NODES ARE DOM, seated by fraction, so they stay 7px at every width
- * and nothing on the figure carries a `transform`. Below 900px the drawing
- * gives way to two plain lists (Moira's own fallback).
+ * hand, an OPEN one the model. That is the whole reading, and it needs no
+ * legend. The nodes are DOM, seated by fraction, so they are the same 8px on
+ * the drawing and on the hologram (the same crop, mounted in the same box).
  *
  * ⚠ SERVER, NO STATE. `data-horizon-*` only.
  */
@@ -69,48 +66,19 @@ export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProp
           motion={motion}
         />
         <figure className="arc-hz arc-reveal" data-horizon-figure="" {...rung(motion, 0.14)}>
-          {/* Two rails and three standing gates, turned (ADR-130 U2). ⚠ The
-              dial's law travels with them: a FILLED node is a person's hand
-              and an OPEN one the model, which is the whole reading and needs
-              no legend (ADR-106). */}
-          <ArcHoloStageMount
-            scene={{
-              kind: "horizon",
-              data: {
-                operated: { steps: operated.steps },
-                agent: { gates: agent.gates.map((g) => ({ kind: g.kind, at: g.at })) },
-              },
-            }}
-            labels={[
-              { id: "operated", text: operated.label, priority: 0 },
-              { id: "agent", text: agent.label, priority: 0 },
-              /* ⚠ THE GATES OUTRANK THE TWO PEOPLE AT THE ENDS. They are what
-                 this beat argues — the agent checks, retries and asks — and on
-                 the first live shoot all three dropped while "Jij zet het doel"
-                 kept its slot. A drop rule is only as good as its order. */
-              ...agent.gates.map((g) => ({
-                id: g.kind,
-                text: g.label,
-                by: (g.kind === "ask" ? "person" : "model") as "person" | "model",
-                priority: 1,
-              })),
-              { id: "start", text: agent.start, by: "person" as const, priority: 2 },
-              { id: "end", text: agent.end, by: "person" as const, priority: 2 },
-              /* ⚠ LETTERED ONCE, on the last check. Eight repetitions of the
-                 same three words along a lane is the map city's plaque defect
-                 in a new place; the eight filled nodes already say how often. */
-              {
-                id: `check-${operated.steps - 1}`,
-                text: operated.check,
-                by: "person" as const,
-                priority: 4,
-              },
-              { id: "from", text: axis.from, priority: 5 },
-              { id: "to", text: axis.to, priority: 5 },
-            ]}
-            gutters={{ top: 8, bottom: 8 }}
-          />
-          <div className="arc-hz__stage">
+          <div
+            className="arc-hz__stage"
+            style={{ "--vb-ar": HORIZON_VB.w / HORIZON_VB.h } as CSSProperties}
+          >
+            <ArcHoloStageMount
+              scene={{
+                kind: "horizon",
+                data: {
+                  operated: { steps: operated.steps },
+                  agent: { gates: agent.gates.map((g) => ({ kind: g.kind, at: g.at })) },
+                },
+              }}
+            />
             <svg
               className="arc-hz__svg"
               viewBox={`0 0 ${HORIZON_VB.w} ${HORIZON_VB.h}`}
@@ -123,21 +91,10 @@ export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProp
               {grid.across.map((d, i) => (
                 <path key={`gc${i}`} className="arc-hz__grat" d={d} />
               ))}
-              {horizonDust().map((p, i) => (
-                <rect key={`d${i}`} className="arc-hz__mote" x={p.x} y={p.y} width="1" height="1" />
-              ))}
+              <path className="arc-hz__axis" d={horizonAxis()} />
               {operatedRuns(operated.steps).map((d, i) => (
                 <path key={`s${i}`} className="arc-hz__step" d={d} />
               ))}
-              {agent.gates.map((g) => {
-                const gate = gateAt(g.at);
-                return (
-                  <g key={g.kind} data-horizon-gate={g.kind}>
-                    <path className="arc-hz__drop" d={gate.drop} />
-                    <path className="arc-hz__gate-frame" d={gate.frame} />
-                  </g>
-                );
-              })}
               {loop ? (
                 <>
                   <path className="arc-hz__loop" d={loop.loop} />
@@ -145,6 +102,9 @@ export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProp
                 </>
               ) : null}
               <path className="arc-hz__run" d={agentRun()} pathLength={100} />
+              {horizonLeaders(operated.steps, agent.gates).map((d, i) => (
+                <path key={`l${i}`} className="arc-hz__leader" d={d} />
+              ))}
             </svg>
 
             {/* The operated lane: a person after every step. */}

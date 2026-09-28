@@ -1058,27 +1058,6 @@ describe("arcs registry (ADR-052)", () => {
               }
             }
           }
-          // The exploded stack between the two panels (ADR-130 U1): the client's
-          // own template, drawn once. ⚠ THE LABELS ARE MEASURED, not rounded —
-          // the drawing's label column is 162 of 360 crop units, and a longer
-          // label walks out of the stage where nothing clips it.
-          if (s.exploded) {
-            const x = s.exploded;
-            expect(x.layers.length, `${at}: layers`).toBeGreaterThanOrEqual(3);
-            expect(x.layers.length, `${at}: layers`).toBeLessThanOrEqual(5);
-            expect(new Set(x.layers.map((l) => l.id)).size, `${at}: layer ids`).toBe(
-              x.layers.length
-            );
-            expect(
-              x.layers.filter((l) => l.dashed).length,
-              `${at}: at most one layer is a guide`
-            ).toBeLessThanOrEqual(1);
-            for (const l of x.layers) {
-              expect(l.label.length, `${at}/${l.id}: label`).toBeLessThanOrEqual(16);
-              if (l.note) expect(l.note.length, `${at}/${l.id}: note`).toBeLessThanOrEqual(40);
-            }
-            noDigits(x, `${at}: the exploded stack`);
-          }
         }
 
         if (s.kind === "stages") {

@@ -10,10 +10,9 @@ import { arcTitleText } from "./chrome";
 import {
   STAGES_VB,
   stageLeader,
-  stageTagSeat,
+  stageNameSeat,
   stagesAxes,
   stagesBoxes,
-  stagesDust,
   stagesGrid,
   stagesWordSeats,
 } from "./framing/stagesLayout";
@@ -24,26 +23,26 @@ interface ArcStagesProps {
   motion?: ArcMotion;
 }
 
-const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at }) as CSSProperties;
+const seat = (p: { ax: number; at: number }, rot?: number) =>
+  ({ "--ax": p.ax, "--at": p.at, ...(rot ? { "--rot": `${rot}deg` } : {}) }) as CSSProperties;
 
 /**
  * ArcStages — a prompt, a tool, an agent, each running longer without you
- * (ADR-130, redrawn in U1). Three wireframe prisms standing on a ruled datum
- * in the brandworld's own isometric register: the footprint along the time
- * axis is how long each runs without you, the height is how much of the work
- * it holds, and the hidden edges are dashed so a box reads as a machine
- * rather than as a flat hexagon. Beside it, three rows in the plates' own
- * head-band material that say what each one is on this client's own work.
+ * (ADR-130, redrawn in U4 on the Moira workshop's own figure). One floor seen
+ * from its front corner — the time axis up the right-hand edge, the work up
+ * the left — and three blocks standing further along both, larger and taller
+ * each time; the agent's, at the back, is the drawing's one gold object.
+ * Beside it, three rows in the plates' head-band material that say what each
+ * one is on this client's own work.
  *
- * ⚠ GOLD BUYS ONE THING: the agent's prism (and its row's lit band). The
- * other two are the seam, and their rows are ring-only (`--tl-lit: 0`,
- * ADR-089 U4: the open one filled, the rest outlined).
+ * ⚠ ONE PICTURE, TWO RENDERINGS. The SVG below is what a reader without
+ * WebGL, a phone and the printed handout get; the hologram is the same crop
+ * through a fixed parallel camera (`stageFit.ts`), mounted INSIDE the stage
+ * so the two share one box. The words are these DOM spans in both.
  *
- * ⚠ THE SVG LETTERS NOTHING, AND NOTHING CARRIES A `transform`. The tags and
- * the axis words are DOM on their own beds, seated by fraction and joined to
- * their prism by a leader; the SVG is `preserveAspectRatio="none"` inside a
- * stage that holds its crop's aspect, so a fraction of the stage IS a
- * fraction of the drawing.
+ * ⚠ THE SVG LETTERS NOTHING, AND NOTHING CARRIES A `transform`. The names sit
+ * beside each block's right-hand edge (Moira's `plinthSide`) on a short tick;
+ * the axis words run along their edges (a DOM `rotate`, lawful on a span).
  *
  * ⚠ SERVER, NO STATE, NO LISTENER. `data-stages-*` only.
  */
@@ -71,23 +70,16 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
         />
         <div className="arc-floor">
           <figure className="arc-floor__figure arc-reveal" {...rung(motion, 0.14)}>
-            {/* The same drawing, turned: the SVG below is what every reader
-                without WebGL gets, and `data-holo="live"` is the only state
-                that hides it (ADR-130 U2, on ADR-080's tri-state). */}
-            <ArcHoloStageMount
-              scene={{
-                kind: "stages",
-                data: { stages: stages.map((s) => ({ id: s.id, lit: s.lit })) },
-              }}
-              labels={[
-                ...stages.map((s) => ({ id: s.id, key: s.label, text: s.name, priority: 0 })),
-                { id: "top", text: ends.top, priority: 2 },
-                { id: "near", text: ends.near, priority: 3 },
-                { id: "far", text: ends.far, priority: 3 },
-              ]}
-              gutters={{ top: 8, bottom: 8 }}
-            />
-            <div className="arc-floor__stage">
+            <div
+              className="arc-floor__stage"
+              style={{ aspectRatio: `${STAGES_VB.w} / ${STAGES_VB.h}` }}
+            >
+              <ArcHoloStageMount
+                scene={{
+                  kind: "stages",
+                  data: { stages: stages.map((s) => ({ id: s.id, lit: s.lit })) },
+                }}
+              />
               <svg
                 className="arc-floor__svg"
                 viewBox={`0 0 ${STAGES_VB.w} ${STAGES_VB.h}`}
@@ -100,23 +92,11 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
                 {grid.across.map((d, i) => (
                   <path key={`gc${i}`} className="arc-floor__grat" d={d} />
                 ))}
-                {stagesDust().map((p, i) => (
-                  <rect
-                    key={`d${i}`}
-                    className="arc-floor__mote"
-                    x={p.x}
-                    y={p.y}
-                    width="1"
-                    height="1"
-                  />
-                ))}
-                {axis.ticks.map((d, i) => (
-                  <path key={`t${i}`} className="arc-floor__tick" d={d} />
-                ))}
                 <path className="arc-floor__axis" d={axis.time} />
                 <path className="arc-floor__axis" d={axis.work} />
                 {/* ⚠ FARTHEST FIRST. SVG has no z-buffer, so the order the
-                    prisms are written IS the order they occlude in. */}
+                    blocks are written IS the order they occlude in, and the
+                    faces are opaque so a nearer block covers a farther one. */}
                 {boxes.map(({ i, paths }) => {
                   const stage = stages[i];
                   return (
@@ -126,8 +106,9 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
                       data-stages-housing={stage.id}
                       data-stages-lit={stage.lit ? "" : undefined}
                     >
-                      <path className="arc-floor__hidden" d={paths.hidden} />
-                      <path className="arc-floor__face" d={paths.top} />
+                      <path className="arc-floor__face" data-face="left" d={paths.left} />
+                      <path className="arc-floor__face" data-face="right" d={paths.right} />
+                      <path className="arc-floor__face" data-face="top" d={paths.top} />
                       <path className="arc-floor__edge" d={paths.visible} />
                     </g>
                   );
@@ -141,31 +122,25 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
                   key={stage.id}
                   className="arc-floor__tag"
                   data-stages-lit={stage.lit ? "" : undefined}
-                  style={seat(stageTagSeat(i))}
+                  style={seat(stageNameSeat(i))}
                 >
                   {stage.label}
                 </span>
               ))}
-              <span
-                className="arc-floor__word arc-floor__word--time"
-                style={seat(words.time)}
-              >
-                {axes.time}
-              </span>
-              <span className="arc-floor__end" style={seat(words.near)}>
-                {ends.near}
+              <span className="arc-floor__word" style={seat(words.time, -22)}>
+                {axes.time} →
               </span>
               <span className="arc-floor__end arc-floor__end--far" style={seat(words.far)}>
                 {ends.far}
               </span>
-              <span
-                className="arc-floor__word arc-floor__word--work"
-                style={seat(words.work)}
-              >
-                {axes.work}
+              <span className="arc-floor__word" style={seat(words.work, 22)}>
+                ← {axes.work}
               </span>
               <span className="arc-floor__end arc-floor__end--top" style={seat(words.top)}>
                 {ends.top}
+              </span>
+              <span className="arc-floor__end" style={seat(words.near)}>
+                {ends.near}
               </span>
             </div>
           </figure>

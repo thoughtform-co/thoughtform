@@ -24,15 +24,15 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { type ComponentRef, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { holoDustFragmentShader, holoDustVertexShader } from "@/components/holo-program/holoDustShader";
 import {
-  BREATHE,
-  BREATHE_HZ,
+  holoDustFragmentShader,
+  holoDustVertexShader,
+} from "@/components/holo-program/holoDustShader";
+import {
   FLICKER,
   HOLO_SEED,
   INTRO_MS,
   TWINKLE,
-  frontnessFromDepth,
   mulberry32,
 } from "@/components/holo-program/holoProgramGeom";
 import type { HoloPalette } from "@/components/holo-program/holoPalette";
@@ -40,7 +40,6 @@ import { clamp01 } from "@/lib/math";
 
 import type { AnchorChannel, HoloAnchor } from "./stageAnchors";
 import type { HoloStageSpec, StageLine, StageRole } from "./stageGeom";
-import { STAGE_DISTANCE } from "./stageFit";
 
 function smootherstep(edge0: number, edge1: number, x: number): number {
   if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
@@ -104,7 +103,15 @@ export function HoloStageScene({
   );
   const blend = palette.additive ? THREE.AdditiveBlending : THREE.NormalBlending;
   const colourOf = (role: StageRole) =>
-    role === "gold" ? C.gold : role === "green" ? C.green : role === "grid" ? C.grid : role === "machine" ? C.machine : C.structure;
+    role === "gold"
+      ? C.gold
+      : role === "green"
+        ? C.green
+        : role === "grid"
+          ? C.grid
+          : role === "machine"
+            ? C.machine
+            : C.structure;
 
   /* ── Geometry, built once per spec ──────────────────────────────────── */
 
@@ -135,6 +142,18 @@ export function HoloStageScene({
       return { role, geometry, ranges: g.ranges };
     });
   }, [spec]);
+
+  /** How far a face is mixed off the ground toward its role's colour: the
+   *  fallback's own ladder (arcs.css `--arc-iso-*`), top lightest. */
+  const faceColour = useMemo(() => {
+    const ground = new THREE.Color(palette.ground);
+    const MIX = { top: 0.12, left: 0.07, right: 0.04 } as const;
+    const GOLD = { top: 0.28, left: 0.2, right: 0.14 } as const;
+    return (role: StageRole, shade: "top" | "left" | "right" = "top") =>
+      ground
+        .clone()
+        .lerp(role === "gold" ? C.gold : C.structure, role === "gold" ? GOLD[shade] : MIX[shade]);
+  }, [palette.ground, C]);
 
   const faceGeom = useMemo(
     () =>
@@ -182,7 +201,11 @@ export function HoloStageScene({
         vertexShader: holoDustVertexShader,
         fragmentShader: holoDustFragmentShader,
         uniforms: {
-          uPointSize: { value: 3.1 },
+          /* ⚠ THE SHADER SOFTENS PERSPECTIVE BY CAMERA DISTANCE (9 / dist,
+             clamped to 0.4) and this camera stands 30 units off in a parallel
+             view, so every mote lands on the 0.4 floor. The size is scaled
+             back by the same factor: ~2.8px, the trajectory's own grain. */
+          uPointSize: { value: 7 },
           uPixelRatio: { value: 1 },
           uColor: { value: new THREE.Color(palette.machine) },
           uOpacity: { value: 0 },
@@ -240,11 +263,11 @@ export function HoloStageScene({
     }
     const p = progress.current;
 
+    /* ⚠ NO BREATHING ON A FRAMING STAGE (ADR-130 U4). The words are the SVG
+       fallback's own DOM spans, seated by fraction over a drawing that must
+       not move under them; the object lives by its flicker, its twinkle and
+       its dust instead. */
     const rig = rigRef.current;
-    if (rig) {
-      const b = still ? 0 : Math.sin(t * Math.PI * 2 * BREATHE_HZ) * BREATHE * 0.05;
-      rig.scale.setScalar(1 + b);
-    }
 
     const flickOf = (i: number) => {
       if (still || FLICKER <= 0) return 1;
@@ -284,7 +307,12 @@ export function HoloStageScene({
       const el = faceRefs.current[i];
       if (!el) return;
       const r = smootherstep(f.face.reveal[0], f.face.reveal[1], p);
-      (el.material as THREE.MeshBasicMaterial).opacity = f.face.opacity * r;
+      const m = el.material as THREE.MeshBasicMaterial;
+      m.opacity = f.face.shade ? r : f.face.opacity * r;
+      /* A block becomes solid only once it has arrived: until then it is
+         see-through, which is the draw-on of a volume. */
+      m.transparent = r < 0.999;
+      m.depthWrite = r >= 0.999;
       el.visible = r > 0.01;
     });
 
@@ -325,9 +353,7 @@ export function HoloStageScene({
         id: a.id,
         x: ndc.x * 0.5 + 0.5,
         y: 0.5 - ndc.y * 0.5,
-        frontness: frontnessFromDepth(
-          world.distanceTo(cam.position) - (STAGE_DISTANCE - 15.6)
-        ),
+        frontness: 1,
         visible: ndc.z < 1 && toPoint.dot(forward) > 0,
         side: a.side,
         nx: dnx / dnl,
@@ -373,13 +399,16 @@ export function HoloStageScene({
           geometry={f.geometry}
         >
           <meshBasicMaterial
-            color={colourOf(f.face.role)}
+            color={f.face.shade ? faceColour(f.face.role, f.face.shade) : colourOf(f.face.role)}
             transparent
             opacity={0}
             depthWrite={false}
             side={THREE.DoubleSide}
-            blending={blend}
+            blending={f.face.shade ? THREE.NormalBlending : blend}
             toneMapped={false}
+            polygonOffset
+            polygonOffsetFactor={1}
+            polygonOffsetUnits={1}
           />
         </mesh>
       ))}

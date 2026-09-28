@@ -85,24 +85,6 @@ export interface ArcListItem {
   meta?: string;
 }
 
-/**
- * One layer of an exploded stack (ADR-130 U1) — a plate in the axonometric
- * drawing between the workshop's two panels. The record is the template's own
- * top-level layers, top of the stack first.
- */
-export interface ArcStackLayer {
-  id: string;
-  /** Mono caps beside the plate. <=16 chars, measured against the label column. */
-  label: string;
-  /** One line under it, sans. <=40 chars. */
-  note?: string;
-  /**
-   * Drawn as a guide rather than as ink — the safety margin, which is a rule
-   * the artwork obeys and not something the setup paints. At most one layer.
-   */
-  dashed?: true;
-}
-
 export interface ArcListGroup {
   id: string;
   label: string;
@@ -259,14 +241,6 @@ export type ArcSection = ArcSectionBase &
         layout: "stack" | "columns" | "plates" | "readout";
         groups: readonly ArcListGroup[];
         closing?: string;
-        /**
-         * `readout` ONLY (ADR-130 U1, owner 2026-09-27: the two panels are
-         * "glorified PowerPoint panels" — more visual, more creative). One
-         * exploded axonometric stack seated BETWEEN the two plates: the thing
-         * the record on the left leads to and the day on the right works on,
-         * drawn once. Absent, the beat renders exactly as it did.
-         */
-        exploded?: { label: string; layers: readonly ArcStackLayer[] };
       }
     | {
         /** Labelled rows — skill anatomy, invariants, freedom bands. */

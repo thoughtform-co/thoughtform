@@ -10,12 +10,13 @@ import { arcTitleText } from "./chrome";
 import {
   CURVE_VB,
   LETTERED_TREADS,
-  curveDust,
+  curveAxis,
   curveGrid,
   curveSeats,
-  ladder,
+  curveTreads,
+  heightPost,
   referencePlane,
-  yearPosts,
+  yearTicks,
 } from "./framing/curveLayout";
 
 interface ArcCurveProps {
@@ -24,28 +25,29 @@ interface ArcCurveProps {
   motion?: ArcMotion;
 }
 
-const seat = (p: { ax: number; at: number }) => ({ "--ax": p.ax, "--at": p.at }) as CSSProperties;
+const seat = (p: { ax: number; at: number }, rot?: number) =>
+  ({ "--ax": p.ax, "--at": p.at, ...(rot ? { "--rot": `${rot}deg` } : {}) }) as CSSProperties;
 
 /**
- * ArcCurve — the longer the task, per release (ADR-130, redrawn in U1).
- * METR's finding in the brandworld's isometric register: a dated floor with a
- * year post at each mark, and the step ladder EXTRUDED into a stepped relief —
- * one tread per doubling, a riser every seven months — arriving at NOW, the
- * drawing's one gold mark. A dashed reference plane cuts through the relief at
- * the length of work this room is here to hand over, so the ladder is read
- * against something the reader owns.
+ * ArcCurve — why long work only works now (ADR-130, redrawn in U4). METR's
+ * finding on the same stage as the three stages before it: seven treads up
+ * the time edge, a riser every seven months from January 2023, the last tread
+ * the frontier now and the drawing's one gold object. On a doubling axis
+ * every doubling is the same height, so the record IS a staircase. The
+ * heights are read off a post at the end of the edge, each lettered tread
+ * joined to it by a dashed contour; a dashed plane cuts through at the length
+ * of work this room is here to hand over.
  *
- * ⚠ THE CREST IS INK, NOT GOLD, and it draws on once (`pathLength` 100 on a
- * path that never takes `vector-effect`). The static line work does take it,
- * so a hairline is one device pixel at every width.
- *
- * ⚠ THE SVG LETTERS NOTHING; the years are the one digit on the figure.
+ * ⚠ THE SVG LETTERS NOTHING; the years are the one digit on the figure. The
+ * hologram is the same crop through the stage's parallel camera, mounted in
+ * the same box (ADR-130 U4).
  * ⚠ SERVER, NO STATE. `data-curve-*` only.
  */
 export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
   const { years, now, treads, axis, reference, note } = section;
-  const relief = ladder();
   const grid = curveGrid();
+  const treadsDrawn = curveTreads();
+  const post = heightPost();
   const seats = curveSeats(years.length);
   return (
     <ArcBeat
@@ -64,25 +66,16 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
           motion={motion}
         />
         <figure className="arc-curve arc-reveal" data-curve-figure="" {...rung(motion, 0.14)}>
-          {/* The relief, in three dimensions. The SVG below is the fallback
-              and the printed handout (ADR-130 U2). */}
-          <ArcHoloStageMount
-            scene={{
-              kind: "curve",
-              data: { years: section.years, reference: { tread: section.reference.tread } },
-            }}
-            labels={[
-              { id: "now", text: section.now, priority: 0 },
-              { id: "reference", text: section.reference.label, priority: 1 },
-              { id: "axis-y", text: section.axis.y, priority: 2 },
-              ...[0, 2, 4, 6]
-                .filter((k) => section.treads[k] !== undefined)
-                .map((k) => ({ id: `tread-${k}`, text: section.treads[k] as string, priority: 3 })),
-              ...section.years.map((y, i) => ({ id: `year-${i}`, text: y, priority: 4 })),
-            ]}
-            gutters={{ top: 8, bottom: 8 }}
-          />
-          <div className="arc-curve__stage">
+          <div
+            className="arc-curve__stage"
+            style={{ "--vb-ar": CURVE_VB.w / CURVE_VB.h } as CSSProperties}
+          >
+            <ArcHoloStageMount
+              scene={{
+                kind: "curve",
+                data: { years: section.years, reference: { tread: section.reference.tread } },
+              }}
+            />
             <svg
               className="arc-curve__svg"
               viewBox={`0 0 ${CURVE_VB.w} ${CURVE_VB.h}`}
@@ -95,27 +88,33 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
               {grid.across.map((d, i) => (
                 <path key={`gc${i}`} className="arc-curve__grat" d={d} />
               ))}
-              {curveDust().map((p, i) => (
-                <rect
-                  key={`d${i}`}
-                  className="arc-curve__mote"
-                  x={p.x}
-                  y={p.y}
-                  width="1"
-                  height="1"
-                />
+              <path className="arc-curve__axis" d={curveAxis()} />
+              {yearTicks(years.length).map((d, i) => (
+                <path key={`y${i}`} className="arc-curve__axis" d={d} />
               ))}
-              {yearPosts(years.length).map((d, i) => (
-                <path key={`p${i}`} className="arc-curve__tie" d={d} />
+              {/* ⚠ FARTHEST FIRST: a later tread stands further up the edge,
+                  and the faces are opaque, so the order is the occlusion. */}
+              {treadsDrawn.map(({ k, lit, paths }) => (
+                <g key={k} className="arc-curve__tread" data-curve-lit={lit ? "" : undefined}>
+                  <path className="arc-curve__face" data-face="left" d={paths.left} />
+                  <path className="arc-curve__face" data-face="right" d={paths.right} />
+                  <path className="arc-curve__face" data-face="top" d={paths.top} />
+                  <path className="arc-curve__edge" d={paths.visible} />
+                </g>
               ))}
-              <path className="arc-curve__hidden" d={relief.footHidden} />
-              <path className="arc-curve__ref" data-curve-ref="" d={referencePlane(reference.tread)} />
-              {relief.ties.map((d, i) => (
-                <path key={`t${i}`} className="arc-curve__tread" d={d} />
+              {post.contours.map((d, i) => (
+                <path key={`c${i}`} className="arc-curve__contour" d={d} />
               ))}
-              <path className="arc-curve__tread" d={relief.far} />
-              <path className="arc-curve__axis" d={relief.footVisible} />
-              <path className="arc-curve__ladder" d={relief.crest} pathLength={100} />
+              <path className="arc-curve__axis" d={post.post} />
+              {post.ticks.map((d, i) => (
+                <path key={`pt${i}`} className="arc-curve__axis" d={d} />
+              ))}
+              <path className="arc-curve__axis arc-curve__now-tick" d={seats.nowTick} />
+              <path
+                className="arc-curve__ref"
+                data-curve-ref=""
+                d={referencePlane(reference.tread)}
+              />
             </svg>
 
             {LETTERED_TREADS.map((t, i) => (
@@ -139,13 +138,12 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
             <span className="arc-curve__lbl arc-curve__lbl--now" style={seat(seats.now)}>
               {now}
             </span>
-            <i className="arc-curve__seat" aria-hidden="true" style={seat(seats.seat)} />
             <span className="arc-curve__desig arc-curve__desig--y" style={seat(seats.axisY)}>
               {axis.y}
             </span>
             <span
               className="arc-curve__desig arc-curve__desig--along"
-              style={seat(seats.axisAlong)}
+              style={seat(seats.axisAlong, -22)}
             >
               {axis.along}
             </span>

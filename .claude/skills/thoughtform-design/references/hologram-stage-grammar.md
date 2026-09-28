@@ -27,6 +27,14 @@ Reach for this only when all four are true:
 > A holographic object that looks impressive while encoding nothing is a lava
 > lamp with a legend.
 
+## ⚠ SUPERSEDED FOR THE FRAMING BEATS BY ADR-130 U4
+
+The workshop's framing beats use a fixed ORTHOGRAPHIC camera that projects
+exactly the SVG's parallel basis (`ISO_BASIS_STAGE`, both floor edges at 22
+degrees from the front corner) and frames the SVG's own crop: no lens solve,
+no drag, no breathing, the fallback's DOM words kept over the canvas, opaque
+shaded faces. The perspective pose below describes U2 and the trajectory beat.
+
 ## The fallback is the drawing, and the live pose reproduces it
 
 ⚠ **THE TWO VERSIONS ARE ONE PICTURE.** The SVG is what a headless shoot, a

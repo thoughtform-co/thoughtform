@@ -8,18 +8,17 @@
  * remount on context restore, `frameloop="demand"` with a pump gated on the
  * beat being on screen, and the reference's own post strengths.
  *
- * ⚠ THE READER DRAGS THIS OBJECT, and three things keep that safe:
- * `enableZoom={false}` binds no wheel listener, so the page scrolls over it
- * exactly as over any other pixel; `enablePan={false}` keeps it inside its own
- * frame; and both angles are clamped, so the record can never be turned into a
- * pose it cannot be read in.
+ * ⚠ NOTHING DRAGS (ADR-130 U4, owner 2026-09-28: "I can drag it around but how
+ * … should people be able to discern what this represents?"). The camera is a
+ * fixed orthographic view that frames the SVG fallback's own crop, so the
+ * canvas binds no pointer listener, no wheel listener, and cannot be turned
+ * into a pose the reader cannot read.
  *
  * ⚠ IT PAINTS THE PAGE'S OWN GROUND. A canvas that paints anything else draws
  * a RECTANGLE across the beat — ADR-080 U2 measured that at three units of
  * difference, invisible as a colour and perfectly visible as an edge.
  */
 
-import { OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocessing";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -33,60 +32,49 @@ import { useThemeStore } from "@/lib/stores/themeStore";
 
 import { HoloStageScene } from "./HoloStageScene";
 import type { AnchorChannel } from "./stageAnchors";
-import {
-  ORBIT_DAMPING_STAGE,
-  STAGE_AZIMUTH_MAX,
-  STAGE_AZIMUTH_MIN,
-  STAGE_DISTANCE,
-  STAGE_FOV,
-  STAGE_POLAR_MAX,
-  STAGE_POLAR_MIN,
-  solveStageFit,
-  stageCameraPosition,
-} from "./stageFit";
+import { stageCameraPosition, stageFrustum } from "./stageFit";
 import type { HoloStageSpec } from "./stageGeom";
 
 /**
- * The lens, solved from the canvas the object is actually given.
+ * The camera, fitted to the crop.
  *
- * ⚠ THREE'S `fov` IS VERTICAL (ADR-080 U3). Without this the visible height at
- * the target is a constant and every pixel of width the beat owns is empty
- * world by construction — measured there at 23.9 % of the frame filled.
+ * ⚠ THE FRUSTUM IS THE SVG's VIEWBOX, NOT A SOLVE. The drawing is framed by
+ * the same numbers the fallback is, so the hologram is that drawing and the
+ * DOM words seated over it by fraction land on it at every width. The stage
+ * box holds the crop's aspect, so the mapping is uniform; were it not, an
+ * orthographic frustum stretches exactly as `preserveAspectRatio="none"` does.
  *
- * ⚠ SOLVED ONCE PER CANVAS SIZE, AT THE REST POSE. Re-solving under the drag
- * would make the lens breathe, which reads as the drawing resisting the hand.
+ * ⚠ `manual`, SO R3F LEAVES IT ALONE ON RESIZE. R3F rewrites an orthographic
+ * camera's left/right/top/bottom from the canvas size unless it is told the
+ * camera is managed — which would put the whole drawing at one world unit
+ * per pixel, off the canvas.
  */
-function StageFit({ spec, gutters }: { spec: HoloStageSpec; gutters: { top: number; bottom: number } }) {
+function StageFit({ spec }: { spec: HoloStageSpec }) {
   const camera = useThree((s) => s.camera);
-  const controls = useThree((s) => s.controls) as { target?: THREE.Vector3; update?: () => void } | null;
   const width = useThree((s) => s.size.width);
   const height = useThree((s) => s.size.height);
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     if (!height || !width) return;
-    const cam = camera as THREE.PerspectiveCamera;
-    const { fov, offsetY, target } = solveStageFit(spec.bounds, width, height, gutters);
+    const cam = camera as THREE.OrthographicCamera & { manual?: boolean };
+    const f = stageFrustum(spec.frame);
+    const pos = stageCameraPosition();
     /* eslint-disable-next-line react-hooks/immutability --
        A three camera IS mutable state the renderer reads each frame; this is
-       how `HoloProgramCanvas`'s own `HoloFit` drives it (ADR-080 U3). The
-       solved value is applied here rather than passed as a prop precisely
-       because R3F re-applies camera PROPS and would clobber it. */
-    cam.fov = fov;
-    const rest = stageCameraPosition();
-    cam.position.set(rest[0] + target[0], rest[1] + target[1], rest[2] + target[2]);
-    if (controls?.target) {
-      controls.target.set(target[0], target[1], target[2]);
-      controls.update?.();
-    }
-    /* ⚠ SHIFT THE FRUSTUM, NOT THE OBJECT. The published anchors go through
-       this same projection matrix, so the DOM labels follow for free. */
-    cam.setViewOffset(width, height, 0, -offsetY, width, height);
+       how `HoloProgramCanvas`'s own `HoloFit` drives it (ADR-080 U3), applied
+       here rather than as props because R3F re-applies camera PROPS. */
+    cam.manual = true;
+    cam.left = f.left;
+    cam.right = f.right;
+    cam.top = f.top;
+    cam.bottom = f.bottom;
+    cam.zoom = 1;
+    cam.up.set(0, 1, 0);
+    cam.position.set(pos[0], pos[1], pos[2]);
+    cam.lookAt(0, 0, 0);
     cam.updateProjectionMatrix();
     invalidate();
-    return () => {
-      cam.clearViewOffset();
-    };
-  }, [camera, controls, width, height, invalidate, spec, gutters]);
+  }, [camera, width, height, invalidate, spec]);
   return null;
 }
 
@@ -113,7 +101,6 @@ export interface HoloStageCanvasProps {
   still?: boolean;
   onReady?: () => void;
   className?: string;
-  gutters?: { top: number; bottom: number };
 }
 
 export function HoloStageCanvas({
@@ -123,7 +110,6 @@ export function HoloStageCanvas({
   still = false,
   onReady,
   className = "arc-holo__gl",
-  gutters = { top: 0, bottom: 0 },
 }: HoloStageCanvasProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [glEpoch, setGlEpoch] = useState(0);
@@ -141,10 +127,9 @@ export function HoloStageCanvas({
 
   const camPos = useMemo(() => stageCameraPosition(), []);
   const cameraProps = useMemo(
-    () => ({ position: [...camPos] as [number, number, number], fov: STAGE_FOV, near: 0.1, far: 60 }),
+    () => ({ position: [...camPos] as [number, number, number], near: 0.1, far: 100, zoom: 1 }),
     [camPos]
   );
-  const gut = useMemo(() => gutters, [gutters.top, gutters.bottom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -163,12 +148,13 @@ export function HoloStageCanvas({
   };
 
   return (
-    <div className={className} ref={wrapRef} style={{ background: groundCss, touchAction: "none" }}>
+    <div className={className} ref={wrapRef} style={{ background: groundCss }}>
       <CanvasErrorBoundary fallback={null}>
         <Canvas
           key={glEpoch}
+          orthographic
           /* ⚠ MEMOISED. R3F re-applies changed camera PROPS, so a fresh object
-             literal would clobber the fov `StageFit` solved. */
+             literal would clobber the frustum `StageFit` set. */
           camera={cameraProps}
           dpr={[1, dprCeiling]}
           gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
@@ -180,24 +166,7 @@ export function HoloStageCanvas({
           }}
         >
           <color attach="background" args={[groundCss]} />
-          <OrbitControls
-            makeDefault
-            enableDamping
-            dampingFactor={ORBIT_DAMPING_STAGE}
-            enablePan={false}
-            enableZoom={false}
-            minPolarAngle={STAGE_POLAR_MIN}
-            maxPolarAngle={STAGE_POLAR_MAX}
-            minAzimuthAngle={STAGE_AZIMUTH_MIN}
-            maxAzimuthAngle={STAGE_AZIMUTH_MAX}
-            minDistance={STAGE_DISTANCE}
-            maxDistance={STAGE_DISTANCE}
-            /* ⚠ 0.22. Three's `rotateLeft` is `2π·dx/clientHeight·speed`, so at
-               the default a short drag slams the clamp and the object feels
-               broken rather than bounded (ADR-080 U3's measurement). */
-            rotateSpeed={0.22}
-          />
-          <StageFit spec={spec} gutters={gut} />
+          <StageFit spec={spec} />
           <LifePump active={onScreen} />
 
           <HoloStageScene
@@ -223,7 +192,11 @@ export function HoloStageCanvas({
               mipmapBlur
             />
             <Noise opacity={POST.grain * palette.grainScale} premultiply />
-            <Vignette offset={0.22} darkness={POST.vignette * palette.vignetteScale} eskil={false} />
+            <Vignette
+              offset={0.22}
+              darkness={POST.vignette * palette.vignetteScale}
+              eskil={false}
+            />
           </EffectComposer>
         </Canvas>
       </CanvasErrorBoundary>

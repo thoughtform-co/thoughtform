@@ -6295,7 +6295,6 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 /* A figure's dot matrix: the head's own lift, masked so it fades rather
    than stops. On a pseudo so the mask never reaches the marks. */
 .arc-floor__stage::before,
-.arc-xp__stage::before,
 .arc-curve__stage::before,
 .arc-hz__stage::before,
 .arc-q__stage::before {
@@ -6420,8 +6419,7 @@ a.arc-readout__hit:focus-visible {
    device pixel at every width and the runs are scaled strokes, on purpose. */
 .arc-floor,
 .arc-curve,
-.arc-hz,
-.arc-xp {
+.arc-hz {
   /* ⚠ THE DATUM IS THE `--arc-rule` RUNG, NOT `--arc-rule-dash`. A dashed line
      already loses half its ink to the gaps, so at .10 the plane a machine
      stands on measured as nothing on the still — the drawing read as three
@@ -6436,11 +6434,63 @@ a.arc-readout__hit:focus-visible {
      `color-mix` is what lets a solid token carry an alpha (the dial's own). */
   --arc-iso-gold-hidden: color-mix(in srgb, var(--gold-line) 55%, transparent);
   --arc-iso-dust: var(--arc-grid);
+  /* ⚠ THE FACES ARE OPAQUE AND LIGHTER UPWARD (ADR-130 U4, the Moira
+     figure's own shading): a block reads as a solid in a parallel view only
+     if the nearer one COVERS the farther, and SVG has no z-buffer — so the
+     faces are filled with the ground mixed toward the ink, the top lightest,
+     and drawn farthest first. `--void` and `--dawn-rgb` both swap in light
+     (ADR-058), so one rule is a step off the ground in both themes. */
+  --arc-iso-top: color-mix(in srgb, var(--void, #0a0908) 88%, rgb(var(--dawn-rgb)) 12%);
+  --arc-iso-left: color-mix(in srgb, var(--void, #0a0908) 93%, rgb(var(--dawn-rgb)) 7%);
+  --arc-iso-right: color-mix(in srgb, var(--void, #0a0908) 96%, rgb(var(--dawn-rgb)) 4%);
+  --arc-iso-gold-top: color-mix(in srgb, var(--void, #0a0908) 72%, var(--gold, #caa554) 28%);
+  --arc-iso-gold-left: color-mix(in srgb, var(--void, #0a0908) 80%, var(--gold, #caa554) 20%);
+  --arc-iso-gold-right: color-mix(in srgb, var(--void, #0a0908) 86%, var(--gold, #caa554) 14%);
+  /* The words sit over the floor's grid, so they carry the ground as a halo. */
+  --arc-iso-halo: 0 0 3px var(--void, #0a0908), 0 0 8px var(--void, #0a0908);
+}
+.arc-floor__face,
+.arc-curve__face {
+  stroke: none;
+}
+.arc-floor__face[data-face="top"],
+.arc-curve__face[data-face="top"] {
+  fill: var(--arc-iso-top);
+}
+.arc-floor__face[data-face="left"],
+.arc-curve__face[data-face="left"] {
+  fill: var(--arc-iso-left);
+}
+.arc-floor__face[data-face="right"],
+.arc-curve__face[data-face="right"] {
+  fill: var(--arc-iso-right);
+}
+.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="top"],
+.arc-curve__tread[data-curve-lit] .arc-curve__face[data-face="top"] {
+  fill: var(--arc-iso-gold-top);
+}
+.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="left"],
+.arc-curve__tread[data-curve-lit] .arc-curve__face[data-face="left"] {
+  fill: var(--arc-iso-gold-left);
+}
+.arc-floor__housing[data-stages-lit] .arc-floor__face[data-face="right"],
+.arc-curve__tread[data-curve-lit] .arc-curve__face[data-face="right"] {
+  fill: var(--arc-iso-gold-right);
+}
+.arc-curve__edge {
+  fill: none;
+  stroke: var(--arc-iso-edge);
+  stroke-width: 1.2;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+.arc-curve__tread[data-curve-lit] .arc-curve__edge {
+  stroke: var(--arc-iso-gold);
+  stroke-width: 1.6;
 }
 .arc-floor__grat,
 .arc-curve__grat,
-.arc-hz__grat,
-.arc-xp__grat {
+.arc-hz__grat {
   fill: none;
   stroke: var(--arc-iso-grid);
   stroke-width: 1;
@@ -6449,8 +6499,7 @@ a.arc-readout__hit:focus-visible {
 }
 .arc-floor__hidden,
 .arc-curve__hidden,
-.arc-hz__hidden,
-.arc-xp__hidden {
+.arc-hz__hidden {
   fill: none;
   stroke: var(--arc-iso-hidden);
   stroke-width: 1;
@@ -6460,155 +6509,21 @@ a.arc-readout__hit:focus-visible {
 .arc-floor__tie,
 .arc-curve__tie,
 .arc-hz__drop,
-.arc-xp__tie,
 .arc-floor__leader,
 .arc-curve__leader,
-.arc-hz__leader,
-.arc-xp__leader {
+.arc-hz__leader {
   fill: none;
   stroke: var(--arc-iso-tie);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.arc-xp__tie,
 .arc-hz__drop {
   stroke-dasharray: 2 5;
 }
 .arc-floor__mote,
 .arc-curve__mote,
-.arc-hz__mote,
-.arc-xp__mote {
+.arc-hz__mote {
   fill: var(--arc-iso-dust);
-}
-
-/* ── 01b · The template, exploded ──────────────────────────────────
-   Between the two panels: one campaign template lifted into its layers, an
-   exploded CAD assembly in the house's line work. Five wireframe plates on
-   four dashed verticals over the datum, each named to the right on a single
-   straight leader; the base plate — what the setup draws — is the drawing's
-   one gold object, and the top layer is the free zone, DASHED, because a
-   safety margin is a rule the artwork obeys rather than ink the setup paints.
-
-   ⚠ THE DRAWING IS COLUMN 2 AND IS LAST IN THE DOM. The reading order is the
-   record, the day, then the figure that sits between them — so the columns are
-   assigned rather than left to auto-placement, and a reader on a screen reader
-   is not handed a wireframe in the middle of a sentence. */
-.arc-groups--readout[data-readout-exploded] {
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr) minmax(0, 1fr);
-  align-items: stretch;
-}
-/* ⚠ EVERY CHILD DECLARES ITS ROW TOO. Auto-placement is SPARSE: once the index
-   plate is placed in column 3, the cursor has passed column 2, so a figure that
-   names only its column is pushed onto a second row — the beat then measured
-   1021px against a 720px viewport, `data-arc-tall` came on and the curtain
-   disarmed itself, with nothing failing. */
-.arc-groups--readout[data-readout-exploded] > [data-readout-side="record"] {
-  grid-row: 1;
-  grid-column: 1;
-}
-.arc-groups--readout[data-readout-exploded] > .arc-xp {
-  grid-row: 1;
-  grid-column: 2;
-}
-.arc-groups--readout[data-readout-exploded] > [data-readout-side="index"] {
-  grid-row: 1;
-  grid-column: 3;
-}
-.arc-xp {
-  margin: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(8px, 1.2vh, 14px);
-}
-.arc-xp__stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 360 / 460;
-}
-.arc-xp__svg {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.arc-xp__face {
-  fill: var(--arc-plate);
-  stroke: none;
-}
-.arc-xp__side {
-  fill: none;
-  stroke: var(--arc-iso-edge);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.arc-xp__run {
-  fill: none;
-  stroke: var(--arc-iso-edge);
-  stroke-width: 1.4;
-  stroke-linejoin: miter;
-}
-/* The base plate: what the setup draws. */
-.arc-xp__plate[data-readout-base] .arc-xp__face {
-  fill: var(--arc-gold-wash);
-}
-.arc-xp__plate[data-readout-base] .arc-xp__run,
-.arc-xp__plate[data-readout-base] .arc-xp__side {
-  stroke: var(--arc-iso-gold);
-}
-.arc-xp__plate[data-readout-base] .arc-xp__hidden {
-  stroke: var(--arc-iso-gold-hidden);
-}
-/* The free zone: a guide, not ink. ⚠ A DASHED RUN CANNOT DRAW ON (its own
-   dash array is the transition's channel), so this plate's outline is the
-   static `__side` weight and its run is dashed and left drawn. */
-.arc-xp__plate[data-readout-dashed] .arc-xp__face {
-  fill: none;
-}
-.arc-xp__plate[data-readout-dashed] .arc-xp__run {
-  stroke-width: 1;
-  stroke-dasharray: 4 5;
-  vector-effect: non-scaling-stroke;
-}
-.arc-xp__lbl {
-  position: absolute;
-  left: calc(var(--ax, 0) * 100%);
-  top: calc(var(--at, 0) * 100%);
-  z-index: 2;
-  width: calc(var(--xw, 160) / 360 * 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  translate: 0 -50%;
-  pointer-events: none;
-}
-.arc-xp__name {
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-weight: var(--weight-text);
-  font-size: clamp(8.5px, 0.6vw, 11px);
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--arc-ink-90);
-}
-.arc-xp__note {
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: var(--weight-text);
-  font-size: clamp(10px, 0.72vw, 13px);
-  line-height: 1.3;
-  color: var(--arc-ink-50);
-}
-.arc-xp__cap {
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-weight: var(--weight-text);
-  font-size: clamp(8.5px, 0.6vw, 11px);
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  text-align: center;
-  color: var(--arc-ink-50);
 }
 
 /* ── 02 · The three stages ──────────────────────────────────────────
@@ -6624,9 +6539,9 @@ a.arc-readout__hit:focus-visible {
   --arc-floor-band: rgba(var(--dawn-rgb), 0.05);
   --arc-floor-gold: var(--gold-line);
   display: grid;
-  /* The drawing is width-bound (twelve units of time plus three of depth), so
-     the only lever on how large it renders is its share of the row. */
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  /* The drawing is width-bound (its aspect is the derived crop's), so the only
+     lever on how large it renders is its share of the row. */
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
   gap: clamp(24px, 3vw, 56px);
   align-items: center;
 }
@@ -6634,10 +6549,11 @@ a.arc-readout__hit:focus-visible {
   margin: 0;
   min-width: 0;
 }
+/* ⚠ THE ASPECT IS WRITTEN INLINE FROM THE LAYOUT'S DERIVED CROP, never typed
+   here: a literal in the sheet is a second place for the crop to be wrong. */
 .arc-floor__stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 960 / 460;
 }
 .arc-floor__svg,
 .arc-curve__svg,
@@ -6661,21 +6577,12 @@ a.arc-readout__hit:focus-visible {
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-/* A prism's top face carries the only fill on the drawing, and only when it
-   is the lit one — a wireframe machine that is filled everywhere is a solid,
-   and the argument here is that you can see through all three. */
-.arc-floor__face {
-  fill: none;
-}
 .arc-floor__edge {
   fill: none;
   stroke: var(--arc-iso-edge);
-  stroke-width: 1.4;
+  stroke-width: 1.2;
   stroke-linejoin: miter;
   vector-effect: non-scaling-stroke;
-}
-.arc-floor__housing[data-stages-lit] .arc-floor__face {
-  fill: var(--arc-gold-wash);
 }
 .arc-floor__housing[data-stages-lit] .arc-floor__edge {
   stroke: var(--arc-floor-gold);
@@ -6699,6 +6606,7 @@ a.arc-readout__hit:focus-visible {
   text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
+  text-shadow: var(--arc-iso-halo);
 }
 .arc-floor__tag {
   translate: 0 -50%;
@@ -6707,22 +6615,21 @@ a.arc-readout__hit:focus-visible {
 .arc-floor__tag[data-stages-lit] {
   color: var(--gold-ink, #caa554);
 }
+/* An axis word runs ALONG its floor edge (Moira's), seated by its centre. */
 .arc-floor__word {
-  translate: -50% 0;
+  translate: -50% -50%;
+  rotate: var(--rot, 0deg);
   color: var(--arc-ink-50);
 }
-.arc-floor__word--work {
-  translate: -50% -50%;
-  rotate: -90deg;
-}
 .arc-floor__end {
+  translate: -50% 0;
   color: var(--arc-ink-40);
 }
 .arc-floor__end--far {
   translate: -100% 0;
 }
 .arc-floor__end--top {
-  translate: -50% -50%;
+  translate: 0 0;
 }
 .arc-floor__list {
   list-style: none;
@@ -6745,16 +6652,21 @@ a.arc-readout__hit:focus-visible {
   --arc-curve-ref: var(--arc-ink-40);
   margin: 0;
 }
+/* ⚠ `--vb-ar` IS THE LAYOUT'S DERIVED CROP, written inline by the renderer. */
 .arc-curve__stage {
   position: relative;
-  width: min(100%, calc(46svh * 1000 / 400));
-  aspect-ratio: 1000 / 400;
+  /* ⚠ 38svh, SOLVED FROM THE HEAD, NOT THE DRAWING: at 1280x720 a taller
+     figure centres the beat's head up onto the client mark's hairline (the
+     first U4 shoot measured the eyebrow at y 53, through it). */
+  width: min(100%, calc(38svh * var(--vb-ar, 2)));
+  aspect-ratio: var(--vb-ar, 2);
   margin-inline: auto;
 }
-.arc-curve__tread {
+.arc-curve__contour {
   fill: none;
-  stroke: var(--arc-curve-tread);
+  stroke: var(--arc-iso-tie);
   stroke-width: 1;
+  stroke-dasharray: 2 4;
   vector-effect: non-scaling-stroke;
 }
 .arc-curve__axis {
@@ -6770,14 +6682,6 @@ a.arc-readout__hit:focus-visible {
   stroke-dasharray: 4 5;
   vector-effect: non-scaling-stroke;
 }
-/* ⚠ THE LADDER MAY NOT TAKE `vector-effect` — it draws on by `pathLength`,
-   which the browser ignores under a non-scaling stroke (ADR-106). */
-.arc-curve__ladder {
-  fill: none;
-  stroke: var(--arc-curve-ink);
-  stroke-width: 2;
-  stroke-linejoin: miter;
-}
 .arc-curve__lbl,
 .arc-curve__desig {
   position: absolute;
@@ -6792,9 +6696,10 @@ a.arc-readout__hit:focus-visible {
   text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
+  text-shadow: var(--arc-iso-halo);
 }
 .arc-curve__lbl--tread {
-  translate: -100% -50%;
+  translate: 0 -50%;
   color: var(--arc-ink-50);
 }
 .arc-curve__lbl--year {
@@ -6806,36 +6711,25 @@ a.arc-readout__hit:focus-visible {
   color: var(--gold-ink, #caa554);
 }
 .arc-curve__lbl--ref {
-  translate: -100% -100%;
-  padding: 1px 4px;
-  background: var(--void, #0a0908);
+  translate: -100% -50%;
+  width: 13em;
+  white-space: normal;
+  text-align: right;
   color: var(--arc-ink-62);
 }
 .arc-curve__desig {
   color: var(--arc-ink-40);
 }
 .arc-curve__desig--y {
-  translate: -100% -50%;
+  translate: -50% -100%;
 }
 /* ⚠ SET FROM ITS RIGHT EDGE. The seat is the crop's own right margin and the
    run is 36 characters, so a left-anchored span walks straight out of the
    stage — past the right rail, where nothing clips it and no box reports it. */
 .arc-curve__desig--along {
-  translate: -100% -50%;
-  padding: 1px 4px;
-  background: var(--void, #0a0908);
-  color: var(--arc-ink-50);
-}
-.arc-curve__seat {
-  position: absolute;
-  left: calc(var(--ax, 0) * 100%);
-  top: calc(var(--at, 0) * 100%);
-  z-index: 3;
-  width: 9px;
-  height: 9px;
   translate: -50% -50%;
-  rotate: 45deg;
-  background: var(--gold, #caa554);
+  rotate: var(--rot, 0deg);
+  color: var(--arc-ink-50);
 }
 .arc-curve__phone {
   display: none;
@@ -6860,11 +6754,21 @@ a.arc-readout__hit:focus-visible {
   --arc-hz-open: var(--arc-ink-60);
   margin: 0;
 }
+/* ⚠ `--vb-ar` IS THE LAYOUT'S DERIVED CROP, written inline by the renderer. */
 .arc-hz__stage {
   position: relative;
-  width: min(100%, calc(44svh * 1200 / 440));
-  aspect-ratio: 1200 / 440;
+  /* The gate sentences are measured against the stage, not the viewport:
+     three gates sit a tenth of the stage apart at every size. */
+  container-type: inline-size;
+  width: min(100%, calc(38svh * var(--vb-ar, 2.6)));
+  aspect-ratio: var(--vb-ar, 2.6);
   margin-inline: auto;
+}
+.arc-hz__axis {
+  fill: none;
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 .arc-hz__step {
   fill: none;
@@ -6921,12 +6825,13 @@ a.arc-readout__hit:focus-visible {
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   pointer-events: none;
+  text-shadow: var(--arc-iso-halo);
 }
 /* ⚠ SET FROM ITS RIGHT EDGE, so the lane's name ends where the lane begins.
    Left-anchored it ran straight over its own rail and its first node. */
 .arc-hz__track {
   translate: -100% -50%;
-  max-width: calc(100% * 160 / 1200);
+  width: 12em;
   text-align: right;
   font-size: clamp(9px, 0.65vw, 12px);
   color: var(--arc-ink-62);
@@ -6935,7 +6840,7 @@ a.arc-readout__hit:focus-visible {
   color: var(--gold-ink, #caa554);
 }
 .arc-hz__check {
-  translate: -50% 0;
+  translate: -50% -100%;
   white-space: nowrap;
   color: var(--arc-ink-40);
 }
@@ -6944,7 +6849,7 @@ a.arc-readout__hit:focus-visible {
   color: var(--arc-ink-40);
 }
 .arc-hz__axislbl--end {
-  translate: -100% 0;
+  translate: 0 -50%;
 }
 .arc-hz__gate,
 .arc-hz__person {
@@ -6956,6 +6861,7 @@ a.arc-readout__hit:focus-visible {
   font-weight: var(--weight-text);
   line-height: 1.3;
   pointer-events: none;
+  text-shadow: var(--arc-iso-halo);
 }
 .arc-hz__gate {
   translate: -50% -100%;
@@ -6964,18 +6870,24 @@ a.arc-readout__hit:focus-visible {
      viewport, so the label's measure is what keeps them off each other —
      wrapped to two short lines rather than run out to 240px, where all three
      printed through their neighbours. */
-  max-width: clamp(112px, 8.5vw, 150px);
-  font-size: clamp(12px, 0.82vw, 15px);
+  /* ⚠ THE MEASURE IS THE GATES' OWN PITCH (9.9 % of the crop), less a gap:
+     at 1280x720 the stage is ~736px wide, the gates 73px apart, and a
+     viewport-sized measure printed each sentence through its neighbour. */
+  max-width: min(118px, 9cqi);
+  font-size: clamp(11px, 1.3cqi, 15px);
   text-align: center;
   color: var(--arc-ink-90);
 }
 .arc-hz__person {
-  font-size: clamp(12.5px, 0.85vw, 16px);
-  white-space: nowrap;
+  width: max-content;
+  max-width: clamp(130px, 9.5vw, 180px);
+  font-size: clamp(12px, 0.82vw, 15px);
   color: var(--arc-ink-70);
 }
-.arc-hz__person--end {
+/* The start's sentence ends at the front corner; the end's starts under its node. */
+.arc-hz__person:not(.arc-hz__person--end) {
   translate: -100% 0;
+  text-align: right;
 }
 .arc-hz__lists {
   display: none;
@@ -7193,112 +7105,46 @@ a.arc-readout__hit:focus-visible {
    observer already writes (`.is-in`). Without JS, and under reduced
    motion, both render drawn. */
 @media (prefers-reduced-motion: no-preference) {
-  .is-arc-js .arc-hz .arc-hz__run,
-  .is-arc-js .arc-curve .arc-curve__ladder {
+  .is-arc-js .arc-hz .arc-hz__run {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
     transition: stroke-dashoffset 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.35s;
   }
-  .is-arc-js .arc-hz.is-in .arc-hz__run,
-  .is-arc-js .arc-curve.is-in .arc-curve__ladder {
-    stroke-dashoffset: 0;
-  }
-  /* The exploded stack assembles from the base up: `pathLength` 1, so the
-     channel is normalised and one delay ladder serves every plate whatever
-     its perimeter. ⚠ THE DASHED PLATE IS EXCLUDED — a dashed run cannot draw
-     on, because its own dash array IS the transition's channel; and the
-     exclusion has to be in the SELECTOR, since the two rules tie on
-     specificity and this block is declared later. */
-  .is-arc-js .arc-xp .arc-xp__plate:not([data-readout-dashed]) .arc-xp__run {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    transition: stroke-dashoffset 0.9s cubic-bezier(0.65, 0, 0.35, 1)
-      calc(0.3s + var(--i, 0) * 0.12s);
-  }
-  .is-arc-js .arc-sec--readout.is-in .arc-xp__plate:not([data-readout-dashed]) .arc-xp__run {
+  .is-arc-js .arc-hz.is-in .arc-hz__run {
     stroke-dashoffset: 0;
   }
 }
 
-/* ── The framing beats, LIVE (ADR-130 U2) ───────────────────────────
-   The four drawings above are the record in two dimensions and they are
-   what every reader without WebGL gets — reduced motion, ≤900px, no GL,
-   a dead canvas, and the printed handout. `data-holo="live"` is the one
-   state that hides them, and the mount writes it from the scene's FIRST
-   COMMITTED FRAME: a class set before there are pixels is exactly what
-   makes a flat-to-canvas swap pop (ADR-080's tri-state).
+/* ── The framing beats, LIVE (ADR-130 U2, re-cut in U4) ─────────────
+   The drawings above are what every reader without WebGL gets — reduced
+   motion, <=900px, no GL, a dead canvas, and the printed handout.
+   `data-holo="live"` is written from the scene's FIRST COMMITTED FRAME.
 
-   ⚠ EVERY RULE HERE IS SCOPED TO A SECTION IN LIVE MODE. The `.arc-holo`
-   host and its bleed are the program beat's own, shared; nothing below
-   reaches `/arcs/loop-earplugs`, whose smoke runs with GL disabled and
-   measures the flat board. */
-.arc-sec--readout[data-holo="live"] .arc-xp__stage,
-.arc-sec--stages[data-holo="live"] .arc-floor__stage,
-.arc-sec--curve[data-holo="live"] .arc-curve__stage,
-.arc-sec--horizon[data-holo="live"] .arc-hz__stage {
-  /* ⚠ `visibility`, NEVER `display: none`. The stage box is what gives the
-     figure its height, and the canvas is absolutely positioned inside that
-     figure — dropping it from flow would collapse the beat to its chrome
-     and hand the drawing a zero-height box to solve a lens against. */
+   ⚠ SINCE U4 THE CANVAS SITS IN THE STAGE BOX AND FRAMES THE SVG's OWN CROP
+   (`stageFit.ts`), so the hologram is the same picture at the same size and
+   the fallback's DOM words stay exactly where they are. Live hides the SVG's
+   geometry and keeps its words, its leaders and the horizon's nodes: one set
+   of words, never a second tracked layer over the first. */
+.arc-sec--stages[data-holo="live"] .arc-floor__svg > :not(.arc-floor__leader),
+.arc-sec--curve[data-holo="live"] .arc-curve__svg,
+.arc-sec--horizon[data-holo="live"] .arc-hz__svg > :not(.arc-hz__leader) {
   visibility: hidden;
 }
-/* The figure is the canvas's containing block. ⚠ DECLARED, not inherited:
-   left implicit it depends on whichever descendant happens to be
-   positioned, which is how a host ends up resolving against the viewport. */
-.arc-sec--readout[data-holo="live"] .arc-xp,
-.arc-sec--stages[data-holo="live"] .arc-floor__figure,
-.arc-sec--curve[data-holo="live"] .arc-curve,
-.arc-sec--horizon[data-holo="live"] .arc-hz {
-  position: relative;
-}
-/* ⚠ THE CROP'S LETTERBOX IS RECLAIMED. The SVG reserves a label column —
-   162 of the exploded crop's 360 units — because its words are seated
-   inside the drawing. Live, the words are DOM over the canvas, so the
-   object gets the whole box: at the same beat height the record renders
-   materially larger without a pixel of extra flow. */
-/* ⚠ NO BLEED ON THESE FOUR, AND THAT IS A CORRECTNESS RULE. The shared
-   `.arc-holo[data-live]` host negates the instrument margin, because the
-   trajectory beat is ONE full-width object with its chrome floating on it.
-   Three of these beats are two-column — a drawing beside its own record —
-   and the canvas paints an OPAQUE ground, so a bleed does not overlap the
-   panels, it ERASES them. Measured at 1920×1080: the readout's index plate
-   lost 150px of its left edge and the record plate its right. */
-.arc-sec--readout[data-holo="live"] .arc-holo[data-live],
+/* ⚠ NO BLEED, AND NO POINTER. The shared `.arc-holo[data-live]` negates the
+   instrument margin for the trajectory's full-width object and takes the
+   pointer for its drag; these stages are the size of their crop and nothing
+   on them turns (owner: "how … should people be able to discern what this
+   represents?"). */
 .arc-sec--stages[data-holo="live"] .arc-holo[data-live],
 .arc-sec--curve[data-holo="live"] .arc-holo[data-live],
 .arc-sec--horizon[data-holo="live"] .arc-holo[data-live] {
   inset: 0;
+  pointer-events: none;
 }
-
-/* ⚠ THE DRAWING GROWS UNTIL THE HEAD WOULD LOSE ITS SEAT, AND NOT FURTHER.
-   The obvious move is ADR-080 U3's: make the band one viewport less its
-   padding and give the figure the `1fr` remainder, which cannot trip
-   `data-arc-tall` at any size. Built, measured, REJECTED here — the beat is
-   `align-content: center`, so a band that fills leaves centring no slack and
-   the head lands on the section's padding: measured at 1920×1080 the head
-   went from y 207 to y 43 and its own origin MARK overhung to y 8, through
-   the HUD row and across the client mark's hairline. That is the exact
-   defect ADR-130's head clamp exists to prevent, arriving from the other
-   side.
-   ⚠ SO THE SLACK IS THE BUDGET. The clamp is solved backwards from the head:
-   at 1080 it leaves ~194px of slack, which seats the head at ~140 — clear of
-   the mark's hairline at ~44 and of the nav row above it — and still hands
-   the object 540px against the 478 it had. Re-measure the HEAD, not the
-   canvas, if this value moves. */
-.arc-sec--curve[data-holo="live"] .arc-curve,
-.arc-sec--horizon[data-holo="live"] .arc-hz {
-  min-height: 0;
-}
-.arc-sec--curve[data-holo="live"] .arc-curve__stage,
-.arc-sec--horizon[data-holo="live"] .arc-hz__stage {
-  width: 100%;
-  aspect-ratio: auto;
-  height: clamp(320px, 50svh, 700px);
-}
-/* The stages beat is a row, so its figure takes the row's own height. */
-.arc-sec--stages[data-holo="live"] .arc-floor__stage {
-  aspect-ratio: auto;
-  height: clamp(300px, 44svh, 580px);
+.arc-sec--stages .arc-holo__gl,
+.arc-sec--curve .arc-holo__gl,
+.arc-sec--horizon .arc-holo__gl {
+  cursor: auto;
 }
 
 /* ── The words ──────────────────────────────────────────────────────

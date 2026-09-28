@@ -32,8 +32,7 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
   // Filed the day the page was made (ADR-118); the workshop itself is 28 September, in the copy.
   date: "2026-09-26",
   cardTitle: "Plopsa · workshop III",
-  cardLede:
-    "De setup die jullie campagnebeelden tekent en opmaakt, en die jullie zelf draaien.",
+  cardLede: "De setup die jullie campagnebeelden tekent en opmaakt, en die jullie zelf draaien.",
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Plopsa · Workshop III · 28 september 2026",
@@ -70,21 +69,24 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
       layout: "readout",
       head: {
         eyebrow: "01 · Vandaag",
-        title: { pre: "Vandaag bouwen we", em: "de setup eromheen." },
-        sub: "In juli leerden jullie prompten en zetten we Claude op. Op 22 september vroegen jullie om visuals en ads aan de lopende band; dat is wat we vandaag opzetten.",
+        title: { pre: "Vandaag bouwen we", em: "de setup die jullie ads maakt." },
+        sub: "Op 22 september vroegen jullie om visuals en ads aan de lopende band, in elk formaat, met het juiste logo en de juiste branding. Vandaag bouwen we de setup die dat doet, en daarna draaien jullie hem zelf.",
       },
+      /* ⚠ THREE ROWS AND FOUR, NOT SIX AND SEVEN (owner, 2026-09-28: "so many
+         blocks … in a very simple way, what is it that we're going to do?").
+         The left plate is the ask, dated, in the words of Filip's mail of 22
+         September; the right plate is the answer, each row a link to the beat
+         that shows it. The exploded template that sat between them is gone
+         with its drawing: the template has its own beat further down. */
       groups: [
         {
-          id: "terugblik",
-          label: "Terugblik",
-          blurb: "Wat we zagen",
+          id: "vraag",
+          label: "Jullie vraag",
+          blurb: "Wat jullie vroegen",
           items: [
-            { id: "juli-1", tag: "30 juli · I", name: "Beeld en video in Krea, hands-on" },
-            { id: "juli-2", tag: "30 juli · II", name: "Claude, en de eerste skills" },
-            { id: "huiswerk", tag: "Huiswerk", name: "Eén skill per workflow" },
-            { id: "vraag", tag: "22 sept", name: "Visuals en ads aan de lopende band" },
+            { id: "juli", tag: "30 juli", name: "Krea, Claude en de eerste skills" },
+            { id: "mail", tag: "22 sept", name: "Visuals en ads aan de lopende band" },
             { id: "templates", tag: "25 sept", name: "Zes templates en één copyregel" },
-            { id: "wave", tag: "26 sept", name: "Eerste wave op jullie eigen plekken" },
           ],
           foot: {
             label: "Stand",
@@ -94,25 +96,17 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
         {
           id: "vandaag",
           label: "Vandaag",
-          blurb: "Wat we vandaag doen",
+          blurb: "Wat we bouwen",
           items: [
             { id: "kader", tag: "Kader", name: "Prompt, tool, agent", href: "#drie-manieren" },
+            { id: "setup", tag: "Setup", name: "Van brief tot opgemaakte ads", href: "#de-loop" },
+            { id: "live", tag: "Live", name: "Eén campagnefamilie door de loop", href: "#live" },
             {
-              id: "configuratie",
-              tag: "Configuratie",
-              name: "Zes vragen, twee die jullie schrijven",
-              href: "#de-configuratie",
+              id: "plugin",
+              tag: "Plugin",
+              name: "In jullie Claude, op jullie sleutels",
+              href: "#wat-it-installeert",
             },
-            {
-              id: "template",
-              tag: "Template",
-              name: "Van één template naar elke taal",
-              href: "#een-psd-ontleed",
-            },
-            { id: "loop", tag: "Loop", name: "Brief, wave, checks, en dan jij", href: "#de-loop" },
-            { id: "live", tag: "Live", name: "Eén campagnefamilie, in het lokaal", href: "#live" },
-            { id: "zelf", tag: "Zelf doen", name: "Een uur aan het stuur", href: "#zelf-doen" },
-            { id: "it", tag: "IT", name: "De plugin en de sleutels", href: "#wat-it-installeert" },
           ],
           foot: {
             label: "Meenemen",
@@ -120,24 +114,6 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
           },
         },
       ],
-      /* The thing the record leads to and the day works on, drawn once between
-         the two panels (ADR-130 U1): ONE template as an exploded axonometric
-         stack. These are the real top-level layers of the Meta-ads template
-         Bert sent on 25 September, top of the stack first, in the same
-         vocabulary the `#een-psd-ontleed` beat already uses ("Plaat",
-         "Tagline", "Vrije zone") — one word for one thing across the page.
-         ⚠ NO FILENAME: it carries a year and a format, and every string in a
-         record is scanned for digits. */
-      exploded: {
-        label: "Eén template, vijf lagen",
-        layers: [
-          { id: "zone", label: "Vrije zone", note: "Waar niets mag staan", dashed: true },
-          { id: "tagline", label: "Tagline", note: "Tagline, datum of prijs, per taal" },
-          { id: "logo", label: "Logo's", note: "Parklogo en campagnemerk" },
-          { id: "schaduw", label: "Schaduw", note: "Wat de tekst leesbaar houdt" },
-          { id: "plaat", label: "Plaat", note: "Wat de setup tekent" },
-        ],
-      },
     },
     {
       id: "drie-manieren",
@@ -333,7 +309,10 @@ export const PLOPSA_WORKSHOP_ARC: ArcDef = {
               body: "Geen Studio 100-figuur, geen mascotte, geen kostuum. Die worden geplaatst uit het officiële materiaal.",
             },
           ],
-          foot: { label: "Faalt", lines: ["Het beeld wordt niet bewaard en gaat opnieuw de wave in."] },
+          foot: {
+            label: "Faalt",
+            lines: ["Het beeld wordt niet bewaard en gaat opnieuw de wave in."],
+          },
         },
         {
           id: "copy",

@@ -1,21 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { explodedExtent, explodedLabels, XP_FRAME, XP_VB } from "@/components/arcs/framing/explodedLayout";
 import {
   ISO_BASIS_2TO1,
-  ISO_BASIS_CABINET,
+  ISO_BASIS_STAGE,
   type IsoFrame,
   type IsoLabel,
   isoBox,
   isoDepth,
   isoDust,
   isoPath,
-  isoPlate,
   isoProject,
-  isoSteps,
   labelBoxes,
   labelCollisions,
 } from "@/components/arcs/framing/iso";
+import { frameAround } from "@/components/arcs/framing/floor";
 import {
   CURVE_FRAME,
   CURVE_VB,
@@ -23,8 +21,8 @@ import {
   TREADS,
   curveExtent,
   curveLabels,
-  ladder,
-  profile,
+  treadBox,
+  treadZ,
 } from "@/components/arcs/framing/curveLayout";
 import {
   HORIZON_VB,
@@ -35,6 +33,7 @@ import {
 import {
   STAGES_FRAME,
   STAGES_VB,
+  STAGE_PRISMS,
   stagesExtent,
   stagesLabels,
 } from "@/components/arcs/framing/stagesLayout";
@@ -42,7 +41,7 @@ import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 import type { ArcSectionKind, ArcSectionOf } from "@/lib/arcs/types";
 
 /**
- * The workshop framing's one projection (ADR-130 U1).
+ * The workshop framing's one projection (ADR-130 U1, re-cut in U4).
  *
  * ⚠ THE LABEL WALK IS THE POINT OF THIS FILE. `.claude/rules/proof.md` records
  * what an isometric costs on this surface: the Intelligence Map city printed
@@ -52,10 +51,14 @@ import type { ArcSectionKind, ArcSectionOf } from "@/lib/arcs/types";
  * declares what it names and this file walks the pairs.
  */
 
-const UNIT: IsoFrame = { w: 200, h: 200, ox: 0, oy: 0, k: 100, basis: ISO_BASIS_CABINET };
+const UNIT: IsoFrame = { w: 200, h: 200, ox: 0, oy: 0, k: 100, basis: ISO_BASIS_STAGE };
 
-/** The type sizes the drawings' DOM labels render at, in each crop's units. */
-const TYPE = { stages: 13, curve: 13, horizon: 15, exploded: 11 } as const;
+/**
+ * The type the DOM words render at, in each crop's own units, at the binding
+ * 1280×720: the span's ~11–13px over the figure's scale there (the stages
+ * figure is ~620px wide, the curve and the horizon ~50svh tall).
+ */
+const TYPE = { stages: 17, curve: 15, horizon: 13.5 } as const;
 
 const section = <K extends ArcSectionKind>(id: string) =>
   PLOPSA_WORKSHOP_ARC.sections.find((s) => s.id === id) as ArcSectionOf<K>;
@@ -75,21 +78,31 @@ describe("the projection", () => {
     }
   });
 
-  it("puts a is right, b is back-and-up, z is up", () => {
-    expect(isoProject(1, 0, 0, UNIT)).toEqual({ x: 100, y: 0 });
-    expect(isoProject(0, 1, 0, UNIT)).toEqual({ x: 43.3, y: -25 });
-    expect(isoProject(0, 0, 1, UNIT)).toEqual({ x: 0, y: -100 });
+  it("is Moira's view: both floor edges at 22 degrees, symmetric about the front corner", () => {
+    /* ⚠ NO VANISHING POINT, AND NO SIDE (owner, 2026-09-28). `a` runs up to
+       the right and `b` up to the left at the SAME angle, so the floor is a
+       rhombus centred on its front corner — the viewer looks from it. */
+    const a = isoProject(1, 0, 0, UNIT);
+    const b = isoProject(0, 1, 0, UNIT);
+    const z = isoProject(0, 0, 1, UNIT);
+    expect(a.x).toBeCloseTo(92.72, 1);
+    expect(a.y).toBeCloseTo(-37.46, 1);
+    expect(b.x).toBeCloseTo(-92.72, 1);
+    expect(b.y).toBeCloseTo(-37.46, 1);
+    expect((Math.atan2(-a.y, a.x) * 180) / Math.PI).toBeCloseTo(22, 6);
+    // z is vertical and ONLY vertical, foreshortened by the camera's elevation.
+    expect(z.x).toBeCloseTo(0, 6);
+    expect(z.y).toBeCloseTo(-119.94, 1);
   });
 
-  it("orders far before near", () => {
-    expect(isoDepth(0, 0)).toBeLessThan(isoDepth(0, 3));
+  it("orders far before near: a larger a + b is farther away", () => {
+    expect(isoDepth(3, 3)).toBeGreaterThan(isoDepth(0, 0));
   });
 
   it("never emits a NaN, an Infinity or a transform", () => {
     const all = [
       isoPath([isoProject(0, 0, 0, UNIT), isoProject(1, 1, 1, UNIT)]),
       isoBox({ a: 0, b: 0, w: 1, d: 1, z: 0, h: 1 }, UNIT).visible,
-      isoPlate({ a: 0, b: 0, w: 1, d: 1, z: 0, h: 0.1 }, 0.2, UNIT).top,
     ].join(" ");
     expect(all).not.toMatch(/NaN|Infinity|transform|matrix/);
   });
@@ -98,17 +111,13 @@ describe("the projection", () => {
 describe("a box", () => {
   const box = isoBox({ a: 0, b: 0, w: 1, d: 1, z: 0, h: 1 }, UNIT);
 
-  it("hides exactly three edges, and they all meet the far-bottom vertex", () => {
+  it("hides exactly three edges, and they all meet the far-back-bottom vertex", () => {
     const runs = box.hidden.split("M").filter(Boolean);
     expect(runs).toHaveLength(3);
-    // (0, 1, 0) — the one corner whose every adjoining face points away.
-    const far = isoProject(0, 1, 0, UNIT);
+    // (1, 1, 0) — the one corner whose every adjoining face points away.
+    const far = isoProject(1, 1, 0, UNIT);
     for (const run of runs) {
-      const pts = run
-        .replace(/L/g, " ")
-        .trim()
-        .split(/\s+/)
-        .map(Number);
+      const pts = run.replace(/L/g, " ").trim().split(/\s+/).map(Number);
       const touches =
         (Math.abs(pts[0] - far.x) < 0.05 && Math.abs(pts[1] - far.y) < 0.05) ||
         (Math.abs(pts[2] - far.x) < 0.05 && Math.abs(pts[3] - far.y) < 0.05);
@@ -117,52 +126,38 @@ describe("a box", () => {
   });
 
   it("shows the other nine", () => {
-    // The top face is one closed run of four edges; five more run singly.
     expect(box.visible.split("M").filter(Boolean)).toHaveLength(6);
     expect(box.visible).toMatch(/Z/);
   });
 
-  it("hangs its tag off the top face's far-left corner", () => {
-    expect(box.apex).toEqual(isoProject(0, 1, 1, UNIT));
+  it("seats a name beside its right-hand edge, at half its height", () => {
+    expect(box.side).toEqual(isoProject(1, 0, 0.5, UNIT));
   });
 });
 
-describe("a plate", () => {
-  it("cuts the top face's SCREEN top-right and bottom-left corners", () => {
-    const cut = 0.2;
-    const plate = isoPlate({ a: 0, b: 0, w: 1, d: 1, z: 0, h: 0.1 }, cut, UNIT);
-    const pts = plate.top
-      .replace(/[MLZ]/g, " ")
-      .trim()
-      .split(/\s+/)
-      .map(Number);
-    const xy: [number, number][] = [];
-    for (let i = 0; i < pts.length; i += 2) xy.push([pts[i], pts[i + 1]]);
-    expect(xy).toHaveLength(6);
-    // The two SHARP corners are the world (a+w, b) and (a, b+d) vertices; the
-    // two CUT ones are (a, b) [screen BL] and (a+w, b+d) [screen TR], each
-    // replaced by a pair. ⚠ ADR-065's diagonal is the reader's, not the
-    // world's: under this basis screen x rises with both axes.
-    const has = (p: { x: number; y: number }) =>
-      xy.some(([x, y]) => Math.abs(x - p.x) < 0.05 && Math.abs(y - p.y) < 0.05);
-    expect(has(isoProject(1, 0, 0.1, UNIT))).toBe(true);
-    expect(has(isoProject(0, 1, 0.1, UNIT))).toBe(true);
-    expect(has(isoProject(0, 0, 0.1, UNIT))).toBe(false);
-    expect(has(isoProject(1, 1, 0.1, UNIT))).toBe(false);
+describe("the stages build up", () => {
+  it("each block runs longer, holds more of the work, and stands taller than the last", () => {
+    for (let i = 1; i < STAGE_PRISMS.length; i += 1) {
+      const p = STAGE_PRISMS[i - 1];
+      const q = STAGE_PRISMS[i];
+      expect(q.a).toBeGreaterThan(p.a + p.w);
+      expect(q.b).toBeGreaterThan(p.b + p.d);
+      expect(q.w).toBeGreaterThan(p.w);
+      expect(q.h).toBeGreaterThan(p.h);
+    }
+  });
+
+  it("the front corner sits on the stage's centre line", () => {
+    const o = isoProject(0, 0, 0, STAGES_FRAME);
+    expect(o.x).toBeCloseTo(STAGES_VB.w / 2, 0);
   });
 });
 
-describe("a stepped relief", () => {
-  it("rises once per tread and ends where the run ends", () => {
-    const relief = isoSteps(profile(), NOW_A, 0, 0.7, CURVE_FRAME);
-    // One corner for the first tread, two for every riser, one for the tail.
-    expect(relief.ties).toHaveLength((TREADS - 1) * 2 + 2);
-    expect(relief.end.x).toBeCloseTo(isoProject(NOW_A, 0, 0, CURVE_FRAME).x, 6);
-  });
-
-  it("never descends", () => {
-    const zs = profile().map((p) => p.z);
-    for (let i = 1; i < zs.length; i += 1) expect(zs[i]).toBeGreaterThan(zs[i - 1]);
+describe("the staircase", () => {
+  it("rises once per tread, never descends, and ends at now", () => {
+    for (let k = 1; k < TREADS; k += 1) expect(treadZ(k)).toBeGreaterThan(treadZ(k - 1));
+    const last = treadBox(TREADS - 1);
+    expect(last.a + last.w).toBeCloseTo(NOW_A, 9);
   });
 });
 
@@ -172,6 +167,24 @@ describe("the dust", () => {
     const b = isoDust(368, 12, 0, 0, 4, 2, 1, UNIT);
     expect(a).toEqual(b);
     expect(isoDust(369, 12, 0, 0, 4, 2, 1, UNIT)).not.toEqual(a);
+  });
+});
+
+describe("a derived crop", () => {
+  it("holds every point it was given, inside its pads", () => {
+    const pts = [
+      { a: 0, b: 0, z: 0 },
+      { a: 12, b: 0, z: 0 },
+      { a: 0, b: 12, z: 3 },
+    ];
+    const f = frameAround(pts, { l: 10, r: 20, t: 5, b: 15 });
+    for (const p of pts) {
+      const q = isoProject(p.a, p.b, p.z, f);
+      expect(q.x).toBeGreaterThanOrEqual(10 - 1e-6);
+      expect(q.x).toBeLessThanOrEqual(f.w - 20 + 1);
+      expect(q.y).toBeGreaterThanOrEqual(5 - 1e-6);
+      expect(q.y).toBeLessThanOrEqual(f.h - 15 + 1);
+    }
   });
 });
 
@@ -208,17 +221,6 @@ describe("every drawing fits its crop, and no two labels overlap", () => {
       labels: horizonLabels(section<"horizon">("de-horizon")),
       type: TYPE.horizon,
     },
-    {
-      name: "exploded",
-      vb: XP_VB,
-      frame: XP_FRAME,
-      extent: explodedExtent(5),
-      labels: (() => {
-        const s = section<"list-groups">("vandaag");
-        return explodedLabels(s.exploded?.layers ?? []);
-      })(),
-      type: TYPE.exploded,
-    },
   ];
 
   for (const c of cases) {
@@ -233,11 +235,11 @@ describe("every drawing fits its crop, and no two labels overlap", () => {
 
     it(`${c.name}: every label is seated inside the stage`, () => {
       expect(c.labels.length).toBeGreaterThan(0);
-      for (const l of c.labels as readonly IsoLabel[]) {
-        expect(l.ax, `${l.id} ax`).toBeGreaterThanOrEqual(0);
-        expect(l.ax, `${l.id} ax`).toBeLessThanOrEqual(1);
-        expect(l.at, `${l.id} at`).toBeGreaterThanOrEqual(0);
-        expect(l.at, `${l.id} at`).toBeLessThanOrEqual(1);
+      for (const b of labelBoxes(c.labels, c.type, c.frame)) {
+        expect(b.x0, `${b.id} left`).toBeGreaterThanOrEqual(-2);
+        expect(b.x1, `${b.id} right`).toBeLessThanOrEqual(c.vb.w + 2);
+        expect(b.y0, `${b.id} top`).toBeGreaterThanOrEqual(-2);
+        expect(b.y1, `${b.id} bottom`).toBeLessThanOrEqual(c.vb.h + 2);
       }
     });
 
@@ -254,17 +256,21 @@ describe("the collision walk itself", () => {
     // city's containment walk was green while its plaques printed through
     // their plates; this asserts the walk can see an overlap at all.
     const two: IsoLabel[] = [
-      { id: "a", text: "VRIJE ZONE", ax: 0.5, at: 0.5, anchor: "start" },
-      { id: "b", text: "TAGLINE", ax: 0.52, at: 0.5, anchor: "start" },
+      { id: "a", text: "EEN PROMPT", ax: 0.5, at: 0.5, anchor: "start" },
+      { id: "b", text: "EEN TOOL", ax: 0.52, at: 0.5, anchor: "start" },
     ];
-    expect(labelCollisions(labelBoxes(two, 11, XP_FRAME))).toEqual([["a", "b"]]);
+    expect(labelCollisions(labelBoxes(two, 11, STAGES_FRAME))).toEqual([["a", "b"]]);
   });
-});
 
-describe("the crest draws on", () => {
-  it("is one run, and the relief's other lines are not", () => {
-    const relief = ladder();
-    expect(relief.crest.startsWith("M")).toBe(true);
-    expect(relief.crest.split("M")).toHaveLength(2);
+  it("tests a rotated word by its rectangle, not its bounding box", () => {
+    /* Two parallel rows of words along one edge: the bounding boxes overlap,
+       the rectangles do not. An AABB walk would fail a clean drawing. */
+    const rows: IsoLabel[] = [
+      { id: "near", text: "HOE LANG ZONDER JOU", ax: 0.5, at: 0.5, anchor: "middle", rot: -22 },
+      { id: "far", text: "HOE LANG ZONDER JOU", ax: 0.5, at: 0.56, anchor: "middle", rot: -22 },
+    ];
+    expect(labelCollisions(labelBoxes(rows, 11, STAGES_FRAME))).toEqual([]);
+    const same: IsoLabel[] = [rows[0], { ...rows[1], at: 0.505 }];
+    expect(labelCollisions(labelBoxes(same, 11, STAGES_FRAME))).toHaveLength(1);
   });
 });

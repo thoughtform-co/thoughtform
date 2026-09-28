@@ -633,3 +633,62 @@ failing one, a `questions` section.
   recomputes "configured" over both kinds. The board fits all four crops.
 - Verified on `/arcs#arc=plopsa-workshop` at 1920×1247 and 1280×720, dark and
   light.
+
+## Update 4 (2026-09-28, owner) - one stage, seen from its front corner, three readings
+
+The owner read U2 live at 04:30 on the day of the room and rejected it: the
+stages beat's drawing was cut off on the side; the three drawings were "all
+different and not the type of isometric view I want"; in ours "the vanishing
+point is on the right side", where the Moira workshop he held them against
+draws every figure with none; dragging did not help anyone read them; and the
+`vandaag` panels had too many blocks and an ugly stack between them.
+
+**The cause of the cut was arithmetic.** U2's perspective lens needed 43.8
+degrees for the stages spec and was clamped to the trajectory's 34 without
+ever checking the projected extremes, while the figure capped at ~677px wide
+and kept growing in height: the agent block ran 85px past the canvas at
+1920x1247 with every guard green, because "solves a lens inside the band"
+cannot fail against a solver that clamps into that band.
+
+Decisions:
+
+1. **One parallel projection for the fallback and the hologram.** Moira's
+   own: both floor edges at 22 degrees from the front corner, the floor a
+   rhombus centred on the stage (`ISO_BASIS_STAGE`, `framing/iso.ts`). The
+   WebGL camera is an ORTHOGRAPHIC camera at azimuth 45 degrees and elevation
+   asin(tan 22) that projects exactly that basis; U2's "close, not identical"
+   caveat is gone, and `holo-stage-geom` pins the identity point for point.
+2. **The canvas frames the SVG's own crop.** The frustum is the viewBox
+   (`stageFrustum`), the canvas is mounted INSIDE the stage box, and live mode
+   hides only the SVG's geometry: the DOM words, leaders and horizon nodes are
+   the fallback's own, fixed, in both modes. `ArcHoloLabels` and its drop pass
+   are no longer mounted on these beats. Nothing can be cut off: the crops
+   are DERIVED from every point a drawing uses (`framing/floor.ts`
+   `frameAround`), and a new guard walks every spec point into its crop.
+3. **No drag, no breathing.** The pose is fixed; the hologram lives by its
+   draw-on, flicker, twinkle and dust. Faces are OPAQUE and shaded top
+   lightest (the first live shoot's translucent faces read as X-ray), and the
+   SVG fallback is filled the same way, drawn farthest first.
+4. **One stage, three readings, built on each other.** All three stand on the
+   same floor module with one time edge (minutes at the front corner, half a
+   day at the right tip): the three blocks at Moira's positions and heights
+   (02), the staircase of the models, a riser every seven months with the
+   frontier tread gold and the heights read off a post (03), and the two lanes
+   marked on the floor, gates as open and filled nodes (05). U2's gate frames,
+   posts, ribs and tower are gone.
+5. **`vandaag` says the ask and the answer.** Three rows (30 July, Filip's
+   mail of 22 September, Bert's templates of 25 September) and four links;
+   the exploded stack, `ArcExploded`, `explodedLayout`, `explodedSpec` and the
+   `exploded` field are deleted.
+6. The curve and horizon figures are capped at 38svh so their heads clear the
+   client mark at 1280x720; the gate sentences are measured against the stage
+   (`9cqi`, a container on the stage), not the viewport.
+
+Measured: live and reduced-motion, dark and light, at 1280x720, 1440x800,
+1920x1080 and 1920x1247 - every framing beat one viewport, zero word overlaps
+(rotated words tested as rectangles), zero horizontal overflow, every head
+clear of the client mark. `npm run verify` green.
+
+Left open: the owner's live read at the room's screen; ghost blocks on the
+curve's treads (built into the plan, not taken); the stages head clears the
+mark by 11px at 1280x720, where the ADR asked for 104px of seat.

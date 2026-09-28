@@ -9,15 +9,18 @@
  * prototype (ADR-062), and a drawing whose basis differs from its neighbour's
  * reads as a rendering fault rather than as a second point of view.
  *
- * ⚠ THE BASIS IS A CABINET OBLIQUE, NOT THE MAP'S 2:1 ISOMETRIC, and the
- * reason is arithmetic rather than taste. Under 2:1 a depth of `d` costs
- * `0.5·d` of HEIGHT, and every beat here is capped in `svh` so the section
- * stays one viewport at 1280x720 (`data-arc-tall` off): a time axis 750 units
- * wide would spend 375 units of a 360-unit crop on depth alone. Cabinet
- * foreshortens depth to 0.5 at 30 degrees, so the same depth costs a quarter
- * of it. `ISO_BASIS_2TO1` is kept, byte-equal to `mapProjection.iso()`, for a
- * compact object that can pay for it — and pinned equal in the unit test, so
- * the copy cannot drift from the original.
+ * ⚠ THE BASIS IS A SYMMETRIC PARALLEL VIEW FROM THE FLOOR'S FRONT CORNER
+ * (ADR-130 U4, owner 2026-09-28). U1's cabinet oblique and U2's perspective
+ * camera both put the drawing's depth off to one side — "the vanishing point
+ * is on the right side … super confusing" — where the Moira workshop he held
+ * them against draws every figure in a parallel projection with NO vanishing
+ * point: both floor edges leave the front corner at 22 degrees, `a` up to the
+ * right and `b` up to the left, so the floor is a rhombus centred on the
+ * stage. That is an orthographic camera at azimuth 45 degrees and elevation
+ * asin(tan 22°) = 23.83°, scaled so a floor edge reads (cos 22°, −sin 22°);
+ * the WebGL stage uses exactly that camera, so the fallback and the hologram
+ * are one picture, not two close ones. `ISO_BASIS_2TO1` is kept, byte-equal
+ * to `mapProjection.iso()` and pinned equal in the unit test.
  *
  * ⚠ THE PROJECTION IS COPIED, NEVER IMPORTED (ADR-106's law, and the map's
  * `iso()` is two lines): `@/components/landing/home-v2/...` would drag the
@@ -50,16 +53,25 @@ export interface IsoBasis {
   Z: readonly [number, number];
 }
 
+/** The floor edges' angle to the horizontal, in degrees (Moira's own). */
+export const ISO_ANGLE = 22;
+const RAD = Math.PI / 180;
+/** The camera's elevation that puts both floor edges at `ISO_ANGLE`. */
+export const ISO_ELEVATION = Math.asin(Math.tan(ISO_ANGLE * RAD));
+/** How much the drawing is scaled against a true orthographic projection, so
+ *  a unit along a floor edge is a unit on screen. */
+export const ISO_SCALE = Math.cos(ISO_ANGLE * RAD) / Math.cos(45 * RAD);
+
 /**
- * CABINET OBLIQUE: `a` straight to the right, `b` back at 30 degrees
- * foreshortened to 0.5 (cos30/2, sin30/2), `z` straight up. A true vertical
- * for the work axis and a true horizontal for time are what let a years or
- * minutes scale stay a readable baseline on the near edge.
+ * THE STAGE: `a` up and to the right at 22°, `b` up and to the left at 22°,
+ * `z` straight up (foreshortened by the camera's elevation). (0, 0, 0) is the
+ * floor's FRONT corner — the lowest point on the screen — and the viewer looks
+ * from it toward the back.
  */
-export const ISO_BASIS_CABINET: IsoBasis = {
-  A: [1, 0],
-  B: [0.433, -0.25],
-  Z: [0, -1],
+export const ISO_BASIS_STAGE: IsoBasis = {
+  A: [Math.cos(ISO_ANGLE * RAD), -Math.sin(ISO_ANGLE * RAD)],
+  B: [-Math.cos(ISO_ANGLE * RAD), -Math.sin(ISO_ANGLE * RAD)],
+  Z: [0, -ISO_SCALE * Math.cos(ISO_ELEVATION)],
 };
 
 /** The map's own 2:1, copied from `mapProjection.iso()`: `[a - b, (a + b)/2]`. */
@@ -94,11 +106,10 @@ export function isoProject(a: number, b: number, z: number, f: IsoFrame): Pt {
 /**
  * Paint order. SVG has no z-buffer, so a near object drawn first is a near
  * object with the far one's edges printed through it — the map's own finding.
- * Sort ASCENDING and draw in that order: the last thing drawn is in front.
  *
- * ⚠ UNDER CABINET ONLY `b` MOVES AN OBJECT AWAY (`a` is purely horizontal), so
- * the `a` term is a tie-break that happens to run left to right — which is
- * also the reading order. Under a true 2:1 the sum is the depth outright.
+ * ⚠ UNDER THE STAGE BASIS A LARGER `a + b` IS FARTHER AWAY (both axes run up
+ * the screen, away from the front corner). Sort DESCENDING — farthest first —
+ * and the last thing drawn is in front.
  */
 export const isoDepth = (a: number, b: number) => a + b;
 
@@ -130,16 +141,23 @@ export interface IsoBoxPaths {
   /** The nine edges a solid box shows. */
   visible: string;
   /**
-   * The three it hides — all meeting the FAR-BOTTOM vertex (a, b+d, z), which
-   * is the one corner whose every adjoining face points away. Dashed, so the
-   * box reads as a machine rather than as a flat hexagon.
+   * The three it hides — all meeting the FAR-BACK-BOTTOM vertex (a+w, b+d, z),
+   * the one corner whose every adjoining face points away from a viewer at the
+   * front corner. Dashed, so the box reads as a machine rather than a hexagon.
    */
   hidden: string;
-  /** The top face, for a wash. */
+  /** The top face. With `right` and `left`, the three faces the viewer sees,
+   *  for an opaque fill in paint order. */
   top: string;
-  /** Paint order (larger is nearer). */
+  /** The face at `b`, running along `a`: the front-RIGHT face. */
+  right: string;
+  /** The face at `a`, running along `b`: the front-LEFT face. */
+  left: string;
+  /** Paint order (larger is FARTHER). */
   depth: number;
-  /** The top face's nearest-to-the-reader top corner — where a tag hangs. */
+  /** The right-hand vertical edge's midpoint — where Moira seats a name. */
+  side: Pt;
+  /** The top face's right-hand corner. */
   apex: Pt;
   /** The top face's centre. */
   topCentre: Pt;
@@ -160,86 +178,27 @@ export function isoBox(box: IsoBox, f: IsoFrame): IsoBoxPaths {
   const t10 = p(a1, b, z1);
   const t11 = p(a1, b1, z1);
   const t01 = p(a, b1, z1);
-  // The visible nine: the top face (4), the near and right bottom edges (2),
-  // and the three verticals that are not the far-bottom one (3).
+  // The visible nine: the top face (4), the two front bottom edges (2), and
+  // the three verticals that are not the far-back one (3).
   const visible = [
     isoPath([t00, t10, t11, t01], true),
     isoPath([b00, b10]),
-    isoPath([b10, b11]),
+    isoPath([b00, b01]),
     isoPath([b00, t00]),
     isoPath([b10, t10]),
-    isoPath([b11, t11]),
+    isoPath([b01, t01]),
   ].join(" ");
-  const hidden = [isoPath([b01, b11]), isoPath([b01, b00]), isoPath([b01, t01])].join(" ");
+  const hidden = [isoPath([b11, b10]), isoPath([b11, b01]), isoPath([b11, t11])].join(" ");
   return {
     visible,
     hidden,
     top: isoPath([t00, t10, t11, t01], true),
+    right: isoPath([b00, b10, t10, t00], true),
+    left: isoPath([b00, b01, t01, t00], true),
     depth: isoDepth(a + w / 2, b + d / 2),
-    apex: t01,
+    side: p(a1, b, z + h / 2),
+    apex: t10,
     topCentre: p(a + w / 2, b + d / 2, z1),
-  };
-}
-
-export interface IsoPlatePaths {
-  /** The chamfered top face. */
-  top: string;
-  /** The slab's visible thickness: the near chain dropped, with its risers. */
-  sides: string;
-  /** The far-bottom edges, dashed. */
-  hidden: string;
-  /** The corner the label's leader leaves from — the top face's screen right. */
-  right: Pt;
-  depth: number;
-}
-
-/**
- * A thin plate — a layer in an exploded stack — with the corner law's cut on
- * its own top face.
- *
- * ⚠ THE LAWFUL DIAGONAL IS THE SCREEN'S, NOT THE WORLD'S (ADR-065: the
- * diagonal is TR + BL). Under this basis screen x rises with both `a` and `b`
- * while screen y falls with `b`, so the top face's screen top-right corner is
- * (a+w, b+d) and its screen bottom-left is (a, b) — the pair a reader sees on
- * the lawful diagonal. Cutting the world's (+a,-b) / (-a,+b) pair instead puts
- * the chamfers on the drawing's left and right extremes, which is the
- * unlawful diagonal wearing world coordinates.
- */
-export function isoPlate(box: IsoBox, cut: number, f: IsoFrame): IsoPlatePaths {
-  const { a, b, w, d, z, h } = box;
-  const p = (aa: number, bb: number, zz: number) => isoProject(aa, bb, zz, f);
-  const a1 = a + w;
-  const b1 = b + d;
-  const z1 = z + h;
-  const c = Math.min(cut, w / 2, d / 2);
-  // Top face, chamfered at screen-BL (a, b) and screen-TR (a+w, b+d).
-  const face: Pt[] = [
-    p(a + c, b, z1),
-    p(a1, b, z1),
-    p(a1, b1 - c, z1),
-    p(a1 - c, b1, z1),
-    p(a, b1, z1),
-    p(a, b + c, z1),
-  ];
-  // The near silhouette: from the near chamfer's foot, along the near and
-  // right top edges, to the far chamfer — dropped by the plate's thickness.
-  const chain: Pt[] = [face[0], face[1], face[2], face[3]];
-  const lower = chain.map((q) => ({ x: q.x, y: q.y + f.k * h }));
-  const sides = [
-    isoPath(lower),
-    ...chain.map((q, i) => isoPath([q, lower[i]])),
-  ].join(" ");
-  const hidden = [
-    isoPath([p(a, b1, z), p(a1 - c, b1, z)]),
-    isoPath([p(a, b1, z), p(a, b + c, z)]),
-    isoPath([p(a, b1, z), p(a, b1, z1)]),
-  ].join(" ");
-  return {
-    top: isoPath(face, true),
-    sides,
-    hidden,
-    right: face[2],
-    depth: isoDepth(a + w / 2, b + d / 2),
   };
 }
 
@@ -287,95 +246,9 @@ export function isoGrid(
   return { along, across };
 }
 
-export interface IsoStepPaths {
-  /** The near crest — the staircase, and the drawing's draw-on run. */
-  crest: string;
-  /** The same profile at the far edge: what makes it a relief, not a line. */
-  far: string;
-  /** One tie per profile vertex, joining near to far. */
-  ties: readonly string[];
-  footVisible: string;
-  footHidden: string;
-  /** The crest's last point: where NOW is seated. */
-  end: Pt;
-}
-
-/**
- * A stepped relief from a profile of (a, z) corners. The profile is read as a
- * staircase: horizontal to the next `a`, then vertical to its `z` — never
- * interpolated, because a doubling every seven months is a ladder and a smooth
- * curve would claim a measurement per release the record does not publish
- * (ADR-078 U1's own ruling, one drawing over).
- */
-export function isoSteps(
-  profile: readonly { a: number; z: number }[],
-  aEnd: number,
-  b: number,
-  d: number,
-  f: IsoFrame
-): IsoStepPaths {
-  const corners: { a: number; z: number }[] = [];
-  profile.forEach((step, i) => {
-    if (i === 0) {
-      corners.push({ a: step.a, z: step.z });
-      return;
-    }
-    corners.push({ a: step.a, z: profile[i - 1].z });
-    corners.push({ a: step.a, z: step.z });
-  });
-  const lastZ = profile[profile.length - 1]?.z ?? 0;
-  corners.push({ a: aEnd, z: lastZ });
-  const near = corners.map((c) => isoProject(c.a, b, c.z, f));
-  const away = corners.map((c) => isoProject(c.a, b + d, c.z, f));
-  const a0 = profile[0]?.a ?? 0;
-  return {
-    crest: isoPath(near),
-    far: isoPath(away),
-    ties: corners.map((_, i) => isoPath([near[i], away[i]])),
-    footVisible: [
-      isoPath([isoProject(a0, b, 0, f), isoProject(aEnd, b, 0, f)]),
-      isoPath([isoProject(aEnd, b, 0, f), isoProject(aEnd, b + d, 0, f)]),
-    ].join(" "),
-    footHidden: [
-      isoPath([isoProject(a0, b + d, 0, f), isoProject(aEnd, b + d, 0, f)]),
-      isoPath([isoProject(a0, b + d, 0, f), isoProject(a0, b, 0, f)]),
-    ].join(" "),
-    end: near[near.length - 1],
-  };
-}
-
 /** A run along `a` at one depth and height. */
 export function isoRail(a0: number, a1: number, b: number, z: number, f: IsoFrame): string {
   return isoPath([isoProject(a0, b, z, f), isoProject(a1, b, z, f)]);
-}
-
-/**
- * A gate the run passes through: an open frame standing in the b-z plane, with
- * dashed drops to the datum so it reads as standing on the floor rather than
- * floating over it.
- */
-export function isoGate(
-  a: number,
-  b: number,
-  z: number,
-  w: number,
-  h: number,
-  f: IsoFrame
-): { frame: string; drop: string; head: Pt } {
-  const frame = isoPath(
-    [
-      isoProject(a, b, z, f),
-      isoProject(a, b + w, z, f),
-      isoProject(a, b + w, z + h, f),
-      isoProject(a, b, z + h, f),
-    ],
-    true
-  );
-  const drop = [
-    isoPath([isoProject(a, b, z, f), isoProject(a, b, 0, f)]),
-    isoPath([isoProject(a, b + w, z, f), isoProject(a, b + w, 0, f)]),
-  ].join(" ");
-  return { frame, drop, head: isoProject(a, b + w / 2, z + h, f) };
 }
 
 /**
@@ -441,6 +314,14 @@ export interface IsoLabel {
   lines?: number;
   /** An explicit measure in viewBox units, for a span that is not mono caps. */
   measure?: number;
+  /**
+   * Degrees, for a word that runs ALONG a floor edge (Moira's axis words:
+   * −22 on the `a` edge, +22 on the `b` edge). The seat is the span's centre.
+   * ⚠ The collision walk tests the ROTATED rectangle, not its bounding box —
+   * two parallel rows of rotated words have overlapping bounding boxes and
+   * clear rectangles, and an AABB walk would fail a drawing that is clean.
+   */
+  rot?: number;
 }
 
 /** PT Mono's advance plus the label rung's tracking (`mapProjection`'s own). */
@@ -452,6 +333,8 @@ export interface LabelBox {
   y0: number;
   x1: number;
   y1: number;
+  /** Rotation about the box's centre, degrees. */
+  rot?: number;
 }
 
 /**
@@ -477,10 +360,45 @@ export function labelBoxes(
     // a drawing where every label sits inside its neighbour.
     const x = l.ax * f.w;
     const y = l.at * f.h;
+    if (l.rot) {
+      return { id: l.id, x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2, rot: l.rot };
+    }
     const x0 = l.anchor === "start" ? x : l.anchor === "middle" ? x - w / 2 : x - w;
     const y0 = l.vAlign === "top" ? y : l.vAlign === "bottom" ? y - h : y - h / 2;
     return { id: l.id, x0, y0, x1: x0 + w, y1: y0 + h };
   });
+}
+
+/** A box's four corners, rotated about its centre. */
+export function labelCorners(b: LabelBox): Pt[] {
+  const cx = (b.x0 + b.x1) / 2;
+  const cy = (b.y0 + b.y1) / 2;
+  const r = ((b.rot ?? 0) * Math.PI) / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return [
+    [b.x0, b.y0],
+    [b.x1, b.y0],
+    [b.x1, b.y1],
+    [b.x0, b.y1],
+  ].map(([x, y]) => ({ x: cx + (x - cx) * c - (y - cy) * s, y: cy + (x - cx) * s + (y - cy) * c }));
+}
+
+/** Separating-axis test on two (possibly rotated) rectangles. */
+function overlaps(p: LabelBox, q: LabelBox): boolean {
+  if (!p.rot && !q.rot) return p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1;
+  const P = labelCorners(p);
+  const Q = labelCorners(q);
+  for (const poly of [P, Q]) {
+    for (let i = 0; i < 2; i += 1) {
+      const nx = -(poly[i + 1].y - poly[i].y);
+      const ny = poly[i + 1].x - poly[i].x;
+      const pp = P.map((t) => t.x * nx + t.y * ny);
+      const qq = Q.map((t) => t.x * nx + t.y * ny);
+      if (Math.max(...pp) <= Math.min(...qq) || Math.max(...qq) <= Math.min(...pp)) return false;
+    }
+  }
+  return true;
 }
 
 /** Every pair of labels whose boxes overlap. Empty is the contract. */
@@ -488,9 +406,7 @@ export function labelCollisions(boxes: readonly LabelBox[]): readonly [string, s
   const out: [string, string][] = [];
   for (let i = 0; i < boxes.length; i += 1) {
     for (let j = i + 1; j < boxes.length; j += 1) {
-      const p = boxes[i];
-      const q = boxes[j];
-      if (p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1) out.push([p.id, q.id]);
+      if (overlaps(boxes[i], boxes[j])) out.push([boxes[i].id, boxes[j].id]);
     }
   }
   return out;

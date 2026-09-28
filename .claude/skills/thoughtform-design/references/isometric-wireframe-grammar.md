@@ -34,6 +34,15 @@ consoles, feet and designators for exactly that.
 
 ## The projection
 
+> ⚠ **ADR-130 U4 (2026-09-28): the framing beats use `ISO_BASIS_STAGE`**, the
+> Moira workshop's symmetric parallel view: `a` up-right and `b` up-left, both
+> at 22 degrees, the floor a rhombus centred on its front corner, a larger
+> `a + b` FARTHER (paint descending), the hidden vertex the far-back-bottom
+> one, faces opaque and shaded top lightest, no chamfer on a projected face.
+> Crops are derived (`framing/floor.ts`), and an axis word may run ALONG its
+> floor edge (rotated +/-22 degrees, a DOM span, tested as a rectangle). The
+> cabinet oblique below is the U1 record.
+
 **One basis per surface.** Mixing two is what broke the Intelligence Map
 prototype: a drawing whose basis differs from its neighbour's reads as a
 rendering fault, not as a second point of view.
