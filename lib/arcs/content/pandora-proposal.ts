@@ -20,10 +20,11 @@ import type { ArcDef } from "../types";
  * The films, the operations tool, the sheets and the map resolve the
  * casefile's records; nothing about Loop is retyped here.
  *
- * ⚠ THE STUDIO TODAY IS A BOARD, NOT A CONFIGURATION. The argument is
- * operations → review → agents, one studio, one setup; the configuration's
- * picker over workstreams is the instrument the owner replaced on Trinny
- * ("a lot of things to look at"). The board letters NO digit.
+ * ⚠ THE STUDIO TODAY IS A CIRCUIT SINCE ADR-133 (owner, 2026-09-28): one
+ * configuration drawing that travels through three beats of one pinned
+ * scene, on the Moira board's six questions. It replaced the board here (the
+ * board still draws Trinny) and letters NO digit. The configuration's picker
+ * stays out: it is the instrument the owner replaced on Trinny.
  *
  * ⚠ EVERY FEE DERIVES FROM ONE CONSTANT (`DAY_RATE`), the same number the
  * deck's generator carries; change it in both in one commit.
@@ -34,13 +35,13 @@ import type { ArcDef } from "../types";
  * so each `proof-card` carries its own `title` ("We pushed …"). The record's
  * lines are untouched: they are the Dublin keynote's, word for word.
  *
- * ⚠ THE SPINE SINCE THE OWNER'S 2026-09-28 READ: Loop (part one) · the turn ·
- * the studio today and configured (the board) · THE GOAL (a `horizon`, the
- * approach from adoption to automation, before the plan) · the plan · the
- * checker ON PANDORA'S OWN PICTURE · who is in the room · what you keep, which
- * IS the configuration (the board's five facts in words) · the fee · the four
- * numbers we count and never promise · who does it · next steps. The readout
- * beat and the Loop-numbers appendix are gone; see each beat's comment.
+ * ⚠ THE SPINE SINCE ADR-133 (2026-09-28): Loop (part one) · THE RETURN (a
+ * `crew`: Loop's record drawn beside the four numbers we count and never
+ * promise) · the turn · THE CIRCUIT (the review recap today and configured →
+ * the team owns it → one layer, every workflow: one pinned scene) · THE GOAL
+ * (a `horizon`, the approach in a CMO's words, before the plan) · the plan ·
+ * the checker ON PANDORA'S OWN PICTURE · who is in the room · what you keep ·
+ * the fee · the four numbers · who does it · next steps.
  */
 
 const DAY_RATE = 1500;
@@ -139,6 +140,100 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       title: "We built the layer the agents run on",
     },
     {
+      /* THE RETURN, DRAWN (ADR-133, owner 2026-09-28, after Rob's read: the
+         marketing director will ask about the impact). "It's not about exact
+         numbers ... it should be a visual thing they can see", and the
+         reasoning is Loop's own team shape. It sits WITH the proof it comes
+         from, before the turn to Pandora (owner: "should be after the
+         proof"). Left, Loop's RECORD, the printable figures only, each output
+         drawn as the quantity it is; right, the same shape in the studio with
+         the four measures we count in week one, FRAMED AND EMPTY. No Pandora
+         estimate, no calculator. */
+      id: "return",
+      kind: "crew",
+      menuLabel: "The return",
+      head: {
+        eyebrow: "Loop · what it returned",
+        title: { pre: "What it returned", em: "at Loop." },
+        sub: "Left, four things the same work did at Loop, from the record: a few people, one configuration each, and what came out. Right, the same shape in Pandora's studio, with the four numbers we count in week one and read beside every month's fee. We promise the counting; the numbers are yours to read.",
+      },
+      record: {
+        label: "At Loop, from the record",
+        rows: [
+          {
+            id: "assets",
+            who: "Two designers and a copywriter",
+            people: 3,
+            config: "The studio's Skills",
+            output: { kind: "field", count: 700 },
+            value: "About 700",
+            unit: "paid-social assets a month",
+          },
+          {
+            id: "copy",
+            who: "The PMs",
+            people: 2,
+            config: "The briefing sync",
+            output: { kind: "funnel", lines: 12 },
+            value: "One copy editor",
+            unit: "checks what they pre-fill",
+          },
+          {
+            id: "review",
+            who: "The head of design",
+            people: 1,
+            config: "The review agent",
+            output: { kind: "tenfold" },
+            value: "About ten times",
+            unit: "less review by hand",
+          },
+          {
+            id: "planning",
+            who: "A program manager",
+            people: 1,
+            config: "The planning tool",
+            output: { kind: "month" },
+            value: "A week a month",
+            unit: "back from resource planning",
+          },
+        ],
+      },
+      plan: {
+        label: "In the studio, counted from week one",
+        rows: [
+          {
+            id: "hours",
+            who: "The PMs and producers",
+            config: "Filing, recap, schedule",
+            measure: "Operational hours a week",
+            source: "Read from their calendars",
+          },
+          {
+            id: "days",
+            who: "The freelancers",
+            config: "The same, on a schedule",
+            measure: "Freelance days on operations",
+            source: "Read from the bookings",
+          },
+          {
+            id: "cycle",
+            who: "The producers",
+            config: "The retouch check",
+            measure: "A batch, in to verdict",
+            source: "How long a batch waits",
+          },
+          {
+            id: "rounds",
+            who: "The retouchers",
+            config: "The retouch check",
+            measure: "Rounds per asset",
+            source: "How often one goes back",
+          },
+        ],
+      },
+      alt: "The business case as two halves. At Loop, from the record: two designers and a copywriter making about 700 paid-social assets a month with the studio's Skills; the PMs pre-filling copy through the briefing sync for one copy editor to check; the head of design's review agent taking about ten times less review by hand; a program manager's planning tool giving back a week a month. In the studio, the same shape with four measures counted from week one and left empty: operational hours a week, freelance days on operations, a retouch batch from in to verdict, and rounds per asset.",
+    },
+    {
       id: "turn",
       kind: "interstitial",
       variant: "callout",
@@ -148,59 +243,108 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         "The products, the brand and the producers' eye are already Pandora's. We bring the order to do it in, starting with the operational work around the creative.",
     },
     {
+      /* THE CIRCUIT (ADR-133, owner 2026-09-28, after Rob's read): ONE
+         configuration drawing that TRAVELS through three beats of one pinned
+         scene, on the Moira workshop's board (one piece of work, six
+         questions around it; owner: "I like the simplicity of this") in the
+         proof's R4 material (the reading he called "super clear"). Beat a:
+         the recap after a review as it is done today, a lone plate, beside
+         the same work configured. Beat b: the team owns it (the owner and
+         what the team writes come forward; the rest recedes). Beat c: every
+         workflow as its own small circuit, all wired to the same written
+         context and checks, and the one socket outside the studio, dashed.
+         ⚠ WRITTEN FOR A CMO WHO DOES NOT KNOW AI: every plate is a question a
+         person would ask, answered in plain words; no lane meter, no model
+         family, no digit. ⚠ The first cut of this kind was rejected the same
+         evening as too dense and its "today" column as depressing; this one
+         draws today as the work alone, neutral, and connected to nothing. */
       id: "today",
-      kind: "board",
+      kind: "circuit",
       menuLabel: "Pandora today",
       menuPrimary: true,
       head: {
-        eyebrow: "Pandora · where the studio stands",
-        title: { pre: "The studio today, and", em: "configured." },
-        sub: "Left, the Global Brand Creative Studio as it runs today: the operational work done by hand, much of it by freelancers, and nothing about the way of working written down. Right, the same studio once the AI work has an owner and its rules are written down, running in the tools it already uses.",
+        eyebrow: "Pandora · the review recap",
+        title: { pre: "Today,", em: "and configured." },
+        sub: "Left, the recap after a creative review as it happens today: someone types it up. Right, the same recap set up once, with six things written down around it: who answers for it, what runs it, what it knows, how it is checked, what it can reach and where the team meets it. Then it runs.",
       },
-      states: [
+      work: {
+        id: "recap",
+        name: "The review recap",
+        good: "Every note in, nothing made up, each next step owned",
+        today: "Typed up after every review by whoever ran it, from their notes",
+      },
+      questions: [
         {
-          mode: "today",
-          label: "As it runs today",
-          alt: "Pandora's brand creative studio as it runs today, written out as a ledger: nobody owns AI as their day job, the operational work is done by hand and held up by freelancers, the way of working is not written down, three tools that nothing connects, and nothing that reaches past the studio.",
-          seat: { q: "Who owns it", a: "Nobody, as their day job" },
-          card: { name: "The work", work: "by hand, held up by freelancers" },
-          layer: { label: "The context", sub: "not written down", rows: [] },
-          tools: {
-            label: "The tools",
-            items: [
-              { id: "figma", name: "Figma" },
-              { id: "primo", name: "Primo" },
-              { id: "hub-planner", name: "Hub Planner" },
-            ],
-          },
-          reach: { label: "Where it scales", value: "not past the studio" },
+          id: "owner",
+          key: "The owner",
+          question: "Who answers for it",
+          answer: "The PM who ran the review",
         },
         {
-          mode: "configured",
-          label: "With a configuration",
-          alt: "The same studio once its AI work is set up: the studio lead owns it with Kristin's sign-off, an AI capability the studio owns runs at the centre on Pandora's own account, it reads the context the studio keeps, it runs inside the tools the studio already uses, and it scales into the rest of marketing.",
-          seat: { q: "Who owns it", a: "The studio lead, with Kristin's sign-off." },
-          card: { name: "AI capability", work: "owned by the studio" },
-          layer: {
-            label: "The context",
-            rows: [
-              { id: "rules", tag: "Rules" },
-              { id: "examples", tag: "Examples" },
-              { id: "sources", tag: "Sources" },
-              { id: "loops", tag: "Loops" },
-            ],
-          },
-          tools: {
-            label: "Where it runs",
-            items: [
-              { id: "figma", name: "Figma" },
-              { id: "primo", name: "Primo" },
-              { id: "hub-planner", name: "Hub Planner" },
-            ],
-          },
-          reach: { label: "Where it scales", value: "into the rest of marketing" },
+          id: "model",
+          key: "The model",
+          question: "What runs it",
+          answer: "Claude, on your account",
+        },
+        {
+          id: "context",
+          key: "The context",
+          question: "What it knows",
+          answer: "The notes and the brief",
+        },
+        {
+          id: "evals",
+          key: "The evaluations",
+          question: "How we know it is good",
+          answer: "Checked on past recaps",
+        },
+        {
+          id: "reach",
+          key: "The reach",
+          question: "What it can reach",
+          answer: "Figma comments and Asana",
+        },
+        {
+          id: "interface",
+          key: "The interface",
+          question: "Where you meet it",
+          answer: "A draft in your inbox",
         },
       ],
+      tag: "Written by the team",
+      people: {
+        head: {
+          eyebrow: "Pandora · the team",
+          title: { pre: "Your team", em: "owns it." },
+          sub: "In the workshops the PMs and producers write down how the work is done: what a recap contains, what a good retouch looks like, how a file is named. That is what the agent runs on, and it is theirs. So the same people do things they could not before: a recap in minutes, every retouch checked before anyone opens it, the schedule read straight from the review notes. Nobody codes.",
+        },
+      },
+      machine: {
+        head: {
+          eyebrow: "Pandora · the larger whole",
+          title: { pre: "One layer,", em: "every workflow." },
+          sub: "Each workflow is its own small circuit, and all of them read the same written context and checks. Written once, owned by the team, kept when the model changes. When Pandora builds a brand system for all of marketing, this is what plugs into it.",
+        },
+        configs: [
+          { id: "filing", name: "Filing and upload" },
+          { id: "recap", name: "The review recap" },
+          { id: "schedule", name: "The schedule" },
+          { id: "resourcing", name: "Resourcing" },
+          { id: "retouch", name: "The retouch check" },
+          { id: "brief", name: "Brief into Figma" },
+        ],
+        layer: {
+          context: "How the studio works, written down",
+          evals: "What a good result looks like",
+        },
+        chips: ["Written once", "Owned by the team", "Outlives the model"],
+        socket: { key: "Later", name: "A brand system for all marketing" },
+      },
+      alts: {
+        a: "The review recap as it is done today, typed up by whoever ran the review, beside the same recap configured: the PM who ran it answers for it, Claude on Pandora's own account runs it, it knows the review notes and the brief, it is checked against past recaps, it reaches Figma comments and Asana, and the team meets it as a draft in their inbox.",
+        b: "The same drawing with the owner and the two things the team writes, the context and the evaluations, brought forward on one green bus, and the model, the reach and the interface receded.",
+        c: "Six workflows as small circuits in a ring, filing and upload, the review recap, the schedule, resourcing, the retouch check and the brief into Figma, every one wired to the same two shared plates, the context and the evaluations, with a dashed socket below for a brand system for all of marketing.",
+      },
     },
     {
       /* THE GOAL (owner, 2026-09-28): the approach from adoption to
@@ -218,7 +362,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · where this goes",
         title: { pre: "From the button", em: "to the goal." },
-        sub: "Today the operational work is done by hand, or with a prompt and a person checking every step. With the studio's context and its checks written down, the same work runs for hours on its own and the team checks in at the end. The hours that go on it today go back to the creative, and that is what the three months are for.",
+        sub: "Today a person runs the work step by step and checks every step, so it saves minutes. The goal of the three months is the lower line: the team sets the goal and the checks once, the work runs for hours on its own, and a person looks at the result. That is where the time comes back, and it only works once the team trusts it, which is why the checks come first.",
       },
       axis: { from: "five minutes", to: "half a day" },
       operated: {

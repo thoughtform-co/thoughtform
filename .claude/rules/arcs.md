@@ -909,6 +909,47 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   (Objective · You make · The gate · The tool), a close. The student builds one
   brand world all term, around themselves or a fictional product. ⚠ Motion is
   held to week eight on purpose, once the world has rules a film can obey.
+- ⚠ **ON PANDORA THE CONFIGURATION TRAVELS AND THE RETURN SITS WITH THE
+  PROOF (ADR-133, Proposed 2026-09-28, owner; second cut, the first was
+  pushed, rejected on his read and reverted).** Two kinds, ADR-052's twelfth
+  and thirteenth exceptions, on one glyph library (`components/arcs/circuit/**`).
+  - **`circuit`** is the Moira workshop's board (one piece of work, six
+    questions around it) in the proof's R4 material, ONE SVG whose parts carry
+    three poses as custom properties; `data-cir-state` picks a set, so the
+    travel is one attribute write on the compositor. **a:** the work alone on
+    a plain plate ("typed up by whoever ran it") beside the same work wired:
+    the owner above (green), model · context · evaluations left (the last two
+    gold, in a dashed frame tagged WRITTEN BY THE TEAM), reach · interface
+    right. **b:** the owner heads the left column over the two written plates
+    on one green bus; the rest recedes to a third of its ink. **c:** the work
+    shrinks to a chip (a `d` morph, one `housing()` structure) in a ring of
+    six workflows around two shared plates, THE CONTEXT and THE EVALUATIONS,
+    with one dashed socket, LATER · a brand system, the Defyner argument drawn
+    generic. It replaces the `board` on Pandora only.
+  - ⚠ **FEWER THAN A DOZEN OBJECTS A BEAT, PINNED** (`arc-circuit-fit`). The
+    first cut carried forty lettered things in one state and he could not say
+    what the section was about. ⚠ **A "TODAY" IS NEVER A COLUMN OF THE
+    CLIENT'S GAPS**: one neutral line on the work carries the comparison.
+    ⚠ **WRITTEN FOR A CMO WHO DOES NOT KNOW AI**: a name, a question, one
+    plain answer per plate; no lane meter, no model family, no digit.
+  - ⚠ **THE SCENE ARMS ITSELF** (`data-circuit-scene`, desktop plus motion): a
+    sticky 100svh stage, two runway markers read by ONE IntersectionObserver
+    at the frame's midline (never a scroll listener), the head decoding in
+    place over ghosts of all three beats. Everywhere else the three beats
+    FLOW at rest; on a phone they are ruled lists. ⚠ **ONE SECTION, THREE
+    MASTHEADS**, which `arc-terminal-markup` counts.
+  - **`crew`** is the business case DRAWN, never a calculator (owner: "not
+    about exact numbers … a visual thing they can see"): Loop's record left,
+    each output drawn as its quantity; the same shape in the studio right,
+    its readouts framed and EMPTY. The only digits are the record's. **It
+    sits after the proof cards, before the turn** (owner).
+  - ⚠ **FIT IS DECLARED PER STATE**: widths, the rendered floor as
+    `fs × k × meet` where a part LANDS, the crop, no two letters and no two
+    plates on one another on the POSED boxes, every wire on its objects.
+    ⚠ **A frame that holds plates paints UNDER them** (drawn after them with a
+    fill it hid both, with every gate green). ⚠ **A path box is walked command
+    by command.** ⚠ **A traveller paints last.** ⚠ **CSS `font-weight` beats
+    the SVG attribute**, so lit is a class.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's

@@ -803,6 +803,73 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("a circuit is one piece of work, six questions, and the same work among its siblings (ADR-133)", () => {
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "circuit") continue;
+        const at = `${arc.slug}/${section.id}`;
+        // The six questions, in the drawing's order: the owner above the
+        // work, three on its left, two on its right.
+        expect(
+          section.questions.map((q) => q.id),
+          `${at}: the six questions`
+        ).toEqual(["owner", "model", "context", "evals", "reach", "interface"]);
+        for (const q of section.questions) {
+          expect(q.answer.length, `${at}/${q.id}: the answer`).toBeGreaterThan(0);
+          expect(q.question.length, `${at}/${q.id}: the question`).toBeGreaterThan(0);
+        }
+        // The work is ONE of the workflows: the chip shrinks into it.
+        const ids = section.machine.configs.map((c) => c.id);
+        expect(new Set(ids).size, `${at}: duplicate workflow`).toBe(ids.length);
+        expect(ids, `${at}: the work is not a workflow`).toContain(section.work.id);
+        expect(ids.length, `${at}: the ring holds six`).toBeLessThanOrEqual(6);
+        // Today is stated, never a column of gaps: one line on the work.
+        expect(section.work.today.length, `${at}: today`).toBeGreaterThan(0);
+        // NO DIGIT ANYWHERE IN IT, the board's ruling, kept.
+        scanArc(section, at, (value, path) => {
+          expect(/\d/.test(value), `${path}: a figure on the circuit`).toBe(false);
+        });
+      }
+    }
+  });
+
+  it("a crew is the record beside the plan, and only the record carries a number (ADR-133)", () => {
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "crew") continue;
+        const at = `${arc.slug}/${section.id}`;
+        // The plan never letters a value: the client's numbers are counted,
+        // never promised.
+        scanArc(section.plan, `${at}/plan`, (value, path) => {
+          expect(/\d/.test(value), `${path}: a figure on the plan`).toBe(false);
+        });
+        for (const row of section.record.rows) {
+          expect(row.people, `${at}/${row.id}: the seat draws no one`).toBeGreaterThan(0);
+          expect(
+            row.people,
+            `${at}/${row.id}: more people than the seat holds`
+          ).toBeLessThanOrEqual(5);
+          // A figure only where the record states one: in the value, or the
+          // count the field draws, and nowhere else on the row.
+          for (const [k, v] of Object.entries({
+            who: row.who,
+            config: row.config,
+            unit: row.unit,
+          })) {
+            expect(/\d/.test(v), `${at}/${row.id}.${k}: a figure outside the value`).toBe(false);
+          }
+          if (row.output.kind === "field") {
+            const stated = row.value.match(/\d+/)?.[0];
+            expect(
+              stated,
+              `${at}/${row.id}: the field draws a count its value does not state`
+            ).toBe(String(row.output.count));
+          }
+        }
+      }
+    }
+  });
+
   it("a steps beat's three stages are one dial, read three ways (ADR-106)", () => {
     /* No registered arc carries a `steps` beat yet — the Trinny page mounts it
        through its own dispatch and `trinny-offer.test.ts` walks that copy. The
