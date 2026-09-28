@@ -815,7 +815,198 @@ export type ArcSection = ArcSectionBase &
         /** The drawing's accessible name. */
         alt: string;
       }
+    | {
+        /**
+         * THE CIRCUIT (ADR-133): the client's intelligence configuration as
+         * ONE drawing that TRAVELS through three beats of one pinned scene.
+         * (a) the studio today, a ruled LEDGER, beside one piece of work
+         * with its six questions wired around it; (b) the same work, shrunk
+         * to one configuration among its siblings, plugged into the teams it
+         * gives time back to; (c) every configuration on one shared layer,
+         * the studio's AI capability, plugged into the larger machine.
+         *
+         * ⚠ THE TWELFTH ENUMERATED EXCEPTION, and not a third mode of the
+         * `board`: that kind's two-state tuple is pinned on every registered
+         * board, and this drawing's objects are ONE set of elements posed
+         * three ways, which is a different contract. On a desktop with
+         * script and motion the section is a runway with one sticky stage;
+         * everywhere else (reduced motion, ≤960px, no script, print) it is
+         * the three beats in flow, each drawn at rest by the same component.
+         * ⚠ NO DIGIT anywhere in it (the proposal copy law); the mono chrome
+         * is authored in sentence case and UPPERCASED by the drawing.
+         */
+        kind: "circuit";
+        /** Beat A's head — the ledger and the configured board. */
+        head: ArcHead;
+        /** The one piece of work at the centre of beat A. `id` is one of
+         *  `machine.configs`: the chip shrinks into that configuration. */
+        work: CircuitWork;
+        /** The six questions, in the drawing's reading order: the three
+         *  the team writes and answers for above the work (context, owner,
+         *  evals), the three it runs on below (model, reach, interface). */
+        questions: readonly [
+          CircuitQuestion<"context">,
+          CircuitQuestion<"owner">,
+          CircuitQuestion<"evals">,
+          CircuitQuestion<"model">,
+          CircuitQuestion<"reach">,
+          CircuitQuestion<"interface">,
+        ];
+        /** The two item rails on the flanks of beat A: what the context
+         *  holds and what the evals check (Moira's zoom: rules · examples ·
+         *  sources, cases · checks · gates), each with this work's answer. */
+        rails: {
+          context: readonly [CircuitItem, CircuitItem, CircuitItem];
+          evals: readonly [CircuitItem, CircuitItem, CircuitItem];
+        };
+        /** Beat B — the teams the configurations give time back to. */
+        people: {
+          head: ArcHead;
+          /** Left to right. A configuration may be shared by two ADJACENT
+           *  teams (it spans between their columns). */
+          teams: readonly [CircuitTeam, CircuitTeam, CircuitTeam, CircuitTeam];
+          /** The mono key on each team's foot plate, e.g. "Freed for". */
+          freedKey: string;
+        };
+        /** Beat C — the larger machine. */
+        machine: {
+          head: ArcHead;
+          /** Every configuration, in the plan's order — the row beat C
+           *  draws. Each is wired into at least one team in beat B. */
+          configs: readonly CircuitConfig[];
+          /** The shared layer every configuration sits on. */
+          layer: { name: string; line: string; chips: readonly [string, string, string] };
+          /** What the layer plugs into, left to right. `future` draws
+           *  dashed: a system that does not exist yet. */
+          sockets: readonly CircuitSocket[];
+        };
+        /** The accessible name of each beat's drawing. */
+        alts: { a: string; b: string; c: string };
+      }
+    | {
+        /**
+         * THE CREW (ADR-133): the business case as a DRAWN RECORD, never a
+         * calculator (owner, 2026-09-28: "it's not about exact numbers …
+         * it should be a visual thing they can see"). Left, the shape the
+         * work took at Loop: a few people, one configuration each, and the
+         * output drawn as the quantity it is. Right, the same shape at the
+         * client, its readouts framed and empty: counted from week one,
+         * never promised.
+         *
+         * ⚠ THE THIRTEENTH ENUMERATED EXCEPTION. The circuit's own glyph
+         * library, static, one leaf, no script. The only digits on the
+         * drawing are the record's, and only on the record side.
+         */
+        kind: "crew";
+        head: ArcHead;
+        record: { label: string; rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow] };
+        plan: {
+          label: string;
+          rows: readonly [CrewMeasure, CrewMeasure, CrewMeasure, CrewMeasure];
+        };
+        /** The drawing's accessible name. */
+        alt: string;
+      }
   );
+
+/* ── The circuit (ADR-133) ───────────────────────────────────────────── */
+
+export type CircuitQuestionId = "context" | "owner" | "evals" | "model" | "reach" | "interface";
+
+/** One of the six questions around the work, answered twice. */
+export interface CircuitQuestion<I extends CircuitQuestionId = CircuitQuestionId> {
+  id: I;
+  /** The chip's mono key, e.g. "The context". */
+  key: string;
+  /** The question it answers, e.g. "What it knows". */
+  question: string;
+  /** This work's answer, configured — one line on the chip's value plate. */
+  answer: string;
+  /** The same question as the studio answers it today — the ledger's row. */
+  today: string;
+}
+
+/** One row of an item rail: a mono key and a short line. */
+export interface CircuitItem {
+  /** e.g. "Rules". */
+  key: string;
+  /** e.g. "The recap's format". */
+  value: string;
+}
+
+export interface CircuitWork {
+  /** One of `machine.configs`. */
+  id: string;
+  /** The chip's name, e.g. "The review recap". */
+  name: string;
+  /** What good looks like, one line on the chip. */
+  good: string;
+  /** The work as it is done today — the ledger's first row. */
+  today: string;
+}
+
+export interface CircuitConfig {
+  id: string;
+  /** Sentence case, one line on a cartridge. */
+  name: string;
+}
+
+export interface CircuitTeam {
+  id: string;
+  /** The seat's name, e.g. "The PMs". */
+  name: string;
+  /** How the team runs its configurations, mono, e.g. "Press the button". */
+  hand: string;
+  /** Ids of the configurations wired into this seat, top to bottom. */
+  configs: readonly string[];
+  /** What the team gets time back for. */
+  freed: string;
+}
+
+export interface CircuitSocket {
+  id: string;
+  /** Mono key, e.g. "Your DAM". */
+  key: string;
+  name: string;
+  /** A system that does not exist yet — drawn dashed. */
+  future?: true;
+}
+
+/** How a record row's output is DRAWN: the quantity, as marks. */
+export type CrewOutput =
+  | { kind: "field"; count: number }
+  | { kind: "funnel"; lines: number }
+  | { kind: "tenfold" }
+  | { kind: "month" };
+
+/** One row of the record: people → one configuration → what came out. */
+export interface CrewRow {
+  id: string;
+  /** Who, e.g. "Two designers and a copywriter". */
+  who: string;
+  /** How many people the seat draws (pixel figures). */
+  people: number;
+  /** The configuration, e.g. "The studio's Skills". */
+  config: string;
+  output: CrewOutput;
+  /** The reading, mono, e.g. "About 700". The record's own number. */
+  value: string;
+  /** The line under it, e.g. "paid-social assets a month". */
+  unit: string;
+}
+
+/** One row of the plan: a measure counted in week one, framed and empty. */
+export interface CrewMeasure {
+  id: string;
+  /** Who it is counted for, e.g. "The PMs and producers". */
+  who: string;
+  /** The configuration that moves it, e.g. "The retouch check". */
+  config: string;
+  /** The measure, e.g. "Operational hours a week". */
+  measure: string;
+  /** Where it is read from, one line. */
+  source: string;
+}
 
 /* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */
 

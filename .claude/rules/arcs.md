@@ -909,6 +909,41 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   (Objective · You make · The gate · The tool), a close. The student builds one
   brand world all term, around themselves or a fictional product. ⚠ Motion is
   held to week eight on purpose, once the world has rules a film can obey.
+- ⚠ **ON PANDORA THE CONFIGURATION TRAVELS AND THE RETURN IS DRAWN (ADR-133,
+  Proposed 2026-09-28, owner; Rob's read: the impact, and Defyner).** Two
+  kinds, ADR-052's twelfth and thirteenth exceptions, on one glyph library
+  (`components/arcs/circuit/**`).
+  - **`circuit`** is ONE SVG whose every part carries three poses as custom
+    properties. `data-cir-state` picks one set, so a state change is one
+    attribute write and the travel plays on the compositor. Its three beats:
+    - **a:** the ledger beside one work with six questions, on the Cyberpunk
+      board's vocabulary in the house law, the core the one FILLED object;
+    - **b:** the work shrinks into its cartridge (the plate morphs on CSS `d`,
+      one `housing()` structure; the name rides a uniform scale), its siblings
+      peel off into the teams' columns;
+    - **c:** the studio's AI capability, one layer the teams steer, plugged
+      into the larger machine, with a GENERIC brand-system socket, dashed.
+    - It replaces the `board` on Pandora only; the board still draws Trinny.
+  - ⚠ **THE SCENE ARMS ITSELF** (`data-circuit-scene`, desktop plus motion).
+    A sticky 100svh stage, two runway markers read by ONE
+    IntersectionObserver at the frame's midline (never a scroll listener),
+    and the head decoding in place over ghosts of all three beats.
+    Everywhere else the three beats FLOW at rest, and on a phone they are
+    ruled lists. ⚠ **ONE SECTION, THREE MASTHEADS**, which
+    `arc-terminal-markup` counts.
+  - **`crew`** is the business case DRAWN, never a calculator (owner: "not
+    about exact numbers … a visual thing they can see"). Loop's record sits
+    left with each output drawn as its quantity (700 pads for about 700
+    assets). The same shape in the studio sits right, its readouts framed and
+    EMPTY. The only digits are the record's, and the registry pins the
+    field's count to its value.
+  - ⚠ **FIT IS DECLARED PER STATE** (`arc-circuit-fit`): widths, the rendered
+    floor as `fs × k × meet` where a part LANDS, the crop, and no two letters
+    on one another on the POSED boxes. It caught "OUTLIVES THE MODEL" 3 units
+    past its chip on its first run.
+  - ⚠ **A SCALED NAME'S MEASURE IS WHERE IT LANDS, ÷ the scale.**
+    ⚠ **A traveller paints last.** ⚠ **CSS `font-weight` beats the SVG
+    attribute**, so lit is a class.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
   2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's
