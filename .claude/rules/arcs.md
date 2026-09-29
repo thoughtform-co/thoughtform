@@ -1124,6 +1124,14 @@ line }, socket, alt }`: six small configurations in the board's cross whose
   ⚠ The picture is sized through its inline `aspect-ratio` and the regions
   ride it in percent. Attributes `data-bench-*`, never `data-arc-*`; the
   whole Pandora arc joins `arc-terminal-markup`'s walk.
+- ⚠ **A PROPOSAL MAY OPT INTO LINEAR'S RHYTHM (`ArcDef.rhythm: "flow"`,
+  ADR-128 U2, landed 2026-09-29; the Pandora proposal only).** `data-arc-rhythm`
+  on the root: a HEAD beat is content-height with its head a fixed 128px under
+  its own top edge (`--arc-head-datum` REDEFINED, never a second token — the
+  bench and the proof card budget against it), where the format's datum seats a
+  head for one body height only. Opt-in because the Trinny scene (ADR-102) is
+  measured against the centre-solved datum; beats without a head stay whole
+  frames. Gated like the datum (≥961px, no PRM).
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

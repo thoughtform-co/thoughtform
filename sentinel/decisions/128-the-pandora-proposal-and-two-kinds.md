@@ -400,3 +400,38 @@ title line counts and the rail-against-housing measurement above.
   on a proposal by owner ruling (the file was held by a parallel session).
 - B4 (the proposal smoke) is still to write; the bench beat runs ~80px past a
   720 frame by its housing's floor, as before.
+
+## Update 2 (2026-09-28, owner; landed 2026-09-29): the heads on Linear's rule
+
+Written the morning the handout went out, alongside a day-rate fee and a copy
+sweep; those two were overtaken by ADR-133's passes on this page (U5 carries the
+day rate) and are not carried. What lands is the head rule alone.
+
+### A head beat sits 128px under its own top edge and is as tall as its content (`rhythm: "flow"`)
+
+The owner, on the handout: the heads sat "either too much to the bottom or too
+much to the top", and he asked what the uniform rule is, since the proposal
+drew on Linear. Measured on linear.app the same morning at 1920×1247 and
+1440×900: every feature section's head sits a fixed **128px** under the
+section's top edge at both heights, and the section is **as tall as its
+content** (1220 to 1232px at both). Nothing is placed against the viewport.
+ADR-099 U2 had recorded the same fact and chosen to keep viewport-tall frames,
+seating each head where centring a 600px composition would; that datum is right
+for exactly one body height, so a short body pools the frame's slack at the
+floor and a tall one presses against it — both at once on one page.
+
+`ArcDef.rhythm: "flow"` (new, optional) publishes `data-arc-rhythm` on the root
+through `ArcShell`, and `arcs.css` gives a head beat on such a root
+`min-height: 0`, `align-content: start` and `padding-block: 128px`, redefining
+`--arc-head-datum` so the bench and the proof card budget for the seat the page
+actually uses. The part callouts, the proof cards and the close keep their
+frames: they have no head and are composed to be centred.
+
+⚠ **Opt-in, not format-wide.** The Trinny page's pinned scene (ADR-102) is
+measured against the centre-solved datum, and the other three proposals are
+live links already sent. Another proposal adopts the rule with one line; the
+attribute is absent everywhere else, so every other root is byte-identical.
+
+⚠ **The handout's paging is not carried.** The first cut also paged each head
+beat as a whole 16:9 page in `pdf-arc.mjs`; that never reached main, so the
+PDF prints the flowing page as it is.

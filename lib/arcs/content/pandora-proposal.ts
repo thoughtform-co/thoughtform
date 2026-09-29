@@ -55,6 +55,9 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
   // Filed the day after the call; the overview's monitor plots it (ADR-118).
   date: "2026-09-26",
   theme: "light",
+  // Linear's rule for the head beats (ADR-128 U2): the head 128px under the
+  // beat's top edge, the beat as tall as its content.
+  rhythm: "flow",
   cardTitle: "Pandora · the proposal",
   cardLede:
     "Three months inside the Global Brand Creative Studio: the operational work first, then the review, then the agents that run both.",

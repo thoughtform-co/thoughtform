@@ -66,6 +66,13 @@ interface ArcShellProps {
    */
   lock?: "light";
   /**
+   * `ArcDef.rhythm` (ADR-128 U2), published as `data-arc-rhythm`: a head
+   * beat sits 128px under its own top edge and is as tall as its content,
+   * Linear's rule. Absent, nothing renders, so every other arc's root is
+   * byte-identical.
+   */
+  rhythm?: "flow";
+  /**
    * The client's mark (`ClientDef.mark`), drawn in the HUD's top-left
    * corner in place of the plain bracket: the design skill's client shell
    * (slot 102x48, `object-fit: contain`, a 30px terminator rule). A leaf:
@@ -103,6 +110,7 @@ export function ArcShell({
   curtain = false,
   format,
   lock,
+  rhythm,
   clientMark,
   children,
 }: ArcShellProps) {
@@ -144,6 +152,7 @@ export function ArcShell({
       ref={rootRef}
       className={`arc-root arc-root--${variant} ${bodyClass}`}
       data-arc-format={format}
+      data-arc-rhythm={rhythm}
       /* ⚠ THE ROOT'S OWN THEME FOLLOWS THE LOCK (ADR-098). No selector in
          this repo reads `[data-theme="dark"]` — ADR-058 forbids authoring
          one — so this attribute paints nothing either way; what it does is

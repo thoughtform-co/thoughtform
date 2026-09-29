@@ -176,6 +176,7 @@ export default async function ArcPage({ params }: ArcRouteParams) {
         curtain={arc.hero.curtain ?? false}
         format={arc.format}
         lock={arc.theme}
+        rhythm={arc.rhythm}
         clientMark={arc.client ? getClient(arc.client)?.mark : undefined}
       >
         <ArcHero hero={arc.hero} />

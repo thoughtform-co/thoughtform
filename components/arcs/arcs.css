@@ -4749,6 +4749,39 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   }
 }
 
+/* ── THE FLOW RHYTHM: LINEAR'S RULE, OPT-IN (ADR-128 U2) ──────────────────
+   Owner, 2026-09-28, on the Pandora handout: the heads sat "either too much
+   to the bottom or too much to the top". Both at once is what the datum
+   above does by construction: it seats every head where centring a 600px
+   composition would, so a beat with less than that under its head pools
+   the frame's slack at the FLOOR and a beat with more is pressed against
+   it. Measured on linear.app the same day, at 1920×1247 and 1440×900: the
+   head sits a fixed 128px under its section's top edge at both heights, and
+   the section is as tall as its content (1220 to 1232px) — nothing is
+   positioned against the viewport, so there is no slack to place.
+   So on a page that opts in, a HEAD beat is a content-height section with
+   the head on 128px and the same air under its body. The beats without a
+   head (the two part callouts, the proof cards, the close) stay whole
+   frames: they are the page's chapter breaks, composed to be centred.
+   ⚠ `--arc-head-datum` is redefined, not a new token: the bench and the
+   proof card subtract it from their frame budgets, and a second token would
+   leave them budgeting for a datum this page no longer seats.
+   ⚠ `padding-block`, both ends, at the datum's own specificity and after it
+   in source order — the per-kind `padding-block: var(--arc-stage-pad)`
+   rules are (0,1,0) and lose, so every head beat takes the same air.
+   ⚠ Gated like the datum: below 961px or under PRM the format already
+   releases `min-height` and reads as a document. */
+.arc-root[data-arc-rhythm="flow"] {
+  --arc-head-datum: 128px;
+}
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .arc-root[data-arc-rhythm="flow"] .arc-sec:has(> .arc-band > .arc-head) {
+    min-height: 0;
+    align-content: start;
+    padding-block: var(--arc-head-datum);
+  }
+}
+
 /* ── THE PROPOSAL HEAD IS TWO EQUAL COLUMNS (ADR-099 U2) ────────────────
    Linear's header grammar, measured off its own sheet: `1fr 1fr`, the
    paragraph LEFT-ANCHORED at its column's start and the column filling its

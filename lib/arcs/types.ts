@@ -1541,6 +1541,21 @@ export interface ArcDef {
    * registry test fails a locked arc that has none.
    */
   theme?: "light";
+  /**
+   * How a head-bearing beat sits on the page (ADR-128 U2). Absent ⇒ the
+   * format's own law: a proposal seats its head on ADR-099's datum, solved
+   * from the frame's centre, inside a viewport-tall beat. `"flow"` is
+   * Linear's rule, measured on linear.app (2026-09-28, 1920×1247 and
+   * 1440×900): every feature section's head sits a fixed 128px under the
+   * section's top edge, and the section is as tall as its content (1220 to
+   * 1232px at both heights). Nothing is placed against the viewport, so no
+   * beat has leftover frame to pool above or below its head.
+   *
+   * ⚠ OPT-IN, NOT FORMAT-WIDE, AND THAT IS THE TRINNY PAGE. Its pinned scene
+   * (ADR-102) is measured against the centre-solved datum; a format-wide
+   * change moves it. Another proposal adopts the rule with this one line.
+   */
+  rhythm?: "flow";
   /** Choreography system — see ArcMotion. Default "reveal". */
   motion?: ArcMotion;
   /**
