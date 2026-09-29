@@ -71,12 +71,16 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
     );
     /* Plopsa left this list with ADR-130 (its picker became the six-question
        board) and came back with `configurationFromQuestions`. */
+    /* The archetype and the course's class one carry a `questions` board
+       since ADR-136, so the owner's page draws theirs too. */
     expect(withBoard.sort()).toEqual([
+      "ai-storytelling-class-1",
       "hungry-minds-proposal",
       "perfect-ted-proposal",
       "plopsa-workshop",
       "suri-proposal",
       "suri-workshop",
+      "thoughtform-workshop",
       "trinny-london-pitch",
     ]);
   });
@@ -128,6 +132,21 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "plopsa-workshop": {
         rows: ["Een campagnefamilie||"],
         links: ["Claude×1", "Image generation×1"],
+      },
+      /* The archetype's board (ADR-136) answers for the practice's own
+         writing skill, so the base every fork starts from carries no
+         client's evidence; Claude in the interface's answer is its one chip.
+         A fork swaps the work and the chips move with it. */
+      "thoughtform-workshop": {
+        rows: ["A post in my voice||"],
+        links: ["Claude×1"],
+      },
+      /* The class-one deck's board is Tom on the Moon's world; the image
+         model is named generically ("chosen per wave"), so Claude in the
+         interface's answer is the one chip here too. */
+      "ai-storytelling-class-1": {
+        rows: ["A brand world||"],
+        links: ["Claude×1"],
       },
       "trinny-london-pitch": {
         rows: [

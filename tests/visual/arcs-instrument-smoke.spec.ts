@@ -53,13 +53,17 @@ const RECORD = [
   ...CLIENTS.flatMap((c) => (c.pages ?? []).map((p) => ({ href: p.href, date: p.date }))),
 ];
 const NEWEST = [...RECORD].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))[0];
-/** The engagements whose dossier draws a configuration: the proposals. */
+/** The engagements whose dossier draws a configuration: the proposals, and
+ *  every workshop with a six-question board (ADR-130 U3; the archetype and
+ *  the course's class one since ADR-136). */
 const CONFIGURED = new Set([
+  "ai-storytelling-class-1",
   "hungry-minds-proposal",
   "perfect-ted-proposal",
   "plopsa-workshop",
   "suri-proposal",
   "suri-workshop",
+  "thoughtform-workshop",
   "trinny-london-pitch",
 ]);
 /** An arc's readout carries its section count; a client's page has none. */

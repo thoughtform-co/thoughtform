@@ -82,6 +82,7 @@ describe("hero preload", () => {
       "/arcs/suri-workshop",
       "/arcs/thoughtform-workshop",
       "/arcs/ai-storytelling",
+      "/arcs/ai-storytelling-class-1",
     ]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });

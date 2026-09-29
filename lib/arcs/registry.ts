@@ -11,6 +11,7 @@ import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
 import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
+import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import type { ArcDef } from "./types";
 
 /**
@@ -39,6 +40,8 @@ export const ARCS: readonly ArcDef[] = [
      are cuts of it, so it is the page to read before any of them. */
   THOUGHTFORM_WORKSHOP_ARC,
   AI_STORYTELLING_ARC,
+  /* The course's class decks sit beside the course (ADR-136). */
+  AI_STORYTELLING_CLASS_1_ARC,
   CLAUDE_WORKSHOP_ARC,
   AI_KEYNOTE_ARC,
   CLAUDE_WORKSHOP_V2_ARC,

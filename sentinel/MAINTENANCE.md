@@ -398,6 +398,34 @@ owner: "fix all".
   G3 pass, title 6.71:1 — the same reading U4 §7 recorded, at the glide's
   framing.
 
+### 2026-09-29 — the class-one deck, and the archetype's situation re-cut on the Moira session (ADR-136)
+
+**Trigger:** the owner, off the Loop Moira second session he likes: a V2 of
+the course's first class on the same flow, the brand world as its subject,
+and the workshop archetype's situation ("from prompt to tool to agent, that's
+outdated") taken from the same source.
+
+- **Cycle B, in full.** ADR-136 (Proposed): three kinds ported by hand from
+  Moira (`spectrum`, `resource`, `signal`; ADR-052's sixteenth to eighteenth
+  exceptions), the stages' per-row `example` line, `/arcs/ai-storytelling-class-1`
+  (22 sections, five chapters), the archetype's theory between the proof and
+  `what-you-build` re-cut on her order, two shared records
+  (`shared/frontierCurve.ts`, `shared/tom-on-the-moon.ts`) pinned `toBe` across
+  their pages, and the syllabus's `page` link. Rule bullet in
+  `.claude/rules/arcs.md`; the registry test gained the three kinds' pins, the
+  examples' pins and the shared-record pins; both course pages joined the
+  markup walk; `sheet-config-fit` gained two boards.
+- **Q5 (what the guards caught, and what they did not):** the owner's `/arcs`
+  dossier failed three overview suites on the archetype's board before the
+  page was ever opened (an answer naming no tool is "a configuration of 0
+  links"); the one-screen law was measured in the browser and in the headed
+  capture, and the two disagreed on an image-card beat (720 in the pane's
+  emulation, 981 headed) — the headed capture is the reading.
+- **Verified:** 14 suites, 465/465; `tsc` clean; eslint 336 of 337; headed
+  captures of every beat on both pages at 1280×720 dark; the shared 3003
+  server's static-paths worker was dead (another session's), so the pages
+  were served from a sibling worktree on 3012.
+
 ### 2026-09-23 — the musings row seats its copy and yields to the telemetry (ADR-121 U1)
 
 **Trigger:** the coordinating session, off ADR-121's own stills: the open card

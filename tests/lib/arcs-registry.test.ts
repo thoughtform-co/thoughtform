@@ -12,7 +12,12 @@ import {
 } from "@/components/landing/home-v2/services/proof-stack/proofOrder";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
+import { AI_STORYTELLING_ARC } from "@/lib/arcs/content/ai-storytelling";
+import { AI_STORYTELLING_CLASS_1_ARC } from "@/lib/arcs/content/ai-storytelling-class-1";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
+import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
+import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
+import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
@@ -1177,6 +1182,16 @@ describe("arcs registry (ADR-052)", () => {
               true
             );
           }
+          /* A class's own page is another registered arc, linked at its
+             root (ADR-136): a gated arc loads through /unlock and drops a
+             fragment, so a fragment here would be a link to nowhere. */
+          if (c.page) {
+            expect(c.page.href, `${here}: page is an arc's root`).toMatch(/^\/arcs\/[a-z0-9-]+$/);
+            expect(arcSlugs(), `${here}: ${c.page.href} is not a registered arc`).toContain(
+              c.page.href.slice("/arcs/".length)
+            );
+            expect(c.page.label.trim().length, `${here}: page label`).toBeGreaterThan(0);
+          }
         }
       }
     }
@@ -1322,6 +1337,128 @@ describe("arcs registry (ADR-052)", () => {
           noDigits({ work: { ...s.work, image: undefined }, left: s.left, right: s.right }, at);
         }
       }
+    }
+  });
+
+  it("the class-one frame holds its records (ADR-136)", () => {
+    /* Three more of the Moira workshop's beats, ported by hand, and the
+       stages' example line. Pinned: the counts each drawing is built for,
+       the one open row and where it sits, a signal only after the board it
+       reads, and NO DIGIT on an instrument's lettering — with the one
+       exception a dated clipping earns (ADR-078 U1: a dated log row may
+       state a count, so a card's corner, kicker, title, dek and date may
+       carry figures while the column heads and the card's mark and tag may
+       not). */
+    const noDigits = (value: unknown, at: string) =>
+      scanArc(value, at, (s, p) => expect(s, `${p} letters a digit`).not.toMatch(/\d/));
+
+    for (const arc of ARCS) {
+      let board = false;
+      for (const s of arc.sections) {
+        const at = `${arc.slug}#${s.id}`;
+        if (s.kind === "questions") board = true;
+
+        if (s.kind === "stages") {
+          const examples = s.stages.filter((st) => st.example !== undefined);
+          expect([0, 3], `${at}: every stage carries an example, or none does`).toContain(
+            examples.length
+          );
+          expect(Boolean(s.own), `${at}: \`own\` present iff the stages carry examples`).toBe(
+            examples.length === 3
+          );
+          if (s.own) expect(s.own.length, `${at}: own`).toBeLessThanOrEqual(24);
+          for (const st of examples) {
+            expect(st.example?.length ?? 0, `${at}/${st.id}: example`).toBeLessThanOrEqual(48);
+          }
+          noDigits({ own: s.own ?? "" }, at);
+        }
+
+        if (s.kind === "spectrum") {
+          expect(s.poles, `${at}: two poles`).toHaveLength(2);
+          for (const p of s.poles) {
+            expect(p.lines, `${at}/${p.label}: three lines`).toHaveLength(3);
+            expect(p.label.length, `${at}/${p.label}: label`).toBeLessThanOrEqual(16);
+            expect(p.head.length, `${at}/${p.label}: head`).toBeLessThanOrEqual(28);
+            for (const l of p.lines) {
+              expect(l.length, `${at}/${p.label}: line`).toBeLessThanOrEqual(48);
+            }
+          }
+          expect(s.middle.label.length, `${at}: middle label`).toBeLessThanOrEqual(24);
+          expect(s.middle.head.length, `${at}: middle head`).toBeLessThanOrEqual(28);
+          expect(s.middle.line.length, `${at}: middle line`).toBeLessThanOrEqual(96);
+          for (const b of [s.bands.start, s.bands.end]) {
+            expect(b.length, `${at}: band`).toBeLessThanOrEqual(16);
+          }
+          noDigits({ poles: s.poles, middle: s.middle, bands: s.bands }, at);
+        }
+
+        if (s.kind === "resource") {
+          expect(s.rows, `${at}: four rows`).toHaveLength(4);
+          expect(new Set(s.rows.map((r) => r.id)).size, `${at}: row ids`).toBe(4);
+          expect(
+            s.rows.filter((r) => r.open),
+            `${at}: exactly one open row`
+          ).toHaveLength(1);
+          expect(s.rows[3].open, `${at}: the open row is the last`).toBe(true);
+          for (const r of s.rows) {
+            expect(r.misses !== undefined, `${at}/${r.id}: misses iff open`).toBe(r.open === true);
+            expect(r.resource.length, `${at}/${r.id}: resource`).toBeLessThanOrEqual(16);
+            expect(r.unit.length, `${at}/${r.id}: unit`).toBeLessThanOrEqual(12);
+            expect(r.tells.length, `${at}/${r.id}: tells`).toBeLessThanOrEqual(56);
+            if (r.misses) expect(r.misses.length, `${at}/${r.id}: misses`).toBeLessThanOrEqual(56);
+          }
+          expect(s.columns, `${at}: three columns`).toHaveLength(3);
+          noDigits({ columns: s.columns, rows: s.rows }, at);
+        }
+
+        if (s.kind === "signal") {
+          expect(board, `${at}: a signal follows the board it reads`).toBe(true);
+          expect(
+            s.columns.map((c) => c.plate),
+            `${at}: the board's order`
+          ).toEqual(["context", "evals"]);
+          const cardIds = s.columns.flatMap((c) => c.cards.map((card) => card.id));
+          expect(new Set(cardIds).size, `${at}: card ids`).toBe(4);
+          for (const c of s.columns) {
+            expect(c.cards, `${at}/${c.id}: two clippings`).toHaveLength(2);
+            noDigits({ label: c.label, line: c.line }, `${at}/${c.id}`);
+            for (const card of c.cards) {
+              expect(card.href, `${at}/${card.id}: https`).toMatch(/^https:\/\/\S+$/);
+              expect(card.dek.length, `${at}/${card.id}: dek parts`).toBeGreaterThanOrEqual(1);
+              expect(card.dek.length, `${at}/${card.id}: dek parts`).toBeLessThanOrEqual(6);
+              for (const k of ["source", "date", "title", "kicker", "corner"] as const) {
+                expect(card[k].trim().length, `${at}/${card.id}: ${k}`).toBeGreaterThan(0);
+              }
+              noDigits({ mark: card.mark, tag: card.tag }, `${at}/${card.id}`);
+            }
+          }
+          expect(s.caption.length, `${at}: caption`).toBeLessThanOrEqual(220);
+        }
+      }
+    }
+  });
+
+  it("the course and its class share the worked example and the curve by reference (ADR-136)", () => {
+    /* One record, two pages: the course's Tom on the Moon path and bench
+       and the class-one deck's are the same objects, and the archetype's
+       frontier curve and the class's are the same lanes — so a reprice or a
+       re-pinned anchor lands on both pages at once, and a copy typed on one
+       fails here. */
+    for (const arc of [AI_STORYTELLING_ARC, AI_STORYTELLING_CLASS_1_ARC]) {
+      const path = arc.sections.find((s) => s.kind === "path");
+      expect(path?.kind === "path" && path.stages, `${arc.slug}: the Tom path`).toBe(
+        TOM_PATH_STAGES
+      );
+      const bench = arc.sections.find((s) => s.kind === "bench");
+      expect(bench?.kind === "bench" && bench.example, `${arc.slug}: the Tom bench`).toBe(
+        TOM_BENCH_EXAMPLE
+      );
+    }
+    for (const arc of [THOUGHTFORM_WORKSHOP_ARC, AI_STORYTELLING_CLASS_1_ARC]) {
+      const curve = arc.sections.find((s) => s.kind === "curve");
+      expect(curve?.kind === "curve" && curve.lanes, `${arc.slug}: the frontier record`).toBe(
+        FRONTIER_CURVE.lanes
+      );
     }
   });
 

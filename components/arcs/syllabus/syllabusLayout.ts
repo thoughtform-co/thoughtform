@@ -18,6 +18,8 @@ export const SYLLABUS_ROWS = [
 export const SYLLABUS_TABLIST_LABEL = "The classes";
 export const SYLLABUS_CLASS_WORD = "Class";
 export const SYLLABUS_EXAMPLE_FLAG = "Worked example";
+/** The flag on a class's own page link (ADR-136). */
+export const SYLLABUS_PAGE_FLAG = "The class";
 
 /** A class's numeral, `01` … — the renderer's, never authored. */
 export const classNumeral = (i: number): string => String(i + 1).padStart(2, "0");

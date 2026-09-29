@@ -6,6 +6,8 @@ import {
   TRINNY_OUTCOMES,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
+import { AI_STORYTELLING_ARC } from "@/lib/arcs/content/ai-storytelling";
+import { AI_STORYTELLING_CLASS_1_ARC } from "@/lib/arcs/content/ai-storytelling-class-1";
 import { CLAUDE_WORKSHOP_ARC } from "@/lib/arcs/content/claude-workshop";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { PANDORA_PROPOSAL_ARC } from "@/lib/arcs/content/pandora-proposal";
@@ -65,6 +67,13 @@ const ALL: readonly ArcSection[] = [
      reveal/terminal seam is measured over that combination — and it is the
      base every client fork starts from, which multiplies anything wrong. */
   ...THOUGHTFORM_WORKSHOP_ARC.sections,
+  /* The course (ADR-134: `syllabus`, `path`, publishing `data-syl-*` and
+     `data-path-*`) had never joined the walk; it does with its class-one
+     deck (ADR-136), which carries the three ported leaves — `spectrum`,
+     `resource`, `signal`, publishing `data-spectrum-*`, `data-resource-*`
+     and `data-signal-*` — and the stages' example line. */
+  ...AI_STORYTELLING_ARC.sections,
+  ...AI_STORYTELLING_CLASS_1_ARC.sections,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

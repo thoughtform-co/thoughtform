@@ -47,7 +47,7 @@ const seat = (p: { ax: number; at: number }, rot?: number) =>
  * ⚠ SERVER, NO STATE, NO LISTENER. `data-stages-*` only.
  */
 export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps) {
-  const { stages, axes, ends } = section;
+  const { stages, axes, ends, own } = section;
   const grid = stagesGrid();
   const axis = stagesAxes();
   const boxes = stagesBoxes();
@@ -162,6 +162,16 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
                     <span className="arc-plate__name">{stage.name}</span>
                   </header>
                   <p className="arc-steps__body">{stage.body}</p>
+                  {/* The client's own work at this stage (ADR-136): a fourth
+                      line in the ROW, never on the plinth — the plinth's
+                      labels are the walk's, and a label on a slanted face is
+                      the plaque defect ADR-130 U1 closed. */}
+                  {stage.example ? (
+                    <span className="arc-floor__example" data-stages-example="">
+                      {own ? <span className="arc-floor__own">{own}</span> : null}
+                      {stage.example}
+                    </span>
+                  ) : null}
                 </li>
               );
             })}

@@ -7849,6 +7849,531 @@ a.arc-readout__hit:focus-visible {
   object-fit: cover;
 }
 
+/* ── The stages' example line (ADR-136) ─────────────────────────────
+   The client's own work at each stage, a fourth line in the ROW under a mono
+   prefix — never on the plinth, whose labels are the walk's. It takes the
+   body's own inset and the body gives up its floor to it. */
+.arc-floor__row:has(.arc-floor__example) .arc-steps__body {
+  padding-bottom: 4px;
+}
+.arc-floor__example {
+  display: block;
+  margin: 0;
+  padding: 0 clamp(16px, 1.4vw, 22px) clamp(13px, 1.6vh, 18px);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+.arc-floor__own {
+  display: inline-block;
+  margin-right: 8px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  vertical-align: 1px;
+  color: var(--arc-ink-40);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE CLASS-ONE FRAME (ADR-136)
+   ══════════════════════════════════════════════════════════════════════
+   Three more of the Moira workshop's beats, ported by hand onto the ramp so
+   the workshop archetype and the course's class-one deck tell the second
+   session's whole opening: it is hard to steer (the spectrum), we measure
+   it like software (the resource), and the market is paying for the two
+   plates a team writes (the signal). Same laws as ADR-130's blocks: each
+   beat pays for its instrument out of its own air, every colour aliases the
+   ramp, the wells that are alphas of their own are re-derived in the light
+   foot, and gold buys one thing per drawing. */
+.arc-sec--spectrum,
+.arc-sec--resource,
+.arc-sec--signal {
+  --arc-sec-pad: clamp(28px, 4vh, 72px);
+}
+.arc-sec--spectrum .arc-head,
+.arc-sec--resource .arc-head,
+.arc-sec--signal .arc-head {
+  margin-bottom: clamp(28px, 18vh - 100px, 112px);
+}
+
+/* ── 07 · Between two things ─────────────────────────────────────────
+   One rail from tool to collaborator, the handle resting in the overlap,
+   two bands under it and three columns under those. The word frames a
+   BAND, never the middle: software reaches from the tool's end and
+   intelligence from the collaborator's, and where they overlap is the
+   beat's one gold object. The middle column is marked by type alone.
+   ⚠ THE HANDLE MOVES ONCE. Moira's drifts for ever; the house allows
+   arrival motion only (ADR-080), so it slides into the overlap when the
+   figure arrives and rests, and rests from the first frame under reduced
+   motion. It is a square on its point, the house's node (ADR-106). */
+.arc-spectrum {
+  --arc-spec-well: rgba(var(--dawn-rgb), 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 5vh, 56px);
+  margin: 0;
+  padding-top: clamp(8px, 2vh, 28px);
+}
+.arc-spectrum__track {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2.2vh, 20px);
+}
+.arc-spectrum__rail {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--arc-edge) 0%,
+    var(--gold-line) 50%,
+    var(--arc-edge) 100%
+  );
+}
+.arc-spectrum__end {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 18px;
+  background: var(--arc-ink-90);
+  translate: -50% -50%;
+}
+.arc-spectrum__end[data-spectrum-end="start"] {
+  left: 1px;
+}
+.arc-spectrum__end[data-spectrum-end="end"] {
+  left: calc(100% - 1px);
+}
+.arc-spectrum__handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 13px;
+  height: 13px;
+  background: var(--gold);
+  box-shadow: 0 0 0 6px var(--arc-gold-wash);
+  translate: -50% -50%;
+  rotate: 45deg;
+}
+.is-arc-js .arc-spectrum.is-in .arc-spectrum__handle {
+  animation: arc-spectrum-settle 1400ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+@keyframes arc-spectrum-settle {
+  from {
+    left: 42%;
+  }
+  to {
+    left: 50%;
+  }
+}
+.arc-spectrum__bands {
+  position: relative;
+  display: grid;
+  grid-template-rows: 24px 24px;
+  row-gap: 6px;
+}
+/* The overlap: where the two bands meet, washed in the beat's one gold. */
+.arc-spectrum__bands::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: 38%;
+  right: 38%;
+  background: var(--arc-gold-wash);
+  border: 1px solid var(--gold-line);
+}
+.arc-spectrum__band {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--arc-spec-well);
+  border: 1px solid var(--arc-edge);
+}
+.arc-spectrum__band[data-spectrum-band="start"] {
+  grid-row: 1;
+  margin-right: 38%;
+}
+.arc-spectrum__band[data-spectrum-band="end"] {
+  grid-row: 2;
+  justify-content: flex-end;
+  margin-left: 38%;
+}
+.arc-spectrum__bandlabel {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-62);
+}
+.arc-spectrum__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3.5vw, 56px);
+}
+.arc-spectrum__col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.arc-spectrum__col[data-spectrum-at="middle"] {
+  align-items: center;
+  text-align: center;
+}
+.arc-spectrum__col[data-spectrum-at="end"] {
+  align-items: flex-end;
+  text-align: right;
+}
+.arc-spectrum__label {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-spectrum__head {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(18px, min(1.7vw, 3.2vh), 26px);
+  line-height: 1.15;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+/* The middle is marked by type alone: the gold INK rung, which is read. */
+.arc-spectrum__col[data-spectrum-at="middle"] .arc-spectrum__label,
+.arc-spectrum__col[data-spectrum-at="middle"] .arc-spectrum__head {
+  color: var(--gold-ink, #caa554);
+}
+.arc-spectrum__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.5;
+  color: var(--arc-ink-62);
+}
+.arc-spectrum__line {
+  max-width: 32ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.5;
+  color: var(--arc-ink-90);
+}
+
+/* ── 08 · A strange resource ─────────────────────────────────────────
+   Four resources and what each is counted in, on the house plate. Three
+   rows are ordinary on purpose, so the fourth reads as the odd one out; what
+   its unit leaves out is the beat's one gold object. The rows are square
+   inside the cut plate (ADR-065 rule 4). */
+.arc-resource {
+  --arc-res-well: rgba(var(--dawn-rgb), 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.6vh, 24px);
+  margin: 0;
+}
+.arc-resource__plate {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+}
+.arc-resource__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.arc-resource__table th,
+.arc-resource__table td {
+  padding: clamp(10px, 1.7vh, 16px) clamp(16px, 2vw, 24px);
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-resource__table thead th {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+  background: var(--arc-res-well);
+  border-bottom-color: var(--arc-seam);
+}
+.arc-resource__table thead th:first-child {
+  width: 26%;
+}
+.arc-resource__table thead th:nth-child(2) {
+  width: 20%;
+}
+.arc-resource__table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.arc-resource__resource,
+.arc-resource__unit {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(15px, min(1.2vw, 2.3vh), 19px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-resource__tells {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+.arc-resource__tellsline,
+.arc-resource__misses {
+  display: block;
+}
+.arc-resource__table tr[data-resource-open] > * {
+  background: var(--arc-gold-wash);
+}
+.arc-resource__misses {
+  margin-top: 6px;
+  padding-left: 12px;
+  font-weight: var(--weight-lit);
+  font-size: clamp(15px, min(1.25vw, 2.4vh), 19px);
+  line-height: 1.3;
+  letter-spacing: var(--track-display);
+  color: var(--gold-ink, #caa554);
+  box-shadow: inset 2px 0 0 var(--gold-line);
+}
+
+/* ── 09 · The signal ─────────────────────────────────────────────────
+   Two columns in the board's order, two clippings under each. A clipping is
+   the house plate: a panel with the name set as a wordmark and the figure in
+   its corner, then the headline, the dek with its figures in weight, and
+   where and when it ran. The card's cut is the module rung (ADR-098 U5: a
+   cut is free only where nothing is set against it). */
+.arc-signal {
+  --arc-sig-well: rgba(var(--dawn-rgb), 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 18px);
+  margin: 0;
+}
+.arc-signal__cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 32px);
+}
+.arc-signal__col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.3vh, 14px);
+  min-width: 0;
+}
+.arc-signal__head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 2px 0 2px 12px;
+  box-shadow: inset 2px 0 0 var(--gold-line);
+}
+.arc-signal__label {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(15px, min(1.2vw, 2.3vh), 18px);
+  line-height: 1.15;
+  letter-spacing: var(--track-display);
+  color: var(--gold-ink, #caa554);
+}
+.arc-signal__line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(12.5px, 0.85vw, 14px);
+  line-height: 1.35;
+  color: var(--arc-ink-62);
+}
+/* The two columns share their height, so each pair ends on one line. */
+.arc-signal__cards {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vh, 14px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-signal__card {
+  --arc-plate-ch: clamp(10px, 1vw, 14px);
+  flex: 1;
+  transition: translate 220ms ease;
+}
+.arc-signal__card:hover,
+.arc-signal__card:focus-within {
+  translate: 0 -2px;
+}
+.arc-signal__card:hover::before,
+.arc-signal__card:focus-within::before {
+  background: var(--gold-line);
+}
+.arc-signal__link {
+  display: grid;
+  grid-template-columns: clamp(92px, 8vw, 120px) minmax(0, 1fr);
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.arc-signal__link:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: -3px;
+}
+/* The panel: the gold wash over the house dot-grid, the name at the top,
+   the figure under it, what kind of news it is at the foot. */
+.arc-signal__thumb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: clamp(88px, 12vh, 120px);
+  padding: 10px 10px 9px 12px;
+  background:
+    linear-gradient(135deg, var(--arc-gold-wash), rgba(var(--gold-rgb), 0.02) 70%),
+    linear-gradient(var(--arc-grid-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--arc-grid-soft) 1px, transparent 1px), var(--arc-sig-well);
+  background-size:
+    auto,
+    14px 14px,
+    14px 14px,
+    auto;
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-signal__mark {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: 15px;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-signal__corner {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(18px, min(1.6vw, 3vh), 24px);
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-ink, #caa554);
+}
+.arc-signal__tag,
+.arc-signal__kicker,
+.arc-signal__byline {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.3;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+}
+.arc-signal__tag {
+  margin-top: auto;
+  color: var(--arc-ink-50);
+}
+.arc-signal__body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.6vh, 6px);
+  min-width: 0;
+  padding: clamp(9px, 1.4vh, 14px) clamp(12px, 1.2vw, 18px);
+}
+.arc-signal__kicker {
+  color: var(--gold-ink, #caa554);
+}
+.arc-signal__title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.2vw, 2.3vh), 17px);
+  line-height: 1.22;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-signal__dek {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(12.5px, 0.85vw, 14px);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+.arc-signal__dek strong {
+  font-weight: var(--weight-lit);
+  color: var(--arc-ink-90);
+}
+.arc-signal__byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 2px;
+  padding-top: clamp(5px, 0.8vh, 8px);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-signal__source {
+  color: var(--arc-ink-90);
+}
+.arc-signal__date {
+  color: var(--arc-ink-50);
+}
+.arc-signal__caption {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(12px, 0.8vw, 13px);
+  line-height: 1.45;
+  color: var(--arc-ink-50);
+}
+
+/* The three on a phone: the rail goes, the columns stack and read left;
+   the table tightens its gutters; the clippings fall into one column. */
+@media (max-width: 900px) {
+  .arc-spectrum__track {
+    display: none;
+  }
+  .arc-spectrum__cols,
+  .arc-signal__cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-spectrum__col[data-spectrum-at="middle"],
+  .arc-spectrum__col[data-spectrum-at="end"] {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .arc-resource__table th,
+  .arc-resource__table td {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-arc-js .arc-spectrum.is-in .arc-spectrum__handle {
+    animation: none;
+  }
+  .arc-signal__card {
+    transition: none;
+  }
+  .arc-signal__card:hover,
+  .arc-signal__card:focus-within {
+    translate: none;
+  }
+}
+
 /* ── The framing beats, LIVE (ADR-130 U2, re-cut in U4) ─────────────
    The drawings above are what every reader without WebGL gets — reduced
    motion, <=900px, no GL, a dead canvas, and the printed handout.
@@ -8131,4 +8656,16 @@ html[data-theme="light"] .arc-root .arc-floor {
 html[data-theme="light"] .arc-root .arc-q {
   --arc-q-band: rgba(var(--dawn-rgb), 0.07);
   --arc-q-green-wash: rgba(var(--atreides-rgb), 0.1);
+}
+/* The class-one frame (ADR-136): the three wells that are alphas of their
+   own — a band's ground, the table's head, a clipping's panel. Every other
+   mark aliases a rung the block above already re-derives. */
+html[data-theme="light"] .arc-root .arc-spectrum {
+  --arc-spec-well: rgba(var(--dawn-rgb), 0.07);
+}
+html[data-theme="light"] .arc-root .arc-resource {
+  --arc-res-well: rgba(var(--dawn-rgb), 0.07);
+}
+html[data-theme="light"] .arc-root .arc-signal {
+  --arc-sig-well: rgba(var(--dawn-rgb), 0.07);
 }

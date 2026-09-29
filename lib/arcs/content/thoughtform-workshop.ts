@@ -1,5 +1,7 @@
 import type { ArcDef } from "../types";
 
+import { FRONTIER_CURVE } from "./shared/frontierCurve";
+
 /**
  * The Thoughtform workshop, as an arc: the ARCHETYPE the practice runs, and
  * the page every client fork starts from.
@@ -9,10 +11,10 @@ import type { ArcDef } from "../types";
  * than a piece of work done for one company). `/arcs/plopsa-workshop` and
  * `/arcs/suri-workshop` are engagements; this is what they are cuts of.
  *
- * Fifteen beats, one idea per viewport, four chapters on the house arc —
- * navigate, encode, build — with an introduction in front of them. Plopsa's
- * team had already met the practice, so their page opens on the frame; a room
- * that has not needs chapter zero, which is why the archetype carries it.
+ * One idea per viewport, five chapters on the house arc — today, the proof,
+ * navigate, encode, build. Plopsa's team had already met the practice, so
+ * their page opens on the frame; a room that has not needs chapter zero,
+ * which is why the archetype carries it.
  *
  * ⚠ THE LAW IS THE PRACTICE'S OWN, ALREADY PUBLISHED. `practice-snapshot`'s
  * evals workshop shell states it: one idea per section, exactly ONE picture
@@ -27,10 +29,22 @@ import type { ArcDef } from "../types";
  * above them, and the studio card is retitled to what its own pictures show.
  * The record is untouched — `proof-card`'s `title` override exists for this.
  *
- * ⚠ FOUR FIGURES, EACH IN ITS OWN BEAT, NONE OF THEM NEW: the three the
- * Moira workshop argues with, ported by ADR-130 (stages, curve, horizon), and
- * the bench ported by ADR-128. No `questions` board — a picker or a board,
- * never both, and this page carries neither.
+ * ⚠ THE SITUATION IS THE MOIRA WORKSHOP'S SECOND SESSION (ADR-136, owner
+ * 2026-09-29: the archetype's "from prompt to tool to agent" was outdated;
+ * "we take that from the Moira one"). After the proof, the page runs her
+ * opening in her order: a prompt, a tool, an agent; each release finishes
+ * longer work; it is hard to steer (the spectrum); we measure it like
+ * software (the resource); the real question; one piece of work with six
+ * questions around it (the board); the two plates the team writes (the
+ * leverage); person or agent; why it needs the checks (the horizon); and
+ * what the market is paying for (the signal, which replaces the callout that
+ * said its left column in prose). The self-sufficiency pair, the bench and
+ * the practicals stand where they were. The proof chapter is untouched.
+ *
+ * ⚠ THE BOARD'S WORK IS THE PRACTICE'S OWN, like the bench's. The base every
+ * fork starts from may not carry another client's evidence (ADR-131), so
+ * the six questions are answered for the house's own writing skill — the
+ * same one the bench runs — and a fork swaps the work.
  *
  * ⚠ TWO HALVES: THE STORY, THEN HANDS ON (ADR-131 U1, owner 2026-09-28). The
  * Plopsa morning proved the shape: within the hour of the practical half the
@@ -201,7 +215,8 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
     },
 
     /* ── Chapter three · NAVIGATE ────────────────────────────────────────
-       Where the room already is, and why it gets harder from here. */
+       The situation, in the Moira session's order (ADR-136): where the room
+       already is, why it gets harder from here, and what the thing is. */
     {
       id: "three-ways",
       kind: "stages",
@@ -209,29 +224,36 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuPrimary: true,
       head: {
         eyebrow: "03 · A prompt, a tool, an agent",
-        title: { pre: "How long it runs", em: "without you." },
-        sub: "Everyone starts at a prompt. Then you notice it can build the tool instead of the answer. Then it runs the work itself and hands you something to judge.",
+        title: { pre: "A prompt, a tool, an agent.", em: "Each runs longer without you." },
+        sub: "Ask it and check every answer. Have it build a tool, and you still run it. Give it the goal and the checks, and it runs for hours while you do other work.",
       },
       axes: { time: "How long, without you", work: "How much of the work" },
       ends: { near: "minutes", far: "half a day", top: "all of it" },
+      /* The studio's own line of work, one tool across three stages: a
+         prompt helper, then a checker, then packaging end to end. A picture
+         of the argument, not a measurement. */
+      own: "Loop's own",
       stages: [
         {
           id: "prompt",
           label: "A prompt",
-          name: "You ask, and you check",
-          body: "Summarise this, pull the text out of that. One answer at a time, and you read every one of them.",
+          name: "Ask, and check the answer",
+          body: "One question, one answer. You do the rest, and you check every one.",
+          example: "One image, one prompt at a time",
         },
         {
           id: "tool",
           label: "A tool",
-          name: "You operate it",
-          body: "It builds the dashboard instead of the number. You press the button, and you still check after every step.",
+          name: "It builds, you operate",
+          body: "It writes the tool. You still press every button, and check the output.",
+          example: "An image tool with a checker inside it",
         },
         {
           id: "agent",
           label: "An agent",
-          name: "It runs the work",
-          body: "You set the goal and the checks; it works for hours, stops where you told it to stop, and reports back.",
+          name: "It runs the loop",
+          body: "You set the goal and the checks. It runs, checks, retries, and asks.",
+          example: "Packaging, from brief to render",
           lit: true,
         },
       ],
@@ -245,82 +267,216 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
         title: { pre: "Each release finishes longer work,", em: "and costs more per token." },
         sub: "Each release makes fewer small mistakes, so it gets further on long and difficult work. And every model has a second dial: how hard it thinks.",
       },
-      /* ⚠ THE SAME FIGURE AS `/arcs/plopsa-workshop`, AND THE SAME NUMBERS.
-         These are the vendors' own list prices, read on the date in the note.
-         The guard only checks that output costs more than input; nothing
-         checks that a price is TRUE, so the two pages move together when a
-         vendor reprices. Search the repo for the lane ids before editing one. */
-      axes: { y: "What it can finish", x: "More intelligence →" },
-      step: "The step",
-      key: { own: "Claude" },
-      prices: {
-        show: "Show the price per token",
-        unit: "Price per million tokens, in and out",
-        promo: "Promotion",
-        words: ["in", "out"],
+      /* The record is shared with the course's class-one deck
+         (`shared/frontierCurve.ts`); this page authors only the head. */
+      ...FRONTIER_CURVE,
+    },
+    {
+      id: "between",
+      kind: "spectrum",
+      menuLabel: "Hard to steer",
+      head: {
+        eyebrow: "05 · Hard to steer",
+        title: {
+          pre: "But it is hard to steer,",
+          em: "because it is a tool and a collaborator at once.",
+        },
+        sub: "Sometimes you tell it exactly what to do. Sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
       },
-      effort: {
-        axis: "← More effort",
-        levels: ["Low", "High", "Max"],
-        show: "Show the effort dial",
-        note: "The second dial is effort. Turned up, the same model thinks longer about the same task, and spends more tokens doing it.",
-      },
-      lanes: [
+      poles: [
         {
-          id: "fast",
-          label: "FAST",
-          models: [
-            { name: "Claude Sonnet 4.6", input: 3, output: 15 },
-            { name: "Claude Haiku 4.5", input: 1, output: 5 },
+          label: "Tool",
+          head: "Executes commands",
+          lines: [
+            "You say exactly what to do",
+            "It does that, or fails clearly",
+            "You check every result",
           ],
         },
         {
-          id: "everyday",
-          label: "EVERYDAY",
-          models: [{ name: "Claude Opus 5", input: 5, output: 25 }],
-        },
-        {
-          id: "frontier",
-          label: "FRONTIER",
-          models: [{ name: "Claude Fable 5.1", input: 10, output: 50 }],
-        },
-      ],
-      others: [
-        {
-          label: "OpenAI",
-          points: [
-            { t: 0.6, model: { name: "GPT-5.6 Sol", input: 4, output: 20, promo: true } },
-            { t: 0.77, model: { name: "GPT-6 Astra", input: 10, output: 50 } },
+          label: "Collaborator",
+          head: "Interprets intent",
+          lines: [
+            "You explain what you are after",
+            "It works out the steps",
+            "You agree on what good looks like",
           ],
         },
       ],
-      note: "Source: METR. The task an agent finishes half the time roughly doubles every seven months. List prices from Anthropic's and OpenAI's own pages on 22 September 2026; the marked one is a promotion.",
+      middle: {
+        label: "AI sits here",
+        head: "Both, at once",
+        line: "Neither end is wrong. It is a third skill: brief it, give it room, judge what comes back.",
+      },
+      bands: { start: "Software", end: "Intelligence" },
+    },
+    {
+      id: "resource",
+      kind: "resource",
+      menuLabel: "A resource",
+      head: {
+        eyebrow: "06 · A strange resource",
+        title: { pre: "We work with an intelligence,", em: "but measure it like software." },
+        sub: "We count it in tokens, the way we count software in seats. Tokens say how much it read and wrote, and nothing about whether the work was any good.",
+      },
+      columns: ["Resource", "Counted in", "What the count tells you"],
+      rows: [
+        { id: "people", resource: "People", unit: "Hours", tells: "How long the work took" },
+        { id: "money", resource: "Money", unit: "Euros", tells: "What the work cost" },
+        { id: "software", resource: "Software", unit: "Seats", tells: "Who can use it" },
+        {
+          id: "intelligence",
+          resource: "Intelligence",
+          unit: "Tokens",
+          tells: "How much the model read and wrote",
+          misses: "Nothing about what it was worth, or whether it worked",
+          open: true,
+        },
+      ],
     },
     {
       /* A beat: no picture, and twenty seconds of silence in the room. */
-      id: "tool-or-agent",
+      id: "real-question",
       kind: "interstitial",
       variant: "question",
-      eyebrow: "05 · The question",
+      eyebrow: "07 · The real question",
       line: {
-        pre: "Is it a tool you command,",
-        em: "or a colleague you brief?",
+        pre: "The real question is:",
+        em: "how should intelligence take part in the work?",
       },
       subline:
-        "It behaves like both and is neither: capable in ways no tool is, strange in ways no colleague is. That is the thing to get used to before you build anything on it.",
+        "Which model, how many tokens, whether it was any good: every question a team asks about it sits downstream of this one.",
     },
 
     /* ── Chapter four · ENCODE ───────────────────────────────────────────
        The gap is not capability. It is context, and what good looks like. */
+    {
+      /* ⚠ THE WORK IS THE PRACTICE'S OWN, like the bench's below: the base
+         every fork starts from may not carry another client's evidence
+         (ADR-131). A fork swaps the work and keeps the six questions. */
+      id: "configuration",
+      kind: "questions",
+      menuLabel: "The configuration",
+      head: {
+        eyebrow: "08 · The configuration",
+        title: { pre: "One piece of work.", em: "Six questions around it." },
+        sub: "The answer is written down, per piece of work. Here it is for one of mine. Today is about the two your team writes.",
+      },
+      work: {
+        label: "The work",
+        name: "A post in my voice",
+        line: "One post, written from a brain dump and read against the house's own rules before it goes out.",
+        bar: {
+          label: "Good looks like",
+          line: "Reads like me, says one thing, and claims nothing nobody measured.",
+        },
+      },
+      left: [
+        {
+          id: "model",
+          title: "The model",
+          question: "What runs it",
+          answer: "The everyday lane",
+        },
+        {
+          id: "context",
+          title: "The context",
+          question: "What it knows",
+          answer: "The voice, as a skill",
+          lit: true,
+        },
+        {
+          id: "evals",
+          title: "The evaluations",
+          question: "How we know it is good",
+          answer: "Posts that went out, and posts sent back",
+          lit: true,
+        },
+      ],
+      right: [
+        {
+          id: "data",
+          title: "The data",
+          question: "What it can reach",
+          answer: "My own posts, and the phrasebook",
+        },
+        {
+          id: "interface",
+          title: "The interface",
+          question: "Where you meet it",
+          answer: "In Claude, before it is posted",
+        },
+        {
+          id: "owner",
+          title: "The owner",
+          question: "Who answers for it",
+          answer: "I do. It drafts, I post",
+          human: true,
+        },
+      ],
+      tag: "You write this",
+      alt: "One piece of work, a post in the founder's voice, with six questions wired around it: the context and the evaluations lit, the owner in green",
+    },
+    {
+      id: "leverage",
+      kind: "cards",
+      menuLabel: "Your two plates",
+      columns: 2,
+      /* ⚠ NOT "leverage" (Moira's word for this beat): it is on the voice
+         skill's post-2022 list and the grader fails the page on it. */
+      head: {
+        eyebrow: "09 · The two you write",
+        title: { pre: "The two plates", em: "only your team can write." },
+        sub: "The model, the data and the tools are set up across the company. What it knows and what good looks like can only come from the team that does the work: owned by the team, written once, and it outlives the model.",
+      },
+      /* ⚠ NO TIPS STRIP, AND ONE-LINE BODIES: with Moira's three chips under
+         the two cards the beat ran past one screen at 1280×720 on the
+         class-one deck, the room's own frame. The chips' three claims are the
+         sub's last sentence now. */
+      cards: [
+        {
+          id: "context",
+          kicker: "The context",
+          title: "What it knows",
+          body: "How this team works, written down so a model can read it.",
+          metaRows: [
+            { label: "Rules", value: "What the team always checks" },
+            { label: "Examples", value: "Good work, and work sent back" },
+            { label: "Sources", value: "Where to look it up" },
+          ],
+        },
+        {
+          id: "evals",
+          kicker: "The evaluations",
+          title: "How we know it is good",
+          body: "Real inputs, the result each must produce, and where it stops.",
+          metaRows: [
+            { label: "Cases", value: "Real inputs, with the expected result" },
+            { label: "Checks", value: "What must be true of every output" },
+            { label: "Gates", value: "Where it stops and asks a person" },
+          ],
+        },
+      ],
+    },
+    {
+      /* The turn, as a beat. The horizon is its proof. */
+      id: "person-or-agent",
+      kind: "interstitial",
+      variant: "question",
+      eyebrow: "10 · The turn",
+      line: { pre: "Is the workflow for a person,", em: "or for an agent?" },
+      subline:
+        "A workflow for a person has a person check in at every step. An agent that runs for hours needs the context and the evals instead, and finds the steps itself.",
+    },
     {
       id: "the-horizon",
       kind: "horizon",
       menuLabel: "The horizon",
       menuPrimary: true,
       head: {
-        eyebrow: "06 · The gates",
-        title: { pre: "Where it stops", em: "on its own." },
-        sub: "Smart enough, it already is. What it does not have is your judgement, so you put your judgement into the run as gates and let it work between them.",
+        eyebrow: "11 · Why it needs checks",
+        title: { pre: "It can only work for hours", em: "when it has the context and the evals." },
+        sub: "A tool you operate needs you at every step. An agent on a long task checks its work against the evals, retries when it slips, and stops to ask when it should.",
       },
       axis: { from: "five minutes", to: "half a day" },
       operated: {
@@ -339,7 +495,260 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
         ],
         end: "You judge the result",
       },
-      note: "The difference is not intelligence, it is context. An agent that knows what good looks like can run for hours; one that does not has to ask you every few minutes.",
+      note: "Small slips compound. One slip in twenty every ten minutes leaves a four-hour task about a three-in-ten chance of ending clean. Checks that catch a slip early keep it going.",
+    },
+    {
+      /* What the market is paying for, on the board's two written plates.
+         Four public sources, each dated on its card. Companies and
+         publications are named; no person is. It replaces the callout that
+         said the left column in prose. */
+      id: "signal",
+      kind: "signal",
+      menuLabel: "The market",
+      head: {
+        eyebrow: "12 · Where the money goes",
+        title: {
+          pre: "The labs just bet billions",
+          em: "on the two things only your team can write.",
+        },
+        sub: "Both labs are paying to put engineers inside companies to write their context down. The teams that write evals are the ones pulling ahead.",
+      },
+      columns: [
+        {
+          id: "context",
+          plate: "context",
+          label: "The context",
+          line: "The labs are paying to embed engineers who write a company's way of working down.",
+          cards: [
+            {
+              id: "openai",
+              mark: "OpenAI",
+              corner: "$10B",
+              tag: "Joint venture",
+              kicker: "Launch · May 2026",
+              title: "OpenAI launches the Deployment Company.",
+              dek: [
+                { text: "$4B from 19 investment partners", strong: true },
+                {
+                  text: " at a $10B valuation, and about 150 forward deployed engineers from day one, to build AI into how companies work.",
+                },
+              ],
+              source: "openai.com",
+              date: "11 May 2026",
+              href: "https://openai.com/index/openai-launches-the-deployment-company/",
+            },
+            {
+              id: "anthropic",
+              mark: "Anthropic",
+              corner: "$1.5B",
+              tag: "Joint venture",
+              kicker: "Launch · May 2026",
+              title: "Anthropic's $1.5B answer.",
+              dek: [
+                { text: "With Blackstone, Hellman & Friedman and Goldman Sachs: " },
+                { text: "engineers placed inside mid-sized companies", strong: true },
+                { text: " to bring Claude into their most important work." },
+              ],
+              source: "CNBC",
+              date: "4 May 2026",
+              href: "https://www.cnbc.com/2026/05/04/anthropic-goldman-blackstone-ai-venture.html",
+            },
+          ],
+        },
+        {
+          id: "evals",
+          plate: "evals",
+          label: "The evaluations",
+          line: "The teams that write down what good looks like are pulling ahead.",
+          cards: [
+            {
+              id: "lennys",
+              mark: "Lenny's",
+              corner: "35→83%",
+              tag: "Hiring · Results",
+              kicker: "Newsletter · Sep 2026",
+              title: "Nearly half of 25 product job openings ask for evals.",
+              dek: [
+                { text: "Ramp's receipt matching: " },
+                { text: "35% to 83% precision", strong: true },
+                { text: ". Shopify's workflow builder: " },
+                { text: "2.2× faster, 68% cheaper", strong: true },
+                { text: ". Cursor's routing: " },
+                { text: "41% lower cost.", strong: true },
+              ],
+              source: "Lenny's Newsletter",
+              date: "22 Sep 2026",
+              href: "https://www.lennysnewsletter.com/p/advanced-evals-how-to-find-and-fix",
+            },
+            {
+              id: "claude",
+              mark: "Claude",
+              corner: "90.5%",
+              tag: "Engineering blog",
+              kicker: "Engineering · Sep 2026",
+              title: "Anthropic automates designing the evals.",
+              dek: [
+                {
+                  text: "Claude interviews you, builds the tests and the grader, and pauses for your approval. On support tickets held back from tuning: ",
+                },
+                { text: "78.6% to 90.5%", strong: true },
+                { text: ", at about a fifth of the cost." },
+              ],
+              source: "claude.dev",
+              date: "28 Sep 2026",
+              href: "https://claude.dev/blog/automating-eval-design-and-hillclimbing/",
+            },
+          ],
+        },
+      ],
+      caption:
+        "Four public sources from May to September 2026, dated on each card. The figures are theirs, not Loop's, and none of it is a study.",
+    },
+
+    /* Encode's close: where it goes, and why it goes there rather than into a
+       subscription. ⚠ NOT A CHAPTER SINCE ADR-131 U1 — the row is at its cap
+       of five, and the BUILD chapter is the practicals below, where the room
+       makes things instead of hearing about them. */
+    {
+      id: "what-you-build",
+      kind: "list-groups",
+      menuLabel: "What you build",
+      layout: "plates",
+      head: {
+        eyebrow: "13 · What you build",
+        title: { pre: "Build it inside", em: "what you already pay for." },
+        sub: "Most of this already sits in the building. What you add is the part only your team can write.",
+      },
+      groups: [
+        {
+          id: "have",
+          label: "What you already own",
+          blurb: "The foundation",
+          items: [
+            {
+              id: "model",
+              tag: "HAVE",
+              name: "A frontier model",
+              body: "Claude or ChatGPT on an enterprise plan, approved and already paid for.",
+            },
+            {
+              id: "reach",
+              tag: "HAVE",
+              name: "The tools it can reach",
+              body: "Your board, your files, your design tool.",
+            },
+            {
+              id: "people",
+              tag: "HAVE",
+              name: "The people who know what good is",
+              body: "The judgement a check encodes is the team's.",
+            },
+          ],
+          foot: {
+            label: "Cost",
+            lines: ["Nothing new. You are already paying for all three of them."],
+          },
+        },
+        {
+          id: "wrapper",
+          label: "What a wrapper resells you",
+          blurb: "The layer on top",
+          items: [
+            {
+              id: "api",
+              tag: "SAME",
+              name: "The same models, marked up",
+              body: "A thin layer over APIs you can already call yourself.",
+            },
+            {
+              id: "spend",
+              tag: "COST",
+              name: "A credit pack, not a bill",
+              body: "Credits at rates that are not the API's. Hard to read.",
+            },
+            {
+              id: "memory",
+              tag: "LOSS",
+              name: "The context stays behind",
+              body: "Work done elsewhere never accumulates in your own assistant.",
+            },
+          ],
+          foot: {
+            label: "The catch",
+            lines: ["Their business runs on your token spend. Yours does not."],
+          },
+        },
+        {
+          id: "build",
+          label: "What you build instead",
+          blurb: "The configuration",
+          items: [
+            {
+              id: "skills",
+              tag: "BUILD",
+              name: "The way you work, written down",
+              body: "How this team briefs, decides and finishes one piece of work.",
+            },
+            {
+              id: "evals",
+              tag: "BUILD",
+              name: "What good looks like, as checks",
+              body: "Rules that catch a bad output before a person has to.",
+            },
+            {
+              id: "keys",
+              tag: "BUILD",
+              name: "Your own keys for the rest",
+              body: "An image model, a video model. Billed at cost.",
+            },
+          ],
+          foot: {
+            label: "You keep",
+            lines: ["A configuration your team runs, and can carry to another model."],
+          },
+        },
+      ],
+    },
+    {
+      id: "delegate-down",
+      kind: "cards",
+      menuLabel: "Delegate down",
+      /* ⚠ FOUR, NOT THREE, AND THE REASON IS THE ROOM'S OWN PROJECTOR.
+         `arcs.css` forces two columns at `max-width: 1280px` — inclusive — so
+         a three-card beat orphans its last card at exactly the viewport this
+         page is authored for. Four fills 2x2 there and runs 4-up above it. */
+      columns: 4,
+      head: {
+        eyebrow: "14 · Who does what",
+        title: { pre: "Map it high,", em: "then hand it down." },
+        sub: "Intelligence is a resource, and the order you spend it in decides the cost.",
+      },
+      cards: [
+        {
+          id: "map",
+          n: "01",
+          title: "Map it at the top",
+          body: "A frontier model reads the whole workflow and catches what nobody wrote down. Expensive, and you do it once.",
+        },
+        {
+          id: "hand",
+          n: "02",
+          title: "Hand the work down",
+          body: "Once the shape is written down, a cheaper model runs it. Delegating down is easy; the other way round is not.",
+        },
+        {
+          id: "keep",
+          n: "03",
+          title: "Keep the judgement here",
+          body: "What good looks like cannot be bought in. It is your team's, which is why they end up not needing me.",
+        },
+        {
+          id: "further",
+          n: "04",
+          title: "Then move it further down",
+          body: "Once the shape holds, more of it runs on smaller and cheaper models, and some of it on models you host. Written down once, it travels.",
+        },
+      ],
     },
     {
       /* ⚠ THE OUTPUT IS TEXT, NOT A PICTURE, AND THAT IS DELIBERATE. The
@@ -352,7 +761,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "bench",
       menuLabel: "The bench",
       head: {
-        eyebrow: "07 · What good looks like",
+        eyebrow: "15 · What good looks like",
         title: { pre: "A check", em: "your team wrote." },
         sub: "A Skill is how you work, written down. An eval is what good looks like, so a model can check itself. Here is ours, running.",
       },
@@ -558,167 +967,6 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
           "The practice's own writing Skill, the one every page on this site is read against.",
       },
     },
-    {
-      /* A beat: no picture. ⚠ NOT A QUOTE — an earlier cut attributed a
-         paraphrase to a named person, which is a sentence nobody said on a
-         public page. The callout states what is observable instead. */
-      id: "the-hard-part",
-      kind: "interstitial",
-      variant: "callout",
-      eyebrow: "08 · Why now",
-      line: {
-        pre: "The labs are hiring people",
-        em: "to write this down inside companies.",
-      },
-      subline:
-        "Engineers embedded in a client's team, encoding how that team works so the models can use it. The models cannot supply that, and it is the part nobody has had to write down before.",
-    },
-
-    /* Encode's close: where it goes, and why it goes there rather than into a
-       subscription. ⚠ NOT A CHAPTER SINCE ADR-131 U1 — the row is at its cap
-       of five, and the BUILD chapter is the practicals below, where the room
-       makes things instead of hearing about them. */
-    {
-      id: "what-you-build",
-      kind: "list-groups",
-      menuLabel: "What you build",
-      layout: "plates",
-      head: {
-        eyebrow: "09 · What you build",
-        title: { pre: "Build it inside", em: "what you already pay for." },
-        sub: "Most of this already sits in the building. What you add is the part only your team can write.",
-      },
-      groups: [
-        {
-          id: "have",
-          label: "What you already own",
-          blurb: "The foundation",
-          items: [
-            {
-              id: "model",
-              tag: "HAVE",
-              name: "A frontier model",
-              body: "Claude or ChatGPT on an enterprise plan, approved and already paid for.",
-            },
-            {
-              id: "reach",
-              tag: "HAVE",
-              name: "The tools it can reach",
-              body: "Your board, your files, your design tool.",
-            },
-            {
-              id: "people",
-              tag: "HAVE",
-              name: "The people who know what good is",
-              body: "The judgement a check encodes is the team's.",
-            },
-          ],
-          foot: {
-            label: "Cost",
-            lines: ["Nothing new. You are already paying for all three of them."],
-          },
-        },
-        {
-          id: "wrapper",
-          label: "What a wrapper resells you",
-          blurb: "The layer on top",
-          items: [
-            {
-              id: "api",
-              tag: "SAME",
-              name: "The same models, marked up",
-              body: "A thin layer over APIs you can already call yourself.",
-            },
-            {
-              id: "spend",
-              tag: "COST",
-              name: "A credit pack, not a bill",
-              body: "Credits at rates that are not the API's. Hard to read.",
-            },
-            {
-              id: "memory",
-              tag: "LOSS",
-              name: "The context stays behind",
-              body: "Work done elsewhere never accumulates in your own assistant.",
-            },
-          ],
-          foot: {
-            label: "The catch",
-            lines: ["Their business runs on your token spend. Yours does not."],
-          },
-        },
-        {
-          id: "build",
-          label: "What you build instead",
-          blurb: "The configuration",
-          items: [
-            {
-              id: "skills",
-              tag: "BUILD",
-              name: "The way you work, written down",
-              body: "How this team briefs, decides and finishes one piece of work.",
-            },
-            {
-              id: "evals",
-              tag: "BUILD",
-              name: "What good looks like, as checks",
-              body: "Rules that catch a bad output before a person has to.",
-            },
-            {
-              id: "keys",
-              tag: "BUILD",
-              name: "Your own keys for the rest",
-              body: "An image model, a video model. Billed at cost.",
-            },
-          ],
-          foot: {
-            label: "You keep",
-            lines: ["A configuration your team runs, and can carry to another model."],
-          },
-        },
-      ],
-    },
-    {
-      id: "delegate-down",
-      kind: "cards",
-      menuLabel: "Delegate down",
-      /* ⚠ FOUR, NOT THREE, AND THE REASON IS THE ROOM'S OWN PROJECTOR.
-         `arcs.css` forces two columns at `max-width: 1280px` — inclusive — so
-         a three-card beat orphans its last card at exactly the viewport this
-         page is authored for. Four fills 2x2 there and runs 4-up above it. */
-      columns: 4,
-      head: {
-        eyebrow: "10 · Who does what",
-        title: { pre: "Map it high,", em: "then hand it down." },
-        sub: "Intelligence is a resource, and the order you spend it in decides the cost.",
-      },
-      cards: [
-        {
-          id: "map",
-          n: "01",
-          title: "Map it at the top",
-          body: "A frontier model reads the whole workflow and catches what nobody wrote down. Expensive, and you do it once.",
-        },
-        {
-          id: "hand",
-          n: "02",
-          title: "Hand the work down",
-          body: "Once the shape is written down, a cheaper model runs it. Delegating down is easy; the other way round is not.",
-        },
-        {
-          id: "keep",
-          n: "03",
-          title: "Keep the judgement here",
-          body: "What good looks like cannot be bought in. It is your team's, which is why they end up not needing me.",
-        },
-        {
-          id: "further",
-          n: "04",
-          title: "Then move it further down",
-          body: "Once the shape holds, more of it runs on smaller and cheaper models, and some of it on models you host. Written down once, it travels.",
-        },
-      ],
-    },
 
     /* ── Chapter five · BUILD — the practicals ───────────────────────────
        Part two of the morning (ADR-131 U1). The setup once, then a ladder of
@@ -731,7 +979,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuPrimary: true,
       layout: "readout",
       head: {
-        eyebrow: "11 · Hands on",
+        eyebrow: "16 · Hands on",
         title: { pre: "Now you", em: "drive." },
         sub: "Five rungs on your own files, each one built on the last. Start with a picture, end with a skill that checks its own work.",
       },
@@ -783,7 +1031,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "One image",
       badge: "Rung one · Image",
       head: {
-        eyebrow: "12 · One image",
+        eyebrow: "17 · One image",
         title: { pre: "Start with", em: "one picture." },
         sub: "A real photograph you already own. Nothing is made from nothing, and that is the first rule.",
       },
@@ -816,7 +1064,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "A brief",
       badge: "Rung two · Brief",
       head: {
-        eyebrow: "13 · A brief",
+        eyebrow: "18 · A brief",
         title: { pre: "Let it write", em: "the brief." },
         sub: "The picture answers a brief nobody wrote down. Write it down, and the brief becomes the thing you keep.",
       },
@@ -849,7 +1097,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Formats",
       badge: "Rung three · Formats",
       head: {
-        eyebrow: "14 · Formats and layers",
+        eyebrow: "19 · Formats and layers",
         title: { pre: "One visual,", em: "every format." },
         sub: "The slow part of the week is rarely the picture. It is the same picture again, in every size, with the logo in the right place.",
       },
@@ -882,7 +1130,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Motion",
       badge: "Rung four · Motion",
       head: {
-        eyebrow: "15 · Motion",
+        eyebrow: "20 · Motion",
         title: { pre: "From rushes", em: "to an edit." },
         sub: "It watches a video the way it reads a file: the cuts, the rhythm, the sound. Then it builds the timeline itself.",
       },
@@ -915,7 +1163,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Make it a skill",
       badge: "Rung five · Skill",
       head: {
-        eyebrow: "16 · Make it a skill",
+        eyebrow: "21 · Make it a skill",
         title: { pre: "Now make it", em: "a skill." },
         sub: "Every note you gave today was a rule nobody had written down. This is where it gets written down.",
       },
@@ -947,7 +1195,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "close",
       menuLabel: "What follows",
       head: {
-        eyebrow: "17 · What follows",
+        eyebrow: "22 · What follows",
         title: { pre: "Then it runs", em: "without me." },
         sub: "The first workstream goes through the loop with your own team at the controls. Then a second, with the checks that have accumulated. Then we hand over, with a date on it, and come back once to see what changed.",
       },

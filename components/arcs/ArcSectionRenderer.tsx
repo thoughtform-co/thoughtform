@@ -22,7 +22,10 @@ import { ArcMediaSection } from "./ArcMediaSection";
 import { ArcPath } from "./ArcPath";
 import { ArcPortrait } from "./ArcPortrait";
 import { ArcQuestions } from "./ArcQuestions";
+import { ArcResource } from "./ArcResource";
 import { ArcSectionHead } from "./ArcSectionHead";
+import { ArcSignal } from "./ArcSignal";
+import { ArcSpectrum } from "./ArcSpectrum";
 import { ArcStages } from "./ArcStages";
 import { ArcSteps } from "./ArcSteps";
 import { ArcStudioFilms } from "./ArcStudioFilms";
@@ -145,6 +148,12 @@ export function ArcSectionRenderer({
             return <ArcSyllabus key={section.id} section={section} index={index} motion={motion} />;
           case "path":
             return <ArcPath key={section.id} section={section} index={index} motion={motion} />;
+          case "spectrum":
+            return <ArcSpectrum key={section.id} section={section} index={index} motion={motion} />;
+          case "resource":
+            return <ArcResource key={section.id} section={section} index={index} motion={motion} />;
+          case "signal":
+            return <ArcSignal key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

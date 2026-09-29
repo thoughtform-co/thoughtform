@@ -22,6 +22,7 @@ import {
   stagesExtent,
   stagesLabels,
 } from "@/components/arcs/framing/stagesLayout";
+import { AI_STORYTELLING_CLASS_1_ARC } from "@/lib/arcs/content/ai-storytelling-class-1";
 import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import type { ArcDef, ArcSectionKind, ArcSectionOf } from "@/lib/arcs/types";
@@ -202,6 +203,9 @@ describe("every drawing fits its crop, and no two labels overlap", () => {
   const cases = [
     stagesCase("stages · plopsa", PLOPSA_WORKSHOP_ARC, "drie-manieren"),
     stagesCase("stages · archetype", THOUGHTFORM_WORKSHOP_ARC, "three-ways"),
+    /* A label's box is its TEXT, so a third page mounting the drawing walks
+       its own strings (ADR-131's finding, one page later). */
+    stagesCase("stages · class one", AI_STORYTELLING_CLASS_1_ARC, "three-ways"),
   ];
 
   for (const c of cases) {

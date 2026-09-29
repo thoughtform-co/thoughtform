@@ -74,6 +74,11 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   crew: "RECORD",
   syllabus: "COURSE",
   path: "PATH",
+  /* ADR-136. `interstitial` already letters SIGNAL, so the market beat
+     takes its own word. */
+  spectrum: "BETWEEN",
+  resource: "RESOURCE",
+  signal: "MARKET",
 };
 
 /**

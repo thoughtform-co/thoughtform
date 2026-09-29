@@ -705,6 +705,10 @@ export type ArcSection = ArcSectionBase &
         /** The axes' ends: the floor's near and far end, the side's top. */
         ends: { near: string; far: string; top: string };
         stages: readonly [ArcStage, ArcStage, ArcStage];
+        /** Whose examples the rows carry (ADR-136), e.g. "Loop's own" — the
+         *  mono prefix on every row's `example` line. Present iff the stages
+         *  carry examples. */
+        own?: string;
       }
     | {
         /**
@@ -944,6 +948,70 @@ export type ArcSection = ArcSectionBase &
         /** One line under the row. */
         note?: string;
       }
+    | {
+        /**
+         * BETWEEN TWO THINGS (ADR-136): the Moira workshop's spectrum,
+         * ported by hand. One rail from tool to collaborator, a handle that
+         * rests in the overlap, two bands under it (software reaches from
+         * the tool's end, intelligence from the collaborator's), and three
+         * columns under those. The word frames a BAND, never the middle: a
+         * collaborator is an intelligence too, so "intelligence" cannot name
+         * the point between the ends.
+         *
+         * ⚠ THE SIXTEENTH ENUMERATED EXCEPTION to ADR-052's "content-only".
+         * One leaf, no state, DOM only; the handle moves once on arrival and
+         * never idles (the house's arrival-only law, ADR-080).
+         */
+        kind: "spectrum";
+        head: ArcHead;
+        /** The two ends: the tool, then the collaborator. */
+        poles: readonly [ArcSpectrumPole, ArcSpectrumPole];
+        /** The overlap, marked by type alone: "AI sits here". */
+        middle: { label: string; head: string; line: string };
+        /** The two bands, from the tool's end and from the collaborator's. */
+        bands: { start: string; end: string };
+      }
+    | {
+        /**
+         * A STRANGE RESOURCE (ADR-136): the Moira workshop's ledger, ported
+         * by hand. Four resources and what each is counted in; three rows
+         * ordinary on purpose so the fourth reads as the odd one out. It has
+         * a unit like the rest, and what the unit leaves out is the beat's
+         * one bright object.
+         *
+         * ⚠ THE SEVENTEENTH ENUMERATED EXCEPTION. One leaf, no state. The
+         * kind is `resource`, never `ledger`: `.arc-ledger*` is the fee table
+         * (ADR-098 U2) and a second object under that name is a fork.
+         */
+        kind: "resource";
+        head: ArcHead;
+        /** The three column heads: the resource, its unit, what the count tells you. */
+        columns: readonly [string, string, string];
+        /** Exactly four rows; the OPEN one is last. */
+        rows: readonly [ArcResourceRow, ArcResourceRow, ArcResourceRow, ArcResourceRow];
+      }
+    | {
+        /**
+         * THE SIGNAL (ADR-136): what the market is paying for, on the board's
+         * two written plates — the Moira workshop's clippings, ported by
+         * hand. Two columns in the board's order (the context, then the
+         * evaluations), two dated clippings under each: a panel with the name
+         * set as a wordmark and the figure in its corner, the headline, a dek
+         * with its figures in weight, and where and when it ran. The whole
+         * card links to its source.
+         *
+         * ⚠ THE EIGHTEENTH ENUMERATED EXCEPTION. One leaf, no state. It may
+         * only follow a `questions` board on the same page (Moira's own rule:
+         * the signal reads the two plates the board lit). ⚠ A clipping is a
+         * dated RECORD, so its corner, kicker, title, dek and date may carry
+         * figures; the column heads and the card's mark and tag may not.
+         */
+        kind: "signal";
+        head: ArcHead;
+        columns: readonly [ArcSignalColumn, ArcSignalColumn];
+        /** One line under the columns: what the figures are, and are not. */
+        caption: string;
+      }
   );
 
 /* ── The syllabus (ADR-134) ────────────────────────────────────────── */
@@ -980,6 +1048,10 @@ export interface ArcSyllabusClass {
   tool: string;
   /** Where the worked example shows this class's work, on this page. */
   example?: { label: string; href: string };
+  /** The class's own page, another registered arc (ADR-136): a root-relative
+   *  `/arcs/<slug>` href, never a fragment — a gated arc loads through
+   *  `/unlock` and drops one. */
+  page?: { label: string; href: string };
 }
 
 /* ── The path (ADR-134) ────────────────────────────────────────────── */
@@ -999,6 +1071,68 @@ export interface ArcPathStage {
   weight?: number;
   /** Optional line under the frames. */
   line?: string;
+}
+
+/* ── The class-one frame (ADR-136) ───────────────────────────────── */
+
+/** One end of the spectrum: what you say, what it does, what you check. */
+export interface ArcSpectrumPole {
+  /** Mono, e.g. "Tool". ≤16. */
+  label: string;
+  /** e.g. "Executes commands". ≤28. */
+  head: string;
+  /** Three lines, ≤48 each. */
+  lines: readonly [string, string, string];
+}
+
+/** One row of the resource ledger. */
+export interface ArcResourceRow {
+  id: string;
+  /** e.g. "People". ≤16. */
+  resource: string;
+  /** e.g. "Hours". ≤12. */
+  unit: string;
+  /** What the count tells you. ≤56. */
+  tells: string;
+  /** What the count leaves out — the open row's second line, in the accent.
+   *  Present iff `open`. ≤56. */
+  misses?: string;
+  /** The odd one out. Exactly one, and it is the last row. */
+  open?: true;
+}
+
+/** One column of the signal: a plate the board lit, and two clippings. */
+export interface ArcSignalColumn {
+  id: string;
+  /** Which of the board's written plates this column reads. */
+  plate: "context" | "evals";
+  /** e.g. "The context". */
+  label: string;
+  /** One line under the label: what the market is doing on this plate. */
+  line: string;
+  cards: readonly [ArcSignalCard, ArcSignalCard];
+}
+
+/** A clipping. */
+export interface ArcSignalCard {
+  id: string;
+  /** The name, set as a wordmark, e.g. "OpenAI". */
+  mark: string;
+  /** The figure in the corner, e.g. "$10B". */
+  corner: string;
+  /** Mono, what kind of news, e.g. "Joint venture". */
+  tag: string;
+  /** Mono, e.g. "Launch · May 2026". */
+  kicker: string;
+  title: string;
+  /** The dek in parts; a `strong` part carries a figure in weight. */
+  dek: readonly { text: string; strong?: true }[];
+  /** Where it ran, e.g. "CNBC". */
+  source: string;
+  /** When, in words, e.g. "4 May 2026". */
+  date: string;
+  /** The source, `https`. */
+  href: string;
 }
 
 /* ── The circuit (ADR-133 U2) ─────────────────────────────────────── */
@@ -1064,6 +1198,11 @@ export interface ArcStage {
   /** The row's name: what you do with it. */
   name: string;
   body: string;
+  /** One of the client's own pieces of work at this stage (ADR-136), drawn
+   *  as a fourth line in the ROW under the section's `own` prefix — never on
+   *  the plinth, whose labels are the walk's. ≤48, digit-free; all three
+   *  stages carry one or none does. */
+  example?: string;
   /** The last stage — the one bright object. Exactly one. */
   lit?: true;
 }

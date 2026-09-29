@@ -936,6 +936,34 @@ contents`** and each station a subgrid item of the track's grid, so the rail
   wave's frames, two offer `cards`, the client's quote. Frames come from
   `scripts/arcs/prep-ai-storytelling-assets.mjs`, which only reads the ship;
   the registry pins every path frame under `/arcs/`, on disk, sized and alt'd.
+- ⚠ **THE CLASS-ONE DECK, AND THE ARCHETYPE'S SITUATION RE-CUT ON THE MOIRA
+  SESSION (ADR-136, Proposed 2026-09-29, owner).** `/arcs/ai-storytelling-class-1`
+  is a house arc in the workshop format, the course's class-one station linking
+  to it (`ArcSyllabusClass.page`, a registered arc's ROOT, never a fragment — a
+  gated arc drops one through `/unlock`); it runs the Loop Moira second
+  session's flow beat for beat, and `/arcs/thoughtform-workshop`'s situation
+  runs the same sequence between its proof and `what-you-build`. **Three kinds,
+  ADR-052's sixteenth to eighteenth exceptions, ported by hand** (ADR-106):
+  `spectrum` (the tool ↔ collaborator rail; the word frames a BAND, never the
+  middle; the handle settles ONCE on `.is-in`, arrival-only motion), `resource`
+  (four rows, the open one last with its `misses` line the one gold object —
+  the kind is `resource`, never `ledger`: `.arc-ledger*` is the fee table) and
+  `signal` (two columns in the board's order, two dated clippings each, every
+  card the house plate linking out; it may only FOLLOW a `questions` board on
+  its page; the digit ban is SPLIT — the corner, kicker, title, dek and date
+  are a dated record and may carry figures, the column heads and a card's mark
+  and tag may not). `ArcStage.example` + `stages.own` letter the client's own
+  work under each stage IN THE ROW, never on the plinth (the label walk and
+  the live stage are untouched). ⚠ **A `questions` board feeds the owner's
+  page** — its six answers must name at least one tool the stack matcher chips
+  ("In Claude, …"), or `sheet-instrument`, `sheet-composition` and
+  `sheet-config-fit` fail on a page nobody opened. The curve's data half is
+  `shared/frontierCurve.ts` (both English pages spread it; Plopsa keeps its
+  Dutch copy) and Tom on the Moon's path, bench and wall are
+  `shared/tom-on-the-moon.ts`, pinned `toBe` across the course and the class.
+  ⚠ **Her chips under the leverage cards cost 195px at 1280×720** — the three
+  claims are the head's last sentence; a five-row anatomy costs 70. ⚠ The
+  hidden browser pane cannot screenshot; the capture script is the still.
 - ⚠ **ADR-133 U2 → U6 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
   Pandora reads Part one (four proof cards, then the return: the `crew`, U6,
   Loop's record ALONE as one row per role read LEFT TO RIGHT, `{ head,

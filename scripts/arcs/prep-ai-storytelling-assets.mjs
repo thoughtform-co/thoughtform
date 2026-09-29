@@ -18,6 +18,10 @@ import sharp from "sharp";
 const SHIP = "C:/Users/buyss/Manifold Delta/Artifacts/Arcs_Tom On The Moon";
 const DRIVE = "I:/My Drive/04_Arcs/04_Production/20260831_Tom On The Moon";
 const CREATION = `${DRIVE}/02_Creation`;
+/* The In The Pocket AI-readiness finals (ADR-136): nine sectors and one main
+   visual in one look, the second world beside Tom's on the class-one deck.
+   Read only, like the ship. */
+const ITP = "I:/My Drive/04_Arcs/04_Production/20260820_ITP_AI Readiness/03_Final";
 const OUT = path.join(process.cwd(), "public", "arcs", "ai-storytelling");
 
 /** [output name, source, long edge] */
@@ -68,6 +72,10 @@ const CUTS = [
     `${CREATION}/wave-21-world-people/P/P__R1-creative-table__nano_02.png`,
     1400,
   ],
+  /* In The Pocket's main visual, the world beside the gateway on the
+     class-one deck's two-worlds cards (ADR-136): the same 16:9 cut, so the
+     two cards sit level and the beat holds its screen. */
+  ["itp-ai-readiness-main-visual", `${ITP}/main-visual.png`, 1400],
 ];
 
 /* At scale: every keeper of wave 23 on one wall, in the order the ship's

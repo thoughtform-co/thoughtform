@@ -14,6 +14,7 @@ import {
   GLYPHS,
   SYLLABUS_CLASS_WORD,
   SYLLABUS_EXAMPLE_FLAG,
+  SYLLABUS_PAGE_FLAG,
   SYLLABUS_ROWS,
   SYLLABUS_TABLIST_LABEL,
   TRACK_ENTRY_COL,
@@ -221,6 +222,15 @@ export function ArcSyllabus({ section, index, motion = "reveal" }: ArcSyllabusPr
                     <a className="arc-syl__example" href={c.example.href}>
                       <span className="arc-syl__exampleflag">{SYLLABUS_EXAMPLE_FLAG}</span>
                       <span className="arc-syl__examplelabel">{c.example.label}</span>
+                    </a>
+                  ) : null}
+                  {/* The class's own page (ADR-136): another arc, linked at
+                      its root — a gated arc loads through /unlock and drops a
+                      fragment. */}
+                  {c.page ? (
+                    <a className="arc-syl__example arc-syl__example--page" href={c.page.href}>
+                      <span className="arc-syl__exampleflag">{SYLLABUS_PAGE_FLAG}</span>
+                      <span className="arc-syl__examplelabel">{c.page.label}</span>
                     </a>
                   ) : null}
                 </div>
