@@ -6178,42 +6178,22 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   }
 }
 
-/* ── THE CIRCUIT (ADR-133) ────────────────────────────────────────────
-   The client's intelligence configuration drawn ONCE and posed three ways:
-   the studio today beside one configured piece of work; the teams it gives
-   time back to; the larger machine it plugs into. The drawing is one SVG
-   whose parts carry their three poses as custom properties
-   (`CircuitDrawing`); this sheet picks a pose by `data-cir-state` and, on the
-   live scene only, transitions between them.
+/* ── THE CIRCUIT (ADR-133 U2) ─────────────────────────────────────────
+   One layer, every workflow: a MAP of the studio's workflows, each a small
+   configuration in the restored board's shape, lettered with its name alone,
+   all wired to one shared context at the centre. Static — ADR-133's pinned
+   scene is retired (U2, owner 2026-09-29) — and the crew draws with the same
+   material and tokens.
 
-   TWO RENDERINGS, AND THE SHEET SHOWS EXACTLY ONE. `data-circuit-scene` on
-   the section (written by `CircuitScene` on a desktop frame with motion
-   allowed) shows the RUNWAY — a sticky stage the reader's scroll walks
-   through the three states — and hides the FLOW. Absent, the flow reads: the
-   three beats as ordinary frames, each drawn at rest, and on a phone as
-   short lists. No script, reduced motion, ≤960px and print all land there,
-   which is the fail-open ADR-102 established.
-
-   ⚠ EVERY DELAY RIDES `var(--dly)` INSIDE THE SHORTHAND (ADR-101's lesson):
-   a separate `transition-delay` beside a `transition` shorthand is reset by
-   whichever of the two wins on specificity, and a delay that does not apply
-   fails silently. `--dly` is set per state on the part and inherited by its
-   paths, so the morph and the wires ride the same clock as their part.
-   ⚠ NO CROSS-DISSOLVE: an object that changes is ONE element moving; what
-   arrives rises or opens on the centre-out aperture, and what leaves folds
-   into the object it belongs to. */
-.arc-sec--circuit {
-  padding-block: 0;
-  min-height: 0;
-  align-content: start;
-}
+   Every part still carries its poses as custom properties and this sheet
+   picks one by `data-cir-state`; since nothing travels any more, every pose
+   is identity and both figures rest at `a`. */
 .arc-cir {
   display: block;
   width: 100%;
   min-width: 0;
   margin: 0 auto;
 
-  --cir-ease: cubic-bezier(0.65, 0, 0.35, 1);
   /* ── The tokens: one alias each, the board's own mapping (ADR-100) ── */
   --cir-plate: var(--arc-plate);
   --cir-sheen: var(--arc-sheen);
@@ -6259,62 +6239,21 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   font-weight: var(--weight-lit);
 }
 
-/* ── The poses. One attribute picks one set; identity at a part's home. */
+/* ── The pose record, at rest. */
 .arc-cir .cq {
   transform-box: view-box;
   transform-origin: 0 0;
 }
 .arc-cir[data-cir-state="a"] .cq {
-  --dly: var(--da);
   transform: var(--pa);
   opacity: var(--oa);
 }
-.arc-cir[data-cir-state="b"] .cq {
-  --dly: var(--db);
-  transform: var(--pb);
-  opacity: var(--ob);
-}
-.arc-cir[data-cir-state="c"] .cq {
-  --dly: var(--dc);
-  transform: var(--pc);
-  opacity: var(--oc);
-}
-/* The aperture and the fold: the lone plate and the layer open and close
-   on the centre-out aperture, and a given plate FOLDS to its head band in b.
-   Only these groups clip — every letter on them sits inside its plate, and a
-   clip on a part whose ink overhangs its box would trim the overhang. */
 .arc-cir[data-cir-state="a"] :is(.cq--today, .cq--plate, .cq--layer) {
   clip-path: var(--ca);
-}
-.arc-cir[data-cir-state="b"] :is(.cq--today, .cq--plate, .cq--layer) {
-  clip-path: var(--cb);
-}
-.arc-cir[data-cir-state="c"] :is(.cq--today, .cq--plate, .cq--layer) {
-  clip-path: var(--cc);
-}
-.arc-cir[data-cir-state="a"] .arc-cir__morph {
-  d: var(--xa);
-}
-.arc-cir[data-cir-state="b"] .arc-cir__morph {
-  d: var(--xb);
-}
-.arc-cir[data-cir-state="c"] .arc-cir__morph {
-  d: var(--xc);
 }
 .arc-cir[data-cir-state="a"] .cw {
   --w: var(--wa);
   --wo: var(--woa);
-  --dly: var(--da);
-}
-.arc-cir[data-cir-state="b"] .cw {
-  --w: var(--wb);
-  --wo: var(--wob);
-  --dly: var(--db);
-}
-.arc-cir[data-cir-state="c"] .cw {
-  --w: var(--wc);
-  --wo: var(--woc);
-  --dly: var(--dc);
 }
 .arc-cir .cw path {
   stroke-dasharray: var(--l);
@@ -6327,124 +6266,12 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   opacity: calc(0.7 * var(--wo, 1));
 }
 
-/* ── The travel — the live scene only. The static beats never move. */
-@media (prefers-reduced-motion: no-preference) {
-  .arc-cir--live .cq {
-    transition:
-      transform 0.9s var(--cir-ease) var(--dly, 0ms),
-      opacity 0.52s var(--cir-ease) var(--dly, 0ms),
-      clip-path 0.72s var(--cir-ease) var(--dly, 0ms);
-  }
-  .arc-cir--live .arc-cir__morph {
-    transition: d 0.9s var(--cir-ease) var(--dly, 0ms);
-  }
-  .arc-cir--live .cw path {
-    transition: stroke-dashoffset 0.64s var(--cir-ease) var(--dly, 0ms);
-  }
-  .arc-cir--live .cw {
-    transition: opacity 0.52s var(--cir-ease) var(--dly, 0ms);
-  }
-  /* The arrival: the wrapper's own rise is off, and the parts assemble on
-     their state-a clocks once the figure is in view. ⚠ Scoped to the live
-     figure; the static beats keep the page's plain reveal. */
-  .is-arc-js .arc-cir--live.arc-reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-  .is-arc-js .arc-cir--live:not(.is-in) .cq:not(.cq--bed) {
-    opacity: 0;
-  }
-  .is-arc-js .arc-cir--live:not(.is-in) .cw path {
-    stroke-dashoffset: var(--l);
-  }
-}
-
-/* ── The runway and its stage. */
-.arc-cir-run {
-  display: none;
-}
-.arc-sec--circuit[data-circuit-scene] .arc-cir-run {
-  display: block;
-  position: relative;
-  height: calc(100svh + var(--cir-runway, 230svh));
-}
-.arc-sec--circuit[data-circuit-scene] .arc-cir-flow {
-  display: none;
-}
-.arc-cir-pin {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  display: grid;
-  align-content: start;
-  padding-block-start: var(--arc-head-datum, clamp(48px, 8vh, 120px));
-}
-/* The drawing takes what the frame leaves under the head, and never more:
-   its width is capped by that height through the crop's own aspect, so a
-   short window shrinks the drawing rather than pushing it off the floor. */
-.arc-cir-pin .arc-cir--live {
-  max-width: calc((100svh - var(--arc-head-datum, 60px) - var(--cir-head-h, 250px)) * 1400 / 560);
-}
-/* Where each beat begins in the runway: the observer's band is the frame's
-   midline, so a mark at 125svh turns the drawing 75svh into the pin. */
-.arc-cir-run__mark {
-  position: absolute;
-  left: 0;
-  width: 1px;
-  bottom: 0;
-  pointer-events: none;
-}
-.arc-cir-run__mark[data-cir-mark="b"] {
-  top: 125svh;
-}
-.arc-cir-run__mark[data-cir-mark="c"] {
-  top: 205svh;
-}
-
-/* The head's decoding boxes — the three beats' words as ghosts in one
-   cell hold the box open, so the head never reflows the drawing. */
-.arc-cir-dec {
-  display: grid;
-}
-.arc-cir-dec--inline {
-  display: inline-grid;
-}
-.arc-cir-dec > * {
-  grid-area: 1 / 1;
-}
-.arc-cir-dec__ghost {
-  visibility: hidden;
-}
-
-/* ── The flow: three frames, each on the proposal's head datum. */
-.arc-cir-beat {
-  display: grid;
-  align-content: center;
-  min-height: 100svh;
-  padding-block: var(--arc-sec-pad, clamp(96px, 14vh, 200px));
-}
-.arc-cir-beat + .arc-cir-beat {
-  border-top: 1px solid var(--arc-edge);
-}
-@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .arc-root[data-arc-format="proposal"] .arc-cir-beat {
-    align-content: start;
-    padding-block-start: var(--arc-head-datum);
-  }
-}
-@media (max-width: 960px), (prefers-reduced-motion: reduce) {
-  .arc-cir-beat {
-    min-height: 0;
-  }
-}
-
 /* ── The phone's reading: short ruled lists in place of the drawing. */
 .arc-cir-list {
   display: none;
 }
 @media (max-width: 960px) {
-  .arc-cir--static,
+  .arc-cir--map,
   .arc-cir--crew {
     display: none;
   }
@@ -6457,9 +6284,7 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     line-height: 1.45;
   }
   .arc-cir-list__label,
-  .arc-cir-list dt,
-  .arc-cir-list__hand,
-  .arc-cir-list__freed span {
+  .arc-cir-list dt {
     font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
     font-size: 11px;
     letter-spacing: var(--track-label);
@@ -6491,37 +6316,9 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     color: var(--arc-ink-62);
     font-size: 13px;
   }
-  .arc-cir-list__team {
-    padding: 14px 0;
-    border-top: 1px solid var(--arc-rule);
-  }
-  .arc-cir-list__team h3 {
-    margin: 0;
-    font-size: 17px;
-    font-weight: var(--weight-lit);
-    color: var(--atreides-ink);
-  }
-  .arc-cir-list__team ul,
   .arc-cir-list__configs {
     margin: 8px 0;
     padding-left: 18px;
-  }
-  .arc-cir-list__freed {
-    margin: 0;
-  }
-  .arc-cir-list__layer {
-    padding: 12px 0;
-    border-top: 1px solid var(--arc-rule);
-  }
-}
-
-/* Paper reads the flow, whatever the frame. */
-@media print {
-  .arc-sec--circuit .arc-cir-run {
-    display: none !important;
-  }
-  .arc-sec--circuit .arc-cir-flow {
-    display: block !important;
   }
 }
 
@@ -7490,6 +7287,144 @@ a.arc-readout__hit:focus-visible {
   line-height: 1.45;
   text-align: center;
   color: var(--arc-ink-62);
+}
+
+/* ── The owned horizon (ADR-133 U2) ─────────────────────────────────
+   "Your team owns it" merged into the goal (owner, 2026-09-29): the owner's
+   plate on the left, and on the right the horizon re-cut so the TOP track is
+   the owner's own day, spent upstream, while the agent's run below reaches up
+   only three times. The plate is the house plate in the human's green — the
+   board seat's own colour — and every word on the tracks is DOM over the SVG,
+   the horizon's law. */
+.arc-hzo__row {
+  display: grid;
+  grid-template-columns: minmax(220px, 23%) minmax(0, 1fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: center;
+  /* The stage's height is bounded by the frame, as the horizon's is: its
+     width rides what the frame leaves under the head, plus the plate. */
+  width: min(100%, calc((100svh - 470px) * 3.235 + 300px));
+}
+.arc-hzo__right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.arc-hzo .arc-hzm__stage {
+  width: 100%;
+  aspect-ratio: 1100 / 340;
+}
+/* The note belongs to the timelines, so it sits under them, not under the
+   plate. */
+.arc-hzo__caption {
+  margin: 0;
+}
+.arc-hzo .arc-hzm__track {
+  width: 16.5%;
+}
+.arc-hzo .arc-hzo__track {
+  color: var(--atreides-ink, #3f5a2e);
+}
+/* The owner's plate: the house plate, its head band in green. */
+.arc-hzo__head {
+  padding-right: calc(clamp(16px, 1.4vw, 22px) + 30px);
+  background:
+    linear-gradient(0deg, rgba(var(--atreides-rgb), 0.1), rgba(var(--atreides-rgb), 0.1)),
+    linear-gradient(172deg, var(--arc-sheen) 0%, rgba(var(--dawn-rgb), 0) 55%);
+}
+.arc-hzo__head::before {
+  background: var(--atreides-light);
+}
+.arc-hzo__kicker {
+  color: var(--atreides-ink, #3f5a2e);
+}
+.arc-hzo__name {
+  color: var(--atreides-ink, #3f5a2e);
+}
+.arc-hzo__bust {
+  position: absolute;
+  top: clamp(14px, 1.6vh, 18px);
+  right: clamp(16px, 1.4vw, 22px);
+  fill: var(--atreides-light);
+}
+/* The owner's day: a quiet track, three spans of upstream work on it. */
+.arc-hzo__day {
+  stroke: var(--arc-ink-40);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzo__spans line {
+  stroke: var(--atreides-light);
+  stroke-width: 6;
+  stroke-linecap: butt;
+  vector-effect: non-scaling-stroke;
+}
+/* The three handoffs: dashed and green, the human's. */
+.arc-hzo__hand line,
+.arc-hzo__hand path {
+  fill: none;
+  stroke: var(--atreides-light);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-hzo__hand line {
+  stroke-dasharray: 4 4;
+}
+.arc-hzo__span,
+.arc-hzo__handlabel {
+  position: absolute;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  line-height: 1.25;
+  white-space: nowrap;
+  text-shadow: var(--arc-hzm-halo);
+}
+.arc-hzo__span {
+  font-size: 14px;
+  font-weight: var(--weight-lit);
+  color: var(--arc-ink-90);
+  transform: translateX(-50%);
+}
+.arc-hzo__handlabel {
+  font-size: 13.5px;
+  color: var(--atreides-ink, #3f5a2e);
+}
+.arc-hzo__handlabel[data-at="end"] {
+  text-align: right;
+}
+/* The words keep their size while the stage narrows, so on a laptop frame
+   the gates and the handoffs step down one rung rather than meet. */
+.arc-hzo .arc-hzm__gate,
+.arc-hzo__handlabel {
+  font-size: clamp(12px, 1vw, 14px);
+}
+@media screen and (max-width: 960px) {
+  .arc-hzo__row {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+  .arc-hzo__owner {
+    max-width: 420px;
+  }
+}
+/* On a phone the tracks become two lists, so the order is the plate, the
+   lists, then the note that reads them. */
+@media screen and (max-width: 720px) {
+  .arc-hzo__row,
+  .arc-hzo__right {
+    display: contents;
+  }
+  .arc-hzo__owner {
+    order: 0;
+    width: 100%;
+  }
+  .arc-hzo .arc-hzm__lists {
+    order: 1;
+  }
+  .arc-hzo__caption {
+    order: 2;
+  }
 }
 
 @media screen and (max-width: 1099px) {

@@ -1,8 +1,11 @@
 # ADR-133: The configuration travels, and the return sits with the proof
 
-- **Status:** Proposed (2026-09-28, owner). Built, guarded and captured; the
-  first cut was pushed, rejected on his read the same evening and reverted
-  (`4bea9946`), and this is the second cut, held local until he has read it.
+- **Status:** Proposed (2026-09-28, owner). The first cut was pushed,
+  rejected on his read the same evening and reverted (`4bea9946`); the second
+  cut and U1 were pushed on his word (2026-09-29); **U2 (2026-09-29) retires
+  the travelling scene**: today returns to the board, the larger whole is a
+  static map, and "your team owns it" joins the horizon. U2 is held local
+  until he has read it.
 - **Surface:** `/arcs/pandora-proposal`.
   - **New:** `components/arcs/circuit/**` (`circuitLayout.ts` pure,
     `CircuitDrawing.tsx`, `CircuitScene.tsx` the one client island,
@@ -139,6 +142,62 @@ work card, and the fifth field was absent.
   shared bars; the bars run out to the dashed socket. The recap's six plates
   fly into its own six pads, so the leitmotif arrives still carrying its
   configuration.
+
+## Update 2 (2026-09-29, owner): three sections, and nothing travels
+
+His read of the pushed U1: "in the 'today and configured' section I want it
+to look like how it was originally, so on the left side a list of the current
+setup and then on the right side the intelligence configuration"; "Your team
+owns it" merged with "From the button to the goal" ("the owner gets more time
+for more upstream work and the agent takes care of the rest … on the left
+side, the owner panel, and on the right side, an adopted version of those two
+timelines"; the wording "a tool you operate" has to change); and "One layer,
+every workflow … a nice overview of different configurations put together …
+I don't think we should see all the texts of the smaller panels … it should
+just become a high-level map of different nodes."
+
+- **`today` is the `board` again**, as it stood before this ADR: the ruled
+  ledger of the studio's setup beside the same five facts configured (the
+  seat, the context with its four tags, the AI capability at the centre, where
+  it runs, where it scales). ⚠ **The ledger states the setup, never a gap**:
+  three of its original rows read "nobody", "not written down" and "not past
+  the studio", the column of the client's shortcomings he ruled out on
+  2026-09-28; they read "each PM, for their own work", "held by the
+  producers" and "within the studio" now, and the contrast lives in the
+  paragraph.
+- **`layer` is the `circuit`, redrawn as a map and made static.** Six small
+  configurations in the board's own cross (owner above in green, the context
+  on the side facing the middle in gold, the work's card lettered with its
+  NAME ALONE, where it runs on the other side, where it scales below), three
+  down each side, every context plate wired into one shared context at the
+  centre (the board's own context module and its four tags, grown), which
+  plugs, dashed, into LATER · a brand system for all marketing. The left
+  column is the right mirrored, so the gold plate always faces the layer;
+  what mirrors is the seating, never a housing's cut. Eight objects, fourteen
+  lettered strings.
+- **`goal` is the horizon re-cut as "Your team owns it."** An owner plate on
+  the left (the house plate, its head band in the human's green, the board
+  seat's bust: WRITES how the work is done · SETS what a good result looks
+  like · DECIDES what goes out). On the right the horizon's two tracks, with
+  the top track the owner's own day: three spans of upstream work (the brief,
+  the concepting, the campaign imagery; Kristin on the call: "the volume of
+  creative campaign work is where I want to put the team") and the agent's
+  run below reaching up three times, dashed and green: you set the goal and
+  the checks, it checks in with you, you judge the result. The agent's own two
+  gates letter on the row under the handoffs, in gold. The note still names
+  the plan's two months (ADR-078 U1's record).
+- **The pinned scene is retired.** `CircuitScene.tsx`, the runway, the pin,
+  the decoding ghosts and the three-beat flow are deleted; the drawing's
+  primitives stay because the crew draws with them, and every circuit part
+  rests at identity in all three states (pinned). A horizon carries exactly one
+  top track, `operated` (Moira's, Plopsa byte-identical) or `upstream`, and an
+  `owner` plate only beside the latter (registry-pinned).
+
+⚠ **Two collisions the still showed, both closed by position, not size**: the
+question's handoff lettered to the right of its connector and ran into the
+result's label coming in from the right, so it letters to the LEFT now; and
+at 1280×720 the two gate labels met, so the gates spread (0.18 · 0.5 · 0.72)
+and the lane words step down one rung (`clamp(12px, 1vw, 14px)`).
 
 ## Findings worth keeping
 

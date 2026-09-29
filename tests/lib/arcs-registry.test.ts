@@ -803,28 +803,24 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("a circuit is one piece of work, six questions, and the same work among its siblings (ADR-133)", () => {
+  it("a circuit is a map of six workflows on one shared context (ADR-133 U2)", () => {
     for (const arc of ARCS) {
       for (const section of arc.sections) {
         if (section.kind !== "circuit") continue;
         const at = `${arc.slug}/${section.id}`;
-        // The six questions, in the drawing's order: the owner above the
-        // work, three on its left, two on its right.
-        expect(
-          section.questions.map((q) => q.id),
-          `${at}: the six questions`
-        ).toEqual(["owner", "model", "context", "evals", "reach", "interface"]);
-        for (const q of section.questions) {
-          expect(q.answer.length, `${at}/${q.id}: the answer`).toBeGreaterThan(0);
-          expect(q.question.length, `${at}/${q.id}: the question`).toBeGreaterThan(0);
-        }
-        // The work is ONE of the workflows: the chip shrinks into it.
-        const ids = section.machine.configs.map((c) => c.id);
+        // Six small configurations, three a side, each a name and nothing
+        // else: "not all the texts of the smaller panels" (owner).
+        const ids = section.configs.map((c) => c.id);
+        expect(ids, `${at}: six workflows`).toHaveLength(6);
         expect(new Set(ids).size, `${at}: duplicate workflow`).toBe(ids.length);
-        expect(ids, `${at}: the work is not a workflow`).toContain(section.work.id);
-        expect(ids.length, `${at}: the ring holds six`).toBeLessThanOrEqual(6);
-        // Today is stated, never a column of gaps: one line on the work.
-        expect(section.work.today.length, `${at}: today`).toBeGreaterThan(0);
+        for (const c of section.configs) {
+          expect(c.name.length, `${at}/${c.id}: the name`).toBeGreaterThan(0);
+          expect(c.name.length, `${at}/${c.id}: one line on the card`).toBeLessThanOrEqual(18);
+        }
+        // The shared context carries the board's own tags, one to four.
+        expect(section.layer.tags.length, `${at}: the context's tags`).toBeGreaterThan(0);
+        expect(section.layer.tags.length, `${at}: the context's tags`).toBeLessThanOrEqual(4);
+        expect(section.socket.name.length, `${at}: the socket`).toBeGreaterThan(0);
         // NO DIGIT ANYWHERE IN IT, the board's ruling, kept.
         scanArc(section, at, (value, path) => {
           expect(/\d/.test(value), `${path}: a figure on the circuit`).toBe(false);
@@ -1189,13 +1185,37 @@ describe("arcs registry (ADR-052)", () => {
           const ats = s.agent.gates.map((g) => g.at);
           expect(ats, `${at}: gates sorted`).toEqual([...ats].sort((a, b) => a - b));
           for (const a of ats) expect(a > 0 && a < 1, `${at}: gate inside the run`).toBe(true);
-          expect(Number.isInteger(s.operated.steps), `${at}: steps`).toBe(true);
-          expect(s.operated.steps).toBeGreaterThanOrEqual(6);
-          expect(s.operated.steps).toBeLessThanOrEqual(10);
+          // ONE top track: Moira's operated tool, or the owner's upstream
+          // day (ADR-133 U2), and the owner's plate only beside the latter.
+          expect(
+            Number(Boolean(s.operated)) + Number(Boolean(s.upstream)),
+            `${at}: exactly one top track`
+          ).toBe(1);
+          if (s.owner)
+            expect(s.upstream, `${at}: an owner plate needs the upstream track`).toBeDefined();
+          if (s.operated) {
+            expect(Number.isInteger(s.operated.steps), `${at}: steps`).toBe(true);
+            expect(s.operated.steps).toBeGreaterThanOrEqual(6);
+            expect(s.operated.steps).toBeLessThanOrEqual(10);
+          }
+          if (s.upstream) {
+            for (const span of s.upstream.spans) {
+              expect(span.length, `${at}: a span`).toBeLessThanOrEqual(20);
+            }
+          }
           for (const g of s.agent.gates) {
             expect(g.label.length, `${at}/${g.kind}: label`).toBeLessThanOrEqual(32);
           }
-          noDigits({ axis: s.axis, operated: { ...s.operated, steps: "" }, agent: s.agent }, at);
+          noDigits(
+            {
+              axis: s.axis,
+              operated: s.operated ? { ...s.operated, steps: "" } : {},
+              upstream: s.upstream ?? {},
+              owner: s.owner ?? {},
+              agent: s.agent,
+            },
+            at
+          );
         }
 
         if (s.kind === "questions") {

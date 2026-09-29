@@ -759,11 +759,18 @@ export type ArcSection = ArcSectionBase &
          * (ADR-106): a filled node is a person's hand, an open one the model.
          *
          * ⚠ THE TENTH ENUMERATED EXCEPTION. One leaf, no state.
+         *
+         * ⚠ TWO READINGS OF ONE FIGURE, AND A SECTION CARRIES EXACTLY ONE TOP
+         * TRACK (ADR-133 U2). `operated` is Moira's: a tool a person runs,
+         * checked after every step. `upstream` is the proposal's: the owner's
+         * own time, spent on the upstream work, while the agent runs the rest
+         * below and reaches up only three times — the goal, a question, the
+         * result. With `upstream` an `owner` plate stands to the left.
          */
         kind: "horizon";
         head: ArcHead;
         axis: { from: string; to: string };
-        operated: {
+        operated?: {
           label: string;
           /** The word under each check. */
           check: string;
@@ -772,6 +779,8 @@ export type ArcSection = ArcSectionBase &
           /** The same track as one sentence, for the phone. */
           line: string;
         };
+        upstream?: ArcHorizonUpstream;
+        owner?: ArcHorizonOwner;
         agent: {
           label: string;
           start: string;
@@ -817,66 +826,42 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE CIRCUIT (ADR-133): the client's configuration as ONE drawing
-         * that TRAVELS through three beats of one pinned scene, on the
-         * Moira workshop's board (one piece of work, six questions around it)
-         * in the proof's R4 material. (a) the work as it is done today, a lone
-         * plate, beside the same work configured: the owner above it, the
-         * model, the context and the evaluations to its left, what it can
-         * reach and where you meet it to its right; (b) the team owns it: the
-         * owner and the two things the team writes come forward, the rest
-         * recedes; (c) the larger whole: every workflow as its own small
-         * circuit, all of them wired to the same written context and checks.
+         * THE CIRCUIT (ADR-133 U2): one layer, every workflow — a MAP. Each
+         * of the studio's workflows is a small configuration in the restored
+         * board's own shape (the owner above, the work at the centre, its
+         * three parts below), lettered with its NAME ALONE; all of them are
+         * wired to one shared context at the centre, and that context plugs,
+         * dashed, into what does not exist yet.
          *
-         * ⚠ THE TWELFTH ENUMERATED EXCEPTION, and not a third mode of the
-         * `board`: that kind's two-state tuple is pinned on every registered
-         * board, and this drawing's objects are ONE set of elements posed
-         * three ways. On a desktop with script and motion the section is a
-         * runway with one sticky stage; everywhere else (reduced motion,
-         * ≤960px, no script, print) it is the three beats in flow.
-         * ⚠ NO DIGIT anywhere in it (the proposal copy law); the mono chrome
-         * is authored in sentence case and UPPERCASED by the drawing.
-         * ⚠ WRITTEN FOR A READER WHO DOES NOT KNOW AI (owner, 2026-09-28):
-         * every plate is a question a person would ask, answered in words a
-         * CMO reads at a glance. Fewer than a dozen objects a beat.
+         * ⚠ THE TWELFTH ENUMERATED EXCEPTION. ADR-133's first two cuts posed
+         * one drawing three ways in a pinned scene; U2 (owner, 2026-09-29)
+         * returned "today" to the `board`, moved "your team owns it" into the
+         * horizon, and asked for this beat to be "a high-level map of
+         * different nodes" without "all the texts of the smaller panels". So
+         * it is one leaf, static, no script.
+         * ⚠ NO DIGIT anywhere in it (the proposal copy law); the mono chrome is
+         * authored in sentence case and UPPERCASED by the drawing.
          */
         kind: "circuit";
-        /** Beat a's head. */
         head: ArcHead;
-        /** The one piece of work: at the centre configured, alone today. */
-        work: CircuitWork;
-        /** The six questions, in the drawing's order: the owner above the
-         *  work; the model, the context and the evaluations on its left (the
-         *  last two are what the team writes); what it reaches and where you
-         *  meet it on its right. */
-        questions: readonly [
-          CircuitQuestion<"owner">,
-          CircuitQuestion<"model">,
-          CircuitQuestion<"context">,
-          CircuitQuestion<"evals">,
-          CircuitQuestion<"reach">,
-          CircuitQuestion<"interface">,
+        /** Every workflow, in the plan's order: the left column top to
+         *  bottom, then the right. Exactly six. */
+        configs: readonly [
+          CircuitConfig,
+          CircuitConfig,
+          CircuitConfig,
+          CircuitConfig,
+          CircuitConfig,
+          CircuitConfig,
         ];
-        /** The mark on the two plates the team writes, e.g. "The studio writes this". */
-        tag: string;
-        /** Beat b: the team owns it. */
-        people: { head: ArcHead };
-        /** Beat c: the larger whole. */
-        machine: {
-          head: ArcHead;
-          /** Every workflow, in the plan's order, each its own small circuit;
-           *  `work.id` is one of them. */
-          configs: readonly CircuitConfig[];
-          /** What every circuit reads: the two shared plates at the centre. */
-          layer: { context: string; evals: string };
-          /** Three short claims on the layer, e.g. "Written once". */
-          chips: readonly [string, string, string];
-          /** The one thing outside the studio it plugs into, drawn dashed
-           *  because it does not exist yet. */
-          socket: { key: string; name: string };
-        };
-        /** The accessible name of each beat's drawing. */
-        alts: { a: string; b: string; c: string };
+        /** The one shared context every configuration reads: its key and
+         *  the tags it holds — the restored board's own context module. */
+        layer: { key: string; tags: readonly string[] };
+        /** The one thing outside the studio it plugs into, drawn dashed
+         *  because it does not exist yet. */
+        socket: { key: string; name: string };
+        /** The drawing's accessible name. */
+        alt: string;
       }
     | {
         /**
@@ -904,42 +889,11 @@ export type ArcSection = ArcSectionBase &
       }
   );
 
-/* ── The circuit (ADR-133) ───────────────────────────────────────────── */
-
-export type CircuitQuestionId = "owner" | "model" | "context" | "evals" | "reach" | "interface";
-
-/** One of the six questions around the work. */
-export interface CircuitQuestion<I extends CircuitQuestionId = CircuitQuestionId> {
-  id: I;
-  /** The plate's name, the way a person would say it, e.g. "The context". */
-  key: string;
-  /** The question it answers, e.g. "What it knows". */
-  question: string;
-  /** This work's answer, one line. */
-  answer: string;
-  /** An optional second line under the answer. The OWNER's carries the
-   *  doctrine's fifth field, how much the work decides alone and where a
-   *  person gates it (Moira's own "It flags, a lawyer decides"). */
-  detail?: string;
-}
-
-export interface CircuitWork {
-  /** One of `machine.configs`. */
-  id: string;
-  /** e.g. "The review recap". */
-  name: string;
-  /** When it runs, one line on the card. ⚠ NEVER the bar: what good looks
-   *  like is the EVALUATIONS' answer ("evals carry what good looks like"),
-   *  and on the card it is said twice, on the wrong object (owner,
-   *  2026-09-28). */
-  when: string;
-  /** How it is done today, one line on the lone plate. */
-  today: string;
-}
+/* ── The circuit (ADR-133 U2) ─────────────────────────────────────── */
 
 export interface CircuitConfig {
   id: string;
-  /** Sentence case, one line on a chip. */
+  /** Sentence case, one line on the small configuration's card. */
   name: string;
 }
 
@@ -1018,6 +972,33 @@ export interface ArcHorizonGate {
   /** Where on the run, 0 → 1. */
   at: number;
   label: string;
+}
+
+/** The owner's own track (ADR-133 U2): the upstream work, three spans in the
+ *  order the work runs, that the agent's run below gives time back to. */
+export interface ArcHorizonUpstream {
+  label: string;
+  /** Three spans, left to right, e.g. "The brief" · "Concepting" · "Campaign imagery". */
+  spans: readonly [string, string, string];
+  /** The same track as one sentence, for the phone. */
+  line: string;
+}
+
+/** The owner's plate beside the horizon (ADR-133 U2): who answers for the
+ *  work, and the three things that stay theirs — the house plate in the
+ *  human's green. */
+export interface ArcHorizonOwner {
+  /** Mono kicker, e.g. "The owner". */
+  key: string;
+  /** Who, e.g. "The PMs and producers". */
+  name: string;
+  rows: readonly [ArcHorizonOwnerRow, ArcHorizonOwnerRow, ArcHorizonOwnerRow];
+}
+
+export interface ArcHorizonOwnerRow {
+  /** Mono tag, a verb, e.g. "Writes". */
+  tag: string;
+  line: string;
 }
 
 /** One of the six questions around the work. */

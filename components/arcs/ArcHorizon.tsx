@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcHorizonOwned } from "./ArcHorizonOwned";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -61,7 +62,18 @@ function Person({ cx, base, tone }: { cx: number; base: number; tone?: "lit" }) 
  * person mark, a `<g>` translate that no overlap walk reads.
  */
 export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProps) {
+  if (section.upstream) {
+    return (
+      <ArcHorizonOwned
+        section={section}
+        upstream={section.upstream}
+        index={index}
+        motion={motion}
+      />
+    );
+  }
   const { axis, operated, agent, note } = section;
+  if (!operated) return null;
   const checks = checksAt(operated.steps);
   const [checkGate, retryGate, askGate] = agent.gates;
   const retryX = along(retryGate.at);

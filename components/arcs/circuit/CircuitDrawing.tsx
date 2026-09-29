@@ -20,16 +20,15 @@ import {
 } from "./circuitLayout";
 
 /**
- * CircuitDrawing — THE CIRCUIT's marks (ADR-133), one SVG for all three
- * states. Server-safe: no hooks, no state. The live scene and the three static
- * beats render this same component; what differs is the `data-cir-state` on
- * the figure around it and whether the sheet lets it transition.
+ * CircuitDrawing — THE CIRCUIT's marks (ADR-133), one SVG. Server-safe: no
+ * hooks, no state. The map and the crew both draw with these primitives.
  *
- * ⚠ EVERY PART CARRIES ITS OWN THREE POSES AS CUSTOM PROPERTIES and the sheet
- * picks one by state (`transform: var(--pb)` under `[data-cir-state="b"]`), so
- * a state change is ONE attribute write and the compositor plays the rest.
- * ⚠ NO `transform` ATTRIBUTE ANYWHERE: the pose is the CSS property, and it
- * is identity at each part's home state, where the fit test reads it.
+ * ⚠ EVERY PART CARRIES ITS POSES AS CUSTOM PROPERTIES and the sheet picks one
+ * by `data-cir-state`. Since U2 retired the pinned scene nothing travels, so
+ * every pose is identity and the figure rests at state `a`; the record stays
+ * because the crew's wires read it.
+ * ⚠ NO `transform` ATTRIBUTE ANYWHERE: the pose is the CSS property, identity
+ * where the fit test reads it.
  *
  * ⚠ EVERY COLOUR IS A `--cir-*` TOKEN, declared on `.arc-cir` as an alias of
  * the ADR-077 ramp (the board's own idiom), never a literal.

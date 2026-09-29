@@ -909,6 +909,24 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   (Objective · You make · The gate · The tool), a close. The student builds one
   brand world all term, around themselves or a fictional product. ⚠ Motion is
   held to week eight on purpose, once the world has rules a film can obey.
+- ⚠ **ADR-133 U2 (2026-09-29, owner) RETIRES THE TRAVELLING SCENE BELOW.**
+  Pandora's `today` is the `board` again (the ruled ledger of the current
+  setup beside the configured board, as before ADR-133; the ledger states the
+  setup and never a gap). `circuit` is now a STATIC MAP, `{ head, configs[6],
+layer: { key, tags }, socket, alt }`: six small configurations in the
+  board's cross, each lettered with its NAME ALONE, every gold context plate
+  wired into one shared context, plugging dashed into LATER. The left column
+  mirrors the right so the context faces the layer (seating mirrors, a cut
+  never does); every part rests at identity in all three states, because the
+  crew still draws with the same pose record (`data-cir-state="a"`).
+  `CircuitScene`, the runway, the pin and the three-beat flow are deleted. The
+  `horizon` gains a second reading (`ArcHorizonOwned`,
+  `framing/ownedLayout.ts`): `upstream` (the owner's day in three spans) in
+  place of `operated`, an `owner` plate beside it in the human's green, the
+  agent's run reaching up three times (goal, question, result) on dashed green
+  handoffs, its own gates a row lower in gold. Exactly one top track per
+  horizon, an owner plate only with `upstream` (registry-pinned); Plopsa's is
+  byte-identical. The bullet below is the record of the scene it replaced.
 - ⚠ **ON PANDORA THE CONFIGURATION TRAVELS AND THE RETURN SITS WITH THE
   PROOF (ADR-133, Proposed 2026-09-28, owner; second cut, the first was
   pushed, rejected on his read and reverted).** Two kinds, ADR-052's twelfth

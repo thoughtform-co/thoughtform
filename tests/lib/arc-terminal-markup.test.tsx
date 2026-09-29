@@ -149,16 +149,12 @@ describe("arc terminal markup (ADR-057)", () => {
     const heads = html.match(/data-arc-still/g)?.length ?? 0;
     // Every head, interstitial band and close band — and every dossier,
     // whose masthead is derived from the tool record (ADR-072).
-    // A circuit (ADR-133) is ONE section drawing THREE beats in its flow, and
-    // each beat carries its own masthead.
     const expected = ALL.reduce(
       (n, s) =>
         n +
-        (s.kind === "circuit"
-          ? 3
-          : s.kind === "interstitial" || s.kind === "close" || s.kind === "dossier" || "head" in s
-            ? 1
-            : 0),
+        (s.kind === "interstitial" || s.kind === "close" || s.kind === "dossier" || "head" in s
+          ? 1
+          : 0),
       0
     );
     expect(heads).toBe(expected);

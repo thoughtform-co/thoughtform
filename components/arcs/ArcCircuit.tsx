@@ -1,11 +1,11 @@
-import type { ArcHead, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
-import { arcTitleText, coordStamp, padIndex } from "./chrome";
+import { rung } from "./arcMotion";
+import { arcTitleText } from "./chrome";
 import { CircuitDrawing } from "./circuit/CircuitDrawing";
-import { circuitGeom, type CircuitState } from "./circuit/circuitLayout";
-import { CircuitScene, type CircuitHeadText } from "./circuit/CircuitScene";
+import { circuitGeom } from "./circuit/circuitLayout";
 
 interface ArcCircuitProps {
   section: ArcSectionOf<"circuit">;
@@ -14,37 +14,21 @@ interface ArcCircuitProps {
 }
 
 /**
- * ArcCircuit — THE CIRCUIT (ADR-133): the client's configuration drawn once
- * and TRAVELLING through three beats — one piece of work today and
- * configured; the team owns it; one layer, every workflow.
+ * ArcCircuit — ONE LAYER, EVERY WORKFLOW (ADR-133 U2): a map of the studio's
+ * workflows, each a small configuration in the restored board's shape and
+ * lettered with its name alone, all wired to one shared context at the centre.
  *
- * TWO RENDERINGS OF ONE RECORD, and the sheet shows exactly one:
- *   · THE SCENE (`CircuitScene`) — a runway with a sticky stage, one drawing
- *     posed three ways, the head decoding in place. It arms itself on a
- *     desktop frame with motion allowed (`data-circuit-scene`).
- *   · THE FLOW — the three beats as ordinary frames, each drawn at rest by the
- *     same component, and on a phone as three short lists instead (a 1400-unit
- *     drawing at 390px paints its type at 4px). No script, reduced motion,
- *     ≤960px and print all read this, and it is what the page fails open to.
+ * ⚠ SERVER, NO STATE, NO SCRIPT. ADR-133's first two cuts ran this beat as the
+ * third pose of one drawing in a pinned scene; U2 (owner, 2026-09-29) put
+ * "today" back on the `board`, moved "your team owns it" into the horizon and
+ * asked for this one as its own picture, so the scene and its runway are gone.
+ * The arrival is the page's plain reveal.
  *
- * ⚠ ONE SECTION, ONE ID (`today`), so the chapter link, the corner readout and
- * the drawer see one beat; the beats inside it are not sections.
+ * Above 960px the drawing; below it a short ruled list, because a 1400-unit
+ * map at 390px paints its type at 4px.
  */
 export function ArcCircuit({ section, index, motion = "reveal" }: ArcCircuitProps) {
   const geom = circuitGeom(section);
-  const heads: Record<CircuitState, ArcHead> = {
-    a: section.head,
-    b: section.people.head,
-    c: section.machine.head,
-  };
-  const text = (h: ArcHead): CircuitHeadText => ({
-    eyebrow: h.eyebrow ?? "",
-    title: h.title,
-    sub: h.sub ?? "",
-  });
-  const labels: Record<CircuitState, string> = section.alts;
-  const beats: CircuitState[] = ["a", "b", "c"];
-
   return (
     <ArcBeat
       id={section.id}
@@ -53,125 +37,43 @@ export function ArcCircuit({ section, index, motion = "reveal" }: ArcCircuitProp
       ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
       motion={motion}
     >
-      <CircuitScene
-        heads={{ a: text(heads.a), b: text(heads.b), c: text(heads.c) }}
-        brief={`ARC / BRIEF · ${padIndex(index)}`}
-        coords={[coordStamp(section.id, 1), coordStamp(section.id, 2)]}
-        drawing={
-          <figure
-            className="arc-cir arc-cir--live arc-reveal"
-            data-cir-state="a"
-            role="group"
-            aria-label={labels.a}
-          >
-            <CircuitDrawing geom={geom} uid={`${section.id}-live`} label={labels.a} />
-          </figure>
-        }
-      />
-      <div className="arc-cir-flow">
-        {beats.map((b) => (
-          <div key={b} className="arc-cir-beat" data-cir-beat={b}>
-            <div className="arc-band">
-              <ArcSectionHead
-                head={heads[b]}
-                kind="circuit"
-                index={index}
-                sectionId={b === "a" ? section.id : `${section.id}-${b}`}
-                motion={motion}
-              />
+      <div className="arc-band">
+        <ArcSectionHead
+          head={section.head}
+          kind="circuit"
+          index={index}
+          sectionId={section.id}
+          motion={motion}
+        />
+      </div>
+      <div className="arc-band">
+        <figure
+          className="arc-cir arc-cir--map arc-reveal"
+          data-cir-state="a"
+          role="group"
+          aria-label={section.alt}
+          {...rung(motion, 0.14)}
+        >
+          <CircuitDrawing geom={geom} uid={section.id} label={section.alt} />
+        </figure>
+        <div className="arc-cir-list" data-cir-list="map">
+          <ul className="arc-cir-list__configs">
+            {section.configs.map((c) => (
+              <li key={c.id}>{c.name}</li>
+            ))}
+          </ul>
+          <dl className="arc-cir-list__rows">
+            <div>
+              <dt>{section.layer.key}</dt>
+              <dd>{section.layer.tags.join(" · ")}</dd>
             </div>
-            <div className="arc-band">
-              <figure className="arc-cir arc-cir--static arc-reveal" data-cir-state={b}>
-                <CircuitDrawing geom={geom} uid={`${section.id}-${b}`} label={labels[b]} />
-              </figure>
-              <CircuitList section={section} beat={b} />
+            <div data-cir-future="">
+              <dt>{section.socket.key}</dt>
+              <dd>{section.socket.name}</dd>
             </div>
-          </div>
-        ))}
+          </dl>
+        </div>
       </div>
     </ArcBeat>
-  );
-}
-
-/**
- * The phone's reading of one beat — the same record as short ruled lists, in
- * the order the drawing reads it. Hidden above 960px, where the drawing is
- * legible.
- */
-function CircuitList({ section, beat }: { section: ArcSectionOf<"circuit">; beat: CircuitState }) {
-  if (beat === "a") {
-    return (
-      <div className="arc-cir-list" data-cir-list="a">
-        <dl className="arc-cir-list__rows">
-          <div>
-            <dt>Today</dt>
-            <dd>
-              <strong>{section.work.name}</strong> · {section.work.today}
-            </dd>
-          </div>
-          <div>
-            <dt>Configured</dt>
-            <dd>
-              <strong>{section.work.name}</strong> · {section.work.when}
-            </dd>
-          </div>
-          {section.questions.map((q) => (
-            <div key={q.id} data-cir-q={q.id}>
-              <dt>{q.key}</dt>
-              <dd>
-                {q.answer}
-                {q.detail ? `. ${q.detail}` : null}
-                <span className="arc-cir-list__was">{q.question}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    );
-  }
-  if (beat === "b") {
-    const lit = section.questions.filter(
-      (q) => q.id === "owner" || q.id === "context" || q.id === "evals"
-    );
-    return (
-      <div className="arc-cir-list" data-cir-list="b">
-        <dl className="arc-cir-list__rows">
-          {lit.map((q) => (
-            <div key={q.id} data-cir-q={q.id}>
-              <dt>{q.key}</dt>
-              <dd>
-                {q.answer}
-                {q.detail ? `. ${q.detail}` : null}
-                <span className="arc-cir-list__was">{q.question}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    );
-  }
-  return (
-    <div className="arc-cir-list" data-cir-list="c">
-      <ul className="arc-cir-list__configs">
-        {section.machine.configs.map((c) => (
-          <li key={c.id}>{c.name}</li>
-        ))}
-      </ul>
-      <dl className="arc-cir-list__rows">
-        <div>
-          <dt>{section.questions.find((q) => q.id === "context")?.key}</dt>
-          <dd>{section.machine.layer.context}</dd>
-        </div>
-        <div>
-          <dt>{section.questions.find((q) => q.id === "evals")?.key}</dt>
-          <dd>{section.machine.layer.evals}</dd>
-        </div>
-        <div data-cir-future="">
-          <dt>{section.machine.socket.key}</dt>
-          <dd>{section.machine.socket.name}</dd>
-        </div>
-      </dl>
-      <p className="arc-cir-list__layer">{section.machine.chips.join(" · ")}</p>
-    </div>
   );
 }
