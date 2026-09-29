@@ -73,11 +73,13 @@ function Bust() {
  *
  * ⚠ ONE FIGURE, TWO READINGS OF ONE RECORD: a horizon with `upstream` draws
  * this, one with `operated` draws Moira's, and Plopsa's is byte-identical.
+ * ⚠ NO TIME AXIS AND NO MONTH NOTE (U4, owner: "we don't need that"): the
+ * height they took is the gap between the two lanes now.
  * ⚠ SERVER, NO STATE. `data-horizon-*` only; lines are SVG, every word is DOM
  * placed by percentage so the type never scales (the horizon's own law).
  */
 export function ArcHorizonOwned({ section, upstream, index, motion = "reveal" }: Props) {
-  const { axis, agent, note, owner } = section;
+  const { agent, note, owner } = section;
   const [checkGate, retryGate, askGate] = agent.gates;
   const checkX = ownedAlong(checkGate.at);
   const retryX = ownedAlong(retryGate.at);
@@ -180,14 +182,6 @@ export function ArcHorizonOwned({ section, upstream, index, motion = "reveal" }:
                       d={`M${retryX - 70} ${B + 21} L${retryX - 64} ${B + 12} L${retryX - 58} ${B + 21}`}
                     />
                   </g>
-
-                  <line
-                    className="arc-hzm__axis"
-                    x1={x0}
-                    y1={OWNED_AXIS.y}
-                    x2={x1}
-                    y2={OWNED_AXIS.y}
-                  />
                 </svg>
 
                 <span className="arc-hzm__track arc-hzo__track" style={{ top: y(A) }}>
@@ -241,20 +235,6 @@ export function ArcHorizonOwned({ section, upstream, index, motion = "reveal" }:
                     {g.label}
                   </span>
                 ))}
-
-                <span
-                  className="arc-hzm__axislabel"
-                  style={{ left: x(x0), top: y(OWNED_AXIS.y + 8) }}
-                >
-                  {axis.from}
-                </span>
-                <span
-                  className="arc-hzm__axislabel"
-                  data-at="end"
-                  style={{ right: x(OWNED_W - x1), top: y(OWNED_AXIS.y + 8) }}
-                >
-                  {axis.to}
-                </span>
               </div>
               {note ? <p className="arc-hzm__caption arc-hzo__caption">{note}</p> : null}
             </div>

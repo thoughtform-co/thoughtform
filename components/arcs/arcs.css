@@ -7310,7 +7310,7 @@ a.arc-readout__hit:focus-visible {
   align-items: center;
   /* The stage's height is bounded by the frame, as the horizon's is: its
      width rides what the frame leaves under the head, plus the plate. */
-  width: min(100%, calc((100svh - 470px) * 3.235 + 300px));
+  width: min(100%, calc((100svh - 470px) * 3.333 + 300px));
 }
 .arc-hzo__right {
   display: flex;
@@ -7321,7 +7321,7 @@ a.arc-readout__hit:focus-visible {
 }
 .arc-hzo .arc-hzm__stage {
   width: 100%;
-  aspect-ratio: 1100 / 340;
+  aspect-ratio: 1100 / 330;
 }
 /* The note belongs to the timelines, so it sits under them, not under the
    plate. */

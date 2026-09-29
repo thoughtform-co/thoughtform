@@ -252,7 +252,7 @@ describe("the six questions' marks (ADR-133)", () => {
   });
 });
 
-describe("the crew (ADR-133)", () => {
+describe("the crew (ADR-133 U4)", () => {
   it("is registered at least once", () => {
     expect(crews.length).toBeGreaterThan(0);
   });
@@ -284,15 +284,39 @@ describe("the crew (ADR-133)", () => {
           }
         }
       });
-      it("digits letter on the record's values alone, never on the plan", () => {
+      it("digits letter on the record's readouts alone", () => {
         for (const l of g.letters) {
-          if (/^record-[^.]+\.value\./.test(l.slot)) continue;
+          if (/^row-[^.]+\.value\./.test(l.slot)) continue;
           expect(l.text, l.slot).not.toMatch(/\d/);
         }
       });
-      it("the plan's readouts are empty: no value is ever drawn on the client's side", () => {
-        const planValues = g.letters.filter((l) => /^plan-.*\.value/.test(l.slot));
-        expect(planValues).toEqual([]);
+      it("draws Loop's record alone: no client side, four columns in two bands", () => {
+        expect(g.letters.some((l) => l.slot.startsWith("plan-"))).toBe(false);
+        expect(g.modules.filter((m) => m.id.endsWith("-up"))).toHaveLength(4);
+        expect(g.modules.filter((m) => m.id.endsWith("-down"))).toHaveLength(4);
+        for (const m of g.modules) {
+          expect(m.paint, m.id).toBe(m.id.endsWith("-up") ? "green" : "gold");
+        }
+      });
+      it("every column's plates sit on their own band, and no two plates meet", () => {
+        const rects = g.modules.map((m) => ({ id: m.id, b: m.rect }));
+        for (let i = 0; i < rects.length; i += 1) {
+          for (let j = i + 1; j < rects.length; j += 1) {
+            expect(overlap(rects[i].b, rects[j].b, 0), `${rects[i].id} × ${rects[j].id}`).toBe(
+              false
+            );
+          }
+        }
+      });
+      it("every letter sits inside a plate, or on the band labels' row", () => {
+        for (const l of g.letters) {
+          if (l.slot.startsWith("band.")) continue;
+          const b = box(l);
+          expect(
+            g.modules.some((m) => inside(b, m.rect)),
+            `${l.slot} prints off its plate`
+          ).toBe(true);
+        }
       });
     });
   }

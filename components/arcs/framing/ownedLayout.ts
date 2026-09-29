@@ -7,17 +7,20 @@
  * question, the result). Between the tracks, two rows of words that never
  * share a band: the handoffs (the human's green) on the upper row, the agent's
  * own gates (gold) on the lower. Everything left of `OWNED_AXIS.x0` is the
- * track names.
+ * track names; the loop under the agent's run hangs to y 308.
  */
 
 export const OWNED_W = 1100;
-export const OWNED_H = 340;
-export const OWNED_AXIS = { x0: 200, x1: 1070, y: 318 } as const;
-export const OWNED_TRACK_A_Y = 84;
-export const OWNED_TRACK_B_Y = 236;
+export const OWNED_H = 330;
+/** The tracks' horizontal extent: everything left of `x0` is the track names.
+ *  ⚠ NO TIME AXIS (U4, owner: "we don't need that"): its height went to the
+ *  gap between the lanes, 152 → 190 units. */
+export const OWNED_AXIS = { x0: 200, x1: 1070 } as const;
+export const OWNED_TRACK_A_Y = 72;
+export const OWNED_TRACK_B_Y = 262;
 /** The handoffs' row, and the gates' row under it. */
-export const OWNED_ROW_HAND_Y = 118;
-export const OWNED_ROW_GATE_Y = 176;
+export const OWNED_ROW_HAND_Y = 110;
+export const OWNED_ROW_GATE_Y = 200;
 
 export const ownedAlong = (t: number) => OWNED_AXIS.x0 + t * (OWNED_AXIS.x1 - OWNED_AXIS.x0);
 

@@ -829,27 +829,29 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("a crew is the record beside the plan, and only the record carries a number (ADR-133)", () => {
+  it("a crew is Loop's record in two bands, and only its readouts carry a number (ADR-133 U4)", () => {
     for (const arc of ARCS) {
       for (const section of arc.sections) {
         if (section.kind !== "crew") continue;
         const at = `${arc.slug}/${section.id}`;
-        // The plan never letters a value: the client's numbers are counted,
-        // never promised.
-        scanArc(section.plan, `${at}/plan`, (value, path) => {
-          expect(/\d/.test(value), `${path}: a figure on the plan`).toBe(false);
-        });
-        for (const row of section.record.rows) {
-          expect(row.people, `${at}/${row.id}: the seat draws no one`).toBeGreaterThan(0);
-          expect(
-            row.people,
-            `${at}/${row.id}: more people than the seat holds`
-          ).toBeLessThanOrEqual(5);
+        expect(section.bands.upstream.length, `${at}: the upstream band`).toBeGreaterThan(0);
+        expect(section.bands.downstream.length, `${at}: the downstream band`).toBeGreaterThan(0);
+        for (const row of section.rows) {
+          // A head count only where the record states one; a plural role
+          // draws none rather than an invented number.
+          if (row.people !== undefined) {
+            expect(row.people, `${at}/${row.id}: the seat draws no one`).toBeGreaterThan(0);
+            expect(
+              row.people,
+              `${at}/${row.id}: more people than the seat holds`
+            ).toBeLessThanOrEqual(5);
+          }
+          expect(row.upstream.length, `${at}/${row.id}: what the time goes to`).toBeGreaterThan(0);
           // A figure only where the record states one: in the value, or the
           // count the field draws, and nowhere else on the row.
           for (const [k, v] of Object.entries({
             who: row.who,
-            config: row.config,
+            upstream: row.upstream,
             unit: row.unit,
           })) {
             expect(/\d/.test(v), `${at}/${row.id}.${k}: a figure outside the value`).toBe(false);
@@ -1206,9 +1208,12 @@ describe("arcs registry (ADR-052)", () => {
           for (const g of s.agent.gates) {
             expect(g.label.length, `${at}/${g.kind}: label`).toBeLessThanOrEqual(32);
           }
+          // The owned reading draws no time axis (U4).
+          if (s.upstream)
+            expect(s.axis, `${at}: the owned reading carries no axis`).toBeUndefined();
           noDigits(
             {
-              axis: s.axis,
+              axis: s.axis ?? {},
               operated: s.operated ? { ...s.operated, steps: "" } : {},
               upstream: s.upstream ?? {},
               owner: s.owner ?? {},

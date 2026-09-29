@@ -123,7 +123,16 @@ export type CirMark =
   | { kind: "glyph"; key: CircuitGlyphKey; x: number; y: number; cell: number }
   | { kind: "pad"; x: number; y: number; w: number; h: number; tone: PadTone }
   | { kind: "person"; x: number; y: number; cell: number }
-  | { kind: "rule"; x1: number; y1: number; x2: number; y2: number; tone: "line" | "on-gold" }
+  | {
+      kind: "rule";
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      tone: "line" | "on-gold";
+      /** Dashed: a line the work crosses, not an edge. */
+      dash?: true;
+    }
   | { kind: "via"; cx: number; cy: number; r: number };
 
 export interface Pose {

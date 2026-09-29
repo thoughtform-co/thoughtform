@@ -909,11 +909,16 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   (Objective · You make · The gate · The tool), a close. The student builds one
   brand world all term, around themselves or a fictional product. ⚠ Motion is
   held to week eight on purpose, once the world has rules a film can obey.
-- ⚠ **ADR-133 U2 + U3 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
+- ⚠ **ADR-133 U2 → U4 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
   Pandora reads today (the `board` again: the ruled ledger of the current
   setup beside the configured board, the ledger stating the setup and never a
   gap) · the approach ("Automation runs through adoption.", the owned
-  horizon) · the map · the plan. `circuit` is a STATIC MAP of the client's
+  horizon, NO time axis and no note since U4) · the return (the `crew`, U4:
+  Loop's record ALONE in the approach's two bands, `{ head, bands, rows[4] {
+  who, people?, upstream, output, value, unit } }`, green UPSTREAM · THE
+  PEOPLE over a dashed line and gold DOWNSTREAM · WHAT RUNS under it, one mark
+  per column drawn as its quantity, `plan` deleted, a head count only where
+  the record states one) · the map ("A system built to compound.") · the plan. `circuit` is a STATIC MAP of the client's
   marketing OS, `{ head, configs[6] { id, name ≤14, line }, os { key, name,
 line }, socket, alt }`: six small configurations in the board's cross whose
   CARD IS THE BOARD'S OWN CARD (264 × 104, `notch: "tr"`, gold wash, name at

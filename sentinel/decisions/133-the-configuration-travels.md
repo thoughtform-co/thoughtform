@@ -7,7 +7,10 @@
   static map, and "your team owns it" joins the horizon; **U3 (same day)**
   puts the approach second, retitles it on adoption and automation, and
   makes the map's cards the board's own card around a twelve-sided marketing
-  OS. U2 and U3 are held local until he has read them.
+  OS; **U4 (same day)** moves the return after the approach and redraws it as
+  Loop's record in the approach's two bands, drops the approach's time axis,
+  and retitles the map "A system built to compound". U2 to U4 are held local
+  until he has read them.
 - **Surface:** `/arcs/pandora-proposal`.
   - **New:** `components/arcs/circuit/**` (`circuitLayout.ts` pure,
     `CircuitDrawing.tsx`, `CircuitScene.tsx` the one client island,
@@ -236,6 +239,42 @@ type of shape."
 - The crop grew 560 → 620 for the taller cards, and the figure's width is now
   capped by the height the frame leaves under the head (the retired stage's
   own rule), so at 1280×720 the map shrinks rather than running off the floor.
+
+## Update 4 (2026-09-29, owner): the return is the approach's proof, and the map compounds
+
+His read of U3: on the approach, "at the bottom we have morning, end of day,
+and month one sets up the filing … remove all that … the agent on the rest can
+move a bit down so both timelines have more breathing room"; the map "should be
+like a system built to compound"; and "What it returned at Loop" is "proof that
+the automation runs through adoption … so maybe that section should come after"
+it, radically simplified, "more like an overview" building on "that
+upstream-downstream material", on Rob's four points, with no studio side
+"counted from week one".
+
+- **The order is today · the approach · the return · the map · the plan.** The
+  return leaves Part one; the four proof cards stay there.
+- **The approach draws no time axis and no month note.** `axis` is optional on
+  the horizon (Plopsa's reading keeps it, byte-identical) and the owned reading
+  carries none; the lanes take the height, 152 → 190 units apart.
+- **The map is "A system built to compound."** (eyebrow "the marketing OS",
+  menu "The system"); the drawing is untouched.
+- **The crew is Loop's record alone, in two bands.** One column per role:
+  above a dashed line, green, UPSTREAM · THE PEOPLE (who, and what the time goes
+  to now); below it, gold, DOWNSTREAM · WHAT RUNS (the readout, one small mark
+  drawn as the quantity it is). Two designers and a copywriter: concepting and
+  brand storytelling / about 700 paid-social assets a month. The PMs: the brief
+  / the copy, pre-filled, one copy editor checks it. The head of design: the
+  final call / about ten times less review by hand. **Creative strategy** (his
+  answer, replacing Rob's campaign managers): the ideas worth testing / the ad
+  count divided across partners and formats — Mímir's briefing division, which
+  takes the month's forecast and writes the slate the team used to write by
+  hand; drawn as one bar over the same bar in parts (`CrewOutput.split`).
+  ⚠ `plan` and `CrewMeasure` are deleted with the client's half, and a head
+  count is drawn only where the record states one (3 and 1); a plural role
+  draws none rather than an invented number.
+- ⚠ **A drop that crosses a label row has to clear the label**: the columns'
+  four-wire drops sit 24 units in from each column's right edge, because the
+  downstream band's label runs in from the left on the row they cross.
 
 ## Findings worth keeping
 

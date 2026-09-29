@@ -73,7 +73,7 @@ export function ArcHorizon({ section, index, motion = "reveal" }: ArcHorizonProp
     );
   }
   const { axis, operated, agent, note } = section;
-  if (!operated) return null;
+  if (!operated || !axis) return null;
   const checks = checksAt(operated.steps);
   const [checkGate, retryGate, askGate] = agent.gates;
   const retryX = along(retryGate.at);

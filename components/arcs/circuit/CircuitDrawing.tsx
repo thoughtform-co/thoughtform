@@ -403,7 +403,14 @@ export function Mark({ mark }: { mark: CirMark }) {
           y1={mark.y1}
           x2={mark.x2}
           y2={mark.y2}
-          stroke={mark.tone === "on-gold" ? "var(--cir-on-gold-2)" : "var(--cir-line)"}
+          stroke={
+            mark.tone === "on-gold"
+              ? "var(--cir-on-gold-2)"
+              : mark.dash
+                ? "var(--cir-edge-strong)"
+                : "var(--cir-line)"
+          }
+          strokeDasharray={mark.dash ? "6 6" : undefined}
         />
       );
     case "via":

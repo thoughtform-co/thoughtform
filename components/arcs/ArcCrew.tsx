@@ -14,14 +14,13 @@ interface ArcCrewProps {
 }
 
 /**
- * ArcCrew — THE CREW (ADR-133): the business case as a drawn record, never a
- * calculator (owner, 2026-09-28). Left, the shape the work took at Loop — a
- * few people, one configuration each, the output drawn as the quantity it is.
- * Right, the same shape at the client, its readouts framed and EMPTY: counted
- * from week one, never promised. The circuit's own glyph library, static.
+ * ArcCrew — THE CREW (ADR-133 U4): what it returned at Loop, as the approach's
+ * two bands — one column per role, the people and what their time goes to now
+ * above a dashed line, what runs and the record's readout below it, each drawn
+ * as the quantity it is. Never a calculator. The circuit's own glyph library.
  *
  * ⚠ SERVER, NO STATE, NO SCRIPT. On a phone the drawing gives way to the same
- * record as two ruled lists (a 1400-unit drawing at 390px paints at 4px).
+ * record as one ruled list (a 1400-unit drawing at 390px paints at 4px).
  */
 export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
   const g = crewGeom(section);
@@ -70,26 +69,15 @@ export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
           </svg>
         </figure>
         <div className="arc-cir-list" data-cir-list="crew">
-          <h3 className="arc-cir-list__label">{section.record.label}</h3>
           <dl className="arc-cir-list__rows">
-            {section.record.rows.map((r) => (
+            {section.rows.map((r) => (
               <div key={r.id}>
                 <dt>{r.who}</dt>
                 <dd>
-                  <strong>{r.value}</strong> {r.unit}
-                  <span className="arc-cir-list__was">{r.config}</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <h3 className="arc-cir-list__label">{section.plan.label}</h3>
-          <dl className="arc-cir-list__rows">
-            {section.plan.rows.map((r) => (
-              <div key={r.id}>
-                <dt>{r.who}</dt>
-                <dd>
-                  <strong>{r.measure}</strong>
-                  <span className="arc-cir-list__was">{r.source}</span>
+                  {r.upstream}
+                  <span className="arc-cir-list__was">
+                    <strong>{r.value}</strong> {r.unit}
+                  </span>
                 </dd>
               </div>
             ))}

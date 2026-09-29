@@ -769,7 +769,9 @@ export type ArcSection = ArcSectionBase &
          */
         kind: "horizon";
         head: ArcHead;
-        axis: { from: string; to: string };
+        /** The time axis under the tracks. The owned reading carries none
+         *  (ADR-133 U4, owner: "we don't need that"). */
+        axis?: { from: string; to: string };
         operated?: {
           label: string;
           /** The word under each check. */
@@ -868,25 +870,24 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE CREW (ADR-133): the business case as a DRAWN RECORD, never a
-         * calculator (owner, 2026-09-28: "it's not about exact numbers …
-         * it should be a visual thing they can see"). Left, the shape the
-         * work took at Loop: a few people, one configuration each, and the
-         * output drawn as the quantity it is. Right, the same shape at the
-         * client, its readouts framed and empty: counted from week one,
-         * never promised.
+         * THE CREW (ADR-133 U4): the proof that automation runs through
+         * adoption, as an OVERVIEW of Loop's record in the approach's own two
+         * bands (owner, 2026-09-29: "it really feels like it builds on top of
+         * that upstream-downstream material"). One column per role: above the
+         * line, green, the people and what they spend the time on now; below
+         * it, gold, what runs and the record's readout, with one small mark
+         * drawn as the quantity it is. Never a calculator.
          *
          * ⚠ THE THIRTEENTH ENUMERATED EXCEPTION. The circuit's own glyph
-         * library, static, one leaf, no script. The only digits on the
-         * drawing are the record's, and only on the record side.
+         * library, static, one leaf, no script. U4 deleted the client's half
+         * (the readouts "counted from week one"): the owner ruled it out. The
+         * only digits on the drawing are the record's own readouts.
          */
         kind: "crew";
         head: ArcHead;
-        record: { label: string; rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow] };
-        plan: {
-          label: string;
-          rows: readonly [CrewMeasure, CrewMeasure, CrewMeasure, CrewMeasure];
-        };
+        /** The two bands' labels, e.g. "Upstream · the people". */
+        bands: { upstream: string; downstream: string };
+        rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow];
         /** The drawing's accessible name. */
         alt: string;
       }
@@ -909,35 +910,26 @@ export type CrewOutput =
   | { kind: "field"; count: number }
   | { kind: "funnel"; lines: number }
   | { kind: "tenfold" }
-  | { kind: "month" };
+  /** One bar divided into segments: a count allocated across partners and
+   *  formats (Mímir's briefing division). */
+  | { kind: "split"; parts: number };
 
-/** One row of the record: people → one configuration → what came out. */
+/** One column of the record: who, what they do now, and what runs. */
 export interface CrewRow {
   id: string;
   /** Who, e.g. "Two designers and a copywriter". */
   who: string;
-  /** How many people the seat draws (pixel figures). */
-  people: number;
-  /** The configuration, e.g. "The studio's Skills". */
-  config: string;
+  /** How many people the seat draws (pixel figures) — ONLY where the record
+   *  states a count. A plural role ("The PMs") draws none. */
+  people?: number;
+  /** What they spend the time on now, upstream, e.g. "Concepting and brand
+   *  storytelling". */
+  upstream: string;
   output: CrewOutput;
-  /** The reading, mono, e.g. "About 700". The record's own number. */
+  /** The reading, mono, e.g. "About 700". The record's own number, if any. */
   value: string;
   /** The line under it, e.g. "paid-social assets a month". */
   unit: string;
-}
-
-/** One row of the plan: a measure counted in week one, framed and empty. */
-export interface CrewMeasure {
-  id: string;
-  /** Who it is counted for, e.g. "The PMs and producers". */
-  who: string;
-  /** The configuration that moves it, e.g. "The retouch check". */
-  config: string;
-  /** The measure, e.g. "Operational hours a week". */
-  measure: string;
-  /** Where it is read from, one line. */
-  source: string;
 }
 
 /* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */

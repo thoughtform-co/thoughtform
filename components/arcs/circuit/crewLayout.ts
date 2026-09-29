@@ -1,6 +1,6 @@
 import type { Pt } from "@/components/landing/home-v2/services/casefile/map/pda/ribbon";
 import { polylineLength } from "@/components/landing/home-v2/services/casefile/map/pda/ribbon";
-import type { ArcSectionOf, CrewMeasure, CrewOutput, CrewRow } from "@/lib/arcs/types";
+import type { ArcSectionOf, CrewOutput, CrewRow } from "@/lib/arcs/types";
 
 import {
   FS,
@@ -17,37 +17,35 @@ import {
 } from "./circuitLayout";
 
 /**
- * crewLayout — THE CREW's arithmetic (ADR-133). Pure.
+ * crewLayout — THE CREW's arithmetic (ADR-133 U4). Pure.
  *
- * The business case, DRAWN: two halves of one instrument on one datum. Left,
- * the RECORD — four rows at Loop, each a seat (the people, counted as marks),
- * the one configuration they run, and what came out, drawn as the quantity it
- * is: seven hundred pads for seven hundred assets, a dozen pre-filled lines
- * converging on one editor, ten reviews of which a person takes one, a month
- * of four weeks with one of them handed back. Right, the PLAN — the same
- * shape at the client, the configuration dashed because it is not built yet
- * and the readout FRAMED AND EMPTY: what is counted in week one and read
- * every month, never a number we promise.
+ * WHAT IT RETURNED AT LOOP, AS THE APPROACH'S TWO BANDS. One column per role
+ * (owner, 2026-09-29, on Rob's four points: the two designers and a copywriter
+ * who make far more, the PMs who fill in the copy, the head of design who
+ * reviews less, creative strategy whose ad count is divided for it). Above a
+ * dashed line, green, the people and what they spend the time on now: the
+ * upstream. Below it, gold, what runs: the record's readout, with one small
+ * mark drawn as the quantity it is — seven hundred pads, a dozen pre-filled
+ * lines for one editor, ten reviews of which a person takes one, one count
+ * divided into its briefs.
  *
- * ⚠ THE OUTPUTS ARE MARKS, NOT A CHART. There is no axis and no scale shared
- * across rows: each row draws its own record in its own unit, because the
- * four readings are not the same quantity and a common scale would claim they
- * are.
+ * ⚠ THE CLIENT'S HALF IS GONE (U4): the readouts "counted from week one" were
+ * ruled out. ⚠ THE OUTPUTS ARE MARKS, NOT A CHART: no axis and no scale shared
+ * across columns, because the four readings are not one quantity.
+ * ⚠ A HEAD COUNT ONLY WHERE THE RECORD STATES ONE: a plural role draws no
+ * person marks rather than an invented number of them.
  */
 
-export const CREW_VB = { w: 1400, h: 560 } as const;
-const HALF_W = (CREW_VB.w - 2 * INSET - 48) / 2;
-export const HALF_X = [INSET, INSET + HALF_W + 48] as const;
-const ROWS_Y = 72;
-const ROW_H = 104;
-const ROW_GAP = (CREW_VB.h - INSET - ROWS_Y - 4 * ROW_H) / 3;
-export const rowY = (i: number) => ROWS_Y + i * (ROW_H + ROW_GAP);
+export const CREW_VB = { w: 1400, h: 442 } as const;
+const GAP = 32;
+export const COL_W = (CREW_VB.w - 2 * INSET - 3 * GAP) / 4;
+export const colX = (i: number) => INSET + i * (COL_W + GAP);
 
-/** The columns of one half: seat · configuration · output, with taps between. */
-const SEAT_W = 180;
-const CFG_W = 168;
-const TAP = 20;
-const OUT_W = HALF_W - SEAT_W - CFG_W - 2 * TAP;
+/** The upstream band's plates, the line, the downstream band's plates. */
+const UP = { label: 44, y: 56, h: 128 } as const;
+export const LINE_Y = 212;
+const DOWN = { label: 244, y: 258, h: 160 } as const;
+const PAD_X = 14;
 
 export interface CrewGeom {
   vb: { w: number; h: number };
@@ -99,16 +97,17 @@ function sans(
 }
 const ALL = { a: 1, b: 1, c: 1 } as const;
 const NOW = { a: 0, b: 0, c: 0 } as const;
-function tap(
+/** A short four-wire tap, straight down from one plate to the next. */
+function drop(
   id: string,
-  x1: number,
-  x2: number,
-  y: number,
+  x: number,
+  y1: number,
+  y2: number,
   ends: readonly [string, string]
 ): CirWire {
   const pts: Pt[] = [
-    [x1, y],
-    [x2, y],
+    [x, y1],
+    [x, y2],
   ];
   return {
     id,
@@ -123,7 +122,7 @@ function tap(
   };
 }
 
-/** The output of a record row, drawn in its box. */
+/** The output of a column, drawn in its box. */
 function drawOutput(o: CrewOutput, box: Rect, marks: CirMark[]): void {
   switch (o.kind) {
     case "field": {
@@ -183,18 +182,22 @@ function drawOutput(o: CrewOutput, box: Rect, marks: CirMark[]): void {
       }
       return;
     }
-    case "month": {
-      // A month of four weeks, one of them handed back.
-      const gap = 10;
-      const w = (box.w - 3 * gap) / 4;
-      for (let n = 0; n < 4; n += 1) {
+    case "split": {
+      // One count, and the same count divided into its briefs: a whole bar
+      // over the bar broken into parts.
+      const h = 14;
+      const gap = 6;
+      const top = box.y + (box.h - 2 * h - 10) / 2;
+      marks.push({ kind: "pad", x: box.x, y: top, w: box.w, h, tone: "gold" });
+      const w = (box.w - (o.parts - 1) * gap) / o.parts;
+      for (let n = 0; n < o.parts; n += 1) {
         marks.push({
           kind: "pad",
           x: box.x + n * (w + gap),
-          y: box.y + 4,
+          y: top + h + 10,
           w,
-          h: box.h - 8,
-          tone: n === 3 ? "green" : "ring-dawn",
+          h,
+          tone: "ring-gold",
         });
       }
       return;
@@ -202,117 +205,86 @@ function drawOutput(o: CrewOutput, box: Rect, marks: CirMark[]): void {
   }
 }
 
-function seat(
-  id: string,
-  x: number,
-  y: number,
-  who: string,
-  people: number,
-  modules: CirModule[],
-  marks: CirMark[],
-  letters: CirLetter[]
-): void {
-  modules.push({ id: `${id}-seat`, rect: { x, y, w: SEAT_W, h: ROW_H }, cut: 12, paint: "green" });
-  for (let p = 0; p < people; p += 1) {
-    marks.push({ kind: "person", x: x + 14 + p * 26, y: y + 12, cell: 3 });
-  }
-  letters.push(
-    ...sans(`${id}.who`, who, FS.chrome, SEAT_W - 28, x + 14, y + 60, "green-ink", 2, true)
-  );
-}
-
-function config(
-  id: string,
-  x: number,
-  y: number,
-  name: string,
-  planned: boolean,
-  modules: CirModule[],
-  letters: CirLetter[]
-): void {
-  const h = 60;
-  const cy = y + (ROW_H - h) / 2;
-  modules.push({
-    id: `${id}-cfg`,
-    rect: { x, y: cy, w: CFG_W, h },
-    cut: 12,
-    paint: planned ? "gold-future" : "gold",
-  });
-  letters.push(...sans(`${id}.cfg`, name, FS.chrome, CFG_W - 24, x + 12, cy + 26, "ink", 2, true));
-}
-
 export function crewGeom(s: ArcSectionOf<"crew">): CrewGeom {
   const modules: CirModule[] = [];
   const marks: CirMark[] = [];
   const letters: CirLetter[] = [];
   const wires: CirWire[] = [];
+  const m = COL_W - 2 * PAD_X;
 
-  // The two halves' names, on the datum above the rows.
+  // The two bands' names, and the line the work crosses between them.
   letters.push(
-    mono("record.label", s.record.label, FS.key, TRACK.key, HALF_W, HALF_X[0], 44, "ink")
+    mono(
+      "band.up",
+      s.bands.upstream,
+      FS.key,
+      TRACK.key,
+      CREW_VB.w - 2 * INSET,
+      INSET,
+      UP.label,
+      "green-ink"
+    )
   );
-  letters.push(mono("plan.label", s.plan.label, FS.key, TRACK.key, HALF_W, HALF_X[1], 44, "ink"));
-
-  s.record.rows.forEach((row: CrewRow, i) => {
-    const y = rowY(i);
-    const x0 = HALF_X[0];
-    const id = `record-${row.id}`;
-    const cfgX = x0 + SEAT_W + TAP;
-    const outX = cfgX + CFG_W + TAP;
-    seat(id, x0, y, row.who, row.people, modules, marks, letters);
-    config(id, cfgX, y, row.config, false, modules, letters);
-    modules.push({
-      id: `${id}-out`,
-      rect: { x: outX, y, w: OUT_W, h: ROW_H },
-      cut: 12,
-      paint: "plate",
-    });
-    drawOutput(row.output, { x: outX + 12, y: y + 10, w: OUT_W - 24, h: 44 }, marks);
-    letters.push(
-      ...sans(`${id}.value`, row.value, FS.value, OUT_W - 24, outX + 12, y + 76, "ink", 1, true)
-    );
-    letters.push(...sans(`${id}.unit`, row.unit, FS.chrome, OUT_W - 24, outX + 12, y + 95, "ink2"));
-    const cy = y + ROW_H / 2;
-    wires.push(tap(`${id}-a`, x0 + SEAT_W, cfgX, cy, [`${id}-seat`, `${id}-cfg`]));
-    wires.push(tap(`${id}-b`, cfgX + CFG_W, outX, cy, [`${id}-cfg`, `${id}-out`]));
+  letters.push(
+    mono(
+      "band.down",
+      s.bands.downstream,
+      FS.key,
+      TRACK.key,
+      CREW_VB.w - 2 * INSET,
+      INSET,
+      DOWN.label,
+      "gold-ink"
+    )
+  );
+  marks.push({
+    kind: "rule",
+    x1: INSET,
+    y1: LINE_Y,
+    x2: CREW_VB.w - INSET,
+    y2: LINE_Y,
+    tone: "line",
+    dash: true,
   });
 
-  s.plan.rows.forEach((row: CrewMeasure, i) => {
-    const y = rowY(i);
-    const x0 = HALF_X[1];
-    const id = `plan-${row.id}`;
-    const cfgX = x0 + SEAT_W + TAP;
-    const outX = cfgX + CFG_W + TAP;
-    seat(id, x0, y, row.who, 0, modules, marks, letters);
-    config(id, cfgX, y, row.config, true, modules, letters);
-    // The readout: the measure's name in a framed key well, and the value
-    // cell under it framed, dashed and EMPTY — read from week one.
-    modules.push({ id: `${id}-key`, rect: { x: outX, y, w: OUT_W, h: 44 }, cut: 0, paint: "well" });
+  s.rows.forEach((row: CrewRow, i) => {
+    const x = colX(i);
+    const id = `row-${row.id}`;
+
+    // Upstream: the people, and what the time goes to now.
     modules.push({
-      id: `${id}-out`,
-      rect: { x: outX, y: y + 50, w: OUT_W, h: ROW_H - 50 },
-      cut: 0,
-      paint: "future",
+      id: `${id}-up`,
+      rect: { x, y: UP.y, w: COL_W, h: UP.h },
+      cut: 12,
+      paint: "green",
     });
+    for (let p = 0; p < (row.people ?? 0); p += 1) {
+      marks.push({ kind: "person", x: x + PAD_X + p * 26, y: UP.y + 14, cell: 3 });
+    }
     letters.push(
-      ...sans(
-        `${id}.measure`,
-        row.measure,
-        FS.chrome,
-        OUT_W - 24,
-        outX + 12,
-        y + 28,
-        "ink",
-        1,
-        true
-      )
+      ...sans(`${id}.who`, row.who, FS.chrome, m, x + PAD_X, UP.y + 60, "green-ink", 1, true)
     );
     letters.push(
-      ...sans(`${id}.source`, row.source, FS.chrome, OUT_W - 24, outX + 12, y + 83, "ink2")
+      ...sans(`${id}.upstream`, row.upstream, FS.answer, m, x + PAD_X, UP.y + 90, "ink", 2)
     );
-    const cy = y + ROW_H / 2;
-    wires.push(tap(`${id}-a`, x0 + SEAT_W, cfgX, cy, [`${id}-seat`, `${id}-cfg`]));
-    wires.push(tap(`${id}-b`, cfgX + CFG_W, outX, cy, [`${id}-cfg`, `${id}-out`]));
+
+    // The drop across the line, off-centre to the right: the band's label
+    // runs in from the left edge on the row the drop crosses.
+    const cx = x + COL_W - 24;
+    wires.push(drop(`${id}-drop`, cx, UP.y + UP.h, DOWN.y, [`${id}-up`, `${id}-down`]));
+
+    // Downstream: what runs, drawn, and the record's readout.
+    modules.push({
+      id: `${id}-down`,
+      rect: { x, y: DOWN.y, w: COL_W, h: DOWN.h },
+      cut: 12,
+      paint: "gold",
+    });
+    drawOutput(row.output, { x: x + PAD_X, y: DOWN.y + 14, w: m, h: 56 }, marks);
+    letters.push(
+      ...sans(`${id}.value`, row.value, FS.value, m, x + PAD_X, DOWN.y + 100, "ink", 1, true)
+    );
+    letters.push(...sans(`${id}.unit`, row.unit, FS.chrome, m, x + PAD_X, DOWN.y + 122, "ink2", 2));
   });
 
   return { vb: { ...CREW_VB }, modules, marks, letters, wires };

@@ -35,13 +35,14 @@ import type { ArcDef } from "../types";
  * so each `proof-card` carries its own `title` ("We pushed …"). The record's
  * lines are untouched: they are the Dublin keynote's, word for word.
  *
- * ⚠ THE SPINE SINCE ADR-133 (2026-09-28): Loop (part one) · THE RETURN (a
- * `crew`: Loop's record drawn beside the four numbers we count and never
- * promise) · the turn · THE CIRCUIT (the review recap today and configured →
- * the team owns it → one layer, every workflow: one pinned scene) · THE GOAL
- * (a `horizon`, the approach in a CMO's words, before the plan) · the plan ·
- * the checker ON PANDORA'S OWN PICTURE · who is in the room · what you keep ·
- * the fee · the four numbers · who does it · next steps.
+ * ⚠ THE SPINE SINCE ADR-133 U4 (2026-09-29): Loop (part one: four proof
+ * cards) · the turn · TODAY (the `board`: the studio's setup beside the same
+ * facts configured) · THE APPROACH ("Automation runs through adoption.", the
+ * owned `horizon`) · THE RETURN (a `crew`: Loop's record in the approach's two
+ * bands, the proof of it) · THE SYSTEM (the `circuit`: every workflow a
+ * configuration on the marketing OS) · the plan · the checker ON PANDORA'S OWN
+ * PICTURE · who is in the room · what you keep · the fee · the four numbers ·
+ * who does it · next steps.
  */
 
 const DAY_RATE = 1500;
@@ -140,100 +141,6 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       title: "We built the layer the agents run on",
     },
     {
-      /* THE RETURN, DRAWN (ADR-133, owner 2026-09-28, after Rob's read: the
-         marketing director will ask about the impact). "It's not about exact
-         numbers ... it should be a visual thing they can see", and the
-         reasoning is Loop's own team shape. It sits WITH the proof it comes
-         from, before the turn to Pandora (owner: "should be after the
-         proof"). Left, Loop's RECORD, the printable figures only, each output
-         drawn as the quantity it is; right, the same shape in the studio with
-         the four measures we count in week one, FRAMED AND EMPTY. No Pandora
-         estimate, no calculator. */
-      id: "return",
-      kind: "crew",
-      menuLabel: "The return",
-      head: {
-        eyebrow: "Loop · what it returned",
-        title: { pre: "What it returned", em: "at Loop." },
-        sub: "Left, four things the same work did at Loop, from the record: a few people, one configuration each, and what came out. Right, the same shape in Pandora's studio, with the four numbers we count in week one and read beside every month's fee. We promise the counting; the numbers are yours to read.",
-      },
-      record: {
-        label: "At Loop, from the record",
-        rows: [
-          {
-            id: "assets",
-            who: "Two designers and a copywriter",
-            people: 3,
-            config: "The studio's Skills",
-            output: { kind: "field", count: 700 },
-            value: "About 700",
-            unit: "paid-social assets a month",
-          },
-          {
-            id: "copy",
-            who: "The PMs",
-            people: 2,
-            config: "The briefing sync",
-            output: { kind: "funnel", lines: 12 },
-            value: "One copy editor",
-            unit: "checks what they pre-fill",
-          },
-          {
-            id: "review",
-            who: "The head of design",
-            people: 1,
-            config: "The review agent",
-            output: { kind: "tenfold" },
-            value: "About ten times",
-            unit: "less review by hand",
-          },
-          {
-            id: "planning",
-            who: "A program manager",
-            people: 1,
-            config: "The planning tool",
-            output: { kind: "month" },
-            value: "A week a month",
-            unit: "back from resource planning",
-          },
-        ],
-      },
-      plan: {
-        label: "In the studio, counted from week one",
-        rows: [
-          {
-            id: "hours",
-            who: "The PMs and producers",
-            config: "Filing, recap, schedule",
-            measure: "Operational hours a week",
-            source: "Read from their calendars",
-          },
-          {
-            id: "days",
-            who: "The freelancers",
-            config: "The same, on a schedule",
-            measure: "Freelance days on operations",
-            source: "Read from the bookings",
-          },
-          {
-            id: "cycle",
-            who: "The producers",
-            config: "The retouch check",
-            measure: "A batch, in to verdict",
-            source: "How long a batch waits",
-          },
-          {
-            id: "rounds",
-            who: "The retouchers",
-            config: "The retouch check",
-            measure: "Rounds per asset",
-            source: "How often one goes back",
-          },
-        ],
-      },
-      alt: "The business case as two halves. At Loop, from the record: two designers and a copywriter making about 700 paid-social assets a month with the studio's Skills; the PMs pre-filling copy through the briefing sync for one copy editor to check; the head of design's review agent taking about ten times less review by hand; a program manager's planning tool giving back a week a month. In the studio, the same shape with four measures counted from week one and left empty: operational hours a week, freelance days on operations, a retouch batch from in to verdict, and rounds per asset.",
-    },
-    {
       id: "turn",
       kind: "interstitial",
       variant: "callout",
@@ -329,7 +236,6 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         title: { pre: "Automation runs", em: "through adoption." },
         sub: "We start with the team, not the tools. In the workshops the PMs and producers learn to work with the AI they already have, and write down how the work is done and what a good result looks like. That is what lets an agent take over the operational work, checking in when it needs a person, while the team's own time goes upstream: the brief, the concepting, the campaign imagery.",
       },
-      axis: { from: "Morning", to: "End of the day" },
       owner: {
         key: "The owner",
         name: "The PMs and producers",
@@ -354,7 +260,65 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         ],
         end: "You judge the result",
       },
-      note: "Month one sets up the filing, the recap and the schedule, and a PM presses the button. By month three the same workflows run on a schedule, the checker reads every upload, and the team hears from them only when a person is needed.",
+    },
+    {
+      /* WHAT IT RETURNED AT LOOP (ADR-133 U4, owner 2026-09-29): the proof that
+         automation runs through adoption, so it follows the approach, drawn in
+         the approach's own two bands (owner: "it really feels like it builds on
+         top of that upstream-downstream material, more like an overview").
+         Rob's four points, one column each; the fourth is creative strategy
+         on Mímir's briefing division (given the month's forecast, it divides
+         the ad count into briefs across use case, format and partner — the
+         owner: "we really built a system that can look at the number of ads we
+         need and then allocate them"). The client's half, the readouts
+         counted from week one, is deleted on his word. The only figures are
+         Loop's spoken, printable ones. */
+      id: "return",
+      kind: "crew",
+      menuLabel: "The return",
+      head: {
+        eyebrow: "Loop · the proof",
+        title: { pre: "What it returned", em: "at Loop." },
+        sub: "The same approach, at Loop. Each team moved upstream, and what sits under the line now runs on the configurations they wrote.",
+      },
+      bands: { upstream: "Upstream · the people", downstream: "Downstream · what runs" },
+      rows: [
+        {
+          id: "assets",
+          who: "Two designers and a copywriter",
+          people: 3,
+          upstream: "Concepting and brand storytelling",
+          output: { kind: "field", count: 700 },
+          value: "About 700",
+          unit: "paid-social assets a month",
+        },
+        {
+          id: "copy",
+          who: "The PMs",
+          upstream: "The brief",
+          output: { kind: "funnel", lines: 12 },
+          value: "The copy, pre-filled",
+          unit: "one copy editor checks it",
+        },
+        {
+          id: "review",
+          who: "The head of design",
+          people: 1,
+          upstream: "The final call",
+          output: { kind: "tenfold" },
+          value: "About ten times",
+          unit: "less review by hand",
+        },
+        {
+          id: "strategy",
+          who: "Creative strategy",
+          upstream: "The ideas worth testing",
+          output: { kind: "split", parts: 6 },
+          value: "The ad count",
+          unit: "divided across partners and formats",
+        },
+      ],
+      alt: "What it returned at Loop, in two bands. Upstream, the people and what their time goes to now: two designers and a copywriter on concepting and brand storytelling, the PMs on the brief, the head of design on the final call, creative strategy on the ideas worth testing. Downstream, what runs: about 700 paid-social assets a month; the copy pre-filled for one copy editor to check; about ten times less review by hand; and the month's ad count divided across partners and formats.",
     },
     {
       /* ONE LAYER, EVERY WORKFLOW (ADR-133 U2, owner 2026-09-29: "a nice
@@ -372,11 +336,11 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
          height"). */
       id: "layer",
       kind: "circuit",
-      menuLabel: "One layer",
+      menuLabel: "The system",
       head: {
-        eyebrow: "Pandora · built to scale",
-        title: { pre: "One layer,", em: "every workflow." },
-        sub: "Each team writes down how its work is done, one workflow at a time. Every workflow becomes a configuration its team owns, and all of them run on one layer: Pandora's marketing OS. Each one written gives the team time back upstream, and the next one starts from what is already there.",
+        eyebrow: "Pandora · the marketing OS",
+        title: { pre: "A system built", em: "to compound." },
+        sub: "Each team writes down how its work is done, one workflow at a time, and each workflow becomes a configuration that team owns. All of them run on one layer, Pandora's marketing OS, so every workflow written gives the team time back upstream and the next one starts from what is already there.",
       },
       configs: [
         { id: "filing", name: "Filing", line: "owned by the producers" },
