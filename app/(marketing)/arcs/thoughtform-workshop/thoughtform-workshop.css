@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════════════════════
+   /arcs/thoughtform-workshop — route-scoped rules (ADR-137)
+
+   The third fork of ADR-053's recipe: hero → about → corridor → the proof
+   stack in #services → the workshop arc in #workshop → contact. Everything
+   here is scoped to `.tw-root` so `/`, `/claude-workshop` and the Trinny
+   proposal keep their own rules byte-for-byte.
+
+   ⚠ Never port these into landing.css / home-v2.css / services.css; one
+   selector reaching two variants' roots is a shared sheet by another name.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. The entry hold must not cover #about (ADR-053 rule 1) ────────
+   `data-corridor-entry` pins the corridor's sticky cell `fixed` whenever
+   the mount sits below the viewport top; on `/` the hero is the curtain
+   over it, here #about sits between them and would be painted over.
+   Native sticky is the fix. Specificity (0,3,1) beats the shared (0,2,1). */
+html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
+  position: sticky;
+  top: 0;
+  left: auto;
+  width: 100%;
+  margin-left: 0;
+}
+
+/* ── 2. The nav corner keeps the BARS (ADR-053 rule 2) ───────────────
+   The readout resolves from the production manifest and would name ABOUT
+   through the corridor approach on this order. */
+.tw-root .hud__nav__sector {
+  display: none;
+}
+.tw-root .hud__nav__btn .bars {
+  display: block;
+}
+
+/* ── 3. The ambient's kill edge ───────────────────────────────────────
+   `#workshop` is the first OPAQUE station below the corridor and carries
+   `data-corridor-kill`; the hook fades the canvas against its top and this
+   rule promotes the same element while the exit band is live. Both sides
+   key on one attribute, so JS and CSS cannot name different stations. */
+html[data-corridor-exit="true"] .tw-root [data-corridor-kill] {
+  position: relative;
+  z-index: 6;
+  content-visibility: visible;
+}
+
+/* ── 4. The workshop station hosts arc beats ──────────────────────────
+   The station base is a centred flex column with the landing's asymmetric
+   padding — right for one titled block, wrong for a run of viewport beats
+   that bring their own rhythm (`.arc-sec`, which already carries this
+   surface's insets). A plain block with no padding; every `.arc-section`
+   paints its own opaque void, and they tile the station edge to edge.
+   ⚠ `content-visibility: visible`, ALWAYS. A station defaults to `auto`,
+   which lays this one out as a 720px placeholder until the reader reaches
+   it and then grows the document by the whole arc (~12,000px measured at
+   1280x720) on that frame — the scrollbar jumps and every scroll clock
+   downstream of it re-bases mid-read. The exit rule above only lifts it
+   while the band is live. */
+.tw-root .tw-arc {
+  display: block;
+  padding: 0;
+  content-visibility: visible;
+}

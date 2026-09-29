@@ -8669,3 +8669,189 @@ html[data-theme="light"] .arc-root .arc-resource {
 html[data-theme="light"] .arc-root .arc-signal {
   --arc-sig-well: rgba(var(--dawn-rgb), 0.07);
 }
+
+/* ── The opening board (ADR-137) ───────────────────────────────────────
+   The workshop's opening slide, ported by hand from the Moira workshop
+   template's session hero: the head on the left, the board in miniature on
+   the right. Every colour is a rung of the ADR-077 ramp or the gold pair,
+   so light re-derives through the tokens and only the two gold WASHES are
+   restated below (an alpha is not a colour).
+
+   ⚠ THE PLATES AND THE CARD ARE OPAQUE. The wires run 6 units under each
+   edge (TUCK) so rounding never opens a gap at the join; a translucent
+   plate would show the tucked ends. `color-mix` against `--void-deep-rgb`
+   makes the recess without an alpha. */
+.arc-hb {
+  --hb-plate: rgb(var(--void-deep-rgb));
+  --hb-card: color-mix(in srgb, rgb(var(--dawn-rgb)) 8%, rgb(var(--void-deep-rgb)));
+  --hb-lit-plate: color-mix(in srgb, rgb(var(--gold-rgb)) 12%, rgb(var(--void-deep-rgb)));
+  --hb-wire: var(--arc-ink-22);
+  --hb-lit: var(--gold-line, #caa554);
+}
+.arc-hb__band {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: clamp(32px, 4.5vw, 96px);
+}
+.arc-hb__copy {
+  display: grid;
+  gap: clamp(16px, 2.6vh, 28px);
+}
+.arc-hb__desig {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-60);
+}
+.arc-hb__desig::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--arc-rule);
+}
+/* The title rides `.arc-title` (face, case, tracking, the gold `em`) and
+   takes only the display SIZE here, so it adds no type literal to the sheet. */
+.arc-hb__title {
+  font-size: clamp(28px, min(3vw, 6vh), 54px);
+  line-height: 1.08;
+  /* A title here is two short sentences, and each one takes its own line
+     group: the `em` starts on a fresh line and both halves wrap BALANCED, so
+     neither leaves a one-word orphan against the diagram's straight edge. */
+  text-wrap: balance;
+}
+.arc-hb__title em {
+  display: block;
+  text-wrap: balance;
+}
+.arc-hb__lede {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.55;
+  color: var(--arc-ink-70);
+}
+.arc-hb__visual {
+  margin: 0;
+  padding: clamp(14px, 2vw, 32px);
+  border: 1px solid var(--arc-edge);
+  background-color: var(--arc-plate);
+  background-image: radial-gradient(circle, var(--arc-grid) 1px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+.arc-hb__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.arc-hb__wires path {
+  fill: none;
+  stroke: var(--hb-wire);
+  stroke-width: 2;
+}
+.arc-hb__wires rect {
+  fill: var(--hb-wire);
+}
+.arc-hb__plate path {
+  fill: var(--hb-plate);
+  stroke: var(--arc-seam);
+  stroke-width: 2;
+}
+.arc-hb__plate rect {
+  fill: var(--arc-chip);
+}
+.arc-hb__plate[data-hb-lit] path {
+  fill: var(--hb-lit-plate);
+  stroke: var(--hb-lit);
+  stroke-width: 2.5;
+}
+.arc-hb__plate[data-hb-lit] rect {
+  fill: rgba(var(--gold-rgb), 0.45);
+}
+.arc-hb__card path:first-child {
+  fill: var(--hb-card);
+  stroke: var(--arc-seam);
+  stroke-width: 2;
+}
+.arc-hb__card .arc-hb__lip {
+  fill: none;
+  stroke: var(--gold, #caa554);
+  stroke-width: 3;
+}
+.arc-hb__card rect {
+  fill: var(--arc-ink-22);
+}
+.arc-hb__card rect[data-hb-on] {
+  fill: var(--gold, #caa554);
+}
+.arc-hb__lit path {
+  fill: none;
+  stroke: var(--hb-lit);
+  stroke-width: 3.5;
+}
+.arc-hb__lit rect {
+  fill: var(--hb-lit);
+}
+.arc-hb__frame {
+  fill: rgba(var(--gold-rgb), 0.05);
+  stroke: var(--hb-lit);
+  stroke-width: 2;
+}
+
+/* The lit bundles draw on once, from the card outward on both sides; the
+   pins and the frame follow. JS-opted and motion-gated, so no-JS and reduced
+   motion read the board complete. ⚠ `pathLength` normalises each run to 1,
+   which is why no `vector-effect` rides these paths (ADR-106). */
+@media (prefers-reduced-motion: no-preference) {
+  .is-arc-js .arc-hb__visual .arc-hb__lit path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: -1;
+  }
+  .is-arc-js .arc-hb__visual .arc-hb__lit path[data-hb-side="left"] {
+    stroke-dashoffset: 1;
+  }
+  .is-arc-js .arc-hb__visual .arc-hb__lit rect,
+  .is-arc-js .arc-hb__visual .arc-hb__frame {
+    opacity: 0;
+  }
+  .is-arc-js .arc-hb__visual.is-in .arc-hb__lit path {
+    animation: arc-hb-draw 900ms cubic-bezier(0.45, 0.05, 0.2, 1) 500ms forwards;
+  }
+  .is-arc-js .arc-hb__visual.is-in .arc-hb__lit rect {
+    animation: arc-hb-show 300ms ease 1300ms forwards;
+  }
+  .is-arc-js .arc-hb__visual.is-in .arc-hb__frame {
+    animation: arc-hb-show 500ms ease 1500ms forwards;
+  }
+}
+@keyframes arc-hb-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes arc-hb-show {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .arc-hb__band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Light: the two gold WASHES are alphas of their own and are lifted, the
+   rest rides the ramp above. */
+html[data-theme="light"] .arc-root .arc-hb {
+  --hb-lit-plate: color-mix(in srgb, rgb(var(--gold-rgb)) 22%, rgb(var(--void-deep-rgb)));
+}
+html[data-theme="light"] .arc-root .arc-hb__frame {
+  fill: rgba(var(--gold-rgb), 0.1);
+}

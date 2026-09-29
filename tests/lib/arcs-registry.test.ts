@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { caseModeLabel, dossierHead } from "@/components/arcs/ArcDossier";
 import { TOOL_ORDER } from "@/components/arcs/ArcToolIndex";
 import { arcTitleText } from "@/components/arcs/chrome";
+import { litIsFramable } from "@/components/arcs/heroBoard/heroBoardLayout";
 import {
   PROOF_STACK_CASE,
   PROOF_STACK_ORDER,
@@ -1579,6 +1580,17 @@ describe("arcs registry (ADR-052)", () => {
         "utf8"
       );
       expect(src, `${v2Slug} authors its own date`).toMatch(/^\s*date: "\d{4}-\d{2}-\d{2}",$/m);
+    }
+  });
+});
+
+describe("the hero-board kind (ADR-137)", () => {
+  it("every lit set is one side and adjacent, or its frame encloses an unlit plate", () => {
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "hero-board") continue;
+        expect(litIsFramable(section.lit), `${arc.slug} / ${section.id}`).toBe(true);
+      }
     }
   });
 });

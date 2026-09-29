@@ -54,6 +54,20 @@ export function getClaudeWorkshopContent(options?: ParseOptions): V7Content {
 }
 
 /**
+ * The Thoughtform workshop (ADR-137) — a THIRD fork of the ADR-053 recipe,
+ * on its own prototype: hero → about → corridor → the proof stack, then the
+ * house workshop arc in `#workshop`. Its own file for the reason the Trinny
+ * fork gives: the two slots it declares are this route's, and a shared read
+ * would make every edit here a change to `/claude-workshop`. The path is a
+ * string LITERAL inside `join` so Vercel's file tracer follows it.
+ */
+export function getThoughtformWorkshopContent(options?: ParseOptions): V7Content {
+  const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-thoughtform-workshop.html");
+  const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
+  return parseV7Html(htmlPath, tokensPath, options);
+}
+
+/**
  * The Trinny London pitch variant (ADR-093) — a SECOND fork of the
  * ADR-053 recipe, on its own prototype.
  *

@@ -84,8 +84,18 @@ import "@/components/landing/v7/rail-instruments/rail-instruments.css";
  */
 export const dynamicParams = false;
 
+/**
+ * Arcs served by a STATIC folder of their own under `/arcs` (ADR-137): the
+ * folder wins over this dynamic segment, so emitting the slug here too would
+ * build a page nobody can reach. The `ArcDef` stays in `ARCS` — the overview,
+ * the registry guards and `HERO_ROUTES` read it — and only the route moves.
+ */
+const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set(["thoughtform-workshop"]);
+
 export function generateStaticParams() {
-  return [...arcSlugs(), ...clientSlugs()].map((slug) => ({ slug }));
+  return [...arcSlugs().filter((s) => !OWN_ROUTE_SLUGS.has(s)), ...clientSlugs()].map((slug) => ({
+    slug,
+  }));
 }
 
 interface ArcRouteParams {

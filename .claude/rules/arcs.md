@@ -903,6 +903,16 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   rows in the same order** (Drop in · Ask · You get · The check), so a fork
   swaps words, never shape. `what-you-build` lost its chapter slot to it; the
   page is 22 sections against the shell's 16, each half inside it.
+- ⚠ **THE WORKSHOP OPENS ON THE CORRIDOR (ADR-137, Proposed 2026-09-29).**
+  `/arcs/thoughtform-workshop` is a STATIC FOLDER under `/arcs` (the third fork
+  of ADR-053's recipe): hero → about → corridor → the homepage's proof stack in
+  `#services` (ring off) → the arc's sections in `#workshop` → contact.
+  `[slug]`'s `generateStaticParams` filters the slug (`OWN_ROUTE_SLUGS`); the
+  `ArcDef` stays in `ARCS`. The tail renders through `ArcSectionRenderer`,
+  reached only through `lazy()`. ⚠ The station is `content-visibility:
+visible` or the document grows ~12,400px on arrival. The opening slide is the
+  `hero-board` kind, Moira's `BoardMini` copied by hand onto the ramp; its lit
+  set is one side and adjacent (registry-pinned), its title two short sentences.
 - ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
   2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
   a readout, one quote beat, one `anatomy` beat per week with the same four rows

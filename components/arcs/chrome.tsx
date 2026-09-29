@@ -70,6 +70,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   curve: "CURVE",
   horizon: "HORIZON",
   questions: "CONFIG",
+  "hero-board": "OPENING",
   circuit: "CIRCUIT",
   crew: "RECORD",
   syllabus: "COURSE",

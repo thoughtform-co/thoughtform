@@ -72,8 +72,8 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
     title: { pre: "The capability", em: "your team owns." },
     lede: "AI is not software to command, and a team that learns to work with it stops needing me.",
     actions: [
-      { id: "start", label: "Today", href: "#today", primary: true },
-      { id: "proof", label: "The proof", href: "#the-proof" },
+      { id: "start", label: "The workshop", href: "#the-workshop", primary: true },
+      { id: "arc", label: "Three ways", href: "#three-ways" },
     ],
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
@@ -93,125 +93,27 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       "How to work with an intelligence rather than command it, and what a team keeps afterwards.",
   },
   sections: [
-    /* ── Chapter one · TODAY ─────────────────────────────────────────────
-       The agenda, as the readout's two plates. The right plate's rows are
-       the day's index: each one links to the beat that answers it. */
+    /* ── The opening slide (ADR-137) ─────────────────────────────────────
+       The page opens on the corridor now (hero, About, the Arc, the proof
+       stack), so the arc's own Today readout, proof head and four proof cards
+       are gone: the homepage's pile is the proof, by reference. This beat is
+       the hand-over from that opening into the workshop, and it is the Moira
+       workshop template's session hero, ported: the promise on the left, the
+       board in miniature on the right, the plates a team writes lit. */
     {
-      id: "today",
-      kind: "list-groups",
-      menuLabel: "Today",
+      id: "the-workshop",
+      kind: "hero-board",
+      menuLabel: "The workshop",
       menuPrimary: true,
-      layout: "readout",
       head: {
-        eyebrow: "01 · Today",
-        title: { pre: "The story first,", em: "then hands on." },
-        sub: "We go from what this technology actually is to the configuration your own team runs. Nothing on this page asks you to buy a tool.",
+        eyebrow: "01 · The workshop",
+        title: { pre: "Hand it to an agent.", em: "Trust what comes back." },
+        sub: "Three ways to work with AI: ask it, have it build you a tool, or give it the goal and let it run. This workshop is about the third, and it ends with the checks your team writes so it can.",
       },
-      groups: [
-        {
-          id: "session",
-          label: "The session",
-          blurb: "What this is",
-          items: [
-            { id: "who", tag: "Who", name: "Your team, and the work you already do" },
-            { id: "long", tag: "How it runs", name: "The story, then your own files" },
-            { id: "keep", tag: "You keep", name: "A configuration your team runs" },
-          ],
-          foot: {
-            label: "Not this",
-            lines: ["No tool to buy, and no workflow moved out of what you already own."],
-          },
-        },
-        {
-          id: "chapters",
-          label: "The arc",
-          blurb: "Where we go",
-          items: [
-            {
-              id: "proof",
-              tag: "Proof",
-              name: "What this looked like at Loop",
-              href: "#the-proof",
-            },
-            {
-              id: "navigate",
-              tag: "Navigate",
-              name: "A prompt, a tool, an agent",
-              href: "#three-ways",
-            },
-            {
-              id: "encode",
-              tag: "Encode",
-              name: "Context, and what good looks like",
-              href: "#the-horizon",
-            },
-            {
-              id: "build",
-              tag: "Build",
-              name: "Hands on, from an image to a skill",
-              href: "#practicals",
-            },
-          ],
-          foot: {
-            label: "The order",
-            lines: ["Navigate, encode, build. You cannot build on what nobody has encoded."],
-          },
-        },
+      lit: [
+        ["right", 0],
+        ["right", 1],
       ],
-    },
-
-    /* ── Chapter two · THE PROOF ─────────────────────────────────────────
-       Chapter zero of the room: who this is, for a team that has not met
-       the practice. The OUTCOME is claimed here, once. The four cards under
-       it are the four moves, and none of them re-claims it. */
-    {
-      id: "the-proof",
-      kind: "head",
-      menuLabel: "The proof",
-      menuPrimary: true,
-      head: {
-        eyebrow: "02 · Where this comes from",
-        title: { pre: "The creative team", em: "runs it without me." },
-        sub: "I am Vince. At Loop Earplugs I sat inside the studio team as its intelligence architect, and the work was to make them not need me. Four moves got them there; the next four cards are the record of each one, and you can open any of them.",
-      },
-    },
-    /* ⚠ NO AUTHORED `head` ON THE FOUR CARDS. The card IS the head (ADR-128
-       B1): its band letters the client and its title letters the arc line, so
-       a masthead above it both repeats the title and pushes the beat past one
-       viewport at 1280x720. The order is the pile's own (`PROOF_STACK_ORDER`)
-       and the registry pins it. The titles are this page's, in the PAST tense
-       — the homepage says them in the present, as the offer. */
-    {
-      id: "proof-films",
-      kind: "proof-card",
-      menuLabel: "The films",
-      track: "atl-films",
-      title: "We pushed the frontiers of AI creative",
-    },
-    {
-      id: "proof-tools",
-      kind: "proof-card",
-      menuLabel: "The tools",
-      track: "tooling",
-      title: "We built the tools the work needed",
-    },
-    {
-      /* ⚠ RETITLED, AND THE RULING IS THE REASON (owner, 2026-09-28): the
-         record's line for this track claims self-sufficiency, which is the
-         chapter's claim above. This card's evidence is the ads and the red
-         line, so its title says that instead. */
-      id: "proof-studio",
-      kind: "proof-card",
-      menuLabel: "The studio",
-      track: "studio",
-      title: "We made the ads, and drew the line",
-    },
-    {
-      id: "proof-layer",
-      kind: "proof-card",
-      menuLabel: "The layer",
-      track: "ai-transformation",
-      title: "We built the layer the agents run on",
     },
 
     /* ── Chapter three · NAVIGATE ────────────────────────────────────────
@@ -223,7 +125,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Three ways",
       menuPrimary: true,
       head: {
-        eyebrow: "03 · A prompt, a tool, an agent",
+        eyebrow: "02 · A prompt, a tool, an agent",
         title: { pre: "A prompt, a tool, an agent.", em: "Each runs longer without you." },
         sub: "Ask it and check every answer. Have it build a tool, and you still run it. Give it the goal and the checks, and it runs for hours while you do other work.",
       },
@@ -263,7 +165,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "curve",
       menuLabel: "The curve",
       head: {
-        eyebrow: "04 · The curve",
+        eyebrow: "03 · The curve",
         title: { pre: "Each release finishes longer work,", em: "and costs more per token." },
         sub: "Each release makes fewer small mistakes, so it gets further on long and difficult work. And every model has a second dial: how hard it thinks.",
       },
@@ -276,7 +178,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "spectrum",
       menuLabel: "Hard to steer",
       head: {
-        eyebrow: "05 · Hard to steer",
+        eyebrow: "04 · Hard to steer",
         title: {
           pre: "But it is hard to steer,",
           em: "because it is a tool and a collaborator at once.",
@@ -315,7 +217,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "resource",
       menuLabel: "A resource",
       head: {
-        eyebrow: "06 · A strange resource",
+        eyebrow: "05 · A strange resource",
         title: { pre: "We work with an intelligence,", em: "but measure it like software." },
         sub: "We count it in tokens, the way we count software in seats. Tokens say how much it read and wrote, and nothing about whether the work was any good.",
       },
@@ -339,7 +241,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       id: "real-question",
       kind: "interstitial",
       variant: "question",
-      eyebrow: "07 · The real question",
+      eyebrow: "06 · The real question",
       line: {
         pre: "The real question is:",
         em: "how should intelligence take part in the work?",
@@ -358,7 +260,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "questions",
       menuLabel: "The configuration",
       head: {
-        eyebrow: "08 · The configuration",
+        eyebrow: "07 · The configuration",
         title: { pre: "One piece of work.", em: "Six questions around it." },
         sub: "The answer is written down, per piece of work. Here it is for one of mine. Today is about the two your team writes.",
       },
@@ -425,7 +327,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       /* ⚠ NOT "leverage" (Moira's word for this beat): it is on the voice
          skill's post-2022 list and the grader fails the page on it. */
       head: {
-        eyebrow: "09 · The two you write",
+        eyebrow: "08 · The two you write",
         title: { pre: "The two plates", em: "only your team can write." },
         sub: "The model, the data and the tools are set up across the company. What it knows and what good looks like can only come from the team that does the work: owned by the team, written once, and it outlives the model.",
       },
@@ -463,7 +365,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       id: "person-or-agent",
       kind: "interstitial",
       variant: "question",
-      eyebrow: "10 · The turn",
+      eyebrow: "09 · The turn",
       line: { pre: "Is the workflow for a person,", em: "or for an agent?" },
       subline:
         "A workflow for a person has a person check in at every step. An agent that runs for hours needs the context and the evals instead, and finds the steps itself.",
@@ -474,7 +376,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "The horizon",
       menuPrimary: true,
       head: {
-        eyebrow: "11 · Why it needs checks",
+        eyebrow: "10 · Why it needs checks",
         title: { pre: "It can only work for hours", em: "when it has the context and the evals." },
         sub: "A tool you operate needs you at every step. An agent on a long task checks its work against the evals, retries when it slips, and stops to ask when it should.",
       },
@@ -506,7 +408,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "signal",
       menuLabel: "The market",
       head: {
-        eyebrow: "12 · Where the money goes",
+        eyebrow: "11 · Where the money goes",
         title: {
           pre: "The labs just bet billions",
           em: "on the two things only your team can write.",
@@ -615,7 +517,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "What you build",
       layout: "plates",
       head: {
-        eyebrow: "13 · What you build",
+        eyebrow: "12 · What you build",
         title: { pre: "Build it inside", em: "what you already pay for." },
         sub: "Most of this already sits in the building. What you add is the part only your team can write.",
       },
@@ -719,7 +621,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
          page is authored for. Four fills 2x2 there and runs 4-up above it. */
       columns: 4,
       head: {
-        eyebrow: "14 · Who does what",
+        eyebrow: "13 · Who does what",
         title: { pre: "Map it high,", em: "then hand it down." },
         sub: "Intelligence is a resource, and the order you spend it in decides the cost.",
       },
@@ -761,7 +663,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "bench",
       menuLabel: "The bench",
       head: {
-        eyebrow: "15 · What good looks like",
+        eyebrow: "14 · What good looks like",
         title: { pre: "A check", em: "your team wrote." },
         sub: "A Skill is how you work, written down. An eval is what good looks like, so a model can check itself. Here is ours, running.",
       },
@@ -979,7 +881,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuPrimary: true,
       layout: "readout",
       head: {
-        eyebrow: "16 · Hands on",
+        eyebrow: "15 · Hands on",
         title: { pre: "Now you", em: "drive." },
         sub: "Five rungs on your own files, each one built on the last. Start with a picture, end with a skill that checks its own work.",
       },
@@ -1031,7 +933,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "One image",
       badge: "Rung one · Image",
       head: {
-        eyebrow: "17 · One image",
+        eyebrow: "16 · One image",
         title: { pre: "Start with", em: "one picture." },
         sub: "A real photograph you already own. Nothing is made from nothing, and that is the first rule.",
       },
@@ -1064,7 +966,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "A brief",
       badge: "Rung two · Brief",
       head: {
-        eyebrow: "18 · A brief",
+        eyebrow: "17 · A brief",
         title: { pre: "Let it write", em: "the brief." },
         sub: "The picture answers a brief nobody wrote down. Write it down, and the brief becomes the thing you keep.",
       },
@@ -1097,7 +999,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Formats",
       badge: "Rung three · Formats",
       head: {
-        eyebrow: "19 · Formats and layers",
+        eyebrow: "18 · Formats and layers",
         title: { pre: "One visual,", em: "every format." },
         sub: "The slow part of the week is rarely the picture. It is the same picture again, in every size, with the logo in the right place.",
       },
@@ -1130,7 +1032,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Motion",
       badge: "Rung four · Motion",
       head: {
-        eyebrow: "20 · Motion",
+        eyebrow: "19 · Motion",
         title: { pre: "From rushes", em: "to an edit." },
         sub: "It watches a video the way it reads a file: the cuts, the rhythm, the sound. Then it builds the timeline itself.",
       },
@@ -1163,7 +1065,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       menuLabel: "Make it a skill",
       badge: "Rung five · Skill",
       head: {
-        eyebrow: "21 · Make it a skill",
+        eyebrow: "20 · Make it a skill",
         title: { pre: "Now make it", em: "a skill." },
         sub: "Every note you gave today was a rule nobody had written down. This is where it gets written down.",
       },
@@ -1195,7 +1097,7 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
       kind: "close",
       menuLabel: "What follows",
       head: {
-        eyebrow: "22 · What follows",
+        eyebrow: "21 · What follows",
         title: { pre: "Then it runs", em: "without me." },
         sub: "The first workstream goes through the loop with your own team at the controls. Then a second, with the checks that have accumulated. Then we hand over, with a date on it, and come back once to see what changed.",
       },

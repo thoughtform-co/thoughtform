@@ -466,6 +466,25 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
+         * THE WORKSHOP'S OPENING SLIDE (ADR-137), ported by hand from the
+         * Moira workshop template's session hero: the head on the left, the
+         * board in miniature on the right — one piece of work in the middle,
+         * wired to six plates, the plates a person writes lit and framed.
+         * ADR-052's SIXTH enumerated exception.
+         *
+         * ⚠ THE DRAWING LETTERS NOTHING. It is a promise of the picture the
+         * room meets later, not a second copy of it, so there is no label
+         * ladder to guard and the head carries the whole meaning.
+         */
+        kind: "hero-board";
+        head: ArcHead;
+        /** Which plates are LIT — their bundles draw on and one frame holds
+         *  them. Every lit plate must sit on one side, adjacent, or the frame
+         *  encloses a plate that is not lit (registry-pinned). */
+        lit: readonly (readonly ["left" | "right", 0 | 1 | 2])[];
+      }
+    | {
+        /**
          * THE FLOW (ADR-099): a pipeline drawn left to right — what goes in,
          * what the setup makes of it, and where it ends up.
          *

@@ -80,12 +80,12 @@ engineering team alike. It is the practice's own writing Skill, running.
 on this surface measures it. Measured, all beats, dark, at the room's projector
 size:
 
-| page | beats over 720px | worst |
-| --- | --- | --- |
-| `claude-workshop` | 16 | +1075 |
-| `plopsa-workshop` | 6 | +225 |
-| `suri-workshop` | 1 | +26 |
-| **`thoughtform-workshop`** | **3** | **+65** |
+| page                       | beats over 720px | worst   |
+| -------------------------- | ---------------- | ------- |
+| `claude-workshop`          | 16               | +1075   |
+| `plopsa-workshop`          | 6                | +225    |
+| `suri-workshop`            | 1                | +26     |
+| **`thoughtform-workshop`** | **3**            | **+65** |
 
 ⚠ **THE OVERFLOW IS THE FORMAT'S SHARED AIR, NOT THE COPY.** The flat kinds
 (`cards`, `list-groups`) carry `--arc-sec-pad` at **100.8px per side** at 720h —
@@ -186,3 +186,11 @@ Recorded rather than forced.
 prompt and sample files per rung — so a team repeats the ladder without Vince;
 and the split-screen ad skill and motion reference, waiting on files from the
 client.
+
+## Update: the opening moves to the corridor (2026-09-29, owner)
+
+[ADR-137](137-the-workshop-opens-on-the-corridor.md) replaces this page's
+opening (the `today` readout, the proof head and the four `proof-card` beats)
+with the homepage's own: the route is a corridor variant that mounts the proof
+stack, then this arc from a new `hero-board` slide on. Everything from
+`three-ways` on is ADR-136's situation re-cut, unchanged.

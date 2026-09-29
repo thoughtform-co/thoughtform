@@ -12,6 +12,7 @@ import { ArcCrew } from "./ArcCrew";
 import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
+import { ArcHeroBoard } from "./ArcHeroBoard";
 import { ArcHorizon } from "./ArcHorizon";
 import { ArcProgramBoard } from "./ArcProgramBoard";
 import { ArcProofCard } from "./ArcProofCard";
@@ -84,6 +85,10 @@ export function ArcSectionRenderer({
             return <ArcAnatomy key={section.id} section={section} index={index} motion={motion} />;
           case "interstitial":
             return <ArcInterstitial key={section.id} section={section} motion={motion} />;
+          case "hero-board":
+            return (
+              <ArcHeroBoard key={section.id} section={section} index={index} motion={motion} />
+            );
           case "media":
             return (
               <ArcMediaSection key={section.id} section={section} index={index} motion={motion} />
