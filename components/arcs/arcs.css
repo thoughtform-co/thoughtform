@@ -6227,6 +6227,13 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   height: auto;
   overflow: visible;
 }
+/* The map takes what the frame leaves under the head, and never more: its
+   width is capped by that height through the crop's own aspect, so a short
+   window shrinks the drawing rather than running it off the floor (the
+   retired pinned stage's own rule, kept for the static beat). */
+.arc-cir--map {
+  max-width: calc((100svh - var(--arc-head-datum, 60px) - 250px) * 1400 / 620);
+}
 .arc-cir text {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-weight: var(--weight-text);

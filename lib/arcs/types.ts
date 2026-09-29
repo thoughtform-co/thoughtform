@@ -826,11 +826,12 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE CIRCUIT (ADR-133 U2): one layer, every workflow — a MAP. Each
-         * of the studio's workflows is a small configuration in the restored
-         * board's own shape (the owner above, the work at the centre, its
-         * three parts below), lettered with its NAME ALONE; all of them are
-         * wired to one shared context at the centre, and that context plugs,
+         * THE CIRCUIT (ADR-133 U2): one layer, every workflow — a MAP of
+         * the client's marketing OS. Each of the studio's workflows is a small
+         * configuration in the restored board's own cross, its card the
+         * board's own card (the name and one line, the same size); the
+         * plates around it letter nothing. All of them are wired to the
+         * marketing OS at the centre, a twelve-sided plate, and that plugs,
          * dashed, into what does not exist yet.
          *
          * ⚠ THE TWELFTH ENUMERATED EXCEPTION. ADR-133's first two cuts posed
@@ -854,9 +855,11 @@ export type ArcSection = ArcSectionBase &
           CircuitConfig,
           CircuitConfig,
         ];
-        /** The one shared context every configuration reads: its key and
-         *  the tags it holds — the restored board's own context module. */
-        layer: { key: string; tags: readonly string[] };
+        /** What every configuration is seated on: the marketing OS, a
+         *  twelve-sided plate at the centre — a small key over its name and
+         *  one line (owner, 2026-09-29: "the center card should have a
+         *  different type of shape and really represent that marketing OS"). */
+        os: { key: string; name: string; line: string };
         /** The one thing outside the studio it plugs into, drawn dashed
          *  because it does not exist yet. */
         socket: { key: string; name: string };
@@ -893,8 +896,12 @@ export type ArcSection = ArcSectionBase &
 
 export interface CircuitConfig {
   id: string;
-  /** Sentence case, one line on the small configuration's card. */
+  /** The card's name, authored in sentence case and UPPERCASED by the
+   *  drawing at the board card's name rung: ≤ 14 characters. */
   name: string;
+  /** The card's one line under it, e.g. "owned by the PMs" — the board's
+   *  own "owned by the studio", one workflow down. */
+  line: string;
 }
 
 /** How a record row's output is DRAWN: the quantity, as marks. */

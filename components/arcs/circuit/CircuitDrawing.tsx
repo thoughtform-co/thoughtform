@@ -206,7 +206,15 @@ export function Module({ m, morph = false }: { m: CirModule; morph?: boolean }) 
     );
   }
   const p = PAINT[m.paint];
-  const d = m.cut > 0 ? housing(x, y, w, h, m.cut) : `M${x},${y} H${x + w} V${y + h} H${x} Z`;
+  if (m.shape === "dodecagon") return <Dodecagon m={m} p={p} />;
+  /* ⚠ `band` IS THE TOP-RIGHT-ONLY HOUSING: the board chip's silhouette,
+     which the map's workflow cards copy exactly (ADR-133 U2). */
+  const d =
+    m.notch === "tr"
+      ? band(x, y, w, h, m.cut)
+      : m.cut > 0
+        ? housing(x, y, w, h, m.cut)
+        : `M${x},${y} H${x + w} V${y + h} H${x} Z`;
   /* ⚠ THE MORPHING PLATE IS ONE PATH, fill and stroke together, so its `d`
      is the one property the sheet transitions — two paths would be two
      morphs that can drift a frame apart. */
@@ -236,6 +244,37 @@ export function Module({ m, morph = false }: { m: CirModule; morph?: boolean }) 
           <line x1={x} y1={y + m.head} x2={x + w} y2={y + m.head} stroke="var(--cir-line)" />
         </>
       ) : null}
+    </g>
+  );
+}
+
+/** A twelve-sided outline inscribed in radius `r` about (cx, cy), a vertex
+ *  at each cardinal. */
+const dodecagon = (cx: number, cy: number, r: number) =>
+  Array.from({ length: 12 }, (_, i) => {
+    const a = (i * Math.PI) / 6;
+    const px = Math.round((cx + r * Math.cos(a)) * 100) / 100;
+    const py = Math.round((cy - r * Math.sin(a)) * 100) / 100;
+    return `${i === 0 ? "M" : "L"}${px},${py}`;
+  }).join(" ") + " Z";
+
+/** THE MARKETING OS (ADR-133 U2): the one plate on the map that is not a card
+ *  — the carrier's twelve-sided housing (ADR-070 U34), a 2px outline and a
+ *  bezel inset inside it (the services cards' device), the plate's ground and
+ *  its wash. It carries no top rule: a rule is a card's, and it would run
+ *  across a vertex. */
+function Dodecagon({ m, p }: { m: CirModule; p: Paint }) {
+  const r = m.rect.w / 2;
+  const cx = m.rect.x + r;
+  const cy = m.rect.y + r;
+  const d = dodecagon(cx, cy, r);
+  return (
+    <g data-cir-module={m.id}>
+      <path d={d} fill={p.fill} />
+      {p.wash ? <path d={d} fill={p.wash} /> : null}
+      <path d={d} fill="var(--cir-sheen)" />
+      <path d={d} fill="none" stroke={p.stroke} strokeWidth="2" />
+      <path d={dodecagon(cx, cy, r - 12)} fill="none" stroke={p.stroke} opacity={0.55} />
     </g>
   );
 }

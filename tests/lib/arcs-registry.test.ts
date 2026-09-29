@@ -803,23 +803,23 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("a circuit is a map of six workflows on one shared context (ADR-133 U2)", () => {
+  it("a circuit is a map of six workflows on the marketing OS (ADR-133 U2)", () => {
     for (const arc of ARCS) {
       for (const section of arc.sections) {
         if (section.kind !== "circuit") continue;
         const at = `${arc.slug}/${section.id}`;
-        // Six small configurations, three a side, each a name and nothing
-        // else: "not all the texts of the smaller panels" (owner).
+        // Six configurations, three a side, each the board's card: a name in
+        // mono caps at the card's name rung (one line, so fourteen
+        // characters) and one line under it.
         const ids = section.configs.map((c) => c.id);
         expect(ids, `${at}: six workflows`).toHaveLength(6);
         expect(new Set(ids).size, `${at}: duplicate workflow`).toBe(ids.length);
         for (const c of section.configs) {
           expect(c.name.length, `${at}/${c.id}: the name`).toBeGreaterThan(0);
-          expect(c.name.length, `${at}/${c.id}: one line on the card`).toBeLessThanOrEqual(18);
+          expect(c.name.length, `${at}/${c.id}: one line on the card`).toBeLessThanOrEqual(14);
+          expect(c.line.length, `${at}/${c.id}: the card's line`).toBeGreaterThan(0);
         }
-        // The shared context carries the board's own tags, one to four.
-        expect(section.layer.tags.length, `${at}: the context's tags`).toBeGreaterThan(0);
-        expect(section.layer.tags.length, `${at}: the context's tags`).toBeLessThanOrEqual(4);
+        expect(section.os.name.length, `${at}: the OS's name`).toBeGreaterThan(0);
         expect(section.socket.name.length, `${at}: the socket`).toBeGreaterThan(0);
         // NO DIGIT ANYWHERE IN IT, the board's ruling, kept.
         scanArc(section, at, (value, path) => {

@@ -20,8 +20,10 @@ import type { CircuitGlyphKey } from "./circuitGlyphData";
  * 2026-09-29: "I don't think we should see all the texts of the smaller
  * panels … it should just become a high-level map of different nodes"). Three
  * down each side; every one's context plate faces the middle and is wired
- * into ONE shared context, the board's own context module grown to the
- * centre, which plugs, dashed, into the brand system that does not exist yet.
+ * into the MARKETING OS at the centre (U2, owner: "the center card should have
+ * a different type of shape and really represent that marketing OS"), a
+ * twelve-sided plate, which plugs, dashed, into the brand system that does not
+ * exist yet.
  *
  * ⚠ THE PRIMITIVES ARE SHARED WITH THE CREW (`crewLayout.ts`): the plate
  * paints, the letters, the ribbons and the pose record. ADR-133's first two
@@ -39,7 +41,7 @@ import type { CircuitGlyphKey } from "./circuitGlyphData";
 export type CircuitState = "a" | "b" | "c";
 export const CIRCUIT_STATES: readonly CircuitState[] = ["a", "b", "c"];
 
-export const CIR_VB = { w: 1400, h: 560 } as const;
+export const CIR_VB = { w: 1400, h: 620 } as const;
 export const INSET = 24;
 
 /** The type ladder, in units — the board's ranking (ADR-100). */
@@ -106,6 +108,12 @@ export interface CirModule {
   paint: Paint;
   /** A head band of this height, ruled at its floor. */
   head?: number;
+  /** `"tr"`: the TOP-RIGHT cut alone (`band`), the board chip's silhouette —
+   *  the card every configuration's work is drawn as (ADR-100 U4). */
+  notch?: "tr";
+  /** `"dodecagon"`: a twelve-sided plate inscribed in `rect` (a square), a
+   *  vertex at each cardinal — the one object on the map that is not a card. */
+  shape?: "dodecagon";
 }
 
 /** A pad's paint: a filled mark, or a ring (an outlined cell). */
@@ -298,28 +306,51 @@ function jog(x0: number, y0: number, x1: number, y1: number, dir: 1 | -1, stub =
 
 /** One small configuration: the work's card at the centre, a plate on each
  *  side, the owner above and where it scales below — the restored board's
- *  cross, at a fifth of its size. The card is the only thing lettered. */
+ *  cross. ⚠ THE CARD IS THE BOARD'S OWN CARD (owner, 2026-09-29: "we need to
+ *  have the exact same cards … all at the same height"): 264 × 104, the
+ *  top-right cut alone, the gold wash, the name in mono caps at the board's
+ *  name rung over one sans line at its value rung. Both drawings are 1400
+ *  units across one text band, so the same units paint the same pixels. The
+ *  plates around it keep their size ("the smaller cards around it are fine"). */
 export const MINI = {
-  card: { w: 196, h: 52, cut: 10 },
+  card: { w: 264, h: 104, cut: 20 },
   side: { w: 44, h: 52, cut: 6 },
   cap: { w: 110, h: 22, cut: 6 },
   gapX: 14,
-  gapY: 12,
+  gapY: 10,
+  pad: 18,
 } as const;
-/** The small configuration's footprint: 312 × 120. */
+/** The board's card type (`boardLayout`'s `FS.name` / `FS.value`). */
+export const CARD_FS = { name: 24, value: 18 } as const;
+export const CARD_TRACK = 0.04;
+/** The small configuration's footprint: 380 × 168. */
 export const MINI_W = MINI.side.w + MINI.gapX + MINI.card.w + MINI.gapX + MINI.side.w;
 export const MINI_H = MINI.cap.h + MINI.gapY + MINI.card.h + MINI.gapY + MINI.cap.h;
 /** The two columns' centres and the three rows'. */
-const COL_CX = [240, CIR_VB.w - 240] as const;
-const ROW_CY = [96, 280, 464] as const;
+const COL_CX = [INSET + MINI_W / 2, CIR_VB.w - INSET - MINI_W / 2] as const;
+const ROW_GAP = (CIR_VB.h - 2 * INSET - 3 * MINI_H) / 2;
+const ROW_CY = [0, 1, 2].map((i) => INSET + i * (MINI_H + ROW_GAP) + MINI_H / 2);
 
-/** The shared context at the centre: the board's own context module, grown. */
-export const HUB: Rect = { x: 570, y: 110, w: 260, h: 260 };
-export const HUB_BAND = 34;
-/** Where each row's wire meets the hub's side. */
-const HUB_PORTS = [168, 240, 312] as const;
-/** The brand system that does not exist yet, under the hub, dashed. */
-export const SOCKET: Rect = { x: 590, y: 424, w: 220, h: 104 };
+/** THE MARKETING OS: the one object on the map that is not a card — a
+ *  twelve-sided plate, the carrier's own housing (ADR-070 U34), because it is
+ *  what every card is seated on, not another card. Inscribed in this square. */
+export const OS_R = 150;
+export const OS: Rect = { x: CIR_VB.w / 2 - OS_R, y: ROW_CY[1] - OS_R, w: 2 * OS_R, h: 2 * OS_R };
+const OS_C: Pt = [CIR_VB.w / 2, ROW_CY[1]];
+/** A vertex of the plate, at `deg` counter-clockwise from three o'clock. */
+export const osVertex = (deg: number, r = OS_R): Pt => [
+  OS_C[0] + r * Math.cos((deg * Math.PI) / 180),
+  OS_C[1] - r * Math.sin((deg * Math.PI) / 180),
+];
+/** Where each row's wire meets the plate: at its vertices, left and right. */
+const OS_PORTS: Record<1 | -1, readonly number[]> = { 1: [150, 180, 210], [-1]: [30, 0, 330] };
+/** The brand system that does not exist yet, under the plate, dashed. */
+export const SOCKET: Rect = {
+  x: CIR_VB.w / 2 - 110,
+  y: OS.y + OS.h + 32,
+  w: 220,
+  h: CIR_VB.h - INSET - (OS.y + OS.h + 32),
+};
 export const SOCKET_BAND = 28;
 
 export interface MiniGeom {
@@ -345,7 +376,7 @@ export function miniAt(id: string, i: number): MiniGeom {
     w: MINI.card.w,
     h: MINI.card.h,
   };
-  const sideY = card.y + (MINI.card.h - MINI.side.h) / 2;
+  const sideY = cy - MINI.side.h / 2;
   const leftSide: Rect = {
     x: card.x - MINI.gapX - MINI.side.w,
     y: sideY,
@@ -370,7 +401,7 @@ export function miniAt(id: string, i: number): MiniGeom {
     w: MINI.cap.w,
     h: MINI.cap.h,
   };
-  // The context plate faces the shared layer: right of the card on the left.
+  // The context plate faces the OS: right of the card on the left.
   return left
     ? { id, card, owner, reach, context: rightSide, tools: leftSide, facing: 1 }
     : { id, card, owner, reach, context: leftSide, tools: rightSide, facing: -1 };
@@ -402,10 +433,10 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
     letters: [],
   });
 
-  /* ── The six small configurations. The card carries the workflow's name;
-     the four plates around it are the configuration's shape and nothing else
-     — green is the owner, gold the context the team writes, the rest the
-     plate. Short four-wire ribbons tie each to its card. */
+  /* ── The six small configurations. The card is the board's card, its
+     name and one line; the four plates around it are the configuration's
+     shape and nothing else — green is the owner, gold the context the team
+     writes, the rest the plate. Short four-wire ribbons tie each to its card. */
   s.configs.forEach((c, i) => {
     const m = miniAt(c.id, i);
     const own = `mini-${c.id}`;
@@ -433,13 +464,15 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
       [toolsEdge, cardCy],
       [cardTools, cardCy],
     ]);
+    const kx = m.card.x + MINI.pad;
+    const km = m.card.w - 2 * MINI.pad;
     parts.push({
       id: own,
       group: "chip",
       poses: REST,
       delays: d3(120 + i * 70, 0, 0),
       modules: [
-        { id: `${own}-card`, rect: m.card, cut: MINI.card.cut, paint: "gold" },
+        { id: `${own}-card`, rect: m.card, cut: MINI.card.cut, notch: "tr", paint: "gold" },
         { id: `${own}-owner`, rect: m.owner, cut: MINI.cap.cut, paint: "green" },
         { id: `${own}-context`, rect: m.context, cut: MINI.side.cut, paint: "gold" },
         { id: `${own}-tools`, rect: m.tools, cut: MINI.side.cut, paint: "plate" },
@@ -453,82 +486,79 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
           cell: 2,
         },
       ],
-      letters: sans(
-        `mini.${c.id}`,
-        c.name,
-        FS.answer,
-        m.card.w - 28,
-        m.card.x + 14,
-        m.card.y + 32,
-        "ink",
-        1,
-        true
-      ),
+      letters: [
+        mono(`mini.${c.id}.name`, c.name, CARD_FS.name, CARD_TRACK, km, kx, m.card.y + 44, "ink"),
+        ...sans(`mini.${c.id}.line`, c.line, CARD_FS.value, km, kx, m.card.y + 70, "ink", 1, true),
+      ],
     });
-    /* The context plate's wire into the shared layer: a level run out of
-       the plate's face, a 45° jog to the row's port, a level run in. */
+    /* The context plate's wire into the OS: a level run out of the plate's
+       face, a 45° jog to the row's vertex, a level run in. */
     const from = m.facing === 1 ? m.context.x + m.context.w : m.context.x;
-    const to = m.facing === 1 ? HUB.x : HUB.x + HUB.w;
+    const port = osVertex(OS_PORTS[m.facing][i % 3]);
     wires.push(
       wire(
-        `${c.id}-layer`,
-        jog(from, cardCy, to, HUB_PORTS[i % 3], m.facing, 18),
+        `${c.id}-os`,
+        jog(from, cardCy, port[0], port[1], m.facing, 18),
         "gold",
         ON,
         d3(700 + i * 60, 0, 0),
-        [own, "layer"]
+        [own, "os"]
       )
     );
   });
 
-  /* ── The shared context: the key, the context glyph, and the tags the
-     restored board's context module carries — one module, now read by all. */
-  const tags = s.layer.tags;
-  const tagTop = HUB.y + HUB_BAND + 44;
-  const tagPitch = (HUB.h - HUB_BAND - 44 - 26) / Math.max(1, tags.length - 1);
+  /* ── THE MARKETING OS: a twelve-sided plate with a bezel, its name in the
+     board's name rung and one line under it — the one object that is not a
+     card, because every card is seated on it. */
+  const osLines = wrapAll(s.os.line, Math.floor((OS_R * 1.5) / (SANS_ADV * CARD_FS.value)));
+  const osTop = OS_C[1] - 6 - ((osLines.length - 1) * 24) / 2;
   parts.push({
-    id: "layer",
+    id: "os",
     group: "layer",
     poses: REST,
     delays: d3(520, 0, 0),
-    modules: [{ id: "layer", rect: HUB, cut: 18, paint: "gold", head: HUB_BAND }],
-    marks: [
-      {
-        kind: "glyph",
-        key: "context",
-        x: HUB.x + HUB.w - 18 - 7 * 3 - 14,
-        y: HUB.y + (HUB_BAND - 7 * 3) / 2,
-        cell: 3,
-      },
-    ],
+    modules: [{ id: "os", rect: OS, cut: 0, paint: "gold", shape: "dodecagon" }],
+    marks: [],
     letters: [
       mono(
-        "layer.key",
-        s.layer.key,
+        "os.key",
+        s.os.key,
         FS.chrome,
-        TRACK.key,
-        HUB.w - 32 - 7 * 3 - 18,
-        HUB.x + 16,
-        HUB.y + 22,
-        "gold-ink"
+        TRACK.chrome,
+        OS_R * 1.4,
+        OS_C[0],
+        osTop - 40,
+        "gold-ink",
+        "middle"
       ),
-      ...tags.map((t, i) =>
-        mono(
-          `layer.tag.${i}`,
-          t,
-          FS.key,
-          TRACK.key,
-          HUB.w - 32,
-          HUB.x + 16,
-          tagTop + i * tagPitch,
-          "gold-ink"
-        )
+      mono(
+        "os.name",
+        s.os.name,
+        CARD_FS.name,
+        CARD_TRACK,
+        OS_R * 1.6,
+        OS_C[0],
+        osTop,
+        "ink",
+        "middle"
       ),
+      ...osLines.map((line, i) => ({
+        slot: `os.line.${i}`,
+        text: line,
+        fs: CARD_FS.value,
+        track: 0,
+        measure: OS_R * 1.5,
+        face: "sans" as const,
+        x: OS_C[0],
+        y: osTop + 32 + i * 24,
+        anchor: "middle" as const,
+        ink: "ink2" as const,
+      })),
     ],
   });
 
-  /* ── The socket: under the layer, dashed — a system that does not exist
-     yet, and the layer is what plugs into it. */
+  /* ── The socket: under the OS, dashed — a system that does not exist yet,
+     and the OS is what it plugs into. */
   parts.push({
     id: "socket",
     group: "socket",
@@ -555,23 +585,24 @@ export function circuitGeom(s: CircuitSection): CircuitGeom {
         // ("a brand system / for all marketing"), not after "for".
         160,
         SOCKET.x + 14,
-        SOCKET.y + SOCKET_BAND + 28,
+        SOCKET.y + SOCKET_BAND + 26,
         "ink2",
         2
       ),
     ],
   });
+  const bottom = osVertex(270);
   wires.push(
     wire(
-      "layer-socket",
+      "os-socket",
       [
-        [HUB.x + HUB.w / 2, HUB.y + HUB.h],
-        [HUB.x + HUB.w / 2, SOCKET.y],
+        [bottom[0], bottom[1]],
+        [bottom[0], SOCKET.y],
       ],
       "gold",
       ON,
       d3(1040, 0, 0),
-      ["layer", "socket"]
+      ["os", "socket"]
     )
   );
 

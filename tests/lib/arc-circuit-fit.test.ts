@@ -6,7 +6,7 @@ import {
   CIRCUIT_STATES,
   CIR_VB,
   FS_FLOOR,
-  HUB,
+  OS,
   circuitGeom,
   letterWidth,
   renderedPx,
@@ -165,27 +165,50 @@ describe("the circuit (ADR-133 U2)", () => {
         }
       });
 
-      it("every small configuration letters its name alone, and faces the shared layer", () => {
+      it("every card is the board's card, and faces the marketing OS", () => {
         const minis = g.parts.filter((p) => p.id.startsWith("mini-"));
         expect(minis.map((p) => p.id.slice(5))).toEqual(s.configs.map((c) => c.id));
-        const hubCx = HUB.x + HUB.w / 2;
+        const osCx = OS.x + OS.w / 2;
         for (const p of minis) {
+          const c = s.configs.find((x) => `mini-${x.id}` === p.id);
+          // The name and one line, as the board's card letters them; the
+          // plates around it letter nothing ("not all the texts of the
+          // smaller panels", owner).
           expect(
             p.letters.map((l) => l.text),
             p.id
-          ).toEqual([s.configs.find((c) => `mini-${c.id}` === p.id)?.name]);
+          ).toEqual([c?.name.toUpperCase(), c?.line]);
           const card = p.modules.find((m) => m.id.endsWith("-card"));
           const ctx = p.modules.find((m) => m.id.endsWith("-context"));
           expect(card && ctx, `${p.id}: the card and its context`).toBeTruthy();
           if (!card || !ctx) continue;
-          // The gold context plate sits between the card and the layer.
+          // THE EXACT SAME CARD: the board chip's 264 x 104, its top-right
+          // cut alone, its gold (owner: "all at the same height").
+          expect([card.rect.w, card.rect.h, card.cut, card.notch], p.id).toEqual([
+            264,
+            104,
+            20,
+            "tr",
+          ]);
+          expect(card.paint).toBe("gold");
+          // The gold context plate sits between the card and the OS.
           const cardCx = card.rect.x + card.rect.w / 2;
           const ctxCx = ctx.rect.x + ctx.rect.w / 2;
           expect(Math.sign(ctxCx - cardCx), `${p.id}: context faces away`).toBe(
-            Math.sign(hubCx - cardCx)
+            Math.sign(osCx - cardCx)
           );
           expect(ctx.paint, `${p.id}: the context is what the team writes`).toBe("gold");
           expect(p.modules.find((m) => m.id.endsWith("-owner"))?.paint).toBe("green");
+        }
+      });
+
+      it("the marketing OS is not a card: a twelve-sided plate, the largest object", () => {
+        const os = g.parts.find((p) => p.id === "os")?.modules[0];
+        expect(os?.shape).toBe("dodecagon");
+        expect(os?.rect.w).toBe(os?.rect.h);
+        const others = objects.flatMap((p) => p.modules).filter((m) => m.id !== "os");
+        for (const m of others) {
+          expect(m.rect.w * m.rect.h, m.id).toBeLessThan((os?.rect.w ?? 0) * (os?.rect.h ?? 0));
         }
       });
     });

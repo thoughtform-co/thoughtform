@@ -4,8 +4,10 @@
   rejected on his read the same evening and reverted (`4bea9946`); the second
   cut and U1 were pushed on his word (2026-09-29); **U2 (2026-09-29) retires
   the travelling scene**: today returns to the board, the larger whole is a
-  static map, and "your team owns it" joins the horizon. U2 is held local
-  until he has read it.
+  static map, and "your team owns it" joins the horizon; **U3 (same day)**
+  puts the approach second, retitles it on adoption and automation, and
+  makes the map's cards the board's own card around a twelve-sided marketing
+  OS. U2 and U3 are held local until he has read them.
 - **Surface:** `/arcs/pandora-proposal`.
   - **New:** `components/arcs/circuit/**` (`circuitLayout.ts` pure,
     `CircuitDrawing.tsx`, `CircuitScene.tsx` the one client island,
@@ -198,6 +200,42 @@ question's handoff lettered to the right of its connector and ran into the
 result's label coming in from the right, so it letters to the LEFT now; and
 at 1280×720 the two gate labels met, so the gates spread (0.18 · 0.5 · 0.72)
 and the lane words step down one rung (`clamp(12px, 1vw, 14px)`).
+
+## Update 3 (2026-09-29, owner): the approach comes second, and the centre is the marketing OS
+
+His read of U2: "Your team owns it" belongs straight after the studio today,
+worded on the practice's own position ("automation through adoption … our
+entire approach is built on that adoption automation flywheel"); and on the
+map, "the center card … doesn't make sense. The idea of this visual is that it
+shows your marketing OS … the center card should not look the same as the AI
+capability owned by the studio … We need to have the exact same cards [as
+that one] … all at the same height … The center card should have a different
+type of shape."
+
+- **The order is today · the approach · the map · the plan.** The approach is
+  titled **"Automation runs through adoption."** (eyebrow "the approach"),
+  the strategy skill's own position, between adoption and automation, and
+  its sub says what turns: the team learns to work with the AI it has and
+  writes down how the work is done, and that is what lets an agent take the
+  operational work while the team's time goes upstream. ⚠ **"Flywheel" stays
+  out of the copy** — the strategy skill rules it out of copy even though the
+  founder says it in the room.
+- **Every workflow's card IS the board's card**: 264 × 104, the top-right cut
+  alone (`CirModule.notch`), the gold wash, the name in mono caps at the
+  board's name rung over one sans line at its value rung. Both drawings are
+  1400 units across one text band, so the units paint the same pixels. The
+  line says who owns the workflow ("owned by the PMs"), the board card's own
+  "owned by the studio", one workflow down; the names shortened to fit one
+  line at that rung (≤ 14 characters). The plates around each card stay.
+- **The centre is PANDORA'S MARKETING OS, a twelve-sided plate**
+  (`CirModule.shape: "dodecagon"`), the carrier's own housing (ADR-070 U34),
+  a 2px outline and a bezel, the largest object on the map, with the workflow
+  wires meeting it at its vertices: "built by your teams, one workflow at a
+  time". The context's four tags left it; they were the board's, and they did
+  not say what the centre is.
+- The crop grew 560 → 620 for the taller cards, and the figure's width is now
+  capped by the height the frame leaves under the head (the retired stage's
+  own rule), so at 1280×720 the map shrinks rather than running off the floor.
 
 ## Findings worth keeping
 

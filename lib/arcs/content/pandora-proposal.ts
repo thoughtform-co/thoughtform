@@ -307,36 +307,10 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
-      /* ONE LAYER, EVERY WORKFLOW (ADR-133 U2, owner 2026-09-29: "a nice
-         overview of different configurations put together, like the restored
-         configuration … I don't think we should see all the texts of the
-         smaller panels … it should just become a high-level map of different
-         nodes"). Each workflow in the plan is a small configuration in the
-         board's own shape, lettered with its name alone; every one's context
-         plate is wired into ONE shared context, which plugs, dashed, into the
-         brand system Pandora may build later (Rob's point, drawn generic). */
-      id: "layer",
-      kind: "circuit",
-      menuLabel: "One layer",
-      head: {
-        eyebrow: "Pandora · the larger whole",
-        title: { pre: "One layer,", em: "every workflow." },
-        sub: "Each workflow gets its own configuration: an owner, the work, the tools it runs in and where it goes. All of them read the same context, written once by the team and kept when the model changes. When Pandora builds a brand system for all of marketing, this is the layer that plugs into it.",
-      },
-      configs: [
-        { id: "filing", name: "Filing and upload" },
-        { id: "recap", name: "The review recap" },
-        { id: "schedule", name: "The schedule" },
-        { id: "resourcing", name: "Resourcing" },
-        { id: "retouch", name: "The retouch check" },
-        { id: "brief", name: "Brief into Figma" },
-      ],
-      layer: { key: "The context", tags: ["Rules", "Examples", "Sources", "Loops"] },
-      socket: { key: "Later", name: "A brand system for all marketing" },
-      alt: "A map of six workflows, each its own small configuration with an owner, the work, its tools and where it goes: filing and upload, the review recap and the schedule on the left, resourcing, the retouch check and the brief into Figma on the right. Every one is wired to one shared context in the middle, its rules, examples, sources and loops, and that context plugs into a dashed socket below, a brand system for all of marketing, later.",
-    },
-    {
-      /* YOUR TEAM OWNS IT, AND WHERE THIS GOES (ADR-133 U2, owner 2026-09-29:
+      /* AUTOMATION RUNS THROUGH ADOPTION (ADR-133 U2, owner 2026-09-29: first
+         "Your team owns it", moved after the studio today and retitled on the
+         practice's own position, between adoption and automation; "flywheel"
+         stays out of copy by the strategy's ruling. His brief:
          "merge it with from the button to the goal … the owner gets more time
          for more upstream work and the agent takes care of the rest … on the
          left side, the owner panel, and on the right side, an adopted version
@@ -349,11 +323,11 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
          count is deliberately NOT in this beat (owner). */
       id: "goal",
       kind: "horizon",
-      menuLabel: "Your team",
+      menuLabel: "The approach",
       head: {
-        eyebrow: "Pandora · the team",
-        title: { pre: "Your team", em: "owns it." },
-        sub: "In the workshops the PMs and producers write down how the work is done and what a good result looks like. The agent runs on that, and it is theirs. So the operational work runs on its own and checks in when it needs a person, and the team's time goes upstream: the brief, the concepting, the campaign imagery.",
+        eyebrow: "Pandora · the approach",
+        title: { pre: "Automation runs", em: "through adoption." },
+        sub: "We start with the team, not the tools. In the workshops the PMs and producers learn to work with the AI they already have, and write down how the work is done and what a good result looks like. That is what lets an agent take over the operational work, checking in when it needs a person, while the team's own time goes upstream: the brief, the concepting, the campaign imagery.",
       },
       axis: { from: "Morning", to: "End of the day" },
       owner: {
@@ -381,6 +355,44 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         end: "You judge the result",
       },
       note: "Month one sets up the filing, the recap and the schedule, and a PM presses the button. By month three the same workflows run on a schedule, the checker reads every upload, and the team hears from them only when a person is needed.",
+    },
+    {
+      /* ONE LAYER, EVERY WORKFLOW (ADR-133 U2, owner 2026-09-29: "a nice
+         overview of different configurations put together, like the restored
+         configuration … I don't think we should see all the texts of the
+         smaller panels … it should just become a high-level map of different
+         nodes"). Each workflow in the plan is a small configuration in the
+         board's own shape, lettered with its name alone; every one's context
+         plate is wired into the MARKETING OS at the centre, a twelve-sided plate
+         and not a card (owner: "the center card should have a different type
+         of shape and really represent that marketing OS"), which plugs,
+         dashed, into the brand system Pandora may build later (Rob's point,
+         drawn generic). Each card is the board's own AI capability card, at
+         the same size (owner: "the exact same cards … all at the same
+         height"). */
+      id: "layer",
+      kind: "circuit",
+      menuLabel: "One layer",
+      head: {
+        eyebrow: "Pandora · built to scale",
+        title: { pre: "One layer,", em: "every workflow." },
+        sub: "Each team writes down how its work is done, one workflow at a time. Every workflow becomes a configuration its team owns, and all of them run on one layer: Pandora's marketing OS. Each one written gives the team time back upstream, and the next one starts from what is already there.",
+      },
+      configs: [
+        { id: "filing", name: "Filing", line: "owned by the producers" },
+        { id: "recap", name: "Review recap", line: "owned by the PMs" },
+        { id: "schedule", name: "Schedule", line: "owned by the PMs" },
+        { id: "resourcing", name: "Resourcing", line: "owned by the PMs" },
+        { id: "retouch", name: "Retouch check", line: "owned by the producers" },
+        { id: "brief", name: "Brief to Figma", line: "owned by the designers" },
+      ],
+      os: {
+        key: "Pandora's",
+        name: "Marketing OS",
+        line: "built by your teams, one workflow at a time",
+      },
+      socket: { key: "Later", name: "A brand system for all marketing" },
+      alt: "Pandora's marketing OS as a map: six workflows, each its own small configuration with an owner, the work, its tools and where it goes. Filing, owned by the producers; the review recap, the schedule and resourcing, owned by the PMs; the retouch check, owned by the producers; and the brief to Figma, owned by the designers. Every one is wired to the marketing OS at the centre, built by the teams one workflow at a time, which plugs into a dashed socket below: a brand system for all of marketing, later.",
     },
     {
       id: "phases",

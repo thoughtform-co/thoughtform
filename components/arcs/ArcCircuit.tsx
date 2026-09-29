@@ -14,9 +14,9 @@ interface ArcCircuitProps {
 }
 
 /**
- * ArcCircuit — ONE LAYER, EVERY WORKFLOW (ADR-133 U2): a map of the studio's
- * workflows, each a small configuration in the restored board's shape and
- * lettered with its name alone, all wired to one shared context at the centre.
+ * ArcCircuit — ONE LAYER, EVERY WORKFLOW (ADR-133 U2): a map of the client's
+ * marketing OS. Each workflow is a small configuration in the restored board's
+ * shape, its card the board's own card, all wired to the OS at the centre.
  *
  * ⚠ SERVER, NO STATE, NO SCRIPT. ADR-133's first two cuts ran this beat as the
  * third pose of one drawing in a pinned scene; U2 (owner, 2026-09-29) put
@@ -57,16 +57,20 @@ export function ArcCircuit({ section, index, motion = "reveal" }: ArcCircuitProp
           <CircuitDrawing geom={geom} uid={section.id} label={section.alt} />
         </figure>
         <div className="arc-cir-list" data-cir-list="map">
-          <ul className="arc-cir-list__configs">
-            {section.configs.map((c) => (
-              <li key={c.id}>{c.name}</li>
-            ))}
-          </ul>
           <dl className="arc-cir-list__rows">
-            <div>
-              <dt>{section.layer.key}</dt>
-              <dd>{section.layer.tags.join(" · ")}</dd>
+            <div data-cir-os="">
+              <dt>{section.os.key}</dt>
+              <dd>
+                <strong>{section.os.name}</strong>
+                <span className="arc-cir-list__was">{section.os.line}</span>
+              </dd>
             </div>
+            {section.configs.map((c) => (
+              <div key={c.id}>
+                <dt>{c.name}</dt>
+                <dd>{c.line}</dd>
+              </div>
+            ))}
             <div data-cir-future="">
               <dt>{section.socket.key}</dt>
               <dd>{section.socket.name}</dd>
