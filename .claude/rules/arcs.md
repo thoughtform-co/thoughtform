@@ -936,16 +936,24 @@ contents`** and each station a subgrid item of the track's grid, so the rail
   wave's frames, two offer `cards`, the client's quote. Frames come from
   `scripts/arcs/prep-ai-storytelling-assets.mjs`, which only reads the ship;
   the registry pins every path frame under `/arcs/`, on disk, sized and alt'd.
-- ⚠ **ADR-133 U2 → U4 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
-  Pandora reads today (the `board` again: the ruled ledger of the current
-  setup beside the configured board, the ledger stating the setup and never a
-  gap) · the approach ("Automation runs through adoption.", the owned
-  horizon, NO time axis and no note since U4) · the return (the `crew`, U4:
-  Loop's record ALONE in the approach's two bands, `{ head, bands, rows[4] {
-  who, people?, upstream, output, value, unit } }`, green UPSTREAM · THE
-  PEOPLE over a dashed line and gold DOWNSTREAM · WHAT RUNS under it, one mark
-  per column drawn as its quantity, `plan` deleted, a head count only where
-  the record states one) · the map ("A system built to compound.") · the plan. `circuit` is a STATIC MAP of the client's
+- ⚠ **ADR-133 U2 → U5 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
+  Pandora reads Part one (four proof cards, then the return: the `crew`, U5,
+  Loop's record ALONE as one row per role read LEFT TO RIGHT, `{ head,
+  rows[4] { who, people?, output, value, unit } }`, a green seat, a tap, a gold
+  plate with the quantity drawn left and the readout said right, a head count
+  only where the record states one) · the turn · today (the `board` again: the
+  ruled ledger of the current setup beside the configured board, the ledger
+  stating the setup and never a gap) · the approach ("Automation runs through
+  adoption.", the owned horizon, no time axis and no note) · the map ("A
+  system built to compound.") · the three months · the checker · who takes
+  part · what you keep · the day rate (U5: the rate and about twenty days a
+  month, NO month fee and NO total, from the debrief with Rob) · what we
+  measure · the About (`portrait` `layout: "orbit"`, U5: the homepage's own —
+  copy left, the portrait at 3:4 in grayscale inside the About rings right;
+  Rob is off the page) · next steps. ⚠ Headings are names or plain claims,
+  never a paired tagline (the voice skill's rule): U5 retired "Priced by the
+  day, one month at a time", "Who is in the room, and for how long", "The
+  plan, month by month" and "Counted in week one, read every month". `circuit` is a STATIC MAP of the client's
   marketing OS, `{ head, configs[6] { id, name ≤14, line }, os { key, name,
 line }, socket, alt }`: six small configurations in the board's cross whose
   CARD IS THE BOARD'S OWN CARD (264 × 104, `notch: "tr"`, gold wash, name at

@@ -829,13 +829,11 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("a crew is Loop's record in two bands, and only its readouts carry a number (ADR-133 U4)", () => {
+  it("a crew is Loop's record, one row per role, and only its readouts carry a number (ADR-133 U5)", () => {
     for (const arc of ARCS) {
       for (const section of arc.sections) {
         if (section.kind !== "crew") continue;
         const at = `${arc.slug}/${section.id}`;
-        expect(section.bands.upstream.length, `${at}: the upstream band`).toBeGreaterThan(0);
-        expect(section.bands.downstream.length, `${at}: the downstream band`).toBeGreaterThan(0);
         for (const row of section.rows) {
           // A head count only where the record states one; a plural role
           // draws none rather than an invented number.
@@ -846,12 +844,11 @@ describe("arcs registry (ADR-052)", () => {
               `${at}/${row.id}: more people than the seat holds`
             ).toBeLessThanOrEqual(5);
           }
-          expect(row.upstream.length, `${at}/${row.id}: what the time goes to`).toBeGreaterThan(0);
+          expect(row.value.length, `${at}/${row.id}: what is possible now`).toBeGreaterThan(0);
           // A figure only where the record states one: in the value, or the
           // count the field draws, and nowhere else on the row.
           for (const [k, v] of Object.entries({
             who: row.who,
-            upstream: row.upstream,
             unit: row.unit,
           })) {
             expect(/\d/.test(v), `${at}/${row.id}.${k}: a figure outside the value`).toBe(false);

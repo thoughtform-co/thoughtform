@@ -2185,6 +2185,152 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   color: var(--arc-ink-80);
 }
 
+/* ── The About, the homepage's (ADR-133 U5) ────────────────────────────
+   `portrait` with `layout: "orbit"`: the homepage's About on a proposal —
+   the copy on the left (name, role, bio, meta cells), the portrait on the
+   right at the centre of the About drawing's rings, at 3:4 in grayscale.
+   Every colour is a rung of the ramp, so a light-locked page paints it. */
+.arc-about {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 96px);
+  align-items: center;
+}
+.arc-about__copy {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  max-width: 34rem;
+}
+.arc-about__eyebrow,
+.arc-about__role {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  text-transform: uppercase;
+}
+.arc-about__eyebrow {
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink, #caa554);
+}
+.arc-about__head {
+  display: grid;
+  gap: 10px;
+}
+.arc-about__name {
+  margin: 0;
+}
+.arc-about__role {
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--arc-ink-62);
+}
+.arc-about__bio {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(15px, 1.05vw, 18px);
+  line-height: 1.55;
+  color: var(--arc-ink-90);
+}
+.arc-about__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  margin: 12px 0 0;
+  border: 1px solid var(--arc-seam);
+}
+.arc-about__cell {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+}
+.arc-about__cell + .arc-about__cell {
+  border-left: 1px solid var(--arc-rule);
+}
+.arc-about__cell dt {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-about__cell dd {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+}
+.arc-about__orbit {
+  position: relative;
+  width: min(100%, calc(100svh - 2 * var(--arc-head-datum, 60px)), 560px);
+  aspect-ratio: 1;
+  margin: 0;
+  justify-self: center;
+}
+.arc-about__rings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-about__rings circle {
+  fill: none;
+  stroke-width: 0.7;
+}
+.arc-about__rings circle[data-tone="ink"] {
+  stroke: var(--arc-ink-40);
+}
+.arc-about__rings circle[data-tone="rule"] {
+  stroke: var(--arc-rule);
+}
+.arc-about__rings circle[data-tone="gold"] {
+  stroke: var(--gold-line, #caa554);
+}
+.arc-about__rings line[data-tone="major"] {
+  stroke: var(--arc-ink-50);
+  stroke-width: 0.8;
+}
+.arc-about__rings line[data-tone="minor"] {
+  stroke: var(--arc-ink-40);
+  stroke-width: 0.5;
+}
+.arc-about__rings line[data-tone="spoke"] {
+  stroke: var(--gold-line, #caa554);
+  stroke-opacity: 0.4;
+  stroke-width: 0.5;
+}
+.arc-about__portrait {
+  position: absolute;
+  inset: 0;
+  width: 52%;
+  aspect-ratio: 3 / 4;
+  margin: auto;
+  overflow: hidden;
+  border: 1px solid var(--arc-seam);
+  background: var(--arc-plate);
+}
+.arc-about__portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+  filter: grayscale(1) contrast(1.05);
+}
+@media (max-width: 960px) {
+  .arc-about {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-about__orbit {
+    order: -1;
+    width: min(100%, 420px);
+  }
+}
+
 /* ── Close band — the final full-viewport beat ─────────────────────── */
 .arc-close {
   display: grid;

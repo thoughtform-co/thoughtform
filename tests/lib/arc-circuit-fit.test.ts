@@ -252,7 +252,7 @@ describe("the six questions' marks (ADR-133)", () => {
   });
 });
 
-describe("the crew (ADR-133 U4)", () => {
+describe("the crew (ADR-133 U5)", () => {
   it("is registered at least once", () => {
     expect(crews.length).toBeGreaterThan(0);
   });
@@ -290,15 +290,21 @@ describe("the crew (ADR-133 U4)", () => {
           expect(l.text, l.slot).not.toMatch(/\d/);
         }
       });
-      it("draws Loop's record alone: no client side, four columns in two bands", () => {
+      it("draws Loop's record alone: no client side, one row per role, seat then plate", () => {
         expect(g.letters.some((l) => l.slot.startsWith("plan-"))).toBe(false);
-        expect(g.modules.filter((m) => m.id.endsWith("-up"))).toHaveLength(4);
-        expect(g.modules.filter((m) => m.id.endsWith("-down"))).toHaveLength(4);
-        for (const m of g.modules) {
-          expect(m.paint, m.id).toBe(m.id.endsWith("-up") ? "green" : "gold");
-        }
+        const seats = g.modules.filter((m) => m.id.endsWith("-seat"));
+        const outs = g.modules.filter((m) => m.id.endsWith("-out"));
+        expect(seats).toHaveLength(4);
+        expect(outs).toHaveLength(4);
+        // Left to right: every seat ends before its plate begins, on one row.
+        seats.forEach((seat, i) => {
+          expect(seat.paint, seat.id).toBe("green");
+          expect(outs[i].paint, outs[i].id).toBe("gold");
+          expect(seat.rect.x + seat.rect.w, seat.id).toBeLessThan(outs[i].rect.x);
+          expect(seat.rect.y, seat.id).toBe(outs[i].rect.y);
+        });
       });
-      it("every column's plates sit on their own band, and no two plates meet", () => {
+      it("no two plates meet", () => {
         const rects = g.modules.map((m) => ({ id: m.id, b: m.rect }));
         for (let i = 0; i < rects.length; i += 1) {
           for (let j = i + 1; j < rects.length; j += 1) {
@@ -308,9 +314,8 @@ describe("the crew (ADR-133 U4)", () => {
           }
         }
       });
-      it("every letter sits inside a plate, or on the band labels' row", () => {
+      it("every letter sits inside a plate", () => {
         for (const l of g.letters) {
-          if (l.slot.startsWith("band.")) continue;
           const b = box(l);
           expect(
             g.modules.some((m) => inside(b, m.rect)),

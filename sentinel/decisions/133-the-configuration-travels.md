@@ -9,8 +9,10 @@
   makes the map's cards the board's own card around a twelve-sided marketing
   OS; **U4 (same day)** moves the return after the approach and redraws it as
   Loop's record in the approach's two bands, drops the approach's time axis,
-  and retitles the map "A system built to compound". U2 to U4 are held local
-  until he has read them.
+  and retitles the map "A system built to compound"; **U5 (same day)** puts
+  the return back beside the proof as a left-to-right row per role, sweeps the
+  copy, prints the day rate without totals, takes Rob off the page and gives
+  the About the homepage's own layout.
 - **Surface:** `/arcs/pandora-proposal`.
   - **New:** `components/arcs/circuit/**` (`circuitLayout.ts` pure,
     `CircuitDrawing.tsx`, `CircuitScene.tsx` the one client island,
@@ -275,6 +277,47 @@ upstream-downstream material", on Rob's four points, with no studio side
 - ⚠ **A drop that crosses a label row has to clear the label**: the columns'
   four-wire drops sit 24 units in from each column's right edge, because the
   downstream band's label runs in from the left on the row they cross.
+
+## Update 5 (2026-09-29, owner): the return goes back, simpler; a copy sweep; the fee is the day rate
+
+His read of U4, in five parts.
+
+- **The return goes back beside the proof cards** (before the turn) and reads
+  LEFT TO RIGHT, one row per role: a green seat (who, a head count only where
+  the record states one), a short tap, and a gold plate carrying what is
+  possible now, the quantity drawn on its left and the record's readout said
+  on its right. U4's upstream / downstream bands are retired (he: "doesn't
+  really make sense" here; "just a super clear visualization of what's now
+  been possible because of this"). `CrewRow.upstream` and `crew.bands` are
+  deleted.
+- **A copy sweep** on the voice skill's own rule for headings (a name or a
+  plain claim, never a paired tagline; "would a person say this in a
+  meeting?"): "Priced by the day, one month at a time." → **"The day rate."**;
+  "Who is in the room, and for how long." → **"Who takes part."**; "The plan,
+  month by month." → **"The three months."**; "Counted in week one, read every
+  month." → **"What we measure."**; every section paragraph cut to one or two
+  sentences, and "in the room" / "out of the room" gone from the copy.
+- **The fee is the day rate and nothing else.** From the debrief with Rob:
+  absolute totals "might put them off", so the page states €1,500 a day and
+  about twenty days a month and lets the reader do the sum. No month fee, no
+  three-month total, no ledger: four cards (rate, time, invoicing, renewal)
+  and one footnote.
+- **Rob is off the page.** He advises in the background and is named in the
+  covering email (owner). "Vince and Rob" becomes **the homepage's own About**:
+  `portrait` takes `layout: "orbit"`, the copy on the left (the name as the
+  title and the section's masthead, the role line, the homepage's three bio
+  paragraphs verbatim, the three meta cells) and the portrait on the right at
+  3:4 in grayscale inside the About drawing's six rings, copied never
+  imported. The keynote's bracketed portrait is untouched.
+- **The three months are high-level and still concrete** (he: "avoid
+  committing to one specific line … without understanding the business, but
+  I don't want it to be too vague"). Three items a month, not a week each:
+  M1 Operations (how the week really runs, more out of the current tools, the
+  first configurations around the team's flows, week one deciding the order);
+  M2 **Review and briefs** (the review is not a month on its own: the
+  retouching check, the brief into Figma, and what month one turned up); M3
+  Agents and scaling (a button to a schedule, the Skills as files, the
+  blueprint and the handover).
 
 ## Findings worth keeping
 

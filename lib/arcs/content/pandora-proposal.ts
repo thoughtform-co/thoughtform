@@ -20,14 +20,12 @@ import type { ArcDef } from "../types";
  * The films, the operations tool, the sheets and the map resolve the
  * casefile's records; nothing about Loop is retyped here.
  *
- * ⚠ THE STUDIO TODAY IS A CIRCUIT SINCE ADR-133 (owner, 2026-09-28): one
- * configuration drawing that travels through three beats of one pinned
- * scene, on the Moira board's six questions. It replaced the board here (the
- * board still draws Trinny) and letters NO digit. The configuration's picker
- * stays out: it is the instrument the owner replaced on Trinny.
- *
- * ⚠ EVERY FEE DERIVES FROM ONE CONSTANT (`DAY_RATE`), the same number the
- * deck's generator carries; change it in both in one commit.
+ * ⚠ THE FEE IS THE DAY RATE AND NOTHING ELSE (ADR-133 U5, owner
+ * 2026-09-29, from the debrief with Rob: absolute totals "might put them
+ * off"). The page states the rate and about twenty days a month and lets the
+ * reader do the sum; no month fee and no three-month total is printed.
+ * `DAY_RATE` is the same number the deck's generator carries; change it in
+ * both in one commit.
  *
  * ⚠ THE FOUR CARDS SPEAK IN THE PAST TENSE HERE (owner, 2026-09-28). The
  * homepage says the arc lines as the practice's offer ("We push the
@@ -35,22 +33,17 @@ import type { ArcDef } from "../types";
  * so each `proof-card` carries its own `title` ("We pushed …"). The record's
  * lines are untouched: they are the Dublin keynote's, word for word.
  *
- * ⚠ THE SPINE SINCE ADR-133 U4 (2026-09-29): Loop (part one: four proof
- * cards) · the turn · TODAY (the `board`: the studio's setup beside the same
- * facts configured) · THE APPROACH ("Automation runs through adoption.", the
- * owned `horizon`) · THE RETURN (a `crew`: Loop's record in the approach's two
- * bands, the proof of it) · THE SYSTEM (the `circuit`: every workflow a
- * configuration on the marketing OS) · the plan · the checker ON PANDORA'S OWN
- * PICTURE · who is in the room · what you keep · the fee · the four numbers ·
- * who does it · next steps.
+ * ⚠ THE SPINE SINCE ADR-133 U5 (2026-09-29): Loop (part one: four proof
+ * cards, then THE RETURN, a `crew`, one row per role read left to right) ·
+ * the turn · TODAY (the `board`) · THE APPROACH (the owned `horizon`) · THE
+ * SYSTEM (the `circuit` map) · the three months · the checker ON PANDORA'S OWN
+ * PICTURE · who takes part · what you keep · the day rate · what we measure ·
+ * the About, the homepage's own · next steps. Rob advises in the background
+ * and is named in the covering email, not on the page (owner).
  */
 
 const DAY_RATE = 1500;
-const DAYS_A_MONTH = 20;
-const MONTHS = 3;
 const eur = (n: number) => `€${n.toLocaleString("en-GB")}`;
-const FEE_MONTH = eur(DAY_RATE * DAYS_A_MONTH);
-const FEE_TOTAL = eur(DAY_RATE * DAYS_A_MONTH * MONTHS);
 
 export const PANDORA_PROPOSAL_ARC: ArcDef = {
   slug: "pandora-proposal",
@@ -141,6 +134,57 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       title: "We built the layer the agents run on",
     },
     {
+      /* WHAT IT RETURNED AT LOOP (ADR-133 U5, owner 2026-09-29): back beside
+         the proof cards it comes from, read left to right, "just a super
+         clear visualization of what's now been possible because of this".
+         One row per role: who, then what is possible now, drawn as the
+         quantity it is and said in one line. Rob's four points; the fourth is
+         creative strategy on Mímir's briefing division (the month's forecast
+         divided into briefs across partner and format). The only figures are
+         Loop's spoken, printable ones. */
+      id: "return",
+      kind: "crew",
+      menuLabel: "The return",
+      head: {
+        eyebrow: "Loop · what it returned",
+        title: { pre: "What it returned", em: "at Loop." },
+        sub: "Four teams at Loop, and what each can do now with the configuration it wrote.",
+      },
+      rows: [
+        {
+          id: "assets",
+          who: "Two designers and a copywriter",
+          people: 3,
+          output: { kind: "field", count: 700 },
+          value: "About 700",
+          unit: "paid-social assets a month",
+        },
+        {
+          id: "copy",
+          who: "The PMs",
+          output: { kind: "funnel", lines: 12 },
+          value: "The copy, filled in",
+          unit: "in Figma by the PMs, checked by one copy editor",
+        },
+        {
+          id: "review",
+          who: "The head of design",
+          people: 1,
+          output: { kind: "tenfold" },
+          value: "About ten times less",
+          unit: "review by hand",
+        },
+        {
+          id: "strategy",
+          who: "Creative strategy",
+          output: { kind: "split", parts: 6 },
+          value: "The ad count, divided",
+          unit: "across partners and formats, ready to brief",
+        },
+      ],
+      alt: "What it returned at Loop, one row per team. Two designers and a copywriter: about 700 paid-social assets a month. The PMs: the copy filled in in Figma, checked by one copy editor. The head of design: about ten times less review by hand. Creative strategy: the month's ad count divided across partners and formats, ready to brief.",
+    },
+    {
       id: "turn",
       kind: "interstitial",
       variant: "callout",
@@ -166,7 +210,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · where the studio stands",
         title: { pre: "The studio today, and", em: "configured." },
-        sub: "Left, the Global Brand Creative Studio as it runs today: the operational work done by hand, much of it by freelancers, and the way of working held by the people who do it. Right, the same studio once the AI work has an owner and its rules are written down, running in the tools it already uses.",
+        sub: "Left, the studio as it runs today. Right, the same studio once its AI work has an owner and its rules are written down, in the tools it already uses.",
       },
       states: [
         {
@@ -234,7 +278,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · the approach",
         title: { pre: "Automation runs", em: "through adoption." },
-        sub: "We start with the team, not the tools. In the workshops the PMs and producers learn to work with the AI they already have, and write down how the work is done and what a good result looks like. That is what lets an agent take over the operational work, checking in when it needs a person, while the team's own time goes upstream: the brief, the concepting, the campaign imagery.",
+        sub: "In the workshops the PMs and producers learn to work with the AI they already have and write down how the work is done. An agent takes the operational work from there and checks in when it needs a person, so the team's time goes to the brief, the concepting and the campaign imagery.",
       },
       owner: {
         key: "The owner",
@@ -262,65 +306,6 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       },
     },
     {
-      /* WHAT IT RETURNED AT LOOP (ADR-133 U4, owner 2026-09-29): the proof that
-         automation runs through adoption, so it follows the approach, drawn in
-         the approach's own two bands (owner: "it really feels like it builds on
-         top of that upstream-downstream material, more like an overview").
-         Rob's four points, one column each; the fourth is creative strategy
-         on Mímir's briefing division (given the month's forecast, it divides
-         the ad count into briefs across use case, format and partner — the
-         owner: "we really built a system that can look at the number of ads we
-         need and then allocate them"). The client's half, the readouts
-         counted from week one, is deleted on his word. The only figures are
-         Loop's spoken, printable ones. */
-      id: "return",
-      kind: "crew",
-      menuLabel: "The return",
-      head: {
-        eyebrow: "Loop · the proof",
-        title: { pre: "What it returned", em: "at Loop." },
-        sub: "The same approach, at Loop. Each team moved upstream, and what sits under the line now runs on the configurations they wrote.",
-      },
-      bands: { upstream: "Upstream · the people", downstream: "Downstream · what runs" },
-      rows: [
-        {
-          id: "assets",
-          who: "Two designers and a copywriter",
-          people: 3,
-          upstream: "Concepting and brand storytelling",
-          output: { kind: "field", count: 700 },
-          value: "About 700",
-          unit: "paid-social assets a month",
-        },
-        {
-          id: "copy",
-          who: "The PMs",
-          upstream: "The brief",
-          output: { kind: "funnel", lines: 12 },
-          value: "The copy, pre-filled",
-          unit: "one copy editor checks it",
-        },
-        {
-          id: "review",
-          who: "The head of design",
-          people: 1,
-          upstream: "The final call",
-          output: { kind: "tenfold" },
-          value: "About ten times",
-          unit: "less review by hand",
-        },
-        {
-          id: "strategy",
-          who: "Creative strategy",
-          upstream: "The ideas worth testing",
-          output: { kind: "split", parts: 6 },
-          value: "The ad count",
-          unit: "divided across partners and formats",
-        },
-      ],
-      alt: "What it returned at Loop, in two bands. Upstream, the people and what their time goes to now: two designers and a copywriter on concepting and brand storytelling, the PMs on the brief, the head of design on the final call, creative strategy on the ideas worth testing. Downstream, what runs: about 700 paid-social assets a month; the copy pre-filled for one copy editor to check; about ten times less review by hand; and the month's ad count divided across partners and formats.",
-    },
-    {
       /* ONE LAYER, EVERY WORKFLOW (ADR-133 U2, owner 2026-09-29: "a nice
          overview of different configurations put together, like the restored
          configuration … I don't think we should see all the texts of the
@@ -340,7 +325,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · the marketing OS",
         title: { pre: "A system built", em: "to compound." },
-        sub: "Each team writes down how its work is done, one workflow at a time, and each workflow becomes a configuration that team owns. All of them run on one layer, Pandora's marketing OS, so every workflow written gives the team time back upstream and the next one starts from what is already there.",
+        sub: "Each workflow becomes a configuration its team owns, and all of them run on one layer: Pandora's marketing OS. Every one written gives the team time back, and the next starts from what is already there.",
       },
       configs: [
         { id: "filing", name: "Filing", line: "owned by the producers" },
@@ -353,10 +338,10 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       os: {
         key: "Pandora's",
         name: "Marketing OS",
-        line: "built by your teams, one workflow at a time",
+        line: "built by your own teams",
       },
       socket: { key: "Later", name: "A brand system for all marketing" },
-      alt: "Pandora's marketing OS as a map: six workflows, each its own small configuration with an owner, the work, its tools and where it goes. Filing, owned by the producers; the review recap, the schedule and resourcing, owned by the PMs; the retouch check, owned by the producers; and the brief to Figma, owned by the designers. Every one is wired to the marketing OS at the centre, built by the teams one workflow at a time, which plugs into a dashed socket below: a brand system for all of marketing, later.",
+      alt: "Pandora's marketing OS as a map: six workflows, each its own small configuration with an owner, the work, its tools and where it goes. Filing, owned by the producers; the review recap, the schedule and resourcing, owned by the PMs; the retouch check, owned by the producers; and the brief to Figma, owned by the designers. Every one is wired to the marketing OS at the centre, built by the teams themselves, which plugs into a dashed socket below: a brand system for all of marketing, later.",
     },
     {
       id: "phases",
@@ -366,9 +351,15 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       layout: "plates",
       head: {
         eyebrow: "Pandora · the three months",
-        title: { pre: "The plan,", em: "month by month." },
-        sub: "Operations first, because that is where the studio's week goes, then the review, then the same workflows handed to agents and shown to the next team. Each month ends on something that has to work before the next one starts, and you can stop after any of them.",
+        title: { pre: "The", em: "three months." },
+        sub: "Operations first, then the review and the briefs, then the same workflows running on their own. Each month ends on something that works, and you can stop after any of them.",
       },
+      /* ⚠ HIGH-LEVEL AND STILL CONCRETE (owner, 2026-09-29: "avoid
+         committing to one specific line … without understanding the business,
+         but I don't want it to be too vague"). Each month names the work it
+         is about, from the call, and leaves the order inside it to week one.
+         The review is not a month on its own: it shares month two with the
+         briefs and whatever month one turns up. */
       groups: [
         {
           id: "m1",
@@ -376,66 +367,60 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           blurb: "Operations",
           items: [
             {
-              id: "m1w1",
-              tag: "Week 1 · Copenhagen",
-              name: "Watch before building",
-              body: "The stack, the PM and producer meetings, the freelancers' week written down as it is. The task force kicks off. Claude access sorted with D&T",
+              id: "m1-week",
+              tag: "Week one · Copenhagen",
+              name: "How the week really runs",
+              body: "We sit in on the meetings and write the operational work down as it is, the freelancers' part included.",
             },
             {
-              id: "m1w2",
-              tag: "Week 2",
-              name: "File naming and the Primo upload, as one Skill",
-              body: "Run by a PM pressing the button, on the studio's own Claude account",
+              id: "m1-setup",
+              tag: "The current setup",
+              name: "More out of the tools you have",
+              body: "Figma, Primo, Asana and Hub Planner as they are, with Claude working inside them.",
             },
             {
-              id: "m1w3",
-              tag: "Week 3",
-              name: "The recap after a creative review, and the schedule",
-              body: "Who said what, the decisions, the next steps with dates, written from the review notes. The Asana schedule read from the same notes",
-            },
-            {
-              id: "m1w4",
-              tag: "Week 4",
-              name: "Resource planning, briefed like a new planner",
-              body: "Hub Planner read from Asana. One lunch-and-learn a week throughout, homework in between",
+              id: "m1-flows",
+              tag: "Around the team's flows",
+              name: "The first configurations",
+              body: "Filing and the Primo upload, the review recap, the schedule, resource planning. Week one decides the order.",
             },
           ],
           foot: {
             label: "Done when",
             lines: [
-              "A PM files a campaign into Primo with the right names and writes the review recap without us",
-              "Each task-force member has encoded one workflow of their own",
+              "A PM runs the first workflows without us",
+              "Each task-force member has written one workflow down",
             ],
           },
         },
         {
           id: "m2",
           label: "M2 · about four weeks",
-          blurb: "Review",
+          blurb: "Review and briefs",
           items: [
             {
-              id: "m2w1",
-              tag: "Weeks 1 and 2",
-              name: "The retouching checker, with the producers",
-              body: "Pandora's own reference shots and the producers' rules in their words, starting with the metal shade and the sparkle. Every retouch graded before a producer opens it",
+              id: "m2-review",
+              tag: "Review",
+              name: "The retouching check, in the producers' words",
+              body: "Starting with the metal's shade and the sparkle, on Pandora's own shots. The producer still decides.",
             },
             {
-              id: "m2w2",
-              tag: "Week 3",
-              name: "The brief into Figma, without the deck",
-              body: "The email managers' brief goes into the Figma template as a page the designers work from. Nobody rebuilds a PowerPoint",
+              id: "m2-briefs",
+              tag: "Briefs",
+              name: "The brief, straight into Figma",
+              body: "The email managers' brief becomes a Figma page the designers work from.",
             },
             {
-              id: "m2w3",
-              tag: "Week 4",
-              name: "The recap in daily use, the checker on every batch",
-              body: "A producer still signs off every batch, and a note they keep repeating becomes a new check",
+              id: "m2-next",
+              tag: "What month one found",
+              name: "The next workflows",
+              body: "What month one turned up, set up the same way.",
             },
           ],
           foot: {
             label: "Done when",
             lines: [
-              "The producers grade a retouch batch with the checker and change one rule themselves",
+              "The producers change a rule of the check themselves",
               "A brief arrives in Figma without being retyped",
             ],
           },
@@ -446,28 +431,28 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           blurb: "Agents and scaling",
           items: [
             {
-              id: "m3w1",
-              tag: "Weeks 1 and 2",
+              id: "m3-agents",
+              tag: "Agents",
               name: "From a button to a schedule",
-              body: "The filing, the schedule and the recap run on their own and the team checks in every hour. The checker runs on every upload to Primo",
+              body: "The workflows run on their own and check in when they need a person.",
             },
             {
-              id: "m3w2",
-              tag: "Week 3",
-              name: "Pandora's Skills, written down as files the studio owns",
-              body: "Brand nuance, tone, the CMO's read, the review rules. The blueprint for the wider marketing organisation, with Jenny",
+              id: "m3-skills",
+              tag: "Written down",
+              name: "The Skills, as files the studio owns",
+              body: "The brand nuance, the tone and the review rules, kept where the team can change them.",
             },
             {
-              id: "m3w3",
-              tag: "Week 4 · Copenhagen",
-              name: "Handover: a production week with us out of the room",
-              body: "Check-ins at one month and at three",
+              id: "m3-handover",
+              tag: "Scaling · Copenhagen",
+              name: "The blueprint and the handover",
+              body: "The same setup written down for the next team, with Jenny, then a production week the team runs without us.",
             },
           ],
           foot: {
             label: "Done when",
             lines: [
-              "The team runs the month without us",
+              "The team runs a month without us",
               "Kristin has the next three workflows listed",
             ],
           },
@@ -493,7 +478,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · creative review",
         title: { pre: "A checker that reads", em: "like your retoucher." },
-        sub: "One check, written down: what it looks at, what it may decide, and the cases it is tested against, shown on one of Pandora's own pictures. The two questions Kristin asked on the call come first: is the metal the right shade, and is the sparkle the right sparkle.",
+        sub: "The retouching check, written down and shown on one of Pandora's own pictures. It starts where Kristin did on the call: the shade of the metal and the sparkle.",
       },
       example: {
         id: "rings",
@@ -697,7 +682,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       },
     },
     {
-      /* WHO IS IN THE ROOM (owner, 2026-09-28, on the readout version: "too
+      /* WHO TAKES PART (owner, 2026-09-28, on the readout version: "too
          condensed … two different fonts … rework this section so it's super
          clear for the stakeholders"). Suri's own grammar for this beat
          (`columns`, a name, one sentence on what the person does, the time it
@@ -705,18 +690,18 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
          has to provide stays in the next steps, where it is asked for. */
       id: "how-we-work",
       kind: "list-groups",
-      menuLabel: "Who is in the room",
+      menuLabel: "Who takes part",
       layout: "columns",
       head: {
         eyebrow: "Pandora · how we work",
-        title: { pre: "Who is in the room,", em: "and for how long." },
-        sub: "We set the loop up in week one and run it beside the team until they run it without us: about five days a month in Copenhagen, the rest in the team's own channels.",
+        title: { pre: "Who", em: "takes part." },
+        sub: "About five days a month in Copenhagen, the rest in the team's own channels, until the team runs it without us.",
       },
       groups: [
         {
           id: "pandora",
           label: "From Pandora",
-          blurb: "Four people and the task force, and what the three months ask of each.",
+          blurb: "What the three months ask of each.",
           items: [
             {
               id: "kristin",
@@ -751,7 +736,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         {
           id: "thoughtform",
           label: "From Thoughtform",
-          blurb: "Vince inside the studio, Rob behind it.",
+          blurb: "In the studio and beside it.",
           items: [
             {
               id: "vince",
@@ -759,13 +744,6 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
               name: "Vince, on AI and creative technology",
               body: "Five days a month in Copenhagen, the rest remote. Runs the sessions, writes the Skills with the team, then steps back.",
               meta: "About twenty days a month",
-            },
-            {
-              id: "rob",
-              tag: "Thoughtform",
-              name: "Rob, on the organisation and the business case",
-              body: "Mostly in the background; in the room for the kickoff, the business case and the senior conversations.",
-              meta: "One session a month",
             },
           ],
         },
@@ -786,7 +764,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Pandora · what you keep",
         title: { pre: "What you keep is", em: "the configuration." },
-        sub: "The right-hand side of the board above, in the studio's own hands: someone whose job it is, the context written down, the workflows on your accounts, inside the tools you already use. That is the product. We build it with the team, and it stays when we leave.",
+        sub: "The configuration from the board above, in the studio's hands: an owner, the context written down, the workflows on your own accounts. We build it with the team, and it stays when we leave.",
       },
       groups: [
         {
@@ -829,7 +807,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
         {
           id: "after",
           label: "After month three",
-          blurb: "What keeps running with us out of the room.",
+          blurb: "What keeps running once we leave.",
           items: [
             {
               id: "team",
@@ -854,62 +832,49 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
+      /* THE DAY RATE (ADR-133 U5, owner 2026-09-29): the rate and the days,
+         no month fee and no total. From the debrief with Rob: absolute
+         numbers "might put them off"; a day rate and about twenty days a
+         month lets them make the calculation themselves. Four cards, because
+         `.arc-cards` sets two across at the reference laptop. */
       id: "pricing",
       kind: "cards",
       menuLabel: "Pricing",
       menuPrimary: true,
       columns: 4,
-      ledger: { columns: ["Month", "Days on the work", "Fee"] },
       head: {
         eyebrow: "Pandora · the fee",
-        title: { pre: "Priced by the day,", em: "one month at a time." },
-        sub: "One day rate whether we work remote or on site, for about twenty days a month, five of them in Copenhagen.",
+        title: { pre: "The", em: "day rate." },
+        sub: "One rate for every day on the work, remote or in Copenhagen.",
       },
       cards: [
         {
-          id: "fee-m1",
-          kicker: "Month one",
-          title: FEE_MONTH,
-          body: "About twenty days, five of them in Copenhagen. Operations.",
-        },
-        {
-          id: "fee-m2",
-          kicker: "Month two",
-          title: FEE_MONTH,
-          body: "About twenty days, five on site. Review.",
-        },
-        {
-          id: "fee-m3",
-          kicker: "Month three",
-          title: FEE_MONTH,
-          body: "About twenty days, five on site. Agents and scaling.",
-        },
-        {
-          id: "fee-total",
-          kicker: "Three months",
-          title: `About ${FEE_TOTAL}`,
-          body: `Sixty days at ${eur(DAY_RATE)} a day, invoiced monthly on the days worked.`,
-        },
-      ],
-      footnote:
-        "If you stop after month one, the studio keeps the four operational workflows and the Skills behind them.",
-      tips: [
-        {
           id: "rate",
-          tag: "Rate",
-          body: `${eur(DAY_RATE)} a day. Invoiced at each month end on the days actually worked, so a lighter month costs less.`,
+          kicker: "Rate",
+          title: `${eur(DAY_RATE)} a day`,
+          body: "The same rate remote or in Copenhagen.",
+        },
+        {
+          id: "days",
+          kicker: "Time",
+          title: "About twenty days a month",
+          body: "Five of them on site in Copenhagen.",
+        },
+        {
+          id: "invoicing",
+          kicker: "Invoicing",
+          title: "At each month end",
+          body: "On the days actually worked, so a lighter month costs less.",
         },
         {
           id: "renewal",
-          tag: "Renewal",
-          body: "Month by month. Either side stops at a month end; nothing beyond the current month is committed.",
-        },
-        {
-          id: "expenses",
-          tag: "Expenses",
-          body: "Travel and stay at cost, Antwerp to Copenhagen. Model usage on Pandora's own Claude account, billed by the provider. Everything built belongs to Pandora.",
+          kicker: "Renewal",
+          title: "Month to month",
+          body: "Either side can stop at the end of any month.",
         },
       ],
+      footnote:
+        "Travel at cost. Model usage runs on Pandora's own Claude account. Everything built belongs to Pandora, including if you stop after the first month.",
     },
     {
       /* THE BUSINESS CASE WITHOUT A NUMBER (owner, 2026-09-28: the appendix
@@ -920,12 +885,12 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
          on the proof cards' own registers and are not repeated here. */
       id: "measures",
       kind: "cards",
-      menuLabel: "How you will know",
+      menuLabel: "What we measure",
       columns: 4,
       head: {
         eyebrow: "Pandora · the business case",
-        title: { pre: "Counted in week one,", em: "read every month." },
-        sub: "Four numbers from Pandora's own bookings, files and calendars, set beside that month's fee. We promise the counting; the numbers are yours to read.",
+        title: { pre: "What we", em: "measure." },
+        sub: "Four numbers from Pandora's own bookings, files and calendars, counted from week one and read beside each month's invoice.",
       },
       cards: [
         {
@@ -938,7 +903,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           id: "days",
           kicker: "Days",
           title: "Freelance days on operational work",
-          body: "Read from the bookings, month by month, beside the month's fee.",
+          body: "Read from the bookings each month.",
         },
         {
           id: "cycle",
@@ -955,28 +920,32 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
+      /* THE ABOUT, THE HOMEPAGE'S OWN (ADR-133 U5, owner 2026-09-29: "with
+         Rob removed, I would just repurpose the About section from our
+         homepage, with my picture on the right side and the text on the left
+         side, so it becomes uniform"). The homepage's words and portrait, as
+         they stand there. Rob advises in the background and is named in the
+         covering email, not on the page. */
       id: "people",
-      kind: "cards",
+      kind: "portrait",
+      layout: "orbit",
       menuLabel: "Who does it",
-      columns: 2,
+      ariaLabel: "About Vince Buyssens",
       head: {
-        eyebrow: "Thoughtform · who shows up",
-        title: { pre: "Vince and Rob,", em: "who did this at Loop." },
-        sub: "Both of us worked at Loop: Vince inside the creative team, Rob on the executive team.",
+        eyebrow: "Thoughtform · who does the work",
+        title: { pre: "Vince Buyssens" },
+        sub: "Creative technologist · Founder · AI adoption",
       },
-      cards: [
-        {
-          id: "vince",
-          kicker: "AI and creative technology",
-          title: "Vince Buyssens",
-          body: "Built Loop's AI capability inside its creative team over three years, then led its company-wide adoption of Claude. Runs the sessions and writes the Skills with the team. About five days a month in Copenhagen.",
-        },
-        {
-          id: "rob",
-          kicker: "Commercial and organisation",
-          title: "Rob Weston",
-          body: "Ran the Commercial and Marketing teams at Loop and sat on the executive team that decided, in 2024, to make Loop AI-first. Works on the organisation, the process, the business case and the senior conversations, and joins in the room when that helps.",
-        },
+      image: { src: "/images/vince-portrait.jpg", alt: "Vince Buyssens, founder of Thoughtform" },
+      bio: [
+        "Vince has been navigating the tides of digital change for over a decade: social media, online communities, now intelligence itself.",
+        "AI is different: it isn't software to command, but an intelligence to navigate. Through Thoughtform, he helps teams build that relationship, mapping the fit between their work and the intelligence available.",
+        "He runs the same practice inside Loop Earplugs, leading AI adoption: advising leadership, embedding with teams, building the tools behind the marketing engine.",
+      ],
+      meta: [
+        { label: "Base", value: "Antwerp · BE" },
+        { label: "Practice", value: "10+ yrs" },
+        { label: "Also at", value: "Loop Earplugs" },
       ],
     },
     {
@@ -1026,7 +995,6 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
           href: "mailto:vince@thoughtform.co",
           primary: true,
         },
-        { id: "rob", label: "Rob Weston", href: "mailto:weston.rob@gmail.com" },
       ],
       footerLine: "Thoughtform · Proposal for Pandora · September 2026.",
       signature: "Prepared for Kristin, Global Brand Creative Studio.",

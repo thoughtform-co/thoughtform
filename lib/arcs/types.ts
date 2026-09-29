@@ -280,12 +280,17 @@ export type ArcSection = ArcSectionBase &
         };
       }
     | {
-        /** Portrait + bio + meta rows (the About Vince read). */
+        /** Portrait + bio + meta rows (the About Vince read).
+         *  `layout: "orbit"` is the homepage's own About (ADR-133 U5): the
+         *  copy on the left (the name as the title, `head.sub` as the role
+         *  line, the bio, the meta cells) and the portrait on the right inside
+         *  the About drawing's rings. Absent, the keynote's bracketed frame. */
         kind: "portrait";
         head: ArcHead;
         image: ArcImage;
         bio: readonly string[];
         meta: readonly ArcMetaRow[];
+        layout?: "orbit";
       }
     | {
         /** Closing CTA band — doubles as the page footer. */
@@ -870,23 +875,20 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE CREW (ADR-133 U4): the proof that automation runs through
-         * adoption, as an OVERVIEW of Loop's record in the approach's own two
-         * bands (owner, 2026-09-29: "it really feels like it builds on top of
-         * that upstream-downstream material"). One column per role: above the
-         * line, green, the people and what they spend the time on now; below
-         * it, gold, what runs and the record's readout, with one small mark
-         * drawn as the quantity it is. Never a calculator.
+         * THE CREW (ADR-133 U5): what it returned at Loop, as ONE ROW PER
+         * ROLE read left to right — who, then what is possible now, drawn as
+         * the quantity it is and said in one line (owner, 2026-09-29: "I
+         * really like the flow from left to right … just a super clear
+         * visualization of what's now been possible because of this"). It
+         * sits with the proof cards it comes from. Never a calculator.
          *
          * ⚠ THE THIRTEENTH ENUMERATED EXCEPTION. The circuit's own glyph
-         * library, static, one leaf, no script. U4 deleted the client's half
-         * (the readouts "counted from week one"): the owner ruled it out. The
-         * only digits on the drawing are the record's own readouts.
+         * library, static, one leaf, no script. U4's two bands are retired
+         * (the upstream / downstream split "doesn't really make sense" here),
+         * and so is the client's half. The only digits are the record's.
          */
         kind: "crew";
         head: ArcHead;
-        /** The two bands' labels, e.g. "Upstream · the people". */
-        bands: { upstream: string; downstream: string };
         rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow];
         /** The drawing's accessible name. */
         alt: string;
@@ -1016,7 +1018,7 @@ export type CrewOutput =
    *  formats (Mímir's briefing division). */
   | { kind: "split"; parts: number };
 
-/** One column of the record: who, what they do now, and what runs. */
+/** One row of the record: who, and what is possible now. */
 export interface CrewRow {
   id: string;
   /** Who, e.g. "Two designers and a copywriter". */
@@ -1024,9 +1026,6 @@ export interface CrewRow {
   /** How many people the seat draws (pixel figures) — ONLY where the record
    *  states a count. A plural role ("The PMs") draws none. */
   people?: number;
-  /** What they spend the time on now, upstream, e.g. "Concepting and brand
-   *  storytelling". */
-  upstream: string;
   output: CrewOutput;
   /** The reading, mono, e.g. "About 700". The record's own number, if any. */
   value: string;

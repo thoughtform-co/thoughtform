@@ -14,10 +14,9 @@ interface ArcCrewProps {
 }
 
 /**
- * ArcCrew — THE CREW (ADR-133 U4): what it returned at Loop, as the approach's
- * two bands — one column per role, the people and what their time goes to now
- * above a dashed line, what runs and the record's readout below it, each drawn
- * as the quantity it is. Never a calculator. The circuit's own glyph library.
+ * ArcCrew — THE CREW (ADR-133 U5): what it returned at Loop, one row per role
+ * read left to right — who, then what is possible now, drawn as the quantity
+ * it is and said in one line. Never a calculator. The circuit's own glyphs.
  *
  * ⚠ SERVER, NO STATE, NO SCRIPT. On a phone the drawing gives way to the same
  * record as one ruled list (a 1400-unit drawing at 390px paints at 4px).
@@ -74,10 +73,7 @@ export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
               <div key={r.id}>
                 <dt>{r.who}</dt>
                 <dd>
-                  {r.upstream}
-                  <span className="arc-cir-list__was">
-                    <strong>{r.value}</strong> {r.unit}
-                  </span>
+                  <strong>{r.value}</strong> {r.unit}
                 </dd>
               </div>
             ))}
