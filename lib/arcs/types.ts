@@ -891,7 +891,72 @@ export type ArcSection = ArcSectionBase &
         /** The drawing's accessible name. */
         alt: string;
       }
+    | {
+        /**
+         * THE COURSE ON ONE TRACK (ADR-134): every class of a course on one
+         * line, the two ways in drawn as the fork it starts from and what is
+         * launched drawn as its end, under the phases of the house arc. A
+         * station is its numeral, its name and the SHAPE of what the class
+         * makes; the open station's practical sheet sits under the track —
+         * the four rows once, never once per class.
+         *
+         * ⚠ THE FOURTEENTH ENUMERATED EXCEPTION to ADR-052's "content-only",
+         * and it exists because the owner read nine identical `anatomy`
+         * sections as "a glorified PowerPoint" (2026-09-29): a syllabus is ONE
+         * instrument, and the week-by-week detail is what it shows when a
+         * station is picked. The numerals and the row keys are the
+         * renderer's; the record authors the words only.
+         */
+        kind: "syllabus";
+        head: ArcHead;
+        /** The assignment's choice, drawn as the fork the track starts from. */
+        entry: { label: string; ways: readonly [string, string] };
+        /** The phases, in order. Every class names one; each phase holds a
+         *  consecutive run of classes. */
+        phases: readonly ArcSyllabusPhase[];
+        classes: readonly ArcSyllabusClass[];
+        /** What is launched at the end, drawn as the track's end. */
+        launch: { label: string; items: readonly string[] };
+        /** One line under the track: what a gate is. */
+        note?: string;
+      }
   );
+
+/* ── The syllabus (ADR-134) ────────────────────────────────────────── */
+
+export interface ArcSyllabusPhase {
+  id: string;
+  /** Mono, on the bracket over its classes. */
+  label: string;
+}
+
+/** The shape of what a class makes, drawn as a hairline frame on its
+ *  station. A shape, never a picture: the track is the course, not the work. */
+export type ArcSyllabusGlyph =
+  | "setup"
+  | "board"
+  | "wall"
+  | "offer"
+  | "poster"
+  | "site"
+  | "film"
+  | "launch";
+
+export interface ArcSyllabusClass {
+  id: string;
+  /** The phase this class belongs to. */
+  phase: string;
+  /** The station's name, ≤ 16 characters. */
+  name: string;
+  glyph: ArcSyllabusGlyph;
+  /** The sheet's four rows. */
+  objective: string;
+  make: string;
+  gate: string;
+  tool: string;
+  /** Where the worked example shows this class's work, on this page. */
+  example?: { label: string; href: string };
+}
 
 /* ── The circuit (ADR-133 U2) ─────────────────────────────────────── */
 

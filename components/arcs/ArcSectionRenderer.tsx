@@ -26,6 +26,7 @@ import { ArcStages } from "./ArcStages";
 import { ArcSteps } from "./ArcSteps";
 import { ArcStudioFilms } from "./ArcStudioFilms";
 import { ArcStudioSheets } from "./ArcStudioSheets";
+import { ArcSyllabus } from "./ArcSyllabus";
 import { ArcToolIndex } from "./ArcToolIndex";
 import { arcTitleText } from "./chrome";
 
@@ -139,6 +140,8 @@ export function ArcSectionRenderer({
             return <ArcCircuit key={section.id} section={section} index={index} motion={motion} />;
           case "crew":
             return <ArcCrew key={section.id} section={section} index={index} motion={motion} />;
+          case "syllabus":
+            return <ArcSyllabus key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

@@ -1110,6 +1110,55 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("a syllabus is one track: phases tile the classes, every class a full sheet (ADR-134)", () => {
+    /* The renderer trusts the record for what it cannot recover: that each
+       phase holds ONE consecutive run of classes (the brackets span a range,
+       so a phase split in two would bracket the classes between), that every
+       class names a phase that exists, that a station's name fits its column,
+       that the fork has exactly two ways in, and that a worked-example link
+       lands on a section of this page. */
+    const GLYPHS = ["setup", "board", "wall", "offer", "poster", "site", "film", "launch"];
+    for (const arc of ARCS) {
+      const ids = new Set(arc.sections.map((x) => x.id));
+      for (const s of arc.sections) {
+        if (s.kind !== "syllabus") continue;
+        const at = `${arc.slug}/${s.id}`;
+        expect(s.classes.length, `${at}: three to twelve classes`).toBeGreaterThanOrEqual(3);
+        expect(s.classes.length, `${at}: three to twelve classes`).toBeLessThanOrEqual(12);
+        expect(s.entry.ways.length, `${at}: two ways in`).toBe(2);
+        expect(s.launch.items.length, `${at}: one to three things launched`).toBeGreaterThan(0);
+        expect(s.launch.items.length, `${at}: one to three things launched`).toBeLessThanOrEqual(3);
+        const phaseIds = s.phases.map((p) => p.id);
+        expect(new Set(phaseIds).size, `${at}: a phase twice`).toBe(phaseIds.length);
+        expect(new Set(s.classes.map((c) => c.id)).size, `${at}: a class twice`).toBe(
+          s.classes.length
+        );
+        /* The phases, read off the classes in order, are the phase list. */
+        const runs = s.classes
+          .map((c) => c.phase)
+          .filter((p, i, all) => i === 0 || all[i - 1] !== p);
+        expect(runs, `${at}: each phase one consecutive run, in the phases' order`).toEqual(
+          phaseIds
+        );
+        for (const c of s.classes) {
+          const here = `${at}/${c.id}`;
+          expect(c.name.length, `${here}: name`).toBeLessThanOrEqual(16);
+          expect(GLYPHS, `${here}: glyph "${c.glyph}"`).toContain(c.glyph);
+          for (const key of ["objective", "make", "gate", "tool"] as const) {
+            expect(c[key].trim().length, `${here}: ${key}`).toBeGreaterThan(0);
+            expect(c[key].length, `${here}: ${key}`).toBeLessThanOrEqual(150);
+          }
+          if (c.example) {
+            expect(c.example.href.startsWith("#"), `${here}: example is on this page`).toBe(true);
+            expect(ids.has(c.example.href.slice(1)), `${here}: ${c.example.href} missing`).toBe(
+              true
+            );
+          }
+        }
+      }
+    }
+  });
+
   it("the workshop's framing kinds hold their records (ADR-130)", () => {
     /* Four leaves and one layout, each with a fixed geometry and authored
        words. What is pinned is what the drawings assume and cannot check at

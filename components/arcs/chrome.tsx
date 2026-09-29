@@ -72,6 +72,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   questions: "CONFIG",
   circuit: "CIRCUIT",
   crew: "RECORD",
+  syllabus: "COURSE",
 };
 
 /**

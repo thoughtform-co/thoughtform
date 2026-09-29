@@ -909,6 +909,28 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   (Objective · You make · The gate · The tool), a close. The student builds one
   brand world all term, around themselves or a fictional product. ⚠ Motion is
   held to week eight on purpose, once the world has rules a film can obey.
+- ⚠ **AND SINCE ADR-134 (2026-09-29, owner) THE COURSE IS ONE TRACK, NOT NINE
+  SECTIONS.** He read the nine `anatomy` beats as "section after section with
+  the same fucking structure … the same glorified PowerPoint". The `syllabus`
+  kind (ADR-052's fourteenth exception) draws the whole term as one picture:
+  the two ways in as a fork, a station per class (its numeral, a name ≤16, a
+  hairline frame in the SHAPE of what the class makes) under the phase
+  brackets, a gate tick after every station, what is launched as the end; the
+  open station's sheet under the track carries Objective · You make · The
+  gate · The tool ONCE, with an optional link to the worked example on the
+  page. ⚠ **A SYLLABUS IS NEVER N IDENTICAL SECTIONS**: the week detail is what
+  the instrument shows when a station is picked. ⚠ It is a client island on
+  the bench's law (class one open at rest, state only in callbacks, every sheet
+  in the DOM for print), `data-syl-*` only. ⚠ **The tablist is `display:
+contents`** and each station a subgrid item of the track's grid, so the rail
+  runs through every plate's centre with nothing measured; the phone's
+  three-by-three overrides the inline columns with `!important`, the one place
+  it is lawful. ⚠ **Its sheet is `course.css`, a ROUTE sheet after
+  `arcs.css`**, because `arcs.css` is the file two sessions write at once. The
+  registry pins one consecutive run per phase in the phases' order, two ways
+  in, the four rows, and every example link landing on the page. The Tom on the
+  Moon breakdown that follows it is the next step; its frames are the client's
+  and need the owner's clearance before they ship.
 - ⚠ **ADR-133 U2 → U4 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
   Pandora reads today (the `board` again: the ruled ledger of the current
   setup beside the configured board, the ledger stating the setup and never a

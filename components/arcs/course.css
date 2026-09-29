@@ -1,0 +1,507 @@
+/* ══════════════════════════════════════════════════════════════════════
+   THE COURSE (ADR-134) — the syllabus
+   ══════════════════════════════════════════════════════════════════════
+   A course page's own kind, in its own sheet so the arcs' one sheet is not
+   the only file two sessions write at once. Loaded at the ROUTE, after
+   arcs.css and before theme.css, like every route sheet: a client-component
+   import would make the cascade ride the chunking.
+
+   ⚠ EVERY COLOUR IS AN ALIAS OF THE ADR-077 RAMP; the two wells that are
+   alphas of their own are re-derived in the light foot of this file. Gold
+   buys ONE thing per drawing: on the track, the open station. */
+
+/* ── The syllabus: the course on one track ───────────────────────────── */
+
+/* The first beat under the curtain: its tighter air is the STAGE token as
+   well as the beat's (the readout's own reason, ADR-130), so the held band
+   and the flow box it hands over to stay one box. */
+.arc-sec--syllabus {
+  --arc-sec-pad: clamp(28px, 4vh, 72px);
+  --arc-stage-pad: clamp(28px, 4vh, 72px);
+}
+.arc-sec--syllabus .arc-head {
+  margin-bottom: clamp(24px, 14vh - 76px, 96px);
+}
+
+.arc-syl {
+  --syl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --syl-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --syl-plate-h: clamp(50px, 6.2vh, 70px);
+  --syl-gap: 8px;
+  --syl-arm: 14px;
+  --syl-well: rgba(var(--dawn-rgb), 0.05);
+  /* A plate is OPAQUE, a step off the ground in both themes, so the rail
+     passes behind it rather than through it. */
+  --syl-bed: color-mix(in srgb, var(--void, #0a0908) 94%, rgb(var(--dawn-rgb)) 6%);
+  margin: 0;
+  min-width: 0;
+  color: var(--arc-ink-90);
+  font-family: var(--syl-sans);
+}
+
+.arc-syl__track {
+  display: grid;
+  grid-template-columns:
+    minmax(118px, 1.35fr)
+    repeat(var(--syl-n), minmax(0, 1fr))
+    minmax(96px, 1.05fr);
+  grid-template-rows: auto auto minmax(var(--syl-plate-h), auto) auto;
+  row-gap: 8px;
+  align-items: end;
+}
+
+/* The phases: a mono kicker over a hairline bracket, spanning its classes. */
+.arc-syl__phase {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-inline: 5px;
+  min-width: 0;
+}
+.arc-syl__phaselabel {
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: clamp(10px, 0.66vw, 11.5px);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--arc-ink-62);
+}
+.arc-syl__phase::after {
+  content: "";
+  display: block;
+  height: 6px;
+  border: 1px solid var(--arc-rule);
+  border-bottom: 0;
+}
+
+/* The two ends' labels ride the numerals' row. */
+.arc-syl__endlabel {
+  grid-row: 2;
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-syl__endlabel--out {
+  padding-left: var(--syl-arm);
+}
+
+/* The ends: equal rows, so the first and last chip centres are arithmetic
+   and the bracket that joins them meets the rail at its midpoint. */
+.arc-syl__ends {
+  --ends-n: 2;
+  position: relative;
+  grid-row: 3;
+  align-self: center;
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: var(--syl-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-syl__ends--in {
+  padding-right: var(--syl-arm);
+}
+.arc-syl__ends--out {
+  --ends-n: 3;
+  padding-left: var(--syl-arm);
+}
+.arc-syl__ends::before {
+  content: "";
+  position: absolute;
+  top: calc((100% - (var(--ends-n) - 1) * var(--syl-gap)) / (2 * var(--ends-n)));
+  bottom: calc((100% - (var(--ends-n) - 1) * var(--syl-gap)) / (2 * var(--ends-n)));
+  width: 1px;
+  background: var(--arc-seam);
+}
+.arc-syl__ends--in::before {
+  right: 0;
+}
+.arc-syl__ends--out::before {
+  left: 0;
+}
+.arc-syl__end {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid var(--arc-rule);
+  background: var(--syl-bed);
+  font-size: clamp(12px, 0.8vw, 14px);
+  line-height: 1.25;
+  color: var(--arc-ink-82);
+}
+.arc-syl__end::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: var(--syl-arm);
+  height: 1px;
+  background: var(--arc-seam);
+}
+.arc-syl__ends--in .arc-syl__end::after {
+  left: 100%;
+}
+.arc-syl__ends--out .arc-syl__end::after {
+  right: 100%;
+}
+
+/* The rail, behind the plates. */
+.arc-syl__rail {
+  grid-row: 3;
+  align-self: center;
+  height: 1px;
+  background: var(--arc-seam);
+}
+
+/* ⚠ `display: contents`: every station is an item of the TRACK's grid, in
+   its own column, sharing the three rows below the phases through subgrid —
+   so the rail runs through every plate's centre with nothing measured. */
+.arc-syl__stations {
+  display: contents;
+}
+.arc-syl__stn {
+  grid-row: 2 / 5;
+  display: grid;
+  grid-template-rows: subgrid;
+  justify-items: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.arc-syl__num {
+  padding: 2px 6px;
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: 10.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  color: var(--arc-ink-62);
+  border: 1px solid transparent;
+  transition:
+    background 200ms ease,
+    color 200ms ease;
+}
+.arc-syl__seat {
+  position: relative;
+  align-self: stretch;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* A gate after every class: one tick on the rail at the column's edge. */
+.arc-syl__seat::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 1px;
+  height: 12px;
+  margin-top: -6px;
+  background: var(--arc-ink-50);
+}
+.arc-syl__plate {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: min(calc(var(--syl-plate-h) * 4 / 3), calc(100% - 14px));
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--arc-rule);
+  background: var(--syl-bed);
+  transition:
+    border-color 200ms ease,
+    background 200ms ease;
+}
+.arc-syl__glyph {
+  width: 74%;
+  height: auto;
+  overflow: visible;
+}
+.arc-syl__glyph rect,
+.arc-syl__glyph line,
+.arc-syl__glyph circle {
+  fill: none;
+  stroke: var(--arc-ink-62);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 200ms ease;
+}
+.arc-syl__name {
+  align-self: start;
+  max-width: 11ch;
+  padding-inline: 4px;
+  font-size: clamp(12px, 0.8vw, 14px);
+  line-height: 1.25;
+  color: var(--arc-ink-70);
+  transition: color 200ms ease;
+}
+.arc-syl__stn:hover .arc-syl__plate {
+  border-color: var(--gold-line);
+}
+.arc-syl__stn:focus-visible {
+  outline: none;
+}
+.arc-syl__stn:focus-visible .arc-syl__plate {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 3px;
+}
+/* The open station: the one gold thing on the track. Filled among outlines
+   (ADR-089 U4), the numeral knocked out, never the void family. */
+.arc-syl__stn[aria-selected="true"] .arc-syl__plate {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--syl-bed) 82%, var(--gold, #caa554) 18%);
+}
+.arc-syl__stn[aria-selected="true"] .arc-syl__glyph * {
+  stroke: var(--gold-ink, #caa554);
+}
+.arc-syl__stn[aria-selected="true"] .arc-syl__num {
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+.arc-syl__stn[aria-selected="true"] .arc-syl__name {
+  color: var(--arc-ink);
+}
+
+/* What a gate is, once, under the track. */
+.arc-syl__note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: clamp(12px, 1.8vh, 20px) 0 0;
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: 10.5px;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-syl__note::before {
+  content: "";
+  flex: none;
+  width: 1px;
+  height: 12px;
+  background: var(--arc-ink-50);
+}
+
+/* The open class's sheet: its name on the left, the four rows on the right. */
+.arc-syl__sheets {
+  margin-top: clamp(14px, 2.2vh, 26px);
+}
+.arc-syl__sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 2.05fr);
+  border: 1px solid var(--arc-seam);
+  background: var(--arc-plate);
+}
+.arc-syl__sheets > .arc-syl__sheet[hidden] {
+  display: none;
+}
+.arc-syl__sheethead {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: clamp(14px, 1.8vh, 22px) clamp(16px, 1.5vw, 24px);
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-syl__kicker {
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: 10.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-syl__sheetname {
+  font-weight: var(--weight-lit);
+  font-size: clamp(22px, 1.9vw, 34px);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+}
+/* The station's shape again, large and lit: the sheet belongs to it. */
+.arc-syl__sheetglyph {
+  display: block;
+  width: clamp(72px, 6.4vw, 118px);
+  margin-top: auto;
+}
+.arc-syl__sheetglyph .arc-syl__glyph {
+  width: 100%;
+}
+.arc-syl__sheetglyph .arc-syl__glyph * {
+  stroke: var(--gold-ink, #caa554);
+}
+.arc-syl__example {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 30px 8px 11px;
+  position: relative;
+  border: 1px solid var(--arc-rule);
+  background: var(--syl-well);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 200ms ease;
+}
+.arc-syl__example::after {
+  content: "";
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-top: 1px solid var(--arc-ink-50);
+  border-right: 1px solid var(--arc-ink-50);
+  rotate: 45deg;
+}
+.arc-syl__example:hover,
+.arc-syl__example:focus-visible {
+  border-color: var(--gold-line);
+}
+.arc-syl__example:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.arc-syl__exampleflag {
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-syl__examplelabel {
+  font-size: clamp(13px, 0.85vw, 15px);
+  line-height: 1.3;
+  color: var(--arc-ink-90);
+}
+.arc-syl__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: clamp(12px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px);
+}
+.arc-syl__row {
+  display: grid;
+  grid-template-columns: minmax(0, 132px) minmax(0, 1fr);
+}
+.arc-syl__key {
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid var(--arc-rule);
+  background: var(--syl-well);
+  font-family: var(--syl-mono);
+  font-weight: var(--weight-text);
+  font-size: clamp(9.5px, 0.62vw, 11px);
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-62);
+}
+.arc-syl__val {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--arc-rule);
+  border-left: 0;
+  font-size: clamp(13.5px, 0.88vw, 16px);
+  line-height: 1.35;
+  color: var(--arc-ink-90);
+}
+/* The gate is what the sheet is for: its key takes the soft gold wash. */
+.arc-syl__row[data-syl-row="gate"] .arc-syl__key {
+  background: var(--arc-gold-wash);
+  color: var(--gold-ink, #caa554);
+}
+.arc-syl__row[data-syl-row="gate"] .arc-syl__val {
+  color: var(--arc-ink);
+}
+
+/* ── The phone: a three-by-three of classes, the ends as rows ────────── */
+@media (max-width: 960px) {
+  .arc-syl__track {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+    row-gap: 14px;
+    column-gap: 8px;
+    align-items: start;
+  }
+  .arc-syl__phase,
+  .arc-syl__rail,
+  .arc-syl__seat::after,
+  .arc-syl__ends::before,
+  .arc-syl__end::after {
+    display: none;
+  }
+  /* ⚠ The inline columns are the desktop track's; the phone re-flows them. */
+  .arc-syl__track > .arc-syl__endlabel,
+  .arc-syl__track > .arc-syl__ends {
+    grid-column: 1 / -1 !important;
+    grid-row: auto;
+    padding: 0;
+  }
+  .arc-syl__ends {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .arc-syl__stn {
+    grid-column: auto !important;
+    grid-row: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .arc-syl__plate {
+    width: min(84px, 100%);
+  }
+  .arc-syl__sheet {
+    grid-template-columns: 1fr;
+  }
+  .arc-syl__sheethead {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  .arc-syl__row {
+    grid-template-columns: 1fr;
+  }
+  .arc-syl__val {
+    border-left: 1px solid var(--arc-rule);
+    border-top: 0;
+  }
+}
+
+/* Paper carries every sheet. */
+@media print {
+  .arc-syl__sheets > .arc-syl__sheet[hidden] {
+    display: grid;
+    margin-top: 12px;
+  }
+}
+
+/* ── Light: the wells are alphas of their own ────────────────────────── */
+html[data-theme="light"] .arc-root .arc-syl {
+  --syl-well: rgba(var(--dawn-rgb), 0.07);
+}

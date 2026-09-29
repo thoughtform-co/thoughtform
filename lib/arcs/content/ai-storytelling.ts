@@ -2,25 +2,26 @@ import type { ArcDef } from "../types";
 
 /**
  * AI storytelling, as an arc: the nine-week course's syllabus, the page the
- * students open and the one it is taught from (ADR-132).
+ * students open and the one it is taught from (ADR-132, re-cut by ADR-134).
  *
- * ⚠ ONE PROJECT, NINE GATES. Every student builds one brand world across the
- * nine weeks — around themselves, or around a fictional futuristic product,
- * their choice — and launches it at the end with a poster, a website and a
- * film. Each week ends on a GATE stated before the week starts, which is the
- * owner's answer to his own weak spot as a teacher: open practical sheets.
+ * ⚠ THE COURSE IS ONE PICTURE (ADR-134, owner 2026-09-29). The first cut drew
+ * one `anatomy` section per week, nine in a row with the same four rows, and
+ * the owner read it as "a glorified PowerPoint". The weeks are ONE `syllabus`
+ * track now: the two ways in, nine stations under the house arc's phases, a
+ * gate after each, and what is launched at the end; the open station's sheet
+ * carries the four rows (objective, you make, the gate, the tool) once.
  *
- * ⚠ EVERY WEEK IS THE SAME FOUR ROWS, IN THE SAME ORDER — objective · you make
- * · the gate · the tool — the workshop's practical rungs one level up
- * (ADR-131 U1). The student learns the shape in week one and never has to
- * ask what is expected again.
+ * ⚠ THE ORDER IS THE OWNER'S NOTE ("AI Storytelling Course", Wispr Flow,
+ * 2026-09-29): theory and setup, the world, the offer, the poster, the
+ * website, the films, the launch. Photographing yourself into the world rides
+ * the world-skill class rather than taking one of its own, and the website
+ * takes one class and the films two (owner, same day). Motion still comes
+ * last on purpose: by then the world has rules a film can obey.
  *
- * ⚠ MOTION COMES LAST ON PURPOSE. The most impressive thing the tools do is
- * held back to week eight, because by then the world has rules a film can
- * obey; given away in week two it is a trick, not a story.
- *
- * The house arc maps onto the weeks: Navigate (one and two), Encode (three to
- * five), Build (six to eight), and the Launch.
+ * One project for the whole term, the student's choice of subject: a brand
+ * world around themselves, or around a fictional futuristic product (first
+ * years may have no practice of their own yet, and a product from the future
+ * makes it easy to be bold).
  */
 export const AI_STORYTELLING_ARC: ArcDef = {
   slug: "ai-storytelling",
@@ -32,16 +33,13 @@ export const AI_STORYTELLING_ARC: ArcDef = {
   date: "2026-09-28",
   cardTitle: "AI storytelling · the course",
   cardLede:
-    "Nine weeks to build a brand world with AI, yours or a product's, and launch it with a poster, a website and a film.",
+    "Nine weeks to build a brand world with AI, yours or a product's, and launch it with a poster, a website and two films.",
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Course · AI storytelling",
     title: { pre: "Build a world,", em: "then launch it." },
-    lede: "One project across the term: a brand world of your own or a product's, made with AI and launched at the end.",
-    actions: [
-      { id: "start", label: "The course", href: "#course", primary: true },
-      { id: "week-1", label: "Week one", href: "#week-1" },
-    ],
+    lede: "One brand world all term, yours or a product's, made with AI and launched with a poster, a website and two films.",
+    actions: [{ id: "start", label: "The course", href: "#course", primary: true }],
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",
@@ -56,379 +54,135 @@ export const AI_STORYTELLING_ARC: ArcDef = {
   meta: {
     title: "AI storytelling — Thoughtform",
     description:
-      "A nine-week course: build a brand world with AI and launch it with a poster, a website and a film.",
+      "A nine-week course: build a brand world with AI and launch it with a poster, a website and two films.",
   },
   sections: [
-    /* ── The course ──────────────────────────────────────────────────── */
+    /* ── The course, on one track ────────────────────────────────────── */
     {
       id: "course",
-      kind: "list-groups",
+      kind: "syllabus",
       menuLabel: "The course",
       menuPrimary: true,
-      layout: "readout",
       head: {
         eyebrow: "The course",
-        title: { pre: "One world,", em: "built week by week." },
-        sub: "You pick the subject once and keep it all term. Every week adds one thing to it, and every week ends on a gate you can see from the start.",
+        title: { pre: "From setup", em: "to launch." },
+        sub: "One brand world all term, around yourself or a product from the future. Every class ends on a gate you can see from the start.",
       },
-      groups: [
+      entry: { label: "Two ways in", ways: ["Yourself", "A product from the future"] },
+      phases: [
+        { id: "navigate", label: "Navigate" },
+        { id: "encode", label: "Encode" },
+        { id: "build", label: "Build" },
+        { id: "launch", label: "Launch" },
+      ],
+      classes: [
         {
-          id: "shape",
-          label: "The project",
-          blurb: "What you build",
-          items: [
-            { id: "subject", tag: "Subject", name: "Yourself, or a product from the future" },
-            { id: "weeks", tag: "Weeks", name: "Nine, each ending on a gate" },
-            { id: "setup", tag: "Setup", name: "Claude, GitHub and a shared drive" },
-            { id: "leave", tag: "You leave with", name: "A poster, a website and a film" },
-          ],
-          foot: {
-            label: "The gate",
-            lines: ["A week is done when its gate is met, not when the class ends."],
-          },
+          id: "what-ai-is",
+          phase: "navigate",
+          name: "What AI is",
+          glyph: "setup",
+          objective:
+            "Understand what you are working with: why it answers differently every time, and why you steer it rather than command it.",
+          make: "A Claude account, a GitHub repository and a shared drive, connected, and your first images.",
+          gate: "Your first images are generated and filed in your own repository.",
+          tool: "Claude, GitHub, Google Drive or Dropbox.",
         },
         {
-          id: "phases",
-          label: "The term",
-          blurb: "Four phases",
-          items: [
-            {
-              id: "navigate",
-              tag: "Navigate",
-              name: "What AI is, and your world",
-              href: "#week-1",
-            },
-            {
-              id: "encode",
-              tag: "Encode",
-              name: "The world as a skill, then you in it",
-              href: "#week-3",
-            },
-            {
-              id: "build",
-              tag: "Build",
-              name: "The poster, the website, the film",
-              href: "#week-6",
-            },
-            { id: "launch", tag: "Launch", name: "All of it, shown as one", href: "#week-9" },
-          ],
-          foot: {
-            label: "The order",
-            lines: ["The impressive part comes last, when the world can carry it."],
-          },
+          id: "your-world",
+          phase: "navigate",
+          name: "Your world",
+          glyph: "board",
+          objective: "Decide what your world looks and feels like, before the AI decides for you.",
+          make: "A reference board, the styles you are after, and a name that belongs to nobody else.",
+          gate: "Someone else can describe your world from the board alone.",
+          tool: "Your own eyes first, then Claude to research and challenge the references.",
+        },
+        {
+          id: "world-skill",
+          phase: "encode",
+          name: "The world skill",
+          glyph: "wall",
+          objective:
+            "Write your world down as a skill with its own checks, so it can make images at scale.",
+          make: "A world skill from the eval template, a first batch of images, and yourself or your product photographed into the world.",
+          gate: "Twenty images that pass your own checks, and the rejects you learned from.",
+          tool: "The eval template, Claude, an image model and a camera.",
+        },
+        {
+          id: "the-offer",
+          phase: "encode",
+          name: "The offer",
+          glyph: "offer",
+          objective:
+            "Find the emotional truth of your world, then say what your brand does inside it.",
+          make: "A one-line offer in the world's own voice, and three mockups where it meets the world.",
+          gate: "The offer and the world read as one brand, not two.",
+          tool: "Claude as your strategist and your critic, and your world skill.",
+        },
+        {
+          id: "the-poster",
+          phase: "build",
+          name: "The poster",
+          glyph: "poster",
+          objective: "Choose rather than generate: land on the image that carries the world.",
+          make: "One to three key visuals, and one of them printed.",
+          gate: "The printed poster holds up on the wall, in the crit.",
+          tool: "Your world skill, and a printer.",
+        },
+        {
+          id: "the-website",
+          phase: "build",
+          name: "The website",
+          glyph: "site",
+          objective: "Build a page that is the world, not a page about it.",
+          make: "A landing page in plain HTML with your key visuals and your offer, online.",
+          gate: "It runs, it reads on a phone, and nothing on it is placeholder.",
+          tool: "Claude, GitHub and a browser.",
+        },
+        {
+          id: "launch-film",
+          phase: "build",
+          name: "The launch film",
+          glyph: "film",
+          objective: "Direct a short launch film about your offer that obeys the world's rules.",
+          make: "A stop-motion launch spot, fifteen to thirty seconds long.",
+          gate: "Every frame belongs to the world, and the offer is clear by the end.",
+          tool: "Claude, a video model and your world skill.",
+        },
+        {
+          id: "second-film",
+          phase: "build",
+          name: "The second film",
+          glyph: "film",
+          objective: "Make a film about the brand's personality rather than what it sells.",
+          make: "A second film in the motion of your choice: stop motion, motion design, or yourself filmed into the world.",
+          gate: "It could only be your brand.",
+          tool: "What the launch film taught you, pushed further.",
+        },
+        {
+          id: "launch",
+          phase: "launch",
+          name: "Launch",
+          glyph: "launch",
+          objective:
+            "Show your world as one thing, with its offer, to people who have not seen it before.",
+          make: "The launch: the poster, the website and both films, presented in class.",
+          gate: "A stranger understands what you do, and wants to see more.",
+          tool: "Everything you built, and nothing new.",
         },
       ],
-    },
-    {
-      /* A beat: no picture. The book's own line (Storytelling met AI, Vince
-         Buyssens and Tom Rumes), translated from the Dutch. */
-      id: "the-rule",
-      kind: "interstitial",
-      variant: "quote",
-      line: {
-        pre: "AI can't replace your creativity.",
-        em: "It can only sharpen it.",
-      },
-      subline:
-        "The whole course runs on it. The world is yours to find; the AI is how you build it faster than you could alone.",
-      attribution: "Storytelling met AI",
+      launch: { label: "You launch", items: ["A poster", "A website", "Two films"] },
+      note: "Every class ends on a gate. The class is done when its gate is met, not when the bell goes.",
     },
 
-    /* ── Navigate · weeks one and two ────────────────────────────────── */
-    {
-      id: "week-1",
-      kind: "anatomy",
-      menuLabel: "Navigate",
-      menuPrimary: true,
-      badge: "Week one · Navigate",
-      head: {
-        eyebrow: "Week one",
-        title: { pre: "AI is not", em: "software." },
-        sub: "Why it answers differently every time, why you steer it rather than command it, and the setup the next eight weeks run on.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Understand what you are working with, then set up where your work lives.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "A Claude account, a GitHub repository and a shared drive, connected.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "Your first ten images, generated and filed in your own repository.",
-        },
-        { id: "tool", label: "The tool", body: "Claude, GitHub, Google Drive or Dropbox." },
-      ],
-    },
-    {
-      id: "week-2",
-      kind: "anatomy",
-      menuLabel: "The world",
-      badge: "Week two · The world",
-      head: {
-        eyebrow: "Week two",
-        title: { pre: "Find", em: "your world." },
-        sub: "Before anything is generated, you look. References, a mood, and a name that belongs to nobody else.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Decide what your world looks and feels like, before the AI decides for you.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "A reference board, a name, and a one-page world bible.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "Someone else can describe your world from the board alone.",
-        },
-        {
-          id: "tool",
-          label: "The tool",
-          body: "Your own eyes first, then Claude to research and challenge the references.",
-        },
-      ],
-    },
-
-    /* ── Encode · weeks three to five ────────────────────────────────── */
-    {
-      id: "week-3",
-      kind: "anatomy",
-      menuLabel: "Encode",
-      menuPrimary: true,
-      badge: "Week three · Encode",
-      head: {
-        eyebrow: "Week three",
-        title: { pre: "Write the world", em: "down." },
-        sub: "The world you found becomes a skill: rules a model can read, and checks it runs on its own images before you see them.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Turn the world bible into a skill with its own evals.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "A world skill from the eval template, and a first batch of images at scale.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "Twenty images that pass your own checks, and the rejects you learned from.",
-        },
-        {
-          id: "tool",
-          label: "The tool",
-          body: "The eval template, Claude and an image model.",
-        },
-      ],
-    },
-    {
-      id: "week-4",
-      kind: "anatomy",
-      menuLabel: "You in it",
-      badge: "Week four · You in it",
-      head: {
-        eyebrow: "Week four",
-        title: { pre: "Put yourself", em: "in it." },
-        sub: "Photograph yourself, or your product, and bring the photographs into the world without losing who or what is in them.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Make the world yours: a real person or a real object inside it.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "A shoot of yourself or your product, edited into the world.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "Three portraits that are recognisably you and recognisably the world.",
-        },
-        { id: "tool", label: "The tool", body: "A camera or a phone, and your world skill." },
-      ],
-    },
-    {
-      id: "week-5",
-      kind: "anatomy",
-      menuLabel: "The offer",
-      badge: "Week five · The offer",
-      head: {
-        eyebrow: "Week five",
-        title: { pre: "From a feeling", em: "to an offer." },
-        sub: "A world is an emotional truth. This week you decide what it is for: what you do, and for whom.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Say in one sentence what your brand does, in the world's own voice.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "A one-line offer, and three mockups where it meets the world.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "The offer and the world read as one brand, not two.",
-        },
-        {
-          id: "tool",
-          label: "The tool",
-          body: "Claude as your strategist and your antagonist, and your world skill.",
-        },
-      ],
-    },
-
-    /* ── Build · weeks six to eight ──────────────────────────────────── */
-    {
-      id: "week-6",
-      kind: "anatomy",
-      menuLabel: "Build",
-      menuPrimary: true,
-      badge: "Week six · The poster",
-      head: {
-        eyebrow: "Week six",
-        title: { pre: "One image", em: "that carries it." },
-        sub: "Out of everything you made, one to three key visuals: the one you would print and hang on a wall.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Choose rather than generate: land on your key visual.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "One to three posters, and one of them printed.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "The printed poster holds up in the crit, on the wall.",
-        },
-        { id: "tool", label: "The tool", body: "Your world skill, and a printer." },
-      ],
-    },
-    {
-      id: "week-7",
-      kind: "anatomy",
-      menuLabel: "Website",
-      badge: "Week seven · The website",
-      head: {
-        eyebrow: "Week seven",
-        title: { pre: "Give it", em: "an address." },
-        sub: "The key visuals become a landing page: clean, fast, and built by you and Claude in plain HTML.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Build a page that is the world, not a page about it.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "One landing page in HTML, carrying your key visuals and your offer.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "The page runs, reads on a phone, and nothing on it is placeholder.",
-        },
-        { id: "tool", label: "The tool", body: "Claude, GitHub and a browser." },
-      ],
-    },
-    {
-      id: "week-8",
-      kind: "anatomy",
-      menuLabel: "Motion",
-      badge: "Week eight · Motion",
-      head: {
-        eyebrow: "Week eight",
-        title: { pre: "Make it", em: "move." },
-        sub: "Motion comes last on purpose: by now the world has rules, so the film has something to obey.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Direct a short launch film that obeys your world's rules.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "A stop-motion launch spot, fifteen to thirty seconds long.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "Every frame belongs to the world, and the offer is clear by the end.",
-        },
-        {
-          id: "tool",
-          label: "The tool",
-          body: "Claude, a video model and your world skill.",
-        },
-      ],
-    },
-
-    /* ── Launch · week nine ──────────────────────────────────────────── */
-    {
-      id: "week-9",
-      kind: "anatomy",
-      menuLabel: "Launch",
-      menuPrimary: true,
-      badge: "Week nine · Launch",
-      head: {
-        eyebrow: "Week nine",
-        title: { pre: "Launch", em: "it." },
-        sub: "The poster, the page and the film, presented together as one world, to people who have not seen it before.",
-      },
-      rows: [
-        {
-          id: "objective",
-          label: "Objective",
-          body: "Show your world as one thing, with its offer, to a new audience.",
-        },
-        {
-          id: "make",
-          label: "You make",
-          body: "The launch: poster, website and film, presented in class.",
-        },
-        {
-          id: "gate",
-          label: "The gate",
-          body: "A stranger understands what you do, and wants to see more.",
-        },
-        { id: "tool", label: "The tool", body: "Everything you built, and nothing new." },
-      ],
-    },
+    /* ── Before we start ─────────────────────────────────────────────── */
     {
       id: "close",
       kind: "close",
       menuLabel: "Before we start",
       head: {
-        eyebrow: "Before week one",
-        title: { pre: "See you", em: "in week one." },
+        eyebrow: "Before the first class",
+        title: { pre: "See you", em: "in class one." },
         sub: "Bring a laptop, a phone with a camera, and one image you find beautiful. We start from what you already see.",
       },
       actions: [

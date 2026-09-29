@@ -1,7 +1,9 @@
 # ADR-132: The AI storytelling course is one project, nine gates
 
-- **Status:** Proposed (2026-09-28, owner). Built and measured; flips to
-  Accepted once the owner has read the page live.
+- **Status:** Proposed (2026-09-28, owner). ⚠ **Superseded on the page's
+  SHAPE by [ADR-134](134-the-course-is-one-track.md) (2026-09-29, owner)**: the
+  one-`anatomy`-section-per-week layout is gone; the course is one `syllabus`
+  track. The content decisions below stand.
 - **Surface:** `/arcs/ai-storytelling` — `lib/arcs/content/ai-storytelling.ts`
   (new, twelve sections); `lib/arcs/registry.ts` (one row, after the workshop
   archetype); `lib/theme/heroPreload.ts` + `tests/lib/hero-preload.test.ts`.
@@ -12,8 +14,8 @@
 
 ## Context
 
-Vince teaches a nine-week course, *AI storytelling*, to first- and second-year
-students. It was planned around his and Tom Rumes' book *Storytelling met AI*;
+Vince teaches a nine-week course, _AI storytelling_, to first- and second-year
+students. It was planned around his and Tom Rumes' book _Storytelling met AI_;
 he now wants to teach it hands-on, in the shape the Plopsa morning validated.
 His own weak spot after years of teaching is the practical sheet: every week
 needs an objective and a gate the student can see from the start.

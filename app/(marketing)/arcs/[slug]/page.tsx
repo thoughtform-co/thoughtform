@@ -31,6 +31,10 @@ import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 // the same reason as the three above, ahead of arcs.css, which hosts it.
 import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
 import "@/components/arcs/arcs.css";
+// The course's syllabus (ADR-134), `.arc-syl*`-scoped: an arc without one
+// gets bytes and no matching rule. After arcs.css, whose tokens
+// it reads, before theme.css.
+import "@/components/arcs/course.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
 import "@/components/sheet/sheet.css";
