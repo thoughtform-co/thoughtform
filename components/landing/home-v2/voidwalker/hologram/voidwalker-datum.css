@@ -108,6 +108,13 @@
      this number. Byte-identical only where the column affords ≥368px; below
      that the min() hands the box to the column. */
   --vwd-measure: min(100%, 23rem);
+  /* The stage's column gap, a token since ADR-082 U45 because the figure's
+     width solve (the gated rule below) has to subtract it. Byte-identical to
+     the literal `.vwd__stage` carried. */
+  --vwd-col-gap: clamp(18px, 2.4vw, 52px);
+  /* A body's floor padding, a token since ADR-082 U46 because the bottom row
+     adds the band's clearance to it on the hologram rung. */
+  --vwd-body-pad-b: clamp(10px, 1.7svh, 24px);
 
   /* ⚠ THE FIGURE COLUMN IS WIDTH-DERIVED-FROM-HEIGHT, the production rule
      (the asset is a 720×1280 portrait, so a width-derived column is always
@@ -342,6 +349,19 @@
        shares this gate for the same reason the datum does: the station has
        surrendered its own padding and pinned, so the stage's top edge IS the
        line the four heads hang from, and there is height to spend. */
+    /* ⚠ THE BAND'S CLEARANCE (ADR-082 U46, owner 2026-09-29: "move the
+       elements above the thumbnails a bit more to the top so the thumbnails
+       gallery has a bit more breathing room; mainly for smaller screen
+       sizes"). Measured at laptop heights the TRANSMISSION pile ended 18–24px
+       above the thumbnails while the heads had 51–54px of air under the title
+       — the gap between the panels and the era SELECTOR (a different region)
+       was the smallest on the sheet. This reserves the difference above the
+       band: the bottom panel row and the figure's fill both end on it, and nothing
+       above moves (the title and the heads keep the HUD datum, the band keeps
+       the wordmark). It is the trail's complement — that term opens above
+       1100px tall, this one closes there — so every window from 1100px up is
+       byte-identical, the owner's ultrawide included. */
+    --vwd-band-clear: clamp(0px, (1100px - 100svh) * 0.1, 32px);
     --vwd-rise: 1;
     /* ⚠ THE FOOT SEATS THE BAND ON THE WORDMARK (ADR-082 U40, owner
        2026-09-23: "move the gallery at the bottom a bit down so they're
@@ -400,8 +420,74 @@
       auto minmax(0, 1fr) auto minmax(0, 1fr)
       calc(var(--vwd-band-box) + var(--vwd-foot));
   }
+  /* ⚠ THE CLEARANCE IS PAID BY THE BOTTOM ROW ALONE (ADR-082 U46). Added to
+     the band's grid row it came out of BOTH `1fr` body rows, and SCOPE — the
+     top row, whose longest era paragraph is the binding content at 1470×747 —
+     overflowed by 5px on four eras. As padding on the bottom row's bodies it
+     shrinks only TRANSMISSION and ON RECORD, which is where the air is meant
+     to be: the pile's seat is a size container, so it fits by construction. */
+  #voidwalker[data-vw-mode="hologram"] .vwd__body[data-cell="ll"],
+  #voidwalker[data-vw-mode="hologram"] .vwd__body[data-cell="lr"] {
+    padding-bottom: calc(var(--vwd-body-pad-b) + var(--vwd-band-clear));
+  }
   #voidwalker[data-vw-mode="hologram"] .vwd__figure {
     grid-row: 1 / 6;
+  }
+
+  /* ⚠ THE FIGURE IS SIZED FROM THE ROOM IT ACTUALLY HAS (ADR-082 U45, owner
+     2026-09-29: balanced on the ultrawide, not on the MacBook Air). The base
+     `--vwd-fig-w` subtracts the U20–U23 chrome accounting — a tuned `104 + 44`
+     surplus plus the band — from a figure that no longer has to clear it: U31
+     lifted his cap onto the panel-head line and U38/U40 took the band out of
+     the flow. Measured before this rule at 1470×747 (the MacBook Air's Chrome
+     viewport): the column sat on its 230px FLOOR, the figure painted 348px
+     (47 % of the frame) and 142px of empty stage stood under his boots, while
+     the panels kept their 368px measure. The shorter the window, the more the
+     panels outweighed him. At ≥1247 tall the 460px cap already bound, which is
+     why the owner's ultrawide read balanced — and it still does, byte for byte.
+     The solve, three terms and the same clamp:
+       fill   the head line (the stage's top) down to the band's top, less a
+              seat's air, read back through the painted share of the canvas
+              (`--holo-overscan × --holo-span`) into a 9:16 column
+       room   the panels may give down to `--vwd-measure-min` and no further
+              (owner: 21rem, i.e. 365 → 336px at the 1280-wide rungs)
+       slot   the picture stays WIDTH-bound in its slot, so the lift's own
+              arithmetic (`--_pict`) keeps describing what paints — less 1px,
+              because this term BINDS at 1470×747 and sub-pixel rounding would
+              otherwise tip the slot height-bound by a hair
+     ⚠ DECLARED ON `.vwd__sheet`, NOT `.vwd`: `--holo-span` is written on the
+     sheet by the component, and a custom property substitutes on the element
+     that declares it — declared on `.vwd` the span would resolve to its
+     fallback. `--vwd-ret-d` is re-declared beside it for the same reason, or
+     the ring would keep `.vwd`'s old width.
+     ⚠ THE STAGE'S TOP IN VIEWPORT Y is `bar + pad-top + mast-h + trail`: the
+     sheet pads `--vwd-mast-top` and the mast's margin pays the rest (see
+     `.vwd__mast`). `--vwd-mast-h` is the title's ONE line box — the mast is a
+     fixed 760px measure and every era's title is one line at desktop.
+     ⚠ `100vw` because the stage is the full-bleed instrument (its box IS the
+     viewport's width); a classic scrollbar costs the panels half its width. */
+  #voidwalker[data-vw-mode="hologram"] .vwd__sheet {
+    --vwd-seat-air: clamp(12px, 2.4svh, 32px);
+    --vwd-mast-h: calc(var(--vwd-title-fs) * 1.1);
+    --vwd-measure-min: 21rem;
+    --vwd-stage-h: calc(
+      100svh - var(--vwd-bar-h) - var(--vwd-pad-top) - var(--vwd-mast-h) - var(--vwd-trail)
+    );
+    --vwd-fig-h: calc(
+      var(--vwd-stage-h) - var(--vwd-band-box) - var(--vwd-foot) - var(--vwd-band-clear) -
+        var(--vwd-seat-air)
+    );
+    --vwd-fig-w: clamp(
+      230px,
+      min(
+        var(--vwd-fig-h) * 0.5625 / (var(--holo-overscan, 1) * var(--holo-span, 1)),
+        100vw - 2 * var(--vwd-pad-x) - 2 * var(--vwd-col-gap) - 2 * var(--vwd-measure-min),
+        (var(--vwd-stage-h) - var(--vwd-fig-pad) - var(--vwh-base-h) + var(--vwh-base-disc-inset)) *
+          0.5625 - 1px
+      ),
+      460px
+    );
+    --vwd-ret-d: calc(var(--vwd-fig-w) * 1.14);
   }
 }
 
@@ -501,7 +587,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--vwd-fig-w) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr);
-  column-gap: clamp(18px, 2.4vw, 52px);
+  column-gap: var(--vwd-col-gap);
   min-height: 0;
   padding: 0 var(--vwd-pad-x);
 }
@@ -566,7 +652,7 @@
   padding-top: clamp(10px, 1.6svh, 18px);
   /* The last 2px of the rail datum's cost (ADR-082 U20) — see `.vwd__facts`.
      Chrome padding, spent before the list's rhythm and long before the type. */
-  padding-bottom: clamp(10px, 1.7svh, 24px);
+  padding-bottom: var(--vwd-body-pad-b);
   overflow: hidden;
 }
 

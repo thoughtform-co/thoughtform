@@ -53,6 +53,19 @@
        lab would show the figure on its old bottom seat with a five-bust band
        under it — the composition this pass replaced, presented as current.
        The `rise` knob writes the same token inline, so it overrides this. */
+    /* ⚠ THE BAND'S CLEARANCE (ADR-082 U46, owner 2026-09-29: "move the
+       elements above the thumbnails a bit more to the top so the thumbnails
+       gallery has a bit more breathing room; mainly for smaller screen
+       sizes"). Measured at laptop heights the TRANSMISSION pile ended 18–24px
+       above the thumbnails while the heads had 51–54px of air under the title
+       — the gap between the panels and the era SELECTOR (a different region)
+       was the smallest on the sheet. This reserves the difference above the
+       band: the panel rows and the figure's fill both end on it, and nothing
+       above moves (the title and the heads keep the HUD datum, the band keeps
+       the wordmark). It is the trail's complement — that term opens above
+       1100px tall, this one closes there — so every window from 1100px up is
+       byte-identical, the owner's ultrawide included. */
+    --vwd-band-clear: clamp(0px, (1100px - 100svh) * 0.1, 32px);
     --vwd-rise: 1;
     /* ⚠ AND THE FOOT SINCE ADR-082 U38, WITH ITS FOUR STRUCTURAL RULES BELOW.
        Production floats the band at the mirrored datum and reserves its zone
@@ -82,8 +95,49 @@
       auto minmax(0, 1fr) auto minmax(0, 1fr)
       calc(var(--vwd-band-box) + var(--vwd-foot));
   }
+  /* ⚠ THE CLEARANCE IS PAID BY THE BOTTOM ROW ALONE (ADR-082 U46). Added to
+     the band's grid row it came out of BOTH `1fr` body rows, and SCOPE — the
+     top row, whose longest era paragraph is the binding content at 1470×747 —
+     overflowed by 5px on four eras. As padding on the bottom row's bodies it
+     shrinks only TRANSMISSION and ON RECORD, which is where the air is meant
+     to be: the pile's seat is a size container, so it fits by construction. */
+  .dlab.vwd .vwd__body[data-cell="ll"],
+  .dlab.vwd .vwd__body[data-cell="lr"] {
+    padding-bottom: calc(var(--vwd-body-pad-b) + var(--vwd-band-clear));
+  }
   .dlab.vwd .vwd__figure {
     grid-row: 1 / 6;
+  }
+}
+/* ⚠ AND THE FIGURE'S WIDTH SOLVE SINCE ADR-082 U45 — production's, character
+   for character, on the sheet (where `--holo-span` is written). Without it the
+   lab would show the pre-U45 column: on its 230px floor at a laptop height
+   while the landing's figure fills the stage. Production's gate is the
+   hologram mode, which only exists from 1101px wide, so the lab takes the same
+   width rung beside the shared height rung. `--vwd-bar-h` is already a term. */
+@media (min-height: 720px) and (min-width: 1101px) {
+  .dlab.vwd .vwd__sheet {
+    --vwd-seat-air: clamp(12px, 2.4svh, 32px);
+    --vwd-mast-h: calc(var(--vwd-title-fs) * 1.1);
+    --vwd-measure-min: 21rem;
+    --vwd-stage-h: calc(
+      100svh - var(--vwd-bar-h) - var(--vwd-pad-top) - var(--vwd-mast-h) - var(--vwd-trail)
+    );
+    --vwd-fig-h: calc(
+      var(--vwd-stage-h) - var(--vwd-band-box) - var(--vwd-foot) - var(--vwd-band-clear) -
+        var(--vwd-seat-air)
+    );
+    --vwd-fig-w: clamp(
+      230px,
+      min(
+        var(--vwd-fig-h) * 0.5625 / (var(--holo-overscan, 1) * var(--holo-span, 1)),
+        100vw - 2 * var(--vwd-pad-x) - 2 * var(--vwd-col-gap) - 2 * var(--vwd-measure-min),
+        (var(--vwd-stage-h) - var(--vwd-fig-pad) - var(--vwh-base-h) + var(--vwh-base-disc-inset)) *
+          0.5625 - 1px
+      ),
+      460px
+    );
+    --vwd-ret-d: calc(var(--vwd-fig-w) * 1.14);
   }
 }
 

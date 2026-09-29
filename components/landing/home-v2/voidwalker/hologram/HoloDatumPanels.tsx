@@ -467,7 +467,22 @@ export function HoloDatumPanels({
   };
 
   return (
-    <section className="vwd__sheet" data-vwd-era={era.id} data-vwd-tab={tab}>
+    <section
+      className="vwd__sheet"
+      data-vwd-era={era.id}
+      data-vwd-tab={tab}
+      /* ⚠ `--holo-span` IS THE REGISTRY'S `HOLO_FIGURE_SPAN`, WRITTEN HERE ONCE
+         (ADR-082 U31; moved up from `.vwd__figure` in U45). Two things are
+         solved from it: the desktop LIFT on the figure cell, and since U45 the
+         figure COLUMN's width — which is declared on this element because the
+         grid that spends it is this element's child. A custom property
+         substitutes where it is declared, so a write on the figure could not
+         reach the column. A second hand-typed 0.7343 in the sheet is a number
+         that drifts the day a delivery re-cuts the floor era; this component
+         is mounted whole by the landing and by both labs, so one write covers
+         every home. */
+      style={{ "--holo-span": HOLO_FIGURE_SPAN } as React.CSSProperties}
+    >
       {/* ⚠ THE EYEBROW IS DELETED (ADR-082 U23, owner). `ERA / 04 OF 05` and the
           year sat above the title and cost it its breathing room — and both were
           already on screen: the band prints every era's year on its own stop and
@@ -633,16 +648,10 @@ export function HoloDatumPanels({
             this sheet flattens its grid so `.vwh__column` fills the cell.
             ⚠ NEVER `data-vwh-ready` here — the slot would take
             `opacity: var(--vwh-morph, 0)` and vanish.
-            ⚠ `--holo-span` IS THE REGISTRY'S `HOLO_FIGURE_SPAN`, WRITTEN HERE
-            ONCE (ADR-082 U31). The desktop lift is solved on THIS element from
-            the height every standing era paints, and a second hand-typed
-            0.7343 in the sheet is a number that drifts the day a delivery
-            re-cuts the floor era. This component is mounted whole by the landing
-            and by both labs, so one write covers every home. */}
-        <div
-          className="vwd__figure"
-          style={{ "--holo-span": HOLO_FIGURE_SPAN } as React.CSSProperties}
-        >
+            ⚠ `--holo-span` is INHERITED from `.vwd__sheet` (ADR-082 U45) —
+            the lift is still solved on THIS element, from the value written
+            once on the sheet. */}
+        <div className="vwd__figure">
           {/* ⚠ A SIBLING OF THE FIGURE, NEVER INSIDE IT. `.vwh__slot` is a grid
               with `place-items: end center` and its own isolation, so a child
               there becomes a grid item colliding with the media wrap; and

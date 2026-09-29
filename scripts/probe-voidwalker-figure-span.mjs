@@ -207,6 +207,27 @@ const read = () =>
       // The reticle's centre, against the middle of the painted figure.
       ringPx: ringBox ? Number((ringBox.top + ringBox.height / 2).toFixed(1)) : null,
       slackPx: Number((slotBox.height - (slotBox.width * 16) / 9).toFixed(1)),
+      /* ── ADR-082 U45: the figure column is solved from the room between the
+         head line and the band, so two margins are the new laws — the air
+         between the band's top and the boots, and the ring's clearance to
+         the nearer panel (it may reach into the column gap, never a panel). */
+      bandTopPx: (() => {
+        const band = document.querySelector("#voidwalker .vwd__band");
+        return band ? Number(band.getBoundingClientRect().top.toFixed(1)) : null;
+      })(),
+      ringClearPx: (() => {
+        if (!ringBox) return null;
+        const ul = document.querySelector('#voidwalker .vwd__body[data-cell="ul"]');
+        const ur = document.querySelector('#voidwalker .vwd__body[data-cell="ur"]');
+        if (!ul || !ur) return null;
+        const l = ringBox.left - ul.getBoundingClientRect().right;
+        const r = ur.getBoundingClientRect().left - ringBox.right;
+        return Number(Math.min(l, r).toFixed(1));
+      })(),
+      panelPx: (() => {
+        const ul = document.querySelector('#voidwalker .vwd__body[data-cell="ul"]');
+        return ul ? Number(ul.getBoundingClientRect().width.toFixed(1)) : null;
+      })(),
       cutL: cut ? Number(cut.left.toFixed(1)) : null,
       cutR: cut ? Number(cut.right.toFixed(1)) : null,
       masked: mask !== null && mask !== "none",
@@ -322,6 +343,11 @@ console.log(
 console.log(
   `               head / feet / centre  ${((Math.min(...heads) / VH) * 100).toFixed(1)} / ${((Math.max(...fs) / VH) * 100).toFixed(1)} / ${(((Math.min(...heads) + Math.max(...fs)) / 2 / VH) * 100).toFixed(1)} % of the frame`
 );
+const bandAir =
+  rows[0].bandTopPx === null ? null : Number((rows[0].bandTopPx - Math.max(...fs)).toFixed(1));
+console.log(
+  `room (U45)     band air ${bandAir}px  · ring clears the panels by ${rows[0].ringClearPx}px  · panel ${rows[0].panelPx}px`
+);
 
 const fails = [];
 /* ⚠ THE LIFT'S THREE LAWS (ADR-082 U31). They are asserted only where the lift
@@ -352,6 +378,14 @@ if (lifted) {
       );
   }
 }
+/* ⚠ THE COLUMN FILLS THE STAGE NOW (ADR-082 U45), so the boots may come close
+   to the band — but never onto it, and the ring may reach into the gap but
+   never a panel. Only where the lift is armed: elsewhere the figure is
+   bottom-seated and the band is in flow. */
+if (lifted && bandAir !== null && bandAir < 8)
+  fails.push(`the boots stand ${bandAir}px above the era band (limit 8)`);
+if (rows[0].ringClearPx !== null && rows[0].ringClearPx < 0)
+  fails.push(`the reticle reaches ${(-rows[0].ringClearPx).toFixed(1)}px into a panel`);
 if (rows[0].slackPx < 0)
   fails.push(
     `the slot is height-bound by ${(-rows[0].slackPx).toFixed(1)}px — the band has started to shrink the figure`

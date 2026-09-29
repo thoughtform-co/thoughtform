@@ -347,6 +347,33 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     floor on this era). ⚠ **v4 MOVES** ("a bit too static"): a scene from plate
     O back to plate O, cut where the motion ends and settled, the halo following
     his head (`--loop orbit --orbit-body settle --cut 144`).
+  - ⚠ **U45 (2026-09-29, owner): THE FIGURE IS SIZED FROM THE ROOM IT HAS.**
+    _"Looks nice on my ultrawide … on my MacBook Air … a scalable responsive
+    system for desktop."_ The base `--vwd-fig-w` subtracts U20–U23's chrome
+    (`104 + 44` + the band) from a figure U31 lifted and U38/U40 un-banded, so
+    at 1470×747 he sat on the 230px floor (348px, 142px of air under the
+    boots). On the hologram rung `.vwd__sheet` re-declares it as the same
+    clamp over `min(fill, room, slot)`: FILL the head line → band top less
+    `--vwd-seat-air`, through `--holo-overscan × --holo-span`; ROOM the panels
+    down to `--vwd-measure-min` **21rem** (owner) and no further; SLOT the
+    picture width-bound in its slot (−1px). Now 461px at 1470×747; 1920×1247
+    and the ultrawide are byte-identical (the cap). ⚠ **`--holo-span` is
+    written on `.vwd__sheet` now** (a custom property substitutes where it is
+    declared — the column's solve could not read it off the figure), and
+    `--vwd-ret-d` is re-declared beside the solve. ⚠ The datum lab mirrors the
+    rule character for character (the sheet test compares them). The probe's
+    `room (U45)` line reports the band air and the ring's clearance to the
+    panels (8px at 1440×900, the tightest).
+  - ⚠ **U46 (2026-09-29, owner): THE ERA GALLERY GETS ITS OWN AIR.** The pile
+    ended 18–24px above the thumbnails at laptop heights against 51–54px
+    under the title, so the selector read as the panels' last row. The TOP
+    does not move (the title and heads are the HUD's datums); the content
+    ends higher. `--vwd-band-clear: clamp(0px, (1100px − 100svh) × 0.1,
+32px)` — the trail's complement, so ≥1100px tall is byte-identical — is
+    added to the BOTTOM row's bodies' padding (`--vwd-body-pad-b`) and to
+    U45's fill term. ⚠ **Never in the band's grid row**: that takes it out of
+    both `1fr` rows and SCOPE (the binding content at 1470×747) overflowed by
+    5px on four eras.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title

@@ -398,3 +398,92 @@ describe("a panel head is its name and its rule (ADR-082 U36)", () => {
     expect(panels).not.toContain("vwd__head__tag");
   });
 });
+
+describe("the figure is sized from the room it has (ADR-082 U45)", () => {
+  /** Every rule body whose selector is exactly `selector` — the sheet declares
+   *  `.vwd__sheet` twice under the hologram gate (U38's `position`, U45's solve). */
+  const ruleBodies = (source: string, selector: string): string[] => {
+    const out: string[] = [];
+    for (
+      let at = source.indexOf(`${selector} {`);
+      at >= 0;
+      at = source.indexOf(`${selector} {`, at + 1)
+    ) {
+      const open = source.indexOf("{", at);
+      out.push(source.slice(open + 1, source.indexOf("}", open)));
+    }
+    return out;
+  };
+  const solveIn = (source: string, selector: string): string => {
+    const hit = ruleBodies(source, selector).find((b) => b.includes("--vwd-fig-w"));
+    if (!hit) throw new Error(`no figure solve on ${selector}`);
+    return hit.replace(/\s+/g, " ");
+  };
+  const LAB = "app/(internal)/test/voidwalker-datum-lab/voidwalker-datum-lab.css";
+  const labCss = readFileSync(join(ROOT, LAB), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const prod = solveIn(css, '#voidwalker[data-vw-mode="hologram"] .vwd__sheet');
+
+  it("lives inside the hologram gate's height rung, on the sheet that carries the span", () => {
+    const gated = mediaBlocks(css).find(([cond]) => cond === "(min-height: 720px)");
+    expect(gated, "the hologram rung").toBeDefined();
+    expect(gated![1]).toContain("--vwd-fig-h");
+  });
+
+  it("reads the real chrome — the head line, the band, the foot — never the tuned surplus", () => {
+    for (const term of [
+      "--vwd-bar-h",
+      "--vwd-pad-top",
+      "--vwd-mast-h",
+      "--vwd-trail",
+      "--vwd-band-box",
+      "--vwd-foot",
+      "--vwd-seat-air",
+      "--vwd-band-clear",
+      "--holo-overscan",
+      "--holo-span",
+      "--vwd-col-gap",
+      "--vwd-pad-x",
+      "--vwh-base-h",
+    ]) {
+      expect(prod, term).toContain(`var(${term}`);
+    }
+    expect(prod).not.toContain("104px");
+    expect(prod).not.toContain("--vwd-chrome-h");
+  });
+
+  it("keeps the owner's 21rem panel floor and the 230 / 460 clamp", () => {
+    expect(prod).toContain("--vwd-measure-min: 21rem");
+    expect(prod).toMatch(/--vwd-fig-w: clamp\( 230px,/);
+    expect(prod).toMatch(/460px \);/);
+  });
+
+  it("pays the band's clearance from the bottom row alone, closing at 1100px tall (U46)", () => {
+    const gated = mediaBlocks(css).find(([cond]) => cond === "(min-height: 720px)")![1];
+    const lab = labCss.replace(/\s+/g, " ");
+    for (const src of [gated.replace(/\s+/g, " "), lab]) {
+      expect(src).toContain("--vwd-band-clear: clamp(0px, (1100px - 100svh) * 0.1, 32px)");
+      expect(src).toContain("padding-bottom: calc(var(--vwd-body-pad-b) + var(--vwd-band-clear))");
+      // In the band's grid row it would come out of SCOPE's row too — and
+      // SCOPE is the binding content at 1470×747.
+      expect(src).toContain("calc(var(--vwd-band-box) + var(--vwd-foot));");
+      expect(src).not.toMatch(/--vwd-foot\) \+ var\(--vwd-band-clear\)/);
+    }
+  });
+
+  it("re-declares the ring beside the column, or the ring keeps the old width", () => {
+    expect(prod).toContain("--vwd-ret-d: calc(var(--vwd-fig-w) * 1.14)");
+  });
+
+  it("is mirrored by the datum lab character for character", () => {
+    expect(solveIn(labCss, ".dlab.vwd .vwd__sheet")).toBe(prod);
+  });
+
+  it("writes the span on the sheet, where the column's solve can read it", () => {
+    const tsx = readFileSync(
+      join(ROOT, "components/landing/home-v2/voidwalker/hologram/HoloDatumPanels.tsx"),
+      "utf8"
+    );
+    expect(tsx).toMatch(/className="vwd__sheet"[\s\S]{0,1200}"--holo-span": HOLO_FIGURE_SPAN/);
+    expect(tsx.match(/"--holo-span"/g)).toHaveLength(1);
+  });
+});

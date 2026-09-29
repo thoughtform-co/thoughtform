@@ -4784,6 +4784,162 @@ wordmark's TOP line — and, at his window, 21px under the TRANSMISSION pile.
   `padding-bottom`, not the foot.
 - The hud-panel lab still does not mirror the foot (it has lagged since U22).
 
+## Update 46 — the era gallery gets its own air (2026-09-29, owner)
+
+Owner, on the U45 still: _"does it make sense from a UX / brand system /
+typography pov to move the elements above the thumbnails a bit more to the top
+so the thumbnails gallery has a bit more breathing room; mainly for smaller
+screen sizes."_
+
+### A · The read
+
+Measured at the laptop heights, the TRANSMISSION pile ended **18–24px** above
+the thumbnails while the four heads had **51–54px** of air under the title.
+The gallery is the era SELECTOR, not a fifth panel, and the gap between two
+different regions was the smallest on the sheet, so the band read as the
+panels' last row. The TOP does not move: the title hangs from the TL bracket's
+foot and the heads from the HUD rail's top line (U20/U22), and those two
+datums are what seat the stage in the frame. The content ENDS higher instead.
+
+### B · The rule
+
+`--vwd-band-clear: clamp(0px, (1100px − 100svh) × 0.1, 32px)` on the hologram
+rung — 32px up to ~780px tall, closing to 0 at 1100px (the complement of the
+trail's `100svh − 1100px` term), so **every window from 1100px tall up is
+byte-identical**, the ultrawide and 1920×1247 included. It is spent twice:
+
+- as extra `padding-bottom` on the BOTTOM row's bodies only (`ll`, `lr`;
+  `--vwd-body-pad-b` is the body pad's new token), and
+- in U45's fill term, so the boots rise with the pile.
+
+⚠ **NOT IN THE BAND'S GRID ROW.** The first cut added it there, which takes it
+out of BOTH `1fr` body rows — and SCOPE, the top row, is the binding content
+at 1470×747: four eras overflowed it by 5px (`probe-voidwalker-eras`). The
+bottom row's pile seat is a size container, so it fits by construction; ON
+RECORD's cards had the room.
+
+### C · After
+
+| viewport  | pile → thumbnails | title → heads | boots → thumbnails | figure    |
+| --------- | ----------------- | ------------- | ------------------ | --------- |
+| 1280×720  | 18 → **50**       | 51            | 56                 | 437       |
+| 1470×747  | 19 → **51**       | 54            | 38 → 57            | 459 → 440 |
+| 1440×900  | 24 → **43**       | 54            | 56                 | 576       |
+| 1920×1080 | 40 → 41           | 60            | 69                 | 697       |
+| 1920×1247 | 62 (unchanged)    | 116           | 176                | 697       |
+
+### D · Verified
+
+`probe-voidwalker-eras` clean on every era at 1280×720, 1280×800, 1440×900,
+1470×747 (SCOPE's feet back to U45's 45 / 71 / 62 / 26px);
+`probe-voidwalker-figure-span` green at 1470×747, 1280×720, 1920×1247; the
+handoff specs as U45 (7 pass, the one pre-existing theme-contract failure);
+`voidwalker-datum-sheet.test.ts` pins the value, the bottom-row padding, the
+lab mirror, and the band row WITHOUT the clearance.
+
+## Update 45 — the figure is sized from the room it has (2026-09-29, owner)
+
+Owner, from his MacBook Air: the era stage (tuned against the Starfield
+reference on his ultrawide) _"looks nice on my ultrawide … but when I look at
+my MacBook Air I feel we need to do another pass so it also looks better
+balanced here … create a scalable responsive system for desktop."_
+
+### A · What was measured
+
+The live landing, Intelligence Architect era, headed Playwright, real scrolls:
+
+| viewport                  | fig-w           | painted figure | share of vh | boots → band | panel |
+| ------------------------- | --------------- | -------------- | ----------- | ------------ | ----- |
+| **1470×747** (MBA Chrome) | **230 (floor)** | 348            | 47 %        | **142**      | 368   |
+| 1280×720                  | 230 (floor)     | 348            | 48 %        | 138          | 365   |
+| 1440×900                  | 311             | 472            | 52 %        | 153          | 368   |
+| 1920×1080                 | 400             | 606            | 56 %        | 151          | 368   |
+| 1920×1247 · 3440×1300     | 460 (cap)       | 697            | 54–56 %     | 167–219      | 368   |
+
+The column was `clamp(230px, (100svh − --vwd-chrome-h) × 0.5625, 460px)`, and
+`--vwd-chrome-h` is the U20–U23 accounting (a tuned `104 + 44` surplus plus
+the band). U31 lifted the cap onto the panel-head line and U38/U40 took the
+band out of the flow, so the formula subtracted ~350px of chrome the figure no
+longer clears. At laptop heights that put him on the 230px floor with ~140px
+of empty stage under his boots, beside panels that keep a fixed 368px measure
+— the shorter the window, the more the panels outweighed him. At ≥1247 tall
+the cap already bound, which is why the ultrawide read balanced.
+
+### B · The solve
+
+On the hologram rung only (the `min-height: 720px` gate under
+`data-vw-mode="hologram"`, where the lift and the absolute band are live),
+`.vwd__sheet` re-declares `--vwd-fig-w` as the same clamp over the MIN of:
+
+- **fill** — the stage's top (`bar + pad-top + mast-h + trail`, viewport y)
+  down to the band's top (`100svh − foot − band-box`), less `--vwd-seat-air`
+  (`clamp(12px, 2.4svh, 32px)`), read back through the painted share of the
+  canvas (`--holo-overscan × --holo-span`) into a 9:16 column;
+- **room** — `100vw − 2·pad-x − 2·col-gap − 2·--vwd-measure-min`, the panels
+  giving no further than **21rem** (owner, choosing between 23 / 21 / 20rem:
+  365 → 336px at the 1280-wide rungs);
+- **slot** — the picture stays width-bound in its slot, so the lift's own
+  `--_pict` keeps describing what paints (less 1px: this term binds at
+  1470×747 and sub-pixel rounding would tip it height-bound).
+
+`--vwd-ret-d` is re-declared beside it. `--holo-span` moved from
+`.vwd__figure` to `.vwd__sheet` — the grid that spends the column is the
+sheet's child, and a custom property substitutes where it is declared; the
+lift inherits it unchanged. `--vwd-col-gap` tokenises the stage's gap
+(byte-identical). The base `--vwd-fig-w` and `--vwd-chrome-h` stay as every
+ungated path's formula (PRM, 701–1100, the phone, the fallback).
+
+### C · After
+
+| viewport                          | fig-w | painted figure | share   | boots → band | panel | ring ↔ panel |
+| --------------------------------- | ----- | -------------- | ------- | ------------ | ----- | ------------ |
+| **1470×747**                      | 304   | **461**        | 62 %    | 32           | 368   | 14           |
+| 1280×720                          | 288   | 437            | 61 %    | 50           | 336   | 11           |
+| 1280×800                          | 288   | 437            | 55 %    | 112          | 336   | 11           |
+| 1440×900                          | 382   | 578            | 64 %    | 48           | 350   | 8            |
+| 1512×860                          | 359   | 543            | 63 %    | 37           | 368   | 11           |
+| 1920×1080                         | 460   | 697            | 64 %    | 60           | 368   | 14           |
+| 1920×1247 · 2560×1300 · 3440×1300 | 460   | 697            | 54–56 % | 166–218      | 368   | 14–20        |
+
+The owner's ultrawide and 1920×1247 are unchanged to the pixel. At the
+1280-wide rungs the room term binds; at 1470×747 the slot term does.
+
+### D · Guards
+
+- `voidwalker-datum-sheet.test.ts` (+6): the solve lives in the hologram rung,
+  reads the real chrome and never the tuned surplus (no `104px`, no
+  `--vwd-chrome-h`), keeps 21rem and the 230/460 clamp, re-declares the ring,
+  is mirrored by the datum lab character for character, and the span is
+  written once, on the sheet.
+- `probe-voidwalker-figure-span` prints the band air, the ring's clearance to
+  the nearer panel and the panel width; it fails on boots within 8px of the
+  band (lift armed) or a ring reaching into a panel.
+- The datum lab mirrors the rule at `(min-height: 720px) and (min-width:
+1101px)` — production's gate is the hologram mode, which only exists from
+  1101px wide.
+
+### Verified
+
+- `probe-voidwalker-eras` clean on every era at 1280×720, 1280×800, 1440×900,
+  1470×747 (tightest SCOPE foot 45 / 71 / 62 / 26px).
+- `probe-voidwalker-figure-span` green at 1470×747, 1280×720, 1440×900,
+  1920×1080, 1920×1247: one figure height (0.00 % spread), cap on the head
+  line, the ring on the figure's centre.
+- Both handoff specs: 7 pass. `dark and light themes preserve the same capable
+handoff contract` fails on `data-corridor-exit` **with and without this
+  change** (checked on a stashed tree) — pre-existing, not this pass.
+- Stills at 1470×747 in both themes.
+
+### Left open
+
+- The ring clears the panels by 8px at 1440×900 (it was ~28 when U23 set the
+  1.14 multiplier against a smaller column). Lawful, and the tightest rung;
+  if it reads crowded the dial is the multiplier, not the column.
+- The panels' type and measure still do not scale with the frame; this pass
+  moved the figure, not the chrome.
+- 1920×1080's figure grows 606 → 697 (the cap). The owner has not read that
+  shape.
+
 ## Update 44 — the AI Captain is re-drawn, and his halo of gateway stone turns (2026-09-25, owner)
 
 The owner, in four reads on one day, from his own avatar paintings on Drive
