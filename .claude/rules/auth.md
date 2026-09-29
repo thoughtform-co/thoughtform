@@ -56,8 +56,42 @@ client-side gate.
   `lib/auth/ownerPassClient` inside its session callbacks only; a static import
   puts it on the anonymous path. It never imports `lib/auth/ownerPass`
   (`node:crypto`).
+- ⚠ **The arcs below it are no longer public-by-link when a password is set**
+  (ADR-135, next section). The overview keeps its own gate and is never keyed
+  by the password.
 - **Verifying:** `npx vitest run tests/lib/owner-pass*.test.ts
 tests/lib/owner-gate-doctrine.test.ts`, then a real build:
   `$env:NEXT_DIST_DIR=".next-verify"; npx next build --webpack` and
   `node scripts/verify-owner-gate.mjs` (its own port — `npm run start` kills
   the dev server on :3003).
+
+## The arcs' password (ADR-135)
+
+Every page under `/arcs/<…>` asks for a password when one is set:
+`ARC_PASSWORD_<KEY>` for one page (`/arcs/pandora-proposal` →
+`ARC_PASSWORD_PANDORA_PROPOSAL`), else `ARCS_PASSWORD`, set in Vercel and
+written nowhere in the repository.
+
+- **`lib/arcs/arcGate.ts` is the one definition** (the key, the lookup, the
+  token, the return path), Web Crypto only, shared by `proxy.ts` and
+  `app/api/arcs/unlock/route.ts`. `/unlock` is a script-free form outside
+  `/arcs/`, so the gate never gates its own door.
+- ⚠ **It FAILS OPEN**: with neither variable set the page is served as
+  before, which is every dev server and every deploy before the variables
+  exist. Say so wherever the gate is described; never test "is it gated?" on
+  a dev server without the variable.
+- ⚠ **The key is taken from the PAGE the router will serve**, not the raw
+  path (`arcPagePath`): `.rsc` and `.segments/…` payloads, percent-escapes
+  (`/%61rcs/…`) and doubled slashes all key as their page — ADR-117's two
+  leaks, closed in the key. A new way to spell a page is a new row in
+  `arc-gate.test.ts` first.
+- ⚠ **A path with a dot in its last segment is an ASSET and is never gated**:
+  the homepage's own pictures live under `public/arcs/`.
+- **The pass is a hash of the key and the password**, per page, httpOnly,
+  30 days. It is not a session and names nobody; rotating the variable
+  revokes every pass.
+- **Verifying:** `npx vitest run tests/lib/arc-gate.test.ts`, then a real
+  build with the variable set (`next build --webpack` into `.next-verify`,
+  `next start -p 3011`). ⚠ Git Bash rewrites `next=/arcs/…` inside a curl form
+  field; encode the slash. ⚠ The pass is `Secure` under production, so a curl
+  jar over http drops it; send it as a header.

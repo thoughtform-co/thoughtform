@@ -5,6 +5,9 @@
 - **Surface:** `/arcs`, the overview that lists every client's engagements —
   and only it. `/arcs/<client>` and every arc (`/arcs/<slug>`) stay
   public-by-link, untouched.
+- **Amended by:** [ADR-135](135-the-arcs-sit-behind-a-password.md)
+  (2026-09-29, owner) — the client pages and the arcs ask for a password
+  whenever one is set in the environment; the overview keeps this gate.
 - **Amends:** [ADR-003](003-auth-centralization.md) (a narrow, cookie-borne
   capability beside the Bearer model, §The pass is not a session).
 - **Related:** [ADR-052](052-client-arcs.md) (the arcs were unlisted, noindex,
