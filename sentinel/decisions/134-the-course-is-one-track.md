@@ -1,14 +1,15 @@
 # ADR-134: The course is one track
 
-- **Status:** Proposed (2026-09-29, owner). The `syllabus` kind is shipped on
-  `/arcs/ai-storytelling`; it moves to Accepted once the owner has read it live.
-  The Tom on the Moon breakdown that follows it on the page is the next step
-  and is not built yet.
+- **Status:** Proposed (2026-09-29, owner). The `syllabus` track shipped first
+  (`f414b2ea`); U1 (same day) adds the Tom on the Moon breakdown and the `path`
+  kind. Moves to Accepted once the owner has read the whole page live.
 - **Surface:** `components/arcs/ArcSyllabus.tsx`,
   `components/arcs/syllabus/syllabusLayout.ts`, `components/arcs/course.css`
   (a route sheet, after `arcs.css`), `lib/arcs/types.ts`,
   `ArcSectionRenderer`, `chrome.tsx` (`KIND_DESIG`),
-  `lib/arcs/content/ai-storytelling.ts`, `tests/lib/arcs-registry.test.ts`.
+  `lib/arcs/content/ai-storytelling.ts`, `tests/lib/arcs-registry.test.ts`;
+  U1: `components/arcs/ArcPath.tsx`, `public/arcs/ai-storytelling/*.webp`,
+  `scripts/arcs/prep-ai-storytelling-assets.mjs`.
 - **Supersedes:** [ADR-132](132-the-ai-storytelling-course.md) on the page's
   SHAPE (one `anatomy` section per week). Its content decisions stand: one
   project all term, two subjects to choose from, a gate on every class, motion
@@ -72,14 +73,37 @@ sessions write `arcs.css` at once more often than not, and the kind's classes
 - Measured: one screen at 1280×720 and at 1920×1247, in both themes, no
   horizontal overflow at 390×844.
 
-## Next
+## U1 (2026-09-29, owner): the worked example
 
-- **The Tom on the Moon breakdown**, each section a different kind of picture
-  from the ship's own record (`Arcs_Tom On The Moon`): how the world was found
-  (four directions, ten worlds, two regions, the anchor frame), the world as a
-  skill on the `bench` (the anchor, a frame that drew our own Moon, a frame
-  that came back as an Earth bunker), a wave's contact sheet, and the world
-  beside its offer. A `path` kind was drafted for the first of these and held
-  back until it is built and measured.
-- ⚠ The Tom on the Moon frames are the client's. The owner confirms they are
-  cleared for a public page before they ship.
+The first push carried the track alone, stopped there for a still the owner
+never asked for, and he read the page as one section: _"Where are the use cases
+from Tom on the Moon? Where are all those visuals?"_ The breakdown he asked for
+in the first brief follows the track now, five beats, each a different kind of
+picture and every one out of the ship's own record (`Arcs_Tom On The Moon`):
+
+- **How the world was found**, the `path` kind (ADR-052's fifteenth exception):
+  dated stages left to right, each a set of the frames it produced, on one
+  horizontal rail with the last stage's node and frame the one gold thing. Four
+  directions (31 August, the first frame of each board) · ten worlds (1 to 4
+  September, the same walk in each) · one planet, two regions (15 September) ·
+  the anchor, with the client's own line under it. ⚠ A SET is cut to one 3:2
+  cell and a single frame keeps its own aspect; a stage's `weight` is its share
+  of the row, so the row can climb toward the frame it ends on.
+- **The world as a skill**, on the `bench`: the anchor (ships), a vista whose
+  moon came back as a shaded ball (back with a note, the client's _knikker_)
+  and a frame that drew our own Moon's seas in mint (does not ship), against
+  four checks read off the rubric; the cases on file are the Uluru and bunker
+  failures the eval log records.
+- **At scale**, on `media`: a wall of 108 of wave 23's 114 delivered frames,
+  twelve by nine so it ends on a full row, built by the prep script from the
+  ship's `_keepers.json`.
+- **From a feeling to an offer**, `cards` in two columns: Tom on the Moon beside
+  Thoughtform, both frames cut to 16:9 and capped by the height the head leaves.
+- **The client's verdict**, an `interstitial` quote, Dutch as said, English
+  under it.
+
+Classes two to four link to their beat from the sheet. The frames are
+converted by `scripts/arcs/prep-ai-storytelling-assets.mjs`, which reads the
+ship and its Drive folder and never writes them (1.9 MB in 21 files).
+
+⚠ The frames are the client's; the owner asked for them on the page.

@@ -1110,6 +1110,38 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("a path is a dated record of real frames, on disk (ADR-134)", () => {
+    /* The renderer trusts the record for the frames it lays out: each one is
+       under `/arcs/` and on disk (a missing file is an empty cell nobody sees
+       as an error), sized, and every stage dated and named. */
+    const onDisk = (src: string) => existsSync(join(process.cwd(), "public", src));
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "path") continue;
+        const at = `${arc.slug}/${s.id}`;
+        expect(s.stages.length, `${at}: three or four stages`).toBeGreaterThanOrEqual(3);
+        expect(s.stages.length, `${at}: three or four stages`).toBeLessThanOrEqual(4);
+        expect(new Set(s.stages.map((x) => x.id)).size, `${at}: a stage twice`).toBe(
+          s.stages.length
+        );
+        for (const st of s.stages) {
+          const here = `${at}/${st.id}`;
+          expect(st.date.trim().length, `${here}: undated`).toBeGreaterThan(0);
+          expect(st.label.length, `${here}: label`).toBeLessThanOrEqual(16);
+          expect(st.name.length, `${here}: name`).toBeLessThanOrEqual(60);
+          expect(st.images.length, `${here}: one to ten frames`).toBeGreaterThan(0);
+          expect(st.images.length, `${here}: one to ten frames`).toBeLessThanOrEqual(10);
+          for (const img of st.images) {
+            expect(img.src.startsWith("/arcs/"), `${here}: ${img.src} under /arcs/`).toBe(true);
+            expect(onDisk(img.src), `${here}: ${img.src} is not on disk`).toBe(true);
+            expect(img.width > 0 && img.height > 0, `${here}: a sized frame`).toBe(true);
+            expect(img.alt.trim().length, `${here}: ${img.src} has no alt`).toBeGreaterThan(0);
+          }
+        }
+      }
+    }
+  });
+
   it("a syllabus is one track: phases tile the classes, every class a full sheet (ADR-134)", () => {
     /* The renderer trusts the record for what it cannot recover: that each
        phase holds ONE consecutive run of classes (the brackets span a range,

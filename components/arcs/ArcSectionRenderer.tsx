@@ -19,6 +19,7 @@ import { ArcIntelligence } from "./ArcIntelligence";
 import { ArcInterstitial } from "./ArcInterstitial";
 import { ArcListGroups } from "./ArcListGroups";
 import { ArcMediaSection } from "./ArcMediaSection";
+import { ArcPath } from "./ArcPath";
 import { ArcPortrait } from "./ArcPortrait";
 import { ArcQuestions } from "./ArcQuestions";
 import { ArcSectionHead } from "./ArcSectionHead";
@@ -142,6 +143,8 @@ export function ArcSectionRenderer({
             return <ArcCrew key={section.id} section={section} index={index} motion={motion} />;
           case "syllabus":
             return <ArcSyllabus key={section.id} section={section} index={index} motion={motion} />;
+          case "path":
+            return <ArcPath key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

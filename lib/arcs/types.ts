@@ -920,6 +920,24 @@ export type ArcSection = ArcSectionBase &
         /** One line under the track: what a gate is. */
         note?: string;
       }
+    | {
+        /**
+         * HOW A WORLD WAS FOUND (ADR-134): an exploration as a row of dated
+         * stages, left to right, each a set of the real frames that stage
+         * produced: wide, then narrowing to what was kept. A record, not a
+         * metaphor: every stage is dated and every frame is on file.
+         *
+         * ⚠ THE FIFTEENTH ENUMERATED EXCEPTION to ADR-052's "content-only".
+         * One leaf, no state, no listener, no script. The frames carry no
+         * caption: the stage's head says what they are, and a caption on every
+         * frame is the card grid again.
+         */
+        kind: "path";
+        head: ArcHead;
+        stages: readonly ArcPathStage[];
+        /** One line under the row. */
+        note?: string;
+      }
   );
 
 /* ── The syllabus (ADR-134) ────────────────────────────────────────── */
@@ -956,6 +974,25 @@ export interface ArcSyllabusClass {
   tool: string;
   /** Where the worked example shows this class's work, on this page. */
   example?: { label: string; href: string };
+}
+
+/* ── The path (ADR-134) ────────────────────────────────────────────── */
+
+export interface ArcPathStage {
+  id: string;
+  /** When, in words, e.g. "31 August". */
+  date: string;
+  /** Mono, e.g. "Directions". */
+  label: string;
+  /** What this stage was, one line. */
+  name: string;
+  /** The frames. A stage of one keeps its frame's own aspect; a set is cut to
+   *  one cell shape so it reads as a set. */
+  images: readonly (ArcImage & { width: number; height: number })[];
+  /** Its share of the row; absent, its column count. */
+  weight?: number;
+  /** Optional line under the frames. */
+  line?: string;
 }
 
 /* ── The circuit (ADR-133 U2) ─────────────────────────────────────── */

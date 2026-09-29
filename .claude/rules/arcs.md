@@ -928,9 +928,14 @@ contents`** and each station a subgrid item of the track's grid, so the rail
   it is lawful. ⚠ **Its sheet is `course.css`, a ROUTE sheet after
   `arcs.css`**, because `arcs.css` is the file two sessions write at once. The
   registry pins one consecutive run per phase in the phases' order, two ways
-  in, the four rows, and every example link landing on the page. The Tom on the
-  Moon breakdown that follows it is the next step; its frames are the client's
-  and need the owner's clearance before they ship.
+  in, the four rows, and every example link landing on the page. ⚠ **U1
+  (same day) ADDS THE WORKED EXAMPLE** — Tom on the Moon in five beats of five
+  grammars: the `path` kind (the fifteenth exception: dated stages of real
+  frames on one rail, a set cut to 3:2 cells, the last stage the one gold
+  thing, `weight` its share of the row), the `bench`, a `media` wall of one
+  wave's frames, two offer `cards`, the client's quote. Frames come from
+  `scripts/arcs/prep-ai-storytelling-assets.mjs`, which only reads the ship;
+  the registry pins every path frame under `/arcs/`, on disk, sized and alt'd.
 - ⚠ **ADR-133 U2 → U4 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
   Pandora reads today (the `board` again: the ruled ledger of the current
   setup beside the configured board, the ledger stating the setup and never a
