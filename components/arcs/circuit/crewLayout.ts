@@ -190,6 +190,10 @@ function drawOutput(o: CrewOutput, box: Rect, marks: CirMark[]): void {
   }
 }
 
+/** The role and the workstream letter at ONE size (U6, owner: "the font
+ *  sizes for the roles are the same as those for the workstreams"). */
+export const NAME_FS = 22;
+
 export function crewGeom(s: ArcSectionOf<"crew">): CrewGeom {
   const modules: CirModule[] = [];
   const marks: CirMark[] = [];
@@ -201,33 +205,26 @@ export function crewGeom(s: ArcSectionOf<"crew">): CrewGeom {
     const id = `row-${row.id}`;
     const cy = y + ROW_H / 2;
 
-    // The people: a head count only where the record states one.
+    // The role: one person mark on every seat (U6: "some have symbols and
+    // others don't … uniformize it"), and its name, centred on the row.
     modules.push({
       id: `${id}-seat`,
       rect: { x: INSET, y, w: SEAT_W, h: ROW_H },
       cut: 12,
       paint: "green",
     });
-    for (let p = 0; p < (row.people ?? 0); p += 1) {
-      marks.push({ kind: "person", x: INSET + PAD_X + p * 26, y: y + 16, cell: 3 });
-    }
-    letters.push(
-      ...sans(
-        `${id}.who`,
-        row.who,
-        FS.chrome,
-        SEAT_W - 2 * PAD_X,
-        INSET + PAD_X,
-        y + 70,
-        "green-ink",
-        1,
-        true
-      )
-    );
+    marks.push({ kind: "person", x: INSET + PAD_X, y: cy - 10.5, cell: 3 });
+    const nx = INSET + PAD_X + 21 + 16;
+    // Eighteen characters a line, so "Two designers and / a copywriter"
+    // breaks as a phrase and every other role holds one line.
+    const nm = 220;
+    const role = sans(`${id}.who`, row.who, NAME_FS, nm, nx, 0, "green-ink", 2, true, 26);
+    const roleTop = cy + 8 - ((role.length - 1) * 26) / 2;
+    letters.push(...role.map((l, k) => ({ ...l, y: roleTop + k * 26 })));
 
     wires.push(tap(`${id}-tap`, INSET + SEAT_W, OUT_X, cy, [`${id}-seat`, `${id}-out`]));
 
-    // What is possible now: drawn on the left, said on the right.
+    // The workstream: drawn on the left, named and said on the right.
     modules.push({
       id: `${id}-out`,
       rect: { x: OUT_X, y, w: OUT_W, h: ROW_H },
@@ -237,8 +234,8 @@ export function crewGeom(s: ArcSectionOf<"crew">): CrewGeom {
     drawOutput(row.output, { x: OUT_X + PAD_X, y: y + (ROW_H - 56) / 2, w: MARK_W, h: 56 }, marks);
     const tx = OUT_X + PAD_X + MARK_W + 40;
     const tm = OUT_X + OUT_W - PAD_X - tx;
-    letters.push(...sans(`${id}.value`, row.value, FS.name, tm, tx, y + 44, "ink", 1, true));
-    letters.push(...sans(`${id}.unit`, row.unit, FS.answer, tm, tx, y + 70, "ink2"));
+    letters.push(...sans(`${id}.work`, row.work, NAME_FS, tm, tx, y + 44, "ink", 1, true));
+    letters.push(...sans(`${id}.line`, row.line, FS.answer, tm, tx, y + 70, "ink2"));
   });
 
   return { vb: { ...CREW_VB }, modules, marks, letters, wires };

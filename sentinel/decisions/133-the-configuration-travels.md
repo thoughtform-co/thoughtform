@@ -319,6 +319,40 @@ His read of U4, in five parts.
   Agents and scaling (a button to a schedule, the Skills as files, the
   blueprint and the handover).
 
+## Update 6 (2026-09-29, owner): roles onto workstreams at one size, the checker is a mockup, two sections go
+
+His read of U5, before the proposal went out as a PDF and a link.
+
+- **The return maps each role onto its workstream, at one size** (he: "the
+  font size for the work should be consistent and bigger … Review is about 10
+  times smaller than the others"; "some have symbols and others don't. Let's
+  uniformize it"). A row is `{ who, work, line, output }`: the role on the
+  green seat, the WORKSTREAM (Paid social · Copy · Review · Briefing) on the
+  gold plate, both at `NAME_FS` 22 (`crewLayout.ts`), and the line under the
+  workstream at the answer rung. Every seat carries ONE person mark, so no row
+  has a symbol the others lack; U5's head counts (`people`) and the mono
+  readout (`value` / `unit`) are deleted, and the record's only digit (700)
+  lives in `line`. `arc-circuit-fit` pins the two sizes equal and the four
+  marks; `arcs-registry` pins `work` ≤ 18 and digits in `line` alone.
+- **The checker is a mockup, and says so** (he: the old sub "doesn't make
+  grammatical sense … this should really be a mockup … keep it simple"). The
+  title is "The retouching check."; the sub is two plain sentences; the task,
+  the check lines and the record are shorter, and the record states that the
+  mistake was added for the page and the rules are placeholders the producers
+  replace in month two.
+- **"What you keep" and "Next steps" are deleted.**
+- **"Who takes part" asks for access.** `ArcListGroup.sub` is a subsection
+  under a group's own items, and the Thoughtform group carries "What I need,
+  before week one": access to Claude (an account on Pandora's own, set up with
+  D&T) and access to the tools (Figma, Primo, Asana and Hub Planner, so the
+  work can be mapped).
+- **The proposal sits behind a password** — [ADR-135](135-the-arcs-sit-behind-a-password.md).
+- **The PDF is the page.** `pandora-proposal-v05.pdf` in the proposal's Drive
+  folder is `scripts/pdf-arc.mjs` at 1920×1080: eighteen pages, one per
+  section, every section fitting one frame there. At 1280×720 two do not (the
+  three months, 737; the checker, 786 — the bench's own 470px floor, which
+  predates this pass).
+
 ## Findings worth keeping
 
 - ⚠ **READ THE DOCTRINE BEFORE DRAWING ITS OBJECT.** Both defects of the
@@ -361,3 +395,6 @@ His read of U4, in five parts.
   without a label, and whether c's pads need one.
 - Pre-existing, not this pass's: `arc-marks.test.ts` fails on Pandora at HEAD
   (its last menu item, `next-steps`, is a chapter, so the arc has no exit mark).
+  Passes since U6, which deleted `next-steps`.
+- At 1280×720 the checker (786) and the three months (737) run past one frame;
+  the PDF is shot at 1920×1080, where both fit.

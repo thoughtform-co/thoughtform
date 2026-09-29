@@ -829,36 +829,30 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("a crew is Loop's record, one row per role, and only its readouts carry a number (ADR-133 U5)", () => {
+  it("a crew maps each role onto its workstream, and only the line carries a number (ADR-133 U6)", () => {
     for (const arc of ARCS) {
       for (const section of arc.sections) {
         if (section.kind !== "crew") continue;
         const at = `${arc.slug}/${section.id}`;
         for (const row of section.rows) {
-          // A head count only where the record states one; a plural role
-          // draws none rather than an invented number.
-          if (row.people !== undefined) {
-            expect(row.people, `${at}/${row.id}: the seat draws no one`).toBeGreaterThan(0);
-            expect(
-              row.people,
-              `${at}/${row.id}: more people than the seat holds`
-            ).toBeLessThanOrEqual(5);
-          }
-          expect(row.value.length, `${at}/${row.id}: what is possible now`).toBeGreaterThan(0);
-          // A figure only where the record states one: in the value, or the
+          expect(row.who.length, `${at}/${row.id}: the role`).toBeGreaterThan(0);
+          expect(row.work.length, `${at}/${row.id}: the workstream`).toBeGreaterThan(0);
+          // The workstream is a NAME at the role's size: one short line.
+          expect(
+            row.work.length,
+            `${at}/${row.id}: a workstream name, not a sentence`
+          ).toBeLessThanOrEqual(18);
+          expect(row.line.length, `${at}/${row.id}: what is possible now`).toBeGreaterThan(0);
+          // A figure only where the record states one: in the line, or the
           // count the field draws, and nowhere else on the row.
-          for (const [k, v] of Object.entries({
-            who: row.who,
-            unit: row.unit,
-          })) {
-            expect(/\d/.test(v), `${at}/${row.id}.${k}: a figure outside the value`).toBe(false);
+          for (const [k, v] of Object.entries({ who: row.who, work: row.work })) {
+            expect(/\d/.test(v), `${at}/${row.id}.${k}: a figure outside the line`).toBe(false);
           }
           if (row.output.kind === "field") {
-            const stated = row.value.match(/\d+/)?.[0];
-            expect(
-              stated,
-              `${at}/${row.id}: the field draws a count its value does not state`
-            ).toBe(String(row.output.count));
+            const stated = row.line.match(/\d+/)?.[0];
+            expect(stated, `${at}/${row.id}: the field draws a count its line does not state`).toBe(
+              String(row.output.count)
+            );
           }
         }
       }

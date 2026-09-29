@@ -73,7 +73,7 @@ export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
               <div key={r.id}>
                 <dt>{r.who}</dt>
                 <dd>
-                  <strong>{r.value}</strong> {r.unit}
+                  <strong>{r.work}</strong> {r.line}
                 </dd>
               </div>
             ))}

@@ -284,13 +284,13 @@ describe("the crew (ADR-133 U5)", () => {
           }
         }
       });
-      it("digits letter on the record's readouts alone", () => {
+      it("digits letter on the record's lines alone", () => {
         for (const l of g.letters) {
-          if (/^row-[^.]+\.value\./.test(l.slot)) continue;
+          if (/^row-[^.]+\.line\./.test(l.slot)) continue;
           expect(l.text, l.slot).not.toMatch(/\d/);
         }
       });
-      it("draws Loop's record alone: no client side, one row per role, seat then plate", () => {
+      it("draws Loop's record alone: one row per role, the role then its workstream", () => {
         expect(g.letters.some((l) => l.slot.startsWith("plan-"))).toBe(false);
         const seats = g.modules.filter((m) => m.id.endsWith("-seat"));
         const outs = g.modules.filter((m) => m.id.endsWith("-out"));
@@ -303,6 +303,13 @@ describe("the crew (ADR-133 U5)", () => {
           expect(seat.rect.x + seat.rect.w, seat.id).toBeLessThan(outs[i].rect.x);
           expect(seat.rect.y, seat.id).toBe(outs[i].rect.y);
         });
+      });
+      it("the role and the workstream letter at one size, and every seat carries one mark", () => {
+        const who = g.letters.filter((l) => /\.who\./.test(l.slot));
+        const work = g.letters.filter((l) => /\.work\./.test(l.slot));
+        expect(work).toHaveLength(4);
+        for (const l of [...who, ...work]) expect(l.fs, l.slot).toBe(work[0].fs);
+        expect(g.marks.filter((m) => m.kind === "person" && m.cell === 3)).toHaveLength(4);
       });
       it("no two plates meet", () => {
         const rects = g.modules.map((m) => ({ id: m.id, b: m.rect }));

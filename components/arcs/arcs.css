@@ -1128,6 +1128,11 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   gap: clamp(28px, 3.5vw, 64px);
   align-items: start;
 }
+/* A subsection under a group's own items (ADR-133 U6): the same head and
+   rows, one group's worth of air below the rows above it. */
+.arc-groups__sub {
+  margin-top: clamp(28px, 4vh, 48px);
+}
 .arc-groups__head {
   display: flex;
   flex-wrap: wrap;

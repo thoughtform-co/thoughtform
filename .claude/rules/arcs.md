@@ -936,21 +936,24 @@ contents`** and each station a subgrid item of the track's grid, so the rail
   wave's frames, two offer `cards`, the client's quote. Frames come from
   `scripts/arcs/prep-ai-storytelling-assets.mjs`, which only reads the ship;
   the registry pins every path frame under `/arcs/`, on disk, sized and alt'd.
-- ⚠ **ADR-133 U2 → U5 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
-  Pandora reads Part one (four proof cards, then the return: the `crew`, U5,
+- ⚠ **ADR-133 U2 → U6 (2026-09-29, owner) RETIRE THE TRAVELLING SCENE BELOW.**
+  Pandora reads Part one (four proof cards, then the return: the `crew`, U6,
   Loop's record ALONE as one row per role read LEFT TO RIGHT, `{ head,
-  rows[4] { who, people?, output, value, unit } }`, a green seat, a tap, a gold
-  plate with the quantity drawn left and the readout said right, a head count
-  only where the record states one) · the turn · today (the `board` again: the
+  rows[4] { who, work, line, output } }`, the ROLE on a green seat, a tap, the
+  WORKSTREAM on a gold plate with the quantity drawn left, the role and the
+  workstream at ONE size (`NAME_FS`) and one person mark on every seat, the
+  record's only digit in `line`) · the turn · today (the `board` again: the
   ruled ledger of the current setup beside the configured board, the ledger
   stating the setup and never a gap) · the approach ("Automation runs through
   adoption.", the owned horizon, no time axis and no note) · the map ("A
   system built to compound.") · the three months · the checker · who takes
-  part · what you keep · the day rate (U5: the rate and about twenty days a
+  part (U6: "What I need" under Thoughtform, an `ArcListGroup.sub`) · the day rate (U5: the rate and about twenty days a
   month, NO month fee and NO total, from the debrief with Rob) · what we
   measure · the About (`portrait` `layout: "orbit"`, U5: the homepage's own —
   copy left, the portrait at 3:4 in grayscale inside the About rings right;
-  Rob is off the page) · next steps. ⚠ Headings are names or plain claims,
+  Rob is off the page) · the close (U6 deleted what you keep and next steps;
+  the checker is labelled a mockup; the page sits behind its own password,
+  ADR-135, `.claude/rules/auth.md`). ⚠ Headings are names or plain claims,
   never a paired tagline (the voice skill's rule): U5 retired "Priced by the
   day, one month at a time", "Who is in the room, and for how long", "The
   plan, month by month" and "Counted in week one, read every month". `circuit` is a STATIC MAP of the client's

@@ -100,6 +100,9 @@ export interface ArcListGroup {
    * ignore it, so a group can carry one before its section switches.
    */
   foot?: { label: string; lines: readonly string[] };
+  /** A subsection under the group's own items, e.g. "What I need" under
+   *  "From Thoughtform" (ADR-133 U6). Read by `stack` / `columns`. */
+  sub?: { label: string; blurb?: string; items: readonly ArcListItem[] };
 }
 
 export interface ArcAnatomyRow {
@@ -875,9 +878,10 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE CREW (ADR-133 U5): what it returned at Loop, as ONE ROW PER
-         * ROLE read left to right — who, then what is possible now, drawn as
-         * the quantity it is and said in one line (owner, 2026-09-29: "I
+         * THE CREW (ADR-133 U5, U6): what it returned at Loop, as ONE ROW PER
+         * ROLE read left to right — the role, then the workstream it runs and
+         * what is possible now, drawn as the quantity it is and said in one
+         * line, the role and the workstream at ONE size (owner, 2026-09-29: "I
          * really like the flow from left to right … just a super clear
          * visualization of what's now been possible because of this"). It
          * sits with the proof cards it comes from. Never a calculator.
@@ -1018,19 +1022,18 @@ export type CrewOutput =
    *  formats (Mímir's briefing division). */
   | { kind: "split"; parts: number };
 
-/** One row of the record: who, and what is possible now. */
+/** One row of the record: the role, the workstream it runs, what came of
+ *  it (ADR-133 U6: roles on the left, workstreams on the right, one size). */
 export interface CrewRow {
   id: string;
-  /** Who, e.g. "Two designers and a copywriter". */
+  /** The role, e.g. "Two designers and a copywriter". */
   who: string;
-  /** How many people the seat draws (pixel figures) — ONLY where the record
-   *  states a count. A plural role ("The PMs") draws none. */
-  people?: number;
+  /** The workstream, e.g. "Paid social". */
+  work: string;
+  /** What is possible now, one line, e.g. "About 700 assets a month". The
+   *  record's own number, if any, lives here and nowhere else. */
+  line: string;
   output: CrewOutput;
-  /** The reading, mono, e.g. "About 700". The record's own number, if any. */
-  value: string;
-  /** The line under it, e.g. "paid-social assets a month". */
-  unit: string;
 }
 
 /* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */
