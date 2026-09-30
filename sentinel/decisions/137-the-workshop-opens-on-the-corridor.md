@@ -11,6 +11,10 @@
   `components/arcs/ArcHeroBoard.tsx`, `components/arcs/heroBoard/heroBoardLayout.ts`,
   `.arc-hb*` in `arcs.css`); `[slug]`'s `generateStaticParams`;
   `lib/arcs/content/thoughtform-workshop.ts`.
+- **Superseded in part:** U2 and U3 by
+  [ADR-138](138-the-workshop-reads-about-the-eras-then-the-arc.md)
+  (2026-09-30, owner): the era stage now follows About, and the Arc opens from
+  the eras through the corridor's prelude. U1 and U4 stand.
 - **Supersedes:** ADR-131's opening (the `today` readout, the proof head and
   the four `proof-card` beats). Everything from `three-ways` on is ADR-136's
   situation re-cut, unchanged.
@@ -116,6 +120,8 @@ Update 2: the ground now lives on the turn's stage.)
 
 ## Update 2 (2026-09-30, owner): About turns into the Arc's first frame
 
+> **Superseded by [ADR-138](138-the-workshop-reads-about-the-eras-then-the-arc.md)** (2026-09-30). Kept as the record.
+
 The owner: "flip the profile picture in the about section to then reveal the
 brandmark gateway … the text on the left to glitch transform into the text on
 the left of [the Arc's first frame] + the button. So instead of boringly
@@ -176,6 +182,8 @@ pure; `useAboutTurn.ts` is the one writer, mounted from `WorkshopPortals`):
   tall get the static About, byte-identical.
 
 ## Update 3 (2026-09-30, owner): the About's diagram becomes the gate
+
+> **Superseded by [ADR-138](138-the-workshop-reads-about-the-eras-then-the-arc.md)** (2026-09-30). Kept as the record.
 
 The owner, on U2 ("looks sick"): "a nice, elegant transition from the diagrams
 behind my profile picture into the diagrams of the brandmark gateway? A smooth

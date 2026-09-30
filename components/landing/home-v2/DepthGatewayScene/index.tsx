@@ -14,6 +14,7 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { FrameCounter } from "@/components/landing/home-v2/FrameCounter";
 import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
 import { onPileHold, pileHoldRef } from "@/lib/home-v2/pileHoldRef";
+import { onPreludeChange, preludeLive } from "@/lib/home-v2/corridorPreludeRef";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
 import { CelestialMotes } from "./CelestialMotes";
@@ -66,7 +67,8 @@ function MotionFollowerDriver() {
     // loop alive for most of it, but the reader can park mid-tunnel with
     // every store flag settled — without this the quality governor stops
     // sampling exactly where the scene is heaviest.
-    const engagedNow = active || armed || docked || servicesAmbient || vwTravelRef.current.engaged;
+    const engagedNow =
+      active || armed || docked || servicesAmbient || vwTravelRef.current.engaged || preludeLive();
     if (engagedNow && !wasEngagedRef.current) resetFrameSampler();
     wasEngagedRef.current = engagedNow;
     if (engagedNow) reportFrameSample(delta);
@@ -173,7 +175,10 @@ function FrameInvalidator() {
         t.armed ||
         t.docked ||
         (t.servicesAmbient && !pileHoldRef.value) ||
-        vwTravelRef.current.engaged
+        vwTravelRef.current.engaged ||
+        // ADR-138: a route that shows the parked mark BEFORE the corridor
+        // (the workshop's About and eras) keeps the scene painting there.
+        preludeLive()
       );
     };
 
@@ -214,6 +219,7 @@ function FrameInvalidator() {
     };
     const unsubscribe = useDepthGatewayStore.subscribe(reconcile);
     const unsubscribeHold = onPileHold(reconcile);
+    const unsubscribePrelude = onPreludeChange(reconcile);
     const onScroll = () => {
       if (pileHoldRef.value) invalidate();
     };
@@ -224,6 +230,7 @@ function FrameInvalidator() {
       stop();
       unsubscribe();
       unsubscribeHold();
+      unsubscribePrelude();
       window.removeEventListener("scroll", onScroll);
     };
   }, [invalidate]);
@@ -374,13 +381,20 @@ export function DepthGatewayScene() {
   // handoff effect, which reads the same signal).
   const [engaged, setEngaged] = useState(() => {
     const t = useDepthGatewayStore.getState().transform;
-    return t.active || t.armed || t.docked;
+    return t.active || t.armed || t.docked || preludeLive();
   });
   useEffect(() => {
-    const unsubscribe = useDepthGatewayStore.subscribe((state) =>
-      setEngaged(state.transform.active || state.transform.armed || state.transform.docked)
-    );
-    return unsubscribe;
+    const read = () => {
+      const t = useDepthGatewayStore.getState().transform;
+      setEngaged(t.active || t.armed || t.docked || preludeLive());
+    };
+    const unsubscribe = useDepthGatewayStore.subscribe(read);
+    // ADR-138: the prelude is engagement too, and it moves on its own edge.
+    const unsubscribePrelude = onPreludeChange(read);
+    return () => {
+      unsubscribe();
+      unsubscribePrelude();
+    };
   }, []);
 
   // Mobile GPU profile: cap the drawing-buffer pixel ratio (phones report

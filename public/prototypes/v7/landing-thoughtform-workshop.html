@@ -4272,13 +4272,14 @@ html { scroll-behavior: smooth; }
   <section class="station" id="about" data-station="about" data-screen-label="09 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
-    <!-- THE TURN'S STAGE (ADR-137 U2). On the capable rung this is the
-         sticky 100svh stage the About → Arc turn plays on: the portrait flips
-         to the brandmark, the bio decodes into the Arc's thesis, and the
-         ground opens onto the live corridor frame held behind it. Everywhere
-         else it is `display: contents` and the About is byte-identical to
-         the static one. The two empty children are the turn's own layers:
-         the text leaves, and the brandmark stand-in (a nested React root). -->
+    <!-- THE ABOUT'S STAGE (ADR-137 U2, ADR-138). On the capable rung this
+         is the sticky 100svh stage the About's handoff into the eras plays
+         on: the copy leaves on per-line leaves, the deck squares up and flies
+         to the era figure's seat, and the name glides onto the era title. Its
+         ground is the corridor's parked frame, held fixed behind it.
+         Everywhere else it is `display: contents` and the About is
+         byte-identical to the static one. The empty child is the leaves'
+         layer. -->
     <div class="tw-about-stage" data-tw-about-stage>
     <div class="voidwalker" data-m-group>
       <!-- LEFT · bio -->
@@ -4360,12 +4361,8 @@ html { scroll-behavior: smooth; }
 
         <!-- orbital rings & ticks (sigil grammar, amplified) -->
         <svg class="voidwalker__orbit__svg" data-m="instrument" viewBox="-200 -200 400 400" fill="none" preserveAspectRatio="xMidYMid meet">
-          <!-- concentric rings. `data-tw-part` names each group for the
-               About → Arc turn (ADR-137 U3), which morphs this drawing into
-               the corridor's compass gate: the rings square up into its
-               portal loops, the ticks into its bearings, the orbit nodes
-               into its phase and orbit dots. -->
-          <g fill="none" stroke-width="0.7" data-tw-part="rings">
+          <!-- concentric rings -->
+          <g fill="none" stroke-width="0.7">
             <circle r="192" stroke="var(--dawn-15)" stroke-dasharray="1 7"/>
             <circle r="172" stroke="var(--dawn-08)"/>
             <circle r="150" stroke="var(--gold)" stroke-opacity="0.18" stroke-dasharray="2 8"/>
@@ -4375,13 +4372,13 @@ html { scroll-behavior: smooth; }
           </g>
 
           <!-- bearing ticks -->
-          <g stroke="var(--dawn-50)" stroke-width="0.8" data-tw-part="cardinal">
+          <g stroke="var(--dawn-50)" stroke-width="0.8">
             <path d="M0 -192 L0 -178"/>
             <path d="M0 192 L0 178"/>
             <path d="M-192 0 L-178 0"/>
             <path d="M192 0 L178 0"/>
           </g>
-          <g stroke="var(--dawn-30)" stroke-width="0.5" data-tw-part="ticks">
+          <g stroke="var(--dawn-30)" stroke-width="0.5">
             <path d="M0 -192 L0 -184" transform="rotate(15)"/>
             <path d="M0 -192 L0 -184" transform="rotate(30)"/>
             <path d="M0 -192 L0 -184" transform="rotate(45)"/>
@@ -4405,7 +4402,7 @@ html { scroll-behavior: smooth; }
           </g>
 
           <!-- radial spokes -->
-          <g stroke="var(--gold)" stroke-opacity="0.22" stroke-width="0.5" data-tw-part="spokes">
+          <g stroke="var(--gold)" stroke-opacity="0.22" stroke-width="0.5">
             <path d="M0 -150 L0 -82"/>
             <path d="M0 150 L0 82"/>
             <path d="M-150 0 L-82 0"/>
@@ -4413,20 +4410,20 @@ html { scroll-behavior: smooth; }
           </g>
 
           <!-- rotating orbit nodes -->
-          <g style="transform-origin:0 0; animation: rotate 50s linear infinite;" data-tw-part="nodes">
+          <g style="transform-origin:0 0; animation: rotate 50s linear infinite;">
             <circle cx="0" cy="-150" r="3.5" fill="var(--gold)"/>
             <rect x="-3" y="147" width="6" height="6" fill="var(--gold)" transform="rotate(45 0 150)"/>
           </g>
-          <g style="transform-origin:0 0; animation: rotateRev 90s linear infinite;" data-tw-part="nodes">
+          <g style="transform-origin:0 0; animation: rotateRev 90s linear infinite;">
             <circle cx="172" cy="0" r="1.8" fill="var(--dawn)" opacity="0.6"/>
             <circle cx="-172" cy="0" r="1.4" fill="var(--dawn)" opacity="0.4"/>
           </g>
-          <g style="transform-origin:0 0; animation: rotate 120s linear infinite;" data-tw-part="nodes">
+          <g style="transform-origin:0 0; animation: rotate 120s linear infinite;">
             <circle cx="124" cy="0" r="1.6" fill="var(--gold)" opacity="0.7"/>
           </g>
 
           <!-- bearing labels -->
-          <g font-family="var(--font-pt-mono)" font-size="8" fill="var(--dawn-50)" text-anchor="middle" letter-spacing="1.5" data-tw-part="text">
+          <g font-family="var(--font-pt-mono)" font-size="8" fill="var(--dawn-50)" text-anchor="middle" letter-spacing="1.5">
             <text x="0" y="-198">N · 000</text>
             <text x="198" y="3" text-anchor="start">090</text>
             <text x="0" y="205">180</text>
@@ -4434,7 +4431,7 @@ html { scroll-behavior: smooth; }
           </g>
 
           <!-- edge notes -->
-          <g font-family="var(--font-pt-mono)" font-size="6" fill="var(--dawn-30)" letter-spacing="1.2" data-tw-part="text">
+          <g font-family="var(--font-pt-mono)" font-size="6" fill="var(--dawn-30)" letter-spacing="1.2">
             <text x="-188" y="-156">FIG · 04a</text>
             <text x="120" y="-172">VB · FIELD MAP</text>
             <text x="-188" y="178">CH · 01 / VOIDWALKER</text>
@@ -4477,9 +4474,7 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
     </div>
-    <svg class="tw-turn-gate" data-tw-turn-gate aria-hidden="true" hidden></svg>
-    <div class="tw-turn-layer" data-tw-turn-layer aria-hidden="true" hidden></div>
-    <div class="tw-turn-mark" data-tw-turn-mark aria-hidden="true" hidden></div>
+    <div class="tw-flow-layer" data-tw-flow-layer aria-hidden="true" hidden></div>
     </div>
 
     <!-- ADR-053 INVARIANT: the about-stage portal slot is deliberately
@@ -4489,6 +4484,20 @@ html { scroll-behavior: smooth; }
          already decommissioned (ghost cards, no orbits, dimmed mark) and
          about-stage.css would pull a -100svh margin under the hero.
          The static voidwalker above IS the about surface here. -->
+  </section>
+
+  <!-- ═══════════ 09A VOIDWALKER · the eras (ADR-138) ═══════════
+       The homepage's era stage, between About and the Arc: who he is, then
+       what he has done, then the Arc. The shell is the homepage's own and
+       VoidwalkerPortal (mounted by LandingPage on every route) draws the
+       body into the empty slot. On this route it sits ABOVE the corridor,
+       so its transparency and its z are the route sheet's (rule 1d), not
+       home-v2.css's, which key on the corridor having been passed.
+       NOTE: this comment must contain NO angle-bracket tag syntax; the
+       v7-parse walkers regex-scan the raw HTML, comments included. -->
+  <section class="station station--voidwalker" id="voidwalker" data-station="voidwalker" data-screen-label="09A Voidwalker">
+    <div class="station__idx">Voidwalker<span class="landmark">Landmark · the through-line · the same move, before AI</span></div>
+    <div class="vw-root" data-voidwalker-root></div>
   </section>
 
   <!-- ═══════════ 02 THOUGHTFORM — WHAT WE DO (sigil at center) ═══════════ -->

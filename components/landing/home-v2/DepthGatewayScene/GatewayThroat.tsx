@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { corridorPreludeRef } from "@/lib/home-v2/corridorPreludeRef";
 import { vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
 import { STATION_THOUGHTFORM, getThoughtformBootEnvelope, thoughtformGateX } from "./sceneGeom";
@@ -169,15 +170,31 @@ void main() {
 
 const throatFragment = /* glsl */ `
 uniform float uOpacity;
+// ADR-138: the prelude's aperture, device px (left, bottom, right, top in
+// gl_FragCoord space). The throat is part of the thesis frame, so under a
+// prelude it is seen only INSIDE the opening, as the compass gate is, fading
+// in across the opening's soft edge (uApertureFeather, device px).
+uniform vec4 uAperture;
+uniform float uApertureOn;
+uniform float uApertureFeather;
 
 varying vec3 vColor;
 varying float vAlpha;
 
 void main() {
+  float apertureKeep = 1.0;
+  if (uApertureOn > 0.5) {
+    float inset = min(
+      min(gl_FragCoord.x - uAperture.x, uAperture.z - gl_FragCoord.x),
+      min(gl_FragCoord.y - uAperture.y, uAperture.w - gl_FragCoord.y)
+    );
+    apertureKeep = clamp(inset / max(uApertureFeather, 1.0), 0.0, 1.0);
+    if (apertureKeep <= 0.0) discard;
+  }
   vec2 uv = gl_PointCoord - 0.5;
   float d = length(uv);
   float core = smoothstep(0.5, 0.0, d);
-  float alpha = core * vAlpha * uOpacity;
+  float alpha = core * vAlpha * uOpacity * apertureKeep;
   if (alpha < 0.01) discard;
   gl_FragColor = vec4(vColor, alpha);
 }
@@ -372,6 +389,9 @@ export function GatewayThroat() {
         uCameraPos: { value: new THREE.Vector3() },
         uTime: { value: 0 },
         uOpacity: { value: 0 },
+        uAperture: { value: new THREE.Vector4() },
+        uApertureOn: { value: 0 },
+        uApertureFeather: { value: 0 },
       },
       transparent: true,
       depthWrite: false,
@@ -407,6 +427,29 @@ export function GatewayThroat() {
       group.visible = false;
       material.uniforms.uOpacity.value = 0;
       return;
+    }
+    // ADR-138: under the prelude the throat is seen only through the opening
+    // (half 0 = shut, nothing of it shows). Off every other route: `level` 0.
+    const prelude = corridorPreludeRef.current;
+    const hole = prelude.level > 0 ? prelude.aperture : null;
+    if (hole && hole.half < 0.5) {
+      group.visible = false;
+      material.uniforms.uOpacity.value = 0;
+      return;
+    }
+    if (hole) {
+      const k = state.viewport.dpr;
+      const h = state.size.height;
+      (material.uniforms.uAperture.value as THREE.Vector4).set(
+        (hole.cx - hole.half) * k,
+        (h - (hole.cy + hole.half)) * k,
+        (hole.cx + hole.half) * k,
+        (h - (hole.cy - hole.half)) * k
+      );
+      material.uniforms.uApertureOn.value = 1;
+      material.uniforms.uApertureFeather.value = hole.feather * k;
+    } else {
+      material.uniforms.uApertureOn.value = 0;
     }
     group.visible = true;
     phaseRef.current += Math.min(0.1, Math.max(0, delta));

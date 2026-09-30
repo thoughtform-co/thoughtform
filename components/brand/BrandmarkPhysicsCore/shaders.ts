@@ -490,6 +490,15 @@ export const brandmarkCoreVertexShader = /* glsl */ `
 export const brandmarkCoreFragmentShader = /* glsl */ `
   precision mediump float;
   
+  // A SCREEN-SPACE HOLE (ADR-138): a consumer may cut a drawing-buffer rect
+  // (x0, y0, x1, y1, gl_FragCoord's own bottom-left origin) out of the field,
+  // so a DOM or WebGL layer opening from inside it takes over pixel by pixel.
+  // The cut is SOFT: the field fades out over uApertureFeather device px
+  // inside the rect's edge, the band the opening's own layers fade in across.
+  // Off (the mount default) the test never runs.
+  uniform vec4 uAperture;
+  uniform float uApertureOn;
+  uniform float uApertureFeather;
   uniform vec3 uColor;
   uniform vec3 uAccentColor;
   // ADR-023 2026-06-25 harmonization: the SETTLED-wireframe palette. As the
@@ -603,6 +612,19 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   }
 
   void main() {
+    float apertureKeep = 1.0;
+    if (uApertureOn > 0.5) {
+      float inset = min(
+        min(gl_FragCoord.x - uAperture.x, uAperture.z - gl_FragCoord.x),
+        min(gl_FragCoord.y - uAperture.y, uAperture.w - gl_FragCoord.y)
+      );
+      // The field clears over the band's OUTER 60 %, ahead of the layers
+      // fading in across all of it: the particle mark is a hair fatter than
+      // the glyph it folded onto, and a full-width cross-fade drew it as a
+      // fringe round the glyph (loud in light, where the field inks dark).
+      apertureKeep = 1.0 - clamp(inset / max(uApertureFeather * 0.6, 1.0), 0.0, 1.0);
+      if (apertureKeep <= 0.0) discard;
+    }
     vec2 c = gl_PointCoord - vec2(0.5);
     float d = length(c);
 
@@ -823,6 +845,6 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
       outAlpha += vBandHead * 0.25 * mask * uOpacity;
     }
 
-    gl_FragColor = vec4(color, outAlpha);
+    gl_FragColor = vec4(color, outAlpha * apertureKeep);
   }
 `;

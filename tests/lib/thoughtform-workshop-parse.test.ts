@@ -33,13 +33,36 @@ function stationOrder(bodyHtml: string): string[] {
 }
 
 describe("thoughtform-workshop variant parse (ADR-137)", () => {
-  it("orders hero → about → corridor → proof → workshop → contact", () => {
+  it("orders hero → about → the eras → corridor → proof → workshop → contact (ADR-138)", () => {
     const body = parsed();
-    expect(stationOrder(body)).toEqual(["hero", "about", "services", "workshop", "contact"]);
+    expect(stationOrder(body)).toEqual([
+      "hero",
+      "about",
+      "voidwalker",
+      "services",
+      "workshop",
+      "contact",
+    ]);
     expect(body.match(/id="home-corridor-mount"/g) ?? []).toHaveLength(1);
     const at = (needle: string) => body.indexOf(needle);
-    expect(at('id="about"')).toBeLessThan(at('id="home-corridor-mount"'));
+    expect(at('id="about"')).toBeLessThan(at('id="voidwalker"'));
+    // The era stage sits DIRECTLY above the mount: the route welds the mount
+    // up under it, and the seam-gap rule names it as the pre-mount station.
+    expect(at('id="voidwalker"')).toBeLessThan(at('id="home-corridor-mount"'));
     expect(at('id="home-corridor-mount"')).toBeLessThan(at('id="services"'));
+  });
+
+  it("carries the homepage's era shell, one root, and nothing inside it (ADR-138)", () => {
+    const body = parsed();
+    const era = body.slice(
+      body.indexOf('id="voidwalker"'),
+      body.indexOf('id="home-corridor-mount"')
+    );
+    expect(body.match(/data-voidwalker-root/g) ?? []).toHaveLength(1);
+    // The portal mounts into an EMPTY root; markup inside it would be torn out
+    // by the nested createRoot's first render.
+    expect(era).toMatch(/<div class="vw-root" data-voidwalker-root><\/div>/);
+    expect(era).toMatch(/data-station="voidwalker"/);
   });
 
   it("declares each slot once, and #services mounts the proof, never the ring stage", () => {
@@ -67,17 +90,18 @@ describe("thoughtform-workshop variant parse (ADR-137)", () => {
     expect(parsed()).not.toContain("data-about-root");
   });
 
-  it("wraps #about's content in the turn's stage, with its two layers (ADR-137 U2)", () => {
+  it("wraps #about's content in its stage, with the leaves' one layer (ADR-137 U2, ADR-138)", () => {
     const body = parsed();
-    const about = body.slice(body.indexOf('id="about"'), body.indexOf('id="home-corridor-mount"'));
+    const about = body.slice(body.indexOf('id="about"'), body.indexOf('id="voidwalker"'));
     expect(about.match(/data-tw-about-stage/g) ?? []).toHaveLength(1);
-    expect(about.match(/data-tw-turn-layer/g) ?? []).toHaveLength(1);
-    expect(about.match(/data-tw-turn-mark/g) ?? []).toHaveLength(1);
+    expect(about.match(/data-tw-flow-layer/g) ?? []).toHaveLength(1);
+    // The About → Arc turn's layers are retired with it (ADR-138).
+    expect(body).not.toMatch(/data-tw-turn-|data-tw-part=/);
     // The stage holds the bio grid, and the station keeps no second stage.
     const stageAt = about.indexOf("data-tw-about-stage");
     expect(stageAt).toBeGreaterThan(-1);
     expect(about.indexOf('class="voidwalker"')).toBeGreaterThan(stageAt);
-    // The writer reads these by class; a rename breaks the turn silently.
+    // The writer reads these by class; a rename breaks the flow silently.
     for (const cls of [
       "voidwalker__name",
       "voidwalker__role",
@@ -93,7 +117,7 @@ describe("thoughtform-workshop variant parse (ADR-137)", () => {
 
   it("the portrait is the deck's card, and the deck is its sibling (ADR-137 U4)", () => {
     const body = parsed();
-    const about = body.slice(body.indexOf('id="about"'), body.indexOf('id="home-corridor-mount"'));
+    const about = body.slice(body.indexOf('id="about"'), body.indexOf('id="voidwalker"'));
     const portraitAt = about.indexOf('class="voidwalker__orbit__portrait"');
     const deckAt = about.indexOf('class="tw-deck"');
     expect(portraitAt).toBeGreaterThan(-1);

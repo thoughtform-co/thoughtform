@@ -117,6 +117,15 @@ const GLITCH_MAX_DPR = 2;
 
 type HoloCodec = "vp9" | "hevc" | null;
 
+/** The engine's settled verdict; `null` while either probe is undecided. */
+function settledCodec(): HoloCodec {
+  return getHoloAlphaSupport() === true
+    ? "vp9"
+    : getHoloHevcAlphaSupport() === true
+      ? "hevc"
+      : null;
+}
+
 /** Something `drawImage` accepts: a decoded poster, or a snapshot of the
  *  outgoing video's frame. */
 type Plate = HTMLImageElement | HTMLCanvasElement;
@@ -506,26 +515,38 @@ export function HoloFigure({
 
   const productionAsset = resolveAsset(hologram);
   // ⚠ LOCKED AT MOUNT, ON PURPOSE. The probe settles during page load and the
-  // station is far down the corridor, so this is decided long before anyone
+  // station is usually far down the page, so this is decided long before anyone
   // sees it — but reading it live would let a late verdict swap the <source>
   // under a playing element and restart the figure mid-view. `null` (undecided)
-  // resolves to the floor path, which is the fail-safe branch.
-  const [codec] = useState<HoloCodec>(() =>
-    getHoloAlphaSupport() === true ? "vp9" : getHoloHevcAlphaSupport() === true ? "hevc" : null
-  );
-  const [, forceProbeSettled] = useState(0);
+  // resolves to the floor path, which is the fail-safe branch — and since
+  // ADR-138 it is upgraded ONCE if the verdict lands while the figure is still
+  // out of range (the effect below).
+  const [codec, setCodec] = useState<HoloCodec>(settledCodec);
   useEffect(() => {
-    // Only matters if the station somehow mounts before a probe settles;
-    // re-render once so the very next mount reads a decided value. Both lanes
-    // are watched because the HEVC one settles AFTER the VP9 one on Safari.
-    const offVp9 =
-      getHoloAlphaSupport() === null
-        ? onHoloAlphaSupport(() => forceProbeSettled((n) => n + 1))
-        : undefined;
+    // ⚠ UNDECIDED IS NOT "NO" (ADR-138). The lock above is what keeps a late
+    // verdict from swapping the source under a PLAYING figure; but a figure
+    // that mounted before the probe settled, and is not yet near the viewport,
+    // is not playing — and locking it on the floor there paints the opaque
+    // pane for the whole visit. That is what happened wherever the station is
+    // not "far down the corridor": on /arcs/thoughtform-workshop the eras are
+    // the third station and the probe (it starts when this module loads)
+    // settled after the mount on 2 loads in 5. So a figure still out of range
+    // takes the verdict when it lands; one already near keeps what it has.
+    // Both lanes are watched because the HEVC one settles AFTER the VP9 one on
+    // Safari.
+    const upgrade = () => {
+      if (nearRef.current) return;
+      setCodec((current) => (current === null ? settledCodec() : current));
+    };
+    // ⚠ AND THE VERDICT CAN LAND BETWEEN THE RENDER AND THIS EFFECT — the
+    // initializer read `null`, the probe settled during the commit, and a
+    // subscription gated on `null` then subscribes to nothing (measured: 1 load
+    // in 6 stayed on the floor with the probe answering yes). Take it now, off
+    // the effect's own stack.
+    queueMicrotask(upgrade);
+    const offVp9 = getHoloAlphaSupport() === null ? onHoloAlphaSupport(upgrade) : undefined;
     const offHevc =
-      getHoloHevcAlphaSupport() === null
-        ? onHoloHevcAlphaSupport(() => forceProbeSettled((n) => n + 1))
-        : undefined;
+      getHoloHevcAlphaSupport() === null ? onHoloHevcAlphaSupport(upgrade) : undefined;
     return () => {
       offVp9?.();
       offHevc?.();

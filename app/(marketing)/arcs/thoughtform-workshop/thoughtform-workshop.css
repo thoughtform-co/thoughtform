@@ -59,16 +59,15 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
    are both on the station's box, so the stars slid up behind a still bio.
    The homepage freezes its whole second section, ground included.
 
-   ⚠ SINCE ADR-137 U2 THE HOLD CARRIES THE TURN'S STAGE (rule 1b below).
-   `#about`'s one box child is `.tw-about-stage`, a 100svh sticky layer,
-   and the ground lives ON it (its `::before`/`::after`) while the station
-   itself is transparent — so the held element covers the whole frame by
-   its own height, and the U1 condition that the STATION be one viewport
-   tall no longer applies. The hold's arithmetic is unchanged: the stage is
+   ⚠ SINCE ADR-137 U2 THE HOLD CARRIES THE ABOUT'S STAGE (rule 1b below).
+   `#about`'s one box child is `.tw-about-stage`, a 100svh sticky layer, and
+   the station itself is transparent — so the held element covers the whole
+   frame by its own height. The hold's arithmetic is unchanged: the stage is
    held for the hero's travel, then pins, so the hero lifts off a still
-   About exactly as before. The rung moved with the turn's: it adds
-   `min-height: 681px`, so a desktop window shorter than that gets the
-   plain flowing About. */
+   About exactly as before.
+   ⚠ SINCE ADR-138 THE GROUND IS THE CORRIDOR'S FIXED FRAME, NOT THE STAGE'S:
+   it cannot move at all, so the U1 finding holds by construction. The rung
+   moved with the flow's (1101px, the era stage's own). */
 @keyframes tw-about-curtain-hold {
   from {
     transform: translateY(-100dvh);
@@ -78,43 +77,43 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
   }
 }
 
-/* ── 1b. #about turns into the Arc's first frame (ADR-137 U2) ────────
-   Owner, 2026-09-30: the profile picture flips to reveal the brandmark
-   gateway, and the bio glitch-transforms into the Arc's thesis + its
-   button, "instead of boringly scrolling from the second to the third
-   section". The writer is `about-turn/useAboutTurn.ts`; the clock and its
-   windows are `about-turn/aboutTurnClock.ts`.
+/* ── 1b. About → the eras → the Arc (ADR-138) ─────────────────────────
+   Owner, 2026-09-30: "we start with an introduction about myself … we need
+   the era section after the About section. That way, I showcase who I am,
+   then what I've done before, and then we can dive into the arc." The writer
+   is `flow/useWorkshopFlow.ts`; the clock and its windows are
+   `flow/flowClock.ts`.
 
-   THE MECHANISM IS THE HOMEPAGE'S OWN CURTAIN, ONE STATION LATER.
-     · `#about` gets a runway (`100svh + dwell + run`) and its stage is
-       STICKY, so it pins for the dwell and the run.
-     · The corridor mount is WELDED up under the station's last viewport
-       (`--tw-turn-weld`, equal to the run), so the About unpins on exactly
-       the frame the corridor pins, and for the whole run the corridor is
-       ARMED — painting its parked frame at paintProgress 0.
-     · While the writer's stamp is up, the entry hold goes back to
-       `position: fixed` (rule 1 undone, because the About now sits ABOVE
-       the corridor: `.hero` z 5 > `#about` z 4 > the host's z 3), so the
-       live frame is held still behind the About exactly as it is behind
-       the hero on `/`. Its cell paints `--void`: the canvas is transparent
-       and the mount's own void only begins at the mount's top.
-     · The turn plays on the stage: the About copy leaves, the portrait
-       turns edge-on, the brandmark on its back lands on the live mark, the
-       ground opens as a square out of the mark's centre (the compass gate's
-       own shape) onto the live frame, and the thesis decodes on the live
-       copy's own lines. Every stand-in hands over on a frame where it is
-       identical to what it stands for, and at `done` the stage goes away.
-   ⚠ THE THREE LENGTHS ARE MIRRORED IN `aboutTurnClock.ts` AND PINNED EQUAL
-   (`tests/lib/workshop-about-turn.test.ts`). This sheet is the one that
-   has to exist before hydration.
-   ⚠ ABSENT MEANS SHOWN. Off this rung the stage is `display: contents`
-   and the About is the static one; on it but without the writer (no JS,
-   or the corridor's WebGL fallback) the About pins, then lifts off the
-   pinned corridor like a curtain. */
+   THREE STAGES, ONE GROUND.
+     · `#about` keeps its runway (`100svh + dwell + run`) and its sticky
+       stage (ADR-137 U2), and hands into the eras the homepage's way: the
+       copy leaves on per-line leaves, the deck squares up and flies to the
+       era figure's seat, the name glides onto the era title.
+     · `#voidwalker` is the homepage's era stage, welded `--tw-era-overlap`
+       up over the About as on `/`, so the two pin together for a stretch.
+     · The corridor mount is welded ONE VIEWPORT up under the era
+       (`--tw-era-weld`), so the corridor pins on the frame the era unpins.
+     · The ground under the About and the eras is the CORRIDOR'S OWN FRAME,
+       held `fixed` on `--void` while the flow's stamp is up: its starfield
+       and the parked particle brandmark the corridor paints on request
+       (`corridorPreludeRef`), exactly what sits behind both on `/`. So
+       neither stage paints a ground of its own, and neither can move one.
+     · The thesis frame (the copy layer, the glyph, and the compass gate,
+       which the corridor clips itself) is seen only through a square that
+       opens from the glyph's centre at the end of the eras, as the particle
+       mark folds into the glyph there.
+   ⚠ THE LENGTHS ARE MIRRORED IN `flowClock.ts` AND PINNED EQUAL
+   (`tests/lib/workshop-flow.test.ts`). This sheet is the one that has to
+   exist before hydration.
+   ⚠ THE RUNG IS THE ERA STAGE'S OWN (its hook's capable query, 1101px and
+   motion allowed), so the era's overlap can never land on an About that does
+   not pin; and every weld is keyed on the writer's stamp, so without it the
+   page is hero → About → the eras → the corridor, in flow. */
 .tw-root {
-  --tw-turn-dwell: 50svh;
-  --tw-turn-run: 100svh;
-  --tw-turn-weld: 100svh;
+  --tw-about-dwell: 50svh;
+  --tw-about-run: 100svh;
+  --tw-era-overlap: 120svh;
+  --tw-era-weld: 100svh;
 }
 .tw-root .tw-about-stage {
   display: contents;
@@ -125,20 +124,24 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
   position: relative;
   z-index: 1;
 }
-.tw-root .tw-turn-layer,
-.tw-root .tw-turn-mark,
-.tw-root .tw-turn-gate {
+.tw-root .tw-flow-layer {
   display: none;
+}
+/* The era's hook welds it over the About whenever it is capable; on this
+   route that overlap is the FLOW'S, so without the flow it does not apply
+   (re-declared under the stamp below). */
+.tw-root #voidwalker[data-vw-mode="hologram"][data-vw-handoff="ready"].station {
+  margin-top: 0;
 }
 
 @supports (animation-timeline: scroll(root block)) {
-  @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
     .tw-root .hero {
       z-index: 5;
     }
     .tw-root #about.station {
       display: block;
-      height: calc(100svh + var(--tw-turn-dwell) + var(--tw-turn-run));
+      height: calc(100svh + var(--tw-about-dwell) + var(--tw-about-run));
       min-height: 0;
       padding: 0;
       background: transparent;
@@ -162,121 +165,30 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       animation-timeline: scroll(root block);
       animation-range: 0 100dvh;
     }
-    /* The ground, on the stage so it pins with it: the station's void +
-       stars tile (`.station:not(.hero)`) and its wash
-       (`#about.station::before`), restated with the same values. Both open
-       as ONE square aperture centred on the live mark (`--tw-hx/-hy`,
-       half-size `--tw-hs`, written by the writer; 0 = closed).
-       ⚠ THE MORPH LAYER (`.tw-turn-gate`, ADR-137 U3) TAKES THE SAME MASK,
-       and that is the hand-over: the drawing that became the compass gate
-       shows where the ground still stands and the LIVE gate shows where it
-       has opened, so the opening sweeps the hand-over out with it. One
-       declaration for all three, or the seam and the edge drift apart. */
-    .tw-root #about.station > .tw-about-stage::before,
-    .tw-root #about.station > .tw-about-stage::after,
-    .tw-root .tw-turn-gate {
-      pointer-events: none;
-      -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
-      mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
-      -webkit-mask-size:
-        100% 100%,
-        calc(2 * var(--tw-hs, 0px)) calc(2 * var(--tw-hs, 0px));
-      mask-size:
-        100% 100%,
-        calc(2 * var(--tw-hs, 0px)) calc(2 * var(--tw-hs, 0px));
-      -webkit-mask-position:
-        0 0,
-        calc(var(--tw-hx, 50%) - var(--tw-hs, 0px)) calc(var(--tw-hy, 50%) - var(--tw-hs, 0px));
-      mask-position:
-        0 0,
-        calc(var(--tw-hx, 50%) - var(--tw-hs, 0px)) calc(var(--tw-hy, 50%) - var(--tw-hs, 0px));
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-    }
-    .tw-root #about.station > .tw-about-stage::before,
-    .tw-root #about.station > .tw-about-stage::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-    }
-    .tw-root #about.station > .tw-about-stage::before {
-      z-index: -2;
-      background: var(--void) url("/v7-stars.svg") center top / 1600px 900px repeat;
-    }
-    .tw-root #about.station > .tw-about-stage::after {
-      z-index: -1;
-      background:
-        radial-gradient(ellipse 50% 50% at 20% 30%, rgba(var(--gold-rgb), 0.05), transparent 60%),
-        radial-gradient(
-          ellipse 60% 70% at 80% 70%,
-          rgba(var(--atreides-rgb), 0.035),
-          transparent 65%
-        );
-    }
-    .tw-root [data-home-corridor-mount] {
-      margin-top: calc(-1 * var(--tw-turn-weld));
-    }
 
-    /* The turn's three layers: the diagram morph, the text leaves and the
-       brandmark stand-in. Their `hidden` attribute is the writer's switch,
-       so `display` is only restored where it is not set. */
-    .tw-root .tw-turn-layer:not([hidden]),
-    .tw-root .tw-turn-mark:not([hidden]),
-    .tw-root .tw-turn-gate:not([hidden]) {
+    /* The leaves' layer. Its `hidden` attribute is the writer's switch, so
+       `display` is only restored where it is not set. */
+    .tw-root .tw-flow-layer:not([hidden]) {
       display: block;
     }
-    /* The morph layer draws in the stage's own CSS px (no viewBox), UNDER
-       the About's grid (z 1), as the orbit's own drawing sits under the
-       portrait: while the card still faces the reader it covers the rings'
-       middle, and they show round it as it turns. The leaves and the mark
-       stand-in are over everything. */
-    .tw-root .tw-turn-gate {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      overflow: visible;
-    }
-    .tw-root .tw-turn-layer {
+    .tw-root .tw-flow-layer {
       position: absolute;
       inset: 0;
       z-index: 2;
       pointer-events: none;
     }
-    .tw-root .tw-turn-leaf {
+    .tw-root .tw-flow-leaf {
       position: absolute;
       margin: 0;
       white-space: pre;
     }
-    /* The stand-in is `ProjectedBrandmarkActor`'s structure: a shell with
-       the perspective and the glow (its literal, since the live mark's is
-       an inline literal too), an inner layer with the Y tilt. */
-    .tw-root .tw-turn-mark {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 3;
-      perspective: 1200px;
-      filter: drop-shadow(0 0 18px rgba(176, 139, 66, 0.42));
-      pointer-events: none;
-    }
-    .tw-root .tw-turn-mark__inner {
-      position: absolute;
-      inset: 0;
-      transform-style: preserve-3d;
-      transform: rotateY(var(--tw-mark-ry, -90deg));
-    }
-    .tw-root .tw-turn-mark svg {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
 
-    /* ── What the writer's stamp switches (`data-tw-turn` on `.tw-root`) ── */
-    html[data-corridor-entry="1"] .tw-root[data-tw-turn] .home-v2-stage__sticky {
+    /* ── What the flow's stamp switches (`data-tw-flow` on `.tw-root`) ── */
+    /* The ground: the corridor's frame, held still behind the About and the
+       eras exactly as it is behind the hero on `/`. Its cell paints `--void`:
+       the canvas is transparent and the host's own void only begins at the
+       mount's top. */
+    html[data-corridor-entry="1"] .tw-root[data-tw-flow] .home-v2-stage__sticky {
       position: fixed;
       top: 0;
       left: 50%;
@@ -285,68 +197,168 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       height: 100svh;
       background: var(--void);
     }
-    /* The destination is hidden until the stand-ins have landed on it. */
-    .tw-root[data-tw-turn]:not([data-tw-turn="done"])
-      .home-v2-copy-block--thoughtform-left
-      :is(.home-v2-copy-title, .home-v2-copy-body),
-    .tw-root[data-tw-turn]:not([data-tw-turn="done"]) .home-v2-projected-brandmark {
+    .tw-root[data-tw-flow] [data-home-corridor-mount] {
+      margin-top: calc(-1 * var(--tw-era-weld));
+    }
+    /* The eras: the homepage's overlap, and the station a transparent window
+       onto the ground and ABOVE the corridor's host (z 3), because on this
+       route it comes before the corridor rather than after it (`/` keys both
+       on `data-corridor-exit`, which is never set up here). */
+    .tw-root[data-tw-flow] #voidwalker[data-vw-mode="hologram"][data-vw-handoff="ready"].station {
+      margin-top: calc(-1 * var(--tw-era-overlap));
+    }
+    .tw-root[data-tw-flow] #voidwalker[data-vw-mode="hologram"].station {
+      position: relative;
+      z-index: 4;
+      background-color: transparent;
+      background-image: none;
+    }
+    /* The thesis frame opens through the square, and the square's edge is
+       SOFT (owner, 2026-09-30: a hard one read as "a frame going over the
+       brand mark"): each layer takes a mask ramping in over the writer's
+       feather while the particle core ramps out over the same band, so the
+       opening draws no line. Two linear ramps, one per axis, intersected; the
+       fallbacks put every stop on one line, i.e. shut.
+       · The copy layer is fixed at the viewport's origin, so its stops are
+         viewport px.
+       · The glyph's are px of its shell, and the mask goes on the shell's
+         INNER layer: the halo is a `drop-shadow` filter on the shell, drawn
+         from what the inner layer paints, so it follows the soft edge rather
+         than being cut into a tile at the shell's box.
+       · The gate and its throat fade in their own shaders. */
+    .tw-root[data-tw-flow]:not([data-tw-flow="done"]) .home-v2-copy-layer {
+      -webkit-mask-image:
+        linear-gradient(
+          to right,
+          transparent var(--tw-apx0, 50%),
+          #000 var(--tw-apx1, 50%),
+          #000 var(--tw-apx2, 50%),
+          transparent var(--tw-apx3, 50%)
+        ),
+        linear-gradient(
+          to bottom,
+          transparent var(--tw-apy0, 50%),
+          #000 var(--tw-apy1, 50%),
+          #000 var(--tw-apy2, 50%),
+          transparent var(--tw-apy3, 50%)
+        );
+      mask-image:
+        linear-gradient(
+          to right,
+          transparent var(--tw-apx0, 50%),
+          #000 var(--tw-apx1, 50%),
+          #000 var(--tw-apx2, 50%),
+          transparent var(--tw-apx3, 50%)
+        ),
+        linear-gradient(
+          to bottom,
+          transparent var(--tw-apy0, 50%),
+          #000 var(--tw-apy1, 50%),
+          #000 var(--tw-apy2, 50%),
+          transparent var(--tw-apy3, 50%)
+        );
+      -webkit-mask-composite: source-in;
+      mask-composite: intersect;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+    .tw-root[data-tw-flow]:not([data-tw-flow="done"]) .home-v2-projected-brandmark > div {
+      -webkit-mask-image:
+        linear-gradient(
+          to right,
+          transparent var(--tw-apgx0, 50%),
+          #000 var(--tw-apgx1, 50%),
+          #000 var(--tw-apgx2, 50%),
+          transparent var(--tw-apgx3, 50%)
+        ),
+        linear-gradient(
+          to bottom,
+          transparent var(--tw-apgy0, 50%),
+          #000 var(--tw-apgy1, 50%),
+          #000 var(--tw-apgy2, 50%),
+          transparent var(--tw-apgy3, 50%)
+        );
+      mask-image:
+        linear-gradient(
+          to right,
+          transparent var(--tw-apgx0, 50%),
+          #000 var(--tw-apgx1, 50%),
+          #000 var(--tw-apgx2, 50%),
+          transparent var(--tw-apgx3, 50%)
+        ),
+        linear-gradient(
+          to bottom,
+          transparent var(--tw-apgy0, 50%),
+          #000 var(--tw-apgy1, 50%),
+          #000 var(--tw-apgy2, 50%),
+          transparent var(--tw-apgy3, 50%)
+        );
+      -webkit-mask-composite: source-in;
+      mask-composite: intersect;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+
+    /* ── About → the eras (`data-tw-about` on `.tw-root`) ── */
+    /* The About copy is hidden while its leaves carry it. The role keeps its
+       box (its hairline is a pseudo the leaf does not carry, retracted on
+       `--tw-rule`), so its glyphs go by their FILL: `dress` copies `color`,
+       and a transparent colour would reach the leaf. */
+    .tw-root[data-tw-about="run"]
+      #about
+      :is(.voidwalker__name, .voidwalker__bio, .voidwalker__orbit__label) {
       visibility: hidden;
     }
-    /* The live button opens on the house's centre-out aperture. */
-    .tw-root[data-tw-turn]:not([data-tw-turn="done"])
-      .home-v2-copy-block--thoughtform-left
-      .home-v2-copy-cta {
-      clip-path: inset(0 calc(50% - 50% * var(--tw-cta, 0)) 0 calc(50% - 50% * var(--tw-cta, 0)));
-    }
-    /* The About copy is hidden while its leaves carry it. The role keeps
-       its box (its hairline is a pseudo the leaf does not carry, retracted
-       on `--tw-rule`), so its glyphs go by their FILL: `dress` copies
-       `color`, and a transparent colour would reach the leaf. */
-    .tw-root[data-tw-turn="run"] #about :is(.voidwalker__name, .voidwalker__bio) {
-      visibility: hidden;
-    }
-    .tw-root[data-tw-turn="run"] #about .voidwalker__role {
+    .tw-root[data-tw-about="run"] #about .voidwalker__role {
       -webkit-text-fill-color: transparent;
     }
-    .tw-root[data-tw-turn="run"] #about .voidwalker__role::after {
+    .tw-root[data-tw-about="run"] #about .voidwalker__role::after {
       transform: scaleX(var(--tw-rule, 1));
       transform-origin: left center;
     }
-    /* The orbit's drawing is carried by the morph layer while it draws
-       (`data-tw-gate` on the stage): its geometry groups go, and its
-       lettering stays where it stands to scramble out. The corner readouts
-       are carried by the leaves (they glide onto the phase labels), and the
-       live phase labels wait under them, like the thesis copy. */
-    .tw-root [data-tw-gate] .voidwalker__orbit__svg [data-tw-part]:not([data-tw-part="text"]) {
+    /* The orbit's rings close in onto the card on their own clip, and the
+       halo gathers into it on the INDIVIDUAL transform properties: the reveal
+       owns these `[data-m]` nodes' `transform`, and its `clip-path`
+       transition (~880ms) would trail the scroll by most of a second. */
+    .tw-root[data-tw-about="run"] #about .voidwalker__orbit__svg[data-m] {
+      clip-path: circle(calc(var(--tw-ring, 1) * 72%) at 50% 50%);
+      transition: none;
+    }
+    .tw-root[data-tw-about="run"] #about .voidwalker__orbit__particles[data-m] {
+      scale: var(--tw-ring, 1);
+      rotate: calc((1 - var(--tw-ring, 1)) * 160deg);
+    }
+    /* The deck squares up under the scroll, never on its arrival's 960ms
+       ease, which would trail the wheel by most of a second. */
+    .tw-root[data-tw-about="run"] #about .tw-deck__slab {
+      transition: none;
+    }
+    /* The card flies to the era figure's seat, deck and all (they share one
+       box and the orbit's 3D context, rule 1c). */
+    .tw-root[data-tw-about="run"] #about .voidwalker__orbit__portrait,
+    .tw-root[data-tw-about="run"] #about .tw-deck {
+      translate: var(--tw-card-dx, 0px) var(--tw-card-dy, 0px);
+      scale: var(--tw-card-s, 1);
+    }
+    /* …and resolves into the figure on the era's own morph, as `/`'s WebGL
+       card does (`--about-handoff-morph`, written on `#about` by the era's
+       hook). */
+    .tw-root[data-tw-flow] #about .voidwalker__orbit__portrait img {
+      opacity: calc(0.86 * (1 - var(--about-handoff-morph, 0)));
+    }
+    .tw-root[data-tw-flow] #about .tw-deck {
+      opacity: calc(1 - var(--about-handoff-morph, 0));
+    }
+    /* The era title waits under the name's leaf, which lands on its seat
+       with its text, and takes over settled once the About hands over. */
+    .tw-root[data-tw-about="run"] #voidwalker .vwd__mast__title {
       visibility: hidden;
     }
-    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__label {
-      visibility: hidden;
-    }
-    .tw-root[data-tw-turn]:not([data-tw-turn="done"]) .home-v2-copy-phase {
-      visibility: hidden;
-    }
-    /* The halo gathers into the mark on the INDIVIDUAL transform properties
-       (the reveal owns this `[data-m]` node's `transform`): it slides to
-       the mark's centre, shrinks to it and turns on the way. */
-    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__particles[data-m] {
-      translate: var(--tw-pdx, 0px) var(--tw-pdy, 0px);
-      scale: var(--tw-ps, 1);
-      rotate: var(--tw-pr, 0deg);
-    }
-    /* The portrait turns on the `rotate` PROPERTY: the reveal owns its
-       `transform`. The deck turns WITH it, on the same axis (the two share
-       one box and the orbit's 3D context, rule 1c), so the stack swings
-       over as one slab, as the homepage's deck flips. */
-    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__portrait,
-    .tw-root[data-tw-turn="run"] #about .tw-deck {
-      rotate: y var(--tw-flip, 0deg);
-    }
-    /* Handed over: the live frame is the page, and it takes the pointer. */
-    .tw-root[data-tw-turn="done"] #about.station {
+    /* Handed over: the eras are the page, and the About takes no pointer. */
+    .tw-root[data-tw-about="done"] #about.station {
       pointer-events: none;
     }
-    .tw-root[data-tw-turn="done"] #about.station > .tw-about-stage {
+    .tw-root[data-tw-about="done"] #about.station > .tw-about-stage {
       visibility: hidden;
     }
   }
@@ -371,8 +383,9 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
    ⚠ THE DECK IS A SIBLING OF THE PORTRAIT, NEVER A CHILD. The emerge clips
    the portrait (`clip-path: inset(0)` even at rest), and any clip flattens a
    3D stack and would cut the slabs off at the card's edge.
-   ⚠ THE ORBIT IS THE 3D CONTEXT (`preserve-3d` + the turn's own 1200px
-   perspective), so the card and the deck share it and turn as one slab.
+   ⚠ THE ORBIT IS THE 3D CONTEXT (`preserve-3d` + a 1200px perspective), so
+   the card and the deck share it and move as one object: the deck squares
+   up (`--tw-deck-fan` → 0) before the card flies (ADR-138).
    ⚠ THE CARD'S CUT IS THE BAKE'S: bottom-right only (`raster-photo`, the
    live face, bakes no top-left cut), 52 bake px of 840 × 1360, i.e. a 45°
    cut 6.19% of the width and 3.82% of the height. The img clips its own
@@ -386,8 +399,8 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
      than the card (the nearest ~1.17×) and grow left and down, the right
      edge all but fixed and a quarter of the height's growth above the top —
      the deck seen from its upper right. The perspective origin stays the
-     orbit's centre (the turn's flip was read and approved on it), so that
-     viewpoint is paid as an in-plane step solved for it: a slab at depth
+     orbit's centre, so that viewpoint is paid as an in-plane step solved
+     for it: a slab at depth
      `n · dz` scales by s = 1200 / (1200 − n · dz), and holding the right
      edge moves it by −(s − 1)·w / 2s, a quarter-down anchor by
      (s − 1)·h·0.24 / s; both are linear in n to a pixel at dz 56, and are
@@ -472,9 +485,9 @@ html[data-theme="light"]
 }
 .tw-root #about .voidwalker__orbit__portrait.is-in ~ .tw-deck .tw-deck__slab {
   transform: translate3d(
-    calc(var(--n) * var(--tw-deck-dx)),
-    calc(var(--n) * var(--tw-deck-dy)),
-    calc(var(--n) * var(--tw-deck-dz))
+    calc(var(--n) * var(--tw-deck-fan, 1) * var(--tw-deck-dx)),
+    calc(var(--n) * var(--tw-deck-fan, 1) * var(--tw-deck-dy)),
+    calc(var(--n) * var(--tw-deck-fan, 1) * var(--tw-deck-dz))
   );
 }
 /* One slab is two rims, its two faces, a thickness apart. Each rim is a

@@ -5,8 +5,7 @@ import { lazy, Suspense, useLayoutEffect } from "react";
 import { useNestedRoot } from "../trinny-london/proposal/useNestedRoot";
 
 import { usePortraitDeck } from "./about-deck/usePortraitDeck";
-import TurnMark from "./about-turn/TurnMark";
-import { useAboutTurn } from "./about-turn/useAboutTurn";
+import { useWorkshopFlow } from "./flow/useWorkshopFlow";
 
 /**
  * WorkshopPortals — this route's two nested roots, and the one attribute the
@@ -25,18 +24,15 @@ import { useAboutTurn } from "./about-turn/useAboutTurn";
  * unmount so a client-side exit hands `/` its ring back.
  *
  * Both roots are lazy, so the proof's plates and the arcs' section components
- * stay off the route's first paint.
- *
- * AND THE ABOUT → ARC TURN (ADR-137 U2): a third root for the brandmark on
- * the back of the portrait (`TurnMark`, eager — it is one inline SVG the
- * landing already ships), and the turn's writer, `useAboutTurn`, which lives
- * here for the same reason the roots do.
+ * stay off the route's first paint. The era stage (`#voidwalker`) needs no
+ * root here: `LandingPage` mounts `VoidwalkerPortal` on every route.
  *
  * AND THE DECK'S CARD (ADR-137 U4): `usePortraitDeck` swaps the portrait's
  * photo for the homepage deck's own bake; the deck around it is CSS.
+ *
+ * AND THE OPENING FLOW (ADR-138): `useWorkshopFlow`, the one writer for
+ * About → the eras → the Arc, lives here for the same reason the roots do.
  */
-const TURN_MARK = <TurnMark />;
-
 const WorkshopProof = lazy(() => import("./WorkshopProof"));
 const WorkshopTail = lazy(() => import("./WorkshopTail"));
 
@@ -61,9 +57,8 @@ export function WorkshopPortals() {
       <WorkshopTail />
     </Suspense>
   );
-  useNestedRoot(".tw-root [data-tw-turn-mark]", TURN_MARK);
   usePortraitDeck();
-  useAboutTurn();
+  useWorkshopFlow();
 
   return null;
 }

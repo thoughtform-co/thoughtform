@@ -15,12 +15,20 @@ import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
+// The era stage (ADR-138): the homepage's five sheets, in `/`'s order, so the
+// eras render exactly as they do there. Before the route sheet, which seats
+// the station above the corridor rather than after it (rule 1d).
+import "@/components/landing/home-v2/voidwalker/voidwalker.css";
+import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
+import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
+import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
+import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";
 // The arcs' sheet: the workshop after the proof is the arcs' own section
 // components inside an `.arc-root`, and this is their grammar and their light
 // re-derivation. Before the route sheet, so the route can overrule it.
 import "@/components/arcs/arcs.css";
-// about-stage.css / continuum-stage.css / voidwalker/*.css are deliberately
-// NOT imported: this page mounts no pinned stage (ADR-053).
+// about-stage.css / continuum-stage.css are deliberately NOT imported: this
+// page mounts no about deck stage (ADR-053).
 import "./thoughtform-workshop.css";
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";

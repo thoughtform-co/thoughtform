@@ -51,6 +51,7 @@ import {
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   BRANDMARK_PHYSICS_CORE_COUNT_MOBILE,
   type BrandmarkBasis,
+  type BrandmarkCoreAperture,
   type BrandmarkCoreBlending,
   type BrandmarkCoreGlyph,
   type BrandmarkCoreShape,
@@ -83,6 +84,7 @@ import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { resolveScenePalette } from "@/lib/theme/palette";
 import { vwTravelRef, vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
+import { corridorPreludeRef } from "@/lib/home-v2/corridorPreludeRef";
 import { getVwFlightConfig } from "@/lib/voidwalker/voidwalkerFlightConfig";
 import { markFlyThroughRelease } from "@/lib/voidwalker/voidwalkerTravelClock";
 import { getServicePose } from "@/lib/home-v2/servicePose";
@@ -527,6 +529,19 @@ export function BrandmarkPhysicsCoreActor({
   // re-rasterises against the camera state at re-entry).
   const [seedFromPositions, setSeedFromPositions] = useState<Float32Array | null>(null);
   const lastBelowHandoff = useRef(true);
+  // ADR-138: the prelude's own raster reseed runs once per fold, re-armed
+  // whenever the fold rewinds to its start.
+  const preludeSeeded = useRef(false);
+  // ADR-138: the square the thesis frame opens through — the core is NOT
+  // drawn inside it, so the opening sweeps the converged mark into the glyph.
+  const apertureRef = useRef<BrandmarkCoreAperture>({
+    on: false,
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    feather: 0,
+  });
   const igniteRef = useRef(ASSEMBLED_IGNITE);
   const depthRef = useRef(0);
   // Cover-in morph (ADR-023 morph rev.): 0 = particles collapsed at the rect
@@ -589,7 +604,11 @@ export function BrandmarkPhysicsCoreActor({
     // core itself is held INVISIBLE during ambient (`handoffFade=0`
     // below) so the centred DOM brandmark + seam pixel field stay
     // the sole foreground marks.
-    const painting = t.active || t.armed || t.docked || t.servicesAmbient;
+    // ADR-138: a route that shows the parked mark BEFORE the corridor (the
+    // workshop's About and eras) keeps it painting though nothing is armed.
+    // 0 on every other route.
+    const prelude = corridorPreludeRef.current;
+    const painting = t.active || t.armed || t.docked || t.servicesAmbient || prelude.level > 0;
     // ADR-081 U5: once the dive has RELEASED the mark and the camera is
     // deep in the tunnel, the mark is a stationary object tens of units
     // behind the lens — shed it with the rest of the corridor painters.
@@ -612,6 +631,20 @@ export function BrandmarkPhysicsCoreActor({
     // (dispersed cloud, but invisible — see opacity gate below).
     const progress = t.paintProgress;
     const [bx, by, bz] = getBrandmarkWorldPosition(progress);
+
+    // ── ADR-138: THE PRELUDE ─────────────────────────────────────────
+    // The mark PARKED before the corridor is reached, then walked onto its
+    // thesis anchor and folded into the glyph. Inert the moment the corridor
+    // owns the mark itself (past the SVG rest, or docked / in the ambient
+    // hold), and 0 on every route but the one that writes it.
+    const preludeLevel =
+      t.docked || t.servicesAmbient || progress >= BRANDMARK_CORE_HANDOFF_PROGRESS
+        ? 0
+        : Math.min(1, Math.max(0, prelude.level));
+    // The park held: 1 at rest, 0 once the mark has reached the anchor.
+    const preludePark = preludeLevel * (1 - Math.min(1, Math.max(0, prelude.travel)));
+    // The wireframe held: 1 at rest, 0 once it has folded onto its seed.
+    const preludeDepth = preludeLevel * (1 - Math.min(1, Math.max(0, prelude.fold)));
 
     // ── ADR-023 2026-06-25 hybrid: matched-pixel swap detection ─────
     // The SVG owns the visible mark while progress < HANDOFF_PROGRESS.
@@ -680,6 +713,49 @@ export function BrandmarkPhysicsCoreActor({
       lastBelowHandoff.current = true;
     }
 
+    // ADR-138: the prelude's fold lands on the GLYPH'S OWN PIXELS. At the
+    // first frame of the fold the core is still at full depth, where the
+    // shader draws `aTarget3D` alone (`mix(flatSeed, aTarget3D, 1)`), so
+    // re-seeding there is invisible; the fold then carries every particle
+    // back onto the matched-pixel seed, exactly the swap's own raster run at
+    // the swap's own pose (the anchor, the rest scale, no billboard and no
+    // pointer lean, which the rig is still easing out of when this fires).
+    if (preludeLevel > 0 && prelude.fold > 0 && !preludeSeeded.current) {
+      const rectRef = brandmarkScreenRectRef.current;
+      if (rectRef.valid) {
+        const rig = pointerLookRef.current;
+        const lean = rig ? rig.rotation.clone() : null;
+        rig?.rotation.set(0, 0, 0);
+        group.position.set(bx, by, bz);
+        group.quaternion.identity();
+        const restHalf = getBrandmarkWrapHalfExtent(progress);
+        group.scale.setScalar(restHalf * 2 * getEpiloguePlanetScale(getSmoothedEpilogueProgress()));
+        group.updateMatrixWorld(true);
+        const world = rasterizeBrandmarkToWorldPositions({
+          rect: rectRef,
+          camera: state.camera,
+          worldZ: bz,
+          viewport: { width: state.size.width, height: state.size.height },
+          maxCount: count,
+        });
+        if (world.count > 0) {
+          const local = worldPositionsToLocal(world.positions, world.count, group);
+          const padded = new Float32Array(count * 3);
+          for (let i = 0; i < count; i++) {
+            const j = (i % world.count) * 3;
+            padded[i * 3] = local[j];
+            padded[i * 3 + 1] = local[j + 1];
+            padded[i * 3 + 2] = local[j + 2];
+          }
+          setSeedFromPositions(padded);
+          preludeSeeded.current = true;
+        }
+        if (rig && lean) rig.rotation.copy(lean);
+      }
+    } else if (preludeLevel === 0 || prelude.fold <= 0) {
+      preludeSeeded.current = false;
+    }
+
     // ── Services core-shrink (2026-06-20) ────────────────────────────
     // As the user scrolls into #services the dissipate clock ramps 0→1.
     // The core (which fills the sphere at "everyone is racing") shrinks
@@ -688,7 +764,8 @@ export function BrandmarkPhysicsCoreActor({
     // from today), 1 = parked centerpiece. Held at 1 through the services
     // ambient hold (the motion follower pins dissipate at 1).
     const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
-    const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
+    // ADR-138: the prelude holds the park (and runs it backwards on travel).
+    const recT = Math.max(smootherstep(SHRINK_START, SHRINK_END, dissipate), preludePark);
 
     // ADR-081 U5 fly-through release. 0 everywhere except the voidwalker
     // entry dive, so every other frame on the page is byte-identical.
@@ -699,9 +776,14 @@ export function BrandmarkPhysicsCoreActor({
     // Decommission clock (ADR-030 Update 1): 0 through every reading beat
     // (and everywhere recT < 1 — the eased runway product keeps the
     // corridor byte-identical), 0..1 across the runway's final beat.
-    const exitT = SERVICES_CARD_RING
-      ? smootherstep(0, 1, exitProgressForRunway(servicesRingProgressRef.current.progress)) * recT
-      : 0;
+    const exitT = Math.max(
+      SERVICES_CARD_RING
+        ? smootherstep(0, 1, exitProgressForRunway(servicesRingProgressRef.current.progress)) * recT
+        : 0,
+      // ADR-138: the prelude's park is the homepage's RECEDED one — the mark
+      // as it sits behind About and the eras there.
+      preludePark
+    );
 
     // About flip dim (ADR-047; owner revision 2026-07-16): the mark no
     // longer clears FULLY across the flip — it PERSISTS through the whole
@@ -714,7 +796,11 @@ export function BrandmarkPhysicsCoreActor({
     // the next opaque station arrives (handoffFade → servicesAmbientLevel).
     // Identity (1) everywhere the about clock is 0.
     const aboutFlipFade = ABOUT_DECK_STAGE
-      ? 1 - ABOUT_FLIP_MARK_DIM * aboutFlipT(aboutStageProgressRef.current.progress)
+      ? 1 -
+        ABOUT_FLIP_MARK_DIM *
+          // ADR-138: …and at the homepage's post-flip floor, lifting to full
+          // ink as the mark travels out of the park.
+          Math.max(aboutFlipT(aboutStageProgressRef.current.progress), preludePark)
       : 1;
 
     // ── SVG → particle MORPH (ADR-023 morph rev., 2026-06-24 cover-in pass) ──
@@ -794,7 +880,10 @@ export function BrandmarkPhysicsCoreActor({
     // dimensional 3D object in #services, and the gentle drift below reveals
     // that volume. (Was `depth * (1 - recT)`, which collapsed it to a flat
     // billboard at the centerpiece.) Z-only, so the XY silhouette is preserved.
-    depthRef.current = depth;
+    // ADR-138: the prelude holds the wireframe, then folds it (the corridor's
+    // own dematerialise, run backwards).
+    const depthShown = Math.max(depth, preludeDepth);
+    depthRef.current = depthShown;
     // Cover-morph clock: 0 = particles collapsed at rect centre, 1 = full
     // home positions. Saturates at 1 well before the depth ramp begins, so
     // the parked corridor / sphere / centerpiece states see coverMorph = 1
@@ -902,10 +991,29 @@ export function BrandmarkPhysicsCoreActor({
     // beat moves on and something else needs the centre. Multiplied in last
     // so it composes with every envelope above rather than replacing one;
     // 0 without a registered morph ⇒ identity on every production route.
+    // ADR-138: under the prelude the SVG rest does not own the mark yet; the
+    // core does, at the prelude's level.
+    const svgOwns = preludeLevel > 0 ? false : armedOnly || inSvgRest;
     opacityRef.current =
-      (armedOnly || inSvgRest ? 0 : parkedOpacity * vwInk(handoffFade)) *
+      (svgOwns ? 0 : parkedOpacity * vwInk(handoffFade)) *
       vwInk(dimMix) *
-      (1 - readBrandmarkVeil());
+      (1 - readBrandmarkVeil()) *
+      (preludeLevel > 0 ? preludeLevel : 1);
+    // ADR-138: the square the thesis frame opens through is cut out of the
+    // field, so the opening itself hands the converged mark to the glyph —
+    // across a soft edge, the band the glyph fades in across.
+    const hole = prelude.aperture;
+    const ap = apertureRef.current;
+    if (preludeLevel > 0 && hole && hole.half > 0) {
+      ap.on = true;
+      ap.left = hole.cx - hole.half;
+      ap.right = hole.cx + hole.half;
+      ap.top = hole.cy - hole.half;
+      ap.bottom = hole.cy + hole.half;
+      ap.feather = hole.feather;
+    } else {
+      ap.on = false;
+    }
     morphRef.current = readBrandmarkMorph();
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a
@@ -913,8 +1021,8 @@ export function BrandmarkPhysicsCoreActor({
     // so the wind-blown particles read as small discrete points.
     pointSizeRef.current =
       CORE_POINT_SIZE_FLAT +
-      (CORE_POINT_SIZE_3D - CORE_POINT_SIZE_FLAT) * depth -
-      CORE_POINT_SIZE_FLIGHT_DIP * Math.sin(Math.PI * depth);
+      (CORE_POINT_SIZE_3D - CORE_POINT_SIZE_FLAT) * depthShown -
+      CORE_POINT_SIZE_FLIGHT_DIP * Math.sin(Math.PI * depthShown);
 
     // Size: shared with the projected SVG so the medium blend is
     // size-continuous. The 2D mark starts growing during the early
@@ -1135,6 +1243,7 @@ export function BrandmarkPhysicsCoreActor({
             opacityRef={opacityRef}
             pointSizeRef={pointSizeRef}
             morphRef={morphRef}
+            apertureRef={apertureRef}
             color={color}
             accentColor={accentColor}
             landedColor={LANDED_WIRE_COLOR}
@@ -1174,6 +1283,7 @@ interface BrandmarkPhysicsCoreWithGLBProps {
   opacityRef: { readonly current: number };
   pointSizeRef: { readonly current: number };
   morphRef: { readonly current: number };
+  apertureRef: { readonly current: BrandmarkCoreAperture };
   color: string;
   accentColor: string;
   landedColor: string;
@@ -1197,6 +1307,7 @@ function BrandmarkPhysicsCoreWithGLB({
   opacityRef,
   pointSizeRef,
   morphRef,
+  apertureRef,
   color,
   accentColor,
   landedColor,
@@ -1475,6 +1586,7 @@ function BrandmarkPhysicsCoreWithGLB({
       landedAccent={landedAccent}
       morphTarget={morphTarget}
       morphRef={morphRef}
+      apertureRef={apertureRef}
       morphColor={morphSpec?.color}
       morphAccent={morphSpec?.accent}
       morphLift={morphSpec?.lift}

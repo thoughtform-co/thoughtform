@@ -172,6 +172,19 @@ type ReadonlyRef<T> = { readonly current: T };
  *  band highlight" driven per frame; the continuum clocks + slab constants
  *  live in the corridor actor (`lib/services-ring/continuumBandMath`). All
  *  gains 0 (or no ref) ⇒ the shader block is byte-identical off. */
+/** A screen-space hole in the field (ADR-138), in CSS px from the canvas's
+ *  top-left. `on` false (or no ref) leaves the shader's test off. */
+export interface BrandmarkCoreAperture {
+  on: boolean;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  /** Soft-edge width, CSS px: the field fades out across this band inside
+   *  the rect instead of stopping at its edge. 0 = a hard cut. */
+  feather: number;
+}
+
 export interface BrandmarkCoreBandState {
   /** Base band glow gain (master pre-applied; 0 = off). */
   gain: number;
@@ -476,6 +489,9 @@ export interface BrandmarkPhysicsCoreProps {
    *  mount default (byte-identical — the corridor pre-continuum, every lab,
    *  and any other consumer are untouched). */
   bandRef?: ReadonlyRef<BrandmarkCoreBandState>;
+  /** A screen-space hole the points are not drawn in (ADR-138). Read every
+   *  frame; absent ⇒ `uApertureOn` stays 0 and the test never runs. */
+  apertureRef?: ReadonlyRef<BrandmarkCoreAperture>;
   /** Blend mode of the points material. "additive" (default) is the luminous
    *  glow; "normal" flattens it into a crisp retro field (kills the bloom that
    *  reads as "Christmas lights"). */
@@ -639,6 +655,7 @@ export function BrandmarkPhysicsCore({
   freezeMotion = false,
   freezeMotionRef,
   bandRef,
+  apertureRef,
   blending = "additive",
   basis = "dome-fill",
   gridSnap,
@@ -874,6 +891,10 @@ export function BrandmarkPhysicsCore({
         uBandTrailLen: { value: 0.28 },
         uBandTrailGain: { value: 0 },
         uBandSizeBoost: { value: 0 },
+        // ADR-138's screen-space hole — off until a consumer passes a ref.
+        uAperture: { value: new THREE.Vector4(0, 0, 0, 0) },
+        uApertureOn: { value: 0 },
+        uApertureFeather: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
       fragmentShader: brandmarkCoreFragmentShader,
@@ -967,6 +988,25 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uBandHeadW.value = band.headW;
       mat.uniforms.uBandTrailLen.value = band.trailLen;
       mat.uniforms.uBandSizeBoost.value = band.sizeBoost;
+    }
+
+    // ADR-138: the hole, converted to the drawing buffer. gl_FragCoord runs
+    // from the buffer's BOTTOM-left in device px, so y flips against the
+    // canvas's CSS height.
+    const hole = apertureRef?.current;
+    if (hole && hole.on) {
+      const k = state.viewport.dpr;
+      const h = state.size.height;
+      (mat.uniforms.uAperture.value as THREE.Vector4).set(
+        hole.left * k,
+        (h - hole.bottom) * k,
+        hole.right * k,
+        (h - hole.top) * k
+      );
+      mat.uniforms.uApertureOn.value = 1;
+      mat.uniforms.uApertureFeather.value = Math.max(0, hole.feather) * k;
+    } else {
+      mat.uniforms.uApertureOn.value = 0;
     }
 
     // Live size / brightness: prefer the refs so the corridor actor can

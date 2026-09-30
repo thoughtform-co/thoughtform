@@ -22,6 +22,7 @@ import { buildJourneyRoster } from "@/components/landing/v7/rail-instruments/jou
 export const WORKSHOP_JOURNEY_ORDER = [
   "hero",
   "about",
+  "voidwalker",
   "thesis",
   "navigate",
   "encode",
@@ -33,12 +34,14 @@ export const WORKSHOP_JOURNEY_ORDER = [
 
 export const WORKSHOP_JOURNEY = buildJourneyRoster(
   WORKSHOP_JOURNEY_ORDER,
-  // About sits between the hero and the corridor mount on this page, so the
-  // seam-gap rule needs it or About stays lit through the whole Arc.
-  "about",
+  // The era stage sits directly above the corridor mount on this page
+  // (ADR-138), so the seam-gap rule needs it or the eras stay lit through the
+  // whole Arc.
+  "voidwalker",
   [
     { id: "hero", name: "Home" },
     { id: "about" },
+    { id: "voidwalker" },
     { id: "thesis", name: "Thesis" },
     { id: "arc", range: ["navigate", "build"] },
     { id: "services", name: "Proof", glyph: "proof" },
@@ -47,10 +50,12 @@ export const WORKSHOP_JOURNEY = buildJourneyRoster(
   [{ id: "contact" }]
 );
 
-/** The nav drawer's items, in page order. `#voidwalker` and `#practice` are
- *  removed here, so production's list would ship dead anchors. */
+/** The nav drawer's items, in page order. `#practice` and `#musings` are not
+ *  on this page, so production's list would ship dead anchors. The eras keep
+ *  production's label (ADR-138). */
 export const WORKSHOP_NAV_ITEMS: readonly NavItem[] = [
   { num: "01", label: "About", href: "#about" },
-  { num: "02", label: "Proof", href: "#services" },
-  { num: "03", label: "The workshop", href: "#workshop" },
+  { num: "02", label: "Voidwalker", href: "#voidwalker" },
+  { num: "03", label: "Proof", href: "#services" },
+  { num: "04", label: "The workshop", href: "#workshop" },
 ];

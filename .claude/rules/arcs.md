@@ -905,7 +905,7 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   page is 22 sections against the shell's 16, each half inside it.
 - ⚠ **THE WORKSHOP OPENS ON THE CORRIDOR (ADR-137, Proposed 2026-09-29).**
   `/arcs/thoughtform-workshop` is a STATIC FOLDER under `/arcs` (the third fork
-  of ADR-053's recipe): hero → about → corridor → the homepage's proof stack in
+  of ADR-053's recipe): hero → about → the eras (ADR-138) → corridor → the homepage's proof stack in
   `#services` (ring off) → the arc's sections in `#workshop` → contact.
   `[slug]`'s `generateStaticParams` filters the slug (`OWN_ROUTE_SLUGS`); the
   `ArcDef` stays in `ARCS`. The tail renders through `ArcSectionRenderer`,
@@ -917,47 +917,52 @@ visible` or the document grows ~12,400px on arrival. The opening slide is the
   copied as the route sheet's rule 1a, never shared): a scroll-driven hold on
   `#about`'s children, not the station, behind `@supports`, capable rung only.
   ⚠ The GROUND is held too, or it slides up under a still bio.
-  ⚠ **U2: ABOUT TURNS INTO THE ARC'S FIRST FRAME** (`about-turn/**`, route
-  rule 1b). `#about` is a runway with a sticky 100svh stage (`.tw-about-stage`,
-  `display: contents` off the rung) that carries the ground; the corridor
-  mount is welded under its last viewport by exactly the run, so the corridor
-  is ARMED for the whole turn and About unpins as it pins; while `data-tw-turn`
-  is up the entry hold is `fixed` again on a `--void` cell, and `.hero` z 5 >
-  `#about` z 4 > the host's z 3. The portrait turns on the `rotate` PROPERTY,
-  a `BrandmarkGlyph` stand-in lands on the live mark, a square aperture opens
-  the ground, and the thesis lands on leaves posed on the LIVE copy's lines.
-  ⚠ Leaves are CALIBRATED by measurement (a text `Range`'s height is rounded
-  to whole pixels, so half-leading arithmetic is up to a pixel out); the weld
-  is ≤ 0.016px. ⚠ The dwell, run and weld are declared in the sheet AND the
-  clock and pinned equal (`workshop-about-turn.test.ts`); the writer reads the
-  About by class, which the parse test pins.
-  ⚠ **U3: THE ABOUT'S DIAGRAM BECOMES THE GATE, NO FADE** (`aboutTurnGate.ts`).
-  One SVG layer in the stage, a replica of the orbit on the first frame (the
-  real parts hide under `data-tw-gate`), then one morph per part: four rings
-  square up and turn onto the gate's loops, the ticks land on its stubs, the
-  nodes spiral onto its dots, and the connectors draw on. The end state is
-  the LIVE gate's pixels, published into the three-free
-  `compassGateScreenRef` by `ThoughtformCompassGate` only while `wanted` is
-  set (this route's writer sets it; `park()` clears it). The layer shares the
-  ground's aperture mask, so the opening IS the hand-over, and every part
-  lands before `GATE_OPEN`. ⚠ The canvas is `premultipliedAlpha: false`, so
-  DOM ink is `rgb(C·a)` at opacity `a` (`compassGateInk`) and the end width
-  `1 / dpr`. ⚠ A dashed ring's pattern wraps at its path's start: an SVG
-  circle starts at 3 o'clock, the gate's loop at its TL corner, so the start
-  travels (`reseat`). ⚠ The gate's inks and dashes live in that module and
-  the gate reads them from there, source-pinned. A change to the gate's
-  geometry is a TWO-surface change: run the `/` corridor smokes and this
-  route's turn probe.
-  ⚠ **U4: THE PORTRAIT IS THE HOMEPAGE DECK'S CARD** (route rule 1c,
-  `about-deck/usePortraitDeck.ts`). The img shows `portraitBakeFor`'s blob
-  (the ring's own bake, `cutTopLeft` false as `raster-photo` bakes it),
-  first painted from `PORTRAIT_BACK_SRC` under the LUT's CSS chain; three
-  rim-only glass slabs (`.tw-deck`) sit IN FRONT of it and fan out once it
-  lands. ⚠ The deck is the portrait's SIBLING (the emerge's `clip-path`
-  flattens anything inside the portrait), the orbit is the 3D context, and
-  U2's flip turns portrait and deck together. ⚠ The viewpoint is `/`'s
-  (upper right) paid as an in-plane step in `%` of the card, with the
-  perspective origin left at the orbit's centre the flip was approved on.
+  ⚠ **U2 AND U3 ARE SUPERSEDED BY [ADR-138](../sentinel/decisions/138-the-workshop-reads-about-the-eras-then-the-arc.md)
+  (2026-09-30, owner): the flip, the brandmark on the card's back, the thesis
+  decoded from the bio, the orbit morphed into the gate, `about-turn/**`,
+  `TurnMark`and`compassGateScreenRef` are all DELETED.** The page reads
+  hero → about → **the eras** (`#voidwalker`, the homepage's own station,
+  mounted by `VoidwalkerPortal`) → the corridor. One writer,
+  `flow/useWorkshopFlow.ts`, on the pure clock `flow/flowClock.ts`:
+  - **About → the eras is the homepage's handoff, in the DOM.** The About stage
+    keeps U2's runway (`--tw-about-dwell` 50svh + `--tw-about-run` 100svh); the
+    era welds itself `-120svh` over it, so it pins at the About's `u` 0.8. The
+    copy leaves on leaves, the deck squares up (`--tw-deck-fan`), the card flies
+    to `aboutVoidwalkerHandoffRef.portraitSeat` on `translate` / `scale` (never
+    `transform`, the reveal's), the name's leaf glides onto the era title and is
+    re-seated on its LIVE box once the era pins (the published seat rounds to
+    whole pixels); the card resolves on the era's own `--about-handoff-morph`.
+  - **The eras → the Arc is the corridor's PRELUDE** (`lib/home-v2/corridorPreludeRef.ts`,
+    three-free, identity at `level` 0 in every reader): the scene counts it as
+    engagement, the core holds its PARKED look and runs it backwards on the era's
+    exit (TRAVEL · FOLD, reseeded from the glyph's raster at the fold's first
+    frame), and OPEN grows a square from the glyph's centre, and ⚠ **its edge is a
+    SOFT BAND, never a cut** (U1, owner: a hard one read as "a frame going over
+    the brand mark"): `aperture.feather` (8 % of the height) is spent by every
+    reader — the core fades OUT over the band's outer 60 %, the gate and its
+    throat (`GatewayThroat`, its own painter, armed before the square opens) fade
+    IN through a factor in their own shaders (`onBeforeCompile` on the gate, 1
+    while off; clipping planes can only cut and are deleted with
+    `localClippingEnabled`), and the copy layer and the glyph take feathered
+    MASKS, the glyph's on the shell's INNER layer so the shell's `drop-shadow`
+    halo follows the edge instead of being cut into a tile. The mount is welded `--tw-era-weld` (100svh) under the era, so the
+    corridor pins as the era unpins, and the stamp drops the prelude there.
+  - ⚠ **Every weld is keyed on the writer's `data-tw-flow` stamp**, the rung is
+    the era hook's own (`(min-width: 1101px) and (prefers-reduced-motion:
+no-preference)`), and the four lengths are pinned equal between the sheet and
+    the clock (`workshop-flow.test.ts`). ⚠ The era's progress is written in its
+    OWN rAF, so the writer takes a three-frame tail after every scroll or it
+    strands on the previous frame's `p`.
+    ⚠ **U4: THE PORTRAIT IS THE HOMEPAGE DECK'S CARD** (route rule 1c,
+    `about-deck/usePortraitDeck.ts`). The img shows `portraitBakeFor`'s blob
+    (the ring's own bake, `cutTopLeft` false as `raster-photo` bakes it),
+    first painted from `PORTRAIT_BACK_SRC` under the LUT's CSS chain; three
+    rim-only glass slabs (`.tw-deck`) sit IN FRONT of it and fan out once it
+    lands. ⚠ The deck is the portrait's SIBLING (the emerge's `clip-path`
+    flattens anything inside the portrait), the orbit is the 3D context, and
+    the deck squares up and flies WITH the card (ADR-138). ⚠ The viewpoint is `/`'s
+    (upper right) paid as an in-plane step in `%` of the card, with the
+    perspective origin left at the orbit's centre the flip was approved on.
 - ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
   2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
   a readout, one quote beat, one `anatomy` beat per week with the same four rows
