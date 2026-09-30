@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop/journey";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
+import { PORTRAIT_BACK_SRC } from "@/lib/services-ring/portraitBake";
 import { getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 /**
@@ -88,6 +89,23 @@ describe("thoughtform-workshop variant parse (ADR-137)", () => {
     ]) {
       expect(about).toContain(cls);
     }
+  });
+
+  it("the portrait is the deck's card, and the deck is its sibling (ADR-137 U4)", () => {
+    const body = parsed();
+    const about = body.slice(body.indexOf('id="about"'), body.indexOf('id="home-corridor-mount"'));
+    const portraitAt = about.indexOf('class="voidwalker__orbit__portrait"');
+    const deckAt = about.indexOf('class="tw-deck"');
+    expect(portraitAt).toBeGreaterThan(-1);
+    // The card's first paint is the bake's own source crop, so the swap to
+    // the bake changes the grade and nothing else.
+    const portrait = about.slice(portraitAt, about.indexOf("</div>", portraitAt));
+    expect(portrait).toContain(`src="${PORTRAIT_BACK_SRC}"`);
+    // A SIBLING after the portrait, never inside it: the emerge clips the
+    // portrait, and a clip flattens the 3D stack.
+    expect(deckAt).toBeGreaterThan(about.indexOf("</div>", portraitAt));
+    expect(about.match(/class="tw-deck"/g) ?? []).toHaveLength(1);
+    expect(about.match(/class="tw-deck__slab"/g) ?? []).toHaveLength(3);
   });
 
   it("the journey order names every section the page shows, in page order", () => {

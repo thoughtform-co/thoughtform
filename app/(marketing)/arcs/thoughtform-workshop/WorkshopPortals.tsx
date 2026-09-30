@@ -4,6 +4,7 @@ import { lazy, Suspense, useLayoutEffect } from "react";
 
 import { useNestedRoot } from "../trinny-london/proposal/useNestedRoot";
 
+import { usePortraitDeck } from "./about-deck/usePortraitDeck";
 import TurnMark from "./about-turn/TurnMark";
 import { useAboutTurn } from "./about-turn/useAboutTurn";
 
@@ -30,6 +31,9 @@ import { useAboutTurn } from "./about-turn/useAboutTurn";
  * the back of the portrait (`TurnMark`, eager — it is one inline SVG the
  * landing already ships), and the turn's writer, `useAboutTurn`, which lives
  * here for the same reason the roots do.
+ *
+ * AND THE DECK'S CARD (ADR-137 U4): `usePortraitDeck` swaps the portrait's
+ * photo for the homepage deck's own bake; the deck around it is CSS.
  */
 const TURN_MARK = <TurnMark />;
 
@@ -58,6 +62,7 @@ export function WorkshopPortals() {
     </Suspense>
   );
   useNestedRoot(".tw-root [data-tw-turn-mark]", TURN_MARK);
+  usePortraitDeck();
   useAboutTurn();
 
   return null;

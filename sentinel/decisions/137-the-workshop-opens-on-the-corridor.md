@@ -256,6 +256,65 @@ premultipliedAlpha: false` under NormalBlending, so a line of colour C at
   are no page errors. On a phone, under reduced motion and at 1280×640 the
   layer stays empty and `display: none` with no stamp and no weld.
 
+## Update 4 (2026-09-30, owner): the portrait is the deck's card
+
+The owner: "On the homepage, in our About section, my photo has a stacked
+effect because it comes from the cards in the Services section. On this
+workshop page, we don't have a Services section but I like the 3D card
+effect. Can we apply it here". There is no card ring on this route to stack
+(`data-services-ring="off"`, and the About sits above the corridor), so the
+deck is drawn in the DOM (route rule 1c), on every rung:
+
+- **The card is the bake, not a look-alike.** `about-deck/usePortraitDeck.ts`
+  runs `portraitBakeFor` (the memo the WebGL deck and the phone band share,
+  ADR-115) and shows the blob on the portrait's own `<img>`: the ring's
+  portrait crop under the gold LUT (the parchment print in light), its two
+  scrims, its chamfer and its shell stroke. The seat is the homepage slot's,
+  52% of the orbit at 420 / 680. Until the bake lands, and without JS, the
+  bake's own source crop shows under the CSS chain the LUT was built to
+  reproduce; `data-tw-portrait="baked"` takes that chain off, and the swap
+  is decoded on a probe first so the card never blanks, a theme flip
+  included.
+- **The deck is three glass slabs in front of the card**, as on `/`, where
+  the flip swings the other three cards over the portrait. Rims only, each
+  drawn twice (a slab is half a step thick, the ring's 0.045 depth on a
+  0.085 pitch), at about the homepage's 24% gold on the void. They fan out
+  once the card has landed (the portrait is the group's seventh reveal, on
+  an 880ms wipe): pure motion, no fade.
+- **The turn takes the whole deck over.** The deck shares the portrait's
+  box and the orbit's 3D context, so U2's flip turns card and slabs on one
+  axis as one slab, and the slabs go edge-on with the card before the
+  brandmark comes round.
+
+**What the measurement found:**
+
+- ⚠ **The deck is a sibling of the portrait, never a child.** The emerge
+  leaves `clip-path: inset(0)` on the portrait even at rest, and any clip
+  flattens a 3D stack and would cut the slabs off at the card's edge. The
+  orbit is the 3D context (`preserve-3d`, with the turn's own 1200px
+  perspective now set at rest).
+- ⚠ **The homepage deck is seen from its upper right.** Scanned off `/` at
+  1440×900, its slabs are larger than the card (the nearest about 1.17×)
+  and grow left and down, the right edge all but fixed and a quarter of the
+  height's growth above the top. The perspective origin stays the orbit's
+  centre, because U2's flip was read and approved on it, so that viewpoint
+  is paid as an in-plane step solved for it: at 56px a step, `s = 1200 /
+(1200 − n · 56)`, and holding the right edge and a quarter-down anchor is
+  linear in n to a pixel. The step is a fraction of the card (a translate's
+  `%` is its own box), so the phone's 166px card fans the same way.
+  Measured: the three slabs' right edges on the card's own at 1440, 1280,
+  1920 and 390.
+- ⚠ **The card's cut is the desktop deck's**: `raster-photo`, the live face,
+  bakes no top-left chamfer. The img clips its own bottom-right corner (a
+  45° cut, 6.19% of the width and 3.82% of the height), so the bake's corner
+  fill (`#050403`) never shows on this ground. The card is also glass (the
+  img at 0.86), so the rings read faintly through it, as they do on `/`.
+- The Arc is untouched: the phase runs thesis → navigate → encode → build,
+  the CTA hit-tests after the hand-over, scrolling back restores the About
+  with the portrait unturned, and there are no page errors. The parse test
+  pins the deck's three slabs, its place after the portrait, and the card's
+  first-paint source.
+
 ## Left open
 
 - The arc's `hero` record is unused by this route and kept because the type
@@ -266,3 +325,7 @@ premultipliedAlpha: false` under NormalBlending, so a line of colour C at
   visible in light), so the aperture's edge shows as a faint step while it
   opens. It came in with U2's opening and passes as you scroll; matching the
   two washes is its own pass.
+- The deck's left rims run through the tail of the orbit's SUBJECT and
+  FIELD readouts (`0001` at 1280, the end of `VOIDWALKER` at 1440). The
+  homepage deck overlaps the same two labels; moving them would change a
+  composition the owner approved, so it is his call.

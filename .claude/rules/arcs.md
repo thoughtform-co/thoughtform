@@ -948,6 +948,16 @@ visible` or the document grows ~12,400px on arrival. The opening slide is the
   the gate reads them from there, source-pinned. A change to the gate's
   geometry is a TWO-surface change: run the `/` corridor smokes and this
   route's turn probe.
+  ⚠ **U4: THE PORTRAIT IS THE HOMEPAGE DECK'S CARD** (route rule 1c,
+  `about-deck/usePortraitDeck.ts`). The img shows `portraitBakeFor`'s blob
+  (the ring's own bake, `cutTopLeft` false as `raster-photo` bakes it),
+  first painted from `PORTRAIT_BACK_SRC` under the LUT's CSS chain; three
+  rim-only glass slabs (`.tw-deck`) sit IN FRONT of it and fan out once it
+  lands. ⚠ The deck is the portrait's SIBLING (the emerge's `clip-path`
+  flattens anything inside the portrait), the orbit is the 3D context, and
+  U2's flip turns portrait and deck together. ⚠ The viewpoint is `/`'s
+  (upper right) paid as an in-plane step in `%` of the card, with the
+  perspective origin left at the orbit's centre the flip was approved on.
 - ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
   2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
   a readout, one quote beat, one `anatomy` beat per week with the same four rows

@@ -4458,9 +4458,22 @@ html { scroll-behavior: smooth; }
           <span class="d" style="--a: 348deg;--r: 42%;"></span>
         </div>
 
-        <!-- portrait, centered, black-and-white -->
+        <!-- portrait, centered. On this route it is the homepage's deck
+             card (ADR-137 U4): the source is the ring's own portrait crop
+             (`PORTRAIT_BACK_SRC`), and the writer swaps in the bake the
+             WebGL deck shows, gold-graded with its chamfer and shell. -->
         <div class="voidwalker__orbit__portrait" data-m="portrait">
-          <img src="assets/vince-portrait.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
+          <img src="/images/services/vince.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
+        </div>
+
+        <!-- the deck: three glass slabs stacked in front of the card, the
+             other three cards of the homepage's deck. A SIBLING of the
+             portrait, never a child: the emerge clips the portrait, and a
+             clip flattens a 3D stack. -->
+        <div class="tw-deck" aria-hidden="true">
+          <span class="tw-deck__slab" style="--n: 1"></span>
+          <span class="tw-deck__slab" style="--n: 2"></span>
+          <span class="tw-deck__slab" style="--n: 3"></span>
         </div>
       </div>
     </div>

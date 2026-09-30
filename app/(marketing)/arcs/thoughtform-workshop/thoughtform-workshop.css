@@ -335,11 +335,11 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       rotate: var(--tw-pr, 0deg);
     }
     /* The portrait turns on the `rotate` PROPERTY: the reveal owns its
-       `transform`. */
-    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit {
-      perspective: 1200px;
-    }
-    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__portrait {
+       `transform`. The deck turns WITH it, on the same axis (the two share
+       one box and the orbit's 3D context, rule 1c), so the stack swings
+       over as one slab, as the homepage's deck flips. */
+    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__portrait,
+    .tw-root[data-tw-turn="run"] #about .tw-deck {
       rotate: y var(--tw-flip, 0deg);
     }
     /* Handed over: the live frame is the page, and it takes the pointer. */
@@ -349,6 +349,177 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
     .tw-root[data-tw-turn="done"] #about.station > .tw-about-stage {
       visibility: hidden;
     }
+  }
+}
+
+/* ── 1c. The portrait is the homepage deck's card (ADR-137 U4) ───────────
+   Owner, 2026-09-30: on `/` the About photo "has a stacked effect because it
+   comes from the cards in the Services section … I like the 3D card effect.
+   Can we apply it here". This route has no card ring to stack, so the deck
+   is drawn in the DOM, on every rung:
+     · THE CARD is the ring's own portrait back (`portraitBakeFor`, the same
+       canvas the WebGL deck and the phone band show), swapped in by
+       `about-deck/usePortraitDeck.ts`; until it lands (and without JS) the
+       ring's source crop shows under the CSS chain the bake's LUT was built
+       to reproduce. Its seat is the homepage slot's: 52% of the orbit at the
+       card's 420 / 680.
+     · THE DECK is three glass slabs IN FRONT of the card, as on `/`, where
+       the flip swings the other three cards over the portrait: rims only,
+       each drawn twice for its thickness, stepped toward the reader so the
+       perspective fans them out to the left and down, the chamfers stairing
+       at the bottom right.
+   ⚠ THE DECK IS A SIBLING OF THE PORTRAIT, NEVER A CHILD. The emerge clips
+   the portrait (`clip-path: inset(0)` even at rest), and any clip flattens a
+   3D stack and would cut the slabs off at the card's edge.
+   ⚠ THE ORBIT IS THE 3D CONTEXT (`preserve-3d` + the turn's own 1200px
+   perspective), so the card and the deck share it and turn as one slab.
+   ⚠ THE CARD'S CUT IS THE BAKE'S: bottom-right only (`raster-photo`, the
+   live face, bakes no top-left cut), 52 bake px of 840 × 1360, i.e. a 45°
+   cut 6.19% of the width and 3.82% of the height. The img clips its own
+   corner so the bake's corner fill (`#050403`) never shows on this ground. */
+.tw-root #about .voidwalker__orbit {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  --tw-card-cx: 6.1905%;
+  --tw-card-cy: 3.8235%;
+  /* Measured off `/`'s seated deck at 1440×900: the three slabs are LARGER
+     than the card (the nearest ~1.17×) and grow left and down, the right
+     edge all but fixed and a quarter of the height's growth above the top —
+     the deck seen from its upper right. The perspective origin stays the
+     orbit's centre (the turn's flip was read and approved on it), so that
+     viewpoint is paid as an in-plane step solved for it: a slab at depth
+     `n · dz` scales by s = 1200 / (1200 − n · dz), and holding the right
+     edge moves it by −(s − 1)·w / 2s, a quarter-down anchor by
+     (s − 1)·h·0.24 / s; both are linear in n to a pixel at dz 56, and are
+     stated as fractions of the card (a translate's % is its own box) so a
+     smaller card fans the same way. A slab is
+     half a step thick (the ring's 0.045 depth on a 0.085 pitch), which is
+     why `/` reads its rims in pairs. Rims ~24% gold on the void, as there. */
+  --tw-deck-dx: -2.333%;
+  --tw-deck-dy: 1.119%;
+  --tw-deck-dz: 56px;
+  --tw-deck-t: 28px;
+  --tw-deck-rim: rgba(var(--gold-rgb), 0.42);
+  --tw-deck-rim-back: rgba(var(--gold-rgb), 0.2);
+}
+html[data-theme="light"] .tw-root #about .voidwalker__orbit {
+  --tw-deck-rim: color-mix(in srgb, var(--gold-line) 78%, transparent);
+  --tw-deck-rim-back: color-mix(in srgb, var(--gold-line) 40%, transparent);
+}
+.tw-root #about .voidwalker__orbit__portrait {
+  aspect-ratio: 420 / 680;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.tw-root #about .voidwalker__orbit__portrait::after {
+  content: none;
+}
+.tw-root #about .voidwalker__orbit__portrait img {
+  object-position: center;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--tw-card-cy)),
+    calc(100% - var(--tw-card-cx)) 100%,
+    0 100%
+  );
+  /* `.svc-plate__pbg`'s chain, which `buildGoldToneLut` reproduces. */
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+  /* The deck's card is glass on `/`: the orbit's rings read faintly through
+     it. The img is a leaf, so this flattens nothing (the reveal owns the
+     portrait's own opacity). */
+  opacity: 0.86;
+}
+html[data-theme="light"] .tw-root #about .voidwalker__orbit__portrait img {
+  /* `buildParchmentToneLut`'s chain, before its levels. */
+  filter: grayscale(1) sepia(0.55) saturate(0.88) brightness(1.1) contrast(0.9);
+}
+.tw-root #about .voidwalker__orbit__portrait[data-tw-portrait="baked"] img,
+html[data-theme="light"]
+  .tw-root
+  #about
+  .voidwalker__orbit__portrait[data-tw-portrait="baked"]
+  img {
+  filter: none;
+}
+
+.tw-root #about .tw-deck {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 52%;
+  aspect-ratio: 420 / 680;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  /* Arrives once the card has: the portrait is the group's seventh reveal
+     (6 × 70ms stagger) on an 880ms wipe. Until then the slabs lie on the
+     card itself, and they are not drawn. */
+  visibility: hidden;
+}
+.tw-root #about .tw-deck__slab {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translate3d(0, 0, 0);
+  transition: transform 960ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(1300ms + (var(--n) - 1) * 90ms);
+}
+.tw-root #about .voidwalker__orbit__portrait.is-in ~ .tw-deck {
+  visibility: visible;
+  transition: visibility 0s linear 1300ms;
+}
+.tw-root #about .voidwalker__orbit__portrait.is-in ~ .tw-deck .tw-deck__slab {
+  transform: translate3d(
+    calc(var(--n) * var(--tw-deck-dx)),
+    calc(var(--n) * var(--tw-deck-dy)),
+    calc(var(--n) * var(--tw-deck-dz))
+  );
+}
+/* One slab is two rims, its two faces, a thickness apart. Each rim is a
+   two-contour ring (a clip CUTS a border and never strokes one), both
+   contours closed, and its inner chamfer leg sits `0.414 × 1px` further in,
+   because a 45° cut offset inward by d moves along each axis by d(√2 − 1). */
+.tw-root #about .tw-deck__slab::before,
+.tw-root #about .tw-deck__slab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--tw-deck-rim);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    100% 0,
+    100% calc(100% - var(--tw-card-cy)),
+    calc(100% - var(--tw-card-cx)) 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    1px calc(100% - 1px),
+    calc(100% - var(--tw-card-cx) - 0.414px) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - var(--tw-card-cy) - 0.414px),
+    calc(100% - 1px) 1px,
+    1px 1px
+  );
+}
+.tw-root #about .tw-deck__slab::after {
+  background: var(--tw-deck-rim-back);
+  transform: translateZ(calc(-1 * var(--tw-deck-t)));
+}
+@media (prefers-reduced-motion: reduce) {
+  .tw-root #about .tw-deck,
+  .tw-root #about .voidwalker__orbit__portrait.is-in ~ .tw-deck {
+    visibility: visible;
+    transition: none;
+  }
+  .tw-root #about .tw-deck .tw-deck__slab {
+    transition: none;
+    transform: translate3d(
+      calc(var(--n) * var(--tw-deck-dx)),
+      calc(var(--n) * var(--tw-deck-dy)),
+      calc(var(--n) * var(--tw-deck-dz))
+    );
   }
 }
 
