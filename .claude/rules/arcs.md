@@ -913,6 +913,24 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
 visible` or the document grows ~12,400px on arrival. The opening slide is the
   `hero-board` kind, Moira's `BoardMini` copied by hand onto the ramp; its lit
   set is one side and adjacent (registry-pinned), its title two short sentences.
+  ⚠ **U1: the hero lifts over a HELD `#about`** (the Trinny route's rule 3a,
+  copied as the route sheet's rule 1a, never shared): a scroll-driven hold on
+  `#about`'s children, not the station, behind `@supports`, capable rung only.
+  ⚠ The GROUND is held too, or it slides up under a still bio.
+  ⚠ **U2: ABOUT TURNS INTO THE ARC'S FIRST FRAME** (`about-turn/**`, route
+  rule 1b). `#about` is a runway with a sticky 100svh stage (`.tw-about-stage`,
+  `display: contents` off the rung) that carries the ground; the corridor
+  mount is welded under its last viewport by exactly the run, so the corridor
+  is ARMED for the whole turn and About unpins as it pins; while `data-tw-turn`
+  is up the entry hold is `fixed` again on a `--void` cell, and `.hero` z 5 >
+  `#about` z 4 > the host's z 3. The portrait turns on the `rotate` PROPERTY,
+  a `BrandmarkGlyph` stand-in lands on the live mark, a square aperture opens
+  the ground, and the thesis lands on leaves posed on the LIVE copy's lines.
+  ⚠ Leaves are CALIBRATED by measurement (a text `Range`'s height is rounded
+  to whole pixels, so half-leading arithmetic is up to a pixel out); the weld
+  is ≤ 0.016px. ⚠ The dwell, run and weld are declared in the sheet AND the
+  clock and pinned equal (`workshop-about-turn.test.ts`); the writer reads the
+  About by class, which the parse test pins.
 - ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
   2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
   a readout, one quote beat, one `anatomy` beat per week with the same four rows

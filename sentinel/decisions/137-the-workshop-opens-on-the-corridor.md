@@ -82,6 +82,99 @@ renders. Eyebrows renumber from 01.
   with the diagram. The tail's own overflows are ADR-131/136's and unchanged by
   this record. No page errors in either theme; the ring stays off.
 
+## Update 1 (2026-09-30, owner): the hero lifts over a held #about
+
+The owner asked for "the same parallax effect as we have on the home page".
+The hero was already the homepage's; what differed is what sits behind it. On
+`/` the corridor is frozen `fixed` through the entry band and the hero uncovers
+a still frame; here `#about` is a normal-flow station whose top tracks the
+hero's bottom, so the two travelled in lockstep and nothing moved against
+anything. Rule 1 undoes the corridor's hold on purpose, so the hold moves to
+`#about`'s children: the Trinny proposal's rule 3a (ADR-094's route sheet),
+inherited verbatim as the route sheet's rule 1a, since the `#about` markup is
+byte-identical. A scroll-driven animation behind `@supports`, capable rung
+only, holding the children and never the station.
+
+Measured with real wheel steps: the content holds at 243.2px (1440×900) and
+355.1px (1920×1247) across the hero's whole travel with a 0.00px spread under a
+continuous wheel, releases into flow continuously at one viewport, the active
+station stays `hero` until the midline and no page errors.
+
+⚠ **THE GROUND IS HELD TOO** (owner, same day: the section's "background also
+moves up"). Holding the children left the station's own paint riding the
+scroll under them, because the void + stars tile and the `::before` wash are
+both on the station's box. The tile moves onto `#about::after` at z −1 and
+both pseudos take the same hold; the station keeps `--void` as its colour. It
+covers the uncovered strip only while the station is at least one viewport
+tall (measured 894 at 1280×720 through 1440 at 2560×1440, its `min-height`
+holding the tall end). ⚠ **The Trinny route's rule 3a has the same gap by
+construction** (it holds `#about > *` alone) and was not touched. Measured as
+pixels on the ground beside the bio at 1440×900, between two scroll positions
+inside the hold: ~3,000 pixels differ with the fix (the wordmark docking at
+half a viewport) against ~196,000 without it. (Superseded on mechanism by
+Update 2: the ground now lives on the turn's stage.)
+
+## Update 2 (2026-09-30, owner): About turns into the Arc's first frame
+
+The owner: "flip the profile picture in the about section to then reveal the
+brandmark gateway … the text on the left to glitch transform into the text on
+the left of [the Arc's first frame] + the button. So instead of boringly
+scrolling from the second to the third section, we use a cool transition
+before we enter our arc; let's make sure though we don't break our arc."
+Asked, he chose the brandmark ON THE BACK of the card (it settles onto the
+Arc's own mark, then the gateway opens around it) and a short read first.
+
+**The mechanism is the homepage's curtain, one station later.** `#about`
+takes a runway (`100svh + 50svh dwell + 100svh run`) and its content moves
+into a sticky 100svh stage (`.tw-about-stage`, a prototype wrapper that is
+`display: contents` off the rung). The corridor mount is WELDED up under the
+station's last viewport by exactly the run (`margin-top: -100svh`), so About
+unpins on the frame the corridor pins, and for the whole run the corridor is
+ARMED, painting its parked frame at paintProgress 0. While the writer's stamp
+is up, rule 1 is undone and the entry hold goes back to `position: fixed` on a
+`--void` cell (the canvas is transparent and the mount's own void starts only
+at its top), with `.hero` z 5 > `#about` z 4 > the host's z 3. The live frame
+is then held still behind the About exactly as it is behind the hero on `/`.
+
+**The choreography is one scrubbed clock** (`about-turn/aboutTurnClock.ts`,
+pure; `useAboutTurn.ts` is the one writer, mounted from `WorkshopPortals`):
+
+- the name, role and bio carried OUT on per-line leaves (scramble; the bio
+  un-types), the fact row and the links closing on the centre-out aperture;
+- the rings and halo closing in onto the card on their own clip;
+- the portrait turning 0 → 90° on the CSS `rotate` property (the reveal owns
+  `transform`), then a `BrandmarkGlyph` stand-in (`TurnMark`, a nested root)
+  turning −90° → the live mark's tilt while it lands on the live mark's rect;
+- a SQUARE aperture (the compass gate's own shape) opening in the stage's
+  ground out of the mark's centre onto the live frame;
+- the thesis carried IN on leaves posed on the LIVE copy's own lines, and the
+  live button opening on the aperture. At `u ≥ 0.96` everything hands over
+  and the stage goes away.
+
+**What the measurement found:**
+
+- ⚠ **A TEXT `Range`'s HEIGHT IS ROUNDED TO WHOLE PIXELS** (33 against a
+  32.79px line box on the thesis title), so `headCarrier`'s half-leading
+  arithmetic put leaves up to 0.91px off their lines at 1280×720. The carrier
+  now lays each leaf out once, reads its own first word the way the source's
+  was read, and takes the difference off. Measured weld: ≤ 0.016px at both
+  ends, at 1280×720, 1440×900 and 1920×1247. The stand-in mark: 0.01px.
+- ⚠ **`dress` copies the face, not the box.** The bio's gold highlight, the
+  entity underline and the title's gold-wash marker are box styles on inline
+  owners, so each leaf is a block (the face, the line box) around an inline
+  ink span (the owner's background, padding, shadow, decoration).
+- ⚠ **The role's hairline is a pseudo the leaf does not carry**, so the role
+  hides by `-webkit-text-fill-color`, never `color`, which `dress` would copy
+  onto its leaf as transparent.
+- ⚠ **The reveal transitions `clip-path` over ~880ms** on the rings, halo and
+  corner readouts; the turn's clip on them turns the transition off while it
+  runs, or the scrubbed clip would trail the scroll by most of a second.
+- The Arc is untouched: driven with real wheel steps, the phase runs thesis →
+  navigate → encode → build and the proof stack arrives, the CTA takes the
+  pointer after the hand-over, scrolling back restores the static About, and
+  there are no page errors. Phones, reduced motion and windows under 681px
+  tall get the static About, byte-identical.
+
 ## Left open
 
 - The arc's `hero` record is unused by this route and kept because the type

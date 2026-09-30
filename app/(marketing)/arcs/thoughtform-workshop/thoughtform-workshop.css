@@ -23,6 +23,306 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
   margin-left: 0;
 }
 
+/* ── 1a. The hero curtain lifts over a HELD #about ───────────────────
+   Owner, 2026-09-30: the hero should have "the same parallax effect as we
+   have on the home page". The hero is already identical on both routes;
+   what differs is what sits behind it. On `/` the next sibling is the
+   corridor mount, frozen `fixed` through the entry band, so the hero
+   uncovers a still frame. Here it is `#about`, a normal-flow station whose
+   top tracks the hero's bottom to the pixel, so the two travel in LOCKSTEP
+   and nothing moves against anything. Rule 1 undoes the corridor's hold on
+   purpose, so the hold moves to the station actually behind the curtain.
+
+   This is the Trinny proposal's rule 3a, INHERITED VERBATIM rather than
+   shared (the `#about` markup is byte-identical, so its measurements
+   carry); read that block for the full argument. The load-bearing parts:
+     · a SCROLL-DRIVEN animation, never a transform off the scroll writer:
+       the page scrolls on the compositor and a main-thread variable lands
+       one wheel step late, so the content jitters by exactly one step.
+     · `@supports` guards it, or a browser without scroll timelines runs
+       the keyframes on the document timeline and throws the content a
+       viewport off its seat. Unsupported means plain flow, as before.
+     · it holds the CHILDREN, never the station: `#about`'s own rect is
+       what the section clock reads, and holding it lights ABOUT while the
+       reader is still on the hero.
+     · it ends at identity at 100dvh, so nothing downstream moves, and the
+       strip the curtain uncovers is exactly the station's own box (the
+       hero's bottom edge IS `#about`'s natural top), so the held content
+       above that edge stays under the hero (z 4 over z 2).
+   Capable rung only: the phone's `dvh` moves under the URL bar, and
+   ADR-115 keeps scroll-linked drift off the phone.
+
+   ⚠ THE GROUND IS HELD TOO (owner, same day: "the about section seems to
+   have a background that also moves up"). Holding the children left the
+   station's own paint riding the scroll under them: the void + stars tile
+   (`.station:not(.hero)`) and the gold/green wash (`#about.station::before`)
+   are both on the station's box, so the stars slid up behind a still bio.
+   The homepage freezes its whole second section, ground included.
+
+   ⚠ SINCE ADR-137 U2 THE HOLD CARRIES THE TURN'S STAGE (rule 1b below).
+   `#about`'s one box child is `.tw-about-stage`, a 100svh sticky layer,
+   and the ground lives ON it (its `::before`/`::after`) while the station
+   itself is transparent — so the held element covers the whole frame by
+   its own height, and the U1 condition that the STATION be one viewport
+   tall no longer applies. The hold's arithmetic is unchanged: the stage is
+   held for the hero's travel, then pins, so the hero lifts off a still
+   About exactly as before. The rung moved with the turn's: it adds
+   `min-height: 681px`, so a desktop window shorter than that gets the
+   plain flowing About. */
+@keyframes tw-about-curtain-hold {
+  from {
+    transform: translateY(-100dvh);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ── 1b. #about turns into the Arc's first frame (ADR-137 U2) ────────
+   Owner, 2026-09-30: the profile picture flips to reveal the brandmark
+   gateway, and the bio glitch-transforms into the Arc's thesis + its
+   button, "instead of boringly scrolling from the second to the third
+   section". The writer is `about-turn/useAboutTurn.ts`; the clock and its
+   windows are `about-turn/aboutTurnClock.ts`.
+
+   THE MECHANISM IS THE HOMEPAGE'S OWN CURTAIN, ONE STATION LATER.
+     · `#about` gets a runway (`100svh + dwell + run`) and its stage is
+       STICKY, so it pins for the dwell and the run.
+     · The corridor mount is WELDED up under the station's last viewport
+       (`--tw-turn-weld`, equal to the run), so the About unpins on exactly
+       the frame the corridor pins, and for the whole run the corridor is
+       ARMED — painting its parked frame at paintProgress 0.
+     · While the writer's stamp is up, the entry hold goes back to
+       `position: fixed` (rule 1 undone, because the About now sits ABOVE
+       the corridor: `.hero` z 5 > `#about` z 4 > the host's z 3), so the
+       live frame is held still behind the About exactly as it is behind
+       the hero on `/`. Its cell paints `--void`: the canvas is transparent
+       and the mount's own void only begins at the mount's top.
+     · The turn plays on the stage: the About copy leaves, the portrait
+       turns edge-on, the brandmark on its back lands on the live mark, the
+       ground opens as a square out of the mark's centre (the compass gate's
+       own shape) onto the live frame, and the thesis decodes on the live
+       copy's own lines. Every stand-in hands over on a frame where it is
+       identical to what it stands for, and at `done` the stage goes away.
+   ⚠ THE THREE LENGTHS ARE MIRRORED IN `aboutTurnClock.ts` AND PINNED EQUAL
+   (`tests/lib/workshop-about-turn.test.ts`). This sheet is the one that
+   has to exist before hydration.
+   ⚠ ABSENT MEANS SHOWN. Off this rung the stage is `display: contents`
+   and the About is the static one; on it but without the writer (no JS,
+   or the corridor's WebGL fallback) the About pins, then lifts off the
+   pinned corridor like a curtain. */
+.tw-root {
+  --tw-turn-dwell: 50svh;
+  --tw-turn-run: 100svh;
+  --tw-turn-weld: 100svh;
+}
+.tw-root .tw-about-stage {
+  display: contents;
+}
+/* `#about.station > *` (landing.css) no longer reaches the grid through a
+   `display: contents` wrapper; restated so the wash stays under the copy. */
+.tw-root #about.station .tw-about-stage > .voidwalker {
+  position: relative;
+  z-index: 1;
+}
+.tw-root .tw-turn-layer,
+.tw-root .tw-turn-mark {
+  display: none;
+}
+
+@supports (animation-timeline: scroll(root block)) {
+  @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+    .tw-root .hero {
+      z-index: 5;
+    }
+    .tw-root #about.station {
+      display: block;
+      height: calc(100svh + var(--tw-turn-dwell) + var(--tw-turn-run));
+      min-height: 0;
+      padding: 0;
+      background: transparent;
+      z-index: 4;
+    }
+    .tw-root #about.station::before {
+      content: none;
+    }
+    .tw-root #about.station > .tw-about-stage {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100svh;
+      padding-inline: var(--hud-content-inset);
+      box-sizing: border-box;
+      isolation: isolate;
+      animation: tw-about-curtain-hold linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 100dvh;
+    }
+    /* The ground, on the stage so it pins with it: the station's void +
+       stars tile (`.station:not(.hero)`) and its wash
+       (`#about.station::before`), restated with the same values. Both open
+       as ONE square aperture centred on the live mark (`--tw-hx/-hy`,
+       half-size `--tw-hs`, written by the writer; 0 = closed). */
+    .tw-root #about.station > .tw-about-stage::before,
+    .tw-root #about.station > .tw-about-stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+      mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+      -webkit-mask-size:
+        100% 100%,
+        calc(2 * var(--tw-hs, 0px)) calc(2 * var(--tw-hs, 0px));
+      mask-size:
+        100% 100%,
+        calc(2 * var(--tw-hs, 0px)) calc(2 * var(--tw-hs, 0px));
+      -webkit-mask-position:
+        0 0,
+        calc(var(--tw-hx, 50%) - var(--tw-hs, 0px)) calc(var(--tw-hy, 50%) - var(--tw-hs, 0px));
+      mask-position:
+        0 0,
+        calc(var(--tw-hx, 50%) - var(--tw-hs, 0px)) calc(var(--tw-hy, 50%) - var(--tw-hs, 0px));
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    .tw-root #about.station > .tw-about-stage::before {
+      z-index: -2;
+      background: var(--void) url("/v7-stars.svg") center top / 1600px 900px repeat;
+    }
+    .tw-root #about.station > .tw-about-stage::after {
+      z-index: -1;
+      background:
+        radial-gradient(ellipse 50% 50% at 20% 30%, rgba(var(--gold-rgb), 0.05), transparent 60%),
+        radial-gradient(
+          ellipse 60% 70% at 80% 70%,
+          rgba(var(--atreides-rgb), 0.035),
+          transparent 65%
+        );
+    }
+    .tw-root [data-home-corridor-mount] {
+      margin-top: calc(-1 * var(--tw-turn-weld));
+    }
+
+    /* The turn's two layers: the text leaves and the brandmark stand-in.
+       Their `hidden` attribute is the writer's switch, so `display` is
+       only restored where it is not set. */
+    .tw-root .tw-turn-layer:not([hidden]),
+    .tw-root .tw-turn-mark:not([hidden]) {
+      display: block;
+    }
+    .tw-root .tw-turn-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .tw-root .tw-turn-leaf {
+      position: absolute;
+      margin: 0;
+      white-space: pre;
+    }
+    /* The stand-in is `ProjectedBrandmarkActor`'s structure: a shell with
+       the perspective and the glow (its literal, since the live mark's is
+       an inline literal too), an inner layer with the Y tilt. */
+    .tw-root .tw-turn-mark {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 3;
+      perspective: 1200px;
+      filter: drop-shadow(0 0 18px rgba(176, 139, 66, 0.42));
+      pointer-events: none;
+    }
+    .tw-root .tw-turn-mark__inner {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transform: rotateY(var(--tw-mark-ry, -90deg));
+    }
+    .tw-root .tw-turn-mark svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── What the writer's stamp switches (`data-tw-turn` on `.tw-root`) ── */
+    html[data-corridor-entry="1"] .tw-root[data-tw-turn] .home-v2-stage__sticky {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      width: 100vw;
+      margin-left: -50vw;
+      height: 100svh;
+      background: var(--void);
+    }
+    /* The destination is hidden until the stand-ins have landed on it. */
+    .tw-root[data-tw-turn]:not([data-tw-turn="done"])
+      .home-v2-copy-block--thoughtform-left
+      :is(.home-v2-copy-title, .home-v2-copy-body),
+    .tw-root[data-tw-turn]:not([data-tw-turn="done"]) .home-v2-projected-brandmark {
+      visibility: hidden;
+    }
+    /* The live button opens on the house's centre-out aperture. */
+    .tw-root[data-tw-turn]:not([data-tw-turn="done"])
+      .home-v2-copy-block--thoughtform-left
+      .home-v2-copy-cta {
+      clip-path: inset(0 calc(50% - 50% * var(--tw-cta, 0)) 0 calc(50% - 50% * var(--tw-cta, 0)));
+    }
+    /* The About copy is hidden while its leaves carry it. The role keeps
+       its box (its hairline is a pseudo the leaf does not carry, retracted
+       on `--tw-rule`), so its glyphs go by their FILL: `dress` copies
+       `color`, and a transparent colour would reach the leaf. */
+    .tw-root[data-tw-turn="run"] #about :is(.voidwalker__name, .voidwalker__bio) {
+      visibility: hidden;
+    }
+    .tw-root[data-tw-turn="run"] #about .voidwalker__role {
+      -webkit-text-fill-color: transparent;
+    }
+    .tw-root[data-tw-turn="run"] #about .voidwalker__role::after {
+      transform: scaleX(var(--tw-rule, 1));
+      transform-origin: left center;
+    }
+    /* The orbit closes in onto the card: the rings and the halo on a circle
+       shrinking to nothing (`--tw-ring`), the corner readouts on the
+       centre-out aperture the fact row takes (`--tw-shut`). ⚠ These are
+       `[data-m]` nodes whose reveal transitions `clip-path` over ~880ms, so
+       the transition is off while the turn runs or the scrubbed clip would
+       trail the scroll by most of a second. The reveal has long finished by
+       then, and the rule lets go of the channel at `done` and `hold`. */
+    .tw-root[data-tw-turn="run"]
+      #about
+      :is(.voidwalker__orbit__svg, .voidwalker__orbit__particles)[data-m] {
+      clip-path: circle(var(--tw-ring, 100%) at 50% 50%);
+      transition: none;
+    }
+    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__label[data-m] {
+      clip-path: inset(0 var(--tw-shut, 0%) 0 var(--tw-shut, 0%));
+      transition: none;
+    }
+    /* The portrait turns on the `rotate` PROPERTY: the reveal owns its
+       `transform`. */
+    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit {
+      perspective: 1200px;
+    }
+    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__portrait {
+      rotate: y var(--tw-flip, 0deg);
+    }
+    /* Handed over: the live frame is the page, and it takes the pointer. */
+    .tw-root[data-tw-turn="done"] #about.station {
+      pointer-events: none;
+    }
+    .tw-root[data-tw-turn="done"] #about.station > .tw-about-stage {
+      visibility: hidden;
+    }
+  }
+}
+
 /* ── 2. The nav corner keeps the BARS (ADR-053 rule 2) ───────────────
    The readout resolves from the production manifest and would name ABOUT
    through the corridor approach on this order. */

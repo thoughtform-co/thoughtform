@@ -66,6 +66,30 @@ describe("thoughtform-workshop variant parse (ADR-137)", () => {
     expect(parsed()).not.toContain("data-about-root");
   });
 
+  it("wraps #about's content in the turn's stage, with its two layers (ADR-137 U2)", () => {
+    const body = parsed();
+    const about = body.slice(body.indexOf('id="about"'), body.indexOf('id="home-corridor-mount"'));
+    expect(about.match(/data-tw-about-stage/g) ?? []).toHaveLength(1);
+    expect(about.match(/data-tw-turn-layer/g) ?? []).toHaveLength(1);
+    expect(about.match(/data-tw-turn-mark/g) ?? []).toHaveLength(1);
+    // The stage holds the bio grid, and the station keeps no second stage.
+    const stageAt = about.indexOf("data-tw-about-stage");
+    expect(stageAt).toBeGreaterThan(-1);
+    expect(about.indexOf('class="voidwalker"')).toBeGreaterThan(stageAt);
+    // The writer reads these by class; a rename breaks the turn silently.
+    for (const cls of [
+      "voidwalker__name",
+      "voidwalker__role",
+      "voidwalker__bio",
+      "voidwalker__meta",
+      "voidwalker__links",
+      "voidwalker__orbit",
+      "voidwalker__orbit__portrait",
+    ]) {
+      expect(about).toContain(cls);
+    }
+  });
+
   it("the journey order names every section the page shows, in page order", () => {
     const shown = stationOrder(parsed());
     const inOrder = WORKSHOP_JOURNEY_ORDER.filter((id) => shown.includes(id));

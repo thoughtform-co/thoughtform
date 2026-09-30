@@ -4272,6 +4272,14 @@ html { scroll-behavior: smooth; }
   <section class="station" id="about" data-station="about" data-screen-label="09 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
+    <!-- THE TURN'S STAGE (ADR-137 U2). On the capable rung this is the
+         sticky 100svh stage the About → Arc turn plays on: the portrait flips
+         to the brandmark, the bio decodes into the Arc's thesis, and the
+         ground opens onto the live corridor frame held behind it. Everywhere
+         else it is `display: contents` and the About is byte-identical to
+         the static one. The two empty children are the turn's own layers:
+         the text leaves, and the brandmark stand-in (a nested React root). -->
+    <div class="tw-about-stage" data-tw-about-stage>
     <div class="voidwalker" data-m-group>
       <!-- LEFT · bio -->
       <div class="voidwalker__copy" data-m="body" data-m-group>
@@ -4451,6 +4459,9 @@ html { scroll-behavior: smooth; }
           <img src="assets/vince-portrait.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
         </div>
       </div>
+    </div>
+    <div class="tw-turn-layer" data-tw-turn-layer aria-hidden="true" hidden></div>
+    <div class="tw-turn-mark" data-tw-turn-mark aria-hidden="true" hidden></div>
     </div>
 
     <!-- ADR-053 INVARIANT: the about-stage portal slot is deliberately
