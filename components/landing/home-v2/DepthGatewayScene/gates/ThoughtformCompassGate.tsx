@@ -6,6 +6,13 @@ import * as THREE from "three";
 import { SIGIL_RING_MORPHS } from "@/lib/celestial/orbits";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import {
+  COMPASS_GATE_DAWN,
+  COMPASS_GATE_GOLD,
+  COMPASS_RING_DASH,
+  compassGateScreenRef,
+  type CompassGateScreen,
+} from "../../compassGateScreenRef";
 import { getSmoothedThoughtformOffsetX } from "../motionFollower";
 import {
   STATION_THOUGHTFORM,
@@ -115,9 +122,11 @@ const RING_RADII = SIGIL_RING_MORPHS.map((r) => r.ringRadius / 200);
  *  brandmark remains the dominant gold object. */
 const RING_ALPHA_WEIGHTS = [0.46, 0.5, 0.68, 0.86];
 
-/** Per-ring colours — outer two are dawn, inner two are gold. */
-const DAWN_HEX = "#ebe3d6";
-const GOLD_HEX = "#caa554";
+/** Per-ring colours — outer two are dawn, inner two are gold. The two inks
+ *  live in the three-free `compassGateScreenRef` so a DOM drawing that lands
+ *  on this gate reads the same values. */
+const DAWN_HEX = COMPASS_GATE_DAWN;
+const GOLD_HEX = COMPASS_GATE_GOLD;
 const RING_COLORS = [DAWN_HEX, DAWN_HEX, GOLD_HEX, GOLD_HEX];
 /** Camera-space focus window for the compass rings + supporting
  *  linework. After the latent depth spacing pass:
@@ -141,13 +150,9 @@ const COMPASS_DEPTH_WINDOW = {
 } as const;
 
 /** Per-ring dash pattern (world units), matching v7 SVG dasharrays
- *  scaled 1/200. `null` means solid. */
-const RING_DASH: ({ dashSize: number; gapSize: number } | null)[] = [
-  { dashSize: 0.005, gapSize: 0.025 }, // v7 "1 5"
-  null, // v7 solid
-  { dashSize: 0.01, gapSize: 0.035 }, // v7 "2 7"
-  { dashSize: 0.005, gapSize: 0.015 }, // v7 "1 3"
-];
+ *  scaled 1/200 (v7 "1 5" · solid · "2 7" · "1 3"). `null` means solid.
+ *  Declared in `compassGateScreenRef` for the same reason as the inks. */
+const RING_DASH = COMPASS_RING_DASH;
 
 /**
  * Phase node positions — compass bearings matching v7 SVG
@@ -295,6 +300,125 @@ function computeLineDistancesOnGeometry(geom: THREE.BufferGeometry): void {
 
 type RingMaterial = THREE.LineBasicMaterial | THREE.LineDashedMaterial;
 
+/** The ticks' local vertices, once — the geometry and the screen publish
+ *  read the same array. */
+const TICK_VERTS = buildTickVerts();
+
+const _gp = new THREE.Vector3();
+
+/** Project a point in `obj`'s local space to canvas-local CSS px, into
+ *  `out[i]`, `out[i + 1]`. */
+function projectInto(
+  out: number[],
+  i: number,
+  obj: THREE.Object3D,
+  x: number,
+  y: number,
+  z: number,
+  camera: THREE.Camera,
+  width: number,
+  height: number
+): void {
+  _gp.set(x, y, z);
+  obj.localToWorld(_gp);
+  _gp.project(camera);
+  out[i] = (_gp.x * 0.5 + 0.5) * width;
+  out[i + 1] = (-_gp.y * 0.5 + 0.5) * height;
+}
+
+interface GatePublishParts {
+  group: THREE.Group;
+  rings: (THREE.LineLoop | null)[];
+  supporting: THREE.Group | null;
+  orbit1: THREE.Group | null;
+  orbit2: THREE.Group | null;
+  ringMats: RingMaterial[];
+  bearingsMat: THREE.LineBasicMaterial;
+  phaseDotMats: THREE.MeshBasicMaterial[];
+  connectorMats: THREE.LineBasicMaterial[];
+  orbit1Mat: THREE.MeshBasicMaterial;
+  orbit2Mat: THREE.MeshBasicMaterial;
+}
+
+/**
+ * Publish this frame's line work in screen space (`compassGateScreenRef`),
+ * for a DOM drawing that lands on it. Called only while a reader has set
+ * `wanted`. ⚠ The camera and this group's world matrices are refreshed first:
+ * the rig set the camera's position and rotation earlier in this loop, but a
+ * `lookAt` refreshes the matrix BEFORE it writes the quaternion, and the
+ * renderer only updates world matrices after every `useFrame` has run.
+ */
+function publishGateScreen(
+  out: CompassGateScreen,
+  p: GatePublishParts,
+  camera: THREE.Camera,
+  width: number,
+  height: number,
+  dpr: number
+): void {
+  camera.updateMatrixWorld();
+  p.group.updateMatrixWorld(true);
+  const sup = p.supporting;
+  if (!sup) {
+    out.valid = false;
+    return;
+  }
+  for (let r = 0; r < RING_RADII.length; r++) {
+    const ring = p.rings[r];
+    if (!ring) {
+      out.valid = false;
+      return;
+    }
+    const h = RING_RADII[r]!;
+    const o = r * 8;
+    projectInto(out.rings, o, ring, -h, h, 0, camera, width, height);
+    projectInto(out.rings, o + 2, ring, h, h, 0, camera, width, height);
+    projectInto(out.rings, o + 4, ring, h, -h, 0, camera, width, height);
+    projectInto(out.rings, o + 6, ring, -h, -h, 0, camera, width, height);
+    out.ringAlpha[r] = p.ringMats[r]!.opacity;
+  }
+  for (let v = 0; v < CROSSHAIR_VERTS.length; v++) {
+    const [x, y, z] = CROSSHAIR_VERTS[v]!;
+    projectInto(out.cross, v * 2, sup, x, y, z, camera, width, height);
+  }
+  for (let v = 0; v < TICK_VERTS.length; v++) {
+    const [x, y, z] = TICK_VERTS[v]!;
+    projectInto(out.ticks, v * 2, sup, x, y, z, camera, width, height);
+  }
+  out.bearingAlpha = p.bearingsMat.opacity;
+  for (let n = 0; n < PHASE_NODES.length; n++) {
+    const node = PHASE_NODES[n]!;
+    const [x, y, z] = node.dot;
+    projectInto(out.phase, n * 2, sup, x, y, z, camera, width, height);
+    projectInto(out.conn, n * 4, sup, x, y, z, camera, width, height);
+    const [ex, ey, ez] = node.lineEnd;
+    projectInto(out.conn, n * 4 + 2, sup, ex, ey, ez, camera, width, height);
+    out.phaseAlpha[n] = p.phaseDotMats[n]!.opacity;
+    out.connAlpha[n] = p.connectorMats[n]!.opacity;
+  }
+  const orbits = [
+    { g: p.orbit1, x: ORBIT_DOT_1.radius, size: ORBIT_DOT_1.size, mat: p.orbit1Mat },
+    { g: p.orbit2, x: -ORBIT_DOT_2.radius, size: ORBIT_DOT_2.size, mat: p.orbit2Mat },
+  ];
+  for (let d = 0; d < orbits.length; d++) {
+    const o = orbits[d]!;
+    if (!o.g) continue;
+    projectInto(out.orbit, d * 2, o.g, o.x, 0, 0.01, camera, width, height);
+    out.orbitAlpha[d] = o.mat.opacity;
+  }
+  /* Scale on the ring plane, from ring 0's top edge; the dot radii and the
+     dashes are world units read through it. */
+  const unit =
+    Math.hypot(out.rings[2]! - out.rings[0]!, out.rings[3]! - out.rings[1]!) / (2 * RING_RADII[0]!);
+  out.unitPx = unit;
+  for (let n = 0; n < PHASE_NODES.length; n++) out.phaseR[n] = PHASE_NODES[n]!.dotRadius * unit;
+  out.orbitR[0] = ORBIT_DOT_1.size * unit;
+  out.orbitR[1] = ORBIT_DOT_2.size * unit;
+  out.dpr = dpr;
+  out.stamp = performance.now();
+  out.valid = true;
+}
+
 export function ThoughtformCompassGate() {
   const groupRef = useRef<THREE.Group>(null);
   // Per-ring mesh refs so the flythrough can translate each ring's
@@ -329,7 +453,7 @@ export function ThoughtformCompassGate() {
     });
   }, []);
   const crosshairGeom = useMemo(() => buildSegmentsGeometry(CROSSHAIR_VERTS), []);
-  const ticksGeom = useMemo(() => buildSegmentsGeometry(buildTickVerts()), []);
+  const ticksGeom = useMemo(() => buildSegmentsGeometry(TICK_VERTS), []);
   const phaseDotGeoms = useMemo(
     () => PHASE_NODES.map((n) => new THREE.CircleGeometry(n.dotRadius, 24)),
     []
@@ -474,7 +598,7 @@ export function ThoughtformCompassGate() {
   ]);
 
   // ── Per-frame motion + visibility ─────────────────────────────
-  useFrame((_state, delta) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
     const {
@@ -491,6 +615,7 @@ export function ThoughtformCompassGate() {
     // the hero.
     if (!active && !armed) {
       group.visible = false;
+      if (compassGateScreenRef.wanted) compassGateScreenRef.current.valid = false;
       return;
     }
     group.visible = true;
@@ -600,6 +725,31 @@ export function ThoughtformCompassGate() {
 
     // Hairline Z-spin (the v7 compass has a subtle "breath" cue).
     group.rotation.z = phaseRef.current * 0.012;
+
+    // Screen-space publish for a DOM drawing that lands on this gate
+    // (`compassGateScreenRef`). Opt-in: one boolean read when nobody asks.
+    if (compassGateScreenRef.wanted) {
+      publishGateScreen(
+        compassGateScreenRef.current,
+        {
+          group,
+          rings: ringRefs.current,
+          supporting: supportingRef.current,
+          orbit1: orbitDot1GroupRef.current,
+          orbit2: orbitDot2GroupRef.current,
+          ringMats,
+          bearingsMat,
+          phaseDotMats,
+          connectorMats,
+          orbit1Mat: orbitDot1Mat,
+          orbit2Mat: orbitDot2Mat,
+        },
+        state.camera,
+        state.size.width,
+        state.size.height,
+        state.gl.getPixelRatio()
+      );
+    }
   });
 
   return (

@@ -33,7 +33,16 @@ import { SCRAMBLE_STAGGER_S, scrambleDuration, scrambleFrame } from "@/lib/home-
 import { dress, textRuns } from "@/lib/home-v2/lineLeaves";
 import { runSlice, typeCount, untypeCount } from "@/lib/home-v2/scrubbedDecode";
 
-import { A_OUT, B_BODY_IN, B_TITLE_IN, windowOf, type TurnWindow } from "./aboutTurnClock";
+import {
+  A_BOX_OUT,
+  A_OUT,
+  B_BODY_IN,
+  B_TITLE_IN,
+  LABELS_GLIDE,
+  easedWindow,
+  windowOf,
+  type TurnWindow,
+} from "./aboutTurnClock";
 
 interface Leaf {
   el: HTMLElement;
@@ -60,8 +69,33 @@ interface Run {
   leaves: Leaf[];
 }
 
+/** A line that decodes from one text into another WHILE it travels and
+ *  resizes from one seat to the other: a corner readout of the About orbit
+ *  becoming its phase label on the gate (ADR-137 U3). */
+interface Glide {
+  el: HTMLElement;
+  ink: HTMLElement;
+  from: string;
+  to: string;
+  /** Calibrated leaf poses (stage px) and faces at both ends. */
+  a: GlideEnd;
+  b: GlideEnd;
+  /** Which end's face the leaf wears now, so it is written on a switch. */
+  worn: "a" | "b" | null;
+}
+
+interface GlideEnd {
+  left: number;
+  top: number;
+  cs: CSSStyleDeclaration;
+  fontSize: number;
+  letterSpacing: number;
+  lineHeight: number;
+}
+
 export interface CarrierMeasure {
   runs: Run[];
+  glides: Glide[];
 }
 
 /** Box styles an inline owner paints that a leaf must repeat. */
@@ -139,17 +173,22 @@ function measureRun(
   return { mode, dir, window, len: off, wall: scrambleDuration("", whole), leaves };
 }
 
-/** Set A: the About's own copy, carried out. */
+/** Set A: the About's own copy, carried out. `labels` are the orbit's
+ *  corner readouts; three of them glide onto the gate's phase labels and
+ *  the fourth (`out`) scrambles away. */
 export interface AboutRuns {
   name: HTMLElement;
   role: HTMLElement;
   bios: readonly HTMLElement[];
+  labels: { glide: readonly HTMLElement[]; out: HTMLElement | null };
 }
 
-/** Set B: the live corridor copy, carried in. */
+/** Set B: the live corridor copy, carried in. `phases` pair with
+ *  `AboutRuns.labels.glide`, index for index. */
 export interface ThesisRuns {
   title: HTMLElement;
   bodies: readonly HTMLElement[];
+  phases: readonly HTMLElement[];
 }
 
 /**
@@ -171,12 +210,131 @@ export function measureCarrier(
     measureRun(layer, [a.role], stageBox, "scramble", "out", A_OUT),
     measureRun(layer, a.bios, stageBox, "type", "out", A_OUT),
   ];
+  if (a.labels.out) {
+    runs.push(measureRun(layer, [a.labels.out], stageBox, "scramble", "out", A_BOX_OUT));
+  }
   if (b) {
     runs.push(measureRun(layer, [b.title], stageBox, "scramble", "in", B_TITLE_IN));
     runs.push(measureRun(layer, b.bodies, stageBox, "type", "in", B_BODY_IN));
   }
   calibrate(layer, runs);
-  return { runs };
+  const glides = b ? measureGlides(layer, a.labels.glide, b.phases, stageBox) : [];
+  return { runs, glides };
+}
+
+function endOf(cs: CSSStyleDeclaration): GlideEnd {
+  const fontSize = parseFloat(cs.fontSize) || 10;
+  return {
+    left: 0,
+    top: 0,
+    cs,
+    fontSize,
+    letterSpacing: parseFloat(cs.letterSpacing) || 0,
+    lineHeight: parseFloat(cs.lineHeight) || fontSize * 1.2,
+  };
+}
+
+/** Dress a glide leaf in one end's face, at that end's metrics. */
+function wear(g: Glide, end: GlideEnd): void {
+  dress(g.el, end.cs);
+  g.el.style.lineHeight = `${end.lineHeight}px`;
+}
+
+/** Where a leaf's first glyph lands, viewport space, with `text` in it. */
+function glyphOrigin(ink: HTMLElement, text: string): { x: number; y: number } | null {
+  ink.textContent = text;
+  const node = ink.firstChild;
+  if (!node || node.nodeType !== Node.TEXT_NODE) return null;
+  const range = document.createRange();
+  range.setStart(node, 0);
+  range.setEnd(node, Math.max(1, text.search(/\s|$/)));
+  const r = range.getBoundingClientRect();
+  range.detach();
+  return r.width || r.height ? { x: r.left, y: r.top } : null;
+}
+
+/**
+ * Pair each source line with its destination line (the first text line of
+ * each, in order) and calibrate the leaf's pose at BOTH ends by measurement,
+ * for the reason `calibrate` exists: a text `Range`'s height is rounded, so
+ * an arithmetic seat is up to a pixel out.
+ */
+function measureGlides(
+  layer: HTMLElement,
+  from: readonly HTMLElement[],
+  to: readonly HTMLElement[],
+  stageBox: DOMRect
+): Glide[] {
+  const glides: Glide[] = [];
+  const wasHidden = layer.hidden;
+  layer.style.visibility = "hidden";
+  layer.hidden = false;
+  for (let p = 0; p < Math.min(from.length, to.length); p++) {
+    const aRuns = textRuns(from[p]!);
+    const bRuns = textRuns(to[p]!);
+    for (let i = 0; i < Math.min(aRuns.length, bRuns.length); i++) {
+      const aLine = aRuns[i]!.lines[0];
+      const bLine = bRuns[i]!.lines[0];
+      if (!aLine || !bLine) continue;
+      const el = document.createElement("span");
+      el.className = "tw-turn-leaf";
+      const ink = document.createElement("span");
+      ink.className = "tw-turn-leaf__ink";
+      el.appendChild(ink);
+      layer.appendChild(el);
+      const g: Glide = {
+        el,
+        ink,
+        from: collapse(aLine.text),
+        to: collapse(bLine.text),
+        a: endOf(getComputedStyle(aRuns[i]!.el)),
+        b: endOf(getComputedStyle(bRuns[i]!.el)),
+        worn: null,
+      };
+      const ends = [
+        { end: g.a, line: aLine, text: g.from },
+        { end: g.b, line: bLine, text: g.to },
+      ];
+      for (const { end, line, text } of ends) {
+        wear(g, end);
+        end.left = line.left - stageBox.left;
+        end.top = line.top - stageBox.top - (end.lineHeight - line.height) / 2;
+        el.style.left = `${end.left}px`;
+        el.style.top = `${end.top}px`;
+        const o = glyphOrigin(ink, text);
+        if (o) {
+          end.left += line.left - o.x;
+          end.top += line.top - o.y;
+        }
+      }
+      ink.textContent = "";
+      el.hidden = true;
+      glides.push(g);
+    }
+  }
+  layer.hidden = wasHidden;
+  layer.style.removeProperty("visibility");
+  return glides;
+}
+
+function writeGlide(g: Glide, u: number): void {
+  const e = easedWindow(u, LABELS_GLIDE);
+  const want = e < 0.5 ? "a" : "b";
+  if (g.worn !== want) {
+    wear(g, want === "a" ? g.a : g.b);
+    g.worn = want;
+  }
+  g.el.style.fontSize = `${g.a.fontSize + (g.b.fontSize - g.a.fontSize) * e}px`;
+  g.el.style.letterSpacing = `${g.a.letterSpacing + (g.b.letterSpacing - g.a.letterSpacing) * e}px`;
+  g.el.style.lineHeight = `${g.a.lineHeight + (g.b.lineHeight - g.a.lineHeight) * e}px`;
+  g.el.style.left = `${(g.a.left + (g.b.left - g.a.left) * e).toFixed(2)}px`;
+  g.el.style.top = `${(g.a.top + (g.b.top - g.a.top) * e).toFixed(2)}px`;
+  let text: string;
+  if (!(e > 0)) text = g.from;
+  else if (e >= 1) text = g.to;
+  else text = scrambleFrame({ from: g.from, to: g.to }, e * scrambleDuration(g.from, g.to)) ?? g.to;
+  if (g.ink.textContent !== text) g.ink.textContent = text;
+  if (g.el.hidden) g.el.hidden = false;
 }
 
 /**
@@ -258,6 +416,10 @@ export function writeCarrier(layer: HTMLElement, m: CarrierMeasure, u: number): 
         if (leaf.ink.textContent !== next) leaf.ink.textContent = next;
       }
     }
+  }
+  for (const g of m.glides) {
+    writeGlide(g, u);
+    any = true;
   }
   if (layer.hidden === any) layer.hidden = !any;
 }

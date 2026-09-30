@@ -175,9 +175,94 @@ pure; `useAboutTurn.ts` is the one writer, mounted from `WorkshopPortals`):
   there are no page errors. Phones, reduced motion and windows under 681px
   tall get the static About, byte-identical.
 
+## Update 3 (2026-09-30, owner): the About's diagram becomes the gate
+
+The owner, on U2 ("looks sick"): "a nice, elegant transition from the diagrams
+behind my profile picture into the diagrams of the brandmark gateway? A smooth
+no-fucking-cross-dissolve, but something that really uses an SVG animation."
+U2 closed the About's rings onto the card and opened the gate on a separate
+aperture, so the two drawings never touched. Now the one drawing turns into
+the other, part by part, and nothing fades.
+
+**One SVG layer in the stage** (`[data-tw-turn-gate]`, z 0 under the card;
+`about-turn/aboutTurnGate.ts`). On the frame the turn starts, it is a
+pixel-exact replica of the About orbit, read off the orbit svg's own CTM. The
+real orbit parts hide under `data-tw-gate` on the stage, so the reveal system
+keeps its `[data-m]` channels. Every part then has one morph:
+
+- four of the six rings SQUARE UP into the gate's four portal loops, each
+  turning as it goes (in alternating directions, as the About's orbits
+  counter-rotate), its centre spiralling from the portrait onto the mark. Its
+  ink, width and dash ease onto the gate's. The start circle is sampled at the
+  end square's own point angles, so each point travels on a spiral with no
+  crossing;
+- the two core rings and the four spokes draw into the mark's centre;
+- the four cardinal ticks land on the gate's bearing stubs. The eight
+  30°-family ticks land on its eight ticks, which sit at the same angles. The
+  other twelve ticks retract into the frame;
+- the five orbit nodes spiral onto the three phase dots and the two orbit
+  dots, squaring or rounding on the way. The connectors draw on at the end;
+- the corner readouts glide into NAVIGATE · ENCODE · BUILD through the
+  carrier, decoding in place. The svg's own lettering scrambles out.
+
+**The landing is the live gate's pixels, read every frame.** The gate is not
+a still. It breathes (a slow Z spin), its orbit dots turn, and its centre
+rides a wall-clock follower. So `ThoughtformCompassGate` publishes its
+projected line work into `components/landing/home-v2/compassGateScreenRef.ts`
+(three-free), and the morph's end state is always the current frame. The
+inks and dash patterns moved into that module, and the gate reads them from
+there (source-pinned), so the two drawings cannot drift. ⚠ **The publish is
+opt-in**: the gate checks `wanted` and does nothing else when it is false.
+Only this route's writer sets it, and `park()` clears it, so `/` pays one
+boolean read per frame. The corridor smokes and the HUD snapshots pass
+without changes.
+
+**The hand-over is the opening, not a swap.** The morph layer takes the SAME
+square-aperture mask as About's ground. It draws where the ground still
+stands, and the live gate shows where the ground has opened. Every part lands
+before `GATE_OPEN` starts (unit-pinned), and both sides draw the same lines on
+the same pixels, so no frame shows two gates or none.
+
+**What the measurement found:**
+
+- ⚠ **The canvas multiplies ink by alpha TWICE.** It is `alpha: true,
+premultipliedAlpha: false` under NormalBlending, so a line of colour C at
+  opacity a lands at `C·a² + page·(1 − a)`. That is why the gate reads grey
+  in light. A DOM stroke matches it with `rgb(C·a)` at `stroke-opacity: a`
+  (`compassGateInk`), one rule for both themes. A WebGL line
+  is one drawing-buffer pixel, so the end width is `1 / dpr` CSS px.
+- ⚠ **A dashed ring's pattern wraps at its path's start, and the two drawings
+  start in different places.** An SVG circle starts at 3 o'clock going
+  clockwise; the gate's LineLoop starts at its top-left corner. So the path's
+  start travels round the perimeter during the morph (`reseat`, from 3
+  o'clock's arc fraction to the corner). Pattern offsets could not match a
+  fixed start. The seam moved the dash starts from 1.3px of mean error to
+  0.2–0.5px, the rest being anti-aliasing.
+- ⚠ **The gate's points are this frame's only after a matrix refresh.** The
+  camera rig's `lookAt` refreshes the matrix before it writes the quaternion,
+  and the renderer updates world matrices after every `useFrame` has run. So
+  the publish updates the camera's and the group's world matrices first.
+  Measured against the published projection, the live ring sits within
+  ~0.5px mean. The probe's own noise is ±0.7–1.2px, because the gate turns
+  between two reads.
+- ⚠ **A probe that pauses animations freezes the scroll-driven hold** and
+  reports a diff that is not there, and a diff across two screenshots
+  measures the gate's spin between them. The start-swap check compares the
+  replica against the real orbit on ONE frame. What differs is
+  anti-aliasing plus the nodes, which are already moving by design.
+- The Arc is still untouched: the phase runs thesis → navigate → encode →
+  build and the proof stack arrives, the CTA hit-tests after the hand-over,
+  scrolling back restores the static About with the orbit whole, and there
+  are no page errors. On a phone, under reduced motion and at 1280×640 the
+  layer stays empty and `display: none` with no stamp and no weld.
+
 ## Left open
 
 - The arc's `hero` record is unused by this route and kept because the type
   requires it; its actions point at live anchors.
 - `useNestedRoot` is imported from the Trinny route's folder; a third consumer
   would argue for lifting it into `components/landing/`.
+- The About's ground and the corridor's ground are not quite one tone (most
+  visible in light), so the aperture's edge shows as a faint step while it
+  opens. It came in with U2's opening and passes as you scroll; matching the
+  two washes is its own pass.

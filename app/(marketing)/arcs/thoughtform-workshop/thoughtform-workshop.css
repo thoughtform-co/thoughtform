@@ -126,7 +126,8 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
   z-index: 1;
 }
 .tw-root .tw-turn-layer,
-.tw-root .tw-turn-mark {
+.tw-root .tw-turn-mark,
+.tw-root .tw-turn-gate {
   display: none;
 }
 
@@ -165,12 +166,15 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
        stars tile (`.station:not(.hero)`) and its wash
        (`#about.station::before`), restated with the same values. Both open
        as ONE square aperture centred on the live mark (`--tw-hx/-hy`,
-       half-size `--tw-hs`, written by the writer; 0 = closed). */
+       half-size `--tw-hs`, written by the writer; 0 = closed).
+       ⚠ THE MORPH LAYER (`.tw-turn-gate`, ADR-137 U3) TAKES THE SAME MASK,
+       and that is the hand-over: the drawing that became the compass gate
+       shows where the ground still stands and the LIVE gate shows where it
+       has opened, so the opening sweeps the hand-over out with it. One
+       declaration for all three, or the seam and the edge drift apart. */
     .tw-root #about.station > .tw-about-stage::before,
-    .tw-root #about.station > .tw-about-stage::after {
-      content: "";
-      position: absolute;
-      inset: 0;
+    .tw-root #about.station > .tw-about-stage::after,
+    .tw-root .tw-turn-gate {
       pointer-events: none;
       -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
       mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
@@ -191,6 +195,12 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       -webkit-mask-composite: xor;
       mask-composite: exclude;
     }
+    .tw-root #about.station > .tw-about-stage::before,
+    .tw-root #about.station > .tw-about-stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
     .tw-root #about.station > .tw-about-stage::before {
       z-index: -2;
       background: var(--void) url("/v7-stars.svg") center top / 1600px 900px repeat;
@@ -209,12 +219,26 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       margin-top: calc(-1 * var(--tw-turn-weld));
     }
 
-    /* The turn's two layers: the text leaves and the brandmark stand-in.
-       Their `hidden` attribute is the writer's switch, so `display` is
-       only restored where it is not set. */
+    /* The turn's three layers: the diagram morph, the text leaves and the
+       brandmark stand-in. Their `hidden` attribute is the writer's switch,
+       so `display` is only restored where it is not set. */
     .tw-root .tw-turn-layer:not([hidden]),
-    .tw-root .tw-turn-mark:not([hidden]) {
+    .tw-root .tw-turn-mark:not([hidden]),
+    .tw-root .tw-turn-gate:not([hidden]) {
       display: block;
+    }
+    /* The morph layer draws in the stage's own CSS px (no viewBox), UNDER
+       the About's grid (z 1), as the orbit's own drawing sits under the
+       portrait: while the card still faces the reader it covers the rings'
+       middle, and they show round it as it turns. The leaves and the mark
+       stand-in are over everything. */
+    .tw-root .tw-turn-gate {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: visible;
     }
     .tw-root .tw-turn-layer {
       position: absolute;
@@ -288,22 +312,27 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       transform: scaleX(var(--tw-rule, 1));
       transform-origin: left center;
     }
-    /* The orbit closes in onto the card: the rings and the halo on a circle
-       shrinking to nothing (`--tw-ring`), the corner readouts on the
-       centre-out aperture the fact row takes (`--tw-shut`). ⚠ These are
-       `[data-m]` nodes whose reveal transitions `clip-path` over ~880ms, so
-       the transition is off while the turn runs or the scrubbed clip would
-       trail the scroll by most of a second. The reveal has long finished by
-       then, and the rule lets go of the channel at `done` and `hold`. */
-    .tw-root[data-tw-turn="run"]
-      #about
-      :is(.voidwalker__orbit__svg, .voidwalker__orbit__particles)[data-m] {
-      clip-path: circle(var(--tw-ring, 100%) at 50% 50%);
-      transition: none;
+    /* The orbit's drawing is carried by the morph layer while it draws
+       (`data-tw-gate` on the stage): its geometry groups go, and its
+       lettering stays where it stands to scramble out. The corner readouts
+       are carried by the leaves (they glide onto the phase labels), and the
+       live phase labels wait under them, like the thesis copy. */
+    .tw-root [data-tw-gate] .voidwalker__orbit__svg [data-tw-part]:not([data-tw-part="text"]) {
+      visibility: hidden;
     }
-    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__label[data-m] {
-      clip-path: inset(0 var(--tw-shut, 0%) 0 var(--tw-shut, 0%));
-      transition: none;
+    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__label {
+      visibility: hidden;
+    }
+    .tw-root[data-tw-turn]:not([data-tw-turn="done"]) .home-v2-copy-phase {
+      visibility: hidden;
+    }
+    /* The halo gathers into the mark on the INDIVIDUAL transform properties
+       (the reveal owns this `[data-m]` node's `transform`): it slides to
+       the mark's centre, shrinks to it and turns on the way. */
+    .tw-root[data-tw-turn="run"] #about .voidwalker__orbit__particles[data-m] {
+      translate: var(--tw-pdx, 0px) var(--tw-pdy, 0px);
+      scale: var(--tw-ps, 1);
+      rotate: var(--tw-pr, 0deg);
     }
     /* The portrait turns on the `rotate` PROPERTY: the reveal owns its
        `transform`. */

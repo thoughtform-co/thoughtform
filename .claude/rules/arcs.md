@@ -931,6 +931,23 @@ visible` or the document grows ~12,400px on arrival. The opening slide is the
   is ≤ 0.016px. ⚠ The dwell, run and weld are declared in the sheet AND the
   clock and pinned equal (`workshop-about-turn.test.ts`); the writer reads the
   About by class, which the parse test pins.
+  ⚠ **U3: THE ABOUT'S DIAGRAM BECOMES THE GATE, NO FADE** (`aboutTurnGate.ts`).
+  One SVG layer in the stage, a replica of the orbit on the first frame (the
+  real parts hide under `data-tw-gate`), then one morph per part: four rings
+  square up and turn onto the gate's loops, the ticks land on its stubs, the
+  nodes spiral onto its dots, and the connectors draw on. The end state is
+  the LIVE gate's pixels, published into the three-free
+  `compassGateScreenRef` by `ThoughtformCompassGate` only while `wanted` is
+  set (this route's writer sets it; `park()` clears it). The layer shares the
+  ground's aperture mask, so the opening IS the hand-over, and every part
+  lands before `GATE_OPEN`. ⚠ The canvas is `premultipliedAlpha: false`, so
+  DOM ink is `rgb(C·a)` at opacity `a` (`compassGateInk`) and the end width
+  `1 / dpr`. ⚠ A dashed ring's pattern wraps at its path's start: an SVG
+  circle starts at 3 o'clock, the gate's loop at its TL corner, so the start
+  travels (`reseat`). ⚠ The gate's inks and dashes live in that module and
+  the gate reads them from there, source-pinned. A change to the gate's
+  geometry is a TWO-surface change: run the `/` corridor smokes and this
+  route's turn probe.
 - ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
   2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
   a readout, one quote beat, one `anatomy` beat per week with the same four rows
