@@ -194,6 +194,32 @@ interface ArcSectionBase {
    * row wraps into the hero copy at the binding viewport.
    */
   menuPrimary?: true;
+  /**
+   * THE WORKED EXAMPLE THIS SECTION IS A PANEL OF (ADR-139). A switched beat
+   * is authored ONCE PER EXAMPLE as sibling sections of the same kind; the
+   * renderer gathers a contiguous run sharing a `group` into one switch and
+   * draws the tab bar over it.
+   *
+   * ⚠ IT TOUCHES NO KIND. Every guard in `arcs-registry` walks each panel as
+   * an ordinary section, which is the whole reason the switcher lives here
+   * and not in six section records.
+   *
+   * ⚠ THE RESTING STATE IS THE MARKUP, the `configuration` picker's own law:
+   * the FIRST panel of each group renders visible and the rest are hidden by
+   * a rule keyed on nothing but its absence, so the page reads whole with no
+   * JS, under reduced motion and in a static render. The pick is PAGE-WIDE —
+   * every group carries the same ordered ids, so one choice is valid for all
+   * of them and the room follows one piece of work down the whole chapter.
+   */
+  worked?: {
+    /** The switched beat, e.g. "made-real". Its panels are contiguous. */
+    group: string;
+    /** The worked example, e.g. "voice". The same ids in the same order in
+     *  every group on the page (registry-pinned). */
+    id: string;
+    /** The tab's label, e.g. "Words". ≤ 24. Equal across groups for one id. */
+    label: string;
+  };
 }
 
 export type ArcSection = ArcSectionBase &
@@ -1031,6 +1057,129 @@ export type ArcSection = ArcSectionBase &
         /** One line under the columns: what the figures are, and are not. */
         caption: string;
       }
+    | {
+        /**
+         * THE GROUND (ADR-139): why the work is built here rather than on a
+         * shelf of point tools. The curve says each release finishes longer
+         * work; this says what follows from it — a general model got good
+         * enough at enough things that the shelf stopped earning its keep.
+         *
+         * Two halves on one floor. The SHELF is dim: separate platforms, each
+         * with its own sign-in, its own agent and its own idea of the brand.
+         * The GROUND is lit and reads bottom up: the intelligence you cannot
+         * build, the reach you connect to it, and the two things you write.
+         *
+         * ⚠ THE NINETEENTH ENUMERATED EXCEPTION to ADR-052's "content-only".
+         * One leaf, no state, no listener, no script.
+         *
+         * ⚠ NO VENDOR IS NAMED ON THE SHELF and no digit is lettered. The
+         * argument is about a shape of purchase, not about four companies,
+         * and a named competitor dates the page the week it ships.
+         */
+        kind: "ground";
+        head: ArcHead;
+        /** The shelf: what a point tool sells, one plate each. */
+        shelf: { label: string; line: string; items: readonly ArcGroundTool[] };
+        /** What the work actually stands on, floor upwards. */
+        floor: {
+          label: string;
+          /** The plinth: the one thing you cannot write. */
+          base: { tag: string; name: string; line: string };
+          /** What you connect to it. */
+          reach: { tag: string; line: string; items: readonly string[] };
+          /** What you write — the same two the board lights. */
+          steer: { tag: string; line: string; items: readonly string[] };
+        };
+        /** One line under the drawing. */
+        note: string;
+        /** The drawing's accessible name. */
+        alt: string;
+      }
+    | {
+        /**
+         * THE CONFIGURATION, MADE REAL (ADR-139): where each of the six
+         * answers goes to live. The marketplace and the account above; the
+         * PLUGIN as a frame around the skill, its evals, the connectors and
+         * the owner; the skill that checks the others at its centre; the
+         * interfaces on a bar beneath.
+         *
+         * ⚠ EVERY PLATE CARRIES ITS `answers` LINE. The tie back to the six
+         * questions is the beat's entire argument — without it this is a
+         * diagram of a folder.
+         *
+         * ⚠ THE TWENTIETH ENUMERATED EXCEPTION. One leaf, no state; the
+         * plates are DOM on `.arc-plate`, the SVG carries only the ribbons,
+         * exactly as `questions` does.
+         */
+        kind: "plugin-board";
+        head: ArcHead;
+        /** Above the frame: where the plugin is kept, and the account that
+         *  sets the model. Left, then right. */
+        above: readonly [ArcPluginNode, ArcPluginNode];
+        /** The frame itself. */
+        plugin: { label: string; name: string };
+        /** Inside it, in the drawing's order. The first TWO are lit — the two
+         *  the team writes — and the guard pins that. */
+        parts: readonly [ArcPluginPart, ArcPluginPart, ArcPluginPart, ArcPluginPart];
+        /** The chip at the frame's centre: the skill that reads the others. */
+        centre: { kicker: string; name: string; line: string };
+        /** The bar under the frame: where you meet it. */
+        bar: { line: string; answers: string };
+        /** The drawing's accessible name. */
+        alt: string;
+      }
+    | {
+        /**
+         * A SKILL, AS THE FILE IT IS (ADR-139): the folder's one main file
+         * with three lines marked, and the three notes those marks carry —
+         * when Claude reaches for it, how the work is done, and where it
+         * stops and asks. The sibling files run underneath.
+         *
+         * ⚠ THE TWENTY-FIRST ENUMERATED EXCEPTION, and the load-bearing one:
+         * a room that has never seen a skill needs to see that it is a text
+         * file in plain language, not a product. Describing it does not work;
+         * `bench` shows the folder, and a folder is not the point.
+         *
+         * ⚠ THE FILE IS REAL, SHORTENED — never invented. What is drawn is an
+         * excerpt of a Skill that exists, with its own words.
+         */
+        kind: "skill-file";
+        head: ArcHead;
+        /** Gold chip above the head, e.g. "Claude · Skill". */
+        badge?: string;
+        /** The file, e.g. "thoughtform-tov / SKILL.md". */
+        path: string;
+        /** Where it lives, e.g. "in the Thoughtform words plugin". */
+        where: string;
+        /** The file as it is set, line by line. */
+        lines: readonly ArcSkillLine[];
+        /** The notes beside it. Exactly three, in the marks' order. */
+        notes: readonly [ArcSkillNote, ArcSkillNote, ArcSkillNote];
+        /** The rest of the folder. */
+        folder: { label: string; items: readonly string[] };
+      }
+    | {
+        /**
+         * A CONVERSATION (ADR-139): what using it actually looks like, drawn
+         * in the page's own ink rather than screenshotted. Two readings of one
+         * panel — `ask` (say it in your own words, or type a slash and pick)
+         * and `feedback` (say what went wrong, and what happens next).
+         *
+         * ⚠ THE TWENTY-SECOND ENUMERATED EXCEPTION. One leaf, no state, no
+         * script; the composer's caret is CSS and never idles (ADR-080).
+         *
+         * ⚠ A SCREENSHOT WOULD BE STALE IN A MONTH and carries another
+         * product's type and colour onto the page. This is the house's ink.
+         */
+        kind: "chat";
+        head: ArcHead;
+        variant: "ask" | "feedback";
+        /** The panel: its title bar, its turns, and the composer's ghost. */
+        thread: { title: string; turns: readonly ArcChatTurn[]; composer?: string };
+        /** The column beside it. `menu` under `ask`, `steps` under
+         *  `feedback` — the guard pins the pairing. */
+        aside: ArcChatAside;
+      }
   );
 
 /* ── The syllabus (ADR-134) ────────────────────────────────────────── */
@@ -1153,6 +1302,105 @@ export interface ArcSignalCard {
   /** The source, `https`. */
   href: string;
 }
+
+/* ── The ground (ADR-139) ─────────────────────────────────────────── */
+
+/** One plate on the shelf: what a point tool sells, and what it costs you
+ *  that is not money. Never a vendor's name. */
+export interface ArcGroundTool {
+  id: string;
+  /** What it does, e.g. "A tool that makes pictures". ≤ 32. */
+  name: string;
+  /** What comes with it, e.g. "Its own sign-in, its own bill". ≤ 40. */
+  cost: string;
+}
+
+/* ── The plugin board (ADR-139) ───────────────────────────────────── */
+
+/** A node above the frame: the marketplace, and the account. */
+export interface ArcPluginNode {
+  id: string;
+  /** ≤ 24. */
+  name: string;
+  /** ≤ 72. */
+  line: string;
+  /** Which of the six questions it answers, if any. ≤ 24. */
+  answers?: string;
+}
+
+/** A plate inside the frame. */
+export interface ArcPluginPart {
+  id: string;
+  /** ≤ 20. */
+  name: string;
+  /** ≤ 64. */
+  line: string;
+  /** Which of the six questions this one answers. ≤ 24. */
+  answers: string;
+  /** One of the two the team writes. Exactly two, and they come first. */
+  lit?: true;
+}
+
+/* ── The skill file (ADR-139) ─────────────────────────────────────── */
+
+/** How a line of the file is set. `meta` is a front-matter key and value,
+ *  `rule` the one form the skill pins, `quote` a line the skill quotes. */
+export type ArcSkillLineAs = "meta" | "h1" | "h2" | "body" | "quote" | "rule";
+
+/** One line of the file, as drawn. */
+export interface ArcSkillLine {
+  id: string;
+  as: ArcSkillLineAs;
+  /** The line's own words, shortened but never invented. ≤ 240. */
+  text: string;
+  /** The front-matter key, under `as: "meta"` only, e.g. "description". */
+  key?: string;
+  /** The note this line carries. Each of 1, 2, 3 marks exactly one line, in
+   *  ascending order down the file. */
+  mark?: 1 | 2 | 3;
+}
+
+/** A note beside the file. */
+export interface ArcSkillNote {
+  id: string;
+  n: 1 | 2 | 3;
+  /** ≤ 32. */
+  title: string;
+  /** ≤ 200. */
+  body: string;
+}
+
+/* ── The conversation (ADR-139) ───────────────────────────────────── */
+
+/** What Claude's turn is built of. */
+export type ArcChatBlock =
+  | { kind: "p"; text: string }
+  | { kind: "list"; items: readonly string[] }
+  | { kind: "rows"; rows: readonly { term: string; def: string }[] }
+  /** The thing being filed, shown whole before anything is filed. */
+  | { kind: "issue"; title: string; rows: readonly { term: string; def: string }[] };
+
+/** One turn. `tool` is the quiet line naming what Claude reached for. */
+export type ArcChatTurn =
+  | { kind: "you"; id: string; text: string; slash?: string }
+  | { kind: "tool"; id: string; text: string }
+  | { kind: "claude"; id: string; blocks: readonly ArcChatBlock[] };
+
+/** The column beside the panel. */
+export type ArcChatAside =
+  | {
+      kind: "menu";
+      label: string;
+      /** The menu's own head, e.g. "Skills, and the plugin each came from". */
+      title: string;
+      items: readonly { id: string; name: string; from: string; on?: true }[];
+    }
+  | {
+      kind: "steps";
+      label: string;
+      /** Exactly four: sorted, decided, drafted with its test, delivered. */
+      items: readonly { id: string; title: string; body: string }[];
+    };
 
 /* ── The circuit (ADR-133 U2) ─────────────────────────────────────── */
 

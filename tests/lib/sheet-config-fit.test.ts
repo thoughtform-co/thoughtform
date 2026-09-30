@@ -81,6 +81,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "suri-proposal",
       "suri-workshop",
       "thoughtform-workshop",
+      "thoughtform-workshop-v2",
       "trinny-london-pitch",
     ]);
   });
@@ -138,6 +139,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
          client's evidence; Claude in the interface's answer is its one chip.
          A fork swaps the work and the chips move with it. */
       "thoughtform-workshop": {
+        rows: ["A post in my voice||"],
+        links: ["Claude×1"],
+      },
+      /* The second cut (ADR-139) keeps the archetype's board word for
+         word, so it derives the same row and the same one chip. */
+      "thoughtform-workshop-v2": {
         rows: ["A post in my voice||"],
         links: ["Claude×1"],
       },

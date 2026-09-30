@@ -80,6 +80,12 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   spectrum: "BETWEEN",
   resource: "RESOURCE",
   signal: "MARKET",
+  /* ADR-139. `questions` already letters CONFIG, so the beat that shows
+     where those six answers go to live takes PLUGIN. */
+  ground: "GROUND",
+  "plugin-board": "PLUGIN",
+  "skill-file": "SKILL",
+  chat: "CHAT",
 };
 
 /**

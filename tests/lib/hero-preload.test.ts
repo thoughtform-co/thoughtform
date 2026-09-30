@@ -81,6 +81,7 @@ describe("hero preload", () => {
       "/arcs/plopsa-workshop",
       "/arcs/suri-workshop",
       "/arcs/thoughtform-workshop",
+      "/arcs/thoughtform-workshop-v2",
       "/arcs/ai-storytelling",
       "/arcs/ai-storytelling-class-1",
     ]);

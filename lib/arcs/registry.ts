@@ -10,6 +10,7 @@ import { PANDORA_PROPOSAL_ARC } from "./content/pandora-proposal";
 import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
 import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
+import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import type { ArcDef } from "./types";
@@ -39,6 +40,10 @@ export const ARCS: readonly ArcDef[] = [
   /* The house formats. THE ARCHETYPE LEADS THEM: the client workshops above
      are cuts of it, so it is the page to read before any of them. */
   THOUGHTFORM_WORKSHOP_ARC,
+  /* The second cut (ADR-139), after the v1 the client forks were cut from
+     and that a room already holds a link to. One line to move the day it
+     is promoted in place. */
+  THOUGHTFORM_WORKSHOP_V2_ARC,
   AI_STORYTELLING_ARC,
   /* The course's class decks sit beside the course (ADR-136). */
   AI_STORYTELLING_CLASS_1_ARC,

@@ -8888,3 +8888,1071 @@ html[data-theme="light"] .arc-root .arc-hb {
 html[data-theme="light"] .arc-root .arc-hb__frame {
   fill: rgba(var(--gold-rgb), 0.1);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE SECOND CUT (ADR-139)
+
+   Four instruments and one control, added for the workshop's second cut.
+   Everything here rides the ink ramp declared on `.arc-root` above, so the
+   light re-derivation at the foot of this sheet reaches all of it and only
+   the gold WASHES need lifting by hand.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── The worked example (ADR-139) ───────────────────────────────────
+   A switched beat is authored once per example, and the renderer gathers
+   the contiguous run into one group. With no script the first panel is
+   simply the page and the control is not on it; once `is-arc-worked-js`
+   says a hand is listening, the island owns visibility through `hidden`
+   and the bar rides over the beat.
+
+   ⚠ THE BAR TAKES NO FLOW. Every beat in the chapter is budgeted to one
+   screen; a bar in flow would spend a line of that budget on every one of
+   them. It is a zero-height sticky rail whose inner is dropped clear of
+   the masthead. */
+.arc-worked-group {
+  position: relative;
+}
+.arc-worked:not([data-arc-worked-default]) {
+  display: none;
+}
+.is-arc-worked-js .arc-worked {
+  display: block;
+}
+.is-arc-worked-js .arc-worked[hidden] {
+  display: none;
+}
+/* ⚠ IT RIDES THE FOOT OF THE SCREEN, NOT THE HEAD. The first cut dropped
+   it into the masthead's right column and it landed straight on the dek —
+   and no single offset can clear a head, because these heads run from 84px
+   to 169px depending on how long the section's own sentence is. Sticky to
+   the BOTTOM instead: the control is in the same place on every beat of the
+   chapter, over the one band no section draws in, and it cannot collide
+   with copy whose height it does not know. Centred, because both bottom
+   corners are spoken for — the mark on the left, the theme switch on the
+   right. */
+.arc-worked__bar {
+  position: sticky;
+  bottom: clamp(18px, 3.4vh, 34px);
+  z-index: 6;
+  display: none;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.is-arc-worked-js .arc-worked__bar {
+  display: block;
+}
+.arc-worked__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: min(100% - 2 * var(--arc-band-pad, clamp(20px, 5vw, 64px)), 1320px);
+  margin-inline: auto;
+  transform: translateY(-100%);
+  pointer-events: auto;
+}
+.arc-worked__barlabel {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-worked__tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  /* Opaque, not the plate's alpha: it rides over whatever the beat draws. */
+  background: color-mix(in srgb, var(--void, #0a0908) 88%, transparent);
+  border: 1px solid var(--arc-rule);
+  backdrop-filter: blur(10px);
+}
+.arc-worked__tab {
+  padding: 5px 12px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.arc-worked__tab:hover {
+  color: var(--arc-ink-90);
+}
+.arc-worked__tab[aria-checked="true"] {
+  color: var(--gold-ink, #caa554);
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+@media (max-width: 900px) {
+  .arc-worked__inner {
+    justify-content: flex-start;
+  }
+  .arc-worked__barlabel {
+    display: none;
+  }
+}
+
+/* ── 10 · The ground (ADR-139) ───────────────────────────────────────
+   Why the work is built here. The shelf on the left is dim and its plates
+   do not touch — the absence of a wire IS the argument, so nothing on that
+   side is connected to anything. The ground on the right reads from the
+   floor up and its plinth is the one course nobody in the room writes. */
+.arc-ground {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.6vh, 26px);
+}
+.arc-ground__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(20px, 4vw, 64px);
+  align-items: start;
+}
+.arc-ground__half {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8vh, 18px);
+  min-width: 0;
+}
+.arc-ground__mast {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.arc-ground__label {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-ground__line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+.arc-ground__tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The shelf's plates are quiet and separate: a lower ground, a dimmer
+   edge, and no connective rule anywhere between them. */
+.arc-ground__tool {
+  --arc-plate-ch: 10px;
+  gap: 3px;
+  padding: clamp(10px, 1.7vh, 15px) clamp(14px, 1.6vw, 20px);
+  opacity: 0.72;
+}
+.arc-ground__toolname {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.05vw, 2.1vh), 17px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-80);
+}
+.arc-ground__toolcost {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--arc-ink-40);
+}
+/* The ground. A hairline runs the height of the stack behind the courses,
+   which is the one connective line on the beat and is why this side reads
+   as one object and the shelf as four. */
+.arc-ground__stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.arc-ground__stack::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: calc(-1 * clamp(10px, 1.2vw, 18px));
+  border-left: 1px solid var(--gold-line);
+  opacity: 0.5;
+}
+.arc-ground__course {
+  gap: 5px;
+  padding: clamp(12px, 2vh, 18px) clamp(16px, 1.8vw, 24px);
+}
+.arc-ground__tag {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-ground__courseline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+.arc-ground__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-ground__items li {
+  padding: 3px 9px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--arc-ink-80);
+  border: 1px solid var(--arc-chip-edge);
+  background: var(--arc-chip);
+}
+/* The plinth: the beat's one bright object, and the only plate on it that
+   is filled rather than outlined. */
+.arc-ground__course[data-ground-course="base"] {
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.arc-ground__basename {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(16px, min(1.3vw, 2.5vh), 21px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-ground__note {
+  margin: 0;
+  max-width: 78ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.5;
+  color: var(--arc-ink-50);
+}
+@media (max-width: 900px) {
+  .arc-ground__stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-ground__stack::before {
+    display: none;
+  }
+}
+
+/* ── 11 · The plugin board (ADR-139) ─────────────────────────────────
+   Where each of the six answers goes to live. The frame IS the plugin, so
+   it letters only its own name and everything that matters is a plate
+   inside it. Every plate carries the question it answers; that tie is the
+   whole beat. Gold is what the team writes — the board's law, held. */
+.arc-pb {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8vh, 18px);
+  width: min(100%, 1180px);
+  margin-inline: auto;
+}
+.arc-pb__above {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 1.4vw, 18px);
+  width: min(100%, 78%);
+  margin-inline: auto;
+}
+.arc-pb__node {
+  --arc-plate-ch: 10px;
+  gap: 3px;
+  padding: clamp(9px, 1.5vh, 14px) clamp(14px, 1.6vw, 20px);
+}
+.arc-pb__nodename {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 16px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-pb__nodeline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(12px, 0.85vw, 14px);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+/* The frame. A dashed outline, because a plugin is a wrapper around things
+   that already exist rather than a thing of its own. */
+.arc-pb__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  padding: clamp(16px, 2.4vh, 26px) clamp(14px, 1.8vw, 24px) clamp(12px, 2vh, 20px);
+  border: 1px dashed var(--arc-seam);
+}
+.arc-pb__framemast {
+  position: absolute;
+  top: 0;
+  left: clamp(14px, 1.8vw, 24px);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 10px;
+  transform: translateY(-50%);
+  background: var(--void, #0a0908);
+}
+.arc-pb__framelabel {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-pb__framename {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.1vw, 2.2vh), 18px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+/* Four plates around a centre chip: two columns, the chip spanning the
+   gutter between them on the middle row. */
+.arc-pb__parts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr);
+  grid-template-areas:
+    "a centre b"
+    "c centre d";
+  gap: clamp(8px, 1.2vw, 14px);
+  align-items: stretch;
+}
+.arc-pb__part:nth-child(1) {
+  grid-area: a;
+}
+.arc-pb__part:nth-child(2) {
+  grid-area: b;
+}
+.arc-pb__part:nth-child(3) {
+  grid-area: c;
+}
+.arc-pb__part:nth-child(4) {
+  grid-area: d;
+}
+.arc-pb__centre {
+  grid-area: centre;
+}
+.arc-pb__part {
+  --arc-plate-ch: 10px;
+  gap: 3px;
+  padding: clamp(10px, 1.7vh, 16px) clamp(13px, 1.5vw, 19px);
+}
+.arc-pb__part[data-plugin-tone="lit"] {
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.arc-pb__partname {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.1vw, 2.2vh), 18px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-pb__partline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(12px, 0.85vw, 14px);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+/* The tie back to the six questions. Mono, quiet, and on every plate that
+   answers one — the one line this beat cannot be read without. */
+.arc-pb__answers {
+  margin-top: 3px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-pb__centre {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: clamp(10px, 1.7vh, 16px) clamp(12px, 1.4vw, 18px);
+  text-align: center;
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-sheen);
+}
+.arc-pb__centrekicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-pb__centrename {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.1vw, 2.2vh), 18px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-pb__centreline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(12px, 0.8vw, 13px);
+  line-height: 1.4;
+  color: var(--arc-ink-50);
+}
+.arc-pb__bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(8px, 1.4vh, 13px) clamp(14px, 1.6vw, 20px);
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-sheen);
+}
+.arc-pb__barline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 16px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-80);
+}
+.arc-pb__bar .arc-pb__answers {
+  margin-top: 0;
+}
+@media (max-width: 900px) {
+  .arc-pb__above {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-pb__parts {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "a" "b" "centre" "c" "d";
+  }
+  .arc-pb__bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ── 12 · The skill file (ADR-139) ───────────────────────────────────
+   A Skill, as the file it is. The room has to SEE that it is a text file in
+   plain language, so the file is set as a file — mono, ruled, with its own
+   path bar — and only three lines are marked. The notes beside it are the
+   argument: what makes Claude reach for it, the craft written once, and
+   where it stops rather than inventing. */
+.arc-sf {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 48px);
+  align-items: start;
+}
+.arc-sf__badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.arc-sf__file {
+  margin: 0;
+  overflow: hidden;
+}
+.arc-sf__filemast {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(8px, 1.4vh, 12px) clamp(14px, 1.6vw, 20px);
+  border-bottom: 1px solid var(--arc-seam);
+  background: var(--arc-sheen);
+}
+.arc-sf__path {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--arc-ink-90);
+}
+.arc-sf__where {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-sf__body {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(10px, 1.8vh, 16px) 0;
+}
+.arc-sf__line {
+  position: relative;
+  padding: 2px clamp(14px, 1.6vw, 20px) 2px clamp(34px, 3vw, 44px);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(11px, 0.78vw, 13px);
+  line-height: 1.55;
+  color: var(--arc-ink-62);
+  overflow-wrap: anywhere;
+}
+.arc-sf__line[data-skill-as="h1"] {
+  margin-top: 8px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(15px, min(1.2vw, 2.3vh), 19px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-sf__line[data-skill-as="h2"] {
+  margin-top: 8px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 15px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-80);
+}
+.arc-sf__line[data-skill-as="body"] {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(12px, 0.85vw, 14px);
+  line-height: 1.5;
+}
+/* The one form the skill pins, set apart the way the file sets it apart. */
+.arc-sf__line[data-skill-as="rule"],
+.arc-sf__line[data-skill-as="quote"] {
+  margin: 4px clamp(14px, 1.6vw, 20px) 4px clamp(34px, 3vw, 44px);
+  padding: 6px 12px;
+  color: var(--arc-ink-90);
+  border-left: 2px solid var(--gold-line);
+  background: var(--arc-sheen);
+}
+.arc-sf__key {
+  font-style: normal;
+  margin-right: 6px;
+  color: var(--arc-ink-40);
+}
+.arc-sf__key::after {
+  content: ":";
+}
+/* A marked line: the gold wash, and its numeral in the gutter. */
+.arc-sf__line[data-skill-mark] {
+  color: var(--arc-ink-90);
+  background: var(--arc-gold-wash);
+}
+.arc-sf__n {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+}
+.arc-sf__line .arc-sf__n {
+  position: absolute;
+  top: 4px;
+  left: clamp(10px, 1.1vw, 16px);
+}
+/* ⚠ A MARKED RULE PUTS ITS NUMERAL IN THE GUTTER, NOT ON THE WORDS. The
+   rule and quote lines take their own margin and padding, so the numeral's
+   gutter offset lands INSIDE their text — it ate the first word of the one
+   line on the page that carries the skill's whole law. It hangs left into
+   the margin those lines already leave. */
+.arc-sf__line[data-skill-as="rule"] .arc-sf__n,
+.arc-sf__line[data-skill-as="quote"] .arc-sf__n {
+  top: 6px;
+  left: calc(-1 * clamp(24px, 2.2vw, 32px));
+}
+.arc-sf__side {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.4vh, 24px);
+}
+.arc-sf__notes {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2.2vh, 22px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-sf__note {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 3px;
+}
+.arc-sf__note .arc-sf__n {
+  grid-row: 1;
+  margin-top: 2px;
+}
+.arc-sf__notetitle {
+  grid-column: 2;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.15vw, 2.2vh), 18px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-sf__notebody {
+  grid-column: 2;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+.arc-sf__folder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: clamp(10px, 1.8vh, 16px);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-sf__folderlabel {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-sf__folderitems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-sf__folderitems li {
+  padding: 3px 9px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--arc-ink-62);
+  border: 1px solid var(--arc-chip-edge);
+}
+@media (max-width: 900px) {
+  .arc-sf {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── 13 · The conversation (ADR-139) ─────────────────────────────────
+   What using it looks like, drawn rather than screenshotted: the house's
+   own ink, and every word of it text. Two readings share one panel — the
+   menu stands beside `ask`, the four steps beside `feedback`. */
+.arc-chat {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 44px);
+  align-items: start;
+}
+.arc-chat__panel {
+  gap: 0;
+  overflow: hidden;
+}
+.arc-chat__mast {
+  padding: clamp(9px, 1.5vh, 13px) clamp(14px, 1.6vw, 20px);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 15px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-80);
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-chat__turns {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.8vh, 16px);
+  padding: clamp(14px, 2.2vh, 22px) clamp(14px, 1.8vw, 24px);
+}
+.arc-chat__you {
+  align-self: flex-end;
+  max-width: 86%;
+  padding: 8px 14px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.45;
+  color: var(--arc-ink-90);
+  border: 1px solid var(--arc-chip-edge);
+  background: var(--arc-chip);
+}
+.arc-chat__slash {
+  margin-right: 6px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 0.92em;
+  color: var(--gold-ink, #caa554);
+}
+/* The quiet line naming what Claude reached for. It is evidence that a
+   skill ran, so it is on the page; it is not the answer, so it is small. */
+.arc-chat__tool {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-chat__tool::after {
+  content: " \203A";
+}
+.arc-chat__claude {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 96%;
+}
+.arc-chat__p {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.55;
+  color: var(--arc-ink-82);
+}
+.arc-chat__list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding-left: 16px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(13px, 0.9vw, 15px);
+  line-height: 1.45;
+  color: var(--arc-ink-82);
+}
+.arc-chat__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+.arc-chat__row {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 4px 12px;
+  font-size: clamp(12px, 0.85vw, 14px);
+  line-height: 1.45;
+}
+.arc-chat__row dt {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+  align-self: center;
+}
+.arc-chat__row dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  color: var(--arc-ink-82);
+}
+/* What is about to be filed, shown whole before anything is filed. */
+.arc-chat__issue {
+  --arc-plate-ch: 10px;
+  gap: 6px;
+  margin: 2px 0;
+  padding: clamp(10px, 1.6vh, 14px) clamp(12px, 1.4vw, 16px);
+}
+.arc-chat__issuetitle {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--arc-ink-90);
+}
+.arc-chat__composer {
+  display: flex;
+  align-items: center;
+  margin: 0 clamp(14px, 1.8vw, 24px) clamp(14px, 2vh, 20px);
+  padding: 9px 12px;
+  border: 1px solid var(--arc-edge);
+}
+.arc-chat__composertext {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(12px, 0.85vw, 14px);
+  color: var(--arc-ink-40);
+}
+/* The caret arrives once and rests. Never an idle blink (ADR-080): a
+   flashing cursor on a beat that fills a screen is a thing the eye cannot
+   leave alone. */
+.arc-chat__composertext::after {
+  content: "";
+  display: inline-block;
+  width: 1.5px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.16em;
+  background: var(--gold, #caa554);
+}
+.arc-chat__aside {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+}
+.arc-chat__asidelabel {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-chat__menu {
+  gap: 8px;
+  padding: clamp(10px, 1.7vh, 15px) clamp(12px, 1.4vw, 18px);
+}
+.arc-chat__menutitle {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(12px, 0.85vw, 14px);
+  color: var(--arc-ink-50);
+}
+.arc-chat__menuitems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-chat__menuitems li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 9px;
+}
+.arc-chat__menuitems li[data-chat-on] {
+  background: var(--arc-gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.arc-chat__menuname {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--arc-ink-90);
+}
+.arc-chat__menuitems li[data-chat-on] .arc-chat__menuname {
+  color: var(--gold-ink, #caa554);
+}
+.arc-chat__menufrom {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+  text-align: right;
+}
+.arc-chat__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: arc-chat-step;
+}
+.arc-chat__step {
+  --arc-plate-ch: 10px;
+  gap: 2px;
+  padding: clamp(9px, 1.5vh, 14px) clamp(12px, 1.4vw, 18px) clamp(9px, 1.5vh, 14px)
+    clamp(30px, 2.6vw, 40px);
+  counter-increment: arc-chat-step;
+}
+.arc-chat__step::before {
+  content: counter(arc-chat-step);
+  position: absolute;
+  top: clamp(9px, 1.5vh, 14px);
+  left: clamp(12px, 1.2vw, 16px);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  color: var(--gold-ink, #caa554);
+}
+.arc-chat__steptitle {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 16px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-chat__stepbody {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(12px, 0.85vw, 14px);
+  line-height: 1.45;
+  color: var(--arc-ink-62);
+}
+@media (max-width: 900px) {
+  .arc-chat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-chat__you,
+  .arc-chat__claude {
+    max-width: 100%;
+  }
+}
+
+/* ── The second cut's fit at 1280x720 (ADR-139) ──────────────────────
+   The practice's own published law: each section fills one screen at
+   1280x720 and never scrolls, and a sentence that does not fit is a
+   sentence to CUT, never a column to widen. These four beats carry more
+   object than the framing's do — a frame with four plates inside it, a
+   file, a conversation — so they take a tighter head gap and a tighter
+   interior than the sections above them.
+
+   ⚠ SCOPED TO THE FOUR NEW KINDS, NEVER `.arc-head` AT LARGE. v1 and every
+   client fork read the same `.arc-band`, and a global rung here would move
+   eighteen beats on five pages that are already measured. */
+.arc-sec--ground .arc-head,
+.arc-sec--plugin .arc-head,
+.arc-sec--skillfile .arc-head,
+.arc-sec--chat .arc-head {
+  margin-bottom: clamp(18px, 3.2vh, 32px);
+}
+
+/* The ground: the shelf's plates and the courses both lose a rung. */
+.arc-sec--ground .arc-ground {
+  gap: clamp(10px, 1.8vh, 16px);
+}
+.arc-sec--ground .arc-ground__tool {
+  padding: clamp(7px, 1.2vh, 11px) clamp(12px, 1.4vw, 17px);
+}
+.arc-sec--ground .arc-ground__tools {
+  gap: 6px;
+}
+.arc-sec--ground .arc-ground__course {
+  padding: clamp(9px, 1.5vh, 14px) clamp(14px, 1.6vw, 20px);
+}
+.arc-sec--ground .arc-ground__stack {
+  gap: 6px;
+}
+.arc-sec--ground .arc-ground__items {
+  margin-top: 2px;
+}
+
+/* The plugin board: the frame's own padding is the biggest single rung. */
+.arc-sec--plugin .arc-pb {
+  gap: clamp(8px, 1.4vh, 13px);
+}
+.arc-sec--plugin .arc-pb__frame {
+  gap: clamp(8px, 1.3vh, 12px);
+  padding: clamp(13px, 2vh, 20px) clamp(12px, 1.6vw, 20px) clamp(10px, 1.6vh, 15px);
+}
+.arc-sec--plugin .arc-pb__part {
+  padding: clamp(8px, 1.3vh, 12px) clamp(11px, 1.3vw, 16px);
+}
+.arc-sec--plugin .arc-pb__node {
+  padding: clamp(7px, 1.2vh, 11px) clamp(12px, 1.4vw, 17px);
+}
+.arc-sec--plugin .arc-pb__bar {
+  padding: clamp(6px, 1.1vh, 10px) clamp(12px, 1.4vw, 17px);
+}
+
+/* The file: its lines are the page's densest object, so they take the
+   tightest rung on the page and the notes close up behind them. */
+.arc-sec--skillfile .arc-sf {
+  gap: clamp(14px, 2.4vw, 36px);
+}
+.arc-sec--skillfile .arc-sf__body {
+  padding: clamp(7px, 1.3vh, 11px) 0;
+}
+.arc-sec--skillfile .arc-sf__line {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  line-height: 1.45;
+}
+.arc-sec--skillfile .arc-sf__filemast {
+  padding: clamp(6px, 1.1vh, 9px) clamp(12px, 1.4vw, 18px);
+}
+.arc-sec--skillfile .arc-sf__notes {
+  gap: clamp(8px, 1.5vh, 15px);
+}
+.arc-sec--skillfile .arc-sf__side {
+  gap: clamp(10px, 1.7vh, 17px);
+}
+.arc-sec--skillfile .arc-sf__folder {
+  padding-top: clamp(7px, 1.3vh, 11px);
+}
+.arc-sec--skillfile .arc-sf__badge {
+  margin-bottom: 6px;
+}
+
+/* The conversation: the turns close up, and the composer stops reserving
+   a line it does not need. */
+.arc-sec--chat .arc-chat__turns {
+  gap: clamp(7px, 1.3vh, 11px);
+  padding: clamp(10px, 1.7vh, 16px) clamp(12px, 1.6vw, 20px);
+}
+.arc-sec--chat .arc-chat__mast {
+  padding: clamp(6px, 1.1vh, 10px) clamp(12px, 1.4vw, 18px);
+}
+.arc-sec--chat .arc-chat__composer {
+  margin: 0 clamp(12px, 1.6vw, 20px) clamp(10px, 1.6vh, 15px);
+  padding: 6px 11px;
+}
+.arc-sec--chat .arc-chat__issue {
+  margin: 0;
+  padding: clamp(8px, 1.3vh, 11px) clamp(10px, 1.2vw, 14px);
+}
+.arc-sec--chat .arc-chat__step {
+  padding: clamp(7px, 1.2vh, 11px) clamp(11px, 1.3vw, 16px) clamp(7px, 1.2vh, 11px)
+    clamp(28px, 2.4vw, 36px);
+}
+.arc-sec--chat .arc-chat__step::before {
+  top: clamp(7px, 1.2vh, 11px);
+}
+.arc-sec--chat .arc-chat__steps {
+  gap: 6px;
+}
+.arc-sec--chat .arc-chat__you {
+  padding: 6px 12px;
+}
+
+/* Light.
+   ⚠ `--void` AND `--dawn` SWAP WHOLESALE (ADR-058), so a rule written
+   against either NEEDS NO OVERRIDE — it inverts for free. The frame mast
+   had one here for a cut, setting its ground to `--dawn`, and that painted
+   a black bar across the plugin's own name on parchment: the base's
+   `--void` was already the page ground in both themes. The two rules left
+   are the ones the swap does NOT solve.
+   The shelf's plates are dimmed by opacity, and the same dimming reads
+   heavier on parchment than on void. */
+html[data-theme="light"] .arc-root .arc-ground__tool {
+  opacity: 0.82;
+}
+/* The numeral is ink ON GOLD, and gold does not swap: parchment on gold is
+   the one pairing on this page that falls under the standard. */
+html[data-theme="light"] .arc-root .arc-sf__n {
+  color: var(--dawn, #110f09);
+}

@@ -1,0 +1,105 @@
+"use client";
+
+import { useEffect } from "react";
+
+const ROOT = ".arc-root";
+const JS_CLASS = "is-arc-worked-js";
+const PICK_ATTR = "data-arc-worked";
+const PANEL = "[data-arc-worked-panel]";
+const TAB = "[data-arc-worked-tab]";
+
+/**
+ * ArcWorkedSwitch — the one island the switched chapter needs (ADR-139).
+ *
+ * It owns exactly three things: the class that tells the stylesheet a hand
+ * is listening, the `hidden` flag on every panel, and the checked state of
+ * every tab. Nothing else on the page knows it exists.
+ *
+ * ⚠ THE PICK IS PAGE-WIDE. Every group carries the same ordered ids (pinned
+ * in `arcs-registry`), so one choice is valid for all of them and the room
+ * follows one piece of work from the plugin board to the last conversation
+ * without touching the control again.
+ *
+ * ⚠ IT NEVER RENDERS THE PANELS. They are server markup, already correct at
+ * rest; this only hides the ones that are not picked. That is what keeps
+ * no-JS, reduced motion and a static render all reading whole — the
+ * `configuration` picker's own law (`types.ts`), held here.
+ *
+ * ⚠ NO STATE, NO RE-RENDER. The DOM is the state. A React state here would
+ * mean the island owned the panels, and it would have to render six beats'
+ * worth of content it does not have.
+ */
+export function ArcWorkedSwitch() {
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>(ROOT);
+    if (!root) return;
+
+    const panels = Array.from(root.querySelectorAll<HTMLElement>(PANEL));
+    if (panels.length === 0) return;
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>(TAB));
+
+    /* The resting pick is the markup's own: whichever panel the server
+       marked default. Never a literal here — the record decides the order,
+       and a hard-coded first id would drift the day it changes. */
+    const resting =
+      panels.find((p) => p.hasAttribute("data-arc-worked-default"))?.dataset.arcWorkedPanel ??
+      panels[0]?.dataset.arcWorkedPanel;
+    if (!resting) return;
+
+    const apply = (pick: string) => {
+      root.setAttribute(PICK_ATTR, pick);
+      for (const panel of panels) {
+        panel.hidden = panel.dataset.arcWorkedPanel !== pick;
+      }
+      for (const tab of tabs) {
+        const on = tab.dataset.arcWorkedTab === pick;
+        tab.setAttribute("aria-checked", on ? "true" : "false");
+        tab.tabIndex = on ? 0 : -1;
+      }
+    };
+
+    const onClick = (event: MouseEvent) => {
+      const tab = (event.target as HTMLElement | null)?.closest<HTMLElement>(TAB);
+      const pick = tab?.dataset.arcWorkedTab;
+      if (pick) apply(pick);
+    };
+
+    /* Arrow keys move the pick inside the group the focus is in, the radio
+       pattern's own behaviour; the pick that results is still page-wide. */
+    const onKeyDown = (event: KeyboardEvent) => {
+      const tab = (event.target as HTMLElement | null)?.closest<HTMLElement>(TAB);
+      if (!tab) return;
+      const step =
+        event.key === "ArrowRight" || event.key === "ArrowDown"
+          ? 1
+          : event.key === "ArrowLeft" || event.key === "ArrowUp"
+            ? -1
+            : 0;
+      if (!step) return;
+      event.preventDefault();
+      const bar = tab.closest<HTMLElement>("[data-arc-worked-bar]");
+      const siblings = Array.from(bar?.querySelectorAll<HTMLButtonElement>(TAB) ?? []);
+      const at = siblings.indexOf(tab as HTMLButtonElement);
+      const next = siblings[(at + step + siblings.length) % siblings.length];
+      const pick = next?.dataset.arcWorkedTab;
+      if (!pick) return;
+      apply(pick);
+      next.focus();
+    };
+
+    root.classList.add(JS_CLASS);
+    apply(resting);
+    root.addEventListener("click", onClick);
+    root.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      root.removeEventListener("click", onClick);
+      root.removeEventListener("keydown", onKeyDown);
+      root.classList.remove(JS_CLASS);
+      root.removeAttribute(PICK_ATTR);
+      for (const panel of panels) panel.hidden = false;
+    };
+  }, []);
+
+  return null;
+}

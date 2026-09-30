@@ -90,7 +90,10 @@ export const dynamicParams = false;
  * build a page nobody can reach. The `ArcDef` stays in `ARCS` — the overview,
  * the registry guards and `HERO_ROUTES` read it — and only the route moves.
  */
-const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set(["thoughtform-workshop"]);
+const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set([
+  "thoughtform-workshop",
+  "thoughtform-workshop-v2",
+]);
 
 export function generateStaticParams() {
   return [...arcSlugs().filter((s) => !OWN_ROUTE_SLUGS.has(s)), ...clientSlugs()].map((slug) => ({

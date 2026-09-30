@@ -1594,3 +1594,193 @@ describe("the hero-board kind (ADR-137)", () => {
     }
   });
 });
+
+describe("the worked-example switch (ADR-139)", () => {
+  it("every group is contiguous, and every group offers the same choices in the same order", () => {
+    /* The pick is PAGE-WIDE: the island writes one id on the arc root and
+       every group reads it. So a group that offered a different set, or the
+       same set in a different order, would leave a beat blank the moment a
+       reader chose from another one. Contiguity is what lets the renderer
+       gather a run without scanning the whole array. */
+    for (const arc of ARCS) {
+      const groups = new Map<string, { ids: string[]; labels: string[]; at: number[] }>();
+      arc.sections.forEach((section, i) => {
+        const worked = section.worked;
+        if (!worked) return;
+        const g = groups.get(worked.group) ?? { ids: [], labels: [], at: [] };
+        g.ids.push(worked.id);
+        g.labels.push(worked.label);
+        g.at.push(i);
+        groups.set(worked.group, g);
+      });
+      if (groups.size === 0) continue;
+
+      let shape: string | null = null;
+      for (const [name, g] of groups) {
+        const at = `${arc.slug}#${name}`;
+        expect(new Set(g.ids).size, `${at}: an example appears twice in one group`).toBe(
+          g.ids.length
+        );
+        expect(g.ids.length, `${at}: a group of one is not a switch`).toBeGreaterThan(1);
+        for (const label of g.labels) {
+          expect(label.length, `${at}: a tab label over the measure`).toBeLessThanOrEqual(24);
+        }
+        /* Contiguous: the indices are a run. */
+        for (let i = 1; i < g.at.length; i++) {
+          expect(g.at[i], `${at}: the group is interrupted at ${g.at[i]}`).toBe(g.at[i - 1] + 1);
+        }
+        /* Every group, the same choices, in the same order. */
+        const here = g.ids.map((id, i) => `${id}|${g.labels[i]}`).join(" · ");
+        if (shape === null) shape = here;
+        else expect(here, `${at}: a different set of examples from the first group`).toBe(shape);
+
+        /* Only the FIRST panel is the page's: the drawer would otherwise
+           carry the beat three times, and the chapter row is capped at five. */
+        for (const [i, index] of g.at.entries()) {
+          const s = arc.sections[index];
+          if (i === 0) continue;
+          expect(s.menuLabel, `${at}: a panel after the first takes a menu row`).toBeUndefined();
+          expect(s.menuPrimary, `${at}: a panel after the first is a chapter`).toBeUndefined();
+        }
+      }
+    }
+  });
+});
+
+describe("the second cut's four kinds (ADR-139)", () => {
+  /* The house habit: the guard is written even where only one arc carries
+     the kind, so a second page can adopt it without the walk arriving a
+     commit late. NO DIGIT on an instrument's lettering, as every drawing
+     before these. */
+  const noDigits = (value: unknown, at: string) =>
+    scanArc(value, at, (s, p) => expect(s, `${p} letters a digit`).not.toMatch(/\d/));
+
+  it("the ground names no vendor, and reads from a plinth nobody writes", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "ground") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.shelf.items.length, `${at}: the shelf`).toBeGreaterThanOrEqual(3);
+        expect(s.shelf.items.length, `${at}: the shelf`).toBeLessThanOrEqual(5);
+        expect(new Set(s.shelf.items.map((i) => i.id)).size, `${at}: duplicate shelf id`).toBe(
+          s.shelf.items.length
+        );
+        for (const item of s.shelf.items) {
+          expect(item.name.length, `${at}/${item.id}: name`).toBeLessThanOrEqual(32);
+          expect(item.cost.length, `${at}/${item.id}: cost`).toBeLessThanOrEqual(40);
+        }
+        for (const course of [s.floor.reach, s.floor.steer]) {
+          expect(course.tag.length, `${at}: a course tag`).toBeLessThanOrEqual(20);
+          expect(course.items.length, `${at}: a course's items`).toBeGreaterThanOrEqual(2);
+          expect(course.items.length, `${at}: a course's items`).toBeLessThanOrEqual(4);
+        }
+        expect(s.floor.base.name.length, `${at}: the plinth's name`).toBeLessThanOrEqual(32);
+        /* The drawing letters no figure; the note under it is prose and may. */
+        noDigits(s.shelf, `${at}.shelf`);
+        noDigits(s.floor, `${at}.floor`);
+      }
+    }
+  });
+
+  it("a plugin board lights exactly the two plates the team writes, and ties every one to a question", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "plugin-board") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(new Set(s.parts.map((p) => p.id)).size, `${at}: duplicate part id`).toBe(4);
+        const lit = s.parts.filter((p) => p.lit);
+        expect(lit.length, `${at}: gold is what the team writes, and that is two`).toBe(2);
+        expect(
+          [s.parts[0].lit, s.parts[1].lit],
+          `${at}: the lit pair is the FIRST two, or a reader is told the team writes its connectors`
+        ).toEqual([true, true]);
+        for (const p of s.parts) {
+          expect(p.name.length, `${at}/${p.id}: name`).toBeLessThanOrEqual(20);
+          expect(p.line.length, `${at}/${p.id}: line`).toBeLessThanOrEqual(64);
+          /* ⚠ THE TIE IS THE BEAT. Without it this is a folder diagram. */
+          expect(p.answers.length, `${at}/${p.id}: answers`).toBeGreaterThan(0);
+          expect(p.answers.length, `${at}/${p.id}: answers`).toBeLessThanOrEqual(24);
+        }
+        for (const n of s.above) {
+          expect(n.name.length, `${at}/${n.id}: name`).toBeLessThanOrEqual(24);
+          expect(n.line.length, `${at}/${n.id}: line`).toBeLessThanOrEqual(72);
+        }
+        expect(s.bar.answers.length, `${at}: the bar answers one`).toBeGreaterThan(0);
+        noDigits(s.parts, `${at}.parts`);
+        noDigits(s.above, `${at}.above`);
+        noDigits(s.centre, `${at}.centre`);
+      }
+    }
+  });
+
+  it("a skill file marks one, two and three down the file, and answers each once", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "skill-file") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(new Set(s.lines.map((l) => l.id)).size, `${at}: duplicate line id`).toBe(
+          s.lines.length
+        );
+        const marks = s.lines.filter((l) => l.mark).map((l) => l.mark as number);
+        expect(marks, `${at}: exactly one line per note, in order down the file`).toEqual([
+          1, 2, 3,
+        ]);
+        expect(
+          s.notes.map((n) => n.n),
+          `${at}: the notes answer the marks, in order`
+        ).toEqual([1, 2, 3]);
+        for (const l of s.lines) {
+          expect(l.text.length, `${at}/${l.id}: a line past the measure`).toBeLessThanOrEqual(240);
+          if (l.key !== undefined) {
+            expect(l.as, `${at}/${l.id}: a key outside the front matter`).toBe("meta");
+          }
+        }
+        for (const n of s.notes) {
+          expect(n.title.length, `${at}/${n.id}: title`).toBeLessThanOrEqual(32);
+          expect(n.body.length, `${at}/${n.id}: body`).toBeLessThanOrEqual(240);
+        }
+        expect(s.folder.items.length, `${at}: the folder`).toBeGreaterThanOrEqual(2);
+        expect(s.folder.items.length, `${at}: the folder`).toBeLessThanOrEqual(6);
+      }
+    }
+  });
+
+  it("a conversation opens on a person, and its column matches its reading", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "chat") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.thread.turns.length, `${at}: turns`).toBeGreaterThanOrEqual(2);
+        expect(s.thread.turns.length, `${at}: turns`).toBeLessThanOrEqual(6);
+        expect(new Set(s.thread.turns.map((t) => t.id)).size, `${at}: duplicate turn id`).toBe(
+          s.thread.turns.length
+        );
+        /* ⚠ A PERSON SPEAKS FIRST. A panel that opens on Claude is a page
+           telling the room something happened on its behalf. */
+        expect(s.thread.turns[0].kind, `${at}: a conversation opens on the person`).toBe("you");
+        expect(
+          s.aside.kind,
+          `${at}: the menu stands beside "ask", the steps beside "feedback"`
+        ).toBe(s.variant === "ask" ? "menu" : "steps");
+        if (s.aside.kind === "menu") {
+          expect(s.aside.items.length, `${at}: the menu`).toBeGreaterThanOrEqual(3);
+          expect(s.aside.items.length, `${at}: the menu`).toBeLessThanOrEqual(8);
+          expect(
+            s.aside.items.filter((i) => i.on).length,
+            `${at}: exactly one skill is picked in the menu`
+          ).toBe(1);
+        } else {
+          expect(s.aside.items.length, `${at}: sorted, decided, drafted, delivered`).toBe(4);
+        }
+        /* ⚠ THE FEEDBACK READING SHOWS THE ASK BEFORE THE FILE. */
+        if (s.variant === "feedback") {
+          const blocks = s.thread.turns.flatMap((t) => (t.kind === "claude" ? t.blocks : []));
+          expect(
+            blocks.some((b) => b.kind === "issue"),
+            `${at}: nothing is filed without showing the reader exactly what`
+          ).toBe(true);
+        }
+      }
+    }
+  });
+});

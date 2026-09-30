@@ -15,6 +15,7 @@ import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { SURI_PROPOSAL_ARC } from "@/lib/arcs/content/suri-proposal";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
+import { THOUGHTFORM_WORKSHOP_V2_ARC } from "@/lib/arcs/content/thoughtform-workshop-v2";
 import type { ArcSection } from "@/lib/arcs/types";
 
 /**
@@ -74,6 +75,12 @@ const ALL: readonly ArcSection[] = [
      and `data-signal-*` — and the stages' example line. */
   ...AI_STORYTELLING_ARC.sections,
   ...AI_STORYTELLING_CLASS_1_ARC.sections,
+  /* The second cut (ADR-139) carries the four newest leaves — `ground`,
+     `plugin-board`, `skill-file` and `chat`, publishing `data-ground-*`,
+     `data-plugin-*`, `data-skill-*` and `data-chat-*` — and it is the only
+     page where a section is wrapped by the worked-example switch, so the
+     reveal seam is measured THROUGH that wrapper here or nowhere. */
+  ...THOUGHTFORM_WORKSHOP_V2_ARC.sections,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 
