@@ -27,7 +27,7 @@ import {
   STAGES_FRAME,
   STAGE_PRISMS,
 } from "@/components/arcs/framing/stagesLayout";
-import type { StageBounds, Vec3 } from "./stageFit";
+import type { StageBounds, StageView, Vec3 } from "./stageFit";
 import { toThree } from "./stageFit";
 
 /* ── The vocabulary ───────────────────────────────────────────────────── */
@@ -52,10 +52,28 @@ export interface StageLine {
   /** Drawn as segments, never `LineDashedMaterial` (which renders nothing
    *  without line distances and cannot be revealed by draw range). */
   dashed?: boolean;
-  /** The intro window, in normalised progress. */
+  /**
+   * The intro window, in normalised progress — of the INTRO, or of the line's
+   * `group` when it has one (ADR-140: the curve's effort surface draws on when
+   * its button is pressed, on the group's own clock).
+   */
   reveal: readonly [number, number];
   /** Additive, and the thing bloom lifts. At most one run per spec. */
   donor?: boolean;
+  /**
+   * A reveal group (ADR-140). Ungrouped lines ride the intro and the sweep;
+   * a grouped line rides its group's progress, which the canvas is handed as
+   * `groups` and eases toward. At most four groups per spec (a `vec4`).
+   */
+  group?: string;
+  /**
+   * Drawn through the GPU segment batch (ADR-140) — one draw call for every
+   * batched line in the spec, swept and drawn on in the shader. The dense
+   * structure (graticule, isolines, risers, rings) goes here; the few lit
+   * donor runs keep drei's fat `Line`, whose draw-range reveal and bloom
+   * lift already work. A width here is CSS px, as drei's is.
+   */
+  batch?: boolean;
 }
 
 export interface StageFace {
@@ -72,12 +90,85 @@ export interface StageFace {
   shade?: "top" | "left" | "right";
   opacity: number;
   reveal: readonly [number, number];
+  group?: string;
+}
+
+/**
+ * A ribbon between two rails of equal length — a sheet of the curve's effort
+ * surface, or the wall under its front edge — drawn as ONE triangle strip
+ * (ADR-140). Forty quads as forty faces would be forty draw calls.
+ */
+export interface StageStrip {
+  id: string;
+  left: readonly Vec3[];
+  right: readonly Vec3[];
+  role: StageRole;
+  opacity: number;
+  reveal: readonly [number, number];
+  group?: string;
 }
 
 export interface StageDust {
   id: string;
   points: readonly Vec3[];
   opacity: number;
+  /** The motes' colour. `machine` (the quiet half of the ramp) unless said. */
+  role?: StageRole;
+  group?: string;
+  /**
+   * Per mote, 0..1: how far it is a CLOUD rather than a LATTICE (ADR-140, the
+   * spectrum's one argument — software is deterministic, intelligence is
+   * probabilistic). 0 = a square mote frozen on its home; 1 = a soft mote
+   * drifting around it. Absent = every mote a cloud mote at rest.
+   */
+  order?: readonly number[];
+  /** CSS px of a mote at order 0; the dust shader jitters it per mote. */
+  size?: number;
+  /** How far a cloud mote drifts off its home, in world units. 0 = still. */
+  drift?: number;
+  /**
+   * A multiplier on the palette's `dustScale` IN LIGHT ONLY. The stage's
+   * atmosphere wants a fraction of its alpha as dark motes on paper
+   * (`HOLO_LIGHT.dustScale`); a field that IS the drawing — the spectrum's
+   * lattice and cloud — needs its ink back. 1 unless said.
+   */
+  inkScale?: number;
+}
+
+/**
+ * The arrival SWEEP (ADR-140): a gold hairline front that crosses the object
+ * once along one world axis and reveals the batched structure and the dust
+ * behind it — the Tokyo-3 scanning line, ADR-097 U12's centre-out aperture
+ * in three dimensions. No fade: what is behind the front is drawn, what is
+ * ahead of it is not. `axis` indexes the THREE vector (`toThree`: 0 = `a`,
+ * 1 = `z`, 2 = `−b`; flat: 0 = `x`, 1 = `−y`).
+ */
+export interface StageSweep {
+  axis: 0 | 1 | 2;
+  from: number;
+  to: number;
+  /** The intro window the front spends crossing `from → to`. */
+  window: readonly [number, number];
+  /** The glow band's half-width around the front, in world units. */
+  width: number;
+}
+
+/** Where the front is at intro progress `p`. */
+export function sweepAt(s: StageSweep, p: number): number {
+  const [t0, t1] = s.window;
+  const k = t1 <= t0 ? 1 : Math.min(1, Math.max(0, (p - t0) / (t1 - t0)));
+  return s.from + (s.to - s.from) * k;
+}
+
+/**
+ * The intro progress at which the front passes a coordinate — what a face
+ * or a donor run that should arrive AFTER the sweep sets its reveal from.
+ */
+export function sweepReaches(s: StageSweep, coord: number): number {
+  const [t0, t1] = s.window;
+  const span = s.to - s.from;
+  const k = span === 0 ? 1 : Math.min(1, Math.max(0, (coord - s.from) / span));
+  return t0 + (t1 - t0) * k;
 }
 
 export interface StageAnchor {
@@ -107,6 +198,18 @@ export interface HoloStageSpec {
   faces: readonly StageFace[];
   dust: readonly StageDust[];
   anchors: readonly StageAnchor[];
+  /** Ribbons (ADR-140). Absent = none. */
+  strips?: readonly StageStrip[];
+  /** The camera (ADR-140). Absent = the stage's parallel view. */
+  view?: StageView;
+  /** The arrival sweep (ADR-140). Absent = draw-on alone, as before. */
+  sweep?: StageSweep;
+  /**
+   * The reveal groups this spec names, in `uGroups` order (≤ 4). A line,
+   * face, strip or dust set naming a group not listed here is a defect the
+   * geometry guard fails.
+   */
+  groups?: readonly string[];
 }
 
 /* ── Primitives ───────────────────────────────────────────────────────── */
@@ -302,12 +405,60 @@ function frontEdges(w: number, d: number, withB: boolean): StageLine[] {
 
 export interface StagesData {
   stages: readonly { id: string; lit?: boolean }[];
+  /**
+   * How the lit block is drawn (ADR-140): `cloud` — a translucent gold volume
+   * filled with a seeded point cloud — or `solid`, U4's opaque shaded gold
+   * faces. The page draws `cloud`; the lab offers both for the owner's read.
+   */
+  agent?: "cloud" | "solid";
 }
 
+/** The arrival (ADR-140): one front along the time edge, front corner to the far tip. */
+export const STAGES_SWEEP: StageSweep = {
+  axis: 0,
+  from: -0.3,
+  to: STAGE_FLOOR.w + 0.3,
+  window: [0.04, 0.62],
+  width: 0.3,
+};
+
+/** The time ruler on the floor's front-right edge: a tick every unit, a longer one on the grid. */
+function timeRuler(): StageLine[] {
+  const out: StageLine[] = [];
+  for (let a = 0; a <= STAGE_FLOOR.w; a++) {
+    const major = a % GRID_PITCH === 0;
+    out.push({
+      id: `tick-${a}`,
+      points: [V(a, 0, 0), V(a, -(major ? 0.26 : 0.14), 0)],
+      role: "structure",
+      width: 1,
+      opacity: major ? 0.55 : 0.32,
+      reveal: [sweepReaches(STAGES_SWEEP, a) - 0.01, sweepReaches(STAGES_SWEEP, a) + 0.04],
+      batch: true,
+    });
+  }
+  return out;
+}
+
+/**
+ * The three stages as WIRE VOLUMES (ADR-140, on U4's floor and pose). The
+ * sweep crosses the floor once along time; each block's twelve edges draw on
+ * as the front reaches it and its faces resolve just behind the wire — the
+ * wire is the hologram, the face is the solid it becomes. The two dark
+ * blocks keep U4's OPAQUE shaded faces (translucent ones read as X-ray). The
+ * agent's block — the drawing's one gold object, standing at the back with
+ * nothing behind it — is a TRANSLUCENT gold volume FILLED with a seeded point
+ * cloud, per unit of volume: a thing that runs on its own, drawn as what it
+ * is made of. Its top rim is the one bloom donor.
+ */
 export function stagesSpec(data: StagesData): HoloStageSpec {
+  const S = STAGES_SWEEP;
   const lines: StageLine[] = [
-    ...gridLines("grid", { a: 0, b: 0, w: STAGE_FLOOR.w, d: STAGE_FLOOR.d, pitch: GRID_PITCH }),
-    ...frontEdges(STAGE_FLOOR.w, STAGE_FLOOR.d, true),
+    ...gridLines("grid", { a: 0, b: 0, w: STAGE_FLOOR.w, d: STAGE_FLOOR.d, pitch: GRID_PITCH }).map(
+      (l) => ({ ...l, batch: true, opacity: 0.11 })
+    ),
+    ...frontEdges(STAGE_FLOOR.w, STAGE_FLOOR.d, true).map((l) => ({ ...l, batch: true })),
+    ...timeRuler(),
   ];
   const faces: StageFace[] = [];
   const dust: StageDust[] = [];
@@ -317,24 +468,43 @@ export function stagesSpec(data: StagesData): HoloStageSpec {
     if (!prism) return;
     const box: Box = { ...prism };
     const lit = s.lit === true;
-    /* The build-up, in the order the argument makes it: prompt, tool, agent. */
-    const t0 = 0.18 + i * 0.16;
+    /* The block arrives as the front crosses it. */
+    const at0 = sweepReaches(S, box.a);
+    const at1 = sweepReaches(S, box.a + box.w);
     lines.push(
       ...boxEdges(`prism-${s.id}`, box, {
         role: lit ? "gold" : "structure",
         ...(lit ? GOLD_EDGE : EDGE),
-        reveal: [t0, t0 + 0.24],
-      })
+        reveal: [at0, at1 + 0.05],
+      }).map((l) => ({ ...l, batch: true }))
     );
-    faces.push(
-      ...boxFaces(`prism-${s.id}`, box, {
-        role: lit ? "gold" : "machine",
-        opacity: lit ? 0.12 : 0.06,
-        reveal: [t0 + 0.06, t0 + 0.3],
-      })
-    );
-    /* The lit block's top rim is the one bloom donor. */
+    if (lit && data.agent === "solid") {
+      faces.push(
+        ...boxFaces(`prism-${s.id}`, box, {
+          role: "gold",
+          opacity: 0.12,
+          reveal: [at1 + 0.04, at1 + 0.3],
+        })
+      );
+    }
     if (lit) {
+      if (data.agent !== "solid") {
+        /* The gold volume: translucent faces, and the cloud inside them. */
+        faces.push(
+          ...boxFaces(`prism-${s.id}`, box, {
+            role: "gold",
+            opacity: 0.14,
+            reveal: [at1 + 0.04, at1 + 0.3],
+          }).map((f) => ({ ...f, shade: undefined }))
+        );
+        dust.push({
+          id: `fill-${s.id}`,
+          points: motes(ISO_SEED + 311 + i, Math.round(box.w * box.d * box.h * 14), box),
+          opacity: 0.6,
+          role: "gold",
+          size: 6,
+        });
+      }
       lines.push({
         id: `crest-${s.id}`,
         points: [
@@ -345,17 +515,25 @@ export function stagesSpec(data: StagesData): HoloStageSpec {
         role: "gold",
         width: 2.6,
         opacity: 0.95,
-        reveal: [t0 + 0.14, t0 + 0.4],
+        reveal: [at1 + 0.1, at1 + 0.38],
         donor: true,
       });
+    } else {
+      faces.push(
+        ...boxFaces(`prism-${s.id}`, box, {
+          role: "machine",
+          opacity: 0.06,
+          reveal: [at1 + 0.04, at1 + 0.28],
+        })
+      );
     }
   });
 
-  /* The motes hang over the floor, not inside the blocks: the blocks are
-     solid now, and dust inside a solid is dust nobody sees. */
+  /* The atmosphere hangs over the floor; the dark blocks are solid, and dust
+     inside a solid is dust nobody sees. */
   dust.push({
     id: "dust",
-    points: motes(ISO_SEED + 977, 260, {
+    points: motes(ISO_SEED + 977, 220, {
       a: 0,
       b: 0,
       w: STAGE_FLOOR.w,
@@ -374,5 +552,6 @@ export function stagesSpec(data: StagesData): HoloStageSpec {
     faces,
     dust,
     anchors: [],
+    sweep: S,
   };
 }

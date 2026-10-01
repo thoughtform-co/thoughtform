@@ -25,6 +25,7 @@ import {
 import { AI_STORYTELLING_CLASS_1_ARC } from "@/lib/arcs/content/ai-storytelling-class-1";
 import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
+import { THOUGHTFORM_WORKSHOP_V2_ARC } from "@/lib/arcs/content/thoughtform-workshop-v2";
 import type { ArcDef, ArcSectionKind, ArcSectionOf } from "@/lib/arcs/types";
 
 /**
@@ -206,6 +207,8 @@ describe("every drawing fits its crop, and no two labels overlap", () => {
     /* A label's box is its TEXT, so a third page mounting the drawing walks
        its own strings (ADR-131's finding, one page later). */
     stagesCase("stages · class one", AI_STORYTELLING_CLASS_1_ARC, "three-ways"),
+    /* The second cut (ADR-139) authors its own strings at the same seats. */
+    stagesCase("stages · v2", THOUGHTFORM_WORKSHOP_V2_ARC, "three-ways"),
   ];
 
   for (const c of cases) {

@@ -74,8 +74,35 @@ export function floor(u: number, v: number): Point {
   return { x: OX + (u * UL - v * VL) * COS, y: OY - (u * UL + v * VL) * SIN };
 }
 
-function height(t: number, series: "own" | "other"): number {
+/** How far above the floor the curve stands at `t`, in viewbox px before the lift. */
+export function height(t: number, series: "own" | "other"): number {
   return BASE - (series === "own" ? yAt(t) : yOther(t));
+}
+
+/**
+ * The drawing's own numbers, for the hologram that lifts it (ADR-140): the
+ * floor's two edges and the front corner in viewbox px, the surface's stand
+ * and lift. ⚠ IMPORTED BY THE SPEC BUILDER, NEVER RESTATED — the SVG and the
+ * hologram are one picture, and a copied constant is a second place for the
+ * record's geometry to be wrong.
+ */
+export const FLOOR_EDGES = { UL, VL } as const;
+export const ORIGIN = { OX, OY } as const;
+export const STAND = { HS, LIFT } as const;
+
+/**
+ * A point of the surface in the FLOOR's own frame: `a` along intelligence and
+ * `b` along effort, both in viewbox px of their edges, and `h` the height above
+ * the floor in viewbox px — i.e. `surface(t, v)` before the projection. The
+ * floor is Moira's 22° parallel view, which is `ISO_BASIS_STAGE` with `k = 1`,
+ * so `isoProject(a, b, h / Z_UNIT)` lands on `surface(t, v)` to the unit.
+ */
+export function world(
+  t: number,
+  v: number,
+  series: "own" | "other" = "own"
+): { a: number; b: number; h: number } {
+  return { a: (t / END_T) * UL, b: v * VL, h: height(t, series) * (1 + LIFT * v) * HS };
 }
 
 /** A point on the surface: t is the curve parameter, v the effort. */
