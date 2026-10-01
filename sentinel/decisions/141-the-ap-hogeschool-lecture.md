@@ -1,0 +1,116 @@
+# ADR-141: The AP Hogeschool lecture is the workshop's third cut
+
+- **Status:** Proposed (2026-10-01, owner). Built and guarded; flips to Accepted once
+  the owner has read the page live and the open items below are settled.
+- **Surface:** `/arcs/ap-hogeschool` — a static route folder
+  `app/(marketing)/arcs/ap-hogeschool/` (`page.tsx`, `journey.ts`, `WorkshopPortals.tsx`,
+  `WorkshopTail.tsx`); `lib/arcs/content/ap-hogeschool.ts`; one asset,
+  `public/arcs/ap-hogeschool/itp-nine-sectors-wall.webp`, written by
+  `scripts/arcs/prep-ap-hogeschool-assets.mjs`; `lib/arcs/registry.ts` (one row);
+  `[slug]`'s `OWN_ROUTE_SLUGS`; `HERO_ROUTES`; `tests/lib/ap-hogeschool.test.ts` (new);
+  rows in `arcs-registry`, `arc-iso`, `sheet-config-fit`, `hero-preload`,
+  `arcs-instrument-smoke`; `REAL_TODAY` in `sheet-instrument` and `sheet-composition`.
+- **Does NOT supersede ADR-139.** v2 is untouched; this is a third route on its share
+  rule. ADR-131 (the archetype) and ADR-136 (the class-one deck) stand.
+- **Related:** [ADR-139](139-the-workshop-second-cut.md) (the spine, and the rule that
+  prototype, sheet and root class fork together or not at all),
+  [ADR-136](136-the-class-one-deck-and-the-situation-re-cut.md) (the Thomas More
+  class-one deck: the Moira flow re-cut for students, Tom on the Moon and In The Pocket
+  as the worked worlds, the shared records), [ADR-138](138-the-workshop-reads-about-the-eras-then-the-arc.md)
+  (About → the eras → the Arc, the spine's own telling of who he is and what he did),
+  [ADR-131](131-the-workshop-archetype.md) (one idea per viewport, one picture per
+  section, seven to sixteen sections, one screen at 1280×720).
+
+## The call
+
+The owner, 2026-10-01: a new variant of the V2 workshop for AP Hogeschool, a Belgian
+university college. The room is students, so it cannot be technical: show and tell, his
+AI story, the AI films he made at Loop, and concrete brand worlds built with the method,
+the way the Thomas More deck drew on Tom on the Moon and In The Pocket. "The point is the
+V2 workshop: that's the new template in terms of style."
+
+Asked, he chose: **English** (the spine is English and forks only as prototype + sheet +
+root together); **show-and-tell only**, no hands-on chapter and no setup readout; **the
+Loop films stay in the proof pile** and are not repeated in the tail; **a new nine-sector
+wall for In The Pocket**, built from the signed-off finals.
+
+## The decision
+
+**A third own route on ADR-139's share rule.** `/arcs/ap-hogeschool` copies v2's four
+route files and changes the record, the journey's labels and the tail; it shares v1's
+prototype, v1's route sheet, `.tw-root`, the About flow, the portrait deck and the proof
+by import. The station id `workshop` is the prototype's and cannot change; this page
+calls it "The lecture" in the roster and the drawer.
+
+**The spine already tells the story, so the tail does not repeat it.** Who he is is the
+About; what he did before is the era stage (the Azeroth era's film is the Thomas More
+class); the Arc is the corridor; the Loop films play from the pile's first card, with the
+tools, the studio and the layer behind them. The tail begins where the pile ends.
+
+**Sixteen sections, five chapters** (`menuPrimary` at the registry's cap): Today ·
+Three ways · The configuration · Tom on the Moon · This week.
+
+|       |                                                                                                             |
+| ----- | ----------------------------------------------------------------------------------------------------------- |
+| 01    | `today` — a readout: this hour, and the worlds the room will see                                            |
+| 02–05 | three ways · the curve · hard to steer · the real question _(the class deck's situation, minus the ledger)_ |
+| 06    | the configuration — Tom on the Moon's six questions, the class deck's board **verbatim**                    |
+| 07–10 | Tom on the Moon: the path · the bench · the wall · the client's verdict _(the shared records)_              |
+| 11    | the nine-sector wall — **NEW**, In The Pocket's finals on one wall                                          |
+| 12    | two anchors — In The Pocket's retail hero beside Thoughtform's world, still being found                     |
+| 13–15 | ambition · your world in one line each (a takeaway, not a room exercise) · what gets rewarded               |
+| 16    | the close                                                                                                   |
+
+**What was cut, and why.** `ground`, `resource`, the two-plates cards, the turn,
+`horizon`, `signal`, the five switched beats and their switch, the family, get started
+and what is next are a buyer's beats: a student is not choosing between a shelf of tools
+and a stack. ⚠ **`horizon` is not re-added as a seventeenth.** The stages' agent example
+("a wave: drawn, graded, delivered") is explained three beats later by the bench (graded)
+and the wall (drawn, delivered), and the wall's sub uses those three words so the
+callback lands. One picture per idea; the compounding-error argument is the technical
+half the owner cut.
+
+**The worlds are the shared records, by reference.** Tom on the Moon's path, bench and
+wall are `shared/tom-on-the-moon.ts`; the six-question board is the class deck's word for
+word, because it is Tom on the Moon's record and not this page's. `arcs-registry` pins
+the records `toBe` across the course, the class and this page, and `sheet-config-fit`
+derives the same row and the same one chip (Claude, in the interface's answer) for the
+owner's `/arcs` dossier.
+
+**The one picture this page adds.** The class deck held In The Pocket as one card; a
+student room meets nine briefs in one look better as a wall. The nine sector finals
+(2400 × 1792 each, `03_Final/` on the Drive, MANIFEST order) are composed 3 × 3 with the
+retail hero, the campaign's anchor, in the centre cell. ⚠ **The cells are 16:9, not the
+finals' 4:3**: `.arc-media__frame img` is `width: 100%; height: auto`, so the wall's
+aspect IS the beat's height, and a 4:3 wall runs ~750px tall at the 1280 band, which
+breaks the one-screen law. 460 × 259 cells, a 4px gap, 1388 × 785, WebP q80, 78 kB. The
+crop takes each hero's middle band; the retail hero reappears whole on the anchor card.
+
+**Readout rows may not link to the pile.** `#services` is not an arc section id, and the
+registry rejects an in-page link that names none (`arcs-registry` L1226), so the Loop row
+in the opening readout carries no href. The pile is one scroll above; the row names it.
+
+## Guards
+
+- `tests/lib/ap-hogeschool.test.ts`: the route shares v1's prototype, sheet, root class,
+  proof and flow; the journey order equals v1's; no `worked` on any section and no switch
+  in the tail; the readout first, the close last, 7 ≤ sections ≤ 16, the three built
+  worlds after the board; the Tom path, bench, wall and the board's anchor and the
+  curve's lanes `toBe` the shared records; the wall on disk (the registry checks a
+  `media.src` by prefix only).
+- `thoughtform-workshop-v2.test.ts`'s folder walk covers the new `OWN_ROUTE_SLUGS` row;
+  `hero-preload` the `HERO_ROUTES` row; `arc-iso` walks the stages' labels on a fifth
+  page; `sheet-config-fit` the board's row and chip; `arcs-instrument-smoke`'s
+  `CONFIGURED` set gains this slug and the `thoughtform-workshop-v2` row it was missing.
+- `REAL_TODAY` moves to 2026-10-01 in both suites that read the real overview.
+
+## Open items
+
+1. **The password.** `arcGate` derives `ARC_PASSWORD_AP_HOGESCHOOL` from the path and
+   falls back to `ARCS_PASSWORD`; if that fallback is set in Vercel the students need the
+   shared password or a key of their own. An owner step in Vercel, not code.
+2. **The wall's crop.** 16:9 cells cut the top and bottom of each 4:3 hero. If a sector
+   reads badly cropped on the live read, the next cut is 2:1 cells on a wider wall, never
+   a smaller one.
+3. **The registry position.** Filed after the course's class deck, which it borrows its
+   worlds from. One line to move if the lectures are ever grouped.

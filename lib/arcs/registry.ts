@@ -13,6 +13,7 @@ import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
+import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
 import type { ArcDef } from "./types";
 
 /**
@@ -47,6 +48,10 @@ export const ARCS: readonly ArcDef[] = [
   AI_STORYTELLING_ARC,
   /* The course's class decks sit beside the course (ADR-136). */
   AI_STORYTELLING_CLASS_1_ARC,
+  /* The AP Hogeschool guest lecture (ADR-141): the workshop's third cut,
+     for a room of students, filed after the course it borrows its worlds
+     from. */
+  AP_HOGESCHOOL_ARC,
   CLAUDE_WORKSHOP_ARC,
   AI_KEYNOTE_ARC,
   CLAUDE_WORKSHOP_V2_ARC,

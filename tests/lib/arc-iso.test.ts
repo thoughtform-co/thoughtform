@@ -23,6 +23,7 @@ import {
   stagesLabels,
 } from "@/components/arcs/framing/stagesLayout";
 import { AI_STORYTELLING_CLASS_1_ARC } from "@/lib/arcs/content/ai-storytelling-class-1";
+import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { PLOPSA_WORKSHOP_ARC } from "@/lib/arcs/content/plopsa-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "@/lib/arcs/content/thoughtform-workshop-v2";
@@ -209,6 +210,9 @@ describe("every drawing fits its crop, and no two labels overlap", () => {
     stagesCase("stages · class one", AI_STORYTELLING_CLASS_1_ARC, "three-ways"),
     /* The second cut (ADR-139) authors its own strings at the same seats. */
     stagesCase("stages · v2", THOUGHTFORM_WORKSHOP_V2_ARC, "three-ways"),
+    /* The AP Hogeschool lecture (ADR-141): the class deck's strings, so a
+       fifth page walks its own labels rather than trusting the fourth's. */
+    stagesCase("stages · AP Hogeschool", AP_HOGESCHOOL_ARC, "three-ways"),
   ];
 
   for (const c of cases) {

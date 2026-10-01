@@ -15,6 +15,7 @@ import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData"
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { AI_STORYTELLING_ARC } from "@/lib/arcs/content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "@/lib/arcs/content/ai-storytelling-class-1";
+import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
@@ -1445,7 +1446,10 @@ describe("arcs registry (ADR-052)", () => {
        frontier curve and the class's are the same lanes — so a reprice or a
        re-pinned anchor lands on both pages at once, and a copy typed on one
        fails here. */
-    for (const arc of [AI_STORYTELLING_ARC, AI_STORYTELLING_CLASS_1_ARC]) {
+    /* The AP Hogeschool lecture (ADR-141) is the third reader of the Tom
+       records and the curve: the same objects, so one worked example cannot
+       drift across three pages. */
+    for (const arc of [AI_STORYTELLING_ARC, AI_STORYTELLING_CLASS_1_ARC, AP_HOGESCHOOL_ARC]) {
       const path = arc.sections.find((s) => s.kind === "path");
       expect(path?.kind === "path" && path.stages, `${arc.slug}: the Tom path`).toBe(
         TOM_PATH_STAGES
@@ -1455,7 +1459,7 @@ describe("arcs registry (ADR-052)", () => {
         TOM_BENCH_EXAMPLE
       );
     }
-    for (const arc of [THOUGHTFORM_WORKSHOP_ARC, AI_STORYTELLING_CLASS_1_ARC]) {
+    for (const arc of [THOUGHTFORM_WORKSHOP_ARC, AI_STORYTELLING_CLASS_1_ARC, AP_HOGESCHOOL_ARC]) {
       const curve = arc.sections.find((s) => s.kind === "curve");
       expect(curve?.kind === "curve" && curve.lanes, `${arc.slug}: the frontier record`).toBe(
         FRONTIER_CURVE.lanes

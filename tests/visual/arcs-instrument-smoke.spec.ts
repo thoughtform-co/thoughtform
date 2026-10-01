@@ -58,12 +58,14 @@ const NEWEST = [...RECORD].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date
  *  the course's class one since ADR-136). */
 const CONFIGURED = new Set([
   "ai-storytelling-class-1",
+  "ap-hogeschool",
   "hungry-minds-proposal",
   "perfect-ted-proposal",
   "plopsa-workshop",
   "suri-proposal",
   "suri-workshop",
   "thoughtform-workshop",
+  "thoughtform-workshop-v2",
   "trinny-london-pitch",
 ]);
 /** An arc's readout carries its section count; a client's page has none. */
