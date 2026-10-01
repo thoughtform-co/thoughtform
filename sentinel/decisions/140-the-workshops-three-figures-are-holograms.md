@@ -374,6 +374,15 @@ USD 50 (wave 06 spent 15.6).
 - **Light theme**: the ink drawing on paper, the pyramid at the paper
   threshold, no halation, no raster, no vignette, no atmosphere shell
   (additive cannot ink); verified on all three plates.
+- **Measured on the stills** (1920 x 1080, the lab's stage element): the
+  light canvas ground is (234, 227, 215) against the page's (235, 227, 214),
+  within a unit on all three plates; the stages donor's core clips to white
+  with a 10 %-halo of 31 px (the 20-40 target); the curve's and the
+  spectrum's donors are a line and a ring, so a row through the brightest
+  pixel measures the object (231 / 128 px), not the halo. The dark corners
+  read (8, 8, 7) against the page's (10, 9, 8): the vignette, by design in
+  the lab's full-bleed glass, and a thing the port has to decide (0 on the
+  page, or the beat's ground matched), or the canvas shows its edge.
 - **Guards**: `tests/lib/holo-stage-instrument.test.ts` — homes in the crop,
   ≤ 128², denser than round three, fill ≥ 70 %, lit share per figure, one
   tangent per flowing bead with a period, every readout keyed, at most one
