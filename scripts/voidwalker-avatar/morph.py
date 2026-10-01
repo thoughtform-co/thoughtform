@@ -67,6 +67,15 @@ Usage:
   python scripts/voidwalker-avatar/morph.py run  --wave ... --run 3 --resume
   python scripts/voidwalker-avatar/morph.py ingest --wave ... --ground gold --file <comfy output.mp4>
   python scripts/voidwalker-avatar/morph.py strip <clip.mp4>
+  python scripts/voidwalker-avatar/morph.py check --host comfy-cloud                       # free
+  python scripts/voidwalker-avatar/morph.py run --wave ... --run flw --host comfy-cloud --ground colour --dry-run
+  python scripts/voidwalker-avatar/morph.py grade <clip.mp4> [--judge --wave ... --ground colour]
+
+⚠ THE COMFY LANE (2026-10-01) is `comfy.py` (host client) + `graph.py` (API
+graphs, validated against the host) + `clipgrade.py` (the deterministic read
+and the vision judge). `run --run flw --host` needs the one-time API export
+of the SYSTMS graph (`SYSTMS_FLW_LTX23_WF.api.json`, kits/README step 5) and
+`COMFY_API_KEY`; everything before the submit is free.
 """
 
 from __future__ import annotations
@@ -520,43 +529,56 @@ def cmd_prep(args) -> int:
 # ── the Comfy Cloud kit ───────────────────────────────────────────────────────
 
 
-def comfy_kit(w: Path, ground: str, a: str, b: str) -> Path:
-    """The shipped FLW graph, patched to this pair. ⚠ ONLY WHAT THE PROBE NEEDS
-    MOVES: the two shots, the audio, the prompt, a FIXED seed, the output name
-    and the resize width. Models, sampler (8 steps, cfg 1, euler_ancestral_cfg_pp,
-    linear_quadratic), the guide node (97 frames, grey 0.5) and LTXVAddGuide
-    (frame 0, strength 1) stay the author's, so a failure is the pair's and not
-    a mis-set graph. The Gemini prompt writer is MUTED and its link to the text
-    encoder cut — a paid partner node that writes a prompt we author by hand."""
-    kit = w / f"comfy-{ground}"
-    kit.mkdir(exist_ok=True)
+#: ⚠ THE LIBRARY NAME, NOT THE AUTHOR'S (found 2026-10-01). The shipped graph's
+#: node 49 asks for `systms__SYSTMS-FLW-IC-LORA-LTX-23__SYSTMS_FLW_V1_LTX23.safetensors`
+#: — an imported-LoRA name on the author's account. Comfy Cloud's shared
+#: library lists it as this (its public `/api/experiment/models/loras`), so
+#: the wave-v1 kits as first written would have opened with a missing model.
+FLW_LORA = "SYSTMS_FLW_V1_LTX23.safetensors"
+
+
+def flw_original(kit: Path) -> dict:
+    """The author's UI-format graph, fetched once into `kit/`."""
+    kit.mkdir(parents=True, exist_ok=True)
     orig = kit / "SYSTMS_FLW_LTX23_WF.original.json"
     if not orig.exists():
-        with urllib.request.urlopen(FLW_WORKFLOW, timeout=60) as r:
+        with urllib.request.urlopen(urllib.request.Request(FLW_WORKFLOW, headers={"User-Agent": UA}), timeout=60) as r:
             orig.write_bytes(r.read())
-    wf = json.loads(orig.read_text(encoding="utf-8"))
+    return json.loads(orig.read_text(encoding="utf-8"))
+
+
+def patch_flw_ui(wf: dict, *, shot_a: str, shot_b: str, audio: str, prompt: str, seed: int,
+                 prefix: str, width: int = SIZE[0], frames: int = SHOT) -> dict:
+    """The shipped FLW graph (UI format), patched for one run. ⚠ ONLY WHAT A RUN
+    NEEDS MOVES: the two shots, the audio, the prompt, a FIXED seed, the output
+    name, the resize width and the LoRA's library name. Models, sampler (8 steps,
+    cfg 1, euler_ancestral_cfg_pp, linear_quadratic), the guide node (97 frames,
+    grey 0.5) and LTXVAddGuide (frame 0, strength 1) stay the author's, so a
+    failure is the footage's and not a mis-set graph. The Gemini prompt writer
+    is MUTED and its link to the text encoder cut — a paid partner node that
+    writes a prompt we author by hand."""
     nodes = {n["id"]: n for n in wf["nodes"]}
-    prompt = prompts(a, b, ground)["flw"]
-    shot_a, shot_b, audio = f"morph-shot-a-{ground}.mp4", f"morph-shot-b-{ground}.mp4", "morph-audio.mp3"
 
     def load_video(nid: int, name: str) -> None:
         wv = nodes[nid]["widgets_values"]
-        wv.update(video=name, skip_first_frames=0, frame_load_cap=SHOT, force_rate=0)
+        wv.update(video=name, skip_first_frames=0, frame_load_cap=frames, force_rate=0)
         if isinstance(wv.get("videopreview"), dict):
             wv["videopreview"].setdefault("params", {})["filename"] = name
 
     expect = {69: "VHS_LoadVideo", 70: "VHS_LoadVideo", 8: "CLIPTextEncode", 18: "RandomNoise",
-              81: "ImageResizeKJv2", 96: "LoadAudio", 26: "VHS_VideoCombine", 61: "GeminiNode", 80: "JoinStrings"}
+              81: "ImageResizeKJv2", 96: "LoadAudio", 26: "VHS_VideoCombine", 61: "GeminiNode", 80: "JoinStrings",
+              49: "LoraLoaderModelOnly"}
     for nid, typ in expect.items():
         if nodes.get(nid, {}).get("type") != typ:
             raise SystemExit(f"FLW workflow changed upstream: node {nid} is not {typ} — re-read it before patching")
 
     load_video(69, shot_a)
     load_video(70, shot_b)
-    nodes[81]["widgets_values"][0:2] = [SIZE[0], 0]  # width 576, height from aspect -> 1024
+    nodes[81]["widgets_values"][0:2] = [width, 0]  # width, height from aspect (576 -> 1024 on 9:16)
     nodes[96]["widgets_values"][0] = audio
-    nodes[18]["widgets_values"] = [SEED, "fixed"]
-    nodes[26]["widgets_values"]["filename_prefix"] = f"morph-{a}-{b}-{ground}"
+    nodes[18]["widgets_values"] = [seed, "fixed"]
+    nodes[26]["widgets_values"]["filename_prefix"] = prefix
+    nodes[49]["widgets_values"][0] = FLW_LORA
     # The prompt: cut Gemini's string out of the encoder and letter ours.
     nodes[8]["widgets_values"] = [prompt]
     dead = None
@@ -570,6 +592,17 @@ def comfy_kit(w: Path, ground: str, a: str, b: str) -> Path:
     for nid in (61, 63, 80, 86):  # Gemini, its video feed, the join, the "FLW," primitive
         if nid in nodes:
             nodes[nid]["mode"] = 2  # never execute
+    return wf
+
+
+def comfy_kit(w: Path, ground: str, a: str, b: str) -> Path:
+    """The era pair's Comfy kit: `patch_flw_ui` on this wave's shots and audio."""
+    kit = w / f"comfy-{ground}"
+    wf = flw_original(kit)
+    prompt = prompts(a, b, ground)["flw"]
+    shot_a, shot_b, audio = f"morph-shot-a-{ground}.mp4", f"morph-shot-b-{ground}.mp4", "morph-audio.mp3"
+    wf = patch_flw_ui(wf, shot_a=shot_a, shot_b=shot_b, audio=audio, prompt=prompt, seed=SEED,
+                      prefix=f"morph-{a}-{b}-{ground}")
     (kit / "SYSTMS_FLW_LTX23_WF.morph.json").write_text(json.dumps(wf, indent=2), encoding="utf-8")
     shutil.copyfile(w / f"shot-a-{ground}.mp4", kit / shot_a)
     shutil.copyfile(w / f"shot-b-{ground}.mp4", kit / shot_b)
@@ -588,8 +621,8 @@ transformer + the distilled LoRA at 0.5, 8 steps, cfg 1. Only the inputs, the
 prompt and the seed ({seed}, fixed) are ours.
 
 1. Open https://comfy.org/workflows/5b94a8f404fa-5b94a8f404fa/ and press
-   "Try on Comfy Cloud" (the account is yours to create; the free tier covers
-   about ten runs of this graph).
+   "Try on Comfy Cloud" (the account is yours to create; the free tier is five
+   runs, no card).
 2. Replace the canvas with `SYSTMS_FLW_LTX23_WF.morph.json` from this folder
    (drag it onto the canvas).
 3. Upload `{shot_a}` into SHOT A, `{shot_b}` into SHOT B and `{audio}` into
@@ -845,6 +878,10 @@ def cmd_ingest(args) -> int:
            "seed": SEED, "prompt": meta["prompts"][args.ground]["flw"], "source_file": str(src),
            "kind": "guide", "ground": args.ground, "ingested_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
     rec["measured"] = report(out, rec, w)
+    import clipgrade
+
+    rec["grade"] = clipgrade.grade_clip(out)["verdict"]
+    print(f"  grade: {rec['grade']}")
     out.with_suffix(".json").write_text(json.dumps(rec, indent=2), encoding="utf-8")
     with (w / "MANIFEST.jsonl").open("a", encoding="utf-8") as m:
         m.write(json.dumps({k: rec[k] for k in ("run", "lane", "measured", "ingested_at")}) + "\n")
@@ -876,10 +913,132 @@ def cmd_check(_args) -> int:
     return 0
 
 
+# ── the Comfy lane (comfy.py + graph.py) ──────────────────────────────────
+
+
+def ui_models(wf: dict) -> list[tuple[int, str]]:
+    """Every model file a UI-format graph names, read off its widget values —
+    so the host's public model list can be checked before any export exists."""
+    from graph import MODEL_EXT
+
+    out = []
+    for n in wf.get("nodes", []):
+        if n.get("mode") == 2:
+            continue
+        vals = n.get("widgets_values")
+        vals = vals.values() if isinstance(vals, dict) else (vals or [])
+        out += [(n["id"], v) for v in vals if isinstance(v, str) and v.lower().endswith(MODEL_EXT)]
+    return out
+
+
+def cmd_check_host(args) -> int:
+    """Free: the host answers, every model the kit's graph names is in its
+    public library, and (with COMFY_API_KEY) the exported seed validates."""
+    import comfy
+
+    host = comfy.ComfyHost(comfy.HOSTS[args.host])
+    st = host.system_stats().get("system", {})
+    print(f"host: {host.p.name} {host.base}  comfyui {st.get('comfyui_version', '?')}  cloud {st.get('cloud_version', '-')}")
+    listed: set[str] = set()
+    for f in comfy.MODEL_FOLDERS:
+        listed |= set(host.model_list(f))
+    kits = [Path(args.kit).resolve()] if args.kit else sorted((WAVES).glob("*/comfy-*")) + sorted((WAVES / "_kits").glob("flw-*"))
+    rc = 0
+    for kit in kits:
+        wfp = kit / "SYSTMS_FLW_LTX23_WF.morph.json"
+        if not wfp.exists():
+            continue
+        miss = [(nid, v) for nid, v in ui_models(json.loads(wfp.read_text(encoding="utf-8"))) if v not in listed]
+        rc |= 1 if miss else 0
+        print(f"  {'ok     ' if not miss else 'MISSING'} {kit.relative_to(WAVES)}"
+              + "".join(f"\n            node {nid}: {v}" for nid, v in miss))
+    try:
+        from graph import load_seed
+
+        seed = load_seed()
+        print(f"  seed: {len(seed.nodes)} nodes, sha256 {seed.sha256()[:16]}")
+    except SystemExit as e:
+        print(f"  seed: {str(e).splitlines()[0]}")
+        return rc
+    from env import load
+
+    if host.p.key_name and not load().get(host.p.key_name):
+        print(f"  ({host.p.key_name} not set: object_info validation skipped)")
+        return rc
+    oi = host.object_info()
+    probs = seed.validate(oi)
+    for x in probs:
+        print(f"  {x}")
+    print("  seed validates clean" if not probs else f"  {len(probs)} findings")
+    return rc | (1 if any(x.startswith("error:") for x in probs) else 0)
+
+
+def cmd_run_comfy(args) -> int:
+    """FLW as its author shipped it, submitted by API: the exported seed
+    (`graph.load_seed`) patched to this wave's kit, uploaded, run, measured."""
+    import clipgrade
+    import comfy
+    from graph import flw_graph, load_seed
+
+    w = wave_dir(args.wave)
+    meta = load_meta(w)
+    g = args.ground
+    if g not in meta.get("grounds", []):
+        raise SystemExit(f"ground {g!r} was not prepped for this wave ({meta.get('grounds')})")
+    kit = w / f"comfy-{g}"
+    seed_int = args.seed if args.seed is not None else SEED
+    n = 1
+    while (w / f"comfy-{g}-{n:02d}.mp4").exists() or (w / f"comfy-{g}-{n:02d}.json").exists():
+        n += 1
+    if args.resume:
+        open_ = [i for i in range(1, n) if not (w / f"comfy-{g}-{i:02d}.mp4").exists()]
+        if not open_:
+            raise SystemExit("nothing to resume: every comfy sidecar here has its mp4")
+        n = open_[-1]
+    name = f"comfy-{g}-{n:02d}"
+    prompt = meta["prompts"][g]["flw"]
+    graph_ = flw_graph(load_seed(), shot_a="(upload)", shot_b="(upload)", audio="(upload)", prompt=prompt,
+                       seed_int=seed_int, width=SIZE[0], prefix=f"morph-{meta['a']}-{meta['b']}-{g}")
+    sets = [("69.video", kit / f"morph-shot-a-{g}.mp4"), ("70.video", kit / f"morph-shot-b-{g}.mp4"),
+            ("96.audio", kit / "morph-audio.mp3")]
+    host = comfy.ComfyHost(comfy.HOSTS[args.host])
+    rec = comfy.run_graph(host, graph_, sets, w, name, dry_run=args.dry_run, resume=args.resume,
+                          max_credits=args.max_credits, est_seconds=args.est_seconds, prefer_node="26",
+                          extra={"lane": "flw", "kind": "guide", "ground": g, "pair": [meta["a"], meta["b"]],
+                                 "prompt": prompt, "seed": seed_int})
+    if rec and rec.get("primary"):
+        out = w / rec["primary"]
+        rec["measured"] = report(out, rec, w)
+        rec["grade"] = clipgrade.grade_clip(out)["verdict"]
+        (w / f"{name}.json").write_text(json.dumps(rec, indent=2), encoding="utf-8")
+        print(f"  grade: {rec['grade']}")
+    return 0
+
+
+def cmd_grade(args) -> int:
+    import clipgrade
+
+    for c in args.clips:
+        clip = Path(c)
+        print(clipgrade.line(clipgrade.grade_clip(clip)))
+        if args.judge:
+            refs = None
+            if args.wave and args.ground:
+                w = wave_dir(args.wave)
+                refs = (w / f"ref-a-{args.ground}.png", w / f"ref-b-{args.ground}.png")
+            j = clipgrade.judge_clip(clip, refs, args.runs, args.dry_run)
+            if j:
+                print(f"  judge {j['verdict']}: " + " ".join(f"{k}={v}" for k, v in j["majority"].items()))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("check")
+    c = sub.add_parser("check")
+    c.add_argument("--host", choices=("comfy-cloud", "comfy-local"),
+                   help="check a ComfyUI host instead of fal (free: public model list, seed validation with a key)")
+    c.add_argument("--kit", help="one kit dir; default: every comfy kit under waves/")
     p = sub.add_parser("prep")
     p.add_argument("--a", required=True)
     p.add_argument("--b", required=True)
@@ -892,6 +1051,18 @@ def main() -> int:
     r.add_argument("--max-usd", type=float, default=3.0)
     r.add_argument("--ground", choices=("gold", "colour"), default="gold",
                    help="gold = the shipped posters; colour = the raw takes on one magenta ground")
+    r.add_argument("--host", choices=("comfy-cloud", "comfy-local"),
+                   help="with --run flw: run FLW as shipped on a ComfyUI host (PAID on comfy-cloud)")
+    r.add_argument("--seed", type=int)
+    r.add_argument("--max-credits", type=float, default=150.0)
+    r.add_argument("--est-seconds", type=float, default=180.0, help="GPU seconds the estimate assumes")
+    gr = sub.add_parser("grade")
+    gr.add_argument("clips", nargs="+")
+    gr.add_argument("--judge", action="store_true", help="also the vision judge on morph-rubric.md (PAID, cents)")
+    gr.add_argument("--wave")
+    gr.add_argument("--ground", choices=("gold", "colour"))
+    gr.add_argument("--runs", type=int, default=3)
+    gr.add_argument("--dry-run", action="store_true")
     i = sub.add_parser("ingest")
     i.add_argument("--wave", required=True)
     i.add_argument("--ground", choices=("gold", "colour"), required=True)
@@ -902,7 +1073,14 @@ def main() -> int:
     if args.cmd == "strip":
         print(strip(Path(args.clip)))
         return 0
-    return {"check": cmd_check, "prep": cmd_prep, "run": cmd_run, "ingest": cmd_ingest}[args.cmd](args)
+    if args.cmd == "check" and args.host:
+        return cmd_check_host(args)
+    if args.cmd == "run" and (args.run == "flw") != bool(args.host):
+        raise SystemExit("`--run flw` is the Comfy lane and needs `--host`; `--host` runs only `--run flw`")
+    if args.cmd == "run" and args.host:
+        return cmd_run_comfy(args)
+    return {"check": cmd_check, "prep": cmd_prep, "run": cmd_run, "ingest": cmd_ingest,
+            "grade": cmd_grade}[args.cmd](args)
 
 
 if __name__ == "__main__":

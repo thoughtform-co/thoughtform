@@ -282,6 +282,70 @@ runner pins ComfyUI to 2025-10-29, before LTX-2 support. ⚠ Every request sends
 a named User-Agent: Replicate's Cloudflare answers Python's default with
 `error code: 1010`, a 403 that reads like a bad key.
 
+### The Comfy lane (`comfy.py`, `graph.py`, `kits.py`, `clipgrade.py`)
+
+The SYSTMS effects run in ComfyUI, and this lane drives ComfyUI from code:
+Claude builds or patches the graph, the script uploads, submits, waits,
+downloads and grades. Nothing is dragged onto a canvas once the plan exists.
+Built 2026-10-01 after the owner asked to replicate the effects on any
+footage first, before the era pair.
+
+```
+python scripts/voidwalker-avatar/comfy.py models --grep systms                  # free: Comfy Cloud's public library
+python scripts/voidwalker-avatar/morph.py check --host comfy-cloud              # free: every kit's models listed?
+python scripts/voidwalker-avatar/kits.py scan <clip.mp4> ...                    # free: where each clip moves
+python scripts/voidwalker-avatar/kits.py flw --a <clip> --a-from N --b <clip> --b-from N --name <n> --prompt-file <p>
+python scripts/voidwalker-avatar/kits.py timeslice --a <clip> --b <clip> --name <n> [--torch-python .. --node-pack ..]
+python scripts/voidwalker-avatar/kits.py ingest --kit <kit dir> --file <downloaded.mp4>
+python scripts/voidwalker-avatar/comfy.py run --graph <g.api.json> --out <dir> --name <run> --set 1.video=@a.mp4 ... --dry-run
+python scripts/voidwalker-avatar/morph.py run --wave <w> --run flw --host comfy-cloud --ground colour --dry-run
+python scripts/voidwalker-avatar/clipgrade.py <clip.mp4> [--judge --refs <start.png> <end.png>]
+python scripts/voidwalker-avatar/clipgrade.py --calibrate                       # free: wave v1 against its eye reads
+```
+
+- **What SYSTMS ships.** FLW (an LTX-2.3 in-context LoRA, the transitions)
+  and TimeSlice (a model-free slit-scan node pack, the frame blending) are the
+  two effects; ACTION and INFL8 are Qwen Image Edit LoRAs. ⚠ Comfy Cloud's
+  shared library HOLDS ALL THREE LoRAs and every model the FLW graph needs, so
+  the Standard plan suffices (no LoRA import). No Veo anywhere: FLW is open
+  weights in ComfyUI, and it takes two clips of ANY origin.
+- ⚠ **THE LIBRARY NAME IS NOT THE AUTHOR'S.** The shipped graph's node 49
+  asks for `systms__SYSTMS-FLW-IC-LORA-LTX-23__SYSTMS_FLW_V1_LTX23.safetensors`
+  (an imported name on the author's account); the library lists
+  `SYSTMS_FLW_V1_LTX23.safetensors`. `patch_flw_ui` and `flw_graph` set the
+  library name; `check --host` reads every model name out of every kit and
+  fails on the old one. The wave-v1 kits were rebuilt with it.
+- ⚠ **CLOUD INPUT NAMES ARE CONTENT HASHES.** Upload through a node's button
+  (the editor renames the input) or through `comfy.py` (it uses the name the
+  server returns). Video and audio go to `/api/assets` when `/api/upload/image`
+  refuses a non-image. Endpoints are read off `docs.comfy.org/openapi-cloud.yaml`.
+- ⚠ **THE KEY NEVER RIDES THE 302.** `/api/view` redirects to a signed URL and
+  urllib copies headers onto redirects by default; `download()` stops at the 302. The self-test proves it against a local server.
+- ⚠ **FLW WANTS MOTION AT THE SEAM.** The era idles stand still; wave v1 cut
+  instead of flowing. A kit's shot A is the 25 frames moving INTO the seam,
+  shot B the 25 moving OUT (`kits.py scan` finds the beat). The first kit
+  (`waves/_kits/flw-genai-to-expanse`) is GenAI's hands opening (f52-76) into
+  the Expanse rifle swing (f84-108).
+- ⚠ **TIMESLICE DUAL CANNOT TRAVEL A TO B.** Its `mix` is not animated (read in
+  the pack's `nodes.py`), so the transition is `TimeSliceEffect` over A then
+  B: the cut sweeps across the frame band by band. It is pure tensor maths,
+  so `kits.py timeslice --torch-python --node-pack` renders a LOCAL preview
+  with the pack's own code, schema-checked, before a Comfy run is spent.
+- ⚠ **THE SEED IS ONE EXPORT.** `run --run flw --host` submits
+  `SYSTMS_FLW_LTX23_WF.api.json`, the editor's File -> Export (API) of the
+  patched graph, done once and committed. There is deliberately no UI -> API
+  converter; `graph.validate()` against the host's `/api/object_info` is the
+  drift guard. `flw_selftest` pins the author's sampler, guide and LoRA
+  strengths on the seed.
+- ⚠ **THE GRADER IS CALIBRATED** on wave v1's six clips (`clipgrade.py
+--calibrate`): dips are VALLEYS against the frames either side, never a
+  level change between two eras of different brightness; a dissolve is a
+  frame its NEIGHBOURS blend into. Code cannot tell a fast swap from a real
+  morph (2c moves less per frame than 3); that is the vision judge's M2
+  (`morph-rubric.md`, uncalibrated, three Gemini Flash runs, PAID, cents).
+- Paid steps stay the owner's: a Comfy plan + `COMFY_API_KEY` for API runs,
+  and the judge's Gemini calls. Everything above them is free.
+
 ## State
 
 | era          | wave                     | status                                                                                                                                                     |

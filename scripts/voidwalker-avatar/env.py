@@ -50,7 +50,10 @@ LOCAL = Path(__file__).resolve().parent / ".env"
 #: LTX-2.3 runs on fal. It is read from the SAME canonical file as the others
 #: and nowhere else — the site repo's own `.env` holds a copy from 2026-08, and
 #: this chain does not go and fetch it; `morph.py check` says which file lacks it.
-WANTED = ("GEMINI_API_KEY", "OPENAI_API_KEY", "FAL_API_KEY")
+#: ⚠ `COMFY_API_KEY` joined for `comfy.py` (2026-10-01): ComfyUI graphs run on
+#: Comfy Cloud (platform.comfy.org -> API Keys; API runs need a paid plan).
+#: Same law: read by name, printed as a length, never a fallback to fal.
+WANTED = ("GEMINI_API_KEY", "OPENAI_API_KEY", "FAL_API_KEY", "COMFY_API_KEY")
 
 _LINE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
 _loaded: dict[str, str] | None = None
