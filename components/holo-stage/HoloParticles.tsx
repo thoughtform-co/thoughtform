@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * HoloParticles — paints a `StageParticleSpec` (ADR-140, round three).
+ * HoloParticles — paints a `StageParticleSpec` (ADR-140, round three; the
+ * life dial and the deterministic clock since round four).
  *
  * ONE `<points>` draw per figure, every population in it, fed by the GPGPU
  * simulation the corridor's brandmark core runs on
@@ -11,6 +12,12 @@
  * does, and sits with the same faint physics once it has. Ordered
  * populations (a lattice, an edge) then seat EXACTLY on their homes; clouds
  * keep riding the sim and their own drift.
+ *
+ * ⚠ THE CLOCK CAN BE FROZEN (`clock`, seconds). The lab's `?t=` and the
+ * capture's frame-by-frame export hand the layer a time; the sim is then
+ * stepped at a fixed 1/60 from its seed to that time, so a frame is a pure
+ * function of `t` — the Evangelion engine's own law, which is what lets a
+ * still be re-shot and a clip be rendered rather than recorded.
  *
  * ⚠ EVERY PER-FRAME WRITE GOES THROUGH A REF. The uniforms are reached via
  * the mesh ref's material and the sim lives in a ref filled by an effect,
@@ -28,6 +35,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import type { HoloPalette } from "@/components/holo-program/holoPalette";
+import { INTRO_MS } from "@/components/holo-program/holoProgramGeom";
 import { mulberry32 } from "@/components/arcs/framing/iso";
 import { createParticleUVs, GPGPUParticleSimulation } from "@/lib/key-visual/gpgpu-simulation";
 import { clamp01 } from "@/lib/math";
@@ -42,6 +50,9 @@ export interface StageClock {
   t: number;
   groups: THREE.Vector4;
   front: number;
+  /** The re-scan front's world coordinate and its gain (0 = off). */
+  rescan: number;
+  rescanGain: number;
 }
 
 function smootherstep(edge0: number, edge1: number, x: number): number {
@@ -54,13 +65,20 @@ function smootherstep(edge0: number, edge1: number, x: number): number {
  *  core's own pair, scaled to a stage ~12 units across. */
 const DISPERSED = { returnStrength: 0.7, flowStrength: 0.12, turbulence: 0.55 };
 const SEATED = { returnStrength: 10, flowStrength: 0.014, turbulence: 0.018 };
+/** Seated, with the life dial at 1: the clouds keep a CONSTANT curl — the
+ *  brandworld film's measured drift, never ramping (grammar.md §5). */
+const SEATED_LIVE = { returnStrength: 10, flowStrength: 0.032, turbulence: 0.046 };
 
 /** The assembly runs over this share of the intro clock, then the seat. */
 const ASSEMBLE_END = 0.62;
 
 /** How much brighter the lit population paints on dark: past the bloom
- *  threshold, into the white-hot core the references measure. */
-const LIT_GAIN = 2.4;
+ *  threshold, into the white-hot core the references measure (donor at
+ *  2–3× linear, grammar.md §2). */
+const LIT_GAIN = 3.2;
+
+/** The fixed step of the frozen clock, seconds. */
+const STEP = 1 / 60;
 
 export interface HoloParticlesProps {
   spec: StageParticleSpec;
@@ -69,6 +87,10 @@ export interface HoloParticlesProps {
   groupNames: readonly string[];
   still: boolean;
   clock: { readonly current: StageClock };
+  /** The life dial 0..1 (ADR-140, round four). */
+  life?: number;
+  /** A frozen time in seconds: the sim is stepped deterministically to it. */
+  frozen?: number;
 }
 
 export function HoloParticles({
@@ -78,11 +100,15 @@ export function HoloParticles({
   groupNames,
   still,
   clock,
+  life = 0.5,
+  frozen,
 }: HoloParticlesProps) {
   const gl = useThree((s) => s.gl);
   const viewport = useThree((s) => s.viewport);
   const pointsRef = useRef<THREE.Points>(null);
   const simRef = useRef<GPGPUParticleSimulation | null>(null);
+  /** How far the frozen clock's sim has been stepped, in steps. */
+  const steppedRef = useRef(-1);
 
   /* ── Buffers, built once per spec ──────────────────────────────────── */
   const buffers = useMemo(() => {
@@ -95,11 +121,13 @@ export function HoloParticles({
     const meta1 = new Float32Array(total * 4);
     const meta2 = new Float32Array(total * 4);
     const reveal = new Float32Array(total * 2);
+    const flow = new Float32Array(total * 4);
     const rnd = mulberry32(911 + n);
     const scatter = still ? 0 : spec.scatter;
     let i = 0;
     for (const pop of spec.populations) {
       const gi = pop.group ? groupNames.indexOf(pop.group) + 1 : 0;
+      const period = pop.flow ? (pop.flow.mode === "wander" ? -1 : 1) * pop.flow.period : 0;
       pop.points.forEach((pt, k) => {
         home[i * 3] = pt[0];
         home[i * 3 + 1] = pt[1];
@@ -120,14 +148,24 @@ export function HoloParticles({
         meta0[i * 4 + 3] = pop.opacity;
         meta1[i * 4] = rnd();
         meta1[i * 4 + 1] = pop.angles?.[k] ?? 0;
-        meta1[i * 4 + 2] = typeof pop.order === "number" ? pop.order : (pop.order?.[k] ?? 1);
-        meta1[i * 4 + 3] = pop.drift ?? 0;
+        const order = typeof pop.order === "number" ? pop.order : (pop.order?.[k] ?? 1);
+        meta1[i * 4 + 2] = order;
+        /* The drift slot: a cloud's wander amplitude, or a seated bead's flow
+           period (negative = wander) — a seated bead never reads it as drift. */
+        meta1[i * 4 + 3] = pop.flow && pop.tangents ? period : (pop.drift ?? 0);
         meta2[i * 4] = gi;
         meta2[i * 4 + 1] = pop.lit ? 1 : 0;
         meta2[i * 4 + 2] = pop.twinkle ?? 0;
         meta2[i * 4 + 3] = pop.sizeVar ?? 0;
         reveal[i * 2] = pop.reveal[0];
         reveal[i * 2 + 1] = pop.reveal[1];
+        const tg = pop.flow ? pop.tangents?.[k] : undefined;
+        if (tg) {
+          flow[i * 4] = tg[0];
+          flow[i * 4 + 1] = tg[1];
+          flow[i * 4 + 2] = tg[2];
+          flow[i * 4 + 3] = rnd();
+        }
         i++;
       });
     }
@@ -147,6 +185,7 @@ export function HoloParticles({
     geometry.setAttribute("aMeta1", new THREE.BufferAttribute(meta1, 4));
     geometry.setAttribute("aMeta2", new THREE.BufferAttribute(meta2, 4));
     geometry.setAttribute("aReveal", new THREE.BufferAttribute(reveal, 2));
+    geometry.setAttribute("aFlow", new THREE.BufferAttribute(flow, 4));
     geometry.computeBoundingSphere();
     return { geometry, home, start, total, ts };
   }, [spec, groupNames, still]);
@@ -168,6 +207,9 @@ export function HoloParticles({
         uSweepAxis: { value: sweep?.axis ?? 0 },
         uSweep: { value: 0 },
         uSweepWidth: { value: sweep?.width ?? 1 },
+        uRescan: { value: -1e6 },
+        uRescanGain: { value: 0 },
+        uLife: { value: 0 },
         uRoleColors: {
           value: [
             c(palette.structure),
@@ -209,6 +251,7 @@ export function HoloParticles({
       sim = null;
     }
     simRef.current = sim;
+    steppedRef.current = -1;
     return () => {
       sim?.dispose();
       if (simRef.current === sim) simRef.current = null;
@@ -225,46 +268,94 @@ export function HoloParticles({
 
   const alphaScale = palette.additive ? palette.dustScale : palette.dustScale * 1.5;
 
+  /** The forces at intro progress `p`, with the life dial on the seated end. */
+  const forcesAt = (p: number) => {
+    const ignite = still ? 1 : smootherstep(0.0, ASSEMBLE_END, p);
+    const seated = {
+      flowStrength: SEATED.flowStrength + (SEATED_LIVE.flowStrength - SEATED.flowStrength) * life,
+      returnStrength: SEATED.returnStrength,
+      turbulence: SEATED.turbulence + (SEATED_LIVE.turbulence - SEATED.turbulence) * life,
+    };
+    return {
+      ignite,
+      flowStrength:
+        DISPERSED.flowStrength + (seated.flowStrength - DISPERSED.flowStrength) * ignite,
+      returnStrength:
+        DISPERSED.returnStrength + (seated.returnStrength - DISPERSED.returnStrength) * ignite,
+      turbulence: DISPERSED.turbulence + (seated.turbulence - DISPERSED.turbulence) * ignite,
+    };
+  };
+
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const pts = pointsRef.current;
     if (!pts) return;
     const u = (pts.material as THREE.ShaderMaterial).uniforms;
-    const { p, t, groups, front } = clock.current;
+    const { p, t, groups, front, rescan, rescanGain } = clock.current;
 
-    /* The arrival's envelope: dispersed → seated. */
-    const ignite = still ? 1 : smootherstep(0.0, ASSEMBLE_END, p);
     const sim = simRef.current;
-    if (sim) {
+    let ignite: number;
+    if (sim && frozen !== undefined) {
+      /* The frozen clock: step from the seed to `frozen` at a fixed dt, once
+         per change; a forward move continues from where the last stop was. */
+      const target = Math.max(0, Math.round(frozen / STEP));
+      if (
+        steppedRef.current < 0 ||
+        target < steppedRef.current ||
+        target - steppedRef.current > 240
+      ) {
+        sim.reseed(buffers.start);
+        steppedRef.current = 0;
+      }
+      for (let k = steppedRef.current; k < target; k++) {
+        const pk = still ? 1 : Math.min(1, ((k + 1) * STEP * 1000) / INTRO_MS);
+        const f = forcesAt(pk);
+        sim.updateUniforms({
+          time: (k + 1) * STEP,
+          deltaTime: STEP,
+          flowStrength: f.flowStrength,
+          returnStrength: f.returnStrength,
+          turbulence: f.turbulence,
+          pointerStrength: 0,
+        });
+        sim.compute();
+      }
+      steppedRef.current = target;
+      ignite = forcesAt(p).ignite;
+      u.uPositions.value = sim.getPositionTexture();
+    } else if (sim) {
+      const f = forcesAt(p);
+      ignite = f.ignite;
       if (!still) {
         sim.updateUniforms({
           time: t,
           deltaTime: dt,
-          flowStrength:
-            DISPERSED.flowStrength + (SEATED.flowStrength - DISPERSED.flowStrength) * ignite,
-          returnStrength:
-            DISPERSED.returnStrength + (SEATED.returnStrength - DISPERSED.returnStrength) * ignite,
-          turbulence: DISPERSED.turbulence + (SEATED.turbulence - DISPERSED.turbulence) * ignite,
+          flowStrength: f.flowStrength,
+          returnStrength: f.returnStrength,
+          turbulence: f.turbulence,
           pointerStrength: 0,
         });
         sim.compute();
       }
       u.uPositions.value = sim.getPositionTexture();
+    } else {
+      ignite = 1;
     }
-    u.uSeat.value = still ? 1 : smootherstep(0.7, 1, ignite);
+    u.uSeat.value = still || !sim ? 1 : smootherstep(0.7, 1, ignite);
     u.uProgress.value = p;
     (u.uGroups.value as THREE.Vector4).copy(groups);
     u.uTime.value = t;
     u.uPixelRatio.value = viewport.dpr;
     u.uSizeScale.value = 1;
     u.uAlphaScale.value = alphaScale;
+    u.uLife.value = still ? 0 : life;
     u.uSweepOn.value = !!sweep;
     if (sweep) {
       u.uSweep.value = still ? sweep.to + sweep.width * 4 : front || sweepAt(sweep, p);
       u.uSweepWidth.value = sweep.width;
+      u.uRescan.value = rescanGain > 0 ? rescan : -1e6;
+      u.uRescanGain.value = rescanGain;
     }
-    /* No sim (no WebGL2 float targets): the homes stand in. */
-    if (!sim) u.uSeat.value = 1;
   });
 
   return (

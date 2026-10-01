@@ -25,6 +25,13 @@
  * group the canvas eases toward — the curve's second dial rises when its
  * button is pressed) and STRIPS (a ribbon as one triangle strip). The drei
  * donor runs, the shaded faces and the anchor channel are the U4 scene's.
+ *
+ * ROUND FOUR adds the LIFE dial (handed to the particle layer: beads travel
+ * their runs, clouds keep a constant curl), the RE-SCAN (the arrival's front
+ * again every `RESCAN_PERIOD` seconds at a quarter of its brightness — a held
+ * instrument re-reading its record), the atmosphere SHELLS, and a FROZEN
+ * CLOCK (`clock`, seconds): every clock here becomes a pure function of that
+ * time, so a still can be re-shot and a clip rendered frame by frame.
  */
 
 import { Line } from "@react-three/drei";
@@ -65,6 +72,41 @@ const DASH_OFF = 0.09;
  *  end to end at this. */
 const GROUP_MS = 1100;
 
+/** The re-scan: the arrival's front again, every `RESCAN_PERIOD` seconds,
+ *  crossing the plate in `RESCAN_SWEEP` seconds at `RESCAN_GAIN` of the
+ *  arrival's brightness (times the life dial). Grammar.md §5: the city's own
+ *  scan plane returns every 3.6 s; a held instrument re-reads less often. */
+export const RESCAN_PERIOD = 9;
+export const RESCAN_SWEEP = 3;
+export const RESCAN_GAIN = 0.25;
+
+/** The Arc sphere's atmosphere, copied from `ShellSubstrateGyro.tsx` (ADR-106:
+ *  never imported). A back-faced sphere whose alpha is a Fresnel of the
+ *  silhouette — a soft halo, not a ring. */
+const ATMOSPHERE_VERT = /* glsl */ `
+varying vec3 vViewNormal;
+varying vec3 vViewPos;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  vViewNormal = normalize(normalMatrix * normal);
+  vViewPos = mv.xyz;
+}`;
+const ATMOSPHERE_FRAG = /* glsl */ `
+uniform vec3 uColor;
+uniform float uOpacity;
+uniform float uPower;
+varying vec3 vViewNormal;
+varying vec3 vViewPos;
+void main() {
+  vec3 viewDir = normalize(-vViewPos);
+  vec3 n = -vViewNormal;
+  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), uPower);
+  float alpha = fresnel * uOpacity;
+  if (alpha < 0.005) discard;
+  gl_FragColor = vec4(uColor, alpha);
+}`;
+
 function dashSegments(points: readonly (readonly [number, number, number])[]): THREE.Vector3[] {
   const out: THREE.Vector3[] = [];
   for (let i = 1; i < points.length; i++) {
@@ -82,6 +124,8 @@ function dashSegments(points: readonly (readonly [number, number, number])[]): T
   return out;
 }
 
+const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
 export interface HoloStageSceneProps {
   spec: HoloStageSpec;
   palette: HoloPalette;
@@ -90,6 +134,10 @@ export interface HoloStageSceneProps {
   still?: boolean;
   /** Which reveal groups are open. Absent = all closed. */
   groups?: Readonly<Record<string, boolean>>;
+  /** The life dial 0..1 (round four). */
+  life?: number;
+  /** A frozen time in seconds (round four): the clocks become f(t). */
+  clock?: number;
   onReady?: () => void;
 }
 
@@ -100,6 +148,8 @@ export function HoloStageScene({
   armed,
   still = false,
   groups,
+  life = 0.5,
+  clock: frozen,
   onReady,
 }: HoloStageSceneProps) {
   const { invalidate, camera, viewport, size } = useThree();
@@ -239,6 +289,32 @@ export function HoloStageScene({
     [spec]
   );
 
+  /** The atmosphere shells (round four): a back-faced sphere each, additive,
+   *  only on dark — on paper the list is empty so nothing is mounted. */
+  const shellGeom = useMemo(
+    () =>
+      (palette.additive ? (spec.shells ?? []) : []).map((s) => ({
+        shell: s,
+        geometry: new THREE.SphereGeometry(s.r, 48, 32),
+        material: new THREE.ShaderMaterial({
+          vertexShader: ATMOSPHERE_VERT,
+          fragmentShader: ATMOSPHERE_FRAG,
+          uniforms: {
+            uColor: { value: colourOf(s.role).clone() },
+            uOpacity: { value: 0 },
+            uPower: { value: 2.5 },
+          },
+          transparent: true,
+          depthWrite: false,
+          side: THREE.BackSide,
+          blending: THREE.AdditiveBlending,
+          toneMapped: false,
+        }),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- colourOf derives from `C`
+    [spec, palette.additive, C]
+  );
+
   const dustGeom = useMemo(
     () =>
       spec.dust.map((d) => {
@@ -297,12 +373,16 @@ export function HoloStageScene({
       for (const d of dashed) d.geometry.dispose();
       for (const f of faceGeom) f.geometry.dispose();
       for (const s of stripGeom) s.geometry.dispose();
+      for (const s of shellGeom) {
+        s.geometry.dispose();
+        s.material.dispose();
+      }
       for (const d of dustGeom) {
         d.geometry.dispose();
         d.material.dispose();
       }
     },
-    [batch, dashed, faceGeom, stripGeom, dustGeom]
+    [batch, dashed, faceGeom, stripGeom, shellGeom, dustGeom]
   );
 
   /* ── Refs the frame writes through ──────────────────────────────────── */
@@ -316,11 +396,19 @@ export function HoloStageScene({
   const dashRefs = useRef<(THREE.LineSegments | null)[]>([]);
   const faceRefs = useRef<(THREE.Mesh | null)[]>([]);
   const stripRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const shellRefs = useRef<(THREE.Mesh | null)[]>([]);
   const dustRefs = useRef<(THREE.Points<THREE.BufferGeometry> | null)[]>([]);
 
   const progress = useRef(0);
   /* The clocks the particle layer reads (ADR-140, round three). */
-  const sceneClock = useRef<StageClock>({ p: 0, t: 0, groups: new THREE.Vector4(), front: 0 });
+  const sceneClock = useRef<StageClock>({
+    p: 0,
+    t: 0,
+    groups: new THREE.Vector4(),
+    front: 0,
+    rescan: -1e6,
+    rescanGain: 0,
+  });
   const ready = useRef(false);
   const clock = useRef(0);
   const scratch = useMemo(() => new THREE.Vector3(), []);
@@ -334,7 +422,7 @@ export function HoloStageScene({
   /* A group opening or closing wakes the loop; the frame eases it. */
   useEffect(() => {
     invalidate();
-  }, [groups, invalidate]);
+  }, [groups, frozen, life, invalidate]);
 
   useEffect(() => () => channel.clear(), [channel]);
 
@@ -346,16 +434,20 @@ export function HoloStageScene({
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    clock.current += dt;
+    /* The wall clock, or the frozen one: every clock below is f(t). */
+    if (frozen === undefined) clock.current += dt;
+    else clock.current = frozen;
     const t = clock.current;
 
     if (still) progress.current = 1;
+    else if (frozen !== undefined) progress.current = Math.min(1, (frozen * 1000) / INTRO_MS);
     else if (armed && progress.current < 1) {
       progress.current = Math.min(1, progress.current + (dt * 1000) / INTRO_MS);
     }
     const p = progress.current;
 
-    /* The groups ease toward their targets, at one speed either way. */
+    /* The groups ease toward their targets, at one speed either way; a
+       frozen clock seats them at their targets. */
     if (!groupP.current || groupP.current.length !== groupNames.length) {
       groupP.current = groupNames.map((g) => (groups?.[g] ? 1 : 0));
     }
@@ -365,7 +457,7 @@ export function HoloStageScene({
       const target = groups?.[g] ? 1 : 0;
       const cur = gp[i];
       if (cur === target) return;
-      const step = still ? 1 : (dt * 1000) / GROUP_MS;
+      const step = still || frozen !== undefined ? 1 : (dt * 1000) / GROUP_MS;
       gp[i] = cur < target ? Math.min(target, cur + step) : Math.max(target, cur - step);
       groupsMoving = true;
     });
@@ -376,10 +468,30 @@ export function HoloStageScene({
     /* The sweep's front, in world. Past the intro it has crossed everything. */
     const sweep = spec.sweep;
     const front = sweep ? (still ? sweep.to + sweep.width * 4 : sweepAt(sweep, p)) : 0;
+    /* The re-scan: the same front again, every RESCAN_PERIOD, fainter. */
+    let rescan = -1e6;
+    let rescanGain = 0;
+    if (sweep && !still && life > 0) {
+      const tr = t - INTRO_MS / 1000;
+      if (tr > 0) {
+        /* The re-scan runs at the END of each period, so the first one comes
+           a full period after the arrival — not on its heels, which read as
+           the arrival sweeping twice (the first clip, measured). */
+        const ph = tr % RESCAN_PERIOD;
+        const start = RESCAN_PERIOD - RESCAN_SWEEP;
+        if (ph > start) {
+          const k = easeInOutCubic((ph - start) / RESCAN_SWEEP);
+          rescan = sweep.from + (sweep.to - sweep.from) * k;
+          rescanGain = RESCAN_GAIN * life;
+        }
+      }
+    }
     sceneClock.current.p = p;
     sceneClock.current.t = t;
     sceneClock.current.groups.copy(groupsVec);
     sceneClock.current.front = front;
+    sceneClock.current.rescan = rescan;
+    sceneClock.current.rescanGain = rescanGain;
 
     /* ⚠ NO BREATHING ON A FRAMING STAGE (ADR-130 U4). The words are the SVG
        fallback's own DOM spans, seated by fraction over a drawing that must
@@ -459,6 +571,17 @@ export function HoloStageScene({
       el.visible = r > 0.01;
     });
 
+    shellGeom.forEach((s, i) => {
+      const el = shellRefs.current[i];
+      if (!el) return;
+      const r = smootherstep(s.shell.reveal[0], s.shell.reveal[1], p);
+      /* The shell breathes with the twinkle, a few percent — the Arc
+         sphere's own atmosphere does; the globe under it does not. */
+      const tw = still ? 1 : 1 + Math.sin(t * 0.9) * 0.04 * life;
+      s.material.uniforms.uOpacity.value = s.shell.opacity * r * tw;
+      el.visible = r > 0.01;
+    });
+
     const machine = smootherstep(0, 0.45, p);
     const tw = still ? 1 : 1 + Math.sin(t * 1.7) * TWINKLE * 0.16;
     dustGeom.forEach((d, i) => {
@@ -531,8 +654,23 @@ export function HoloStageScene({
           groupNames={groupNames}
           still={still}
           clock={sceneClock}
+          life={life}
+          frozen={frozen}
         />
       ) : null}
+
+      {shellGeom.map((s, i) => (
+        <mesh
+          key={s.shell.id}
+          ref={(el) => {
+            shellRefs.current[i] = el;
+          }}
+          geometry={s.geometry}
+          material={s.material}
+          position={s.shell.c}
+          renderOrder={2}
+        />
+      ))}
 
       {dashed.map((g, i) => (
         <lineSegments

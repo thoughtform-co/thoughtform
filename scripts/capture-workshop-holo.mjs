@@ -14,13 +14,26 @@
  *   node scripts/capture-workshop-holo.mjs --only the-curve
  *   node scripts/capture-workshop-holo.mjs --slug thoughtform-workshop --flat
  *
+ * THE LAB (round four), by `--path`, whose sections are `#dir-<id>`:
+ *
+ *   node scripts/capture-workshop-holo.mjs --path /test/workshop-holo-lab --only stages-instrument,curve-instrument,spectrum-instrument
+ *   node scripts/capture-workshop-holo.mjs --path /test/workshop-holo-lab --only curve-instrument --video --from 0 --to 12 --fps 30
+ *   node scripts/capture-workshop-holo.mjs --path /test/workshop-holo-lab --only curve-instrument --sheet --from 0 --to 12 --n 12
+ *
+ * `--video` renders FRAME BY FRAME through the lab's frozen clock
+ * (`window.__holoClock(t)`: the sim is stepped deterministically to t, so a
+ * frame is f(t), the Evangelion engine's own law) and assembles an MP4 with
+ * ffmpeg; `--sheet` tiles n frames into one contact sheet. ⚠ Run from
+ * PowerShell: Git Bash rewrites a `/test/...` argument into a Windows path.
+ *
  * Per figure it waits for live (or not), lets the arrival play, shoots the
  * viewport and the section's own box, and for the curve presses the two
  * buttons and shoots each step. It prints what it measured: the tri-state,
  * the canvas size, the beat's height against the frame, page errors.
  */
 import { chromium } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
 const arg = (flag, fallback) => {
@@ -30,18 +43,31 @@ const arg = (flag, fallback) => {
 
 const BASE = arg("--base", "http://localhost:3003");
 const SLUG = arg("--slug", "thoughtform-workshop-v2");
-/** A path instead of an arc — the lab: `--path "/test/workshop-holo-lab?agent=solid"`. */
+/** A path instead of an arc — the lab: `--path "/test/workshop-holo-lab?life=1"`. */
 const PATH = arg("--path", "");
 const THEME = arg("--theme", "dark");
-const ONLY = arg("--only", "three-ways,the-curve,between");
+const ONLY = arg("--only", PATH ? "stages-instrument,curve-instrument,spectrum-instrument" : "three-ways,the-curve,between");
 const FLAT = process.argv.includes("--flat");
+const VIDEO = process.argv.includes("--video");
+const SHEET = process.argv.includes("--sheet");
+const FROM = Number(arg("--from", "0"));
+const TO = Number(arg("--to", "12"));
+const FPS = Number(arg("--fps", "30"));
+const SHEET_N = Number(arg("--n", "12"));
 /* ⚠ NOT under `public/` — that ships. `.cursor/arc-shots-*` is gitignored. */
-const OUT = arg("--out", path.join(".cursor", `arc-shots-${SLUG}-holo`));
+const OUT = arg("--out", path.join(".cursor", `arc-shots-${PATH ? "holo-lab" : SLUG}-holo`));
 const [W, H] = arg("--vp", "1920x1080")
   .split("x")
   .map((n) => Number(n));
 /** How long the arrival gets after `live` before the still (the intro is 2s). */
 const ARRIVE_MS = Number(arg("--arrive", "3400"));
+/** The lab's sections are `#dir-<id>`; an arc's are the beats' own ids. */
+const sectionId = (id) => (PATH ? (id.startsWith("dir-") ? id : `dir-${id}`) : id);
+
+const ffmpeg = (args) => {
+  const r = spawnSync("ffmpeg", ["-v", "error", "-y", ...args], { stdio: "inherit" });
+  if (r.status !== 0) throw new Error("ffmpeg failed: " + args.join(" "));
+};
 
 const run = async () => {
   await mkdir(OUT, { recursive: true });
@@ -69,8 +95,13 @@ const run = async () => {
   await page.goto(url, { waitUntil: "networkidle" });
   await page.addStyleTag({ content: "html{scroll-behavior:auto!important}" });
 
+  const wanted = ONLY.split(",").map((s) => s.trim()).filter(Boolean);
+
   /* The workshop's tail is a lazy nested root (ADR-137): wait for it. */
-  await page.waitForSelector(PATH ? `#${ONLY.split(",")[0].trim()}` : "#the-curve, #three-ways, #between", { timeout: 60000 });
+  await page.waitForSelector(
+    PATH ? `#${sectionId(wanted[0])}` : "#the-curve, #three-ways, #between",
+    { timeout: 60000 }
+  );
 
   /* ONE FORWARD SWEEP FIRST: the reveal is one-shot and unobserves on first
      intersect, so a beat only draws itself once scrolled through. */
@@ -81,7 +112,6 @@ const run = async () => {
   }
   await page.waitForTimeout(600);
 
-  const wanted = ONLY.split(",").map((s) => s.trim());
   const report = [];
   const shots = [];
 
@@ -92,34 +122,86 @@ const run = async () => {
     return file;
   };
 
+  /** Two frames of the loop, so a clock write has painted. */
+  const settle = () =>
+    page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(0))))
+    );
+
   for (const id of wanted) {
-    const exists = await page.$(`#${id}`);
+    const sid = sectionId(id);
+    const exists = await page.$(`#${sid}`);
     if (!exists) {
       report.push({ id, missing: true });
       continue;
     }
-    await page.evaluate((sid) => {
-      const el = document.getElementById(sid);
-      if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY);
-    }, id);
+    await page.evaluate((s) => {
+      const el = document.getElementById(s);
+      if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - (s.startsWith("dir-") ? 24 : 0));
+    }, sid);
     await page.waitForTimeout(500);
 
     let live = "absent";
     if (!FLAT) {
       await page
         .waitForFunction(
-          (sid) => document.getElementById(sid)?.getAttribute("data-holo") === "live",
-          id,
+          (s) => document.getElementById(s)?.getAttribute("data-holo") === "live",
+          sid,
           { timeout: 20000 }
         )
-        .catch(() => console.log(`⚠ #${id} never went live — shooting whatever is there`));
+        .catch(() => console.log(`⚠ #${sid} never went live — shooting whatever is there`));
     }
+
+    if ((VIDEO || SHEET) && PATH) {
+      /* Frame by frame on the frozen clock, the stage box alone. */
+      const stage = await page.$(`#${sid} .whd__stage`);
+      const tmp = path.join(OUT, `_frames-${id}-${THEME}`);
+      await rm(tmp, { recursive: true, force: true });
+      await mkdir(tmp, { recursive: true });
+      const n = VIDEO ? Math.round((TO - FROM) * FPS) : SHEET_N;
+      const t0 = Date.now();
+      for (let k = 0; k < n; k++) {
+        const t = VIDEO ? FROM + k / FPS : FROM + ((TO - FROM) * k) / Math.max(1, n - 1);
+        await page.evaluate((tt) => window.__holoClock?.(tt), t);
+        await settle();
+        await settle();
+        await stage.screenshot({ path: path.join(tmp, `f_${String(k).padStart(5, "0")}.png`) });
+        if (k % 30 === 0) console.log(`${id} frame ${k}/${n} t=${t.toFixed(2)} ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+      }
+      await page.evaluate(() => window.__holoClock?.(undefined));
+      if (VIDEO) {
+        const out = path.join(OUT, `${id}-${THEME}-${FROM}-${TO}s.mp4`);
+        ffmpeg(["-framerate", String(FPS), "-i", path.join(tmp, "f_%05d.png"), "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", "-preset", "slow", "-movflags", "+faststart", out]);
+        shots.push(out);
+        console.log("wrote", out);
+      }
+      if (SHEET) {
+        const out = path.join(OUT, `${id}-${THEME}-sheet.png`);
+        const cols = 4;
+        const rows = Math.ceil(n / cols);
+        ffmpeg(["-i", path.join(tmp, "f_%05d.png"), "-vf", `scale=480:-1,tile=${cols}x${rows}:padding=6:color=0x0a0908`, "-frames:v", "1", out]);
+        shots.push(out);
+        console.log("wrote", out);
+      }
+      await rm(tmp, { recursive: true, force: true });
+      report.push({ id, live: "frozen", frames: n });
+      continue;
+    }
+
     await page.waitForTimeout(ARRIVE_MS);
     live = await page.evaluate(
-      (sid) => document.getElementById(sid)?.getAttribute("data-holo") ?? "absent",
-      id
+      (s) => document.getElementById(s)?.getAttribute("data-holo") ?? "absent",
+      sid
     );
     await shoot(id, "rest");
+    if (PATH) {
+      const stage = await page.$(`#${sid} .whd__stage`);
+      if (stage) {
+        const file = path.join(OUT, `${id}-stage-${THEME}-${W}x${H}.png`);
+        await stage.screenshot({ path: file });
+        shots.push(file);
+      }
+    }
 
     /* The curve's two buttons: the prices, then the surface. */
     if (id === "the-curve") {
@@ -140,9 +222,9 @@ const run = async () => {
     }
 
     const m = await page.evaluate(
-      ({ sid, vh }) => {
-        const sec = document.getElementById(sid);
-        const canvas = sec?.querySelector(".arc-holo canvas");
+      ({ s, vh }) => {
+        const sec = document.getElementById(s);
+        const canvas = sec?.querySelector("canvas");
         const r = sec?.getBoundingClientRect();
         const c = canvas?.getBoundingClientRect();
         return {
@@ -153,7 +235,7 @@ const run = async () => {
           step: sec?.querySelector(".arc-cv")?.getAttribute("data-step") ?? null,
         };
       },
-      { sid: id, vh: H }
+      { s: sid, vh: H }
     );
     report.push({ id, live, ...m });
   }
@@ -161,7 +243,7 @@ const run = async () => {
   const arcTall = await page.evaluate(() => document.documentElement.hasAttribute("data-arc-tall"));
   await browser.close();
 
-  console.log(`shot ${shots.length} stills → ${OUT}`);
+  console.log(`shot ${shots.length} files → ${OUT}`);
   for (const r of report) console.log(JSON.stringify(r));
   if (arcTall) console.log("⚠ data-arc-tall is SET — the curtain is disarmed");
   if (errors.length) console.log("⚠ page errors:", errors);

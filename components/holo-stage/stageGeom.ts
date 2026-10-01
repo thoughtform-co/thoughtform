@@ -172,6 +172,22 @@ export function sweepReaches(s: StageSweep, coord: number): number {
   return t0 + (t1 - t0) * k;
 }
 
+/**
+ * An ATMOSPHERE (ADR-140, round four): the Arc sphere's own Fresnel shell
+ * around a globe — bright at the silhouette, clear at the centre — drawn
+ * additive on dark and NOT AT ALL on paper (additive cannot ink). The
+ * reference's "soft halo rather than a thin ring": `uPower` 2.5.
+ */
+export interface StageShell {
+  id: string;
+  /** The centre, in three-space. */
+  c: Vec3;
+  r: number;
+  role: StageRole;
+  opacity: number;
+  reveal: readonly [number, number];
+}
+
 export interface StageAnchor {
   id: string;
   /** Where the leader lands, in world. */
@@ -201,6 +217,8 @@ export interface HoloStageSpec {
   anchors: readonly StageAnchor[];
   /** Ribbons (ADR-140). Absent = none. */
   strips?: readonly StageStrip[];
+  /** Atmosphere shells around a globe (ADR-140, round four). Absent = none. */
+  shells?: readonly StageShell[];
   /** The camera (ADR-140). Absent = the stage's parallel view. */
   view?: StageView;
   /** The arrival sweep (ADR-140). Absent = draw-on alone, as before. */

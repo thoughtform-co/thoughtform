@@ -213,3 +213,41 @@ beat is one viewport, horizontal overflow is zero, **label collisions are
 zero** (measured on rendered rects, and report WHICH pair), and the ground is
 identical above, inside and below the canvas. Then disable GL and confirm the
 flat drawing comes back whole.
+
+## Round four (2026-10-01): the frame is the instrument
+
+The owner's read of a populated figure at the Arc sphere's basis was still
+"boring", and the measurement said why: a small object in a large void, no
+datum around it, thin motes, a bloom that lifted nothing, a figure frozen
+after arrival. Four rules joined the stage, all in `components/holo-stage/`:
+
+- **A plate stands on a BED** (`directions/instrument.ts`): a dotted graticule
+  past the figure's floor to the crop's edges, beaded rules on the major
+  pitch, ruler ticks on the bed's two front edges, the slab below, the front
+  edges a step brighter, all at the `grid` / `structure` rungs. Figure + bed
+  fill at least 70 % of the width; the lit object at least a quarter of the
+  shorter side where it is a body, a twelfth where it is a locator.
+- **Readouts are DOM plates** (`DirLabel.kind: "readout"`): a framed KEY over
+  a value, TR + BL cut, seated in the bed's margin and stacked in SCREEN px
+  from one anchor — never spaced by a world step, which is 23 px at 1920 and
+  overprints.
+- **Density is the Arc sphere's**: the gyro's cos-latitude shell (copied),
+  an atmosphere shell (dark only), beads at the core's size, a `disc` sprite
+  for a filled node. A shell at 3000 fuses into a ball at stage scale; 2000
+  keeps the rows. A lattice fuses into bars past four layers in the parallel
+  view.
+- **Life is scoped and measured**: beads with a tangent TRAVEL (`run`
+  conveyor, `wander` sine); clouds keep a constant curl; a re-scan at the end
+  of every 9 s at a quarter of the arrival; nothing rotates or breathes. Hold
+  at life 0 measures 0.03 per 255 whole-frame (grain + twinkle), 0.23 at
+  0.6; the house film's hold is 0.04–0.15, so the dial defaults to 0.5.
+- **The light is the P(doom) pyramid** (`HoloPost.ts`): threshold above the
+  structure and the paper, warm-gold halation off what passes it, a tone
+  shoulder, the raster, the vignette — before the composer's `Noise`, which
+  keeps the grain and does the encoding. The page keeps the two-Bloom chain
+  until a pick.
+- **A frozen clock** (`clock` / `?t=` / `window.__holoClock`): the sim steps
+  at a fixed 1/60 from its seed, so a still is f(t) and
+  `capture-workshop-holo.mjs --video` renders a clip rather than recording
+  one. Veo on a populated first frame invented an object on five clips of
+  six: motion here is built, never recorded.

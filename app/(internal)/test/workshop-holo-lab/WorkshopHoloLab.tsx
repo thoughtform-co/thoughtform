@@ -1,19 +1,26 @@
 "use client";
 
 /**
- * WorkshopHoloLab — the directions, side by side (ADR-140, round two).
+ * WorkshopHoloLab — the directions, side by side (ADR-140, rounds two to four).
  *
  * Each card mounts production's `HoloStageCanvas` (through the same lazy seam
  * the page uses) on one direction's spec and seats its words as DOM spans at
  * their anchors' crop fractions — nothing lettered on the object. The theme
  * flips through the STORE (never a stamped attribute: the painters read the
  * store), and the dials are the material's own.
+ *
+ * Round four's dials: `?life=` (0..1, the travel / wander / re-scan),
+ * `?post=pyramid|bloom` (the P(doom) chain or the two Blooms it replaced),
+ * and `?t=` — a FROZEN clock in seconds, so a still is a pure function of
+ * time. The capture's frame-by-frame export drives that clock through
+ * `window.__holoClock(t)`.
  */
 
 import dynamic from "next/dynamic";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 import { DIRECTIONS, DIRECTION_IDS, type Direction } from "@/components/holo-stage/directions";
+import type { HoloPostMode } from "@/components/holo-stage/HoloStageCanvas";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
 import { stageToCrop, toThree, type StageCamera } from "@/components/holo-stage/stageFit";
 import { useThemeStore } from "@/lib/stores/themeStore";
@@ -23,12 +30,20 @@ const HoloStageCanvas = dynamic(
   { ssr: false }
 );
 
+declare global {
+  interface Window {
+    /** The capture's hand on the frozen clock (seconds); `undefined` releases it. */
+    __holoClock?: (t: number | undefined) => void;
+  }
+}
+
 function fromUrl(key: string, fallback: string): string {
   if (typeof window === "undefined") return fallback;
   return new URLSearchParams(window.location.search).get(key) || fallback;
 }
 
 const WIDTHS = [1280, 1440, 1920] as const;
+const LIVES = [0, 0.3, 0.6, 1] as const;
 
 function DirectionCard({
   dir,
@@ -37,6 +52,9 @@ function DirectionCard({
   width,
   replay,
   groupsOn,
+  life,
+  clock,
+  post,
 }: {
   dir: Direction;
   scan: number;
@@ -44,6 +62,9 @@ function DirectionCard({
   width: number;
   replay: number;
   groupsOn: boolean;
+  life: number;
+  clock: number | undefined;
+  post: HoloPostMode;
 }) {
   const channel = useMemo(() => createAnchorChannel(), []);
   const [live, setLive] = useState(false);
@@ -94,40 +115,77 @@ function DirectionCard({
             armed
             scan={scan}
             groups={groups}
+            life={life}
+            clock={clock}
+            post={post}
             onReady={() => setLive(true)}
           />
         </div>
-        {seats.map(({ l, ax, at }) => (
-          <span
-            key={l.id}
-            className="whd__lbl"
-            data-kind={l.kind ?? "name"}
-            data-lit={l.lit ? "" : undefined}
-            data-anchor={l.anchor ?? "start"}
-            style={
-              {
-                "--ax": ax,
-                "--at": at,
-                "--dx": `${(l.dx ?? 0) * scale}px`,
-                "--dy": `${(l.dy ?? 0) * scale}px`,
-                "--rot": `${l.rot ?? 0}deg`,
-              } as CSSProperties
-            }
-          >
-            {l.text}
-          </span>
-        ))}
+        {seats.map(({ l, ax, at }) =>
+          l.kind === "readout" ? (
+            <span
+              key={l.id}
+              className="whd__ro"
+              data-lit={l.lit ? "" : undefined}
+              data-anchor={l.anchor ?? "start"}
+              style={
+                {
+                  "--ax": ax,
+                  "--at": at,
+                  "--dx": `${(l.dx ?? 0) * scale}px`,
+                  "--dy": `${(l.dy ?? 0) * scale}px`,
+                } as CSSProperties
+              }
+            >
+              <b>{l.key}</b>
+              <span>{l.text}</span>
+            </span>
+          ) : (
+            <span
+              key={l.id}
+              className="whd__lbl"
+              data-kind={l.kind ?? "name"}
+              data-lit={l.lit ? "" : undefined}
+              data-anchor={l.anchor ?? "start"}
+              style={
+                {
+                  "--ax": ax,
+                  "--at": at,
+                  "--dx": `${(l.dx ?? 0) * scale}px`,
+                  "--dy": `${(l.dy ?? 0) * scale}px`,
+                  "--rot": `${l.rot ?? 0}deg`,
+                } as CSSProperties
+              }
+            >
+              {l.text}
+            </span>
+          )
+        )}
       </div>
     </section>
   );
 }
 
 export function WorkshopHoloLab() {
-  const [only] = useState(() => fromUrl("only", "").split(",").filter(Boolean));
-  const [scan, setScan] = useState(() => Number(fromUrl("scan", "0.08")));
+  /* `?only=` takes bare ids or the sections' `dir-` ids, either way. */
+  const [only] = useState(() =>
+    fromUrl("only", "")
+      .split(",")
+      .map((s) => s.trim().replace(/^dir-/, ""))
+      .filter(Boolean)
+  );
+  const [scan, setScan] = useState(() => Number(fromUrl("scan", "0.1")));
   const [sweep, setSweep] = useState(() => fromUrl("sweep", "on") !== "off");
   const [groupsOn, setGroupsOn] = useState(() => fromUrl("groups", "on") !== "off");
   const [width, setWidth] = useState(() => Number(fromUrl("w", "1920")));
+  const [life, setLife] = useState(() => Number(fromUrl("life", "0.5")));
+  const [post, setPost] = useState<HoloPostMode>(() =>
+    fromUrl("post", "pyramid") === "bloom" ? "bloom" : "pyramid"
+  );
+  const [clock, setClock] = useState<number | undefined>(() => {
+    const t = fromUrl("t", "");
+    return t === "" ? undefined : Number(t);
+  });
   /* A vantage override for every direction; "own" keeps each direction's. */
   const [az, setAz] = useState(() => fromUrl("az", "own"));
   const [el, setEl] = useState(() => fromUrl("el", "own"));
@@ -140,6 +198,14 @@ export function WorkshopHoloLab() {
     const t = fromUrl("theme", "");
     if (t === "light" || t === "dark") setMode(t);
   }, [setMode]);
+
+  /* The capture's hand on the clock. */
+  useEffect(() => {
+    window.__holoClock = (t) => setClock(t);
+    return () => {
+      delete window.__holoClock;
+    };
+  }, []);
 
   const override: StageCamera | undefined = useMemo(
     () =>
@@ -159,15 +225,32 @@ export function WorkshopHoloLab() {
   return (
     <div className="whl">
       <div className="whl__bar">
-        <span className="whl__title">WORKSHOP HOLO LAB · ADR-140 · ROUND THREE</span>
+        <span className="whl__title">WORKSHOP HOLO LAB · ADR-140 · ROUND FOUR</span>
         <label>
           scan
           <select value={scan} onChange={(e) => setScan(Number(e.target.value))}>
-            {[0, 0.05, 0.08, 0.12, 0.18].map((s) => (
+            {[0, 0.05, 0.08, 0.1, 0.12, 0.18].map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          life
+          <select value={life} onChange={(e) => setLife(Number(e.target.value))}>
+            {LIVES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          post
+          <select value={post} onChange={(e) => setPost(e.target.value as HoloPostMode)}>
+            <option value="pyramid">pyramid</option>
+            <option value="bloom">two blooms</option>
           </select>
         </label>
         <label>
@@ -219,6 +302,17 @@ export function WorkshopHoloLab() {
             ))}
           </select>
         </label>
+        <label>
+          t
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            placeholder="live"
+            value={clock ?? ""}
+            onChange={(e) => setClock(e.target.value === "" ? undefined : Number(e.target.value))}
+          />
+        </label>
         <button type="button" onClick={() => setMode(mode === "light" ? "dark" : "light")}>
           theme: {mode}
         </button>
@@ -236,6 +330,9 @@ export function WorkshopHoloLab() {
           width={width}
           replay={replay}
           groupsOn={groupsOn}
+          life={life}
+          clock={clock}
+          post={post}
         />
       ))}
     </div>

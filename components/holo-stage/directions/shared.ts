@@ -38,7 +38,12 @@ export interface DirLabel {
   anchor?: "start" | "middle" | "end";
   /** Degrees, for a word running along a floor edge. */
   rot?: number;
-  kind?: "name" | "axis" | "end" | "note" | "person";
+  /** `readout` (round four): a framed KEY over a value — the Starfield
+   *  travel-data grammar the arcs overview already letters — seated on the
+   *  instrument bed's margin, never on the figure. */
+  kind?: "name" | "axis" | "end" | "note" | "person" | "readout";
+  /** The readout's key; `text` is its value. */
+  key?: string;
   lit?: boolean;
 }
 

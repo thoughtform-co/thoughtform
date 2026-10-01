@@ -35,7 +35,7 @@ export type ParticleRole = "structure" | "machine" | "gold" | "green" | "grid" |
  *  copied: a soft DOT (dust, bokeh), a CELL (an outlined square — a lattice
  *  you can count), a VOXEL (a lit cube face), a RING (an open node), a DASH
  *  (an oriented stroke along a contour), a CROSS (a registration mark). */
-export type ParticleShape = "dot" | "cell" | "voxel" | "ring" | "dash" | "cross";
+export type ParticleShape = "dot" | "cell" | "voxel" | "ring" | "dash" | "cross" | "disc";
 
 export const PARTICLE_SHAPE_ID: Readonly<Record<ParticleShape, number>> = {
   dot: 0,
@@ -44,6 +44,8 @@ export const PARTICLE_SHAPE_ID: Readonly<Record<ParticleShape, number>> = {
   ring: 3,
   dash: 4,
   cross: 5,
+  /** A hard-edged filled node — the artifact's 7 px lane dot, at the stage's scale. */
+  disc: 6,
 };
 
 export const PARTICLE_ROLE_ID: Readonly<Record<ParticleRole, number>> = {
@@ -83,6 +85,21 @@ export interface ParticlePopulation {
   lit?: boolean;
   /** Screen-space tangent per point, radians — `dash` sprites align to it. */
   angles?: readonly number[];
+  /**
+   * LIFE (ADR-140, round four). A seated population whose points carry a
+   * `tangents` entry TRAVELS along it once the figure has assembled: `run`
+   * slides every bead one tangent-length per `period` seconds and wraps (a
+   * conveyor — identical beads make the line flow without the object moving,
+   * the orbit's dots circulate, the tendrils pulse into their cells); `wander`
+   * swings each point back and forth along its tangent on a `period`-second
+   * sine (the globe's shell drifting on the sphere while the sphere stays
+   * put). Scaled by the canvas's `life` dial; nothing rotates, nothing
+   * breathes (ADR-130 U4, ADR-097 U12).
+   */
+  flow?: { period: number; mode?: "run" | "wander" };
+  /** Per point, the travel vector in three-space, its LENGTH the span of one
+   *  step (world units). Required by `flow`; ignored without it. */
+  tangents?: readonly Vec3[];
 }
 
 export interface StageParticleSpec {
@@ -392,6 +409,204 @@ export function slabLayers(
     );
   }
   return out;
+}
+
+/* ── Samplers with a tangent, for the life dial (round four) ──────────── */
+
+export interface Beads {
+  points: WorldPt[];
+  /** The direction of travel at each bead, its length one step. */
+  tangents: WorldPt[];
+}
+
+/** `dotsAlong`, and the direction each bead would travel: a run that flows. */
+export function dotsAlongT(
+  seed: number,
+  poly: readonly WorldPt[],
+  pitch: number,
+  jitter = 0,
+  span = pitch
+): Beads {
+  const rnd = mulberry32(seed);
+  const points: WorldPt[] = [];
+  const tangents: WorldPt[] = [];
+  let carry = 0;
+  for (let i = 1; i < poly.length; i++) {
+    const p = poly[i - 1];
+    const q = poly[i];
+    const len = Math.hypot(q.a - p.a, q.b - p.b, q.z - p.z);
+    if (len <= 1e-9) continue;
+    const ta = ((q.a - p.a) / len) * span;
+    const tb = ((q.b - p.b) / len) * span;
+    const tz = ((q.z - p.z) / len) * span;
+    let s = carry;
+    while (s <= len) {
+      const t = s / len;
+      points.push({
+        a: lerp(p.a, q.a, t) + (rnd() - 0.5) * jitter,
+        b: lerp(p.b, q.b, t) + (rnd() - 0.5) * jitter,
+        z: lerp(p.z, q.z, t) + (rnd() - 0.5) * jitter,
+      });
+      tangents.push({ a: ta, b: tb, z: tz });
+      s += pitch;
+    }
+    carry = s - len;
+  }
+  return { points, tangents };
+}
+
+/** `ringDots`, with each dot's direction along the ring (so the ring circulates). */
+export function ringDotsT(
+  c: WorldPt,
+  r: number,
+  n: number,
+  plane: "floor" | "wall-a" | "wall-b" = "floor",
+  tiltDeg = 0,
+  phase = 0
+): Beads {
+  const points: WorldPt[] = [];
+  const tangents: WorldPt[] = [];
+  const tilt = (tiltDeg * Math.PI) / 180;
+  const span = (2 * Math.PI * r) / n;
+  const at = (th: number): WorldPt => {
+    const x = Math.cos(th) * r;
+    const y = Math.sin(th) * r;
+    if (plane === "floor")
+      return { a: c.a + x, b: c.b + y * Math.cos(tilt), z: c.z + y * Math.sin(tilt) };
+    if (plane === "wall-a") return { a: c.a + x, b: c.b, z: c.z + y };
+    return { a: c.a, b: c.b + x, z: c.z + y };
+  };
+  for (let i = 0; i < n; i++) {
+    const th = phase + (i / n) * Math.PI * 2;
+    const p = at(th);
+    const q = at(th + 1e-3);
+    const l = Math.hypot(q.a - p.a, q.b - p.b, q.z - p.z) || 1;
+    points.push(p);
+    tangents.push({
+      a: ((q.a - p.a) / l) * span,
+      b: ((q.b - p.b) / l) * span,
+      z: ((q.z - p.z) / l) * span,
+    });
+  }
+  return { points, tangents };
+}
+
+/**
+ * The Arc sphere's own DOTTED SHELL (`shell/ShellSubstrateGyro.tsx`'s
+ * `buildDottedShell`, copied — never imported — ADR-106): `bands` latitude
+ * rows from pole to pole, each row's count following cos(lat) so the globe
+ * is densest at its equator, a seeded longitude offset per row so the rows
+ * never align into a grid, a half-percent radial jitter. Tilted about `a`.
+ * Each dot's tangent runs along its row, for the `wander` life.
+ */
+export function sphereShell(
+  seed: number,
+  c: WorldPt,
+  r: number,
+  bands: number,
+  approxCount: number,
+  tiltDeg = 0,
+  span = 0.05
+): Beads {
+  const rnd = mulberry32(seed);
+  const points: WorldPt[] = [];
+  const tangents: WorldPt[] = [];
+  const tilt = (tiltDeg * Math.PI) / 180;
+  let cosSum = 0;
+  for (let k = 0; k < bands; k++) cosSum += Math.cos(-Math.PI / 2 + ((k + 0.5) * Math.PI) / bands);
+  const perCos = approxCount / cosSum;
+  const place = (x: number, y: number, h: number): WorldPt => ({
+    a: c.a + x,
+    b: c.b + y * Math.cos(tilt) - h * Math.sin(tilt),
+    z: c.z + y * Math.sin(tilt) + h * Math.cos(tilt),
+  });
+  for (let k = 0; k < bands; k++) {
+    const lat = -Math.PI / 2 + ((k + 0.5) * Math.PI) / bands;
+    const cosLat = Math.cos(lat);
+    const n = Math.max(1, Math.round(perCos * cosLat));
+    const offset = rnd() * Math.PI * 2;
+    const h = Math.sin(lat) * r;
+    const rr = cosLat * r;
+    for (let i = 0; i < n; i++) {
+      const lon = offset + (i / n) * Math.PI * 2 + (rnd() - 0.5) * 0.08;
+      const rj = 0.992 + rnd() * 0.016;
+      const p = place(Math.cos(lon) * rr * rj, Math.sin(lon) * rr * rj, h * rj);
+      const q = place(Math.cos(lon + 1e-3) * rr, Math.sin(lon + 1e-3) * rr, h);
+      const l = Math.hypot(q.a - p.a, q.b - p.b, q.z - p.z) || 1;
+      points.push(p);
+      tangents.push({
+        a: ((q.a - p.a) / l) * span,
+        b: ((q.b - p.b) / l) * span,
+        z: ((q.z - p.z) / l) * span,
+      });
+    }
+  }
+  return { points, tangents };
+}
+
+/** `ribbon`, with the core's beads carrying their direction along the curve. */
+export function ribbonT(
+  seed: number,
+  curve: readonly WorldPt[],
+  core: { pitch: number; spread: number },
+  halo: { perUnit: number; sigma: number }
+): { core: Beads; halo: WorldPt[] } {
+  const r = ribbon(seed, curve, core, halo);
+  const t = dotsAlongT(seed + 1, curve, core.pitch, core.spread);
+  return { core: t, halo: r.halo };
+}
+
+/** `tendrilDots`, with the direction of the discharge (from → to). */
+export function tendrilDotsT(
+  seed: number,
+  from: WorldPt,
+  to: WorldPt,
+  segs: number,
+  jitter: number,
+  pitch: number
+): Beads {
+  const rnd = mulberry32(seed);
+  const poly: WorldPt[] = [from];
+  for (let i = 1; i < segs; i++) {
+    const t = i / segs;
+    const env = Math.sin(t * Math.PI);
+    poly.push({
+      a: lerp(from.a, to.a, t) + (rnd() - 0.5) * jitter * env,
+      b: lerp(from.b, to.b, t) + (rnd() - 0.5) * jitter * env,
+      z: lerp(from.z, to.z, t) + (rnd() - 0.5) * jitter * env * 0.5,
+    });
+  }
+  poly.push(to);
+  return dotsAlongT(seed + 7, poly, pitch);
+}
+
+/** Tick marks along the `b` axis at the floor's front-left edge (a = `a`). */
+export function ticksAlongB(
+  b0: number,
+  b1: number,
+  a: number,
+  z: number,
+  pitch: number,
+  len: number
+) {
+  const out: WorldPt[] = [];
+  const n = Math.max(1, Math.round((b1 - b0) / pitch));
+  for (let i = 0; i <= n; i++) {
+    const b = b0 + (i * (b1 - b0)) / n;
+    const major = i % 2 === 0;
+    const l = major ? len : len * 0.55;
+    for (let k = 0; k <= 2; k++) out.push({ a: a - (k / 2) * l, b, z });
+  }
+  return out;
+}
+
+/** A population from beads: the points AND their tangents, so it can flow. */
+export function flowing(
+  id: string,
+  beads: Beads,
+  o: Omit<ParticlePopulation, "id" | "points" | "tangents">
+): ParticlePopulation {
+  return { id, points: beads.points.map(V), tangents: beads.tangents.map(V), ...o };
 }
 
 /** Convenience: a population from stage points. */

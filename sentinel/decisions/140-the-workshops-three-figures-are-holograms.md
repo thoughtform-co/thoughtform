@@ -304,3 +304,99 @@ three itself: a slow travel of motes along the globe's rings (the particles
 orbiting while the globe stays put — motion the framing stage's no-breathing
 law may or may not allow), and the budget on a tablet tier (one 128-square
 texture per figure, three figures on one page).
+
+## Round four (2026-10-01, evening): the instrument plates
+
+The owner's read of round three, the same evening: the graph is a graph now,
+but all three "look too boring", and nothing here yet looks like the Arc
+sphere or the brandmark core. Measured against his references (the ZERO slab,
+the teleportation chamber, the CRT map, the sixteen Evangelion plates), round
+three was a small object in a large void with nothing drawn around it, at a
+quarter of the Arc sphere's density, under a bloom tuned to show almost
+nothing, and frozen after arrival. The compositions carried the readings and
+were not rejected; what changed is the FRAME, the MATERIAL, the LIGHT and the
+LIFE. Three decisions with him: build in this engine and judge in the lab (no
+standalone renderer); Monday's room runs on round one, so the page is
+byte-identical until a pick; two generation waves and six clips at a cap of
+USD 50 (wave 06 spent 15.6).
+
+- **The frame is the instrument** (`directions/instrument.ts`). Every plate
+  stands on a BED: a dotted graticule past the figure's floor to the crop's
+  edges, beaded rules every three units, ruler ticks on the bed's two front
+  edges, the slab's stacked outlines below, the front edges a step brighter.
+  Readouts are DOM plates (`DirLabel.kind: "readout"`, a framed KEY over a
+  value, the arcs overview's Starfield grammar, TR + BL cut), seated in the
+  bed's margin and STACKED IN SCREEN PX from one anchor — a world-z step of
+  0.6 was 23 px at 1920 and the first cut's three plates overprinted. Figure
+  plus bed spans more than 70 % of the crop's width on every plate (guarded).
+- **The Arc sphere's density.** The agent's globe is the gyro's own
+  cos-latitude dotted shell (`sphereShell`, copied from `buildDottedShell`,
+  never imported), an additive Fresnel ATMOSPHERE (`StageShell`, the gyro's
+  shader, dark only), an equator and a meridian of beads, an orbit that
+  circulates. Sprites at the core's size (dot 4–4.8, cell 4.6–5.2, a new
+  hard-edged `disc` for the lane nodes); the frontier ribbon at pitch 0.012
+  under a 300-per-unit halo. ⚠ 3000 shell dots fused into a solid ball at
+  this scale: 2000 keeps the rows that make it read as a globe. ⚠ The
+  spectrum's lattice at 0.22 with seven layers fused into vertical bars in
+  the parallel view (grammar §7.5 again): four layers at 0.26. The lit object
+  is at least a quarter of the frame's shorter side on the stages and the
+  curve; the spectrum's gold is a LOCATOR on the rail and takes a twelfth.
+- **The light** (`HoloPost.ts`): the P(doom) chain ported from the motion
+  study — a thresholded prefilter, a 13-tap pyramid through seven mips, a
+  9-tap tent up, a warm-gold halation tap fed only by what passes the
+  threshold (0.85 dark, 0.97 above the paper in light), the tone shoulder,
+  the raster at 0.10, the vignette — as one `postprocessing` `Pass` before
+  the composer's `Noise` (which keeps the grain and does the encoding). The
+  donor writes at 3.2× linear. The two-Bloom chain stays behind
+  `post="bloom"`, and ⚠ IS THE PAGE'S DEFAULT until a pick, as is the 0.08
+  raster.
+- **Life** (`stageParticleShader.ts`, a seventh attribute `aFlow`): a seated
+  bead with a tangent TRAVELS — `run` slides it one step per period and wraps
+  (a conveyor: the ribbon flows toward the frontier, the orbit circulates,
+  the tendrils pulse into their cells, the rail flows software → intelligence),
+  `wander` swings the shell's dots on a sine; clouds keep a CONSTANT curl
+  (seated turbulence 0.018 → 0.046 at life 1); a RE-SCAN front crosses the
+  plate at the end of every 9 s at a quarter of the arrival's brightness
+  (⚠ the first cut fired it on the arrival's heels — a double sweep). The
+  object never rotates or breathes. ⚠ The atmosphere arrives WITH the globe
+  (reveal 0.34–0.66): the first clip had it at full strength at 0.8 s as a
+  brown ring around dots still gathering. Measured on the rendered clip,
+  whole-frame mean |Δ| per 255: arrival 1.0–1.5, hold at life 0 = 0.029
+  (grain + twinkle), at life 0.6 = 0.234; the house film's hold is 0.04–0.15
+  (grammar §5), so the default is 0.5. Veo clips on a populated first frame
+  were measured too (wave 06): 2–6 per 255 and an invented object on five of
+  six — the life is built in code, never recorded.
+- **A frozen clock** (`clock` on the canvas, `?t=` in the lab, `__holoClock`
+  for the capture): the sim steps at a fixed 1/60 from its seed, so a frame
+  is f(t). `capture-workshop-holo.mjs --video` renders a clip frame by frame
+  through it and `--sheet` tiles one; 120 frames in 12 s. ⚠ Pass `--out` as
+  a Windows path: Node reads `/c/Users/…` as `C:\c\Users\…`.
+- **Light theme**: the ink drawing on paper, the pyramid at the paper
+  threshold, no halation, no raster, no vignette, no atmosphere shell
+  (additive cannot ink); verified on all three plates.
+- **Guards**: `tests/lib/holo-stage-instrument.test.ts` — homes in the crop,
+  ≤ 128², denser than round three, fill ≥ 70 %, lit share per figure, one
+  tangent per flowing bead with a period, every readout keyed, at most one
+  gold shell, determinism, the stage view, and a negative case. `tsc` clean,
+  the touched files lint at zero.
+
+**Wave 06 on the prion ship** (grammar §8, rubric 0.2, block v0.5, 18 nano
+draws + 6 Veo clips, USD 15.6): the BED framing drew what the owner asked for
+on six of six from words alone (`B-stagesv3__nano_02` the frame: the globe in
+rows, the orbit, the discharge, a countable graticule, five empty readout
+frames, no lettering, no bezel); the PANEL framing reads as an instrument but
+leaves the figure at 55 % of its housing; DENSE lost the parallel projection
+on four of six when the margin went. Gallery:
+`Arcs_Thoughtform-Holograms/delivery/review-wave-06-populated.html`.
+
+**Open:** the owner's read of the three plates at
+`http://localhost:3003/test/workshop-holo-lab` and of the clips in
+`Hologram Grammar\02_Creation\round-04\`; then the port (the bed becomes the
+beat's figure host, a new SVG fallback in the beaded grammar, DOM readouts
+with leaders, `arc-iso` rows for the curve and the spectrum, round one's
+wiring out, `stageParticles` onto `HOLO_FREE`, this ADR rewritten for what
+ships). Left open from the build: the readout plates' DECODE on arrival (the
+page's own idiom, not yet in the lab); the tablet budget (one 128² sim and a
+seven-mip pyramid per plate, three on a page); `HOLO_LIGHT.dustScale` is
+shared with the trajectory beat and was left at 0.45 (the layer lifts it
+×1.5 on paper itself).

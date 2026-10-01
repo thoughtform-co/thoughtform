@@ -22,6 +22,12 @@
  * reveal `groups` through (the curve's second dial), and the post chain gains
  * the scanline pass (dark only, strength a dial) and a wide, faint second
  * bloom tap — the halation a lit run leaves on a held instrument's screen.
+ *
+ * ROUND FOUR: the post chain is the P(doom) PYRAMID (`HoloPost.ts`) — bloom
+ * pyramid, warm-gold halation, tone shoulder, raster, vignette — with the
+ * two-Bloom chain kept behind `post="bloom"` for the comparison; the LIFE
+ * dial and a FROZEN clock reach the scene; the raster's default is the
+ * grammar's 0.10.
  */
 
 import { Canvas, useThree } from "@react-three/fiber";
@@ -35,14 +41,18 @@ import { POST } from "@/components/holo-program/holoProgramGeom";
 import { useDprCeiling } from "@/lib/hooks/useQualityTier";
 import { useThemeStore } from "@/lib/stores/themeStore";
 
+import { HOLO_POST_DARK, HOLO_POST_LIGHT, HoloPostPass } from "./HoloPost";
 import { HoloScanlineEffect } from "./HoloScanline";
 import { HoloStageScene } from "./HoloStageScene";
 import type { AnchorChannel } from "./stageAnchors";
 import { STAGE_DISTANCE, stageCameraPosition, stageFrustum } from "./stageFit";
 import type { HoloStageSpec } from "./stageGeom";
 
-/** The scanline's strength on dark: the lab's reading, never above 0.12. */
+/** The raster's strength on dark: the lab's reading, never above 0.12. The
+ *  page keeps 0.08 (round one, Monday's room); the round-four lab asks 0.10. */
 export const SCAN_STRENGTH = 0.08;
+
+export type HoloPostMode = "pyramid" | "bloom";
 
 /**
  * The camera, fitted to the crop.
@@ -111,8 +121,19 @@ export interface HoloStageCanvasProps {
   still?: boolean;
   /** Which reveal groups are open (ADR-140). */
   groups?: Readonly<Record<string, boolean>>;
-  /** The scanline pass's strength on dark; 0 switches it off. */
+  /** The raster's strength on dark; 0 switches it off. */
   scan?: number;
+  /** The life dial 0..1 (round four): travel, wander, the re-scan. */
+  life?: number;
+  /** A frozen time in seconds (round four): the frame is f(t). */
+  clock?: number;
+  /**
+   * The post chain. `bloom` (the default) is the two-Bloom chain round one
+   * shipped on the page; `pyramid` is round four's P(doom) chain, which the
+   * lab asks for. ⚠ The default stays `bloom` until a pick lands, so the page
+   * the Suri room sees on Monday is byte-identical (owner, 2026-10-01).
+   */
+  post?: HoloPostMode;
   /**
    * The PAGE's own ground under this canvas, as `#rrggbb`, resolved by the
    * mount from the host's first opaque ancestor (ADR-140). The palette's
@@ -132,6 +153,9 @@ export function HoloStageCanvas({
   still = false,
   groups,
   scan = SCAN_STRENGTH,
+  life = 0.5,
+  clock,
+  post = "bloom",
   ground,
   onReady,
   className = "arc-holo__gl",
@@ -168,6 +192,19 @@ export function HoloStageCanvas({
   const scanEffect = useMemo(() => new HoloScanlineEffect(scanStrength), [scanStrength]);
   useEffect(() => () => scanEffect.dispose(), [scanEffect]);
 
+  /* The pyramid (round four): the dark dials or the ink drawing's, the raster
+     at the dial's strength, the halation in the palette's own gold. */
+  const holoPost = useMemo(() => {
+    const base = palette.additive ? HOLO_POST_DARK : HOLO_POST_LIGHT;
+    const gold = new THREE.Color(palette.gold);
+    return new HoloPostPass({
+      ...base,
+      scan: palette.additive ? scan : 0,
+      halationColor: [gold.r, gold.g, gold.b],
+    });
+  }, [palette, scan]);
+  useEffect(() => () => holoPost.dispose(), [holoPost]);
+
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -188,7 +225,7 @@ export function HoloStageCanvas({
     <div className={className} ref={wrapRef} style={{ background: groundCss }}>
       <CanvasErrorBoundary fallback={null}>
         <Canvas
-          key={glEpoch}
+          key={`${glEpoch}-${post}`}
           orthographic
           /* ⚠ MEMOISED. R3F re-applies changed camera PROPS, so a fresh object
              literal would clobber the frustum `StageFit` set. */
@@ -214,48 +251,60 @@ export function HoloStageCanvas({
             armed={armed}
             still={still}
             groups={groups}
+            life={life}
+            clock={clock}
             onReady={handleReady}
           />
 
-          <EffectComposer multisampling={0} enableNormalPass={false}>
-            {/* ⚠ The threshold sits ABOVE the structure and BELOW the donors,
-                or bloom stops being a highlight and becomes a blur on
-                everything. On a light ground it scales to a trace rather than
-                being unmounted — swapping the composer's child COUNT between
-                themes remounts every effect under it. */}
-            {/* ⚠ THE THRESHOLD SITS ABOVE THE PAPER IN LIGHT. Parchment's
-                luminance is ~0.79, so at 0.62 the whole ground bloomed by a
-                trace — one unit, `rgb(237,228,215)` on a `rgb(236,227,214)`
-                page, measured — which is a rectangle the width of the beat
-                (ADR-080 U2's finding, again). Nothing on paper is brighter
-                than the paper, so 0.97 leaves bloom with nothing to lift. */}
-            <Bloom
-              intensity={POST.bloom * palette.bloomScale}
-              luminanceThreshold={palette.additive ? 0.62 : 0.97}
-              luminanceSmoothing={POST.bloomRadius}
-              mipmapBlur
-            />
-            {/* The halation: a wider, fainter tap off the brightest thing only
-                — the warm bleed a lit run leaves on a phosphor screen. */}
-            <Bloom
-              intensity={POST.bloom * 0.3 * palette.bloomScale}
-              luminanceThreshold={palette.additive ? 0.8 : 0.98}
-              luminanceSmoothing={0.25}
-              radius={0.95}
-              mipmapBlur
-            />
-            <primitive object={scanEffect} />
-            <Noise opacity={POST.grain * palette.grainScale} premultiply />
-            {/* ⚠ ZERO ON PAPER. Even the palette's 0.22 trace darkened the
-                canvas's edge by a unit against the page (patch means 235.1
-                against 236.0, measured) — a frame, where there is no lit
-                volume for the corners to fall off from. */}
-            <Vignette
-              offset={0.22}
-              darkness={palette.additive ? POST.vignette * palette.vignetteScale : 0}
-              eskil={false}
-            />
-          </EffectComposer>
+          {post === "pyramid" ? (
+            <EffectComposer multisampling={0} enableNormalPass={false}>
+              {/* The pyramid reads linear HDR and writes linear HDR; the Noise
+                  pass after it is the composer's last EffectPass, which is what
+                  encodes the output. Both mounted in both themes. */}
+              <primitive object={holoPost} />
+              <Noise opacity={POST.grain * palette.grainScale} premultiply />
+            </EffectComposer>
+          ) : (
+            <EffectComposer multisampling={0} enableNormalPass={false}>
+              {/* ⚠ The threshold sits ABOVE the structure and BELOW the donors,
+                  or bloom stops being a highlight and becomes a blur on
+                  everything. On a light ground it scales to a trace rather than
+                  being unmounted — swapping the composer's child COUNT between
+                  themes remounts every effect under it. */}
+              {/* ⚠ THE THRESHOLD SITS ABOVE THE PAPER IN LIGHT. Parchment's
+                  luminance is ~0.79, so at 0.62 the whole ground bloomed by a
+                  trace — one unit, `rgb(237,228,215)` on a `rgb(236,227,214)`
+                  page, measured — which is a rectangle the width of the beat
+                  (ADR-080 U2's finding, again). Nothing on paper is brighter
+                  than the paper, so 0.97 leaves bloom with nothing to lift. */}
+              <Bloom
+                intensity={POST.bloom * palette.bloomScale}
+                luminanceThreshold={palette.additive ? 0.62 : 0.97}
+                luminanceSmoothing={POST.bloomRadius}
+                mipmapBlur
+              />
+              {/* The halation: a wider, fainter tap off the brightest thing only
+                  — the warm bleed a lit run leaves on a phosphor screen. */}
+              <Bloom
+                intensity={POST.bloom * 0.3 * palette.bloomScale}
+                luminanceThreshold={palette.additive ? 0.8 : 0.98}
+                luminanceSmoothing={0.25}
+                radius={0.95}
+                mipmapBlur
+              />
+              <primitive object={scanEffect} />
+              <Noise opacity={POST.grain * palette.grainScale} premultiply />
+              {/* ⚠ ZERO ON PAPER. Even the palette's 0.22 trace darkened the
+                  canvas's edge by a unit against the page (patch means 235.1
+                  against 236.0, measured) — a frame, where there is no lit
+                  volume for the corners to fall off from. */}
+              <Vignette
+                offset={0.22}
+                darkness={palette.additive ? POST.vignette * palette.vignetteScale : 0}
+                eskil={false}
+              />
+            </EffectComposer>
+          )}
         </Canvas>
       </CanvasErrorBoundary>
     </div>
