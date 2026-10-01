@@ -156,11 +156,57 @@ wheel listener is bound, so the page scrolls over it. **Clamp both angles**,
 and keep the azimuth band off the axis so the record can never be turned into a
 pose it cannot be read in.
 
+## The material since ADR-140 (2026-10-01)
+
+Three figures live on the one stage now — the stages, the curve, the
+spectrum — and the renderer grew four data-driven things. All of it is in
+`components/holo-stage/`; a fourth drawing is still a BUILDER.
+
+- **The BATCH** (`stageBatch.ts`, the Evangelion / P(doom) engine's `lines.ts`
+  copied by hand, MIT): every `batch: true` line in a spec is one instanced
+  draw — a capsule segment per instance, AA in physical px, widths in CSS px
+  like drei's — and the shader does the draw-on from each segment's own
+  reveal window. Dense structure goes here; the one or two lit DONOR runs keep
+  drei's `Line`. ⚠ Depth-tested, or the dark blocks' hidden edges print
+  through their opaque faces — U2's X-ray back through a material flag.
+- **The SWEEP** (`StageSweep`): one gold front crossing the object along one
+  world axis in a window of the intro. Batched segments and motes ahead of it
+  are not drawn; at the front they glow; behind it they are there. `step`, not
+  `mix` — no fade. Faces and donors seat their reveal from `sweepReaches` of
+  their own position. Grouped elements are never swept.
+- **Reveal GROUPS**: a line, face, strip or dust set with a `group` rides that
+  group's clock, which the canvas is handed as `groups` and eases toward
+  (1100 ms). The curve's second dial draws on when its button is pressed and
+  folds back when pressed again. `spec.groups` names every group (≤ 4) and
+  the guard fails one used and unnamed.
+- **STRIPS** (`StageStrip`): a ribbon between two rails of equal length as
+  one triangle strip — a sheet of the surface, the wall under a curve.
+- **The FLAT view** (`view: "flat"`): for a figure whose fallback has no
+  projection (the spectrum's rail). Camera on +z, world units the box's own
+  px, `toFlat(x, y)`. It is not a second projection; it is the absence of one,
+  and an isometric strip under a horizontal rail would be two pictures.
+- **Two dust materials in one shader** (`stageDustShader.ts`): `order` 0 is
+  a lattice mote (a crisp square frozen on its home), 1 a cloud mote (the soft
+  dot, drifting on a seeded phase). The spectrum's one argument — software is
+  deterministic, intelligence is probabilistic — is that attribute.
+- **A scanline pass** (`HoloScanline.ts`): three-px lines multiplied over the
+  frame at ≤ 0.12 on dark, ZERO on paper, kept mounted in both themes.
+- ⚠ **Light, three findings, all one-unit rectangles**: the bloom threshold
+  must sit ABOVE the paper's luminance (0.97; at 0.62 the whole ground
+  bloomed by a unit), the vignette is zero on paper (0.22 darkened the edge a
+  unit), and the canvas paints the PAGE's ground read at runtime from the
+  host's first opaque ancestor, never only the palette's constant. Measure
+  patch MEANS inside and outside the canvas; a single pixel under grain lies.
+- **The spectrum's field is MEASURED off the DOM** (the band boxes, on
+  resize), so the CSS that lays the rail out stays the one source.
+
 ## Verifying
 
 Headed, with real GL — headless falls back to SwiftShader or no GL at all and
 the failure mode is not an error, it is a beat that quietly renders the flat
-drawing while the shoot looks fine.
+drawing while the shoot looks fine. For the workshop's figures:
+`node scripts/capture-workshop-holo.mjs --vp 1920x1080 --theme dark` (and
+`--theme light`, `--vp 1280x720`, `--flat` for the handout's drawing).
 
 At every reference shape and in both themes: the tri-state reads `"live"`, the
 beat is one viewport, horizontal overflow is zero, **label collisions are

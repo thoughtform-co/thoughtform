@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -30,6 +31,11 @@ interface ArcSpectrumProps {
  * and rests from the start under reduced motion.
  *
  * ⚠ SERVER, NO STATE, NO LISTENER. `data-spectrum-*` only.
+ *
+ * ⚠ THE FIELD UNDER THE TRACK IS LIVE SINCE ADR-140: a particle lattice on
+ * the tool's side dissolving into a cloud on the collaborator's, built from
+ * the band boxes the mount measures here. The rail, the bands, the box, the
+ * handle and every word are this DOM, in both modes.
  */
 export function ArcSpectrum({ section, index, motion = "reveal" }: ArcSpectrumProps) {
   const { poles, middle, bands } = section;
@@ -57,6 +63,7 @@ export function ArcSpectrum({ section, index, motion = "reveal" }: ArcSpectrumPr
         />
         <figure className="arc-spectrum arc-reveal" data-spectrum-figure="" {...rung(motion, 0.14)}>
           <div className="arc-spectrum__track">
+            <ArcHoloStageMount scene={{ kind: "spectrum" }} />
             <div
               className="arc-spectrum__rail"
               role="img"

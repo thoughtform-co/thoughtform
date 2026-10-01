@@ -8433,6 +8433,45 @@ a.arc-readout__hit:focus-visible {
   cursor: auto;
 }
 
+/* The curve, LIVE (ADR-140): the surface lifted into the stage's camera,
+   framed to the SVG's own 780 x 425 crop. Live hides every SVG child (the
+   curve letters nothing; its dots and lines are geometry) and keeps the DOM
+   tags, prices, axis words and the two buttons where they are. The second
+   dial follows the figure's own data-step through the mount. */
+.arc-sec--curve[data-holo="live"] .arc-cv__svg > * {
+  visibility: hidden;
+}
+.arc-sec--curve[data-holo="live"] .arc-holo[data-live] {
+  inset: 0;
+  pointer-events: none;
+}
+.arc-sec--curve .arc-holo__gl {
+  cursor: auto;
+}
+
+/* The spectrum, LIVE (ADR-140): a particle field under the rail and the
+   bands, measured off their own boxes. Nothing is hidden - the rail, the
+   bands, the gold box, the handle and the words ARE the drawing in both
+   modes; the field sits behind them. The wells go clear so the lattice and
+   the cloud read through the bands. */
+.arc-spectrum__track {
+  position: relative;
+}
+.arc-spectrum__track > :not(.arc-holo) {
+  position: relative;
+  z-index: 1;
+}
+.arc-sec--spectrum[data-holo="live"] .arc-holo[data-live] {
+  inset: 0;
+  pointer-events: none;
+}
+.arc-sec--spectrum .arc-holo__gl {
+  cursor: auto;
+}
+.arc-sec--spectrum[data-holo="live"] .arc-spectrum__band {
+  background: transparent;
+}
+
 /* ── The words ──────────────────────────────────────────────────────
    Real DOM in the page's own type, tracking anchors the scene publishes
    every frame. ⚠ NOTHING IS LETTERED ON THE OBJECT: the Intelligence Map

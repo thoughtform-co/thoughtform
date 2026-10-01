@@ -12,7 +12,7 @@
  *
  * ⚠ THE FALLBACK IS THE SVG DRAWING, AND IT IS THE DEFAULT. `data-holo` is a
  * tri-state on the section host: absent (server-rendered, no JS), "static"
- * (JS ran and the gate said no — reduced motion, ≤960px, no WebGL, or the
+ * (JS ran and the gate said no — reduced motion, ≤900px, no WebGL, or the
  * canvas threw) and "live". Only "live" hides the flat figure, and it is
  * written from the scene's FIRST COMMITTED FRAME rather than from the gate
  * passing — a class set before there are pixels is what makes a swap pop.
@@ -24,15 +24,24 @@
  *
  * ⚠ IT ADDS NO SCROLL WRITER (ADR-002). `useArcScroll` is the page's one
  * writer; the arming check reads `scrollY`, writes nothing, and disconnects.
+ *
+ * THREE SCENES SINCE ADR-140. The stages (U4's, unchanged in kind), the curve
+ * — whose second dial is a reveal group this mount drives off the figure's
+ * own `data-step`, the attribute `ArcCurveSteps` already writes — and the
+ * spectrum, whose field is built from the band boxes this mount MEASURES in
+ * the track, so the CSS that lays the rail out stays the one source.
  */
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
+import { CURVE_GROUP_EFFORT, curveSpec, type CurveData } from "@/components/holo-stage/curveGeom";
+import { spectrumSpec, type SpectrumData } from "@/components/holo-stage/spectrumGeom";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
-import { stagesSpec, type StagesData } from "@/components/holo-stage/stageGeom";
+import { stagesSpec, type HoloStageSpec, type StagesData } from "@/components/holo-stage/stageGeom";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import { useThemeStore } from "@/lib/stores/themeStore";
 import { probeWebGL } from "@/lib/webgl/probe";
 
 import { ArcHoloLabels, type HoloLabelSpec } from "./ArcHoloLabels";
@@ -43,10 +52,10 @@ import { ArcHoloLabels, type HoloLabelSpec } from "./ArcHoloLabels";
    terminal grammar's 960. Both numbers exist on this surface. */
 const STAGE_MEDIA = "(min-width: 901px) and (prefers-reduced-motion: no-preference)";
 
-/* ⚠ ONE SCENE SINCE ADR-130 U5: the curve and the horizon are the Moira
-   workshop's own flat figures now (owner, 2026-09-28), so only the three
-   stages go live. */
-export type StageScene = { kind: "stages"; data: StagesData };
+export type StageScene =
+  | { kind: "stages"; data: StagesData }
+  | { kind: "curve"; data: CurveData }
+  | { kind: "spectrum" };
 
 const HoloStageCanvas = dynamic(
   () => import("@/components/holo-stage/HoloStageCanvas").then((m) => m.HoloStageCanvas),
@@ -72,6 +81,71 @@ export interface ArcHoloStageMountProps {
 
 const ARM_AT = 0.55;
 
+/**
+ * The page's own ground under a host: the first ancestor whose background
+ * is opaque, as `#rrggbb`. ⚠ A canvas that paints anything else draws a
+ * rectangle across the beat (ADR-080 U2): the holo palette's constant is the
+ * site's `--void` / parchment, and the arcs' light ground is a step off it.
+ */
+function resolveGround(host: HTMLElement): string | null {
+  let el: HTMLElement | null = host;
+  while (el) {
+    const bg = getComputedStyle(el).backgroundColor;
+    const m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/.exec(bg);
+    if (m && (m[4] === undefined || Number(m[4]) >= 0.999)) {
+      const hex = (n: string) => Number(n).toString(16).padStart(2, "0");
+      return `#${hex(m[1])}${hex(m[2])}${hex(m[3])}`;
+    }
+    el = el.parentElement;
+  }
+  return null;
+}
+
+/**
+ * Look-dev dials (ADR-140), read off the nearest `[data-holo-dials]` wrapper
+ * as JSON: `/test/workshop-holo-lab` sets them; the page sets none, so every
+ * default below IS production. Three-free and no module singleton — the
+ * attribute travels with the DOM it describes.
+ */
+interface HoloDials {
+  scan?: number;
+  sweep?: boolean;
+  agent?: "cloud" | "solid";
+}
+
+function readDials(host: HTMLElement): HoloDials {
+  const raw = host.closest<HTMLElement>("[data-holo-dials]")?.getAttribute("data-holo-dials");
+  if (!raw) return {};
+  try {
+    const d = JSON.parse(raw) as HoloDials;
+    return typeof d === "object" && d ? d : {};
+  } catch {
+    return {};
+  }
+}
+
+/** The spectrum's track, measured: the rail's line and the two band boxes. */
+function measureSpectrum(host: HTMLElement): SpectrumData | null {
+  const track = host.parentElement;
+  if (!track) return null;
+  const rail = track.querySelector<HTMLElement>(".arc-spectrum__rail");
+  const bands = track.querySelectorAll<HTMLElement>("[data-spectrum-band]");
+  if (!rail || bands.length < 2) return null;
+  const t = track.getBoundingClientRect();
+  if (t.width < 1 || t.height < 1) return null;
+  const box = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    return { x0: r.left - t.left, y0: r.top - t.top, x1: r.right - t.left, y1: r.bottom - t.top };
+  };
+  const r = rail.getBoundingClientRect();
+  return {
+    w: t.width,
+    h: t.height,
+    rail: { y: (r.top + r.bottom) / 2 - t.top },
+    bands: [box(bands[0]), box(bands[1])],
+  };
+}
+
 export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloStageMountProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery(STAGE_MEDIA);
@@ -79,9 +153,29 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
   const [loadable, setLoadable] = useState(false);
   const [armed, setArmed] = useState(false);
   const [live, setLive] = useState(false);
+  /* The curve's step, read off the figure (ADR-140). */
+  const [step, setStep] = useState(2);
+  /* The spectrum's measured track (ADR-140). */
+  const [spectrum, setSpectrum] = useState<SpectrumData | null>(null);
+  /* The page's ground under the beat, re-read when the theme flips. */
+  const mode = useThemeStore((s) => s.mode);
+  const [ground, setGround] = useState<string | null>(null);
+  /* The lab's dials; `{}` on the page. */
+  const [dials, setDials] = useState<HoloDials>({});
 
   const channel = useMemo(() => createAnchorChannel(), []);
-  const spec = useMemo(() => stagesSpec(scene.data), [scene]);
+  const spec = useMemo<HoloStageSpec | null>(() => {
+    let built: HoloStageSpec | null;
+    if (scene.kind === "stages") built = stagesSpec({ ...scene.data, agent: dials.agent });
+    else if (scene.kind === "curve") built = curveSpec(scene.data);
+    else built = spectrum ? spectrumSpec(spectrum) : null;
+    if (built && dials.sweep === false) built = { ...built, sweep: undefined };
+    return built;
+  }, [scene, spectrum, dials]);
+  const groups = useMemo(
+    () => (scene.kind === "curve" ? { [CURVE_GROUP_EFFORT]: step >= 2 } : undefined),
+    [scene.kind, step]
+  );
 
   useEffect(() => {
     /* eslint-disable-next-line react-hooks/set-state-in-effect --
@@ -93,6 +187,13 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
   }, []);
 
   const allowed = capable && gl === true;
+
+  /* The dials live on an ancestor's attribute, which exists only once the
+     tree is in the DOM; a mount effect is the first place it can be read. */
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host) setDials(readDials(host));
+  }, []);
 
   /* Load at idle. Four canvases on one page is four chunks of nothing —
      they share the one lazily-imported module. */
@@ -146,6 +247,46 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
     return () => io.disconnect();
   }, [allowed, armed, arm]);
 
+  /* The curve's second dial follows the figure's own `data-step` — the one
+     attribute `ArcCurveSteps` writes — so the two buttons drive the hologram
+     without a second piece of state. */
+  useEffect(() => {
+    if (scene.kind !== "curve" || !allowed) return;
+    const figure = hostRef.current?.closest<HTMLElement>(".arc-cv");
+    if (!figure) return;
+    const read = () => setStep(Number(figure.getAttribute("data-step") ?? 2));
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(figure, { attributes: true, attributeFilter: ["data-step"] });
+    return () => mo.disconnect();
+  }, [scene.kind, allowed]);
+
+  /* The spectrum's field is the track's own boxes, re-measured on resize. */
+  useEffect(() => {
+    if (scene.kind !== "spectrum" || !allowed) return;
+    const host = hostRef.current;
+    const track = host?.parentElement;
+    if (!host || !track) return;
+    const measure = () => setSpectrum(measureSpectrum(host));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+    return () => ro.disconnect();
+  }, [scene.kind, allowed]);
+
+  /* The ground is the page's, read off the cascade once the theme's sheet
+     has applied — a frame after the store flips, since the `data-theme`
+     attribute and the store move in the same tick. */
+  useEffect(() => {
+    if (!allowed) return;
+    const host = hostRef.current;
+    if (!host) return;
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => setGround(resolveGround(host)));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [allowed, mode]);
+
   /* The mode signal, on the SECTION so the whole beat's CSS keys off it. */
   useEffect(() => {
     const section = hostRef.current?.closest("section");
@@ -154,7 +295,8 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
     section.setAttribute("data-holo", live ? "live" : "static");
   }, [gl, live]);
 
-  if (!allowed || !loadable) return <div className="arc-holo" ref={hostRef} aria-hidden="true" />;
+  if (!allowed || !loadable || !spec)
+    return <div className="arc-holo" ref={hostRef} aria-hidden="true" />;
 
   return (
     <div className="arc-holo" ref={hostRef} data-live={live ? "" : undefined}>
@@ -164,6 +306,9 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
           spec={spec}
           channel={channel}
           armed={armed}
+          groups={groups}
+          ground={ground ?? undefined}
+          scan={dials.scan}
           onReady={() => setLive(true)}
         />
       </CanvasErrorBoundary>

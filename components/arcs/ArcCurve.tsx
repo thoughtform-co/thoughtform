@@ -4,6 +4,7 @@ import type { ArcCurveModel, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcCurveSteps } from "./ArcCurveSteps";
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { arcTitleText } from "./chrome";
 import {
@@ -88,6 +89,18 @@ export function ArcCurve({ section, index, motion = "reveal" }: ArcCurveProps) {
 
   const stage = (
     <span key="plot" className="arc-cv__plot">
+      {/* The hologram (ADR-140): the same surface, lifted, in the stage's
+          parallel camera, framed to this crop; the SVG below is its fallback.
+          The record crosses as the lanes' ids and the other vendor's t values. */}
+      <ArcHoloStageMount
+        scene={{
+          kind: "curve",
+          data: {
+            lanes: lanes.map((l) => ({ id: l.id })),
+            others: others.map((s) => ({ points: s.points.map((p) => ({ t: p.t })) })),
+          },
+        }}
+      />
       <svg
         className="arc-cv__svg"
         viewBox={`0 0 ${DW} ${DH}`}

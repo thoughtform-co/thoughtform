@@ -865,6 +865,36 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   under 960px tall the curve's caption goes BESIDE the stage, or the stage
   falls to 532px at 1280x720 and the head runs through the client mark.
   ⚠ **NEVER "plaat" / "platen" IN DUTCH COPY** (owner): "beeld" / "beelden".
+  ⚠ **[ADR-140](../../sentinel/decisions/140-the-workshops-three-figures-are-holograms.md)
+  (2026-10-01, owner, Proposed) MAKES ALL THREE FIGURES LIVE ON THE ONE
+  STAGE, REVERSING U5's "the live stage serves the stages beat alone"** — on
+  U4's terms, every one of them kept (one parallel projection, the camera
+  frames the SVG's own crop, no drag, the DOM words untouched, opaque shaded
+  faces on the dark blocks). The curve is a LIFT (`curveGeom.ts` reads
+  `curveSurface.world()` — Moira's floor IS `ISO_BASIS_STAGE` at `k = 1`; the
+  identity is pinned to the unit), its second dial a REVEAL GROUP driven off
+  the figure's own `data-step`; the spectrum is a FLAT particle field measured
+  off the band boxes (a lattice dissolving into a cloud — software is
+  deterministic, intelligence is probabilistic), never an isometric strip
+  under a horizontal rail; the stages are wire volumes drawn on by one gold
+  SWEEP, the agent a translucent gold volume filled with a seeded cloud.
+  `stageBatch.ts` is one instanced draw for the dense structure (the P(doom) /
+  Evangelion engine's `lines.ts`, copied by hand, MIT; ⚠ depth-TESTED or the
+  dark blocks go X-ray), `HoloScanline.ts` a three-px scanline pass at 0.08 on
+  dark and ZERO on paper. ⚠ **THREE ONE-UNIT RECTANGLES IN LIGHT, ALL
+  MEASURED**: the bloom threshold sits ABOVE the paper's luminance (0.97; at
+  0.62 the ground bloomed `237` on `236`), the vignette is zero on paper, and
+  the canvas paints the PAGE's ground read off the host's first opaque
+  ancestor. The live layer is on wherever the kind renders (the SVG fallback
+  is byte-identical on v1, Plopsa and the class-one deck). Guards:
+  `holo-stage-geom` (three specs, both identities, groups named, one donor on
+  the stages and the curve and NONE on the spectrum — its gold is the DOM
+  handle), `arc-iso` (the v2 row, which was missing), `arcs-import-doctrine`
+  (`curveGeom` / `spectrumGeom` on the pure list; the two leaves unchanged).
+  Shoot HEADED with `scripts/capture-workshop-holo.mjs`; look-dev at
+  `/test/workshop-holo-lab` (`data-holo-dials` on a wrapper; every default is
+  the page's). Grammar: [`hologram-stage-grammar.md`](../skills/thoughtform-design/references/hologram-stage-grammar.md)
+  §The material since ADR-140.
 - ⚠ **THE WORKSHOP IS A HOUSE ARC AND THE CLIENT PAGES ARE CUTS OF IT
   (ADR-131, Proposed 2026-09-28, owner).** `/arcs/thoughtform-workshop` carries
   no `client` — ADR-052's own reading of that field — and leads the house block.
