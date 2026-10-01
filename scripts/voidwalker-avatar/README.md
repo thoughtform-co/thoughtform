@@ -237,6 +237,51 @@ seat line (the projector disc's top until ADR-082 U35 deleted the disc; the
 seat box is still there), so a figure ending above the canvas floor hovers.
 `post.py` shifts the frame — never crops it.
 
+## The morph route (`morph.py`) — an era BECOMING the next
+
+A probe, not a delivery: can a flow model carry an era change, where U42's
+glitch tears one poster into the other? No ADR yet; one follows if a clip wins.
+
+```
+python scripts/voidwalker-avatar/morph.py prep --a expanse --b pokemon-go --wave <date>-morph-v<N>-<a>-<b>   # free
+VOIDWALKER_ENV_FILE=<the file holding FAL_API_KEY> python scripts/voidwalker-avatar/morph.py check          # free auth probe
+python scripts/voidwalker-avatar/morph.py run --wave <wave> --run all --dry-run                            # prints every payload
+python scripts/voidwalker-avatar/morph.py run --wave <wave> [--ground colour]                              # PAID, fal
+python scripts/voidwalker-avatar/morph.py ingest --wave <wave> --ground colour --file <comfy output.mp4>   # a Comfy Cloud take
+```
+
+`prep` builds the FLW LoRA's own GUIDE (era A's first 25 frames reversed + 47
+grey + era B's first 25), so frames 24 and 72 are the two posters and
+`out[24:73]` is the deliverable. It also writes `comfy-<ground>/`: the
+author's workflow with only our shots, audio, prompt and a fixed seed swapped
+in. ⚠ The wave name puts `vN` BEFORE the pair, or `generate.py`'s
+`*-{era}-v*` glob takes a morph wave for an era's canonical one.
+
+⚠ **GOLD ON BLACK MAKES THE MODEL RELIGHT THE FIGURE** (wave
+`20260924-morph-v1-expanse-pokemon-go`, 2026-10-01). Five of six clips on the
+shipped posters dipped to black, went silver, repainted the cel cream or
+dropped him into a grey studio — and the dips are flashes. U31's lesson one
+stage later: the model draws the man in COLOUR, the gold is ours. `--ground
+colour` starts from the two raw takes keyed onto one MAGENTA ground (magenta,
+not blue: the trainer's vest carries blue key signal, the commander's armour
+almost no magenta).
+
+⚠ **FLW NEEDS ITS GUIDE PINNED, AND FAL DOES NOT PIN IT.** The one clip that
+morphed (one figure, the change riding the gesture, no dips) was FLW reading
+the guide on fal's reference endpoint — which redrew both ends rather than
+keeping them, so it cannot hand over to a poster. The shipped graph's
+`LTXVAddGuide` at frame 0, strength 1 is what pins them: run that on Comfy
+Cloud. ⚠ Where a clip CUTS instead of morphing, the middle is a stranger;
+identity follows continuity, so fix the cut before steering the face.
+
+⚠ fal's ltx-2.3-22b endpoints take a seed, an end frame and LoRAs by URL; the
+non-22b `fal-ai/ltx-2.3/*` take no LoRA, and LTX-2.3 LoRAs do not load on
+LTX-2.5. Replicate hosts Lightricks' LTX-2.3 Pro/Fast (first + last frame, no
+seed, no LoRA) and a fixed-menu LoRA model with no URL slot; its ComfyUI
+runner pins ComfyUI to 2025-10-29, before LTX-2 support. ⚠ Every request sends
+a named User-Agent: Replicate's Cloudflare answers Python's default with
+`error code: 1010`, a 403 that reads like a bad key.
+
 ## State
 
 | era          | wave                     | status                                                                                                                                                     |

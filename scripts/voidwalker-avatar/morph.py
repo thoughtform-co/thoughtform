@@ -636,10 +636,17 @@ def data_uri(path: Path) -> str:
     return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
 
 
+#: ⚠ A NAMED USER AGENT ON EVERY CALL. Replicate's Cloudflare front answers
+#: Python's default `Python-urllib/3.x` with `error code: 1010` (a 403 that reads
+#: like a rejected key, measured 2026-10-01); fal took the default on 09-07, but
+#: a fronting rule is not ours to rely on.
+UA = "thoughtform-morph-probe/1.0"
+
+
 def _req(url: str, payload: dict | None = None) -> dict:
     body = json.dumps(payload).encode() if payload is not None else None
     req = urllib.request.Request(url, data=body, method="POST" if body else "GET", headers={
-        "Authorization": f"Key {require('FAL_API_KEY')}",
+        "Authorization": f"Key {require('FAL_API_KEY')}", "User-Agent": UA,
         "Content-Type": "application/json", "Accept": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=180) as r:
@@ -654,17 +661,31 @@ def estimate(payload: dict) -> float:
     return round((wpx or SIZE[0]) * (hpx or SIZE[1]) * payload.get("num_frames", GUIDE) / 1e6 * USD_PER_MP_FRAME, 3)
 
 
-def build_run(run: str, w: Path, meta: dict) -> tuple[str, dict, dict]:
-    """(endpoint, payload, sidecar extras) for one named run."""
+def build_run(run: str, w: Path, meta: dict, ground: str = "gold") -> tuple[str, dict, dict]:
+    """(endpoint, payload, sidecar extras) for one named run.
+
+    ⚠ `ground` CHANGES THE PICTURE THE MODEL STARTS FROM, NOT JUST A LABEL. Wave
+    v1 (2026-10-01) ran every clip on the gold posters and the model RE-LIT the
+    figure in five of six — dips to black, a silver pass, a cream repaint, a
+    grey studio — which is U31's finding one stage later: a model draws a man in
+    colour and the gold is ours to add (`gold.py`). `colour` starts from the two
+    raw takes keyed onto one magenta ground (`ref-*-colour.png`, the guide's own
+    frames 24 and 72), so the clip can be graded like an idle afterwards.
+    """
     a, b = meta["a"], meta["b"]
-    p = meta["prompts"]["gold"]
+    p = meta["prompts"][ground]
     common = {
         "video_size": {"width": SIZE[0], "height": SIZE[1]},
         "num_frames": GUIDE, "fps": FPS, "seed": SEED,
         "enable_prompt_expansion": False, "generate_audio": False,
         "video_output_type": "X264 (.mp4)", "video_quality": "high",
     }
-    pa, pb = w / "poster-a.png", w / "poster-b.png"
+    if ground == "gold":
+        pa, pb = w / "poster-a.png", w / "poster-b.png"
+    else:
+        pa, pb = w / f"ref-a-{ground}.png", w / f"ref-b-{ground}.png"
+    if run in ("1a", "1b") and ground != "gold":
+        raise SystemExit("1a/1b are the gold idles (their words describe a hologram on black); run them on gold")
     if run in ("1a", "1b"):
         era, still = (a, pa) if run == "1a" else (b, pb)
         words = ERA_WORDS.get(era, {}).get("idle")
@@ -685,7 +706,7 @@ def build_run(run: str, w: Path, meta: dict) -> tuple[str, dict, dict]:
             payload["video_cfg_scale"] = 4.0  # the LoRA card's setting
         return EP_I2V, payload, {"kind": "first-last", "start": str(pa), "end": str(pb), "lora": lora}
     if run == "3":
-        guide = w / "guide-gold.mp4"
+        guide = w / f"guide-{ground}.mp4"
         if not guide.exists():
             raise SystemExit(f"{guide} is missing — run `morph.py prep` first")
         payload = {**common, "prompt": p["flw"], "video_url": data_uri(guide),
@@ -695,7 +716,7 @@ def build_run(run: str, w: Path, meta: dict) -> tuple[str, dict, dict]:
                    # The LoRA's author: artifacts without input audio, so the audio branch runs.
                    "generate_audio": True,
                    "loras": [{"path": LORAS["flw"], "scale": 1.0}], "negative_prompt": ""}
-        return EP_REF, payload, {"kind": "guide", "guide": str(guide), "ground": "gold"}
+        return EP_REF, payload, {"kind": "guide", "guide": str(guide), "ground": ground}
     raise SystemExit(f"unknown run {run!r} (1a 1b 2a 2b 2c 3, or all)")
 
 
@@ -721,11 +742,11 @@ def report(out: Path, extra: dict, w: Path) -> dict:
         strip(out, marks={ia: "A poster", ib: "B poster"})
     else:
         fr = read_frames(out, idx=[0, total - 1])
-        ra = np.asarray(Image.open(w / "poster-a.png").convert("RGB"))
-        rb = np.asarray(Image.open(w / "poster-b.png").convert("RGB"))
+        # The frames the clip was ASKED to start and end on, whichever ground.
+        ra = np.asarray(Image.open(extra.get("start") or (w / "poster-a.png")).convert("RGB"))
+        rb = np.asarray(Image.open(extra.get("end") or (w / "poster-b.png")).convert("RGB"))
         if kind == "i2v":
-            ref = ra if extra.get("start", "").endswith("poster-a.png") else rb
-            res.update(first=round(mad(fr[0], ref), 2))
+            res.update(first=round(mad(fr[0], ra), 2))
         else:
             res.update(a_poster=round(mad(fr[0], ra), 2), b_poster=round(mad(fr[-1], rb), 2))
         strip(out)
@@ -739,7 +760,11 @@ def cmd_run(args) -> int:
     w = wave_dir(args.wave)
     meta = load_meta(w)
     runs = ["1a", "1b", "2a", "2b", "2c", "3"] if args.run == "all" else args.run.split(",")
-    plan = [(r, *build_run(r, w, meta)) for r in runs]
+    if args.ground not in meta.get("grounds", ["gold"]):
+        raise SystemExit(f"ground {args.ground!r} was not prepped for this wave ({meta.get('grounds')})")
+    if args.ground != "gold" and args.run == "all":
+        runs = ["2a", "2b", "2c", "3"]  # the idles are gold-only
+    plan = [(r, *build_run(r, w, meta, args.ground)) for r in runs]
     total = sum(estimate(p) for _, _, p, _ in plan)
     for r, ep, p, _ in plan:
         print(f"\n== {r}  {ep}  est ${estimate(p):.3f}")
@@ -754,7 +779,9 @@ def cmd_run(args) -> int:
 
     manifest = w / "MANIFEST.jsonl"
     for r, ep, payload, extra in plan:
-        out = w / f"{r}.mp4"
+        # Gold keeps wave v1's names; another ground is suffixed so it can never
+        # answer as (or overwrite) the gold take of the same run.
+        out = w / (f"{r}.mp4" if args.ground == "gold" else f"{r}-{args.ground}.mp4")
         side = out.with_suffix(".json")
         if out.exists():
             print(f"{out.name} already on disk — kept (delete it to re-draw)")
@@ -793,7 +820,7 @@ def cmd_run(args) -> int:
         url = ((res or {}).get("video") or {}).get("url")
         if not url:
             raise SystemExit(f"{r}: no video in the result: {json.dumps(res)[:600]}")
-        with urllib.request.urlopen(url, timeout=600) as fh:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=600) as fh:
             out.write_bytes(fh.read())
         rec.update(video_url=url, seed_returned=res.get("seed"), bytes=out.stat().st_size,
                    completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -825,10 +852,27 @@ def cmd_ingest(args) -> int:
 
 
 def cmd_check(_args) -> int:
+    """Names, lengths and one FREE authenticated call — never a value.
+
+    The probe asks the queue for the status of a request id that cannot exist:
+    a 401/403 means the key was refused, anything else means fal read it and
+    answered about the (absent) job. Nothing is generated and nothing is billed.
+    """
     print(f"env: {env_path()}")
     print(describe(["FAL_API_KEY"]))
     for tool in ("ffmpeg", "ffprobe"):
         print(f"  {tool:28} {'present' if shutil.which(tool) else 'MISSING'}")
+    url = f"{QUEUE}/fal-ai/ltx-2.3-22b/requests/{'0' * 8}-{'0' * 4}-{'0' * 4}-{'0' * 4}-{'0' * 12}/status"
+    req = urllib.request.Request(url, headers={"Authorization": f"Key {require('FAL_API_KEY')}", "User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            code = r.status
+    except urllib.error.HTTPError as e:
+        code = e.code
+    if code in (401, 403):
+        print(f"  fal auth                     REFUSED (HTTP {code}) - the key did not authenticate")
+        return 2
+    print(f"  fal auth                     accepted (HTTP {code} on a request id that does not exist)")
     return 0
 
 
@@ -846,6 +890,8 @@ def main() -> int:
     r.add_argument("--dry-run", action="store_true")
     r.add_argument("--resume", action="store_true")
     r.add_argument("--max-usd", type=float, default=3.0)
+    r.add_argument("--ground", choices=("gold", "colour"), default="gold",
+                   help="gold = the shipped posters; colour = the raw takes on one magenta ground")
     i = sub.add_parser("ingest")
     i.add_argument("--wave", required=True)
     i.add_argument("--ground", choices=("gold", "colour"), required=True)
