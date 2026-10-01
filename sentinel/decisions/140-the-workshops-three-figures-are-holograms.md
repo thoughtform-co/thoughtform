@@ -212,3 +212,95 @@ Headed Chromium with real GL (`scripts/capture-workshop-holo.mjs`, new):
   seating and unchanged; the hologram made them no worse.
 - **No bake of the hologram for the phone** — ≤ 900px stays the SVG by the
   gate, which is the law.
+
+## Round two and round three (2026-10-01, same day)
+
+⚠ **THE DECISION ABOVE IS ROUND ONE, AND THE OWNER REJECTED IT** the same
+morning: _"what I'm seeing is just glorified. You used the visuals we had …
+and you added some particle effects to it. My explicit specific ask was to go
+back to the fucking drawing board, use particle systems, draw inspiration from
+the images I shared, and really build them up from first principles."_ He was
+right, and the guard above proved it against itself: §2's identity test asserts
+the hologram EQUALS the SVG to the unit — a test that the drawing did not
+change. Round one stays wired on the page until a pick lands (commit
+`5649df62`, revertable alone); §1–§9 stand as the engine's record.
+
+**Round two** (the lab, `/test/workshop-holo-lab`, six directions) redrew the
+compositions from his references — a wire planet with a tilted orbit, a
+geodesic sphere discharging into a grid, a terrain relief on a stacked slab, a
+Smith-chart trace, a graduated gauge, two poles — each at its own vantage. He
+rejected those too: _"it feels very boring. It doesn't have any of that
+isometric, cool particle system that we use, for example, for our arc sphere.
+The perspective is also super weird."_ Two findings, both mine to own:
+
+1. **The material was wire.** Instanced hairlines with a few motes sprinkled
+   on, when the house's own hologram is the brandmark core — six thousand
+   luminous motes assembling out of dust under curl flow and a return-to-home
+   force, with a sprite library (dot · dither · voxel · glyph · dash · cell ·
+   bracket · scan). I had dismissed that core as "the wrong base for a
+   lightweight kit". The references he gave are all POPULATED: a figure of
+   nodes and dust between two platens, coil-ball instruments on a wire planet,
+   a dot-matrix horse coming apart, an armillary in a sparkle field.
+2. **A free camera reads as a wrong perspective.** `{ az 30, el 36 }` is a
+   vantage nobody on the site has seen; the stage basis (az 45 / el 22,
+   `ISO_BASIS_STAGE`) is the one every isometric drawing in the house shares.
+   "Try different vantage points" was an invitation to explore, not a
+   licence to ship one.
+
+**Round three** is the pass the brief asked for, and it adds one layer to the
+engine rather than a second renderer:
+
+- **`stageParticles.ts`** (pure, three-free): a figure is POPULATIONS of
+  particles — home positions, a role (the colour rung), a sprite shape, a
+  size, an alpha, a reveal window, `order` (1 seats on its home, 0 rides the
+  sim), `drift`, `twinkle`, `sizeVar`, `lit` — and deterministic samplers
+  (`dotsAlong`, `lattice`, `wallLattice`, `ringDots`, `sphereRings`,
+  `motesIn`, `motesAround`, `ribbon`, `tendrilDots`, `ticksAlongA`,
+  `slabLayers`). `HoloStageSpec.particles` carries them.
+- **`HoloParticles.tsx`**: ONE `<points>` per figure fed by the corridor
+  core's own `GPGPUParticleSimulation` (curl flow + return + turbulence), the
+  forces lerped from DISPERSED to SEATED over the first 62 % of the intro —
+  so every figure assembles out of a scattered shell of dust exactly as the
+  Arc sphere does (measured: a loose cloud at 700 ms, the figure at 1300 ms
+  with the gold front crossing it). Ordered populations then seat exactly;
+  clouds keep the sim's faint physics and their own slow wander.
+- **`stageParticleShader.ts`**: the core's sprites, copied; the stage's
+  clocks per particle (intro, groups, the sweep front with a flash behind
+  it); premultiplied, additive on dark, ink on paper. ⚠ **Six attributes,
+  not sixteen** — fifteen scalars failed to link on the first shoot ("Too
+  many attributes") against the GPU's 16 locations; they are packed into
+  three `vec4`s and the home rides `position`.
+- **Three directions on the stage basis**, in `directions/`:
+  **Graph** (the curve as a plotted graph — ruled graph paper of beads with
+  cells at the crossings on a five-layer stacked slab, a graticule on the
+  back and side walls, a beaded vertical axis with its levels, a time ruler,
+  the frontier as a RIBBON of gold with a halo of sparkle — the one lit
+  object — a ring node per lane with a dotted drop to the floor and a cross at
+  its foot, the other vendor as a dawn trace, the step a lit patch under the
+  rise, and the effort surface as a MEMBRANE of motes with isolines and risers
+  on the `effort` group); **Sphere** (the stages — a floor lattice of cells on
+  a slab with the three footprints lit, YOU a green node, the prompt one
+  bright node with a drop, the tool a standing ring with a second ring turned
+  through it, the agent the Arc sphere itself: twenty-four latitude rings of
+  gold motes with a tilted orbit, hovering clear of the floor and discharging
+  six tendrils into the cells it covers, reporting back to the hand once);
+  **Dissolve** (the spectrum — one field over a long slab, a lattice of cells
+  at the tool's end coming apart cell by cell into a drifting plume of motes at
+  the collaborator's, the gold node where AI sits with its own strike down to
+  the rail).
+
+⚠ **Two shader defects the first shoots caught, both silent**: the sweep
+gate was inverted (`passed` was 1 AHEAD of the front, so the whole figure was
+hidden at rest and only motes that drifted past the end showed), and a
+backtick in a GLSL comment closed the template literal (a 500 on the whole
+chunk). Both are the kind of thing a geometry test cannot see; the lab shoot is
+the guard.
+
+**Open:** the owner's pick per figure. Then the pick takes an SVG fallback
+drawn in the same beaded grammar, DOM labels with leaders, the `arc-iso`
+label walk, and replaces the kind's renderer on every page; round one's page
+wiring comes out; this ADR is rewritten for what ships. Left open from round
+three itself: a slow travel of motes along the globe's rings (the particles
+orbiting while the globe stays put — motion the framing stage's no-breathing
+law may or may not allow), and the budget on a tablet tier (one 128-square
+texture per figure, three figures on one page).

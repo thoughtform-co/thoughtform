@@ -36,18 +36,25 @@ function DirectionCard({
   sweep,
   width,
   replay,
+  groupsOn,
 }: {
   dir: Direction;
   scan: number;
   sweep: boolean;
   width: number;
   replay: number;
+  groupsOn: boolean;
 }) {
   const channel = useMemo(() => createAnchorChannel(), []);
   const [live, setLive] = useState(false);
   const spec = useMemo(() => (sweep ? dir.spec : { ...dir.spec, sweep: undefined }), [dir, sweep]);
   const f = spec.frame;
   const view = spec.view ?? "stage";
+  /* Every reveal group open (the curve's effort dial) unless the dial says otherwise. */
+  const groups = useMemo(
+    () => Object.fromEntries((spec.groups ?? []).map((g) => [g, groupsOn])),
+    [spec, groupsOn]
+  );
   const seats = useMemo(
     () =>
       dir.labels.map((l) => {
@@ -86,6 +93,7 @@ function DirectionCard({
             channel={channel}
             armed
             scan={scan}
+            groups={groups}
             onReady={() => setLive(true)}
           />
         </div>
@@ -118,6 +126,7 @@ export function WorkshopHoloLab() {
   const [only] = useState(() => fromUrl("only", "").split(",").filter(Boolean));
   const [scan, setScan] = useState(() => Number(fromUrl("scan", "0.08")));
   const [sweep, setSweep] = useState(() => fromUrl("sweep", "on") !== "off");
+  const [groupsOn, setGroupsOn] = useState(() => fromUrl("groups", "on") !== "off");
   const [width, setWidth] = useState(() => Number(fromUrl("w", "1920")));
   /* A vantage override for every direction; "own" keeps each direction's. */
   const [az, setAz] = useState(() => fromUrl("az", "own"));
@@ -150,7 +159,7 @@ export function WorkshopHoloLab() {
   return (
     <div className="whl">
       <div className="whl__bar">
-        <span className="whl__title">WORKSHOP HOLO LAB · ADR-140 · ROUND TWO</span>
+        <span className="whl__title">WORKSHOP HOLO LAB · ADR-140 · ROUND THREE</span>
         <label>
           scan
           <select value={scan} onChange={(e) => setScan(Number(e.target.value))}>
@@ -164,6 +173,16 @@ export function WorkshopHoloLab() {
         <label>
           sweep
           <select value={sweep ? "on" : "off"} onChange={(e) => setSweep(e.target.value === "on")}>
+            <option value="on">on</option>
+            <option value="off">off</option>
+          </select>
+        </label>
+        <label>
+          groups
+          <select
+            value={groupsOn ? "on" : "off"}
+            onChange={(e) => setGroupsOn(e.target.value === "on")}
+          >
             <option value="on">on</option>
             <option value="off">off</option>
           </select>
@@ -209,7 +228,15 @@ export function WorkshopHoloLab() {
         <span className="whl__note">{dirs.length} directions · pick by name</span>
       </div>
       {dirs.map((d) => (
-        <DirectionCard key={d.id} dir={d} scan={scan} sweep={sweep} width={width} replay={replay} />
+        <DirectionCard
+          key={d.id}
+          dir={d}
+          scan={scan}
+          sweep={sweep}
+          width={width}
+          replay={replay}
+          groupsOn={groupsOn}
+        />
       ))}
     </div>
   );

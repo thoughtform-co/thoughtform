@@ -28,6 +28,7 @@ import {
   STAGE_PRISMS,
 } from "@/components/arcs/framing/stagesLayout";
 import type { StageBounds, StageView, Vec3 } from "./stageFit";
+import type { StageParticleSpec } from "./stageParticles";
 import { toThree } from "./stageFit";
 
 /* ── The vocabulary ───────────────────────────────────────────────────── */
@@ -210,6 +211,12 @@ export interface HoloStageSpec {
    * geometry guard fails.
    */
   groups?: readonly string[];
+  /**
+   * The figure's MATERIAL (ADR-140, round three): populations of particles
+   * that assemble on arrival through the corridor core's own simulation.
+   * Lines, faces and strips stay for the few crisp edges a slab needs.
+   */
+  particles?: StageParticleSpec;
 }
 
 /* ── Primitives ───────────────────────────────────────────────────────── */

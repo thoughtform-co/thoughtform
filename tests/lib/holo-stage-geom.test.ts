@@ -13,7 +13,9 @@ import {
   spectrumSpec,
   type SpectrumData,
 } from "@/components/holo-stage/spectrumGeom";
+import { DIRECTIONS } from "@/components/holo-stage/directions";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
+import { particleCount, particlePoints } from "@/components/holo-stage/stageParticles";
 import {
   stageCameraBasis,
   stageCameraPosition,
@@ -299,5 +301,61 @@ describe("the workshop's live stage (ADR-130 U2, re-cut in U4, three drawings si
     expect(two.read()).toHaveLength(0);
     two.clear();
     expect(one.read()).toHaveLength(1);
+  });
+});
+
+/* ADR-140, round three: the material is particles. These walk the three new
+   directions the lab mounts, so a population that strays off its crop, a
+   second gold object or a non-deterministic seed fails here before a shoot. */
+describe("the round-three directions are populations on the stage (ADR-140)", () => {
+  const ROUND_THREE = ["sphere", "graph", "dissolve"] as const;
+
+  it("every particle home lands inside its own crop, at the stage view", () => {
+    for (const id of ROUND_THREE) {
+      const d = DIRECTIONS[id]();
+      const spec = d.spec;
+      expect(spec.particles, id).toBeDefined();
+      const pts = particlePoints(spec.particles!);
+      expect(pts.length, id).toBeGreaterThan(1500);
+      let out = 0;
+      for (const p of pts) {
+        const c = stageToCrop(p, spec.frame, spec.view ?? "stage");
+        if (c.x < 0 || c.x > spec.frame.w || c.y < 0 || c.y > spec.frame.h) out++;
+      }
+      expect(out, `${id}: homes outside the crop`).toBe(0);
+    }
+  });
+
+  it("the lit populations are gold and gold alone, and there is at least one", () => {
+    for (const id of ROUND_THREE) {
+      const pops = DIRECTIONS[id]().spec.particles!.populations;
+      const lit = pops.filter((p) => p.lit);
+      expect(lit.length, id).toBeGreaterThan(0);
+      for (const p of lit) expect(p.role, `${id}/${p.id}`).toBe("gold");
+    }
+  });
+
+  it("a figure fits one 128-square simulation texture", () => {
+    for (const id of ROUND_THREE) {
+      expect(particleCount(DIRECTIONS[id]().spec.particles!), id).toBeLessThanOrEqual(128 * 128);
+    }
+  });
+
+  it("the populations are deterministic, seed for seed", () => {
+    for (const id of ROUND_THREE) {
+      const a = DIRECTIONS[id]().spec.particles!;
+      const b = DIRECTIONS[id]().spec.particles!;
+      expect(a.populations.map((p) => p.points.length)).toEqual(
+        b.populations.map((p) => p.points.length)
+      );
+      expect(a.populations[0].points).toEqual(b.populations[0].points);
+      expect(a.populations[a.populations.length - 1].points).toEqual(
+        b.populations[b.populations.length - 1].points
+      );
+    }
+  });
+
+  it("every direction poses on the house stage, not a free camera", () => {
+    for (const id of ROUND_THREE) expect(DIRECTIONS[id]().spec.view ?? "stage", id).toBe("stage");
   });
 });

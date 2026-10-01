@@ -42,6 +42,7 @@ import {
 import type { HoloPalette } from "@/components/holo-program/holoPalette";
 import { clamp01 } from "@/lib/math";
 
+import { HoloParticles, type StageClock } from "./HoloParticles";
 import type { AnchorChannel, HoloAnchor } from "./stageAnchors";
 import { buildStageBatch, type StageBatchUniforms } from "./stageBatch";
 import { stageDustFragmentShader, stageDustVertexShader } from "./stageDustShader";
@@ -318,6 +319,8 @@ export function HoloStageScene({
   const dustRefs = useRef<(THREE.Points<THREE.BufferGeometry> | null)[]>([]);
 
   const progress = useRef(0);
+  /* The clocks the particle layer reads (ADR-140, round three). */
+  const sceneClock = useRef<StageClock>({ p: 0, t: 0, groups: new THREE.Vector4(), front: 0 });
   const ready = useRef(false);
   const clock = useRef(0);
   const scratch = useMemo(() => new THREE.Vector3(), []);
@@ -373,6 +376,10 @@ export function HoloStageScene({
     /* The sweep's front, in world. Past the intro it has crossed everything. */
     const sweep = spec.sweep;
     const front = sweep ? (still ? sweep.to + sweep.width * 4 : sweepAt(sweep, p)) : 0;
+    sceneClock.current.p = p;
+    sceneClock.current.t = t;
+    sceneClock.current.groups.copy(groupsVec);
+    sceneClock.current.front = front;
 
     /* ⚠ NO BREATHING ON A FRAMING STAGE (ADR-130 U4). The words are the SVG
        fallback's own DOM spans, seated by fraction over a drawing that must
@@ -515,6 +522,17 @@ export function HoloStageScene({
   return (
     <group ref={rigRef}>
       {batch ? <primitive ref={batchMeshRef} object={batch.mesh} /> : null}
+
+      {spec.particles ? (
+        <HoloParticles
+          spec={spec.particles}
+          palette={palette}
+          sweep={spec.sweep}
+          groupNames={groupNames}
+          still={still}
+          clock={sceneClock}
+        />
+      ) : null}
 
       {dashed.map((g, i) => (
         <lineSegments
