@@ -51,8 +51,10 @@
  * and the card count is read off the pile's published `data-vwd-media-count`.
  * Since U34 every era carries a real pile, and a fixture that fits proves only
  * that the fixture's titles fit.
- * ⚠ THE FIXTURE STOPS AT 3 (U34): the cap is the cascade's HEIGHT now, and the
- * lab's `?media=` refuses 4 — a pile it would not mount is a still of the
+ * ⚠ THE FIXTURE STOPS AT 4 (U47; it was 3 under U34): the record holds four,
+ * the cascade DRAWS as many as its seat affords (four on a tall seat, three
+ * from a 200px one, two at 1280×720 and on a phone) and the rest rotate in.
+ * The lab's `?media=` refuses 5 — a pile it would not mount is a still of the
  * wrong subject, gated green.
  */
 import { mkdirSync } from "node:fs";
@@ -71,9 +73,9 @@ const ERA = argOf("--era", "genai");
 const RECORD = args.includes("--record");
 /* `null` is the record's own pile, whose size is only known once it renders. */
 const PILES = RECORD ? [null] : argOf("--piles", "1,2,3").split(",").map(Number);
-const BAD_PILE = PILES.find((n) => n !== null && !(Number.isInteger(n) && n >= 0 && n <= 3));
+const BAD_PILE = PILES.find((n) => n !== null && !(Number.isInteger(n) && n >= 0 && n <= 4));
 if (BAD_PILE !== undefined) {
-  console.error(`--piles ${BAD_PILE}: the lab mounts 0–3 cards (the U34 cap); anything else shoots the wrong subject`);
+  console.error(`--piles ${BAD_PILE}: the lab mounts 0–4 cards (the U47 cap); anything else shoots the wrong subject`);
   process.exit(2);
 }
 const OUT = argOf("--out", "");

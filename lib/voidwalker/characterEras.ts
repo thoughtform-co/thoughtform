@@ -502,20 +502,22 @@ export type CharacterEraMedia =
   | CharacterEraMediaImage;
 
 /**
- * How many assets one era's pile may hold.
+ * How many assets one era's pile may hold — the RECORD's cap.
  *
- * ⚠ THE CAP IS ARITHMETIC, NOT TASTE, AND SINCE ADR-082 U34 IT IS A HEIGHT.
- * The pile is a stack of identical folders seen on a diagonal: each card
- * behind the front one stands one TAB HEIGHT up, so its tab reads whole above
- * the card in front — and every one of those rises is paid for out of the
- * front card's frame. At 1280×720 a fourth card pushes the frame under its
- * 72px floor. (U31's cap was 4, and it was the WIDTH of a row of fanned tabs,
- * which no longer exists.) The shortest phone draws the front two of a
- * three-card pile and rotates the third in. Raising this number is a
- * redesign of the pile, which is why the guard below truncates rather than
- * trusting the author.
+ * ⚠ IT IS NO LONGER THE NUMBER DRAWN (ADR-082 U47, owner 2026-10-02: four
+ * films on 2023, "keep all four"). The pile is a stack of identical folders
+ * seen on a diagonal: each card behind the front one stands one TAB HEIGHT up,
+ * so its tab reads whole above the card in front — and every one of those
+ * rises is paid for out of the front card's frame. So the cascade DRAWS what
+ * its seat affords and the rest rotate in — two cards on a short seat (the
+ * binding 1280×720 one included, where the pile's box is 139px), three from a
+ * 200px seat, four from 240px (`voidwalker-datum.css`'s container rungs,
+ * measured), two on a phone. Under U34 the cap and the number drawn were one
+ * (3), because nothing was hidden. The tallest rung draws four, so a fifth
+ * card could never be drawn anywhere, which is why the guard below still
+ * truncates rather than trusting the author.
  */
-export const CHARACTER_ERA_MEDIA_MAX = 3;
+export const CHARACTER_ERA_MEDIA_MAX = 4;
 
 const ERA_MEDIA_IMAGE_PATH =
   /^\/images\/voidwalker\/media\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp|avif)$/i;
@@ -818,6 +820,17 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // ⚠ ITS 2:55 ARRIVED WITH THE SECOND CARD (ADR-082 U33): the head's tag
     // reads the FRONT card's length, so a pile whose front had none printed a
     // blank tag on one card and "7:06" on the other.
+    /* ⚠ THE UNDER ARMOUR PAIR GOES DIRECTLY BEHIND THE FRONT CARD (ADR-082
+       U47, owner 2026-10-02) — the facts' REACH row names that campaign, and a
+       new card goes behind the era's existing front one. Both stream from the
+       bucket: the masters are 2560×1440 HEVC at ~300 MB, re-cut to 1080p H.264
+       with the index first (34.0 / 37.3 MB, under the bucket's 50 MB). The
+       posters are the films' own frames: the stone figure breaking apart at
+       0:13.4, and Joshua himself at the mic at 0:39.6 (the cut opens on colour
+       bars, so frame zero could not be the poster). Durations are the native
+       player's reading of the delivered files (60.07s, 69.99s). Where the seat
+       cannot pay for a fourth card the Latent Land behind-the-scenes, last,
+       rotates in. */
     media: [
       {
         kind: "embed",
@@ -825,6 +838,22 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
         title: "Welcome to Latent Land",
         duration: "2:55",
         poster: "/images/voidwalker/media/film-latent-land.jpg",
+      },
+      {
+        kind: "video",
+        src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/era-media/genai/under-armour-aj.mp4`,
+        title: "Under Armour, with Anthony Joshua",
+        duration: "1:00",
+        poster: "/images/voidwalker/media/film-under-armour-aj.jpg",
+        focus: [0.45, 0.3],
+      },
+      {
+        kind: "video",
+        src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/era-media/genai/under-armour-aj-bts.mp4`,
+        title: "Under Armour, behind the scenes",
+        duration: "1:09",
+        poster: "/images/voidwalker/media/film-under-armour-aj-bts.jpg",
+        focus: [0.4, 0.25],
       },
       {
         kind: "embed",

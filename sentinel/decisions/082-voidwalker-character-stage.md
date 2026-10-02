@@ -5401,3 +5401,94 @@ face."_ Two reference frames of an open-visor marine helmet came with it.
   videotoolbox; a Mac cuts one from `veo/graded/`.
 - The photographs the era is named off still show him in a cap; the era's
   `wardrobe` comment records that and the figure does not follow it.
+
+## Update 47 — 2023 gets the Under Armour films, and the pile draws what its seat affords (2026-10-02, owner)
+
+The owner: _"What I wanted to add to the Latent Land era are these two videos.
+You need to add them to Supabase … not just on this page but also on our
+homepage."_ The two are the Under Armour campaign with Anthony Joshua and its
+behind-the-scenes cut, the work the era's REACH row already names. 2023 held
+two films and the pile's cap was three, so he was asked which three to keep; he
+answered **keep all four**.
+
+### A · The films, in the bucket
+
+- **The masters are 2560 × 1440 HEVC at ~300 MB** (60.06s and 69.99s), and the
+  bucket takes H.264 MP4 under 50 MB. Each is re-cut to 1080p H.264 High, CRF 22
+  capped at 4.8 Mbps, AAC 160k, `+faststart` (`moov` read before `mdat` off the
+  atom order): **34.0 MB and 37.3 MB**.
+- **The objects:** `era-media/genai/under-armour-aj.mp4` and
+  `era-media/genai/under-armour-aj-bts.mp4`, uploaded with
+  `cache-control: max-age=31536000` and `x-upsert: false`, the key read from
+  `.env.local` inside the script and never printed. Read back as a ranged
+  public GET: `206`, `video/mp4`, a year's cache.
+- **The posters are the films' own frames**, 960 × 540: the stone figure breaking
+  apart at 0:13.4 (40 KB), and Joshua at the mic in his Under Armour shirt at
+  0:39.6 (31 KB). The cut opens on colour bars, so frame zero could not be the
+  poster.
+- **The cards go directly BEHIND the front one** (the standing rule): _Welcome
+  to Latent Land_ · _Under Armour, with Anthony Joshua_ (1:00) · _Under Armour,
+  behind the scenes_ (1:09) · _Welcome to Latent Land, behind the scenes_. The
+  third title was first written with Joshua's name in it; at 1280 × 720 it ran
+  to two lines, which §B shows is the case that breaks, and it now matches the
+  Latent Land pair's own form.
+
+### B · The record holds four; the seat decides how many are drawn
+
+`CHARACTER_ERA_MEDIA_MAX` is the RECORD's cap now, **4**, and it is no longer
+the number drawn. The cascade draws what its seat affords, by container rungs on
+the TRANSMISSION seat, which is a size container at ≥1101px: **two by default,
+three from a 200px seat, four from 240px**, and the phone draws two. A card past
+the drawn depth is not drawn, reserves no room, and rotates in when a card in
+front is chosen, exactly as the phone's third always has.
+
+- ⚠ **U34's "three fit 1280 × 720" was a model, and it was wrong at the one
+  shape it was about.** It took the seat as 194.7px; the pile's own box there is
+  139px (the seat's padding and head are not the pile's). With three cards drawn
+  the frame sits below its card, and a two-line title in front pushes it under
+  the seat, where a click lands on the seat and opens nothing. The lab's
+  three-card fixture failed exactly that way on unchanged code; **no live era had
+  three cards until this update**, so nothing on the site showed it. U38
+  recorded the overrun as open ("the lab's three-card fixture overruns its card
+  there while the landing's pile fits"); drawing two at that seat closes it.
+- **The rungs are measured, never estimated** (`capture-era-media --piles 3,4`,
+  every rotation and every dialog, nineteen desktop shapes from 1101 × 770 to
+  1920 × 1247): seats from 199.3 to 223.1 drew three clean and failed four, the
+  tallest failure at 223.1 (1280 × 800, a back tab covered); every seat from
+  224.3 up drew four clean at every width. 240 is that edge plus the margin the
+  1101px width needs, where titles wrap more. Four are drawn at 1280 × 840,
+  1440 × 900, 1920 × 960 and the owner's 1920 × 1247; three at 1366 × 768,
+  1440 × 840 and 1536 × 864; two at 1280 × 720.
+- **The rungs ask the seat, not the viewport**, so they cannot drift from the
+  budget they stand for. They live inside the one `@media (min-width: 1101px)`
+  gate where the seat IS a container; below it no query matches and two are
+  drawn, which is also every 701–1100 shape.
+
+### Verified
+
+- `capture-era-media --record --era genai` at 1280 × 720, 1440 × 900,
+  1920 × 1080, 1920 × 1247, 1101 × 800, 390 × 844 and 375 × 553: every gate
+  passes, every card rotates to the front and opens its dialog (the two Under
+  Armour cards as `<video>` from the bucket, 16:9 to the pixel). The other four
+  eras' own piles pass at 1280 × 720 unchanged.
+- **Headed, under the dev server's enforced CSP:** both films play from the
+  bucket (`readyState` 4, three seconds in after three, 1920 × 1080) at
+  1920 × 1247 and 1280 × 720, zero violations.
+- **On every page that mounts the era stage** (`/`, `/arcs/thoughtform-workshop`,
+  `/arcs/thoughtform-workshop-v2`, `/arcs/ap-hogeschool`) the 2023 sheet carries
+  four cards in the order above, draws four at 1920 × 1247, and plays the film
+  from the bucket: one record, four pages, per the owner's standing rule of the
+  same day (`CLAUDE.md`, "one section, one record, every surface").
+
+### Guards
+
+`character-eras` pins the cap at four and 2023's pile in order;
+`voidwalker-datum-sheet` replaces U34's arithmetic with the law it measured
+(two by default, the 200 and 240 rungs inside the ≥1101px gate, depths 2 and 3
+undrawn below them); the lab's `?media=` and `capture-era-media --piles` take
+0–4.
+
+### Left open
+
+- The capture still has no frame-inside-card gate (U38's note). The dialog-click
+  gate is what found §B's defect.

@@ -256,10 +256,12 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
       }
       expect(eraMedia(era)).toEqual(raw);
     }
-    // Three since ADR-082 U34, and the number is the CASCADE's height at
-    // 1280×720 (each card behind costs the front frame one tab height); U31's
-    // four was the width of a fanned tab row that no longer exists.
-    expect(CHARACTER_ERA_MEDIA_MAX).toBe(3);
+    // Four since ADR-082 U47: the RECORD's cap. The cascade DRAWS what its
+    // seat affords (two, three or four, `voidwalker-datum-sheet` pins the
+    // rungs) and the rest rotate in; the tallest rung draws four, so a fifth
+    // card could never be drawn anywhere. U34's three was the number drawn at
+    // 1280×720, when the two were one number.
+    expect(CHARACTER_ERA_MEDIA_MAX).toBe(4);
   });
 
   it("the two films that shipped as `film` are still the record, as embeds", () => {
@@ -280,12 +282,20 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
     // The owner's films, in the order he gave them. A new card goes BEHIND the
     // era's existing front card, so the two films above stay the record's lead —
     // with ONE ruled exception: 2020's Twitch recording of the class itself goes
-    // to the FRONT of its pile (ADR-082 U34 §B), the bucket's one film.
+    // to the FRONT of its pile (ADR-082 U34 §B), the bucket's first film.
+    // ADR-082 U47: 2023's Under Armour pair goes DIRECTLY behind the front card
+    // (the facts' REACH row names that campaign), both streamed from the
+    // bucket; the Latent Land behind-the-scenes moves to the back.
     const pile = (id: string) =>
       eraMedia(findCharacterEra(id)).map((m) => (m.kind === "embed" ? m.youtubeId : m.title));
     expect(pile("expanse")).toEqual(["a5-DcdfxCvU", "pNlYOGwt1nA"]);
     expect(pile("loop")).toEqual(["EQKIiqVyjJk", "bouBxlVy3zc"]);
-    expect(pile("genai")).toEqual(["jFVezT4mznU", "T6z9sbGl04Y"]);
+    expect(pile("genai")).toEqual([
+      "jFVezT4mznU",
+      "Under Armour, with Anthony Joshua",
+      "Under Armour, behind the scenes",
+      "T6z9sbGl04Y",
+    ]);
     expect(pile("azeroth")).toEqual(["The World of Warcraft class, live on Twitch", "qm4KlfvJc9A"]);
     expect(pile("pokemon-go")).toEqual(["tRdaNTpxmR8"]);
     // Every card in a pile states its length, so the head's tag never goes

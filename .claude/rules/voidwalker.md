@@ -133,11 +133,20 @@ aim`, framing checked before a video is paid for; asked in words, Veo
     `KIND NN`; the mark is gold on the open card and dawn behind — one notch,
     one state. A back tab's hit area is two tab heights, clipped by the
     silhouette (the area under a back tab belongs to the card in front, so
-    the old downward slop is gone). ⚠ **THE CAP IS A HEIGHT NOW: 3** — at
-    1280×720 each card behind costs the front frame one tab height, and three
-    land the frame on its 72px floor exactly; the phone draws at most two
-    (`--vwd-mpad` 10) and reaches the third by rotation. The lab's `?media=`
-    and `capture-era-media --piles` take 0–3 and refuse the rest.
+    the old downward slop is gone). ⚠ **THE RECORD HOLDS FOUR AND THE SEAT
+    DECIDES HOW MANY ARE DRAWN (U47, 2026-10-02, owner: "keep all four")** —
+    each card behind costs the front frame one tab height, so the cascade draws
+    two by default (1280×720 included, where the pile's own box is 139px), three
+    from a 200px seat and four from 240px, by `@container` rungs on the
+    TRANSMISSION seat's size container (≥1101px only); the phone draws two. A
+    card past the drawn depth is not drawn and rotates in. ⚠ **U34's "three fit
+    1280×720" was a model, and it was wrong there**: it assumed the 194.7px seat,
+    a third card put the frame below its card, and a two-line title in front
+    pushed it under the seat so a click landed on the seat itself (the lab's
+    three-card fixture failed that way; no live era had three cards until U47).
+    The rungs are MEASURED: seats 199.3–223.1 drew three clean and failed four,
+    224.3 up drew four clean at every width. The lab's `?media=` and
+    `capture-era-media --piles` take 0–4.
     ⚠ **`media-src` NAMES ONE REMOTE HOST, BY OWNER RULING** (_"stream from
     Supabase"_): the site's own project, never the `*.supabase.co` glob,
     pinned from both directions; a `video` may name a PUBLIC `.mp4` in the

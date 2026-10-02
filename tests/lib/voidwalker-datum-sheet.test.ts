@@ -140,17 +140,45 @@ describe("the media card's silhouette and its lip (ADR-082 U31)", () => {
     expect(stack).toMatch(/padding:\s*calc\(var\(--_steps\) \* var\(--vwd-mstack-dy\)\) 0 0/);
   });
 
-  it("three cards fit the binding seat and a fourth breaks the frame's floor", () => {
-    // 1280×720, measured (capture-era-media): a 194.7px seat, a card of
-    // 22 (tab) + 7.2 (pad) + 27 (a two-line title) + 7.2 (gap) + 7.2 (pad)
-    // around a frame whose cap is 108px and whose floor is 72px.
-    const seat = 194.7;
-    const t = 22;
-    const chrome = t + 7.2 + 27 + 7.2 + 7.2;
-    const frame = (n: number) => Math.min(108, seat - (n - 1) * t - chrome);
-    expect(frame(CHARACTER_ERA_MEDIA_MAX)).toBeGreaterThanOrEqual(72);
-    // ⚠ This is what the record's cap IS. Raising it is a redesign of the pile.
-    expect(frame(CHARACTER_ERA_MEDIA_MAX + 1)).toBeLessThan(72);
+  it("draws what the seat affords: two, three from a 200px seat, four from 240 (ADR-082 U47)", () => {
+    // ⚠ U34 modelled this as arithmetic off a 194.7px seat and pinned three.
+    // The model was wrong where it mattered: the pile's own box at 1280×720 is
+    // 139px (the seat's padding and head are not the pile's), so a third card
+    // put the frame below its card and a two-line title in front pushed it
+    // under the seat, where a click landed on the seat itself. No live era had
+    // three cards until U47, so nothing saw it. The counts below are MEASURED
+    // (`capture-era-media --piles 3,4`, every rotation and every dialog): seats
+    // from 199.3 to 223.1 drew three clean and failed four, seats from 224.3
+    // up drew four clean at every width from 1101 to 1920.
+    const stack = ruleBody(css, ".vwd__mstack");
+    expect(stack).toContain("--_steps: min(calc(var(--vwd-mn, 1) - 1), 1)");
+    expect(css).toMatch(
+      /\.vwd__mcard\[data-vwd-media-depth="2"\],\s*\.vwd__mcard\[data-vwd-media-depth="3"\]\s*\{\s*display:\s*none;/
+    );
+    // The rungs ask the SEAT (the size container), never the viewport, so they
+    // live in the one gate where the seat IS a container.
+    const gate = mediaBlocks(css).find(([, body]) => body.includes("container-type"));
+    expect(gate?.[0]).toBe("(min-width: 1101px)");
+    const rung = (h: number) => {
+      const body = gate![1];
+      const at = body.indexOf(`@container (min-height: ${h}px)`);
+      expect(at, `no ${h}px rung`).toBeGreaterThan(-1);
+      let depth = 0;
+      let i = body.indexOf("{", at);
+      const open = i;
+      for (; i < body.length; i += 1) {
+        if (body[i] === "{") depth += 1;
+        else if (body[i] === "}" && --depth === 0) break;
+      }
+      return body.slice(open + 1, i);
+    };
+    expect(rung(200)).toContain("--_steps: min(calc(var(--vwd-mn, 1) - 1), 2)");
+    expect(rung(200)).toMatch(/depth="2"\]\s*\{\s*display:\s*flex/);
+    expect(rung(240)).toContain("--_steps: calc(var(--vwd-mn, 1) - 1)");
+    expect(rung(240)).toMatch(/depth="3"\]\s*\{\s*display:\s*flex/);
+    // The tallest rung draws the record's whole cap: a card past it could never
+    // be drawn anywhere, and a cap raised without a rung would hide one forever.
+    expect(CHARACTER_ERA_MEDIA_MAX).toBe(4);
   });
 });
 

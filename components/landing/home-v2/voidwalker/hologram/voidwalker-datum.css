@@ -884,13 +884,23 @@
      characters behind a 5px mark and two 6px gaps — plus the slant's own width
      on the right, because that corner of the tab is not there. One width is
      what makes every notch the same notch.
-     ⚠ THREE IS THE CEILING AND IT IS NOW A HEIGHT (`CHARACTER_ERA_MEDIA_MAX`):
-     each card behind costs the front card's frame one tab height, and at
-     1280×720 a fourth pushes the frame under its 72px floor. U31's ceiling was
-     the WIDTH of a fanned tab row, and that row is gone. */
+     ⚠ THE CASCADE DRAWS WHAT ITS SEAT AFFORDS, AND THE RECORD HOLDS MORE
+     (ADR-082 U47, owner 2026-10-02: four films on 2023, "keep all four"). Each
+     card behind costs the front card's frame one tab height, so the number
+     DRAWN is a height, read off the seat by the container rungs below: two
+     cards here (one step), three from a middle seat, four from a tall one; the
+     phone stays at two. A card past the drawn depth is not drawn and rotates
+     in when a card in front is chosen, exactly as the phone's third always
+     has. `CHARACTER_ERA_MEDIA_MAX` (4) caps the RECORD; U34's three was the
+     number drawn, when nothing was hidden.
+     ⚠ TWO IS THE FLOOR BECAUSE 1280×720 HAS NO ROOM FOR A THIRD, AND IT NEVER
+     DID. The pile's budget there is its 139px box, not the 194.7px seat around
+     it, so a third card puts the frame below its card and a two-line title in
+     front pushes it under the seat, where a click lands on the seat itself.
+     No live era carried three cards until U47, which is why nothing saw it. */
   --_adv: calc(var(--vwd-mtab-fs) * 0.68);
   --_wt: calc(var(--_adv) * 7 + 31px + var(--vwd-mtab-h));
-  --_steps: calc(var(--vwd-mn, 1) - 1);
+  --_steps: min(calc(var(--vwd-mn, 1) - 1), 1);
 
   position: relative;
   display: grid;
@@ -946,6 +956,14 @@
     100% 100%,
     0 100%
   );
+}
+
+/* A card past the drawn depth (U47): in the pile, reachable by rotation, not
+   drawn, and its room not reserved (`--_steps` above). The seat's rungs draw
+   them back; the phone never does. */
+.vwd__mcard[data-vwd-media-depth="2"],
+.vwd__mcard[data-vwd-media-depth="3"] {
+  display: none;
 }
 
 /* The lip. Outer contour, closed; inner contour 1px in, closed; `evenodd`
@@ -1650,6 +1668,33 @@ a.vwd__pcard:focus-visible {
   }
   .vwd__mcard__frame {
     max-height: clamp(120px, 18svh, 207px);
+  }
+  /* ⚠ THE FOURTH CARD IS DRAWN ONLY WHERE THE SEAT PAYS FOR IT (ADR-082 U47).
+     The seat is the size container above, so the question is asked of the
+     budget itself rather than of the viewport: a third step costs the frame one
+     more tab height, and below this seat the frame would fall under its 72px
+     floor with a two-line title in front. Measured, never estimated
+     (`capture-era-media --piles 4`, nineteen desktop shapes, 2026-10-02): every
+     seat from 224.3px up fit at every width, the tallest that failed was 223.1
+     (1280×800, a back tab covered and unpressable), so 240 is the measured
+     edge plus a margin the narrowest width (1101, titles wrapping more) needs.
+     It draws four at 1280×840, 1440×900, 1920×960 and the owner's 1920×1247,
+     and three at 1280×720, 1366×768 and 1440×840. */
+  @container (min-height: 200px) {
+    .vwd__mstack {
+      --_steps: min(calc(var(--vwd-mn, 1) - 1), 2);
+    }
+    .vwd__mcard[data-vwd-media-depth="2"] {
+      display: flex;
+    }
+  }
+  @container (min-height: 240px) {
+    .vwd__mstack {
+      --_steps: calc(var(--vwd-mn, 1) - 1);
+    }
+    .vwd__mcard[data-vwd-media-depth="3"] {
+      display: flex;
+    }
   }
 }
 .vwd__vwh {
