@@ -119,6 +119,14 @@ describe("the workshop's second cut (ADR-139)", () => {
     expect(ids.indexOf("ground"), "the ground follows the curve").toBe(
       ids.indexOf("the-curve") + 1
     );
+    /* ADR-139 U1: the hull answers the turn's question (a person or an
+       agent?) and hands to the horizon (what an agent needs to run long). */
+    expect(ids.indexOf("agent-shaped"), "the hull answers the turn").toBe(
+      ids.indexOf("person-or-agent") + 1
+    );
+    expect(ids.indexOf("the-horizon"), "and hands to the horizon").toBe(
+      ids.indexOf("agent-shaped") + 1
+    );
     expect(ids.indexOf("signal"), "the market closes the framing").toBeLessThan(
       ids.indexOf("made-real-voice")
     );

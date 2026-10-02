@@ -205,3 +205,54 @@ machine would be switched off within a week.
 3. **`ARC_PASSWORD_THOUGHTFORM_WORKSHOP_V2`.** The door is path-matched, so
    the route is gated for free — but it does NOT inherit v1's key. Unset, it
    falls back to `ARCS_PASSWORD`.
+
+## U1 (2026-10-02, owner): agent-shaped work, and the spectrum's middle
+
+The owner brought Matthew Schwartz's "Claude-shaped science" (Anthropic) and
+asked how it fits the flow without adding text. Two changes, one of them a
+picture.
+
+**The spectrum's middle says which collaborator.** It read "a third skill:
+brief it, give it room, judge what comes back". Schwartz's nuance is that the
+collaborator a room pictures is a peer who knows what is interesting and when
+it is done, and the one it has is not that: "I started to treat it like the
+collaborator it actually is." The line is now _"Treat it as the collaborator it
+actually is: give it what it does well, and keep the judging."_, and the
+figure carries a credit (`spectrum.source`, optional, rendered as a caption).
+
+⚠ **ONE SECTION, ONE RECORD.** The beat was four identical copies (v1, this
+cut, the class-one deck, the AP lecture), so the change is a hoist:
+`lib/arcs/content/shared/toolAndCollaborator.ts` holds the poles, the middle,
+the bands and the credit, each page spreads it and authors only its head, and
+`arcs-registry` pins every spectrum's four fields `toBe` the shared record. A
+page with its own copy now fails by name.
+
+**A new beat answers the turn: `agent-shaped`, the `hull` kind** (ADR-052's
+**twenty-third** enumerated exception). Between 10 (_is the workflow for a
+person, or for an agent?_) and the horizon (_what an agent needs to run for
+hours_) sits _which work goes to the agent_: Schwartz's convex hull. The
+team's knowledge is a jagged star, one spike per role; a dashed line runs
+round the tips; the bays between the spikes, inside that line, are gold
+particles. The spikes are where the judgement comes from; the particles are
+what an agent can fill (work that crosses fields and can be checked).
+
+- **People are shapes and the agent is particles**, the spectrum's own reading
+  (intelligence is the cloud), held across the two beats.
+- **It draws an argument, so it names its source** (ADR-130's workshop
+  clause); `source` is required on the kind. "Agent-shaped" on screen and
+  Claude only in the credit, because the ground beat names no vendor and a
+  fork should reuse the beat unchanged.
+- **The geometry is pure** (`components/arcs/hull/hullLayout.ts`): fixed
+  patterns, a seeded jittered field, a crop derived from the drawing so it is
+  centred at five to seven roles. The SVG letters nothing; the roles are DOM
+  on seats the layout emits.
+- ⚠ **EVERY TIP IS A HULL VERTEX, AND THE GUARD CAUGHT ONE THAT WAS NOT.**
+  `tests/lib/arc-hull.test.ts` asserts it at five, six and seven roles; the
+  first tuning put the shortest spike of a seven-role team inside the hull,
+  which would have drawn that person swallowed by the agent's field. It also
+  walks every particle: inside the hull, outside the star, clear of both
+  lines.
+- Eyebrows 11 to 22 move to 12 to 23. The beat measures 720 in a 720 frame at
+  1280x720 and 1247 at 1920x1247; it stacks under 900px.
+- No live layer yet: the three hologram figures are still awaiting the
+  owner's round-four pick (ADR-140), and this one joins them only after it.

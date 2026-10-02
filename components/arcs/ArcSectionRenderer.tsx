@@ -14,6 +14,7 @@ import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
 import { ArcGround } from "./ArcGround";
+import { ArcHull } from "./ArcHull";
 import { ArcHeroBoard } from "./ArcHeroBoard";
 import { ArcHorizon } from "./ArcHorizon";
 import { ArcProgramBoard } from "./ArcProgramBoard";
@@ -142,6 +143,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcSkillFile key={section.id} section={section} index={index} motion={motion} />;
     case "chat":
       return <ArcChat key={section.id} section={section} index={index} motion={motion} />;
+    case "hull":
+      return <ArcHull key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;

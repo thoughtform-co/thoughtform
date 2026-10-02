@@ -38,7 +38,7 @@ interface ArcSpectrumProps {
  * handle and every word are this DOM, in both modes.
  */
 export function ArcSpectrum({ section, index, motion = "reveal" }: ArcSpectrumProps) {
-  const { poles, middle, bands } = section;
+  const { poles, middle, bands, source } = section;
   const [tool, collaborator] = poles;
   const cols = [
     { at: "start", label: tool.label, head: tool.head, lines: tool.lines },
@@ -100,6 +100,7 @@ export function ArcSpectrum({ section, index, motion = "reveal" }: ArcSpectrumPr
               </div>
             ))}
           </div>
+          {source ? <figcaption className="arc-spectrum__source">{source}</figcaption> : null}
         </figure>
       </div>
     </ArcBeat>

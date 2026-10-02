@@ -19,6 +19,7 @@ import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
+import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
@@ -1388,6 +1389,17 @@ describe("arcs registry (ADR-052)", () => {
           expect(s.middle.label.length, `${at}: middle label`).toBeLessThanOrEqual(24);
           expect(s.middle.head.length, `${at}: middle head`).toBeLessThanOrEqual(28);
           expect(s.middle.line.length, `${at}: middle line`).toBeLessThanOrEqual(96);
+          if (s.source !== undefined) {
+            expect(s.source.length, `${at}: source`).toBeGreaterThan(0);
+            expect(s.source.length, `${at}: source`).toBeLessThanOrEqual(72);
+          }
+          /* ⚠ ONE SECTION, ONE RECORD (owner, 2026-10-02): every page that
+             shows this beat reads the shared drawing, so a change lands on
+             all of them. A page with its own copy fails here by name. */
+          expect(s.poles, `${at}: the shared poles`).toBe(TOOL_AND_COLLABORATOR.poles);
+          expect(s.middle, `${at}: the shared middle`).toBe(TOOL_AND_COLLABORATOR.middle);
+          expect(s.bands, `${at}: the shared bands`).toBe(TOOL_AND_COLLABORATOR.bands);
+          expect(s.source, `${at}: the shared credit`).toBe(TOOL_AND_COLLABORATOR.source);
           for (const b of [s.bands.start, s.bands.end]) {
             expect(b.length, `${at}: band`).toBeLessThanOrEqual(16);
           }
@@ -1784,6 +1796,31 @@ describe("the second cut's four kinds (ADR-139)", () => {
             `${at}: nothing is filed without showing the reader exactly what`
           ).toBe(true);
         }
+      }
+    }
+  });
+
+  /* ADR-139 U1: the hull. It draws an argument, so it names its source; the
+     roles letter on a ring round one drawing, so each is a short word. */
+  it("a hull names its source, letters short roles, and no digit", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "hull") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.team.roles.length, `${at}: five to seven roles`).toBeGreaterThanOrEqual(5);
+        expect(s.team.roles.length, `${at}: five to seven roles`).toBeLessThanOrEqual(7);
+        expect(new Set(s.team.roles).size, `${at}: a role twice`).toBe(s.team.roles.length);
+        for (const r of s.team.roles) {
+          expect(r.length, `${at}/${r}: a role is one short word`).toBeLessThanOrEqual(10);
+        }
+        for (const k of [s.team, s.field]) {
+          expect(k.label.length, `${at}: key label`).toBeLessThanOrEqual(28);
+          expect(k.line.length, `${at}: key line`).toBeLessThanOrEqual(72);
+        }
+        expect(s.source.length, `${at}: the source is named`).toBeGreaterThan(0);
+        expect(s.source.length, `${at}: source`).toBeLessThanOrEqual(72);
+        noDigits(s.team, `${at}.team`);
+        noDigits(s.field, `${at}.field`);
       }
     }
   });

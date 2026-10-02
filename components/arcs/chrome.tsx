@@ -86,6 +86,8 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   "plugin-board": "PLUGIN",
   "skill-file": "SKILL",
   chat: "CHAT",
+  /* ADR-139 U1. */
+  hull: "REACH",
 };
 
 /**

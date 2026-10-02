@@ -2,6 +2,7 @@ import type { ArcDef, ArcSection } from "../types";
 
 import { FRONTIER_CURVE } from "./shared/frontierCurve";
 import { WRITING_BENCH } from "./shared/writingBench";
+import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
 
 /**
  * The Thoughtform workshop, SECOND CUT (ADR-139).
@@ -79,7 +80,7 @@ const MADE_REAL: ArcSection[] = [
     menuPrimary: true,
     worked: panel("made-real", "voice"),
     head: {
-      eyebrow: "13 · Made real",
+      eyebrow: "14 · Made real",
       title: { pre: "Every answer has somewhere to live.", em: "Together they make a plugin." },
       sub: "What the team knows becomes a skill, and what good looks like becomes its evals. The plugin is where those two sit with the connectors and the owner, so the whole answer travels as one thing.",
     },
@@ -138,7 +139,7 @@ const MADE_REAL: ArcSection[] = [
     kind: "plugin-board",
     worked: panel("made-real", "image"),
     head: {
-      eyebrow: "13 · Made real",
+      eyebrow: "14 · Made real",
       title: { pre: "Every answer has somewhere to live.", em: "Together they are a plugin." },
       sub: "What the team knows becomes a skill, and what good looks like becomes its evals. The plugin is where those two sit with the connectors and the owner, so the whole answer travels as one thing.",
     },
@@ -197,7 +198,7 @@ const MADE_REAL: ArcSection[] = [
     kind: "plugin-board",
     worked: panel("made-real", "reference"),
     head: {
-      eyebrow: "13 · Made real",
+      eyebrow: "14 · Made real",
       title: { pre: "Every answer has somewhere to live.", em: "Together they are a plugin." },
       sub: "What the team knows becomes a skill, and what good looks like becomes its evals. The plugin is where those two sit with the connectors and the owner, so the whole answer travels as one thing.",
     },
@@ -266,7 +267,7 @@ const THE_SKILL: ArcSection[] = [
     worked: panel("the-skill", "voice"),
     badge: "Claude · Skill",
     head: {
-      eyebrow: "14 · A skill",
+      eyebrow: "15 · A skill",
       title: { pre: "A skill is how you work,", em: "written down." },
       sub: "The first thing the team writes: what it knows. It is a folder with one main file, in plain language, and Claude reaches for it when the request fits. This is a real one, shortened.",
     },
@@ -340,7 +341,7 @@ const THE_SKILL: ArcSection[] = [
     worked: panel("the-skill", "image"),
     badge: "Claude · Skill",
     head: {
-      eyebrow: "14 · A skill",
+      eyebrow: "15 · A skill",
       title: { pre: "A skill is how you work,", em: "written down." },
       sub: "The first thing the team writes: what it knows. It is a folder with one main file, in plain language, and Claude reaches for it when the request fits. This is a real one, shortened.",
     },
@@ -418,7 +419,7 @@ const THE_SKILL: ArcSection[] = [
     worked: panel("the-skill", "reference"),
     badge: "Claude · Skill",
     head: {
-      eyebrow: "14 · A skill",
+      eyebrow: "15 · A skill",
       title: { pre: "A skill is how you work,", em: "written down." },
       sub: "The first thing the team writes: what it knows. It is a folder with one main file, in plain language, and Claude reaches for it when the request fits. This is a real one, shortened.",
     },
@@ -493,7 +494,7 @@ const THE_PLUGIN: ArcSection[] = [
     worked: panel("the-plugin", "voice"),
     layout: "readout",
     head: {
-      eyebrow: "15 · How it reaches the team",
+      eyebrow: "16 · How it reaches the team",
       title: { pre: "One install for the team,", em: "from a shelf that stays current." },
       sub: "The team's skills are packed into one plugin, and the plugin sits on a shelf your organisation owns. The shelf is added once; after that a new skill arrives without anybody being asked to install anything.",
     },
@@ -544,7 +545,7 @@ const THE_PLUGIN: ArcSection[] = [
     worked: panel("the-plugin", "image"),
     layout: "readout",
     head: {
-      eyebrow: "15 · What you get",
+      eyebrow: "16 · What you get",
       title: { pre: "One plugin,", em: "from one shelf." },
       sub: "The team's skills are packed into one plugin, and the plugin sits in a marketplace that keeps itself in sync. The marketplace is the shelf; the plugin is the book you take off it.",
     },
@@ -595,7 +596,7 @@ const THE_PLUGIN: ArcSection[] = [
     worked: panel("the-plugin", "reference"),
     layout: "readout",
     head: {
-      eyebrow: "15 · What you get",
+      eyebrow: "16 · What you get",
       title: { pre: "One plugin,", em: "from one shelf." },
       sub: "The team's skills are packed into one plugin, and the plugin sits in a marketplace that keeps itself in sync. The marketplace is the shelf; the plugin is the book you take off it.",
     },
@@ -667,7 +668,7 @@ const USING_IT: ArcSection[] = [
     worked: panel("using-it", "voice"),
     variant: "ask",
     head: {
-      eyebrow: "16 · Using it",
+      eyebrow: "17 · Using it",
       title: { pre: "Ask in your own words.", em: "Or type a slash and pick." },
       sub: "Claude matches the request to the right skill and says which one it used. Nobody has to remember what is installed, or what it is called.",
     },
@@ -713,7 +714,7 @@ const USING_IT: ArcSection[] = [
     worked: panel("using-it", "image"),
     variant: "ask",
     head: {
-      eyebrow: "16 · Using it",
+      eyebrow: "17 · Using it",
       title: { pre: "Ask in your own words.", em: "Or type a slash and pick." },
       sub: "Claude matches the request to the right skill and says which one it used. Nobody has to remember what is installed, or what it is called.",
     },
@@ -756,7 +757,7 @@ const USING_IT: ArcSection[] = [
     worked: panel("using-it", "reference"),
     variant: "ask",
     head: {
-      eyebrow: "16 · Using it",
+      eyebrow: "17 · Using it",
       title: { pre: "Ask in your own words.", em: "Or type a slash and pick." },
       sub: "Claude matches the request to the right skill and says which one it used. Nobody has to remember what is installed, or what it is called.",
     },
@@ -835,7 +836,7 @@ const WHEN_WRONG: ArcSection[] = [
     worked: panel("when-wrong", "voice"),
     variant: "feedback",
     head: {
-      eyebrow: "17 · When it is wrong",
+      eyebrow: "18 · When it is wrong",
       title: { pre: "When a skill gets it wrong,", em: "say so in the chat." },
       sub: "Say what went wrong where you are already working. You see exactly what will be filed before anything is filed, and nothing goes anywhere until you say yes.",
     },
@@ -881,7 +882,7 @@ const WHEN_WRONG: ArcSection[] = [
     worked: panel("when-wrong", "image"),
     variant: "feedback",
     head: {
-      eyebrow: "17 · When it is wrong",
+      eyebrow: "18 · When it is wrong",
       title: { pre: "When a skill gets it wrong,", em: "say so in the chat." },
       sub: "Say what went wrong where you are already working. You see exactly what will be filed before anything is filed, and nothing goes anywhere until you say yes.",
     },
@@ -927,7 +928,7 @@ const WHEN_WRONG: ArcSection[] = [
     worked: panel("when-wrong", "reference"),
     variant: "feedback",
     head: {
-      eyebrow: "17 · When it is wrong",
+      eyebrow: "18 · When it is wrong",
       title: { pre: "When a skill gets it wrong,", em: "say so in the chat." },
       sub: "Say what went wrong where you are already working. You see exactly what will be filed before anything is filed, and nothing goes anywhere until you say yes.",
     },
@@ -1153,32 +1154,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
         },
         sub: "Sometimes you tell it exactly what to do. Sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
       },
-      poles: [
-        {
-          label: "Tool",
-          head: "Executes commands",
-          lines: [
-            "You say exactly what to do",
-            "It does that, or fails clearly",
-            "You check every result",
-          ],
-        },
-        {
-          label: "Collaborator",
-          head: "Interprets intent",
-          lines: [
-            "You explain what you are after",
-            "It works out the steps",
-            "You agree on what good looks like",
-          ],
-        },
-      ],
-      middle: {
-        label: "AI sits here",
-        head: "Both, at once",
-        line: "Neither end is wrong. It is a third skill: brief it, give it room, judge what comes back.",
-      },
-      bands: { start: "Software", end: "Intelligence" },
+      ...TOOL_AND_COLLABORATOR,
     },
     {
       id: "resource",
@@ -1326,12 +1302,40 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
         "A workflow for a person has a person check in at every step. An agent that runs for hours needs the context and the evals instead, and finds the steps itself.",
     },
     {
+      /* The turn's answer (ADR-139 U1): which work goes to the agent. Matthew
+         Schwartz's convex hull, from "Claude-shaped science" (Anthropic): a
+         team's knowledge is jagged, and an agent earns its keep in the bays
+         between the spikes, where the work crosses fields and can be
+         checked. It draws an argument, so it names its source (ADR-130's
+         workshop clause). "Agent-shaped" on screen, Claude in the source:
+         the ground beat names no vendor, and a fork reuses this unchanged. */
+      id: "agent-shaped",
+      kind: "hull",
+      menuLabel: "Agent-shaped",
+      head: {
+        eyebrow: "11 · Agent-shaped work",
+        title: { pre: "Give the agent the gaps", em: "between your experts." },
+        sub: "Each person on the team knows one thing deeply. The space between them, wherever an answer can be checked, is where an agent does its best work.",
+      },
+      team: {
+        label: "What your people know",
+        line: "Deep in one direction each. That is where the judgement comes from.",
+        roles: ["Copy", "Design", "Strategy", "Motion", "Media", "Data"],
+      },
+      field: {
+        label: "What an agent can fill",
+        line: "The space between them, wherever the answer can be checked.",
+      },
+      source: "After Matthew Schwartz, Claude-shaped science, Anthropic",
+      alt: "Six spikes of uneven length, one per discipline, with a dashed line drawn round their tips; the bays between the spikes, inside the line, are filled with gold particles",
+    },
+    {
       id: "the-horizon",
       kind: "horizon",
       menuLabel: "The horizon",
       menuPrimary: true,
       head: {
-        eyebrow: "11 · Why it needs checks",
+        eyebrow: "12 · Why it needs checks",
         title: { pre: "It can only work for hours", em: "when it has the context and the evals." },
         sub: "A tool you operate needs you at every step. An agent on a long task checks its work against the evals, retries when it slips, and stops to ask when it should.",
       },
@@ -1359,7 +1363,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       kind: "signal",
       menuLabel: "The market",
       head: {
-        eyebrow: "12 · Where the money goes",
+        eyebrow: "13 · Where the money goes",
         title: {
           pre: "The labs just bet billions",
           em: "on the two things only your team can write.",
@@ -1475,7 +1479,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       kind: "bench",
       menuLabel: "The bench",
       head: {
-        eyebrow: "18 · The checks, running",
+        eyebrow: "19 · The checks, running",
         title: { pre: "One of the three,", em: "all the way down." },
         sub: "Four checks the practice wrote for its own writing, run against a first draft and then against the same text rewritten. A check returns a state, never a score, and the verdict is the worst of them.",
       },
@@ -1489,7 +1493,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       menuLabel: "Two more skills",
       layout: "stack",
       head: {
-        eyebrow: "19 · The mother and the father",
+        eyebrow: "20 · The mother and the father",
         title: { pre: "Two skills", em: "look after all the others." },
         sub: "One reads the work against what the rest have learned; one sorts every remark the moment it arrives. Nothing merges without a person.",
       },
@@ -1553,7 +1557,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       menuPrimary: true,
       columns: 3,
       head: {
-        eyebrow: "20 · Get started",
+        eyebrow: "21 · Get started",
         title: { pre: "Your team's plugin", em: "is one click away." },
         sub: "Plugins, skills and connectors all live in one place. Turn the plugin on once, and every skill in it is on in every Claude you use.",
       },
@@ -1587,7 +1591,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       menuLabel: "What is next",
       layout: "readout",
       head: {
-        eyebrow: "21 · What is next",
+        eyebrow: "22 · What is next",
         title: { pre: "What you leave with,", em: "and what you run next." },
         sub: "The workshop ends with one piece of work chosen, its six questions answered on a page, and the first skill started.",
       },
@@ -1629,7 +1633,7 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       kind: "close",
       menuLabel: "What follows",
       head: {
-        eyebrow: "22 · What follows",
+        eyebrow: "23 · What follows",
         title: { pre: "Then it runs", em: "without me." },
         sub: "The first workstream goes through the loop with your own team at the controls. Then a second, with the checks that have accumulated. Then we hand over, with a date on it, and come back once to see what changed.",
       },

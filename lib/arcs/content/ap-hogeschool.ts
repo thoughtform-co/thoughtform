@@ -1,6 +1,7 @@
 import type { ArcDef } from "../types";
 
 import { FRONTIER_CURVE } from "./shared/frontierCurve";
+import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
 import {
   TOM_ANCHOR_IMAGE,
   TOM_BENCH_EXAMPLE,
@@ -206,32 +207,7 @@ export const AP_HOGESCHOOL_ARC: ArcDef = {
         },
         sub: "Sometimes you tell it exactly what to do. Sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
       },
-      poles: [
-        {
-          label: "Tool",
-          head: "Executes commands",
-          lines: [
-            "You say exactly what to do",
-            "It does that, or fails clearly",
-            "You check every result",
-          ],
-        },
-        {
-          label: "Collaborator",
-          head: "Interprets intent",
-          lines: [
-            "You explain what you are after",
-            "It works out the steps",
-            "You agree on what good looks like",
-          ],
-        },
-      ],
-      middle: {
-        label: "AI sits here",
-        head: "Both, at once",
-        line: "Neither end is wrong. It is a third skill: brief it, give it room, judge what comes back.",
-      },
-      bands: { start: "Software", end: "Intelligence" },
+      ...TOOL_AND_COLLABORATOR,
     },
     {
       /* A beat: no picture, and twenty seconds of silence in the room. */

@@ -1015,6 +1015,9 @@ export type ArcSection = ArcSectionBase &
         middle: { label: string; head: string; line: string };
         /** The two bands, from the tool's end and from the collaborator's. */
         bands: { start: string; end: string };
+        /** Where the reading comes from, lettered under the figure (ADR-139
+         *  U1: the middle is Matthew Schwartz's turn, and it is credited). */
+        source?: string;
       }
     | {
         /**
@@ -1179,6 +1182,38 @@ export type ArcSection = ArcSectionBase &
         /** The column beside it. `menu` under `ask`, `steps` under
          *  `feedback` — the guard pins the pairing. */
         aside: ArcChatAside;
+      }
+    | {
+        /**
+         * AGENT-SHAPED WORK (ADR-139 U1): Matthew Schwartz's convex hull,
+         * drawn as the answer to the turn's question (a person or an agent?).
+         * The team's knowledge is a jagged star, one spike per discipline,
+         * deep in one direction each; a dashed line runs round the tips; the
+         * bays between the spikes, inside that line, fill with gold
+         * particles. The spikes are where the judgement comes from, the
+         * particles are what an agent can fill.
+         *
+         * ⚠ THE TWENTY-THIRD ENUMERATED EXCEPTION. One leaf, no state; the
+         * geometry is pure in `components/arcs/hull/hullLayout.ts`, the SVG
+         * letters nothing and every word is DOM placed over it.
+         *
+         * ⚠ IT DRAWS AN ARGUMENT, SO IT NAMES ITS SOURCE (ADR-130's workshop
+         * clause). `source` is required here, where the spectrum's is
+         * optional: this figure is the article's own picture.
+         *
+         * ⚠ PEOPLE ARE SHAPES, THE AGENT IS PARTICLES — the spectrum's own
+         * reading (intelligence is the cloud), held across the two beats.
+         */
+        kind: "hull";
+        head: ArcHead;
+        /** The people: one spike per role, five to seven. */
+        team: { label: string; line: string; roles: readonly string[] };
+        /** The bays inside the hull: what an agent can fill. */
+        field: { label: string; line: string };
+        /** Where the picture comes from, under the key. */
+        source: string;
+        /** The drawing's accessible name. */
+        alt: string;
       }
   );
 
