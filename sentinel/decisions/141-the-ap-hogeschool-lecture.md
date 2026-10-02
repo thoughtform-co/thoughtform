@@ -114,3 +114,41 @@ in the opening readout carries no href. The pile is one scroll above; the row na
    a smaller one.
 3. **The registry position.** Filed after the course's class deck, which it borrows its
    worlds from. One line to move if the lectures are ever grouped.
+
+## Update 1 — the shared sheet wins on specificity, not on order (2026-10-02, owner)
+
+The owner, on the live read: _"the elements are really smushed together, with two
+dominant margins on the left and right, which is something we don't have on any of
+our other pages."_ Every beat sat in a column ~820px wide at his 2000px window, where
+v2's runs the full 1200px band.
+
+- **The cause is cascade order, not this page's CSS.** v1's route sheet releases the
+  `#workshop` station with `.tw-root .tw-arc { display: block; padding: 0;
+content-visibility: visible }`, which is (0,2,0): the same as landing.css's
+  `.station:not(.hero)` and below the ≤960 rung's
+  `.station:not(.hero):not(.station--cover)` (0,3,0). It only ever won by coming after
+  landing.css. The bundler does not keep import order for a sheet three routes share,
+  and on this route it put the route sheet BEFORE landing.css, in dev and in production
+  (measured on thoughtform.co). The page's only extra import, `course.css`, is what
+  changes the order; the page's own import order is unchanged and correct.
+- **It lost three things, not one:** the station kept its side padding (189px a side
+  at 2000px, 129 at 1280, 32 on a phone), `content-visibility: auto` came back (the arc
+  laid out as a placeholder and grew the document on reach, the jump §4 of the sheet
+  warns about), and on a phone the station's 140/220 vertical padding too. Every guard
+  was green; the parse, registry and fit gates measure the beats, never the station
+  around them.
+- **The fix names the station by id:** `.tw-root #workshop.station.tw-arc`. An id
+  outranks every class-based station rule the landing has, in any order, and
+  `#workshop` exists only in this route's prototype. v1 and v2 are unchanged
+  (both already resolved to padding 0; measured).
+- **Verified:** a cascade audit (every route-sheet rule copied to the end of the
+  cascade; a computed value that moves means the rule was losing on order) reports
+  zero losers on v2 and on this route at 2000×1024, 1280×720 and 390×844, where it had
+  reported the three above. The band is 1200px at x 400 on both pages. All sixteen beats
+  are still one frame at 1280×720, 1920×1247 and 2000×1024 in both themes, the shared
+  bench's +36px at 1280×720 as before.
+- **Guard:** `ap-hogeschool.test.ts` asserts the release rule names `#workshop` and
+  outranks both landing selectors that pad a station.
+- **The general lesson:** a sheet shared by several routes may not depend on its place
+  in the cascade. Every override in it has to win on specificity, because the next
+  route to add one import can reorder it.

@@ -71,6 +71,42 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
   });
 
   /**
+   * ⚠ THE SHARED SHEET MUST WIN ON SPECIFICITY, NEVER ON ORDER (ADR-141 U1).
+   * The bundler does not keep import order for a sheet three routes share: on
+   * this route it put v1's sheet BEFORE landing.css, so its equal-specificity
+   * `.tw-root .tw-arc` lost to `.station:not(.hero)` — the station kept its
+   * side padding (every beat in an ~820px column at 2000px wide) and
+   * `content-visibility: auto` came back, in dev and in production, and on a
+   * phone the 140/220 station padding too (the ≤960 rung's
+   * `.station:not(.hero):not(.station--cover)` is (0,3,0)), with every guard
+   * green. So the rule that releases the station names it BY ID: an id
+   * outranks every class-based station rule the landing has, in any order.
+   */
+  it("releases the workshop station on specificity, not on sheet order", () => {
+    const weight = (sel: string) => {
+      const s = sel.replace(/::[\w-]+/g, "");
+      const ids = (s.match(/#[\w-]+/g) ?? []).length;
+      const classes = (s.match(/\.[\w-]+|\[[^\]]+\]|:(?!not\()[\w-]+/g) ?? []).length;
+      return ids * 1000 + classes;
+    };
+    const sheet = routeFile("thoughtform-workshop", "thoughtform-workshop.css");
+    const release = sheet.match(
+      /([^{}/]+)\{\s*display:\s*block;\s*padding:\s*0;\s*content-visibility:\s*visible;/
+    );
+    expect(release, "the station-release rule is in v1's sheet").not.toBeNull();
+    const selector = release![1].trim();
+    expect(selector, "it names the station by id").toMatch(/#workshop\b/);
+    const landing = readFileSync(
+      join(process.cwd(), "components", "landing", "v7", "landing.css"),
+      "utf8"
+    );
+    for (const pad of [".station:not(.hero)", ".station:not(.hero):not(.station--cover)"]) {
+      expect(landing, `the landing still pads stations on ${pad}`).toContain(pad);
+      expect(weight(selector), `outranks ${pad}`).toBeGreaterThan(weight(pad));
+    }
+  });
+
+  /**
    * ⚠ NO SWITCH. The second cut's worked-example switch is what makes its
    * practical chapter one piece of work followed five ways; this page has no
    * practical chapter, so the island is not mounted and no section carries a

@@ -568,8 +568,20 @@ html[data-corridor-exit="true"] .tw-root [data-corridor-kill] {
    it and then grows the document by the whole arc (~12,000px measured at
    1280x720) on that frame — the scrollbar jumps and every scroll clock
    downstream of it re-bases mid-read. The exit rule above only lifts it
-   while the band is live. */
-.tw-root .tw-arc {
+   while the band is live.
+   ⚠ THE SELECTOR NAMES THE STATION BY ID, AND THAT IS WHAT MAKES IT WIN.
+   Bare `.tw-root .tw-arc` is (0,2,0), the same as landing.css's
+   `.station:not(.hero)`, and the phone rung's
+   `.station:not(.hero):not(.station--cover)` is (0,3,0) — so this rule won
+   only while this sheet was ordered after landing.css, and the bundler does
+   not keep import order for a sheet three routes share. On
+   /arcs/ap-hogeschool it put this sheet first, in dev and in production: the
+   station kept its 189px side padding at 2000px wide (every beat in a column
+   ~820px wide), `content-visibility: auto` came back, and on a phone the
+   140/220 station padding too, with every guard green (ADR-141 U1). An id
+   outranks every class-based station rule in any order; `#workshop` exists
+   only in this route's prototype. */
+.tw-root #workshop.station.tw-arc {
   display: block;
   padding: 0;
   content-visibility: visible;
