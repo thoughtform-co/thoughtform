@@ -176,3 +176,36 @@ comes back.'"_
   readout absent and the hero's first action on it; `arcs-registry` fails any
   `hero-board` carrying this sub that is not the shared object, and pins its readers to
   this page and v2.
+
+## Update 3 — Prompt to Loop replaces the anchor beat (2026-10-02, owner)
+
+The owner, half an hour before the lecture: _"I just created a breakdown of a super cool
+motion design video … integrate this into the AP section … verbatim … Use the
+Thoughtform brand tokens … different colours and no rounded corners … replace the anchor
+12 near the bottom."_
+
+- **`two-anchors` is deleted** and its course.css caps with it. In its place, between
+  `itp-wall` and `ambition`, the tail mounts **thirteen slides** (the breakdown's hero
+  and its twelve chapters, Setup to Next time) through `PromptToLoop.tsx`. They are not
+  an arc section kind: one person's breakdown is not a reusable grammar, so the arc
+  array stays at fifteen and the renderer gained an `indexOffset` to carry numbering
+  across the split.
+- **Each slide's head is the arc's own** (`ArcSectionHead`: title left, paragraph
+  right); **every body is the breakdown's markup verbatim**, generated into
+  `promptToLoopSlides.ts` by `scripts/arcs/port-prompt-to-loop.py` from the owner's
+  `index.html`. The media leave the file for `public/arcs/ap-hogeschool/prompt-to-loop/`
+  (one film, 23 stills, 1.8 MB), and every id is prefixed `ptl-`.
+- **The CSS is the breakdown's own, scoped under `.ptl`** (`prompt-to-loop.css`, also
+  generated). Its palette is remapped onto the arcs' ink ramp and gold, with green
+  for the human, square corners and no shadows; the video's scene palette stays.
+  ⚠ **Every breakdown class is prefixed `ptl-` too:** the page already owns `.station`,
+  `.plate`, `.hero`, `.title`, `.k` and six others, and the landing's `.station` rule
+  (140/220 padding, the starfield) broke "How it runs" until the prefix went on.
+  ⚠ **The data file is `promptToLoopSlides.ts`, not `promptToLoop.ts`:** on Windows the
+  latter resolves to `PromptToLoop.tsx` and the import comes back undefined.
+- **Verified:** all thirteen slides one frame at 2000×1024 in both themes, the film
+  playing, no page errors. `ap-hogeschool.test.ts` pins thirteen slides, unique
+  prefixed ids, every in-page link landing on a slide and every media path on disk.
+- **The cost chapter** prints the evening's API spend at published prices (about $27).
+  It is the owner's own spend on his own breakdown, published on his word; the money
+  scan reads the arc records, not these bodies.

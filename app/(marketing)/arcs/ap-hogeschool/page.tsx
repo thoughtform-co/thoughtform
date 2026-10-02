@@ -34,6 +34,9 @@ import "@/components/arcs/arcs.css";
 // registry guard green. After arcs.css, whose tokens it reads, as `[slug]`
 // orders it.
 import "@/components/arcs/course.css";
+// The Prompt to Loop breakdown (ADR-141 U3): its own rules, scoped under
+// `.ptl`, on Thoughtform's tokens. After the arcs' sheets it reads from.
+import "./prompt-to-loop.css";
 // about-stage.css / continuum-stage.css are deliberately NOT imported: this
 // page mounts no about deck stage (ADR-053).
 // ⚠ v1's ROUTE SHEET, BY PATH. This page renders `.tw-root` and shares v1's

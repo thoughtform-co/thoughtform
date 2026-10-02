@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { AP_HOGESCHOOL_JOURNEY_ORDER } from "@/app/(marketing)/arcs/ap-hogeschool/journey";
+import { PROMPT_TO_LOOP_SLIDES } from "@/app/(marketing)/arcs/ap-hogeschool/promptToLoopSlides";
 import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop/journey";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
@@ -145,7 +146,11 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
     expect(ids.indexOf("configuration")).toBe(ids.indexOf("real-question") + 1);
     expect(ids.indexOf("tom-on-the-moon")).toBeGreaterThan(ids.indexOf("configuration"));
     expect(ids.indexOf("itp-wall")).toBeGreaterThan(ids.indexOf("tom-verdict"));
-    expect(ids.indexOf("this-week")).toBeGreaterThan(ids.indexOf("two-anchors"));
+    expect(ids.indexOf("this-week")).toBeGreaterThan(ids.indexOf("itp-wall"));
+    /* The anchor beat is replaced by the Prompt to Loop slides (ADR-141 U3),
+       which the tail mounts right before the ambition beat. */
+    expect(ids.includes("two-anchors"), "the anchor beat is gone").toBe(false);
+    expect(ids[ids.indexOf("ambition") - 1]).toBe("itp-wall");
   });
 
   /**
@@ -183,5 +188,29 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
     const src = wall?.kind === "media" ? wall.media.src : "";
     expect(src.startsWith("/arcs/ap-hogeschool/")).toBe(true);
     expect(existsSync(join(process.cwd(), "public", src)), `${src} on disk`).toBe(true);
+  });
+
+  /**
+   * The Prompt to Loop breakdown (ADR-141 U3): thirteen slides, the owner's
+   * own markup verbatim under arc heads. Every id is prefixed so none can
+   * collide with the page's stations or beats, every in-page link lands on a
+   * slide, and every picture and the film are on disk (a body is a string,
+   * so nothing else would notice a missing file).
+   */
+  it("carries the Prompt to Loop slides whole, prefixed and on disk", () => {
+    expect(PROMPT_TO_LOOP_SLIDES).toHaveLength(13);
+    const ids = PROMPT_TO_LOOP_SLIDES.map((s) => s.id);
+    expect(new Set(ids).size).toBe(13);
+    for (const slide of PROMPT_TO_LOOP_SLIDES) {
+      expect(slide.id.startsWith("ptl-"), slide.id).toBe(true);
+      expect(slide.pre && slide.em && slide.sub, `${slide.id}: a whole head`).toBeTruthy();
+      for (const [, href] of slide.body.matchAll(/href="#([^"]+)"/g)) {
+        expect(ids, `${slide.id}: #${href} lands on a slide`).toContain(href);
+      }
+      for (const [, src] of slide.body.matchAll(/(?:src|poster)="(\/arcs\/[^"]+)"/g)) {
+        expect(existsSync(join(process.cwd(), "public", src)), `${src} on disk`).toBe(true);
+      }
+      expect(slide.body, `${slide.id}: no inlined media`).not.toContain("data:image");
+    }
   });
 });

@@ -305,50 +305,10 @@ export const AP_HOGESCHOOL_ARC: ArcDef = {
         sourceLabel: "In The Pocket · AI readiness",
       },
     },
-    {
-      /* Two anchors beside each other, one found and one not: the card grid
-         falls to two columns at the room's own 1280px and a third card orphans
-         there (ADR-131's own measurement). Two rows a card. */
-      id: "two-anchors",
-      kind: "cards",
-      menuLabel: "Two anchors",
-      columns: 2,
-      head: {
-        eyebrow: "12 · The anchor",
-        title: { pre: "Every world", em: "has an anchor." },
-        sub: "One approved frame that every later draw is read against. In The Pocket's is the retail hero. Thoughtform's own world is four waves in, and still looking for one.",
-      },
-      cards: [
-        {
-          id: "itp",
-          kicker: "In The Pocket",
-          title: "The retail hero",
-          body: "The frame the client approved first. Every sector after it was drawn against this one.",
-          image: {
-            src: "/arcs/ai-storytelling/itp-ai-readiness-main-visual.webp",
-            alt: "In The Pocket's AI readiness campaign: a woman pushing a shopping trolley across a car park at dusk, lit coral against a blue sky",
-          },
-          metaRows: [
-            { label: "The check", value: "The palette holds across the set" },
-            { label: "The anchor", value: "The retail hero, on every draw" },
-          ],
-        },
-        {
-          id: "thoughtform",
-          kicker: "Thoughtform",
-          title: "Still being found",
-          body: "The gateway is the identity. Four waves in, no frame approved yet.",
-          image: {
-            src: "/images/Gateway_v1b.webp",
-            alt: "The Thoughtform key visual: a ring of gateway stone in the dark",
-          },
-          metaRows: [
-            { label: "The check", value: "The founder's own read: cheap fails" },
-            { label: "The anchor", value: "None yet" },
-          ],
-        },
-      ],
-    },
+    /* 12 · The anchor (`two-anchors`) is REPLACED by the Prompt to Loop
+       breakdown (ADR-141 U3, owner 2026-10-02): thirteen slides the tail
+       mounts between `itp-wall` and `ambition` (`PromptToLoop.tsx`), not
+       arc sections, so they are not in this array. */
 
     /* ── Chapter five · NOW YOU ────────────────────────────────────────── */
     {

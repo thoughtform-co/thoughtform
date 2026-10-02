@@ -6,6 +6,15 @@ import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { useArcReveal } from "@/components/arcs/useArcReveal";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 
+import { PromptToLoop } from "./PromptToLoop";
+
+/* The Prompt to Loop breakdown sits where the anchor beat was, between the
+   ITP wall and the ambition beat (ADR-141 U3); the arc renders on either
+   side of it with its numbering carried across. */
+const SPLIT = AP_HOGESCHOOL_ARC.sections.findIndex((s) => s.id === "ambition");
+const BEFORE = AP_HOGESCHOOL_ARC.sections.slice(0, SPLIT);
+const AFTER = AP_HOGESCHOOL_ARC.sections.slice(SPLIT);
+
 /**
  * The lecture's arc, mounted into `#workshop` (ADR-141).
  *
@@ -29,7 +38,9 @@ export default function ApHogeschoolTail() {
       className="arc-root arc-root--detail tw-arc__root"
       data-arc-format={AP_HOGESCHOOL_ARC.format}
     >
-      <ArcSectionRenderer sections={AP_HOGESCHOOL_ARC.sections} />
+      <ArcSectionRenderer sections={BEFORE} />
+      <PromptToLoop startIndex={BEFORE.length} />
+      <ArcSectionRenderer sections={AFTER} indexOffset={BEFORE.length} />
     </div>
   );
 }

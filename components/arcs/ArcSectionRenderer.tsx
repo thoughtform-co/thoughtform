@@ -183,15 +183,21 @@ function arcRuns(sections: readonly ArcSection[]): ArcRun[] {
 export function ArcSectionRenderer({
   sections,
   motion = "reveal",
+  indexOffset = 0,
 }: {
   sections: readonly ArcSection[];
   motion?: ArcMotion;
+  /** Where this run's numbering starts, for a page that splits its sections
+   *  around something the renderer does not draw (ADR-141 U3). Default 0. */
+  indexOffset?: number;
 }) {
   return (
     <>
       {arcRuns(sections).map((run) => {
         if (!run.group) {
-          return run.items.map(({ section, index }) => renderSection(section, index, motion));
+          return run.items.map(({ section, index }) =>
+            renderSection(section, index + indexOffset, motion)
+          );
         }
         const choices = run.items.map(({ section }) => ({
           id: section.worked?.id ?? section.id,
@@ -207,7 +213,7 @@ export function ArcSectionRenderer({
                 data-arc-worked-panel={section.worked?.id ?? section.id}
                 data-arc-worked-default={i === 0 ? "" : undefined}
               >
-                {renderSection(section, index, motion)}
+                {renderSection(section, index + indexOffset, motion)}
               </div>
             ))}
           </div>

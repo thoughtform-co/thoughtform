@@ -682,22 +682,8 @@
 .arc-root #itp-wall .arc-media {
   max-width: min(100%, 1100px, calc((100svh - 2 * clamp(28px, 4vh, 72px) - 320px) * 1.768));
 }
-.arc-root #itp-wall,
-.arc-root #two-anchors {
+.arc-root #itp-wall {
   --arc-sec-pad: clamp(28px, 4vh, 72px);
-}
-.arc-root #two-anchors .arc-head {
-  margin-bottom: clamp(24px, 14vh - 76px, 96px);
-}
-.arc-root #two-anchors .arc-card-item__media {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: calc(100svh - 2 * clamp(28px, 4vh, 72px) - 470px);
-  overflow: hidden;
-}
-.arc-root #two-anchors .arc-card-item__media img {
-  height: 100%;
-  object-fit: cover;
 }
 
 /* ── Light: the wells are alphas of their own ────────────────────────── */
