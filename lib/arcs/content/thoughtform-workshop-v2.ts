@@ -2,6 +2,7 @@ import type { ArcDef, ArcSection } from "../types";
 
 import { FRONTIER_CURVE } from "./shared/frontierCurve";
 import { WRITING_BENCH } from "./shared/writingBench";
+import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
 
 /**
@@ -1005,21 +1006,9 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
   },
   sections: [
     /* ── Chapter one · THE WORKSHOP ────────────────────────────────────── */
-    {
-      id: "the-workshop",
-      kind: "hero-board",
-      menuLabel: "The workshop",
-      menuPrimary: true,
-      head: {
-        eyebrow: "01 · The workshop",
-        title: { pre: "Hand it to an agent.", em: "Trust what comes back." },
-        sub: "Three ways to work with AI: ask it, have it build you a tool, or give it the goal and let it run. This workshop is about the third, and it ends with one piece of your own work set up to run that way.",
-      },
-      lit: [
-        ["right", 0],
-        ["right", 1],
-      ],
-    },
+    /* The opening slide is a SHARED RECORD (ADR-141 U2): the AP lecture opens
+       on it too, so both read it by reference. */
+    HAND_IT_TO_AN_AGENT,
 
     /* ── Chapter two · NAVIGATE ─────────────────────────────────────────
        The situation, in the Moira session's order (ADR-136), with the ground

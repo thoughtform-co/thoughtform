@@ -152,3 +152,27 @@ v2's runs the full 1200px band.
 - **The general lesson:** a sheet shared by several routes may not depend on its place
   in the cascade. Every override in it has to win on specificity, because the next
   route to add one import can reorder it.
+
+## Update 2 — the lecture opens on the second cut's slide (2026-10-02, owner)
+
+The owner: _"For the AP workshop we have what AI is and what gets built with it.
+Replace it with this … section from the V2 workshop, 'Hand it to an agent. Trust what
+comes back.'"_
+
+- **The Today readout is deleted** (`today`, the `list-groups` readout with "This hour"
+  and "The worlds you will see"). In its place is v2's opening slide, the `hero-board`
+  (`the-workshop`): the promise on the left, the board in miniature on the right, the two
+  plates a person writes lit. It previews the configuration beat five sections later.
+- **One section, one record.** Two pages now show that slide whole, so it moved to
+  `lib/arcs/content/shared/handItToAnAgent.ts` and both v2 and this page put the object
+  in their sections array as it is. It is the whole section, head included: the drawing
+  letters nothing, so the head is the beat. v1's opening shares the title over a
+  different sub and is a different section, not a reader. v2 renders byte-identically.
+- **The hero's first action** moves with it: "The workshop" → `#the-workshop`. The
+  section count stays sixteen and `menuPrimary` stays five.
+- **Verified:** all sixteen beats one frame at 1280×720, 1920×1247 and 2000×1024 in both
+  themes (the shared bench +36px at 1280×720, as before); the slide read in both themes.
+- **Guards:** `ap-hogeschool.test.ts` pins `sections[0]` `toBe` the shared record, the
+  readout absent and the hero's first action on it; `arcs-registry` fails any
+  `hero-board` carrying this sub that is not the shared object, and pins its readers to
+  this page and v2.

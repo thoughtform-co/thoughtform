@@ -7,6 +7,7 @@ import { AP_HOGESCHOOL_JOURNEY_ORDER } from "@/app/(marketing)/arcs/ap-hogeschoo
 import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop/journey";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
+import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import {
   TOM_ANCHOR_IMAGE,
   TOM_BENCH_EXAMPLE,
@@ -121,16 +122,19 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
   });
 
   /**
-   * The student cut: a readout first (where we go, and the worlds the room
-   * will see), the close last, and the whole thing inside the archetype's
-   * seven-to-sixteen (ADR-131's law, one screen a section).
+   * The student cut: the second cut's opening slide first, BY REFERENCE (ADR-141
+   * U2, owner 2026-10-02: it replaced the Today readout), the close last, and
+   * the whole thing inside the archetype's seven-to-sixteen (ADR-131's law, one
+   * screen a section). The hero's first action lands on that slide.
    */
-  it("opens on the readout, closes on the close, and stays inside the law", () => {
+  it("opens on the shared board, closes on the close, and stays inside the law", () => {
     const sections = AP_HOGESCHOOL_ARC.sections;
-    const first = sections[0];
-    expect(first.kind).toBe("list-groups");
-    expect(first.kind === "list-groups" && first.layout).toBe("readout");
-    expect(first.id).toBe("today");
+    expect(sections[0], "the opening is v2's, by reference").toBe(HAND_IT_TO_AN_AGENT);
+    expect(
+      sections.some((s) => s.id === "today"),
+      "the Today readout is gone"
+    ).toBe(false);
+    expect(AP_HOGESCHOOL_ARC.hero.actions?.[0]?.href).toBe(`#${HAND_IT_TO_AN_AGENT.id}`);
     expect(sections.at(-1)?.kind).toBe("close");
     expect(sections.length).toBeGreaterThanOrEqual(7);
     expect(sections.length).toBeLessThanOrEqual(16);

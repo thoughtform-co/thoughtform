@@ -1,6 +1,7 @@
 import type { ArcDef } from "../types";
 
 import { FRONTIER_CURVE } from "./shared/frontierCurve";
+import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
 import {
   TOM_ANCHOR_IMAGE,
@@ -59,7 +60,7 @@ export const AP_HOGESCHOOL_ARC: ArcDef = {
     title: { pre: "Building", em: "brand worlds." },
     lede: "How AI went from answering to running the work, and how a brand world gets built on top of it.",
     actions: [
-      { id: "start", label: "Today", href: "#today", primary: true },
+      { id: "start", label: "The workshop", href: "#the-workshop", primary: true },
       { id: "world", label: "Tom on the Moon", href: "#tom-on-the-moon" },
     ],
     image: {
@@ -77,73 +78,12 @@ export const AP_HOGESCHOOL_ARC: ArcDef = {
       "A guest lecture for AP Hogeschool: how AI went from a prompt to an agent, and three brand worlds built with it.",
   },
   sections: [
-    /* ── Chapter one · TODAY ───────────────────────────────────────────── */
-    {
-      id: "today",
-      kind: "list-groups",
-      menuLabel: "Today",
-      menuPrimary: true,
-      layout: "readout",
-      head: {
-        eyebrow: "01 · Today",
-        title: { pre: "What AI is,", em: "and what gets built with it." },
-        sub: "Nothing today you cannot see. What this technology is, why it is strange to work with, and three brand worlds built on it this year, every frame on file.",
-      },
-      groups: [
-        {
-          id: "hour",
-          label: "This hour",
-          blurb: "Where we go",
-          items: [
-            {
-              id: "three",
-              tag: "Three ways",
-              name: "A prompt, a tool, an agent",
-              href: "#three-ways",
-            },
-            {
-              id: "config",
-              tag: "One world",
-              name: "One piece of work, six questions",
-              href: "#configuration",
-            },
-            {
-              id: "worlds",
-              tag: "Worlds, built",
-              name: "How Tom on the Moon was found",
-              href: "#tom-on-the-moon",
-            },
-            { id: "you", tag: "Now you", name: "Your first world, this week", href: "#this-week" },
-          ],
-          foot: {
-            label: "The order",
-            lines: ["Navigate, encode, build. You cannot build on what nobody has written down."],
-          },
-        },
-        {
-          id: "worlds",
-          label: "The worlds you will see",
-          blurb: "All real, all this year",
-          items: [
-            /* The Loop films play from the proof pile above this tail, which
-               is not an arc section, so the row carries no link. */
-            { id: "loop", tag: "Loop Earplugs", name: "Two AI films and a studio" },
-            {
-              id: "tom",
-              tag: "Tom on the Moon",
-              name: "A world for an agency of creators",
-              href: "#tom-on-the-moon",
-            },
-            { id: "itp", tag: "In The Pocket", name: "Nine sectors, one look", href: "#itp-wall" },
-            { id: "tf", tag: "Thoughtform", name: "Still being found", href: "#two-anchors" },
-          ],
-          foot: {
-            label: "The rule",
-            lines: ["Every frame you will see was drawn, graded and kept on file."],
-          },
-        },
-      ],
-    },
+    /* ── Chapter one · THE WORKSHOP ───────────────────────────────────────
+       The second cut's opening slide, by reference (ADR-141 U2, owner
+       2026-10-02: it replaced the Today readout, "What AI is, and what gets
+       built with it"). The board in miniature promises the picture the room
+       meets at the configuration. */
+    HAND_IT_TO_AN_AGENT,
 
     /* ── Chapter two · THE SITUATION ───────────────────────────────────── */
     {

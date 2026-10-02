@@ -19,6 +19,7 @@ import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
+import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
@@ -1608,6 +1609,25 @@ describe("the hero-board kind (ADR-137)", () => {
         expect(litIsFramable(section.lit), `${arc.slug} / ${section.id}`).toBe(true);
       }
     }
+  });
+
+  /* ⚠ ONE SECTION, ONE RECORD (owner, 2026-10-02; ADR-141 U2). The second
+     cut's opening slide is shown whole by more than one page, so any section
+     that letters its head must BE the shared record. v1's opening shares the
+     title over a different sub and is a different section, not a copy. */
+  it("every page showing the second cut's opening reads the shared record", () => {
+    const readers: string[] = [];
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "hero-board") continue;
+        if (section.head.sub !== HAND_IT_TO_AN_AGENT.head.sub) continue;
+        expect(section, `${arc.slug} / ${section.id}: a copy of the shared slide`).toBe(
+          HAND_IT_TO_AN_AGENT
+        );
+        readers.push(arc.slug);
+      }
+    }
+    expect(readers.sort()).toEqual(["ap-hogeschool", "thoughtform-workshop-v2"]);
   });
 });
 
