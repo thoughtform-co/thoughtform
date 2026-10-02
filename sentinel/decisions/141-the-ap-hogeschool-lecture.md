@@ -123,8 +123,8 @@ our other pages."_ Every beat sat in a column ~820px wide at his 2000px window, 
 v2's runs the full 1200px band.
 
 - **The cause is cascade order, not this page's CSS.** v1's route sheet releases the
-  `#workshop` station with `.tw-root .tw-arc { display: block; padding: 0;
-content-visibility: visible }`, which is (0,2,0): the same as landing.css's
+  `#workshop` station (block, no padding, `content-visibility: visible`) with
+  `.tw-root .tw-arc`, which is (0,2,0): the same as landing.css's
   `.station:not(.hero)` and below the ≤960 rung's
   `.station:not(.hero):not(.station--cover)` (0,3,0). It only ever won by coming after
   landing.css. The bundler does not keep import order for a sheet three routes share,
