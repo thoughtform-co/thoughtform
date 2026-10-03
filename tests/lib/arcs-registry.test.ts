@@ -1634,11 +1634,9 @@ describe("the hero-board kind (ADR-137)", () => {
         readers.push(arc.slug);
       }
     }
-    expect(readers.sort()).toEqual([
-      "ap-hogeschool-lecture",
-      "thoughtform-workshop-v2",
-      "thoughtform-workshop-v3",
-    ]);
+    // v3 opens on the same board with its own sub since ADR-143 U3
+    // (`WORKSHOP_INTRO.opening`), so it is no longer a reader.
+    expect(readers.sort()).toEqual(["ap-hogeschool-lecture", "thoughtform-workshop-v2"]);
   });
 });
 

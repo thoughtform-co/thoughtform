@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
-import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
+import type { StationTelemetry } from "@/lib/home-v2/corridorMap";
 import {
   DISSIPATE_BANDS,
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
@@ -32,6 +32,7 @@ import { gyroTilt } from "@/lib/stores/gyroLabStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { ARC_CASES_CARD } from "./arcCasesCard";
 import { ArcCasesCue } from "./arc-cases/ArcCasesCue";
+import { useCorridorCopy } from "./CorridorCopyContext";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -799,59 +800,9 @@ function StationBlock({
 // because the markup, type-out, and `position: fixed` viewport
 // anchor pattern are identical — only the CSS variant (`--signal`)
 // and the opacity driver differ.
-const SIGNAL_CONTENT: StationContent = {
-  // The accent sits on the CLOSING phrase, which is where every other
-  // headline on the site puts it ("Tools the team builds itself", "Plot
-  // your course.") — owner, 2026-07-27, and unchanged since.
-  //
-  // ⚠ THE SUBJECT OF THIS BEAT IS OURS NOW, NOT THE MARKET'S (owner,
-  // 2026-09-09 — supersedes the 2026-07-27 BUILD/OWN inversion, which is
-  // recorded below because the reasoning still binds one level up).
-  //
-  // It used to read "EVERYONE IS RACING TO / BUILD THIS CAPABILITY." with
-  // "WE HELP YOU OWN YOURS" as its CTA — a claim about OpenAI, Anthropic
-  // and Palantir, with our own position as a four-word clause hanging off
-  // their headline. That inversion was real and it worked while the race
-  // was news; once it stopped being news the headline had nothing left to
-  // do, and the subordinate clause was always the actual argument.
-  //
-  // So the hierarchy inverts rather than the verbs: OWNERSHIP is the
-  // title, and the race demotes to the layer where its evidence already
-  // lives — the ticker underneath. Nothing is thrown away. The ticker
-  // stops being proof of a claim we are making and becomes the reason the
-  // claim is urgent, which is a better job for three real headlines, and
-  // and the note that used to tie them together is gone.
-  //
-  // ⚠ THE TITLE IS THE CAPABILITY, IN THE HOUSE'S OWN WORDS (owner,
-  // 2026-09-14: "we can simplify it by saying 'AI capability your team
-  // owns'" — supersedes the 2026-09-09 pair below). It is the services
-  // masthead's own authored line (`serviceData.ts`), so the beat and the
-  // offer it leads into say one thing in one voice.
-  //
-  // The 2026-09-09 shape it replaces, recorded because the reasoning still
-  // binds one level up: "AN INTELLIGENCE LAYER YOU OWN, / AND A TEAM THAT
-  // RUNS IT." — the PAIR from `04-the-offering.md` ("a layer nobody curates
-  // freezes; a trained team with no layer evaporates; the pair is the
-  // product"). The owner collapsed it to the capability; the pair is still
-  // what the offer below unpacks.
-  //
-  // ⚠ AND IT MAY NEVER SAY "SELF-SUFFICIENT" — the same reference bans
-  // the word outright: say the behaviour, because the abstraction hides
-  // the mechanics that make it real. "Your team owns" is the behaviour;
-  // "a self-sufficient team" is the abstraction.
-  //
-  // ⚠ THE TITLE IS THE GOAL THE ARC HANDS TO THE PROOF (owner, 2026-09-26,
-  // ADR-126 — supersedes the 2026-09-14 line above on THIS surface only).
-  // "AI CAPABILITY / YOUR TEAM OWNS." printed twice: here and as the
-  // services masthead, with the whole proof pile between. The masthead
-  // keeps it (it is the proposition, above the offer); this beat says what
-  // the pile beneath it illustrates — we embed, until the team runs it
-  // without us — which is also what the ticker's four headlines argue
-  // for. "Runs without us" is the behaviour, said the language bank's way.
-  // The ticker and the CTA (HOW IT LOOKS IN PRACTICE) are untouched. A
-  // draft in the site's register, for the owner's voice.
-  titleHtml: "WE EMBED IN YOUR TEAM<br><em>UNTIL IT RUNS WITHOUT US.</em>",
-};
+// ⚠ ITS COPY IS THE ROUTE'S (ADR-143 U3): the title, the button and the
+// ticker switch come from `useCorridorCopy().signal`, whose defaults (and
+// the title's whole history) live in `lib/home-v2/corridorCopy.ts`.
 
 interface SignalTickerItem {
   source: string;
@@ -1234,7 +1185,7 @@ function ChevronCluster({ flipped }: { flipped?: boolean }) {
   );
 }
 
-function SignalActions() {
+function SignalActions({ label }: { label: string }) {
   return (
     <div className="home-v2-signal-actions">
       {/* ⚠ THE DESTINATION MOVED WITH THE LABEL (2026-09-09), AND THE LABEL
@@ -1255,7 +1206,7 @@ function SignalActions() {
           surfaces carry it: `MobileEpilogueSignal` moves with this one. */}
       <a className="home-v2-signal-cta" href="#services">
         <ChevronCluster />
-        <span className="home-v2-signal-cta__label">HOW IT LOOKS IN PRACTICE</span>
+        <span className="home-v2-signal-cta__label">{label}</span>
         <ChevronCluster flipped />
       </a>
     </div>
@@ -1263,10 +1214,14 @@ function SignalActions() {
 }
 
 export function CorridorStationHeaders() {
-  const nav = stationById("navigate")?.content;
-  const enc = stationById("diagnostic")?.content;
-  const bld = stationById("intelligence")?.content;
-  const sig = SIGNAL_CONTENT;
+  const copy = useCorridorCopy();
+  const nav = copy.stations.navigate;
+  const enc = copy.stations.diagnostic;
+  const bld = copy.stations.intelligence;
+  const sig = useMemo<StationContent>(
+    () => ({ titleHtml: copy.signal.titleHtml }),
+    [copy.signal.titleHtml]
+  );
 
   // Reduced-motion / SSR-safe detection. Cached at mount (a one-time
   // read is plenty; if the user toggles `prefers-reduced-motion` mid-
@@ -1973,14 +1928,17 @@ export function CorridorStationHeaders() {
           signal block, whose per-frame `translate3d` transform would
           make the fixed SVG a containing block and break viewport-space
           projection). It welds itself to the planet via world projection. */}
-      <EpilogueNewsTicker animate={!reducedMotion} />
+      {/* A route may hide it (ADR-143 U3: the workshop's third cut, whose
+          beat 09 shows the same news). The RAF re-queries the SVG and
+          skips its writes when it is absent. */}
+      {copy.signal.ticker && <EpilogueNewsTicker animate={!reducedMotion} />}
       <StationBlock
         refSetter={setSigRef}
         registerChars={sigRegisterChars}
         registerCursors={sigRegisterCursors}
         content={sig}
         typewriter={typewriter}
-        afterContent={<SignalActions />}
+        afterContent={<SignalActions label={copy.signal.cta} />}
         variantClass="home-v2-station-header--signal"
       />
     </div>

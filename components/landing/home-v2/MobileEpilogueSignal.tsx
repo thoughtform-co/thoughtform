@@ -13,6 +13,7 @@ import {
   windowT,
 } from "@/lib/home-v2/signalHandoff";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
+import { phoneSignalTitleHtml } from "@/lib/home-v2/corridorCopy";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 import {
@@ -24,6 +25,7 @@ import {
   type DecodeLayer,
   type DecodeRunSpec,
 } from "./decodeLayer";
+import { useCorridorCopy } from "./CorridorCopyContext";
 
 /** The phone pile's first slot — present only where the pile is split, which
  *  is exactly where its slots are sticky and its hook publishes `--pc-enter`
@@ -87,6 +89,7 @@ const FIRST_CARD = "#services .pf-stack--split [data-pc-slot]";
  */
 export function MobileEpilogueSignal() {
   const ref = useRef<HTMLDivElement>(null);
+  const { signal } = useCorridorCopy();
 
   useEffect(() => {
     const el = ref.current;
@@ -318,12 +321,12 @@ export function MobileEpilogueSignal() {
       ref={ref}
       className="home-v2-mobile-signal"
       role="region"
-      aria-label="We embed in your team until it runs without us"
+      aria-label={signal.ariaLabel}
       aria-hidden="false"
     >
-      {/* ⚠ KEEP IN LOCKSTEP WITH `SIGNAL_CONTENT.titleHtml`
-          (CorridorStationHeaders) — same beat, two surfaces, and the full
-          reasoning for this copy lives there. In short: the title is the
+      {/* ⚠ ONE STRING WITH THE DESKTOP TITLE (ADR-143 U3): both read
+          `useCorridorCopy().signal`, whose default and full reasoning live
+          in `lib/home-v2/corridorCopy.ts`. In short: the title is the
           GOAL the arc hands to the proof — we embed, until the team runs it
           without us (owner, 2026-09-26, ADR-126; the proposition line moved
           back to the services masthead alone) — the race demoted to the
@@ -331,15 +334,17 @@ export function MobileEpilogueSignal() {
           third thing to move. (The word "self-sufficient" is allowed in
           copy since 2026-09-28, owner; this title says the behaviour by
           choice.) */}
-      {/* ⚠ NO AUTHORED `<br>` HERE — the one place this surface may diverge
-          from the desktop string, for fit rather than copy: the desktop's
+      {/* ⚠ NO `<br>` HERE (`phoneSignalTitleHtml` turns it into a space) —
+          the one place this surface may diverge from the desktop string,
+          for fit rather than copy: the desktop's
           two authored lines are set against a phone-width box, and the GOLD
           `<em>` marks the break the line break does on desktop. (The
           previous title bound its compound noun with an NBSP; this one has
           none.) */}
-      <h2 className="home-v2-mobile-signal__title">
-        WE EMBED IN YOUR TEAM <em>UNTIL IT RUNS WITHOUT US.</em>
-      </h2>
+      <h2
+        className="home-v2-mobile-signal__title"
+        dangerouslySetInnerHTML={{ __html: phoneSignalTitleHtml(signal.titleHtml) }}
+      />
       <div className="home-v2-mobile-signal__actions">
         {/* `#services`, not `#contact` — see the note beside the desktop
             CTA: this is a move now, not the beat's argument, and the label
@@ -347,7 +352,7 @@ export function MobileEpilogueSignal() {
             deleted (owner, 2026-09-14); the label reads HOW IT LOOKS IN
             PRACTICE since 2026-09-21 (owner). */}
         <a className="home-v2-mobile-signal__cta" href="#services">
-          <span className="home-v2-mobile-signal__cta-label">HOW IT LOOKS IN PRACTICE</span>
+          <span className="home-v2-mobile-signal__cta-label">{signal.cta}</span>
           <span className="home-v2-mobile-signal__cta-chevrons" aria-hidden="true">
             <span className="home-v2-mobile-signal__cta-chev" />
             <span className="home-v2-mobile-signal__cta-chev" />

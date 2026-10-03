@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 
 import { LandingPage } from "@/components/landing/v7";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "@/lib/arcs/content/thoughtform-workshop-v3";
+import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
+import { replaceAboutBio } from "./about";
 import { WORKSHOP_V3_JOURNEY, WORKSHOP_V3_NAV_ITEMS } from "./journey";
 import { WorkshopV3Portals } from "./WorkshopPortals";
 
@@ -73,9 +75,12 @@ export const metadata: Metadata = {
  *
  * ⚠ IT SHARES v1's PROTOTYPE AND v1's SHEET. The corridor half is the same
  * page, so `getThoughtformWorkshopContent` is called with the same removed
- * stations and `.tw-root` is rendered unchanged. The owner means to change
- * this cut's intro next; the day its corridor copy diverges, the prototype,
- * the sheet and the root class fork together (ADR-139).
+ * stations and `.tw-root` is rendered unchanged. Its intro COPY diverges
+ * through seams instead (ADR-143 U3): `WORKSHOP_INTRO` rewrites the About's
+ * bio here and passes the corridor's captions and
+ * signal as `corridorText.copy`, and `data-tw-cut="v3"` scopes its rules in
+ * v1's sheet. The day its STRUCTURE diverges, the prototype, the sheet and
+ * the root class still fork together (ADR-139).
  *
  * ⚠ NO `course.css`: this page draws no `path` and none of the Tom caps.
  */
@@ -94,16 +99,26 @@ const WORKSHOP_REMOVED_STATIONS = [
 const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 
 export default async function ThoughtformWorkshopV3Page() {
-  const { bodyHtml, bodyClass } = getThoughtformWorkshopContent({
+  const { bodyHtml: protoHtml, bodyClass } = getThoughtformWorkshopContent({
     removeStations: WORKSHOP_REMOVED_STATIONS,
     corridorMountId: CORRIDOR_MOUNT_ID,
   });
-  const corridorText = extractV7Text();
+  // The intro leads into the workshop (ADR-143 U3): the About, the captions
+  // and the signal line are this cut's own, from one record; the thesis is
+  // the homepage's. Each seam is the identity on every other route.
+  const bodyHtml = replaceAboutBio(protoHtml, WORKSHOP_INTRO.about);
+  const shared = extractV7Text();
+  const corridorText = {
+    ...shared,
+    copy: { stations: WORKSHOP_INTRO.stations, signal: WORKSHOP_INTRO.signal },
+  };
   const celestialSlots = await getCelestialSlotsCached();
 
   return (
     <>
-      <div className="tw-root">
+      {/* `data-tw-cut` scopes this cut's rules in v1's sheet (the concise
+          claims, the lit card), winning on specificity (ADR-141 U1). */}
+      <div className="tw-root" data-tw-cut="v3">
         <LandingPage
           bodyHtml={bodyHtml}
           bodyClass={bodyClass}

@@ -586,3 +586,62 @@ html[data-corridor-exit="true"] .tw-root [data-corridor-kill] {
   padding: 0;
   content-visibility: visible;
 }
+
+/* ── 5. The third cut's proof: concise claims, one lit card (ADR-143 U3) ──
+   v3 says each card in one line, so its claims say their TITLES only. The
+   sentence leaves the paint, not the tree (the sr-only idiom the pile already
+   uses below 940px tall), so a screen reader still hears every word.
+   ⚠ EVERY RULE HERE IS SCOPED TO `[data-tw-cut="v3"]` AND WINS ON SPECIFICITY,
+   NEVER ON ORDER (ADR-141 U1): the bundler does not keep import order for a
+   sheet three routes share. `.tw-root[data-tw-cut="v3"] .pf-stack …` is
+   (0,4,0) against the pile's (0,2,0) and its tall-rung reveal. */
+.tw-root[data-tw-cut="v3"] .pf-stack .pf-card .pf-card__claim-desc {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The last card is where the rest of the day starts, so it is the lit one:
+   the lip ring at full line strength, a stronger corner catch, the corridor
+   title's phosphor on its name, and the station mark's glow back on.
+   ⚠ DARK ONLY. A glow is additive: on parchment it is a smudge (theme.css's
+   ruling on `--con-mark-glow`), so light keeps the pile's own values; the
+   `:not([data-theme="light"])` guard is the reset.
+   ⚠ NO ANIMATION, NO `filter` (it blinds the card's `backdrop-filter`), NO
+   LUMINANCE FLICKER, tokens only (proof-stack.md). The claim glyphs take no
+   halo: they are pixel drawings, a box-shadow squares them off and a
+   drop-shadow is a filter.
+   The id is `ProofCard`'s `pf-card-${track.id}` for `WORKSHOP_INTRO.proof.lit`
+   (`workshop-intro.test.ts` pins the two together). */
+:root:not([data-theme="light"])
+  .tw-root[data-tw-cut="v3"]
+  .pf-stack
+  .pf-card[aria-labelledby="pf-card-ai-transformation"] {
+  --pf-lip: var(--gold-line);
+  --pf-bloom-a: 0.24;
+}
+
+:root:not([data-theme="light"])
+  .tw-root[data-tw-cut="v3"]
+  .pf-stack
+  .pf-card[aria-labelledby="pf-card-ai-transformation"]
+  .pf-card__title {
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
+}
+
+:root:not([data-theme="light"])
+  .tw-root[data-tw-cut="v3"]
+  .pf-stack
+  .pf-card[aria-labelledby="pf-card-ai-transformation"]
+  .pf-card__tabs
+  .fl-con__stn[data-on]
+  > i {
+  /* The console's own glow. `--con-mark-glow` is declared on `.fl-con`, which
+     the card's tab rail sits outside, so the value rides as the fallback. */
+  box-shadow: var(--con-mark-glow, 0 0 10px rgba(var(--gold-rgb), 0.5));
+}

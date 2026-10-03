@@ -111,4 +111,33 @@ export interface V7CorridorText {
     /** Right side body label. */
     rightLabel: string;
   };
+  /** A route's own corridor copy (ADR-143 U3), resolved by
+   *  `lib/home-v2/corridorCopy.ts`. Absent on every route but the
+   *  workshop's third cut, and absent means today's copy verbatim: the
+   *  homepage passes nothing and renders byte-identical. A static prop
+   *  read once at mount; nothing subscribes to it. */
+  copy?: CorridorCopyOverride;
+}
+
+/** The corridor stations whose caption a route may replace. */
+export type CorridorCopyStationId = "navigate" | "diagnostic" | "intelligence";
+
+/** The epilogue's signal line: title, its phone aria label, the button,
+ *  and whether the headline ticker runs under it. */
+export interface CorridorSignalCopy {
+  /** Desktop title, one `<br>` between its two lines, `<em>` on the close. */
+  titleHtml: string;
+  /** The phone block's region label, the title said as a sentence. */
+  ariaLabel: string;
+  /** The button's label, upper case as printed. */
+  cta: string;
+  /** Whether the headline ticker arcs over the planet under the title. */
+  ticker: boolean;
+}
+
+/** What a route may override. Each station's caption replaces both its
+ *  `supportHtml` and its `floorHtml`; titles and telemetry stay the map's. */
+export interface CorridorCopyOverride {
+  stations?: Partial<Record<CorridorCopyStationId, string>>;
+  signal?: Partial<CorridorSignalCopy>;
 }

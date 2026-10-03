@@ -15,6 +15,9 @@ import { parseV7Html } from "./parseBody";
 import type { ParseOptions, V7Content } from "./types";
 
 export type {
+  CorridorCopyOverride,
+  CorridorCopyStationId,
+  CorridorSignalCopy,
   FillSlotSpec,
   ParseOptions,
   RelocateStationSpec,

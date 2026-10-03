@@ -14,7 +14,7 @@ import {
 import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v1/journey";
 import { PROMPT_TO_LOOP_SLIDES } from "@/components/arcs/prompt-to-loop/promptToLoopSlides";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
-import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
+import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { MARKET_SIGNAL_COLUMNS } from "@/lib/arcs/content/shared/marketSignal";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import {
@@ -60,7 +60,11 @@ describe("the workshop's third house cut (ADR-143)", () => {
       '"@/components/arcs/prompt-to-loop/prompt-to-loop.css"'
     );
     const portals = routeFile("thoughtform", "workshop-v3", "WorkshopPortals.tsx");
-    expect(portals, "reuses v1's proof, never a copy").toContain('"../workshop-v1/WorkshopProof"');
+    // The pile is v1's record mapped through this cut's ledes (ADR-143 U3),
+    // so v3 imports its own leaf, which reads the pile's own helpers.
+    expect(portals, "mounts this cut's proof").toContain('"./WorkshopProof"');
+    const proof = routeFile("thoughtform", "workshop-v3", "WorkshopProof.tsx");
+    expect(proof, "maps the homepage's pile, never a copy").toContain("proofStackTracks()");
     expect(portals, "reuses v1's About flow").toContain('"../workshop-v1/flow/useWorkshopFlow"');
     /* Equal TODAY; separate files so the owner's intro pass can change one. */
     expect([...WORKSHOP_V3_JOURNEY_ORDER]).toEqual([...WORKSHOP_JOURNEY_ORDER]);
@@ -81,7 +85,8 @@ describe("the workshop's third house cut (ADR-143)", () => {
    */
   it("reads the situation by reference from the pages it was cut from", () => {
     const [open, stages, curve, steer, question] = THOUGHTFORM_WORKSHOP_V3_ARC.sections;
-    expect(open).toBe(HAND_IT_TO_AN_AGENT);
+    // The shared board with this cut's own sub (ADR-143 U3).
+    expect(open).toBe(WORKSHOP_INTRO.opening);
     expect(stages).toBe(THREE_WAYS_LOOP);
     expect(curve).toBe(THE_CURVE_BEAT);
     expect(steer).toBe(HARD_TO_STEER_BEAT);

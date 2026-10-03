@@ -10,7 +10,9 @@ import { useWorkshopFlow } from "../workshop-v1/flow/useWorkshopFlow";
  * WorkshopV3Portals — the third house cut's nested roots (ADR-143), v2's portals
  * with one import changed.
  *
- * ⚠ THE TWO HOOKS AND THE PROOF ARE v1's, BY IMPORT, and that is the point.
+ * ⚠ THE TWO HOOKS ARE v1's, BY IMPORT, and that is the point. (The proof was
+ * too, until ADR-143 U3 gave this cut its own one-line ledes; it is still
+ * v1's pile, mapped.)
  * The corridor half of this page — the About flow, the portrait deck, the
  * four proof cards — is the same page, so a copy of any of them would be two
  * things to keep in step for no gain. What v3 owns is the arc after them, and
@@ -26,7 +28,8 @@ import { useWorkshopFlow } from "../workshop-v1/flow/useWorkshopFlow";
  * owns a `dangerouslySetInnerHTML` body with nested `createRoot`s inside it,
  * and a re-render there orphans them.
  */
-const WorkshopProof = lazy(() => import("../workshop-v1/WorkshopProof"));
+// The pile is this cut's own since ADR-143 U3: v1's, with one-line ledes.
+const WorkshopProof = lazy(() => import("./WorkshopProof"));
 const WorkshopV3Tail = lazy(() => import("./WorkshopTail"));
 
 const RING_ATTR = "data-services-ring";

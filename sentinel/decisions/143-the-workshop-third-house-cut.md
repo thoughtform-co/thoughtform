@@ -233,3 +233,59 @@ trust_): the leverage slide, the horizon and the labs betting billions.
 - **Verified:** lint 0 errors (336 warnings, ceiling 337); typecheck clean; 2,764 tests
   green; the setup beats one screen each at 1280×720 (dark) and 1920×1247 (light), no
   page errors.
+
+## Update 3: the intro leads into the workshop (2026-10-03, owner)
+
+Built from `docs/plans/workshop-v3-intro.md`. V3's intro (About → eras → corridor →
+proof pile) still talked like the homepage. It reads as a story now: I am an
+intelligence architect; this is how I work, the Arc; this is how I did it at Loop; now
+we go in depth.
+
+- **V3 only.** V1, V2, the AP lecture and the homepage keep today's intro, checked as
+  DOM text on `/` and `/arcs/thoughtform/workshop-v2`.
+- **ONE RECORD**: `lib/arcs/content/shared/workshopIntro.ts` exports `WORKSHOP_INTRO`
+  (`about`, `stations`, `signal`, `proof`, `opening`), pure data, so the
+  Suri cut and later cuts read it by reference. The Arc keeps its own words (Navigate /
+  Encode / Build, "intelligence configuration"), overriding the Suri sprint plan's list
+  for this page.
+- **Four seams, each the identity when nothing is passed:**
+  1. **About**: `workshop-v3/about.ts` `replaceAboutBio` rewrites the bio paragraphs
+     at parse time, keeping the first one's attributes; it THROWS on a miss so the old
+     About can never ship silently. The role line is unchanged (the eras name the
+     present).
+  2. **Thesis**: none. The plan's thesis ("My material sits between tool and
+     collaborator") was built and taken back the same day (owner, on the page:
+     "restore the copy from the home page"); V3 reads `extractV7Text()` unchanged.
+  3. **Captions and signal**: `V7CorridorText.copy?` → `lib/home-v2/corridorCopy.ts`
+     (pure, `resolveCorridorCopy`) → `CorridorCopyContext`, provided once by
+     `HomeCorridor`. Its five readers (`CorridorStationHeaders`, `CopyAnchors` →
+     `StationTitle`, `MobileEpilogueSignal`, the no-WebGL fallback) read the context
+     instead of `stationById` and the constants. With no override it hands back the
+     corridor map's own `content` objects BY REFERENCE and `DEFAULT_SIGNAL_COPY`
+     (which now holds the signal title's whole history, moved from
+     `CorridorStationHeaders`). The phone title derives from the desktop string
+     (`phoneSignalTitleHtml`, `<br>` → space), so the two can no longer drift. The
+     ticker is a switch; V3 hides it (beat 09 shows the same news).
+  4. **Proof**: `workshop-v3/WorkshopProof.tsx` maps `proofStackTracks()` and replaces
+     `card.lede` only (`ArcProofCard`'s record-spread precedent). V3's portals import it
+     in place of V1's.
+  5. **Opening**: `WORKSHOP_INTRO.opening` spreads `HAND_IT_TO_AN_AGENT` with a new sub
+     only; the registry's readers list is v2 and AP now.
+- **Concise claims and the lit card** are rules in V1's route sheet (§5), scoped to
+  `.tw-root[data-tw-cut="v3"]`, winning on specificity (ADR-141 U1). The claim sentence
+  is sr-only at every height. The last card (`WORKSHOP_INTRO.proof.lit`) takes the lip
+  at full `--gold-line`, `--pf-bloom-a` .24, the corridor title's phosphor on its name,
+  and the station mark's glow, in DARK ONLY (`:root:not([data-theme="light"])`); no
+  animation, no `filter`. ⚠ `--con-mark-glow` is declared on `.fl-con`, which the card's
+  tab rail sits outside, so the value rides as the `var()` fallback. ⚠ The claim
+  glyphs take NO halo: they are pixel drawings, a box-shadow squares them off and a
+  drop-shadow is a filter.
+- **Guards**: `workshop-intro.test.ts` (copy law, lede bound, one `<br>` per caption,
+  the opening changes only its sub, the About rewrite on the real prototype and its
+  throw, the pile replaces only ledes, the lit selector matches the record),
+  `corridor-copy.test.ts` (the homepage identity by reference, the merge).
+- **Verified**: lint, typecheck, 2,775 tests green. DOM text on V3 (every intro string,
+  no ticker, ledes), `/` and V2 unchanged; computed styles for the claims and the lit
+  card in dark and light. ⚠ The beat-by-beat screenshot walk (1920×1247, 1280×720,
+  390×844, both themes) was NOT run here: the browser pane was hidden, which freezes
+  rAF and transitions (memory: corridor visual verification); shoot it headed.

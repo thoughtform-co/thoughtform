@@ -4,7 +4,6 @@ import { useRef } from "react";
 import { ARTIFACT_LABELS } from "@/components/landing/intelligence-artifact/artifactGeom";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
-import { stationById } from "@/lib/home-v2/corridorMap";
 import {
   COPY_ANCHORS,
   STACK_SOURCE_ITEMS,
@@ -12,6 +11,7 @@ import {
 } from "./DepthGatewayScene/sceneGeom";
 import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
+import { useCorridorCopy } from "./CorridorCopyContext";
 import { MobileEpilogueSignal } from "./MobileEpilogueSignal";
 import { StationTitle } from "./StationTitle";
 import { ArcCasesHitLayer } from "./arc-cases/ArcCasesHitLayer";
@@ -74,9 +74,12 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // map nodes (Navigate is the fly-through landmark inside
   // passthrough-01). The opening Thoughtform/setup copy still flows
   // through `text` (untouched).
-  const nav = stationById("navigate")?.content;
-  const enc = stationById("diagnostic")?.content;
-  const bld = stationById("intelligence")?.content;
+  // ...through the route's corridor copy (ADR-143 U3), which is the
+  // map's own content unless the route passed captions of its own.
+  const { stations } = useCorridorCopy();
+  const nav = stations.navigate;
+  const enc = stations.diagnostic;
+  const bld = stations.intelligence;
   const stackSourcesLabel = ARTIFACT_LABELS.find((l) => l.id === "sources");
   const stackSurfacesLabel = ARTIFACT_LABELS.find((l) => l.id === "surfaces");
 

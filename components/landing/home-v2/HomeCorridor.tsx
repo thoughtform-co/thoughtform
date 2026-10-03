@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { stationById } from "@/lib/home-v2/corridorMap";
+import { resolveCorridorCopy } from "@/lib/home-v2/corridorCopy";
 import { CopyAnchors } from "./CopyAnchors";
+import { CorridorCopyProvider, useCorridorCopy } from "./CorridorCopyContext";
 import { CorridorPhoneSeats } from "./CorridorPhoneSeats";
 // ADR-021 amendment (2026-06-19): CorridorSeamPixelField is RETIRED on
 // the production path. `#services` is now a content section (Keynote /
@@ -141,76 +142,82 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
   }, []);
 
   const fallback = webglOK === false || reducedMotion || capable === false;
+  // The route's corridor copy (ADR-143 U3): today's copy, by reference,
+  // unless the route passed its own. `text` is a static server prop, so
+  // this resolves once.
+  const copy = useMemo(() => resolveCorridorCopy(text.copy), [text.copy]);
 
   return (
-    <div
-      ref={stageRef}
-      className="home-v2-stage"
-      data-fallback={fallback ? "true" : "false"}
-      aria-label="Depth corridor: Thoughtform, Diagnostic, Intelligence layer"
-    >
-      <div className="home-v2-stage__sticky">
-        {!fallback && (
-          <div className="home-v2-stage__canvas">
-            {/* Boundary fallback = the boundary's built-in dark void
+    <CorridorCopyProvider value={copy}>
+      <div
+        ref={stageRef}
+        className="home-v2-stage"
+        data-fallback={fallback ? "true" : "false"}
+        aria-label="Depth corridor: Thoughtform, Diagnostic, Intelligence layer"
+      >
+        <div className="home-v2-stage__sticky">
+          {!fallback && (
+            <div className="home-v2-stage__canvas">
+              {/* Boundary fallback = the boundary's built-in dark void
                 plane (absolute inset-0), NOT the static-text corridor:
                 swapping composition mid-scroll would violate the
                 layered-composite rules (ADR-008). A crashed scene
                 degrades to a dark backdrop behind the DOM copy overlay,
                 which keeps reading. */}
-            <CanvasErrorBoundary>
-              <DepthGatewayScene />
-            </CanvasErrorBoundary>
-          </div>
-        )}
+              <CanvasErrorBoundary>
+                <DepthGatewayScene />
+              </CanvasErrorBoundary>
+            </div>
+          )}
 
-        {/* Copy + label overlay — DOM text positioned by
+          {/* Copy + label overlay — DOM text positioned by
             `useWorldDomTracker` (mounted inside `CopyAnchors`). */}
-        {!fallback && <CopyAnchors text={text} />}
+          {!fallback && <CopyAnchors text={text} />}
 
-        {/* Linear-style station headers (Navigate / Encode / Build).
+          {/* Linear-style station headers (Navigate / Encode / Build).
             Desktop-only 2D overlay rendered in viewport coordinates so
             the headers don't skew with the 3D camera or shift with
             aspect ratio. Mobile keeps the legacy world-anchored
             straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
-        {!fallback && <CorridorStationHeaders />}
-        {/* The Arc Cases pager + ✕ moved to a baked-into-the-card face with a
+          {!fallback && <CorridorStationHeaders />}
+          {/* The Arc Cases pager + ✕ moved to a baked-into-the-card face with a
             transparent hit layer (`ArcCasesHitLayer`, ADR-041 addendum),
             mounted in `CopyAnchors` next to the sigil — the floating stepper
             row is retired. */}
 
-        {/* The right-rail Arc register (`CorridorProgressRail`, "THE ARC ·
+          {/* The right-rail Arc register (`CorridorProgressRail`, "THE ARC ·
             03") is RETIRED (ADR-031 Update 12). The left-side menu that
             replaced it is retired too (ADR-055) — the journey indicator is
             the nav-corner readout now, and it names the Arc as ONE section:
             there is no Navigate/Encode/Build register anywhere. Both
             components stay on disk for rollback, like `ServicesRailRegister`. */}
 
-        {/* Projected brandmark — lives inside the sticky stage so
+          {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform
             section instead of floating over the hero. */}
-        {!fallback && <ProjectedBrandmarkActor />}
+          {!fallback && <ProjectedBrandmarkActor />}
 
-        {/* Seam pixel field — retired on the production path (ADR-021
+          {/* Seam pixel field — retired on the production path (ADR-021
             amendment, 2026-06-19). See the comment on the import. */}
 
-        {/* Debug HUD — progress + active beat readout. */}
-        {!fallback && debug && <StageHud />}
+          {/* Debug HUD — progress + active beat readout. */}
+          {!fallback && debug && <StageHud />}
 
-        {/* Static fallback (no WebGL / reduced motion). */}
-        {fallback && (
-          <div className="home-v2-stage__fallback">
-            <FallbackCorridor text={text} />
-          </div>
-        )}
-      </div>
+          {/* Static fallback (no WebGL / reduced motion). */}
+          {fallback && (
+            <div className="home-v2-stage__fallback">
+              <FallbackCorridor text={text} />
+            </div>
+          )}
+        </div>
 
-      {/* The phone's snap seats (ADR-125) — siblings of the sticky cell,
+        {/* The phone's snap seats (ADR-125) — siblings of the sticky cell,
           absolute in the stage, one per plateau of the phone paint clock
           and one per stretch after it. The cell itself stays no snap area.
           Nothing on the desktop or the fallback path. */}
-      {!fallback && <CorridorPhoneSeats />}
-    </div>
+        {!fallback && <CorridorPhoneSeats />}
+      </div>
+    </CorridorCopyProvider>
   );
 }
 
@@ -236,10 +243,12 @@ function stripStationIndex(kicker: string): string {
 /** Simple stacked-text fallback — paints the corridor copy in plain
  *  flow when WebGL or motion is unavailable. */
 function FallbackCorridor({ text }: { text: V7CorridorText }) {
-  // Encode + Build copy comes from the corridor map (single source);
-  // the opening setup section keeps its v7 spine copy.
-  const enc = stationById("diagnostic")?.content;
-  const bld = stationById("intelligence")?.content;
+  // Encode + Build copy comes from the corridor map (single source),
+  // through the route's corridor copy (ADR-143 U3); the opening setup
+  // section keeps its v7 spine copy.
+  const { stations } = useCorridorCopy();
+  const enc = stations.diagnostic;
+  const bld = stations.intelligence;
   return (
     <div className="home-v2-fallback-text">
       <section>

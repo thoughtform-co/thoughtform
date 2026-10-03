@@ -1,9 +1,9 @@
 import type { ArcDef } from "../types";
 
-import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import { MARKET_SIGNAL_COLUMNS } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { whatFollows } from "./shared/whatFollows";
+import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./shared/workshopFraming";
 import { FEEDBACK_STEPS, getStarted, theHorizon } from "./shared/workshopPractice";
 
@@ -76,8 +76,10 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       "How AI went from a prompt to an agent, one motion ad made end to end, and what it changes for a creative team.",
   },
   sections: [
-    /* ── Chapter one · THE WORKSHOP ─────────────────────────────────────── */
-    HAND_IT_TO_AN_AGENT,
+    /* ── Chapter one · THE WORKSHOP ───────────────────────────────────────
+       The shared board with this cut's own sub (ADR-143 U3): the intro
+       before it now says the Arc, so the slide says what today follows. */
+    WORKSHOP_INTRO.opening,
 
     /* ── Chapter two · THE SITUATION ───────────────────────────────────────
        v2's stages (Loop's own examples) and the AP lecture's three middle
