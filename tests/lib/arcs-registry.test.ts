@@ -20,6 +20,7 @@ import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
+import { MARKET_SIGNAL_COLUMNS } from "@/lib/arcs/content/shared/marketSignal";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import {
@@ -1672,6 +1673,26 @@ describe("the workshop's shared beats (ADR-143)", () => {
     }
     expect(readers.get("real-question")?.sort()).toEqual([
       "ap-hogeschool-lecture",
+      "thoughtform-workshop-v3",
+    ]);
+  });
+
+  it("every page drawing the market's clippings reads the one record", () => {
+    const readers: string[] = [];
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "signal") continue;
+        if (JSON.stringify(s.columns) !== JSON.stringify(MARKET_SIGNAL_COLUMNS)) continue;
+        expect(s.columns, `${arc.slug}#${s.id}: a copy of the clippings`).toBe(
+          MARKET_SIGNAL_COLUMNS
+        );
+        readers.push(arc.slug);
+      }
+    }
+    expect(readers.sort()).toEqual([
+      "ai-storytelling-class-1",
+      "thoughtform-workshop",
+      "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
     ]);
   });

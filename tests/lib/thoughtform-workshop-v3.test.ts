@@ -15,6 +15,7 @@ import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/works
 import { PROMPT_TO_LOOP_SLIDES } from "@/components/arcs/prompt-to-loop/promptToLoopSlides";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
+import { MARKET_SIGNAL_COLUMNS } from "@/lib/arcs/content/shared/marketSignal";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import {
   FEEDBACK_STEPS,
@@ -126,7 +127,9 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(V3_SITUATION.map((s) => s.id).slice(4)).toEqual([
       "real-question",
       "configuration-motion",
-      "the-skill-motion",
+      "leverage-motion",
+      "the-horizon",
+      "signal",
       "its-evals-motion",
     ]);
     expect(V3_BREAKDOWN[0]?.id).toBe("ptl-top");
@@ -140,8 +143,8 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(V3_JUST_ASK.map((s) => s.id)).toEqual(["ptl-next"]);
     expect(V3_CLOSE.map((s) => s.id)).toEqual([
       "in-other-hands",
-      "the-horizon",
       "made-real-motion",
+      "the-skill-motion",
       "the-plugin-motion",
       "using-it-motion",
       "when-wrong-motion",
@@ -186,14 +189,45 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(JSON.stringify(beat)).not.toMatch(/Soave|Bala|Clarissa/);
   });
 
-  /** Four cards, never three: `.arc-cards` is two columns at 1280px. The
-   *  one exception is getting started, v2's record by reference. */
-  it("lays every card grid of its own out in fours", () => {
+  /** Two or four cards, never three: `.arc-cards` is two columns at 1280px.
+   *  The one exception is getting started, v2's record by reference. */
+  it("lays every card grid of its own out in twos or fours", () => {
     for (const s of THOUGHTFORM_WORKSHOP_V3_ARC.sections) {
       if (s.kind !== "cards" || s.ledger) continue;
       if (s.cards === GET_STARTED_CARDS) continue;
-      expect(s.cards.length, `${s.id}`).toBe(4);
+      expect([2, 4], `${s.id}`).toContain(s.cards.length);
     }
+  });
+
+  /**
+   * U2 (owner, 2026-10-03): why the two parts a team writes matter, before the
+   * breakdown — the two plates opened up for the ad, the horizon's two
+   * timelines, the labs' bets — from the Moira session's own slides. The
+   * horizon and the clippings are shared records; the plates are the ad's.
+   */
+  it("sets up the breakdown with why the context and the evals matter", () => {
+    const ids = THOUGHTFORM_WORKSHOP_V3_ARC.sections.map((s) => s.id);
+    expect(ids.slice(ids.indexOf("configuration-motion"), ids.indexOf("the-money"))).toEqual([
+      "configuration-motion",
+      "leverage-motion",
+      "the-horizon",
+      "signal",
+      "its-evals-motion",
+    ]);
+    const plates = THOUGHTFORM_WORKSHOP_V3_ARC.sections.find((s) => s.id === "leverage-motion");
+    const board = THOUGHTFORM_WORKSHOP_V3_ARC.sections.find((s) => s.id === "configuration-motion");
+    if (plates?.kind !== "cards" || board?.kind !== "questions") throw new Error("kinds");
+    /* The same two plates as on the board, opened up: each card's line is
+       the board's own answer for that plate. */
+    const answer = (id: string) => board.left.find((q) => q.id === id)?.answer;
+    expect(plates.cards.map((c) => c.body.replace(/\.$/, ""))).toEqual([
+      answer("context"),
+      answer("evals"),
+    ]);
+    const signal = THOUGHTFORM_WORKSHOP_V3_ARC.sections.find((s) => s.id === "signal");
+    expect(signal?.kind === "signal" && signal.columns).toBe(MARKET_SIGNAL_COLUMNS);
+    /* The skill as the file it is moved after the proof, beside the plugin. */
+    expect(ids.indexOf("the-skill-motion")).toBe(ids.indexOf("made-real-motion") + 1);
   });
 
   /**
@@ -222,6 +256,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
        day a second workstream is authored they become `worked` panels. */
     for (const id of [
       "configuration-motion",
+      "leverage-motion",
       "the-skill-motion",
       "its-evals-motion",
       "made-real-motion",
@@ -240,7 +275,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(close.head.title).toBe(WHAT_FOLLOWS_TITLE);
     expect(close.head.sub).toBe(WHAT_FOLLOWS_SUB);
     expect(close.actions).toBe(WHAT_FOLLOWS_CLOSE.actions);
-    expect(close.head.eyebrow).toBe("20 · What follows");
+    expect(close.head.eyebrow).toBe("22 · What follows");
     const v2 = THOUGHTFORM_WORKSHOP_V2_ARC.sections.at(-1);
     expect(v2?.kind === "close" && v2.head.title, "v2's close reads it too").toBe(
       WHAT_FOLLOWS_TITLE

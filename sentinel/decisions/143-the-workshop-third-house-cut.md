@@ -197,3 +197,39 @@ too**.
     errors, no horizontal overflow, every reveal fired.
   - At 1280×720, "When it is wrong" runs 11px past one screen and "Get started" runs
     30px past it (v2's three-card grid lands two and one). Both are v2's own heights.
+
+## Update 2: why the two you write matter, before the breakdown (2026-10-03, owner)
+
+The owner, after U1: what is missing after "Answer it per piece of work, in six parts"
+is _why_ the skills and evals are so important, "so 'From one prompt to a 10-second ad'
+has a bit more setup". It replaces "A skill is one piece of work, written down" there.
+He took three slides from the Moira second session (_From a prompt to an agent you can
+trust_): the leverage slide, the horizon and the labs betting billions.
+
+- **The setup now reads:**
+  1. configuration
+  2. **`leverage-motion`**: "Two of the six nobody can write for you." The board's two
+     lit plates opened up. Each card's line is the board's own answer for the ad; the
+     rows are the deck's (rules, examples, sources; cases, checks, gates).
+  3. **`the-horizon`**, moved up from the end. Not a chapter here.
+  4. **`signal`**, "The labs just bet billions…"
+  5. its evals
+  6. then the breakdown
+
+  ⚠ The deck's title says "the most leverage". The page keeps v1's and v2's "Two of the
+  six nobody can write for you": "leverage" is on the voice skill's post-2022 list. The
+  sub says it instead: "that is where a team steers the intelligence most".
+
+- **The skill file moved, it was not deleted**: `the-skill-motion` now sits between
+  "Made real" and the plugin, so the readout's "the skill you just read" still holds.
+  "Made real" takes the horizon's chapter slot: The workshop · Three ways · The
+  configuration · The economics · Made real.
+- **Twenty-two sections.** The breakdown's thirteen slides render around them.
+- ⚠ **ONE RECORD, AND THE GUARD FOUND A FOURTH READER.** The four clippings were typed
+  identically in v1 and v2. They are `shared/marketSignal.ts` now, read by v1, v2, v3
+  and the class-one deck. The class-one copy was found by the new registry pin on its
+  first run. Each page authors its own head and caption. v1, v2, the class deck and
+  AP serialise identically before and after.
+- **Verified:** lint 0 errors (336 warnings, ceiling 337); typecheck clean; 2,764 tests
+  green; the setup beats one screen each at 1280×720 (dark) and 1920×1247 (light), no
+  page errors.
