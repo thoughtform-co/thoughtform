@@ -1423,6 +1423,13 @@ All of it is `.arc-dossier`-scoped and gated at
   ⚠ Six failures on `iphone-14` / `tablet` are PRE-EXISTING (the ≤960
   `.fl-wire` aspect rung) — stash before blaming a change.
 
+- ⚠ **THE DISPLAY RAMP LANDS ON ITS CAP AT 2560, NOT AT A LAPTOP** (owner,
+  2026-10-03, MacBook Air: titles "so stacked underneath each other"). `.arc-title`,
+  `.arc-hb__title`, `.arc-inter__line` and the callout are `a + b·vw` solved to hit
+  their old caps at 2560 (every wider screen byte-identical) and about a quarter
+  smaller at 1470: 32 · 36 · 40 · 48px there. A pure `vw` slope capped at ~1470 and
+  set an ultrawide's size in a laptop's column. Retune by re-solving the pair, never
+  by raising the slope.
 - **No italics.** Emphasis is `ArcTitle.em` → upright gold; markup inside
   copy strings fails `tests/lib/arcs-registry.test.ts`.
 - **Content changes** = edit `lib/arcs/content/*` + registry only; run

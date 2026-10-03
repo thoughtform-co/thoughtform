@@ -4,7 +4,6 @@ import { MARKET_SIGNAL_COLUMNS } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { whatFollows } from "./shared/whatFollows";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
-import { REAL_QUESTION_BEAT } from "./shared/workshopFraming";
 import { FEEDBACK_STEPS, getStarted, theHorizon } from "./shared/workshopPractice";
 
 /**
@@ -88,7 +87,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
     // The curve and the steer with V3's own heads (ADR-143 U4), figures shared.
     WORKSHOP_INTRO.curve,
     WORKSHOP_INTRO.steer,
-    REAL_QUESTION_BEAT,
+    WORKSHOP_INTRO.question,
 
     /* ── Chapter three · THE CONFIGURATION ─────────────────────────────────
        The answer to the real question, per piece of work (owner, 2026-10-03:

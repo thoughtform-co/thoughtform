@@ -42,7 +42,13 @@ function strings(): { at: string; text: string }[] {
     if (typeof t === "string") out.push({ at: `signal.${k}`, text: t });
   for (const [k, t] of Object.entries(WORKSHOP_INTRO.proof.ledes))
     out.push({ at: `proof.${k}`, text: t });
-  out.push({ at: "opening.sub", text: WORKSHOP_INTRO.opening.head.sub ?? "" });
+  for (const [name, t] of [
+    ["opening", WORKSHOP_INTRO.opening.head.title],
+    ["curve", WORKSHOP_INTRO.curve.head.title],
+    ["steer", WORKSHOP_INTRO.steer.head.title],
+  ] as const) {
+    out.push({ at: `${name}.title`, text: `${t.pre} ${t.em}` });
+  }
   return out;
 }
 
@@ -75,12 +81,17 @@ describe("the workshop intro record (ADR-143 U3)", () => {
     expect(WORKSHOP_INTRO.signal).toEqual({ ticker: false });
   });
 
-  it("changes only the opening's sub, and v3 opens on it", () => {
+  it("changes only the opening's title and drops its sub, and v3 opens on it", () => {
     const { head, ...rest } = WORKSHOP_INTRO.opening;
     const { head: sharedHead, ...sharedRest } = HAND_IT_TO_AN_AGENT;
     expect(rest).toEqual(sharedRest);
-    expect({ ...head, sub: undefined }).toEqual({ ...sharedHead, sub: undefined });
-    expect(head.sub).not.toBe(sharedHead.sub);
+    expect({ ...head, title: undefined, sub: undefined }).toEqual({
+      ...sharedHead,
+      title: undefined,
+      sub: undefined,
+    });
+    expect(head.title).not.toEqual(sharedHead.title);
+    expect(head.sub, "the title alone opens the day").toBeUndefined();
     expect(THOUGHTFORM_WORKSHOP_V3_ARC.sections[0]).toBe(WORKSHOP_INTRO.opening);
   });
 });

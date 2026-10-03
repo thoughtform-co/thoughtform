@@ -102,7 +102,12 @@ describe("the workshop's third house cut (ADR-143)", () => {
       expect(head.eyebrow).toBe(sharedHead.eyebrow);
       expect(head.title).not.toEqual(sharedHead.title);
     }
-    expect(question).toBe(REAL_QUESTION_BEAT);
+    // The question without its subline (owner, 2026-10-03), else the shared beat.
+    expect(question).toBe(WORKSHOP_INTRO.question);
+    expect({ ...WORKSHOP_INTRO.question, subline: REAL_QUESTION_BEAT.subline }).toEqual(
+      REAL_QUESTION_BEAT
+    );
+    expect(WORKSHOP_INTRO.question.subline).toBeUndefined();
     expect(THOUGHTFORM_WORKSHOP_V2_ARC.sections[1], "v2 reads the same stages").toBe(
       THREE_WAYS_LOOP
     );

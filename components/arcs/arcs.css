@@ -246,10 +246,19 @@ html[data-theme="light"] .arc-hud-client__light {
 }
 
 /* The one big-title voice of the journey (station-header recipe). */
+/* ⚠ THE DISPLAY RAMP GROWS SLOWLY AND LANDS ON ITS CAP AT 2560 (owner,
+   2026-10-03, on a MacBook Air: the titles were "so stacked underneath each
+   other … on my ultra-wide screen it's great, but this is just too much").
+   A pure `vw` slope reached the cap at ~1470px, so a laptop read the
+   ultrawide's size in a column a third as wide, set in capitals at .04em:
+   four lines where two would do. Each display size is now `a + b·vw`, solved
+   to land on its old cap at 2560 (every wider screen is byte-identical) and
+   about a quarter smaller at 1470, the way Linear holds a display size through
+   its laptop range instead of scaling it with the width. */
 .arc-title {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(26px, 3vw, 44px);
+  font-size: clamp(24px, 15.8px + 1.1vw, 44px);
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: 0.04em;
@@ -1993,7 +2002,8 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   max-width: 24ch;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-weight: 400;
-  font-size: clamp(30px, 4.2vw, 58px);
+  /* The display ramp (see `.arc-title`): 40px at 1470, its 58 cap at 2560. */
+  font-size: clamp(28px, 15.7px + 1.65vw, 58px);
   line-height: 1.12;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2006,7 +2016,8 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   font-weight: 500;
 }
 .arc-inter--callout .arc-inter__line {
-  font-size: clamp(38px, 5.4vw, 76px);
+  /* The display ramp (see `.arc-title`): 48px at 1470, its 76 cap at 2560. */
+  font-size: clamp(34px, 10.2px + 2.57vw, 76px);
 }
 .arc-inter--quote .arc-inter__line {
   max-width: 34ch;
@@ -8801,7 +8812,8 @@ html[data-theme="light"] .arc-root .arc-signal {
 /* The title rides `.arc-title` (face, case, tracking, the gold `em`) and
    takes only the display SIZE here, so it adds no type literal to the sheet. */
 .arc-hb__title {
-  font-size: clamp(28px, min(3vw, 6vh), 54px);
+  /* The display ramp (see `.arc-title`): 36px at 1470, its 54 cap at 2560. */
+  font-size: clamp(26px, min(11.7px + 1.65vw, 6vh), 54px);
   line-height: 1.08;
   /* A title here is two short sentences, and each one takes its own line
      group: the `em` starts on a fresh line and both halves wrap BALANCED, so

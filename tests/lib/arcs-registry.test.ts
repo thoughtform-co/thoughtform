@@ -1670,10 +1670,8 @@ describe("the workshop's shared beats (ADR-143)", () => {
         "thoughtform-workshop",
       ]);
     }
-    expect(readers.get("real-question")?.sort()).toEqual([
-      "ap-hogeschool-lecture",
-      "thoughtform-workshop-v3",
-    ]);
+    // v3 shows the question without its subline (ADR-143 U4).
+    expect(readers.get("real-question")?.sort()).toEqual(["ap-hogeschool-lecture"]);
   });
 
   it("every page drawing the market's clippings reads the one record", () => {

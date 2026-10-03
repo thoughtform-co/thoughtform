@@ -314,3 +314,13 @@ only"), no structure change.
   **16** ends by handing to 17 ("Here is the first of them, the skill."). **17**
   said "the ad that follows" while it sits after the ad since U2; it says "the ad you
   just saw".
+- **01** (same day, owner): the opening's title is "How to work with _a new kind of
+  intelligence._"; the agent line moves into the sub ("One you can hand work to, and
+  trust what comes back."), so 02 still follows. V2 and the AP lecture keep "Hand it
+  to an agent." (`WORKSHOP_INTRO.opening` forks title and sub now).
+- **01** loses its sub (owner: "don't think we need the paragraph"); the title alone
+  opens the day. And the arcs' display ramp grows slower (owner, on a MacBook Air):
+  every arc's titles land on their old caps at 2560 and run about a quarter smaller
+  at 1470 (`arcs.css`, `.claude/rules/arcs.md`).
+- **05** loses its subline on V3 (owner): the question stands alone
+  (`WORKSHOP_INTRO.question`); the AP lecture keeps the shared beat whole.

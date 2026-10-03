@@ -2,7 +2,7 @@ import type { CorridorCopyOverride } from "@/lib/v7-parse/types";
 
 import type { ArcSectionOf } from "../../types";
 import { HAND_IT_TO_AN_AGENT } from "./handItToAnAgent";
-import { HARD_TO_STEER_BEAT, THE_CURVE_BEAT } from "./workshopFraming";
+import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./workshopFraming";
 
 /**
  * The workshop's intro, said as a story (ADR-143 U3): the RECORD the third
@@ -49,13 +49,15 @@ export interface WorkshopIntro {
     /** The card that glows, in dark only (the route sheet). */
     lit: WorkshopProofTrack;
   };
-  /** The opening slide, 01: the shared board with this cut's own sub. */
+  /** The opening slide, 01: the shared board with this cut's own title, no sub. */
   opening: ArcSectionOf<"hero-board">;
   /** 03 and 04 with this cut's own heads (ADR-143 U4): the shared figures by
    *  reference, the words turned so each beat hands to the next. V1 and the AP
    *  lecture keep the shared records (owner, 2026-10-03: "v3 only"). */
   curve: ArcSectionOf<"curve">;
   steer: ArcSectionOf<"spectrum">;
+  /** 05 without its subline (owner, 2026-10-03): the question stands alone. */
+  question: ArcSectionOf<"interstitial">;
 }
 
 export const WORKSHOP_INTRO: WorkshopIntro = {
@@ -91,9 +93,14 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
   },
   opening: {
     ...HAND_IT_TO_AN_AGENT,
+    // The title says what the day is for (owner, 2026-10-03: "how to work
+    // with a new type of intelligence").
     head: {
       ...HAND_IT_TO_AN_AGENT.head,
-      sub: "Today follows the Arc: how this intelligence behaves, what your team writes down for it, and one piece of work set up to run on its own, from a prompt to a ten-second ad.",
+      title: { pre: "How to work with", em: "a new kind of intelligence." },
+      // No sub (owner, 2026-10-03: "don't think we need the paragraph"):
+      // the title alone opens the day.
+      sub: undefined,
     },
   },
   /* 02 ends on "each runs longer without you", so 03 stays on length (the
@@ -114,4 +121,7 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
       sub: "It is a tool and a collaborator at once. Sometimes you tell it exactly what to do; sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
     },
   },
+  // The question stands alone on V3 (owner, 2026-10-03: "remove this
+  // paragraph"); the AP lecture keeps the shared beat's subline.
+  question: { ...REAL_QUESTION_BEAT, subline: undefined },
 };
