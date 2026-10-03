@@ -18,7 +18,7 @@ import { type ConsoleStation, ConsoleRail } from "../../console/ConsoleRail";
 import { ViewConfiguration, configExt, configLayout } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
 import { PdaPhoneReadings } from "./PdaPhoneReadings";
-import { ViewWork, slotRect, workExt, workLayout } from "./PdaViews";
+import { ViewWork, slotRect, workLayoutFor } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks, workPlan } from "./pdaRecord";
@@ -233,7 +233,9 @@ export function PdaConsole({
   /** ⚠ READING 01 TAKES THE PLAN (ADR-126): its slots depend on which
    *  streams the record files under which workstream, and the flight measures
    *  against this same object — one source for the attribute AND the flight. */
-  const layout1 = useMemo(() => workLayout(workExt(aspect), plan), [aspect, plan]);
+  /* ⚠ AND THE ARRANGEMENT FOLLOWS THE FIELD (2026-10-03): rows on a
+     landscape field, columns on a tall one, whichever letters larger. */
+  const layout1 = useMemo(() => workLayoutFor(aspect, plan, streams), [aspect, plan, streams]);
   const layout2 = useMemo(() => configLayout(configExt(aspect)), [aspect]);
   const viewBox = view === 1 ? layout1.crop : layout2.crop;
   /* ⚠ THESE MIRRORS KEEP THE WHEEL LISTENER STABLE, and that is the whole

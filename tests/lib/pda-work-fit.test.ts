@@ -21,8 +21,11 @@ import {
   VIEW_BOX,
   ViewWork,
   WORK_LAYOUT_0,
+  rowLabelLines,
+  workArrangement,
   workExt,
   workLayout,
+  workLayoutFor,
   workLettering,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
 import { cropOf } from "@/components/landing/home-v2/services/casefile/map/pda/pdaFlight";
@@ -211,5 +214,95 @@ describe("the view renders nothing its declaration did not name", () => {
     }
     // Twelve cartridges on the reading, each hit-testable as a button.
     expect((markup.match(/role="button"/g) ?? []).length).toBe(12);
+  });
+});
+
+/**
+ * THE ROWS ARRANGEMENT (2026-10-03, owner: on a MacBook Air the cards "feel too
+ * small"). The same record turned a quarter for landscape fields: one row per
+ * workstream, the name in a label column, the runs left to right. The console
+ * picks whichever arrangement letters larger at the field's aspect.
+ */
+describe("the rows arrangement", () => {
+  /* The pile's own fields (`capture-proof-stack.mjs` `mapField`). */
+  const FIELDS = {
+    "1280x720": [579, 307],
+    "1470x830": [665, 408],
+    "1440x900": [652, 479],
+    "1920x1247": [814, 790],
+  } as const;
+  const title = (l: ReturnType<typeof workLayout>, w: number, h: number) => {
+    const c = cropOf(l.crop);
+    return Math.min(w / c.w, h / c.h) * CART_TYPE.title;
+  };
+
+  it("is chosen on every laptop field and never on the tall monitor's", () => {
+    expect(workArrangement(307 / 579)).toBe("rows");
+    expect(workArrangement(408 / 665)).toBe("rows");
+    expect(workArrangement(479 / 652)).toBe("rows");
+    expect(workArrangement(790 / 814)).toBe("columns");
+    expect(workArrangement(0)).toBe("columns");
+  });
+
+  it("letters larger than the columns wherever it is chosen", () => {
+    for (const [vp, [w, h]] of Object.entries(FIELDS)) {
+      const chosen = workLayoutFor(h / w, plan, visual.streams);
+      const cols = workLayout(workExt(h / w), plan);
+      expect(title(chosen, w, h), vp).toBeGreaterThanOrEqual(title(cols, w, h));
+    }
+    // The MacBook Air's field: a third larger, at least.
+    const [w, h] = FIELDS["1470x830"];
+    const rows = workLayoutFor(h / w, plan, visual.streams);
+    expect(title(rows, w, h) / title(workLayout(workExt(h / w), plan), w, h)).toBeGreaterThan(1.3);
+  });
+
+  it("seats every card once, inside the crop, and letters into its measures", () => {
+    for (const aspect of [307 / 579, 408 / 665, 479 / 652, 0.4]) {
+      const l = workLayoutFor(aspect, plan, visual.streams);
+      expect(l.arrangement).toBe("rows");
+      expect(Object.keys(l.slots).sort()).toEqual([...plan.ids].sort());
+      const c = cropOf(l.crop);
+      for (const p of l.placed) {
+        if (p.kind !== "card") continue;
+        expect(p.rect.x).toBeGreaterThanOrEqual(c.x);
+        expect(p.rect.y).toBeGreaterThanOrEqual(c.y);
+        expect(p.rect.x + p.rect.w).toBeLessThanOrEqual(c.x + c.w);
+        expect(p.rect.y + p.rect.h).toBeLessThanOrEqual(c.y + c.h);
+        expect(p.rect.w).toBe(CARD_BOX.w);
+        expect(p.rect.h).toBe(CARD_BOX.h);
+      }
+      for (const spec of workLettering(l, visual.streams)) {
+        expect(specWidth(spec), `${spec.slot}: "${spec.text}"`).toBeLessThanOrEqual(spec.measure);
+      }
+      // Each row's label spells the record's name, one word per line here.
+      for (const s of visual.streams) {
+        const lines = l.placed
+          .filter((p) => p.kind === "row" && p.stream === s.key)
+          .map((p) => (p.kind === "row" ? p.line : ""));
+        expect(lines.join(" ")).toBe(s.name.toUpperCase());
+        expect(rowLabelLines(s.name)).toEqual(lines);
+      }
+    }
+  });
+
+  it("never letters two cards or a head over a card", () => {
+    const l = workLayoutFor(408 / 665, plan, visual.streams);
+    const cards = l.placed.flatMap((p) => (p.kind === "card" ? [p.rect] : []));
+    for (let a = 0; a < cards.length; a++) {
+      for (let b = a + 1; b < cards.length; b++) {
+        const A = cards[a];
+        const B = cards[b];
+        const apart = A.x + A.w <= B.x || B.x + B.w <= A.x || A.y + A.h <= B.y || B.y + B.h <= A.y;
+        expect(apart, `cards ${a} and ${b} overlap`).toBe(true);
+      }
+    }
+    // A run's head sits in the band above its cards, never inside one.
+    for (const p of l.placed) {
+      if (p.kind !== "head") continue;
+      for (const r of cards) {
+        const inside = p.x >= r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h;
+        expect(inside, `${p.label} prints inside a card`).toBe(false);
+      }
+    }
   });
 });

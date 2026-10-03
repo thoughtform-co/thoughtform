@@ -1772,6 +1772,23 @@ RENAME, never an alias; the wheel's last step is reading 02 and its lockout
 now holds a fling's tail BEFORE the release (with two readings a single
 fling lands on the last one).
 
+⚠ **AND ON A LANDSCAPE FIELD THE ESTATE IS ROWS (2026-10-03, owner: on a
+MacBook Air the cards "feel too small … fill in their frame more properly").**
+The columns are a portrait block (588 × 756) and every laptop field is
+landscape, so the reading was height-bound and the gutters spent the width as
+air: ~95px cards in a 665 × 408 field at 1470×830. `workRowsLayout` turns the
+record a quarter (one row per workstream, its name in a 96-unit label column
+in up to two lines at the column head's rung, the runs left to right under the
+same group heads; 900 × 548 at rest), and `workLayoutFor` picks whichever
+arrangement's RESTING crop gives the larger `meet` at the field's aspect, which
+flips at h/w ≈ 0.84: rows at 1280×720 · 1440×900 · 1470×830, columns at
+1920×1247. Title type +37 % at the Air's field. The cartridge, `CARD_BOX`, the
+flight (`slotRect` reads whichever layout is mounted) and the phone readings
+are untouched; `WORK_LAYOUT_0` and `VIEW_BOX[1]` stay the columns' rest crop.
+`pda-work-fit` pins the choice per pile field, rows ≥ columns wherever chosen,
+every card seated once inside the crop, the label lines spelling the record's
+names, and no card or head overlapping a card.
+
 - **The rail is HORIZONTAL, across the top of the console** (owner,
   2026-08-06), equal stations. Still not a web tab strip: diamonds, mono
   caps and a hairline spine, with ONE lit segment that TRAVELS along that spine

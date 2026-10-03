@@ -145,10 +145,37 @@ const WORK_FIT: FitSpec = {
  *  reads — the one object the render and the flight share. */
 export type WorkPlaced =
   | { kind: "col"; stream: CaseMapStreamKey; x: number; y: number }
+  /** One line of a ROW's stream name, set in the label column (`rows` only). */
+  | { kind: "row"; stream: CaseMapStreamKey; line: string; n: number; x: number; y: number }
   | { kind: "head"; stream: CaseMapStreamKey; label: string; x: number; y: number }
   | { kind: "card"; id: string; i: number; rect: FlightRect };
 
+/**
+ * THE TWO ARRANGEMENTS (2026-10-03, owner: on a MacBook Air the cards "feel
+ * too small … redesign them so they fill in their frame more properly").
+ *
+ * `columns` is ADR-126's drawing: a PORTRAIT block (588 × 756 at rest). On
+ * every laptop the pile's field is LANDSCAPE (665 × 408 at 1470×830), so the
+ * reading was height-bound and the gutters could only spend the width as air:
+ * the cards rendered ~95px wide in a 665px panel.
+ *
+ * `rows` is the same record turned a quarter: one ROW per workstream, its name
+ * in a label column at the left, its runs climbing LEFT TO RIGHT under the
+ * same group heads. A landscape block (900 × 548) in a landscape field. Both
+ * axes are still the record's (the row is the stream, the run is the step on
+ * the ladder), the cartridge is untouched, and the flight reads whichever
+ * layout is mounted through `slotRect`.
+ *
+ * ⚠ THE CHOICE IS ARITHMETIC, NOT A BREAKPOINT. `workLayoutFor` takes the
+ * arrangement whose resting crop gives the larger `meet` at this field's
+ * aspect, which flips at h/w ≈ 0.84: every laptop reads rows, a tall monitor
+ * (814 × 790 at 1920×1247) keeps columns. Elasticity buys no type in either
+ * (`pdaFit`), so comparing the resting crops is comparing the type.
+ */
+export type WorkArrangement = "columns" | "rows";
+
 export interface WorkLayout {
+  arrangement: WorkArrangement;
   gutX: number;
   gutY: number;
   block: FlightRect;
@@ -213,6 +240,7 @@ export function workLayout(ext: FitExt, plan: WorkPlan): WorkLayout {
      growing and the remainder is margin, split (ADR-070 U14). */
   const box = cropAround(block, WORK_FIT.cropW + ext.extW, WORK_FIT.cropH + ext.extH);
   return {
+    arrangement: "columns",
     gutX,
     gutY,
     block,
@@ -225,6 +253,138 @@ export function workLayout(ext: FitExt, plan: WorkPlan): WorkLayout {
 }
 
 export const workExt = (fieldAspect: number) => fitExt(WORK_FIT, fieldAspect);
+
+/* ── the rows arrangement ─────────────────────────────────────────────── */
+
+/**
+ * THE LABEL COLUMN. The stream's name is set in up to two lines at the column
+ * head's own rung (12 at .14em, the floor), one word per line where it fits:
+ * "PRODUCTION" and "OPERATIONS" are 88.8 units against 96. Its first baseline
+ * sits on the cards' top edge, so the name reads as the row's head.
+ */
+const ROW_LABEL_W = 96;
+const ROW_LABEL_GAP = 16;
+const ROW_LABEL_LEAD = 16;
+const ROW_H = GROUP_H + CARD_H;
+/** Rows are one card high, so the slack goes to fewer, shorter gutters. */
+const ROW_GUT_X_MAX = 44;
+const ROW_GUT_Y_MAX = 56;
+const ROW_CARDS_X = GRID_X + ROW_LABEL_W + ROW_LABEL_GAP;
+
+const rowsCeilingW = (gutX: number) =>
+  ROW_LABEL_W + ROW_LABEL_GAP + WORK_COLUMN_SLOTS * CARD_W + (WORK_COLUMN_SLOTS - 1) * gutX;
+const rowsCeilingH = (gutY: number) => COLS * ROW_H + (COLS - 1) * gutY;
+const ROWS_FIT: FitSpec = {
+  cropW: rowsCeilingW(GUT_X0) + 28,
+  cropH: rowsCeilingH(GUT_Y0) + 24,
+  maxW: (WORK_COLUMN_SLOTS - 1) * (ROW_GUT_X_MAX - GUT_X0),
+  maxH: 620,
+};
+
+export const workRowsExt = (fieldAspect: number) => fitExt(ROWS_FIT, fieldAspect);
+
+/** The stream's name in lines that fit the label column, greedily by word. */
+export function rowLabelLines(name: string): string[] {
+  const lineW = (t: string) => t.length * adv(COL_HEAD_FS, COL_HEAD_TRACK);
+  const lines: string[] = [];
+  for (const word of name.toUpperCase().split(/\s+/).filter(Boolean)) {
+    const last = lines[lines.length - 1];
+    if (last && lineW(`${last} ${word}`) <= ROW_LABEL_W)
+      lines[lines.length - 1] = `${last} ${word}`;
+    else lines.push(word);
+  }
+  return lines;
+}
+
+/**
+ * THE READING TURNED A QUARTER: one row per workstream. Same contract as
+ * `workLayout` (pure, plan in, rects out, the crop the ceiling's grown by the
+ * field's extension and the live block centred in it). The stream NAMES come
+ * from the record at render, so the layout places their slots by line count:
+ * `names` maps a stream to its lines, and omitting it seats one line.
+ */
+export function workRowsLayout(
+  ext: FitExt,
+  plan: WorkPlan,
+  names?: Partial<Record<CaseMapStreamKey, readonly string[]>>
+): WorkLayout {
+  const gutX = Math.min(ROW_GUT_X_MAX, GUT_X0 + ext.extW / Math.max(1, WORK_COLUMN_SLOTS - 1));
+  const gutY = Math.min(ROW_GUT_Y_MAX, GUT_Y0 + ext.extH / Math.max(1, COLS - 1));
+  const placed: WorkPlaced[] = [];
+  const slots: Record<string, FlightRect> = {};
+  let i = 0;
+  let right = ROW_CARDS_X;
+  plan.columns.forEach((col, r) => {
+    const top = GRID_Y + r * (ROW_H + gutY);
+    const cardY = top + GROUP_H;
+    (names?.[col.stream] ?? [col.stream]).forEach((line, n) => {
+      placed.push({
+        kind: "row",
+        stream: col.stream,
+        line,
+        n,
+        x: GRID_X,
+        y: cardY + COL_HEAD_FS + n * ROW_LABEL_LEAD,
+      });
+    });
+    let x = ROW_CARDS_X;
+    col.runs.forEach((run, k) => {
+      if (k > 0) x += gutX;
+      placed.push({ kind: "head", stream: col.stream, label: run.label, x, y: top + GROUP_BASE });
+      run.ids.forEach((id, m) => {
+        if (m > 0) x += gutX;
+        const rect = { x, y: cardY, w: CARD_W, h: CARD_H };
+        placed.push({ kind: "card", id, i, rect });
+        slots[id] = rect;
+        i += 1;
+        x += CARD_W;
+      });
+    });
+    right = Math.max(right, x);
+  });
+  const block: FlightRect = {
+    x: GRID_X,
+    y: GRID_Y,
+    w: right - GRID_X,
+    h: COLS * ROW_H + (COLS - 1) * gutY,
+  };
+  const box = cropAround(block, ROWS_FIT.cropW + ext.extW, ROWS_FIT.cropH + ext.extH);
+  return {
+    arrangement: "rows",
+    gutX,
+    gutY,
+    block,
+    marginX: box.marginX,
+    marginY: box.marginY,
+    crop: box.crop,
+    placed,
+    slots,
+  };
+}
+
+/** `meet` per unit of field width for a resting crop at this aspect. */
+const restScale = (spec: FitSpec, aspect: number) => Math.min(1 / spec.cropW, aspect / spec.cropH);
+
+/** The arrangement that letters larger at this field's aspect (h / w). */
+export function workArrangement(fieldAspect: number): WorkArrangement {
+  if (!(fieldAspect > 0)) return "columns";
+  return restScale(ROWS_FIT, fieldAspect) > restScale(WORK_FIT, fieldAspect) ? "rows" : "columns";
+}
+
+/** THE READING AT THIS FIELD — what the console mounts and the flight reads. */
+export function workLayoutFor(
+  fieldAspect: number,
+  plan: WorkPlan,
+  streams: readonly CaseMapStream[]
+): WorkLayout {
+  if (workArrangement(fieldAspect) === "columns") return workLayout(workExt(fieldAspect), plan);
+  const names: Partial<Record<CaseMapStreamKey, readonly string[]>> = {};
+  for (const col of plan.columns) {
+    const name = streams.find((s) => s.key === col.stream)?.name ?? col.stream;
+    names[col.stream] = rowLabelLines(name);
+  }
+  return workRowsLayout(workRowsExt(fieldAspect), plan, names);
+}
 
 /**
  * THE CEILING PLAN — every column holding one card in each of the four runs,
@@ -281,6 +441,14 @@ export function workLettering(layout: WorkLayout, streams: readonly CaseMapStrea
         fs: COL_HEAD_FS,
         track: COL_HEAD_TRACK,
         measure: CARD_W,
+      });
+    } else if (p.kind === "row") {
+      out.push({
+        slot: `row.${p.stream}.head.${p.n}`,
+        text: p.line,
+        fs: COL_HEAD_FS,
+        track: COL_HEAD_TRACK,
+        measure: ROW_LABEL_W,
       });
     } else if (p.kind === "head") {
       out.push({
@@ -349,6 +517,20 @@ export function ViewWork({
               fill="var(--pda-ink)"
             >
               {name(p.stream)}
+            </text>
+          );
+        }
+        if (p.kind === "row") {
+          return (
+            <text
+              key={`row-${p.stream}-${p.n}`}
+              x={p.x}
+              y={p.y}
+              fontSize={COL_HEAD_FS}
+              letterSpacing={`${COL_HEAD_TRACK}em`}
+              fill="var(--pda-ink)"
+            >
+              {p.line}
             </text>
           );
         }
