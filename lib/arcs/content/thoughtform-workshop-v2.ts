@@ -6,6 +6,7 @@ import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
 import { whatFollows } from "./shared/whatFollows";
+import { FEEDBACK_STEPS, getStarted, theHorizon } from "./shared/workshopPractice";
 
 /**
  * The Thoughtform workshop, SECOND CUT (ADR-139).
@@ -804,32 +805,8 @@ const USING_IT: ArcSection[] = [
 
 /* ── 17 · When it is wrong ───────────────────────────────────────────── */
 
-const FEEDBACK_STEPS = {
-  kind: "steps" as const,
-  label: "What happens next",
-  items: [
-    {
-      id: "sorted",
-      title: "It is sorted",
-      body: "Claude names the kind of mistake, which file the fix belongs in, and who fixes it.",
-    },
-    {
-      id: "decided",
-      title: "The owner decides",
-      body: "They ask what is waiting on them and choose: fix it, later, close it, or send it on.",
-    },
-    {
-      id: "drafted",
-      title: "A draft fix, with a test",
-      body: "The case that caught it joins the evals, and all of them run again. Claude never merges.",
-    },
-    {
-      id: "delivered",
-      title: "Everyone gets it",
-      body: "A person merges, and the new version reaches everyone who has the plugin.",
-    },
-  ],
-};
+/* The four steps after `/skill-feedback` are a SHARED RECORD since ADR-143
+   (`shared/workshopPractice.ts`): the third house cut shows them too. */
 
 const WHEN_WRONG: ArcSection[] = [
   {
@@ -1286,35 +1263,8 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
       source: "After Matthew Schwartz, Claude-shaped science, Anthropic",
       alt: "Six spikes of uneven length, one per discipline, with a dashed line drawn round their tips; the bays between the spikes, inside the line, are filled with gold particles",
     },
-    {
-      id: "the-horizon",
-      kind: "horizon",
-      menuLabel: "The horizon",
-      menuPrimary: true,
-      head: {
-        eyebrow: "12 · Why it needs checks",
-        title: { pre: "It can only work for hours", em: "when it has the context and the evals." },
-        sub: "A tool you operate needs you at every step. An agent on a long task checks its work against the evals, retries when it slips, and stops to ask when it should.",
-      },
-      axis: { from: "five minutes", to: "half a day" },
-      operated: {
-        label: "A tool you operate",
-        check: "you check",
-        steps: 8,
-        line: "You check after every step, eight times over.",
-      },
-      agent: {
-        label: "An agent on a long task",
-        start: "You set the goal and the checks",
-        gates: [
-          { kind: "check", at: 0.27, label: "Checks its own work" },
-          { kind: "retry", at: 0.52, label: "Steps back and tries again" },
-          { kind: "ask", at: 0.77, label: "Stops and asks you" },
-        ],
-        end: "You judge the result",
-      },
-      note: "Small slips compound. One slip in twenty every ten minutes leaves a four-hour task about a three-in-ten chance of ending clean. Checks that catch a slip early keep it going.",
-    },
+    /* The horizon is a SHARED RECORD since ADR-143; the number is this page's. */
+    theHorizon("12 · Why it needs checks", true),
     {
       id: "signal",
       kind: "signal",
@@ -1507,41 +1457,8 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
         },
       ],
     },
-    {
-      id: "get-started",
-      kind: "cards",
-      menuLabel: "Get started",
-      menuPrimary: true,
-      columns: 3,
-      head: {
-        eyebrow: "21 · Get started",
-        title: { pre: "Your team's plugin", em: "is one click away." },
-        sub: "Plugins, skills and connectors all live in one place. Turn the plugin on once, and every skill in it is on in every Claude you use.",
-      },
-      cards: [
-        {
-          id: "open",
-          n: "01",
-          kicker: "In Claude",
-          title: "Open Customize",
-          body: "In the left panel. Plugins, skills and connectors are all on that one page.",
-        },
-        {
-          id: "find",
-          n: "02",
-          kicker: "Plugins, then Discover",
-          title: "Find your team's plugin",
-          body: "It is offered under your organisation. Add the one your team owns, and the shelf keeps it current.",
-        },
-        {
-          id: "on",
-          n: "03",
-          kicker: "Once",
-          title: "Turn it on",
-          body: "Every skill in it comes on together, everywhere you use Claude. Skills and Connectors on the same page show what you have and what it can reach.",
-        },
-      ],
-    },
+    /* Getting started is a SHARED RECORD since ADR-143; the number is this page's. */
+    getStarted("21 · Get started", true),
     {
       id: "whats-next",
       kind: "list-groups",

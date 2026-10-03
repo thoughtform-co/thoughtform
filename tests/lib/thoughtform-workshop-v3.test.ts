@@ -17,6 +17,11 @@ import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import {
+  FEEDBACK_STEPS,
+  GET_STARTED_CARDS,
+  THE_HORIZON_RECORD,
+} from "@/lib/arcs/content/shared/workshopPractice";
+import {
   WHAT_FOLLOWS_CLOSE,
   WHAT_FOLLOWS_SUB,
   WHAT_FOLLOWS_TITLE,
@@ -118,7 +123,12 @@ describe("the workshop's third house cut (ADR-143)", () => {
    * them, then Laura's test and the close. Every slide renders exactly once.
    */
   it("splits Prompt to Loop around the economics, every slide once", () => {
-    expect(V3_SITUATION.at(-1)).toBe(REAL_QUESTION_BEAT);
+    expect(V3_SITUATION.map((s) => s.id).slice(4)).toEqual([
+      "real-question",
+      "configuration-motion",
+      "the-skill-motion",
+      "its-evals-motion",
+    ]);
     expect(V3_BREAKDOWN[0]?.id).toBe("ptl-top");
     expect(V3_BREAKDOWN.at(-1)?.id).toBe("ptl-cost");
     expect(V3_ECONOMICS.map((s) => s.id)).toEqual([
@@ -128,7 +138,16 @@ describe("the workshop's third house cut (ADR-143)", () => {
       "the-team",
     ]);
     expect(V3_JUST_ASK.map((s) => s.id)).toEqual(["ptl-next"]);
-    expect(V3_CLOSE.map((s) => s.id)).toEqual(["in-other-hands", "close"]);
+    expect(V3_CLOSE.map((s) => s.id)).toEqual([
+      "in-other-hands",
+      "the-horizon",
+      "made-real-motion",
+      "the-plugin-motion",
+      "using-it-motion",
+      "when-wrong-motion",
+      "get-started",
+      "close",
+    ]);
     expect([...V3_BREAKDOWN, ...V3_JUST_ASK]).toEqual([...PROMPT_TO_LOOP_SLIDES]);
     expect(
       [...V3_SITUATION, ...V3_ECONOMICS, ...V3_CLOSE].map((s) => s.id),
@@ -167,11 +186,50 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(JSON.stringify(beat)).not.toMatch(/Soave|Bala|Clarissa/);
   });
 
-  /** Four cards, never three: `.arc-cards` is two columns at 1280px. */
-  it("lays every card grid out in fours", () => {
+  /** Four cards, never three: `.arc-cards` is two columns at 1280px. The
+   *  one exception is getting started, v2's record by reference. */
+  it("lays every card grid of its own out in fours", () => {
     for (const s of THOUGHTFORM_WORKSHOP_V3_ARC.sections) {
       if (s.kind !== "cards" || s.ledger) continue;
+      if (s.cards === GET_STARTED_CARDS) continue;
       expect(s.cards.length, `${s.id}`).toBe(4);
+    }
+  });
+
+  /**
+   * U1 (owner, 2026-10-03): the answer to the real question for the ad, its
+   * skill and its evals before the breakdown; how it reaches a team after the
+   * proof. ONE worked example, the motion ad. The beats that read the same for
+   * every example are v2's records by reference.
+   */
+  it("answers the real question for the ad, and reads the practice beats from v2", () => {
+    const at = (id: string) => THOUGHTFORM_WORKSHOP_V3_ARC.sections.find((s) => s.id === id);
+    const board = at("configuration-motion");
+    expect(board?.kind === "questions" && board.work.name).toBe("A ten-second motion ad");
+    const skill = at("the-skill-motion");
+    expect(skill?.kind === "skill-file" && skill.path).toBe("motion-design / SKILL.md");
+    const horizon = at("the-horizon");
+    expect(horizon?.kind === "horizon" && horizon.agent).toBe(THE_HORIZON_RECORD.agent);
+    const v2Horizon = THOUGHTFORM_WORKSHOP_V2_ARC.sections.find((s) => s.id === "the-horizon");
+    expect(v2Horizon?.kind === "horizon" && v2Horizon.agent, "v2 reads it too").toBe(
+      THE_HORIZON_RECORD.agent
+    );
+    const wrong = at("when-wrong-motion");
+    expect(wrong?.kind === "chat" && wrong.aside).toBe(FEEDBACK_STEPS);
+    const started = at("get-started");
+    expect(started?.kind === "cards" && started.cards).toBe(GET_STARTED_CARDS);
+    /* The workstream seam: every example-specific beat is suffixed, so the
+       day a second workstream is authored they become `worked` panels. */
+    for (const id of [
+      "configuration-motion",
+      "the-skill-motion",
+      "its-evals-motion",
+      "made-real-motion",
+      "the-plugin-motion",
+      "using-it-motion",
+      "when-wrong-motion",
+    ]) {
+      expect(at(id), id).toBeDefined();
     }
   });
 
@@ -182,7 +240,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(close.head.title).toBe(WHAT_FOLLOWS_TITLE);
     expect(close.head.sub).toBe(WHAT_FOLLOWS_SUB);
     expect(close.actions).toBe(WHAT_FOLLOWS_CLOSE.actions);
-    expect(close.head.eyebrow).toBe("11 · What follows");
+    expect(close.head.eyebrow).toBe("20 · What follows");
     const v2 = THOUGHTFORM_WORKSHOP_V2_ARC.sections.at(-1);
     expect(v2?.kind === "close" && v2.head.title, "v2's close reads it too").toBe(
       WHAT_FOLLOWS_TITLE

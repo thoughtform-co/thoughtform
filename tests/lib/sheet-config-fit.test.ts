@@ -83,6 +83,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "suri-workshop",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
+      "thoughtform-workshop-v3",
       "trinny-london-pitch",
     ]);
   });
@@ -148,6 +149,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "thoughtform-workshop-v2": {
         rows: ["A post in my voice||"],
         links: ["Claude×1"],
+      },
+      /* The third house cut (ADR-143 U1) answers the six for the motion ad:
+         Claude in the model's answer, Figma in the data's. */
+      "thoughtform-workshop-v3": {
+        rows: ["A ten-second motion ad||"],
+        links: ["Claude×1", "Figma×1"],
       },
       /* The class-one deck's board is Tom on the Moon's world; the image
          model is named generically ("chosen per wave"), so Claude in the

@@ -50,6 +50,33 @@ const SKILLS_DIR = join(
   "skills"
 );
 
+/**
+ * Skills that live in ANOTHER repository than the practice's plugins, by the
+ * name the beat draws (ADR-143 U1): the third house cut quotes Loop's
+ * `motion-design`, kept in `tensalir/loop-ai-studio`. `LOOP_AI_STUDIO_DIR`
+ * points at a checkout of it; the sibling folder is the default. Absent, the
+ * Skill is skipped like any other source that is not on disk.
+ */
+const LOOP_AI_STUDIO_DIR =
+  process.env.LOOP_AI_STUDIO_DIR ?? join(__dirname, "..", "..", "..", "loop-ai-studio");
+const ELSEWHERE: Record<string, string> = {
+  "motion-design": join(
+    LOOP_AI_STUDIO_DIR,
+    "plugins",
+    "ai-studio-motion",
+    "skills",
+    "motion-design",
+    "SKILL.md"
+  ),
+};
+
+/** The file a beat's Skill is read from, and whether this checkout has it. */
+function sourceOf(skill: string): { file: string; external: boolean } {
+  const other = ELSEWHERE[skill];
+  if (other) return { file: other, external: true };
+  return { file: join(SKILLS_DIR, skill, "SKILL.md"), external: false };
+}
+
 /** Strip the markdown the source uses and the page does not. */
 const norm = (s: string) =>
   s
@@ -79,22 +106,23 @@ describe("a skill-file beat quotes a file that exists (ADR-139)", () => {
 
   it("draws at least one, and every one names a Skill on disk", () => {
     expect(panels.length, "no skill-file beat is registered").toBeGreaterThan(0);
-    if (!existsSync(SKILLS_DIR)) return; // the sibling repo is not checked out here
     for (const { arc, section } of panels) {
       const skill = section.path.split(" / ")[0];
+      const { file, external } = sourceOf(skill);
+      // The repository that holds it is not checked out here.
+      if (external ? !existsSync(LOOP_AI_STUDIO_DIR) : !existsSync(SKILLS_DIR)) continue;
       expect(
-        existsSync(join(SKILLS_DIR, skill, "SKILL.md")),
+        existsSync(file),
         `${arc}#${section.id}: ${skill} is drawn as a real Skill but is not on disk`
       ).toBe(true);
     }
   });
 
   it("every line it draws is in that Skill's own file", () => {
-    if (!existsSync(SKILLS_DIR)) return;
     const faults: string[] = [];
     for (const { arc, section } of panels) {
       const skill = section.path.split(" / ")[0];
-      const file = join(SKILLS_DIR, skill, "SKILL.md");
+      const { file } = sourceOf(skill);
       if (!existsSync(file)) continue;
       const source = new Set(shingles(readFileSync(file, "utf8")));
       for (const line of section.lines) {

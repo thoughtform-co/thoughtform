@@ -144,3 +144,56 @@ His note names four movements. The proposal, for his read before the next pass:
 
 Cut candidates across the lineage: `ground`, `resource`, `signal`, `the-family`,
 `leverage` and the five switched beats; the breakdown now shows what they told.
+
+## Update 1: the configuration before the proof, the practice after it (2026-10-03, owner)
+
+The owner, on reading v3: the page jumps from "how should intelligence take part in
+the work?" straight to the breakdown, and "what we're currently missing is really how
+intelligence should take part, because of an intelligence configuration". He pointed at
+the evals deck's configuration (_Making your agents reliable_, chapter 5) and asked for
+the skill as "one piece of work, written down", its evals, and, after the breakdown,
+the two-timeline horizon, the plugin and the marketplace, and how to pick a skill.
+Asked, he chose **the motion ad end to end** (with tabs for other workstreams, creative
+operations first, later), **v2's evals beat**, and **"When it's wrong" and "Get started"
+too**.
+
+- **Before the breakdown, three beats on the motion ad:**
+  - `configuration-motion` (`questions`): "Answer it per piece of work, in six parts."
+  - `the-skill-motion` (`skill-file`): `motion-design / SKILL.md` in Loop AI Studio
+    Motion, quoted from the real file.
+  - `its-evals-motion` (`list-groups` readout): the plugin's first five cases with the
+    skill and without it, 15 of 15 against 4 of 15. This is the same run the
+    breakdown's "15 of 15" reads.
+- **After Laura, six beats:**
+  - `the-horizon` and `get-started` are v2's, hoisted with `FEEDBACK_STEPS` into
+    `shared/workshopPractice.ts`. Each page passes its own number; v2's JSON is
+    identical before and after.
+  - `made-real-motion` (`plugin-board`), `the-plugin-motion` (readout),
+    `using-it-motion` (chat, ask) and `when-wrong-motion` (chat, feedback) are the
+    motion plugin's own.
+- **Twenty sections, five chapters:** The workshop · Three ways · The configuration ·
+  The economics · The horizon. Laura's beat left the chapter row; the cap is five.
+- ⚠ **THE EVALS BEAT IS A READOUT, NOT A BENCH.** The owner picked "v2's evals beat", and
+  its bench draws a draft and a rewrite marked against four checks. For the motion
+  skill no real draft-and-rewrite is on file. Inventing a reply for the "without" arm
+  is the failure ADR-139 refused for the switch. So the beat draws the record that
+  exists: the eval log's run, request by request, with the skill and without it.
+- ⚠ **THE SKILL LIVES IN ANOTHER REPOSITORY.** `motion-design` is kept in
+  `tensalir/loop-ai-studio` (0.2.0, renamed from `studio-ai-motion` on 2026-10-03; the
+  breakdown's ported slides still carry the old name). `skill-file-fidelity` resolves
+  it from `LOOP_AI_STUDIO_DIR` or a sibling `../loop-ai-studio` checkout, and skips it
+  where neither exists.
+  - Run against the file read on 2026-10-03, every drawn line scores 0.71 to 1.00
+    against a floor of 0.5. An invented control line scores 0.
+- ⚠ **THE PLUGIN BOARD'S CENTRE IS NOT THE MOTHER.** The motion plugin has none; its
+  eval log names that gap. The chip is what the skill carries instead: the scripts
+  that render, mix and measure the cut.
+- **The workstream seam is in the ids.** Every example-specific beat is suffixed
+  `-motion`. The day a second workstream is authored, each becomes the first panel of
+  a `worked` group (ADR-139's switch), with no other change.
+- **Verified:**
+  - Lint 0 errors, typecheck clean, every unit test green.
+  - The new beats were captured at 1280×720 (dark) and 1920×1247 (light): no page
+    errors, no horizontal overflow, every reveal fired.
+  - At 1280×720, "When it is wrong" runs 11px past one screen and "Get started" runs
+    30px past it (v2's three-card grid lands two and one). Both are v2's own heights.
