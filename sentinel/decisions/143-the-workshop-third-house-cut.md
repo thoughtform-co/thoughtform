@@ -265,7 +265,10 @@ we go in depth.
      (which now holds the signal title's whole history, moved from
      `CorridorStationHeaders`). The phone title derives from the desktop string
      (`phoneSignalTitleHtml`, `<br>` → space), so the two can no longer drift. The
-     ticker is a switch; V3 hides it (beat 09 shows the same news).
+     ticker is a switch; V3 hides it (beat 09 shows the same news). V3's own
+     signal line ("WE DID IT FIRST AT LOOP EARPLUGS…") was built and taken back
+     the same day (owner: it read as AI slop); it keeps the homepage's title and
+     button, so `signal` is `{ ticker: false }`.
   4. **Proof**: `workshop-v3/WorkshopProof.tsx` maps `proofStackTracks()` and replaces
      `card.lede` only (`ArcProofCard`'s record-spread precedent). V3's portals import it
      in place of V1's.

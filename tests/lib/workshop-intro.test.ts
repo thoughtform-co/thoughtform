@@ -67,19 +67,12 @@ describe("the workshop intro record (ADR-143 U3)", () => {
     }
   });
 
-  it("gives every caption exactly one break, and the signal one break and one accent", () => {
+  it("gives every caption exactly one break, and keeps the homepage's signal line", () => {
     for (const [id, caption] of Object.entries(WORKSHOP_INTRO.stations)) {
       expect(caption?.match(/<br>/g)?.length, id).toBe(1);
     }
-    const title = WORKSHOP_INTRO.signal.titleHtml ?? "";
-    expect(title.match(/<br>/g)?.length).toBe(1);
-    expect(title.match(/<em>/g)?.length).toBe(1);
-    expect(WORKSHOP_INTRO.signal.ticker, "beat 09 shows the news").toBe(false);
-    expect(WORKSHOP_INTRO.signal.ariaLabel?.toLowerCase()).toBe(
-      plain((title ?? "").replace("<br>", " "))
-        .toLowerCase()
-        .replace(/\.$/, "")
-    );
+    // Owner, 2026-10-03: the title and the button are the homepage's.
+    expect(WORKSHOP_INTRO.signal).toEqual({ ticker: false });
   });
 
   it("changes only the opening's sub, and v3 opens on it", () => {

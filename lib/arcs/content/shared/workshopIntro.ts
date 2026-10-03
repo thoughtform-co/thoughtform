@@ -10,7 +10,7 @@ import { HAND_IT_TO_AN_AGENT } from "./handItToAnAgent";
  *
  *   1. I am an intelligence architect.     (about)
  *   2. This is how I work: the Arc.         (stations)
- *   3. This is how I did it at Loop.        (signal, proof)
+ *   3. This is how I did it at Loop.        (proof)
  *   4. Now we go in depth.                  (opening)
  *
  * ⚠ V3 ONLY (owner, 2026-10-03). V1, V2, the AP lecture and the homepage keep
@@ -39,7 +39,8 @@ export interface WorkshopIntro {
   about: readonly string[];
   /** Each station's caption: the Arc's move, then which part of today it is. */
   stations: NonNullable<CorridorCopyOverride["stations"]>;
-  /** The epilogue's signal line. No ticker: beat 09 shows the same news. */
+  /** The epilogue's signal line: the homepage's title and button, without
+   *  the ticker (beat 09 shows the same news). */
   signal: NonNullable<CorridorCopyOverride["signal"]>;
   proof: {
     /** One line per card, in place of `card.lede`; titles stay the record's. */
@@ -66,12 +67,10 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     intelligence:
       "Give each piece of work its <em>intelligence configuration</em>.<br>Part three: one motion ad, end to end, and the plugin your team installs.",
   },
-  signal: {
-    titleHtml: "WE DID IT FIRST AT LOOP EARPLUGS,<br><em>TEAM BY TEAM, UNTIL THEY RAN IT.</em>",
-    ariaLabel: "We did it first at Loop Earplugs, team by team, until they ran it",
-    cta: "HOW IT WENT AT LOOP",
-    ticker: false,
-  },
+  // The title and the button are the homepage's (owner, 2026-10-03: the
+  // positioning line, "we embed until it runs without us", is the one to
+  // keep); only the ticker goes.
+  signal: { ticker: false },
   proof: {
     ledes: {
       "atl-films":
