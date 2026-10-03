@@ -292,3 +292,25 @@ we go in depth.
   card in dark and light. ⚠ The beat-by-beat screenshot walk (1920×1247, 1280×720,
   390×844, both themes) was NOT run here: the browser pane was hidden, which freezes
   rAF and transitions (memory: corridor visual verification); shoot it headed.
+
+## Update 4: the copy hands from beat to beat (2026-10-03, owner)
+
+The owner asked how the copy should flow from "Hand it to an agent." onward. Each
+beat read fine alone; the breaks were at the seams. Copy only, V3 only (owner: "v3
+only"), no structure change.
+
+- **03 → 04**: the curve ended on price and the next beat opened on steering. 03 is
+  now "Each release finishes longer work _on its own._" (the price moves into its
+  sub; the money's own beat is 11), and 04 turns on that word: "The longer it runs,
+  _the harder it is to steer._", its sub naming the tool and the collaborator.
+  Both are forks in `WORKSHOP_INTRO` (`curve`, `steer`): the shared records with a new
+  head, the figures by reference. V1 and the AP lecture keep the shared heads;
+  `arcs-registry`'s readers of `the-curve` and `between` are v1 and AP now.
+- **06 → 07**: 07's sub repeated 06's "set up once, for everyone"; it now opens on the
+  two parts the team writes and names them the context and the evals, so 08's title
+  lands, and ends "Written down, what it knows becomes a skill."
+- **10** says "This ad's skill comes with its own tests" (a skill was used before it
+  was defined). **12** opens "That is the real change." so it answers 11's question.
+  **16** ends by handing to 17 ("Here is the first of them, the skill."). **17**
+  said "the ad that follows" while it sits after the ad since U2; it says "the ad you
+  just saw".

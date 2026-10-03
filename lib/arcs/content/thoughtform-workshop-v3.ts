@@ -4,7 +4,7 @@ import { MARKET_SIGNAL_COLUMNS } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { whatFollows } from "./shared/whatFollows";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
-import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./shared/workshopFraming";
+import { REAL_QUESTION_BEAT } from "./shared/workshopFraming";
 import { FEEDBACK_STEPS, getStarted, theHorizon } from "./shared/workshopPractice";
 
 /**
@@ -85,8 +85,9 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
        v2's stages (Loop's own examples) and the AP lecture's three middle
        beats, all by reference. The breakdown follows the real question. */
     THREE_WAYS_LOOP,
-    THE_CURVE_BEAT,
-    HARD_TO_STEER_BEAT,
+    // The curve and the steer with V3's own heads (ADR-143 U4), figures shared.
+    WORKSHOP_INTRO.curve,
+    WORKSHOP_INTRO.steer,
     REAL_QUESTION_BEAT,
 
     /* ── Chapter three · THE CONFIGURATION ─────────────────────────────────
@@ -178,7 +179,10 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       head: {
         eyebrow: "07 · The two you write",
         title: { pre: "Two of the six", em: "nobody can write for you." },
-        sub: "The model, the data and the tools are set up once, for everyone. What it knows and what good looks like can only come from the team doing the work. That is where a team steers the intelligence most, and both outlive the model that reads them.",
+        // The seam with 06 (ADR-143 U4): 06 already says four parts are set up
+        // once, so this sub opens on the two, and names them the context and the
+        // evals before 08's title uses those words.
+        sub: "What it knows and what good looks like can only come from the team doing the work: the context and the evals. That is where a team steers the intelligence most, and both outlive the model that reads them. Written down, what it knows becomes a skill.",
       },
       cards: [
         {
@@ -234,7 +238,10 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       layout: "readout",
       head: {
         eyebrow: "10 · Its evals",
-        title: { pre: "Every skill comes with its own tests.", em: "Run with it, and without it." },
+        title: {
+          pre: "This ad's skill comes with its own tests.",
+          em: "Run with it, and without it.",
+        },
         sub: "An eval is a real request and what a good answer must do. Each ran three times with the skill and three times without it; the run without shows whether the skill changes the answer at all.",
       },
       groups: [
@@ -313,7 +320,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       head: {
         eyebrow: "12 · The economics",
         title: { pre: "More variety", em: "than a team can hire for." },
-        sub: "Meta's Andromeda matches ads to people by their creative, so an account needs many genuinely different ads, and you rarely know in advance which one will work.",
+        sub: "That is the real change. Meta's Andromeda matches ads to people by their creative, so an account needs many genuinely different ads, and you rarely know in advance which one will work.",
       },
       cards: [
         {
@@ -447,7 +454,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       head: {
         eyebrow: "16 · Made real",
         title: { pre: "Every answer has somewhere to live.", em: "Together they make a plugin." },
-        sub: "What the team knows becomes a skill, and what good looks like becomes its evals. The plugin is where those two sit with the connectors and the owner, so the whole answer travels as one thing.",
+        sub: "What the team knows becomes a skill, and what good looks like becomes its evals. The plugin is where those two sit with the connectors and the owner, so the whole answer travels as one thing. Here is the first of them, the skill.",
       },
       above: [
         {
@@ -513,7 +520,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       head: {
         eyebrow: "17 · A skill",
         title: { pre: "A skill is one piece of work,", em: "written down." },
-        sub: "The first thing the team writes: what it knows. A folder with one main file in plain language, and Claude reaches for it when the request fits. This is the skill behind the ad that follows, shortened.",
+        sub: "The first thing the team writes: what it knows. A folder with one main file in plain language, and Claude reaches for it when the request fits. This is the skill behind the ad you just saw, shortened.",
       },
       path: "motion-design / SKILL.md",
       where: "in Loop AI Studio Motion",

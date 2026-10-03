@@ -88,8 +88,20 @@ describe("the workshop's third house cut (ADR-143)", () => {
     // The shared board with this cut's own sub (ADR-143 U3).
     expect(open).toBe(WORKSHOP_INTRO.opening);
     expect(stages).toBe(THREE_WAYS_LOOP);
-    expect(curve).toBe(THE_CURVE_BEAT);
-    expect(steer).toBe(HARD_TO_STEER_BEAT);
+    // The curve and the steer take V3's own heads (ADR-143 U4, owner: "v3
+    // only"): everything but the head is the shared record's.
+    expect(curve).toBe(WORKSHOP_INTRO.curve);
+    expect(steer).toBe(WORKSHOP_INTRO.steer);
+    for (const [fork, shared] of [
+      [WORKSHOP_INTRO.curve, THE_CURVE_BEAT],
+      [WORKSHOP_INTRO.steer, HARD_TO_STEER_BEAT],
+    ] as const) {
+      const { head, ...rest } = fork;
+      const { head: sharedHead, ...sharedRest } = shared;
+      expect(rest).toEqual(sharedRest);
+      expect(head.eyebrow).toBe(sharedHead.eyebrow);
+      expect(head.title).not.toEqual(sharedHead.title);
+    }
     expect(question).toBe(REAL_QUESTION_BEAT);
     expect(THOUGHTFORM_WORKSHOP_V2_ARC.sections[1], "v2 reads the same stages").toBe(
       THREE_WAYS_LOOP

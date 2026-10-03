@@ -1662,11 +1662,12 @@ describe("the workshop's shared beats (ADR-143)", () => {
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
     ]);
+    // v3 turns the curve's and the steer's heads (ADR-143 U4, `WORKSHOP_INTRO`),
+    // so it is no longer a word-for-word reader of either.
     for (const id of ["the-curve", "between"]) {
       expect(readers.get(id)?.sort(), id).toEqual([
         "ap-hogeschool-lecture",
         "thoughtform-workshop",
-        "thoughtform-workshop-v3",
       ]);
     }
     expect(readers.get("real-question")?.sort()).toEqual([

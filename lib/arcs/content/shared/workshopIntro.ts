@@ -2,6 +2,7 @@ import type { CorridorCopyOverride } from "@/lib/v7-parse/types";
 
 import type { ArcSectionOf } from "../../types";
 import { HAND_IT_TO_AN_AGENT } from "./handItToAnAgent";
+import { HARD_TO_STEER_BEAT, THE_CURVE_BEAT } from "./workshopFraming";
 
 /**
  * The workshop's intro, said as a story (ADR-143 U3): the RECORD the third
@@ -50,6 +51,11 @@ export interface WorkshopIntro {
   };
   /** The opening slide, 01: the shared board with this cut's own sub. */
   opening: ArcSectionOf<"hero-board">;
+  /** 03 and 04 with this cut's own heads (ADR-143 U4): the shared figures by
+   *  reference, the words turned so each beat hands to the next. V1 and the AP
+   *  lecture keep the shared records (owner, 2026-10-03: "v3 only"). */
+  curve: ArcSectionOf<"curve">;
+  steer: ArcSectionOf<"spectrum">;
 }
 
 export const WORKSHOP_INTRO: WorkshopIntro = {
@@ -88,6 +94,24 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     head: {
       ...HAND_IT_TO_AN_AGENT.head,
       sub: "Today follows the Arc: how this intelligence behaves, what your team writes down for it, and one piece of work set up to run on its own, from a prompt to a ten-second ad.",
+    },
+  },
+  /* 02 ends on "each runs longer without you", so 03 stays on length (the
+     price moves to its sub, the money's own beat is 11) and 04 turns on it. */
+  curve: {
+    ...THE_CURVE_BEAT,
+    head: {
+      ...THE_CURVE_BEAT.head,
+      title: { pre: "Each release finishes longer work", em: "on its own." },
+      sub: "Each release makes fewer small mistakes, so it gets further on long and difficult work. It also costs more per token, and every model has a second dial: how hard it thinks.",
+    },
+  },
+  steer: {
+    ...HARD_TO_STEER_BEAT,
+    head: {
+      ...HARD_TO_STEER_BEAT.head,
+      title: { pre: "The longer it runs,", em: "the harder it is to steer." },
+      sub: "It is a tool and a collaborator at once. Sometimes you tell it exactly what to do; sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
     },
   },
 };
