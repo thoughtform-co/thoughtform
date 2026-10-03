@@ -1,8 +1,6 @@
 import type { ArcDef } from "../types";
 
-import { FRONTIER_CURVE } from "./shared/frontierCurve";
 import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
-import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
 import {
   TOM_ANCHOR_IMAGE,
   TOM_BENCH_EXAMPLE,
@@ -11,6 +9,7 @@ import {
   TOM_WALL_CAPTION,
   TOM_WALL_MEDIA,
 } from "./shared/tom-on-the-moon";
+import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./shared/workshopFraming";
 
 /**
  * The AP Hogeschool guest lecture, THE WORKSHOP'S THIRD CUT (ADR-141).
@@ -130,44 +129,11 @@ export const AP_HOGESCHOOL_ARC: ArcDef = {
         },
       ],
     },
-    {
-      id: "the-curve",
-      kind: "curve",
-      menuLabel: "The curve",
-      head: {
-        eyebrow: "03 · The curve",
-        title: { pre: "Each release finishes longer work,", em: "and costs more per token." },
-        sub: "Each release makes fewer small mistakes, so it gets further on long and difficult work. And every model has a second dial: how hard it thinks.",
-      },
-      ...FRONTIER_CURVE,
-    },
-    {
-      id: "between",
-      kind: "spectrum",
-      menuLabel: "Hard to steer",
-      head: {
-        eyebrow: "04 · Hard to steer",
-        title: {
-          pre: "But it is hard to steer,",
-          em: "because it is a tool and a collaborator at once.",
-        },
-        sub: "Sometimes you tell it exactly what to do. Sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
-      },
-      ...TOOL_AND_COLLABORATOR,
-    },
-    {
-      /* A beat: no picture, and twenty seconds of silence in the room. */
-      id: "real-question",
-      kind: "interstitial",
-      variant: "question",
-      eyebrow: "05 · The real question",
-      line: {
-        pre: "The real question is:",
-        em: "how should intelligence take part in the work?",
-      },
-      subline:
-        "Which model, how many tokens, whether it was any good: every question you will ever ask about it sits downstream of this one.",
-    },
+    /* The situation's middle beats, SHARED RECORDS since ADR-143: the third
+       house cut shows them whole at the same places (03 · 04 · 05). */
+    THE_CURVE_BEAT,
+    HARD_TO_STEER_BEAT,
+    REAL_QUESTION_BEAT,
 
     /* ── Chapter three · ONE WORLD ─────────────────────────────────────── */
     {

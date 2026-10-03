@@ -20,7 +20,13 @@ import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
+import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
+import {
+  HARD_TO_STEER_BEAT,
+  REAL_QUESTION_BEAT,
+  THE_CURVE_BEAT,
+} from "@/lib/arcs/content/shared/workshopFraming";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
@@ -1627,7 +1633,47 @@ describe("the hero-board kind (ADR-137)", () => {
         readers.push(arc.slug);
       }
     }
-    expect(readers.sort()).toEqual(["ap-hogeschool-lecture", "thoughtform-workshop-v2"]);
+    expect(readers.sort()).toEqual([
+      "ap-hogeschool-lecture",
+      "thoughtform-workshop-v2",
+      "thoughtform-workshop-v3",
+    ]);
+  });
+});
+
+describe("the workshop's shared beats (ADR-143)", () => {
+  /* ⚠ ONE SECTION, ONE RECORD (owner, 2026-10-02). A section that is a copy
+     of a shared beat, word for word, must BE the shared object: a copy is how
+     one page goes stale the day the other is edited. The readers are pinned
+     so a page that stops reading the record is noticed too. */
+  it("every word-for-word copy of a shared beat is the shared object", () => {
+    const shared = [THREE_WAYS_LOOP, THE_CURVE_BEAT, HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT];
+    const readers = new Map<string, string[]>(shared.map((b) => [b.id, []]));
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        for (const beat of shared) {
+          if (JSON.stringify(section) !== JSON.stringify(beat)) continue;
+          expect(section, `${arc.slug} / ${section.id}: a copy of a shared beat`).toBe(beat);
+          readers.get(beat.id)?.push(arc.slug);
+        }
+      }
+    }
+    expect(readers.get("three-ways")?.sort()).toEqual([
+      "thoughtform-workshop",
+      "thoughtform-workshop-v2",
+      "thoughtform-workshop-v3",
+    ]);
+    for (const id of ["the-curve", "between"]) {
+      expect(readers.get(id)?.sort(), id).toEqual([
+        "ap-hogeschool-lecture",
+        "thoughtform-workshop",
+        "thoughtform-workshop-v3",
+      ]);
+    }
+    expect(readers.get("real-question")?.sort()).toEqual([
+      "ap-hogeschool-lecture",
+      "thoughtform-workshop-v3",
+    ]);
   });
 });
 

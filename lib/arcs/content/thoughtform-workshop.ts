@@ -1,8 +1,8 @@
 import type { ArcDef } from "../types";
 
-import { FRONTIER_CURVE } from "./shared/frontierCurve";
 import { WRITING_BENCH } from "./shared/writingBench";
-import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
+import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
+import { HARD_TO_STEER_BEAT, THE_CURVE_BEAT } from "./shared/workshopFraming";
 
 /**
  * The Thoughtform workshop, as an arc: the ARCHETYPE the practice runs, and
@@ -122,74 +122,12 @@ export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
     /* ── Chapter three · NAVIGATE ────────────────────────────────────────
        The situation, in the Moira session's order (ADR-136): where the room
        already is, why it gets harder from here, and what the thing is. */
-    {
-      id: "three-ways",
-      kind: "stages",
-      menuLabel: "Three ways",
-      menuPrimary: true,
-      head: {
-        eyebrow: "02 · A prompt, a tool, an agent",
-        title: { pre: "A prompt, a tool, an agent.", em: "Each runs longer without you." },
-        sub: "Ask it and check every answer. Have it build a tool, and you still run it. Give it the goal and the checks, and it runs for hours while you do other work.",
-      },
-      axes: { time: "How long, without you", work: "How much of the work" },
-      ends: { near: "minutes", far: "half a day", top: "all of it" },
-      /* The studio's own line of work, one tool across three stages: a
-         prompt helper, then a checker, then packaging end to end. A picture
-         of the argument, not a measurement. */
-      own: "Loop's own",
-      stages: [
-        {
-          id: "prompt",
-          label: "A prompt",
-          name: "Ask, and check the answer",
-          body: "One question, one answer. You do the rest, and you check every one.",
-          example: "One image, one prompt at a time",
-        },
-        {
-          id: "tool",
-          label: "A tool",
-          name: "It builds, you operate",
-          body: "It writes the tool. You still press every button, and check the output.",
-          example: "An image tool with a checker inside it",
-        },
-        {
-          id: "agent",
-          label: "An agent",
-          name: "It runs the loop",
-          body: "You set the goal and the checks. It runs, checks, retries, and asks.",
-          example: "Packaging, from brief to render",
-          lit: true,
-        },
-      ],
-    },
-    {
-      id: "the-curve",
-      kind: "curve",
-      menuLabel: "The curve",
-      head: {
-        eyebrow: "03 · The curve",
-        title: { pre: "Each release finishes longer work,", em: "and costs more per token." },
-        sub: "Each release makes fewer small mistakes, so it gets further on long and difficult work. And every model has a second dial: how hard it thinks.",
-      },
-      /* The record is shared with the course's class-one deck
-         (`shared/frontierCurve.ts`); this page authors only the head. */
-      ...FRONTIER_CURVE,
-    },
-    {
-      id: "between",
-      kind: "spectrum",
-      menuLabel: "Hard to steer",
-      head: {
-        eyebrow: "04 · Hard to steer",
-        title: {
-          pre: "But it is hard to steer,",
-          em: "because it is a tool and a collaborator at once.",
-        },
-        sub: "Sometimes you tell it exactly what to do. Sometimes you explain what you are after and let it work it out. Nothing we worked with before was both.",
-      },
-      ...TOOL_AND_COLLABORATOR,
-    },
+    /* SHARED RECORDS since ADR-143: Loop's own stages (read by the second and
+       third cuts too), then the curve and the hard-to-steer beat (read by the
+       AP lecture and the third cut too), each word for word at this place. */
+    THREE_WAYS_LOOP,
+    THE_CURVE_BEAT,
+    HARD_TO_STEER_BEAT,
     {
       id: "resource",
       kind: "resource",

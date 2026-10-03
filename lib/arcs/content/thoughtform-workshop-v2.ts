@@ -3,7 +3,9 @@ import type { ArcDef, ArcSection } from "../types";
 import { FRONTIER_CURVE } from "./shared/frontierCurve";
 import { WRITING_BENCH } from "./shared/writingBench";
 import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
+import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
+import { whatFollows } from "./shared/whatFollows";
 
 /**
  * The Thoughtform workshop, SECOND CUT (ADR-139).
@@ -1014,44 +1016,9 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
     /* ── Chapter two · NAVIGATE ─────────────────────────────────────────
        The situation, in the Moira session's order (ADR-136), with the ground
        inserted after the curve where the argument needs it. */
-    {
-      id: "three-ways",
-      kind: "stages",
-      menuLabel: "Three ways",
-      menuPrimary: true,
-      head: {
-        eyebrow: "02 · A prompt, a tool, an agent",
-        title: { pre: "A prompt, a tool, an agent.", em: "Each runs longer without you." },
-        sub: "Ask it and check every answer. Have it build a tool, and you still run it. Give it the goal and the checks, and it runs for hours while you do other work.",
-      },
-      axes: { time: "How long, without you", work: "How much of the work" },
-      ends: { near: "minutes", far: "half a day", top: "all of it" },
-      own: "Loop's own",
-      stages: [
-        {
-          id: "prompt",
-          label: "A prompt",
-          name: "Ask, and check the answer",
-          body: "One question, one answer. You do the rest, and you check every one.",
-          example: "One image, one prompt at a time",
-        },
-        {
-          id: "tool",
-          label: "A tool",
-          name: "It builds, you operate",
-          body: "It writes the tool. You still press every button, and check the output.",
-          example: "An image tool with a checker inside it",
-        },
-        {
-          id: "agent",
-          label: "An agent",
-          name: "It runs the loop",
-          body: "You set the goal and the checks. It runs, checks, retries, and asks.",
-          example: "Packaging, from brief to render",
-          lit: true,
-        },
-      ],
-    },
+    /* Loop's own stages, a SHARED RECORD since ADR-143: the third house cut
+       shows this beat whole at the same place, so both read it by reference. */
+    THREE_WAYS_LOOP,
     {
       id: "the-curve",
       kind: "curve",
@@ -1618,25 +1585,8 @@ export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
         },
       ],
     },
-    {
-      id: "close",
-      kind: "close",
-      menuLabel: "What follows",
-      head: {
-        eyebrow: "23 · What follows",
-        title: { pre: "Then it runs", em: "without me." },
-        sub: "The first workstream goes through the loop with your own team at the controls. Then a second, with the checks that have accumulated. Then we hand over, with a date on it, and come back once to see what changed.",
-      },
-      actions: [
-        {
-          id: "mail",
-          label: "vince@thoughtform.co",
-          href: "mailto:vince@thoughtform.co",
-          primary: true,
-        },
-      ],
-      footerLine: "Thoughtform · Antwerp · 2026",
-      signature: "Vince Buyssens",
-    },
+    /* The close's title, sub and actions are a SHARED RECORD since ADR-143
+       (the third house cut ends on them too); the number is this page's. */
+    whatFollows("23 · What follows"),
   ],
 };

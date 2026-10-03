@@ -75,6 +75,7 @@ export const dynamicParams = false;
 const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "thoughtform-workshop",
   "thoughtform-workshop-v2",
+  "thoughtform-workshop-v3",
   "ap-hogeschool-lecture",
 ]);
 

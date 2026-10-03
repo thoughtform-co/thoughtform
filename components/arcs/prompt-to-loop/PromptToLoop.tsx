@@ -6,12 +6,20 @@ import { ArcBeat } from "@/components/arcs/ArcBeat";
 import { ArcSectionHead } from "@/components/arcs/ArcSectionHead";
 import { rung } from "@/components/arcs/arcMotion";
 
-import { PROMPT_TO_LOOP_SLIDES } from "./promptToLoopSlides";
+import { PROMPT_TO_LOOP_SLIDES, type PromptToLoopSlide } from "./promptToLoopSlides";
 
 /**
  * Prompt to Loop — the owner's breakdown of one motion video, from one prompt
  * to a 10-second ad, in the lecture where the anchor beat was (ADR-141 U3,
  * owner 2026-10-02: "integrate this … verbatim … replace the anchor 12").
+ *
+ * ⚠ ONE RECORD, TWO PAGES (ADR-143). The AP lecture shows it whole; the
+ * workshop's third house cut splits it around its economics chapter (the
+ * cost slide, then the chapter, then "Now it's a skill"). So it lives here,
+ * beside the arcs' components, and its media under `public/arcs/prompt-to-loop/`,
+ * rather than in either route's folder. `slides` takes a run of the record in
+ * its own order; omitted, the whole breakdown renders. The sound toggle is
+ * wired only where the opening film is in the run.
  *
  * Each slide is an `.arc-section` with the arc's OWN head (the title left, the
  * paragraph right, the decode, the crosses), so it reads as the rest of the
@@ -27,7 +35,13 @@ import { PROMPT_TO_LOOP_SLIDES } from "./promptToLoopSlides";
  * The one behaviour the breakdown carried in a script is the sound toggle on
  * the opening film; it is wired here, on the slide's own nodes.
  */
-export function PromptToLoop({ startIndex }: { startIndex: number }) {
+export function PromptToLoop({
+  startIndex,
+  slides = PROMPT_TO_LOOP_SLIDES,
+}: {
+  startIndex: number;
+  slides?: readonly PromptToLoopSlide[];
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,7 +64,7 @@ export function PromptToLoop({ startIndex }: { startIndex: number }) {
 
   return (
     <div ref={rootRef} className="ptl-run">
-      {PROMPT_TO_LOOP_SLIDES.map((slide, i) => (
+      {slides.map((slide, i) => (
         <ArcBeat
           key={slide.id}
           id={slide.id}

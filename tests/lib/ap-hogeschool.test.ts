@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { AP_HOGESCHOOL_JOURNEY_ORDER } from "@/app/(marketing)/arcs/ap-hogeschool/lecture/journey";
-import { PROMPT_TO_LOOP_SLIDES } from "@/app/(marketing)/arcs/ap-hogeschool/lecture/promptToLoopSlides";
+import { PROMPT_TO_LOOP_SLIDES } from "@/components/arcs/prompt-to-loop/promptToLoopSlides";
 import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v1/journey";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";

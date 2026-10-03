@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 import { LandingPage } from "@/components/landing/v7";
-import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
+import { THOUGHTFORM_WORKSHOP_V3_ARC } from "@/lib/arcs/content/thoughtform-workshop-v3";
 import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
-import { AP_HOGESCHOOL_JOURNEY, AP_HOGESCHOOL_NAV_ITEMS } from "./journey";
-import { ApHogeschoolPortals } from "./WorkshopPortals";
+import { WORKSHOP_V3_JOURNEY, WORKSHOP_V3_NAV_ITEMS } from "./journey";
+import { WorkshopV3Portals } from "./WorkshopPortals";
 
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
@@ -23,20 +23,12 @@ import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";
-// The arcs' sheet: the lecture after the proof is the arcs' own section
+// The arcs' sheet: the workshop after the proof is the arcs' own section
 // components inside an `.arc-root`, and this is their grammar and their light
 // re-derivation. Before the route sheet, so the route can overrule it.
 import "@/components/arcs/arcs.css";
-// ⚠ THE COURSE'S SHEET (ADR-134), which v2 does not load and this page must:
-// the `path` kind is styled there and nowhere else, and so are the worked
-// example's height caps (the Tom wall's, this page's two worlds'). Without it
-// the path renders as an unstyled column ~10,700px tall at 1280×720 with every
-// registry guard green. After arcs.css, whose tokens it reads, as `[slug]`
-// orders it.
-import "@/components/arcs/course.css";
-// The Prompt to Loop breakdown (ADR-141 U3): its own rules, scoped under
-// `.ptl`, on Thoughtform's tokens. After the arcs' sheets it reads from. One
-// record shared with the workshop's third house cut since ADR-143.
+// The Prompt to Loop breakdown (ADR-141 U3, shared since ADR-143): its own
+// rules, scoped under `.ptl`, on Thoughtform's tokens. After the arcs' sheet.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 // about-stage.css / continuum-stage.css are deliberately NOT imported: this
 // page mounts no about deck stage (ADR-053).
@@ -44,7 +36,7 @@ import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 // prototype, so it shares v1's overrides too; a copy would be a second thing
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
-import "../../thoughtform/workshop-v1/thoughtform-workshop.css";
+import "../workshop-v1/thoughtform-workshop.css";
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";
 // The instruments after it, exactly as `/` and the arcs route do; without it
@@ -54,36 +46,38 @@ import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 import "@/components/landing/v7/site-footer/site-footer.css";
 
 export const metadata: Metadata = {
-  title: `${AP_HOGESCHOOL_ARC.meta.title} — Thoughtform`,
-  description: AP_HOGESCHOOL_ARC.meta.description,
+  title: `${THOUGHTFORM_WORKSHOP_V3_ARC.meta.title} — Thoughtform`,
+  description: THOUGHTFORM_WORKSHOP_V3_ARC.meta.description,
   // A link handed to a room, like every page under /arcs.
   robots: { index: false, follow: false },
 };
 
 /**
- * /arcs/ap-hogeschool/lecture — the AP Hogeschool guest lecture, the workshop's THIRD
- * CUT (ADR-141).
+ * /arcs/thoughtform/workshop-v3 — the workshop's THIRD HOUSE CUT (ADR-143),
+ * the template the owner's next presentations are cut from.
  *
- * The same page as v2 down to the proof stack, and a tail written for a room
- * of students: show and tell, not technical. The story is the spine's own
- * (the About, the eras, the Arc, the Loop pile with its films); the tail is
- * the situation in five beats, one world's six questions, three brand worlds
- * built with the method, and what a student can do this week.
+ * The AP lecture's spine (ADR-141) without its worlds: the same page as v1 and
+ * v2 down to the proof stack, then the situation by reference, then Prompt to
+ * Loop as the worked example, split around the economics chapter that answers
+ * its bill, then Laura's test and the close.
  *
  *   hero → about → the eras → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)
  *        → the proof stack (#services, no card ring)
- *        → the lecture's arc (#workshop) → contact
+ *        → the third cut's arc (#workshop) → contact
  *
  * ⚠ A STATIC FOLDER UNDER `[slug]`'s NAMESPACE, like v1's and v2's. Next
  * matches this folder before the dynamic segment, and `[slug]`'s
- * `generateStaticParams` filters this slug out through `OWN_ROUTE_SLUGS` so
- * the two never both emit it; `thoughtform-workshop-v2.test.ts` walks the
- * folders and fails on a missing row.
+ * `generateStaticParams` filters this slug out through `OWN_ROUTE_SLUGS`;
+ * `thoughtform-workshop-v2.test.ts` walks the folders and fails on a missing
+ * row.
  *
  * ⚠ IT SHARES v1's PROTOTYPE AND v1's SHEET. The corridor half is the same
  * page, so `getThoughtformWorkshopContent` is called with the same removed
- * stations and `.tw-root` is rendered unchanged. The day the corridor copy
- * diverges, the prototype, the sheet and the root class fork together.
+ * stations and `.tw-root` is rendered unchanged. The owner means to change
+ * this cut's intro next; the day its corridor copy diverges, the prototype,
+ * the sheet and the root class fork together (ADR-139).
+ *
+ * ⚠ NO `course.css`: this page draws no `path` and none of the Tom caps.
  */
 
 // ADR-053's list, for the same reasons (never "approach": it is nested inside
@@ -99,7 +93,7 @@ const WORKSHOP_REMOVED_STATIONS = [
 ] as const;
 const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 
-export default async function ApHogeschoolPage() {
+export default async function ThoughtformWorkshopV3Page() {
   const { bodyHtml, bodyClass } = getThoughtformWorkshopContent({
     removeStations: WORKSHOP_REMOVED_STATIONS,
     corridorMountId: CORRIDOR_MOUNT_ID,
@@ -116,13 +110,13 @@ export default async function ApHogeschoolPage() {
           celestialSlots={celestialSlots}
           corridorText={corridorText}
           corridorMountId={CORRIDOR_MOUNT_ID}
-          navItems={AP_HOGESCHOOL_NAV_ITEMS}
-          journey={AP_HOGESCHOOL_JOURNEY}
+          navItems={WORKSHOP_V3_NAV_ITEMS}
+          journey={WORKSHOP_V3_JOURNEY}
         />
       </div>
       {/* After the wrapper, so its effects run once the parsed body is
           committed; a sibling of LandingPage for the reason it documents. */}
-      <ApHogeschoolPortals />
+      <WorkshopV3Portals />
     </>
   );
 }

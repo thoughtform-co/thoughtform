@@ -11,6 +11,7 @@ import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
 import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
+import { THOUGHTFORM_WORKSHOP_V3_ARC } from "./content/thoughtform-workshop-v3";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
@@ -49,6 +50,10 @@ export const ARCS: readonly ArcDef[] = [
      and that a room already holds a link to. One line to move the day it
      is promoted in place. */
   THOUGHTFORM_WORKSHOP_V2_ARC,
+  /* The third house cut (ADR-143): the AP lecture's spine with Prompt to
+     Loop as its worked example and the economics after its bill. The
+     template the next presentations are cut from. */
+  THOUGHTFORM_WORKSHOP_V3_ARC,
   AI_STORYTELLING_ARC,
   /* The course's class decks sit beside the course (ADR-136). */
   AI_STORYTELLING_CLASS_1_ARC,

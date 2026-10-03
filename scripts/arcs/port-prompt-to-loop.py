@@ -1,4 +1,5 @@
-"""Port the Prompt to Loop breakdown into the AP lecture: assets to public/,
+"""Port the Prompt to Loop breakdown, one record shared by the AP lecture and
+the workshop's third house cut (ADR-143): assets to public/,
 each chapter's head into arc-head data, its body verbatim, the CSS scoped
 under .ptl with the palette remapped to Thoughtform tokens."""
 import base64
@@ -10,9 +11,11 @@ import re
 
 SRC = r"C:\Users\buyss\Downloads\prompt-to-loop\index.html"
 REPO = r"C:\Users\buyss\Manifold Delta\Artifacts\01_thoughtform"
-PUB_DIR = os.path.join(REPO, "public", "arcs", "ap-hogeschool", "prompt-to-loop")
-PUB_URL = "/arcs/ap-hogeschool/prompt-to-loop"
-ROUTE = os.path.join(REPO, "app", "(marketing)", "arcs", "ap-hogeschool")
+PUB_DIR = os.path.join(REPO, "public", "arcs", "prompt-to-loop")
+PUB_URL = "/arcs/prompt-to-loop"
+# Not a route folder since ADR-143: two pages read the record, so it lives
+# beside the arcs' components (the name keeps ROUTE so the writes below stand).
+ROUTE = os.path.join(REPO, "components", "arcs", "prompt-to-loop")
 
 s = io.open(SRC, encoding="utf-8").read()
 os.makedirs(PUB_DIR, exist_ok=True)

@@ -6,7 +6,7 @@ import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { useArcReveal } from "@/components/arcs/useArcReveal";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 
-import { PromptToLoop } from "./PromptToLoop";
+import { PromptToLoop } from "@/components/arcs/prompt-to-loop/PromptToLoop";
 
 /* The Prompt to Loop breakdown sits where the anchor beat was, between the
    ITP wall and the ambition beat (ADR-141 U3); the arc renders on either
