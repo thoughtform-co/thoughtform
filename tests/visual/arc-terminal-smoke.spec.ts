@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-import { CLIENTS } from "@/lib/arcs/clients";
+import { GROUPS } from "@/lib/arcs/clients";
 import { ARCS } from "@/lib/arcs/registry";
+import { arcHref } from "@/lib/arcs/routes";
 
 import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
 
@@ -28,8 +29,8 @@ import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
  * sequence, and a jump skips the states being asserted.
  */
 
-const V2 = "/arcs/claude-workshop-v2";
-const KEYNOTE_V2 = "/arcs/ai-keynote-v2";
+const V2 = "/arcs/thoughtform/claude-workshop-v2";
+const KEYNOTE_V2 = "/arcs/thoughtform/keynote-v2";
 
 test.describe("arc terminal motion (ADR-057)", () => {
   test("the masthead decodes at rest, with zero travel", async ({ page }, testInfo) => {
@@ -311,8 +312,8 @@ test.describe("arc terminal motion (ADR-057)", () => {
   });
 
   test("the v1 pages are untouched", async ({ page }) => {
-    for (const slug of ["claude-workshop", "ai-keynote"]) {
-      await prepare(page, `/arcs/${slug}`);
+    for (const v1 of ["/arcs/thoughtform/claude-workshop-v1", "/arcs/thoughtform/keynote-v1"]) {
+      await prepare(page, v1);
       const root = page.locator(".arc-root");
       await expect(root).toHaveClass(/is-arc-js/);
       await expect(root).not.toHaveAttribute("data-motion", /.*/);
@@ -347,27 +348,30 @@ test.describe("arc terminal motion (ADR-057)", () => {
        reason this page is reachable from a smoke at all. */
     await page.goto("/arcs");
     await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 30_000 });
-    const pages = CLIENTS.reduce((n, client) => n + (client.pages?.length ?? 0), 0);
+    const pages = GROUPS.reduce((n, group) => n + (group.pages?.length ?? 0), 0);
     await expect(page.locator(".sh-log__row")).toHaveCount(ARCS.length + pages);
     await expect(page.locator(".sh-mon__mark")).toHaveCount(ARCS.length + pages);
     for (const arc of ARCS)
-      await expect(page.locator(`.sh-log__row[href="/arcs/${arc.slug}"]`), arc.slug).toHaveCount(1);
+      await expect(page.locator(`.sh-log__row[href="${arcHref(arc)}"]`), arc.slug).toHaveCount(1);
     const rowFor = async (href: string) => {
       const row = page.locator(`.sh-log__row[href="${href}"]`);
       const client = (await row.locator(".sh-log__name").textContent())?.trim() ?? "";
       const line = (await row.locator(".sh-log__eng").textContent())?.trim() ?? "";
       return { client, both: `${client} ${line}` };
     };
-    for (const base of ["claude-workshop", "ai-keynote"]) {
-      const v1 = await rowFor(`/arcs/${base}`);
-      const v2 = await rowFor(`/arcs/${base}-v2`);
+    for (const base of ["/arcs/thoughtform/claude-workshop", "/arcs/thoughtform/keynote"]) {
+      const v1 = await rowFor(`${base}-v1`);
+      const v2 = await rowFor(`${base}-v2`);
       expect(v1.client, `${base} says whose it is`).not.toBe("");
       expect(v2.both, `${base}-v2 is distinguishable from its v1 ("${v1.both}")`).not.toBe(v1.both);
     }
-    const portfolio = await rowFor("/arcs/loop-earplugs");
+    const portfolio = await rowFor("/arcs/loop/portfolio");
     expect(portfolio.client, "the portfolio says whose it is").not.toBe("");
     expect(
-      [(await rowFor("/arcs/claude-workshop")).client, (await rowFor("/arcs/ai-keynote")).client],
+      [
+        (await rowFor("/arcs/thoughtform/claude-workshop-v1")).client,
+        (await rowFor("/arcs/thoughtform/keynote-v1")).client,
+      ],
       "the portfolio is not labelled as a deck"
     ).not.toContain(portfolio.client);
   });

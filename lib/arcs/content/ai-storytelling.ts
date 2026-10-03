@@ -33,11 +33,12 @@ import {
  *
  * ⚠ THE WORKED EXAMPLE IS SHARED (ADR-136). Tom on the Moon's path, bench
  * and wall are `shared/tom-on-the-moon.ts`, imported by reference here and
- * on the class-one deck (`/arcs/ai-storytelling-class-1`), which class one's
+ * on the class-one deck (`/arcs/thoughtform/ai-storytelling-class-1`), which class one's
  * station links to; the registry pins the two pages to the same records.
  */
 export const AI_STORYTELLING_ARC: ArcDef = {
   slug: "ai-storytelling",
+  leaf: "ai-storytelling",
   format: "workshop",
   /* No `client`: a course is a shape the practice sells. `cardChip` keeps the
      overview from reading it as a second workshop. */
@@ -104,7 +105,7 @@ export const AI_STORYTELLING_ARC: ArcDef = {
           tool: "Claude, GitHub, Google Drive or Dropbox.",
           /* The class's own deck (ADR-136): the Moira second session's flow,
              with the brand world as its subject. */
-          page: { label: "Class one, the deck", href: "/arcs/ai-storytelling-class-1" },
+          page: { label: "Class one, the deck", href: "/arcs/thoughtform/ai-storytelling-class-1" },
         },
         {
           id: "your-world",

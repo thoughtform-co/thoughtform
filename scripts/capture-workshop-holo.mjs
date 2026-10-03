@@ -1,7 +1,7 @@
 /**
  * capture-workshop-holo — the workshop's three LIVE figures (ADR-140).
  *
- * `/arcs/thoughtform-workshop-v2` (and its siblings) draw the stages, the
+ * `/arcs/thoughtform/workshop-v2` (and its siblings) draw the stages, the
  * curve and the spectrum twice: an SVG/DOM fallback the server sends, and a
  * WebGL hologram the mount promotes to `data-holo="live"` from its first
  * committed frame. ⚠ HEADED, WITH REAL GL — a headless Chromium falls back to

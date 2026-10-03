@@ -300,7 +300,7 @@ export function HudNav({ items = NAV_ITEMS }: { items?: readonly NavItem[] } = {
             the section readout (the journey indicator, ADR-055) and the
             bars, which survive as the trigger wherever the readout is
             suppressed — below 641px before the collapse, and on
-            /claude-workshop, whose station order is not the manifest's.
+            /arcs/thoughtform/claude-workshop-corridor, whose station order is not the manifest's.
             CSS picks; the button and drawer are identical either way. */}
         <button
           ref={btnRef}

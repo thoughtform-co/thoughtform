@@ -16,7 +16,7 @@ import type { ArcSection } from "@/lib/arcs/types";
  * TWO ROOTS USE IT: `#proposition` mounts the board alone (ADR-100), `#offer`
  * mounts the seven beats after it. One renderer either way, so a fix to the
  * plates, the ledger or the head's datum lands on both surfaces and on
- * `/arcs/suri-proposal` at the same time.
+ * `/arcs/suri/proposal` at the same time.
  *
  * ⚠ NOT `ArcSectionRenderer`. That dispatch statically imports every kind,
  * the dossier console and the holo program's three.js mount among them; the

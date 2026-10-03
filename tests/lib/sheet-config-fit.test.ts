@@ -75,7 +75,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
        since ADR-136, so the owner's page draws theirs too. */
     expect(withBoard.sort()).toEqual([
       "ai-storytelling-class-1",
-      "ap-hogeschool",
+      "ap-hogeschool-lecture",
       "hungry-minds-proposal",
       "perfect-ted-proposal",
       "plopsa-workshop",
@@ -159,7 +159,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       /* The AP Hogeschool lecture (ADR-141) carries the class deck's board
          verbatim, Tom on the Moon's record, so it derives the same row and
          the same one chip. */
-      "ap-hogeschool": {
+      "ap-hogeschool-lecture": {
         rows: ["A brand world||"],
         links: ["Claude×1"],
       },

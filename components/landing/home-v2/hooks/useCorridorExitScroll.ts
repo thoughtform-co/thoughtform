@@ -222,7 +222,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // The rack is the first opaque station below the corridor, so it takes
       // the role by position rather than by choice — an opaque station this
       // read does not name hard-cuts the canvas at its own top. ⚠ THE `??`
-      // IS LOAD-BEARING AND IS NOT DEFENSIVE: `/claude-workshop` and the
+      // IS LOAD-BEARING AND IS NOT DEFENSIVE: `/arcs/thoughtform/claude-workshop-corridor` and the
       // Trinny proposal mount this same hook from their OWN prototypes,
       // neither of which has a `#musings`, and on those routes the answer is
       // still `#contact`. A bare `musingsEl` would leave both with no cover

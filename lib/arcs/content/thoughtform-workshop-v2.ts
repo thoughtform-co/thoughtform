@@ -973,6 +973,7 @@ const WHEN_WRONG: ArcSection[] = [
 
 export const THOUGHTFORM_WORKSHOP_V2_ARC: ArcDef = {
   slug: "thoughtform-workshop-v2",
+  leaf: "workshop-v2",
   format: "workshop",
   /* No `client` (a house format), no `theme` (it reads in both), no `motion`
      (reveal is the default). */

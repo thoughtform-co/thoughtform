@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useLayoutEffect } from "react";
 
-import { useNestedRoot } from "../trinny-london/proposal/useNestedRoot";
+import { useNestedRoot } from "../../trinny-london/proposal/useNestedRoot";
 
 import { usePortraitDeck } from "./about-deck/usePortraitDeck";
 import { useWorkshopFlow } from "./flow/useWorkshopFlow";

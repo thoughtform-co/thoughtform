@@ -43,7 +43,7 @@ place) → the proposal** → contact.
   keyed on `<html>`, for chrome the wrapper cannot reach). Never port a rule
   from it into `landing.css` / `home-v2.css` / `services.css` /
   `rail-instruments.css` — a shared-sheet edit changes `/` and
-  `/claude-workshop`. ⚠ ADR-053's two rules are DUPLICATED here rather than
+  `/arcs/thoughtform/claude-workshop-corridor`. ⚠ ADR-053's two rules are DUPLICATED here rather than
   shared: one rule scoped to both roots is a shared sheet by another name.
   ⚠ **The sheet is pinned at ZERO type literals** (`type-material-tokens`):
   every letter-spacing is a `--track-*` role token, every weight a
@@ -588,7 +588,7 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   pitch page's own cut outlined it; the newer house law wins, and this route
   took it by mounting the arcs' component. ⚠ The mechanical gate reports five
   `accent` findings on `.arc-cfg` (four lit layer rows, the readout's rule) —
-  **identical on `/arcs/suri-proposal`**, i.e. the authored gold the ruling
+  **identical on `/arcs/suri/proposal`**, i.e. the authored gold the ruling
   above asks for, not a regression.
 - ⚠ **SUPERSEDED ON THIS PAGE BY ADR-100 (2026-09-13, owner: _"it doesn't look
   bad, but it's a lot of things to look at"_; the beat is the PROBLEM
@@ -677,7 +677,7 @@ station — and `#phases` keeps its id.
   around `ArcListGroups` / `ArcCards` over `offer/offerSections.ts`. The record
   is that module, never the prototype — a second hand-written copy of every
   proposal section is the fork ADR-098 argued against, and the plates and the
-  ledger (ADR-098 U2) land here and on `/arcs/suri-proposal` from ONE renderer.
+  ledger (ADR-098 U2) land here and on `/arcs/suri/proposal` from ONE renderer.
 - ⚠ **THE KILL EDGE IS `#offer` NOW** — the first opaque station below the
   corridor (the `.station` base paints the ground; every arc beat paints its
   own void). `#contact` gave it up; the parse guard pins both ends and the
@@ -1082,8 +1082,8 @@ var(--arc-head-datum)`. ⚠ **AND SINCE ADR-099 U2 (2026-09-14, owner: the
   frames "centred" and "one datum" cannot both hold unless the datum is placed
   where a centred composition lands — per-beat centring was offered and not
   taken (his one-datum ruling), content-height sections likewise (not a deck).
-  ⚠ **IT LIVES IN `arcs.css`, NOT HERE**: `/arcs/suri-proposal`,
-  `/arcs/perfect-ted-proposal` and `/arcs/hungry-minds-proposal` have the same
+  ⚠ **IT LIVES IN `arcs.css`, NOT HERE**: `/arcs/suri/proposal`,
+  `/arcs/perfect-ted/proposal` and `/arcs/hungry-minds/proposal` have the same
   defect for the same reason, and a fix scoped to one client's page would be a
   rule true on one surface. ⚠ **`:has()` is the mechanism** — chapter heads,
   interstitial callouts and the close band draw no `.arc-head` and keep
@@ -1134,7 +1134,7 @@ var(--arc-head-datum)`. ⚠ **AND SINCE ADR-099 U2 (2026-09-14, owner: the
 - ⚠ **`/` AND `/arcs/trinny-london/proposal` MEASURE BYTE-IDENTICAL THROUGH THE CORRIDOR.**
   Sampled at the same progress stops, every reading matched to the pixel. So a
   corridor complaint read on this route is NOT a route defect, and a fix for it
-  lands on `/` and `/claude-workshop` too. **Measure both before scoping.**
+  lands on `/` and `/arcs/thoughtform/claude-workshop-corridor` too. **Measure both before scoping.**
 - ⚠ **THE THOUGHTFORM COMPOSITION'S SPREAD IS A FUNCTION OF FRAME HEIGHT.** A
   perspective camera's lateral screen offset is `x·vh / (2·d·tan(fov/2))` — the
   frame's WIDTH cancels out of the aspect term — while the copy block caps at

@@ -528,7 +528,7 @@ export function HoloFigure({
     // that mounted before the probe settled, and is not yet near the viewport,
     // is not playing — and locking it on the floor there paints the opaque
     // pane for the whole visit. That is what happened wherever the station is
-    // not "far down the corridor": on /arcs/thoughtform-workshop the eras are
+    // not "far down the corridor": on /arcs/thoughtform/workshop-v1 the eras are
     // the third station and the probe (it starts when this module loads)
     // settled after the mount on 2 loads in 5. So a figure still out of range
     // takes the verdict when it lands; one already near keeps what it has.

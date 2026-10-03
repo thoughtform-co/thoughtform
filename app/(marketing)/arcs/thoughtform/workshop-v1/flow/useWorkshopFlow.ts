@@ -46,7 +46,7 @@ import {
 
 /**
  * useWorkshopFlow — the one writer for the workshop's opening flow on
- * /arcs/thoughtform-workshop (ADR-138): About hands into the eras as it does
+ * /arcs/thoughtform/workshop-v1 (ADR-138): About hands into the eras as it does
  * on `/`, and the eras hand into the Arc through the parked brandmark.
  *
  * WHAT IT READS. `#about`'s rect (the About's clock), the era stage's own

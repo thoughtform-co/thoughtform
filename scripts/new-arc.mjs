@@ -65,6 +65,8 @@ if (!["keynote", "workshop", "production"].includes(KIND)) die(`unknown --kind: 
 if (!/^\d{4}-\d{2}-\d{2}$/.test(DATE)) die(`--date must be YYYY-MM-DD: ${DATE}`);
 
 const SLUG = `${CLIENT}-${ENGAGEMENT}`;
+// The page's address (ADR-142): under its client, the engagement as its leaf.
+const ADDRESS = `/arcs/${CLIENT}/${ENGAGEMENT}`;
 const CONST = `${constantCase(SLUG)}_ARC`;
 const MODULE = path.join("lib", "arcs", "content", `${SLUG}.ts`);
 
@@ -145,17 +147,17 @@ if (!DRY) for (const [rel, body] of writes) writeFileSync(rel, body, "utf8");
 console.log();
 console.log("  TWO ROWS ARE YOURS. Until both are in, `npm run verify` fails on the guard");
 console.log("  that says a locked arc needs its row, which is that guard working:");
-console.log(`    lib/theme/heroPreload.ts    HERO_ROUTES         += "/arcs/${SLUG}"`);
-console.log(`    lib/theme/themeLock.ts      LIGHT_LOCKED_ROUTES += "/arcs/${SLUG}"`);
+console.log(`    lib/theme/heroPreload.ts    HERO_ROUTES         += "${ADDRESS}"`);
+console.log(`    lib/theme/themeLock.ts      LIGHT_LOCKED_ROUTES += "${ADDRESS}"`);
 console.log("    and the same row in their two pinned tests (hero-preload, theme-lock).");
 console.log();
 console.log("  then fill in, in this order:");
 FILL_IN.forEach((what, i) => console.log(`    ${i + 1}. ${what}`));
 console.log();
 console.log("  then:  npm run verify");
-console.log(`         node scripts/capture-arc-portfolio.mjs --slug ${SLUG} --vp 1280x720`);
+console.log(`         node scripts/capture-arc-portfolio.mjs --slug ${CLIENT}/${ENGAGEMENT} --vp 1280x720`);
 console.log();
-console.log(`  http://localhost:3003/arcs/${SLUG}`);
-console.log(`  https://thoughtform.co/arcs/${SLUG}`);
+console.log(`  http://localhost:3003${ADDRESS}`);
+console.log(`  https://thoughtform.co${ADDRESS}`);
 console.log();
 if (DRY) console.log("  dry run: nothing written.\n");

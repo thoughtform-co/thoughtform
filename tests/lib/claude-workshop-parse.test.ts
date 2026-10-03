@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getClaudeWorkshopContent } from "@/lib/v7-parse";
 
 /**
- * /claude-workshop corridor variant (ADR-053) — drift guard.
+ * /arcs/thoughtform/claude-workshop-corridor corridor variant (ADR-053) — drift guard.
  *
  * Runs against the live `public/prototypes/v7/landing-claude-workshop.html`
  * with the route's own parse options. Separate from
@@ -11,7 +11,7 @@ import { getClaudeWorkshopContent } from "@/lib/v7-parse";
  * must stay untouched by variant work.
  */
 
-// Duplicated from app/(marketing)/claude-workshop/page.tsx (importing the
+// Duplicated from app/(marketing)/arcs/thoughtform/claude-workshop-corridor/page.tsx (importing the
 // server component would drag Next.js server context into vitest). If the
 // route's options change, this copy must change with them — that is what
 // makes the assertions below a drift guard rather than a restatement.

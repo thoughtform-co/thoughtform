@@ -3,9 +3,11 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { WORKSHOP_V2_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop-v2/journey";
-import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop/journey";
+import { WORKSHOP_V2_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v2/journey";
+import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v1/journey";
+import { GROUPS } from "@/lib/arcs/clients";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "@/lib/arcs/content/thoughtform-workshop-v2";
+import { getArcAt } from "@/lib/arcs/registry";
 import { getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 /**
@@ -39,30 +41,59 @@ const WORKSHOP_PARSE_OPTIONS = {
 
 describe("the workshop's second cut (ADR-139)", () => {
   /**
-   * ⚠ THE ONE SILENT FAILURE MODE. A static folder under `/arcs` shadows the
-   * dynamic segment, and `[slug]`'s `generateStaticParams` must filter the
-   * slug out or the build emits a prerender nobody can reach. Nothing errors
-   * when it is missed — the page simply exists twice and one copy is dead —
-   * so this walks the folders rather than pinning a list, and a future own
-   * route is covered the day it is created.
+   * ⚠ THE ONE SILENT FAILURE MODE. A static folder under `/arcs/<group>/`
+   * shadows the dynamic `[slug]/[leaf]` segment, and its
+   * `generateStaticParams` must filter the arc out or the build emits a
+   * prerender nobody can reach. Nothing errors when it is missed — the page
+   * simply exists twice and one copy is dead — so this walks the folders
+   * rather than pinning a list, and a future own route is covered the day it
+   * is created. Since ADR-142 an own route is two levels deep, and a folder
+   * that renders a page is either an arc (filtered by its id) or one of its
+   * group's `pages` (a pitch, the corridor variant), never neither.
    */
   it("every own-route folder is filtered out of the dynamic segment", () => {
-    const own = readdirSync(ARCS_DIR, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !e.name.startsWith("[") && !e.name.startsWith("_"))
-      .map((e) => e.name)
-      // A folder is an own ROUTE only if it renders a page itself.
-      .filter((name) => {
-        try {
-          readFileSync(join(ARCS_DIR, name, "page.tsx"), "utf8");
-          return true;
-        } catch {
-          return false;
-        }
-      });
-    expect(own, "the arcs namespace has own routes to filter").toContain("thoughtform-workshop-v2");
-    const slugPage = routeFile("[slug]", "page.tsx");
-    for (const name of own) {
-      expect(slugPage, `${name}: an own route with no OWN_ROUTE_SLUGS row`).toContain(`"${name}"`);
+    const dirs = (path: string) =>
+      readdirSync(path, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && !e.name.startsWith("[") && !e.name.startsWith("_"))
+        .map((e) => e.name);
+    const renders = (...p: string[]) => {
+      try {
+        readFileSync(join(ARCS_DIR, ...p, "page.tsx"), "utf8");
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    const own = dirs(ARCS_DIR).flatMap((group) =>
+      dirs(join(ARCS_DIR, group))
+        .filter((leaf) => renders(group, leaf))
+        .map((leaf) => ({ group, leaf }))
+    );
+    expect(
+      own.map((o) => `${o.group}/${o.leaf}`),
+      "the arcs namespace has own routes to filter"
+    ).toContain("thoughtform/workshop-v2");
+    // A page at `/arcs/<group>` would shadow the group's listing.
+    for (const group of dirs(ARCS_DIR)) {
+      expect(renders(group), `/arcs/${group}: a group folder renders no page of its own`).toBe(
+        false
+      );
+    }
+    const leafPage = routeFile("[slug]", "[leaf]", "page.tsx");
+    for (const { group, leaf } of own) {
+      const here = `/arcs/${group}/${leaf}`;
+      const arc = getArcAt(group, leaf);
+      if (arc) {
+        expect(leafPage, `${here}: an own route with no OWN_ROUTE_SLUGS row`).toContain(
+          `"${arc.slug}"`
+        );
+      } else {
+        const pages = GROUPS.find((g) => g.slug === group)?.pages ?? [];
+        expect(
+          pages.map((p) => p.href),
+          `${here}: a folder that is neither an arc nor a page of its group`
+        ).toContain(here);
+      }
     }
   });
 
@@ -74,22 +105,16 @@ describe("the workshop's second cut (ADR-139)", () => {
    * globally and a half-fork would leave two routes fighting over it.
    */
   it("shares the corridor with v1 rather than forking it", () => {
-    const page = routeFile("thoughtform-workshop-v2", "page.tsx");
+    const page = routeFile("thoughtform", "workshop-v2", "page.tsx");
     expect(page, "renders v1's root class").toContain('className="tw-root"');
-    expect(page, "imports v1's route sheet").toContain(
-      '"../thoughtform-workshop/thoughtform-workshop.css"'
-    );
+    expect(page, "imports v1's route sheet").toContain('"../workshop-v1/thoughtform-workshop.css"');
     expect(page, "reads v1's prototype").toContain("getThoughtformWorkshopContent");
     for (const station of WORKSHOP_PARSE_OPTIONS.removeStations) {
       expect(page, `removes ${station}, as v1 does`).toContain(`"${station}"`);
     }
-    const portals = routeFile("thoughtform-workshop-v2", "WorkshopPortals.tsx");
-    expect(portals, "reuses v1's proof, never a copy").toContain(
-      '"../thoughtform-workshop/WorkshopProof"'
-    );
-    expect(portals, "reuses v1's About flow").toContain(
-      '"../thoughtform-workshop/flow/useWorkshopFlow"'
-    );
+    const portals = routeFile("thoughtform", "workshop-v2", "WorkshopPortals.tsx");
+    expect(portals, "reuses v1's proof, never a copy").toContain('"../workshop-v1/WorkshopProof"');
+    expect(portals, "reuses v1's About flow").toContain('"../workshop-v1/flow/useWorkshopFlow"');
     /* The two orders are equal TODAY. The files are separate so they need
        not stay equal; this only records that nothing has diverged yet, and
        it is a deliberately weak pin. */

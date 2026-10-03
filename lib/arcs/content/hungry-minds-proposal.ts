@@ -31,6 +31,7 @@ import { MODE_LEGEND } from "./shared/loop-tools";
  */
 export const HUNGRY_MINDS_PROPOSAL_ARC: ArcDef = {
   slug: "hungry-minds-proposal",
+  leaf: "proposal",
   format: "proposal",
   status: "proposed",
   date: "2026-09-13",

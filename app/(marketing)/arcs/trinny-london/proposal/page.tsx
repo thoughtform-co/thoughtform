@@ -34,7 +34,7 @@ import "@/components/landing/v7/theme.css";
 // The sheet declares no `[data-theme]` rules, so its position past theme.css
 // is safe — and WITHOUT it the settings cluster loses its fixed overlay, the
 // top-left journey row is unpositioned inline content in the corner box, and
-// the right rail's telemetry is unstyled. (`/claude-workshop` omits it and
+// the right rail's telemetry is unstyled. (`/arcs/thoughtform/claude-workshop-corridor` omits it and
 // carries exactly that defect — see ADR-093.)
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
  * — with three things that are this route's own:
  *
  *   · its OWN prototype (`landing-trinny-london.html`), so the client copy
- *     this page takes in a later phase cannot reach `/claude-workshop`;
+ *     this page takes in a later phase cannot reach `/arcs/thoughtform/claude-workshop-corridor`;
  *   · a LIGHT LOCK (`lib/theme/themeLock.ts`): the pre-paint bootstrap
  *     stamps light before anything paints, the leaf below holds it across a
  *     client-side navigation, and the route sheet hides the switch. The

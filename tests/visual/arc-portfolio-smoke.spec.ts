@@ -57,7 +57,7 @@ import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/t
  */
 test.use({ launchOptions: { args: ["--disable-webgl", "--disable-3d-apis"] } });
 
-const PORTFOLIO = "/arcs/loop-earplugs";
+const PORTFOLIO = "/arcs/loop/portfolio";
 const DOSSIERS = WIREFRAME_STATIONS.map((stn) => ({ ...stn, beat: `tool-${stn.id}` }));
 
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 961;
@@ -660,7 +660,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
     /* An own-plate arc keeps its own image, and does NOT get the seam —
        the flag is opt-in, never a side effect of the plate. */
     const deck = await browser.newPage({ viewport: { width: 1440, height: 800 } });
-    await prepare(deck, "/arcs/ai-keynote-v2");
+    await prepare(deck, "/arcs/thoughtform/keynote-v2");
     const own = await deck.evaluate(() => {
       const el = document.querySelector<HTMLElement>(".arc-hero");
       return {
@@ -831,7 +831,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       "tool index line": 4.5,
     };
 
-    for (const path of [PORTFOLIO, "/arcs/ai-keynote"]) {
+    for (const path of [PORTFOLIO, "/arcs/thoughtform/keynote-v1"]) {
       for (const theme of ["dark", "light"] as const) {
         const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
         await page.goto(`${path}${theme === "light" ? "?theme=light" : ""}`, {

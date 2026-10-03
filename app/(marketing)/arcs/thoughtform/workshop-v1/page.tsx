@@ -46,8 +46,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * /arcs/thoughtform-workshop — the house workshop as a HOMEPAGE VARIANT
- * (ADR-137), the third fork of ADR-053's recipe after `/claude-workshop` and
+ * /arcs/thoughtform/workshop-v1 — the house workshop as a HOMEPAGE VARIANT
+ * (ADR-137), the third fork of ADR-053's recipe after `/arcs/thoughtform/claude-workshop-corridor` and
  * the Trinny proposal:
  *
  *   hero → about → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)

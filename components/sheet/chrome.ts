@@ -20,6 +20,9 @@ export const figLabel = (n: number) => `[ FIG. ${String(n).padStart(2, "0")} ]`;
 /** The console's right-hand designation — a slash-slash kicker, the house's
  *  Bearing Label variant confirmed live on Astrolabe. */
 export const CLIENT_DESIG = "// Client";
+/** The same designation on the house's own console (ADR-142), whose group is
+ *  Thoughtform's formats and not a client. */
+export const HOUSE_DESIG = "// House";
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");
 

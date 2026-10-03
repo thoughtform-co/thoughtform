@@ -43,7 +43,7 @@ import "./prompt-to-loop.css";
 // prototype, so it shares v1's overrides too; a copy would be a second thing
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
-import "../thoughtform-workshop/thoughtform-workshop.css";
+import "../../thoughtform/workshop-v1/thoughtform-workshop.css";
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";
 // The instruments after it, exactly as `/` and the arcs route do; without it
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * /arcs/ap-hogeschool — the AP Hogeschool guest lecture, the workshop's THIRD
+ * /arcs/ap-hogeschool/lecture — the AP Hogeschool guest lecture, the workshop's THIRD
  * CUT (ADR-141).
  *
  * The same page as v2 down to the proof stack, and a tail written for a room

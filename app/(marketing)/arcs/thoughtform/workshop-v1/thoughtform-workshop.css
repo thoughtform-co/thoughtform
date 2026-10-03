@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════
-   /arcs/thoughtform-workshop — route-scoped rules (ADR-137)
+   /arcs/thoughtform/workshop-v1 — route-scoped rules (ADR-137)
 
    The third fork of ADR-053's recipe: hero → about → corridor → the proof
    stack in #services → the workshop arc in #workshop → contact. Everything
-   here is scoped to `.tw-root` so `/`, `/claude-workshop` and the Trinny
+   here is scoped to `.tw-root` so `/`, `/arcs/thoughtform/claude-workshop-corridor` and the Trinny
    proposal keep their own rules byte-for-byte.
 
    ⚠ Never port these into landing.css / home-v2.css / services.css; one
@@ -575,7 +575,7 @@ html[data-corridor-exit="true"] .tw-root [data-corridor-kill] {
    `.station:not(.hero):not(.station--cover)` is (0,3,0) — so this rule won
    only while this sheet was ordered after landing.css, and the bundler does
    not keep import order for a sheet three routes share. On
-   /arcs/ap-hogeschool it put this sheet first, in dev and in production: the
+   /arcs/ap-hogeschool/lecture it put this sheet first, in dev and in production: the
    station kept its 189px side padding at 2000px wide (every beat in a column
    ~820px wide), `content-visibility: auto` came back, and on a phone the
    140/220 station padding too, with every guard green (ADR-141 U1). An id

@@ -10,8 +10,8 @@ import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
  *
  * ⚠ IT HAS NO `client`, AND THAT IS THE POINT (ADR-052's own reading of the
  * field: absent ⇒ a Thoughtform format, a shape the practice sells rather
- * than a piece of work done for one company). `/arcs/plopsa-workshop` and
- * `/arcs/suri-workshop` are engagements; this is what they are cuts of.
+ * than a piece of work done for one company). `/arcs/plopsa/workshop` and
+ * `/arcs/suri/workshop` are engagements; this is what they are cuts of.
  *
  * One idea per viewport, five chapters on the house arc — today, the proof,
  * navigate, encode, build. Plopsa's team had already met the practice, so
@@ -60,6 +60,7 @@ import { TOOL_AND_COLLABORATOR } from "./shared/toolAndCollaborator";
  */
 export const THOUGHTFORM_WORKSHOP_ARC: ArcDef = {
   slug: "thoughtform-workshop",
+  leaf: "workshop-v1",
   format: "workshop",
   /* No `client`, no `kind` (kindOf derives "workshop" from the format), no
      `theme` (it reads in both), no `motion` (reveal is the default). */

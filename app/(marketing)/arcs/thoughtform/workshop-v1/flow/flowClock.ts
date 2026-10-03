@@ -1,5 +1,5 @@
 /**
- * flowClock — the workshop's opening flow on /arcs/thoughtform-workshop, as
+ * flowClock — the workshop's opening flow on /arcs/thoughtform/workshop-v1, as
  * pure arithmetic (ADR-138).
  *
  * Owner, 2026-09-30: "we start with an introduction about myself. I do think

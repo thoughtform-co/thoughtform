@@ -6,7 +6,7 @@
  * WHY. On `/` the corridor is behind the reader by the time About and the era
  * stage arrive, so its canvas is already in the services ambient hold and the
  * parked particle mark sits behind both, dimmed. On
- * `/arcs/thoughtform-workshop` About and the eras come FIRST: the corridor is
+ * `/arcs/thoughtform/workshop-v1` About and the eras come FIRST: the corridor is
  * below them, not armed, and paints nothing. This lets that route ask for the
  * homepage's look anyway, and then fold the mark into the solid glyph where
  * the thesis frame holds it.

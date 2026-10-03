@@ -9,8 +9,9 @@ import {
   CROP_SWITCH,
   cropFor,
 } from "@/components/sheet/config/configLayout";
-import { CLIENTS } from "@/lib/arcs/clients";
+import { GROUPS } from "@/lib/arcs/clients";
 import { ARCS } from "@/lib/arcs/registry";
+import { arcHref } from "@/lib/arcs/routes";
 import { letterDateShort } from "@/lib/sheet/dates";
 
 /**
@@ -49,8 +50,8 @@ const VIEWPORTS: [number, number][] = [
 
 /** Every engagement the overview plots: the arcs and the clients' pages. */
 const RECORD = [
-  ...ARCS.map((a) => ({ href: `/arcs/${a.slug}`, date: a.date })),
-  ...CLIENTS.flatMap((c) => (c.pages ?? []).map((p) => ({ href: p.href, date: p.date }))),
+  ...ARCS.map((a) => ({ href: arcHref(a), date: a.date })),
+  ...GROUPS.flatMap((c) => (c.pages ?? []).map((p) => ({ href: p.href, date: p.date }))),
 ];
 const NEWEST = [...RECORD].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))[0];
 /** The engagements whose dossier draws a configuration: the proposals, and
@@ -58,7 +59,7 @@ const NEWEST = [...RECORD].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date
  *  the course's class one since ADR-136). */
 const CONFIGURED = new Set([
   "ai-storytelling-class-1",
-  "ap-hogeschool",
+  "ap-hogeschool-lecture",
   "hungry-minds-proposal",
   "perfect-ted-proposal",
   "plopsa-workshop",
@@ -69,7 +70,7 @@ const CONFIGURED = new Set([
   "trinny-london-pitch",
 ]);
 /** An arc's readout carries its section count; a client's page has none. */
-const ARC_HREFS = new Set(ARCS.map((a) => `/arcs/${a.slug}`));
+const ARC_HREFS = new Set(ARCS.map(arcHref));
 /** The band's tint at its strong end, by theme (sheet.css / theme.css), and
  *  its far end, a quarter of it — the proof card's folder band (ADR-097). */
 const BAND_ALPHA = { dark: 0.28, light: 0.22 } as const;

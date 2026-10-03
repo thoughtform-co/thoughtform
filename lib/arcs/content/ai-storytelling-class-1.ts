@@ -13,7 +13,7 @@ import {
 
 /**
  * AI storytelling, class one, as an arc: the deck the first class is taught
- * from (ADR-136). The course page (`/arcs/ai-storytelling`) is the term on
+ * from (ADR-136). The course page (`/arcs/thoughtform/ai-storytelling`) is the term on
  * one track; this is one class, and its station on that track links here.
  *
  * ⚠ THE FLOW IS THE MOIRA WORKSHOP'S SECOND SESSION ("From a prompt to an
@@ -39,6 +39,7 @@ import {
  */
 export const AI_STORYTELLING_CLASS_1_ARC: ArcDef = {
   slug: "ai-storytelling-class-1",
+  leaf: "ai-storytelling-class-1",
   format: "workshop",
   cardChip: "course",
   status: "running",
@@ -752,7 +753,12 @@ export const AI_STORYTELLING_CLASS_1_ARC: ArcDef = {
         sub: "Bring the five lines and the one reference. Next week we build the board your world is read from.",
       },
       actions: [
-        { id: "course", label: "The course", href: "/arcs/ai-storytelling", primary: true },
+        {
+          id: "course",
+          label: "The course",
+          href: "/arcs/thoughtform/ai-storytelling",
+          primary: true,
+        },
         { id: "mail", label: "vince@thoughtform.co", href: "mailto:vince@thoughtform.co" },
       ],
       footerLine: "Thoughtform · Antwerp · 2026",

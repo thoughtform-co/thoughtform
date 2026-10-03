@@ -60,7 +60,7 @@ export function RailManifestController({ containerRef }: RailManifestControllerP
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    // Absent shell (e.g. /claude-workshop parses a prototype without the
+    // Absent shell (e.g. /arcs/thoughtform/claude-workshop-corridor parses a prototype without the
     // manifest nav) → clean no-op.
     const nav = container.querySelector<HTMLElement>("[data-rail-manifest-root]");
     if (!nav) return;

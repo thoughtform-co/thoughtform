@@ -585,7 +585,7 @@
   height: 14px;
   /* The readout owns the trigger; the bars stand down and survive only
      where the readout cannot serve — below 641px before the collapse,
-     and on /claude-workshop (see those rules). */
+     and on /arcs/thoughtform/claude-workshop-corridor (see those rules). */
   display: none;
 }
 .hud__nav__btn .bars span {
@@ -6360,7 +6360,7 @@
 
 /* ⚠ RETIRED (ADR-054, 2026-07-27): the #continuum station is gone from
    BOTH routes — the homepage replaced it with #proof (the client case)
-   and /claude-workshop strips it at parse time (ADR-053). Every selector
+   and /arcs/thoughtform/claude-workshop-corridor strips it at parse time (ADR-053). Every selector
    in this block through the TWEAKS PANEL heading is therefore unmatched
    and inert. Left in place deliberately for one cycle rather than bulk
    deleted: the block interleaves `.distance` and other shared-looking
@@ -8214,7 +8214,7 @@ body.density-dense .station {
   /* ── NO BRACKETS ON THE PHONE (ADR-125 U1, ADR-059 U7) ──────────────
      The owner, on the Arc's stills: "remove the white corners in the
      top-left and bottom-right". Both corner brackets are hidden on every
-     route that mounts this sheet (the landing, /arcs, /claude-workshop,
+     route that mounts this sheet (the landing, /arcs, /arcs/thoughtform/claude-workshop-corridor,
      the Trinny proposal — one phone frame), and the theme switch takes
      the bottom-right corner's own seat (rail-instruments.css, theme.css).
      The chrome bands above are untouched: they reserve the readout's row

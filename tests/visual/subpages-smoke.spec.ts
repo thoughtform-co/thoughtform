@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { CLIENTS, clientPageCount } from "@/lib/arcs/clients";
+import { GROUPS, clientPageCount } from "@/lib/arcs/clients";
 import { arcsOf } from "@/lib/arcs/registry";
 import { clientReadout } from "@/lib/sheet/arcs";
 import { compositionViolations } from "@/lib/sheet/composition";
@@ -359,7 +359,8 @@ test.describe("subpages (ADR-114)", () => {
   }) => {
     /* The overview drew these consoles until ADR-118; the client pages still
        do, one each (ADR-098 §2), so the readout is checked where it lives. */
-    const clients = CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
+    // Every group with a page: the clients, and the house since ADR-142.
+    const clients = GROUPS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
     for (const client of clients) {
       await ready(page, `/arcs/${client.slug}`);
       const rows = await page.$$eval(`article#${client.slug} .sh-readout__row`, (els) =>

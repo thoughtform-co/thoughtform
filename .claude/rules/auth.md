@@ -68,7 +68,7 @@ tests/lib/owner-gate-doctrine.test.ts`, then a real build:
 ## The arcs' password (ADR-135)
 
 Every page under `/arcs/<…>` asks for a password when one is set:
-`ARC_PASSWORD_<KEY>` for one page (`/arcs/pandora-proposal` →
+`ARC_PASSWORD_<KEY>` for one page (`/arcs/pandora/proposal` →
 `ARC_PASSWORD_PANDORA_PROPOSAL`), else `ARCS_PASSWORD`, set in Vercel and
 written nowhere in the repository.
 

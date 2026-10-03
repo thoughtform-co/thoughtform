@@ -7,7 +7,7 @@ import type { ArcSectionOf } from "../../types";
  * class-one deck spread it into their `curve` sections and author only the
  * head; Plopsa's page keeps its Dutch copy of the same figure.
  *
- * ⚠ THE SAME FIGURE AS `/arcs/plopsa-workshop`, AND THE SAME NUMBERS. These
+ * ⚠ THE SAME FIGURE AS `/arcs/plopsa/workshop`, AND THE SAME NUMBERS. These
  * are the vendors' own list prices, read on the date in the note. The guard
  * only checks that output costs more than input; nothing checks that a
  * price is TRUE, so the pages move together when a vendor reprices: edit

@@ -18,6 +18,7 @@ import type { ArcDef } from "../types";
  */
 export const SURI_WORKSHOP_ARC: ArcDef = {
   slug: "suri-workshop",
+  leaf: "workshop",
   format: "workshop",
   client: "suri",
   kind: "workshop",

@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 
 import type { SheetSection } from "@/lib/sheet/types";
 
-import { CLIENT_DESIG } from "./chrome";
+import { CLIENT_DESIG, HOUSE_DESIG } from "./chrome";
 import { dataAttrs } from "./SheetCells";
 import { SheetConsoleStack } from "./SheetConsoleStack";
 import { SheetFlashcard } from "./SheetFlashcard";
@@ -43,7 +43,7 @@ export function SheetConsole({ section }: { section: Console }) {
                   {c.panel.href ? <Link href={c.panel.href}>{c.panel.name}</Link> : c.panel.name}
                 </h3>
                 <span className="sh-console__desig" aria-hidden="true">
-                  {c.panel.kicker ?? CLIENT_DESIG}
+                  {c.panel.kicker ?? (c.panel.house ? HOUSE_DESIG : CLIENT_DESIG)}
                 </span>
               </div>
               <SheetReadout rows={c.panel.readout} className="sh-console__readout" />

@@ -60,9 +60,9 @@ export const HERO_PLATE_LIGHT = "/images/Gateway_v2-light.webp";
 export const HERO_PLATE_LIGHT_TYPE = "image/webp";
 
 /**
- * The routes that render the hero on THIS key visual. `/claude-workshop`
+ * The routes that render the hero on THIS key visual. `/arcs/thoughtform/claude-workshop-corridor`
  * mounts the same `LandingPage` with the same plate, and
- * `/arcs/loop-earplugs` declares `hero.plate: "gateway"` (ADR-075) so it
+ * `/arcs/loop/portfolio` declares `hero.plate: "gateway"` (ADR-075) so it
  * paints the same two files; every other route would be preloading an
  * image it never shows.
  *
@@ -74,7 +74,7 @@ export const HERO_PLATE_LIGHT_TYPE = "image/webp";
  */
 /* ⚠ HAND-WRITTEN, NOT DERIVED. This is the set of routes whose hero has TWO
    files, one per theme — the only case a script-injected preload solves,
-   because a static link always names the dark one. `/arcs/loop-earplugs` left it
+   because a static link always names the dark one. `/arcs/loop/portfolio` left it
    in ADR-078 U1 (a Loop key visual, one file) and came back in U2 (a film
    frame is evidence, not wallpaper — the plate is the house visual again).
    `/arcs/trinny-london/proposal` joined on ADR-093: it mounts the same `LandingPage` on the
@@ -86,20 +86,20 @@ export const HERO_PLATE_LIGHT_TYPE = "image/webp";
    derives this, so nothing else would say so. */
 export const HERO_ROUTES = [
   "/",
-  "/claude-workshop",
+  "/arcs/thoughtform/claude-workshop-corridor",
   "/arcs/trinny-london/proposal",
-  "/arcs/loop-earplugs",
-  "/arcs/suri-proposal",
-  "/arcs/perfect-ted-proposal",
-  "/arcs/hungry-minds-proposal",
-  "/arcs/pandora-proposal",
-  "/arcs/plopsa-workshop",
-  "/arcs/suri-workshop",
-  "/arcs/thoughtform-workshop",
-  "/arcs/thoughtform-workshop-v2",
-  "/arcs/ai-storytelling",
-  "/arcs/ai-storytelling-class-1",
-  "/arcs/ap-hogeschool",
+  "/arcs/loop/portfolio",
+  "/arcs/suri/proposal",
+  "/arcs/perfect-ted/proposal",
+  "/arcs/hungry-minds/proposal",
+  "/arcs/pandora/proposal",
+  "/arcs/plopsa/workshop",
+  "/arcs/suri/workshop",
+  "/arcs/thoughtform/workshop-v1",
+  "/arcs/thoughtform/workshop-v2",
+  "/arcs/thoughtform/ai-storytelling",
+  "/arcs/thoughtform/ai-storytelling-class-1",
+  "/arcs/ap-hogeschool/lecture",
 ] as const;
 
 /**

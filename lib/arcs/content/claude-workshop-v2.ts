@@ -16,6 +16,7 @@ import type { ArcDef } from "../types";
 export const CLAUDE_WORKSHOP_V2_ARC: ArcDef = {
   ...CLAUDE_WORKSHOP_ARC,
   slug: "claude-workshop-v2",
+  leaf: "claude-workshop-v2",
   motion: "terminal",
   // The cut's OWN date — the spread above would inherit v1's (ADR-118).
   date: "2026-08-01",

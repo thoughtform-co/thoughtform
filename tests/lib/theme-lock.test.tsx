@@ -51,14 +51,14 @@ describe("the light-locked routes", () => {
 
   it("locks exactly the routes composed in light, and no others", () => {
     // Hand-written, like HERO_ROUTES: a route joins or leaves BY HAND, so
-    // the list is pinned rather than derived. `/` and `/claude-workshop`
+    // the list is pinned rather than derived. `/` and `/arcs/thoughtform/claude-workshop-corridor`
     // must never appear here — they are the site's own themed surfaces.
     expect([...LIGHT_LOCKED_ROUTES]).toEqual([
       "/arcs/trinny-london/proposal",
-      "/arcs/suri-proposal",
-      "/arcs/perfect-ted-proposal",
-      "/arcs/hungry-minds-proposal",
-      "/arcs/pandora-proposal",
+      "/arcs/suri/proposal",
+      "/arcs/perfect-ted/proposal",
+      "/arcs/hungry-minds/proposal",
+      "/arcs/pandora/proposal",
       "/test/trinny-bench",
     ]);
   });
@@ -101,10 +101,10 @@ describe("themeBootstrapScript — the pre-paint decision", () => {
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
     expect(document.documentElement.hasAttribute(THEME_LOCK_ATTR)).toBe(false);
 
-    // Stored light on `/claude-workshop` → light, and still no lock mark.
+    // Stored light on `/arcs/thoughtform/claude-workshop-corridor` → light, and still no lock mark.
     resetChannel();
     window.localStorage.setItem(THEME_STORAGE_KEY, "light");
-    runBootstrapAt("/claude-workshop");
+    runBootstrapAt("/arcs/thoughtform/claude-workshop-corridor");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
     expect(document.documentElement.hasAttribute(THEME_LOCK_ATTR)).toBe(false);
 

@@ -25,10 +25,17 @@
  * Imports `lib/arcs` (pure data, the Trinny pitch's offer record included).
  */
 
-import { CLIENTS, KIND_LABEL, clientPageCount, kindOf } from "@/lib/arcs/clients";
+import {
+  CLIENTS,
+  KIND_LABEL,
+  THOUGHTFORM_HOUSE,
+  clientPageCount,
+  kindOf,
+} from "@/lib/arcs/clients";
 import type { ClientDef } from "@/lib/arcs/clients";
 import { TRINNY_BOARD, TRINNY_PHASES } from "@/lib/arcs/content/trinny-london-offer";
 import { arcsOf, houseArcs } from "@/lib/arcs/registry";
+import { HOUSE_SLUG, arcHref, groupHref } from "@/lib/arcs/routes";
 import type { ArcDef, ArcKind } from "@/lib/arcs/types";
 
 import { atOnWindow, axisWindow } from "./axis";
@@ -69,18 +76,19 @@ export function kindsOf(client: ClientDef): ArcKind[] {
 
 /**
  * The console's readout column: five facts a reader could check against
- * the registry. Newest engagement first — a client's non-arc pages lead,
- * as they lead its band (ADR-098 U2).
+ * the registry. `Latest` is the newest filing by DATE, a tie going to the
+ * band's order (pages, then arcs). Until ADR-142 it was simply the band's
+ * first card, which was the same thing for every client; the house lists an
+ * archetype ahead of its newer cuts, so position and date part there.
  */
 export function clientReadout(client: ClientDef): SheetReadoutRow[] {
   const arcs = arcsOf(client.slug);
   const pages = client.pages ?? [];
   const latest =
-    pages[0] !== undefined
-      ? { chip: pages[0].chip, status: pages[0].status }
-      : arcs[0] !== undefined
-        ? { chip: arcs[0].cardChip ?? arcs[0].format, status: arcs[0].status }
-        : null;
+    newestFirst([
+      ...pages.map((p) => ({ chip: p.chip, status: p.status, date: p.date })),
+      ...arcs.map((a) => ({ chip: a.cardChip ?? a.format, status: a.status, date: a.date })),
+    ])[0] ?? null;
   return [
     { label: "Engagements", value: String(clientPageCount(client, arcs)) },
     { label: "Standing", value: latest?.status ? STANDING[latest.status] : "On record" },
@@ -110,12 +118,14 @@ function arcCard(arc: ArcDef): SheetFlashcard {
       caption: arc.cardChip ?? arc.format,
       treatment: "duotone",
     },
-    href: `/arcs/${arc.slug}`,
+    href: arcHref(arc),
     data: { kind: kindOf(arc) },
   };
 }
 
-/** A client's cards: its pages first, then its arcs in registry order. */
+/** A client's cards: its pages first, then its arcs in registry order. The
+ *  house reverses it (ADR-142): its one page is its oldest, and its formats
+ *  lead with the archetype. */
 export function consoleCardsOf(client: ClientDef): SheetFlashcard[] {
   const pages = (client.pages ?? []).map<SheetFlashcard>((p) => ({
     id: p.href,
@@ -134,7 +144,8 @@ export function consoleCardsOf(client: ClientDef): SheetFlashcard[] {
     href: p.href,
     data: { kind: p.kind },
   }));
-  return [...pages, ...arcsOf(client.slug).map(arcCard)];
+  const arcs = arcsOf(client.slug).map(arcCard);
+  return client.slug === HOUSE_SLUG ? [...arcs, ...pages] : [...pages, ...arcs];
 }
 
 export function consoleFor(client: ClientDef, chapter = true): SheetConsoleDef {
@@ -146,20 +157,22 @@ export function consoleFor(client: ClientDef, chapter = true): SheetConsoleDef {
       name: client.name,
       readout: clientReadout(client),
       lede: client.lede,
-      href: `/arcs/${client.slug}`,
+      href: groupHref(client.slug),
+      ...(client.slug === HOUSE_SLUG ? { house: true as const } : {}),
     },
     cards: consoleCardsOf(client),
     data: { "sh-filter": "kind", kinds: kindsOf(client).join(" ") },
   };
 }
 
-/** One client's page: split · its console · close. */
+/** One client's page: split · its console · close. The house's page
+ *  (ADR-142) is the same ladder, named as the house rather than a client. */
 export function clientSheetSections(client: ClientDef): SheetSection[] {
   return [
     {
       kind: "split",
       id: client.slug + "-head",
-      name: "Client",
+      name: client.slug === HOUSE_SLUG ? "House formats" : "Client",
       title: { pre: client.name },
       paragraphs: [client.lede],
     },
@@ -242,7 +255,8 @@ function arcConfiguration(arc: ArcDef): SheetConfiguration | null {
 }
 
 /** Every engagement on the overview exactly once, in LOG order: each client's
- *  pages and arcs in `CLIENTS` order, then the house formats. */
+ *  pages and arcs in `CLIENTS` order, then the house formats, then the
+ *  house's pages that are not arcs (ADR-142). */
 export function engagements(): Engagement[] {
   const out: Engagement[] = [];
   const fromArc = (arc: ArcDef, client: ClientDef | null): Engagement => ({
@@ -255,7 +269,7 @@ export function engagements(): Engagement[] {
     kind: kindOf(arc),
     standing: standingOf(arc.status, arc.slug),
     date: arc.date,
-    href: `/arcs/${arc.slug}`,
+    href: arcHref(arc),
     sections: arc.sections.length,
     configuration: arcConfiguration(arc),
   });
@@ -278,6 +292,24 @@ export function engagements(): Engagement[] {
     for (const arc of arcsOf(client.slug)) out.push(fromArc(arc, client));
   }
   for (const arc of houseArcs()) out.push(fromArc(arc, null));
+  /* A house page's row reads as the kind of page it is, as a house arc's
+     reads as its format: the card's chip (`corridor`) names the cut, and the
+     log's icons are keyed by the kind of page (`logGlyphs`). */
+  for (const page of THOUGHTFORM_HOUSE.pages ?? [])
+    out.push({
+      id: `${THOUGHTFORM_HOUSE.slug}-${page.chip}`,
+      lane: `formats-${page.kind}`,
+      client: null,
+      isArc: false,
+      chip: page.kind,
+      cardTitle: page.title,
+      kind: page.kind,
+      standing: standingOf(page.status, page.href),
+      date: page.date,
+      href: page.href,
+      sections: null,
+      configuration: null,
+    });
   return out;
 }
 
@@ -442,8 +474,8 @@ export function instrumentSections(
       return {
         id: e.id,
         designation: e.client
-          ? { name: e.client.name, href: `/arcs/${e.client.slug}` }
-          : { name: "Thoughtform" },
+          ? { name: e.client.name, href: groupHref(e.client.slug) }
+          : { name: THOUGHTFORM_HOUSE.name, href: groupHref(THOUGHTFORM_HOUSE.slug) },
         kind: KIND_ONE[e.kind],
         title: e.cardTitle,
         status: dossierStatus(e),

@@ -61,7 +61,7 @@ describe("hero preload", () => {
     /* This list is the set of routes whose hero has TWO files, one per
        theme — the only case a script-injected preload exists to solve,
        because a static link always names the dark one.
-       `/arcs/loop-earplugs` joined on ADR-075, left on ADR-078 U1 (a Loop key
+       `/arcs/loop/portfolio` joined on ADR-075, left on ADR-078 U1 (a Loop key
        visual, one file) and returned in U2 — a frame out of the films is
        evidence, not wallpaper, so the plate is the house visual again.
        `/arcs/trinny-london/proposal` joined on ADR-093 — light-locked, so it only ever
@@ -71,20 +71,20 @@ describe("hero preload", () => {
        be removed here by hand — nothing else would say so. */
     expect([...HERO_ROUTES]).toEqual([
       "/",
-      "/claude-workshop",
+      "/arcs/thoughtform/claude-workshop-corridor",
       "/arcs/trinny-london/proposal",
-      "/arcs/loop-earplugs",
-      "/arcs/suri-proposal",
-      "/arcs/perfect-ted-proposal",
-      "/arcs/hungry-minds-proposal",
-      "/arcs/pandora-proposal",
-      "/arcs/plopsa-workshop",
-      "/arcs/suri-workshop",
-      "/arcs/thoughtform-workshop",
-      "/arcs/thoughtform-workshop-v2",
-      "/arcs/ai-storytelling",
-      "/arcs/ai-storytelling-class-1",
-      "/arcs/ap-hogeschool",
+      "/arcs/loop/portfolio",
+      "/arcs/suri/proposal",
+      "/arcs/perfect-ted/proposal",
+      "/arcs/hungry-minds/proposal",
+      "/arcs/pandora/proposal",
+      "/arcs/plopsa/workshop",
+      "/arcs/suri/workshop",
+      "/arcs/thoughtform/workshop-v1",
+      "/arcs/thoughtform/workshop-v2",
+      "/arcs/thoughtform/ai-storytelling",
+      "/arcs/thoughtform/ai-storytelling-class-1",
+      "/arcs/ap-hogeschool/lecture",
     ]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });
@@ -120,7 +120,7 @@ describe("hero preload", () => {
     // scanner would fetch the dark plate before this script ever runs.
     for (const page of [
       "app/(marketing)/page.tsx",
-      "app/(marketing)/claude-workshop/page.tsx",
+      "app/(marketing)/arcs/thoughtform/claude-workshop-corridor/page.tsx",
       "app/(marketing)/arcs/trinny-london/proposal/page.tsx",
     ]) {
       const src = readFileSync(join(ROOT, page), "utf8");

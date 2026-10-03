@@ -127,6 +127,10 @@ export interface SheetConsoleDef {
     readout: readonly SheetReadoutRow[];
     lede: string;
     href?: string;
+    /** The house's console (ADR-142): the renderer letters `// House` where
+     *  a client's letters `// Client`. A flag, never the string, by the
+     *  chrome rule above. */
+    house?: true;
   };
   cards: readonly SheetFlashcard[];
   data?: Record<string, string>;

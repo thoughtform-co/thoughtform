@@ -3,9 +3,9 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { AP_HOGESCHOOL_JOURNEY_ORDER } from "@/app/(marketing)/arcs/ap-hogeschool/journey";
-import { PROMPT_TO_LOOP_SLIDES } from "@/app/(marketing)/arcs/ap-hogeschool/promptToLoopSlides";
-import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop/journey";
+import { AP_HOGESCHOOL_JOURNEY_ORDER } from "@/app/(marketing)/arcs/ap-hogeschool/lecture/journey";
+import { PROMPT_TO_LOOP_SLIDES } from "@/app/(marketing)/arcs/ap-hogeschool/lecture/promptToLoopSlides";
+import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v1/journey";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
@@ -51,21 +51,21 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
    * globally and a half-fork would leave two routes fighting over it.
    */
   it("shares the corridor with v1 rather than forking it", () => {
-    const page = routeFile("ap-hogeschool", "page.tsx");
+    const page = routeFile("ap-hogeschool", "lecture", "page.tsx");
     expect(page, "renders v1's root class").toContain('className="tw-root"');
     expect(page, "imports v1's route sheet").toContain(
-      '"../thoughtform-workshop/thoughtform-workshop.css"'
+      '"../../thoughtform/workshop-v1/thoughtform-workshop.css"'
     );
     expect(page, "reads v1's prototype").toContain("getThoughtformWorkshopContent");
     for (const station of REMOVED_STATIONS) {
       expect(page, `removes ${station}, as v1 does`).toContain(`"${station}"`);
     }
-    const portals = routeFile("ap-hogeschool", "WorkshopPortals.tsx");
+    const portals = routeFile("ap-hogeschool", "lecture", "WorkshopPortals.tsx");
     expect(portals, "reuses v1's proof, never a copy").toContain(
-      '"../thoughtform-workshop/WorkshopProof"'
+      '"../../thoughtform/workshop-v1/WorkshopProof"'
     );
     expect(portals, "reuses v1's About flow").toContain(
-      '"../thoughtform-workshop/flow/useWorkshopFlow"'
+      '"../../thoughtform/workshop-v1/flow/useWorkshopFlow"'
     );
     /* The two orders are equal TODAY; the files are separate so they need
        not stay equal. A deliberately weak pin. */
@@ -91,7 +91,7 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
       const classes = (s.match(/\.[\w-]+|\[[^\]]+\]|:(?!not\()[\w-]+/g) ?? []).length;
       return ids * 1000 + classes;
     };
-    const sheet = routeFile("thoughtform-workshop", "thoughtform-workshop.css");
+    const sheet = routeFile("thoughtform", "workshop-v1", "thoughtform-workshop.css");
     const release = sheet.match(
       /([^{}/]+)\{\s*display:\s*block;\s*padding:\s*0;\s*content-visibility:\s*visible;/
     );
@@ -115,7 +115,7 @@ describe("the AP Hogeschool lecture (ADR-141)", () => {
    * panel stamp. A switch over nothing is a control that does nothing.
    */
   it("carries no worked-example switch", () => {
-    const tail = routeFile("ap-hogeschool", "WorkshopTail.tsx");
+    const tail = routeFile("ap-hogeschool", "lecture", "WorkshopTail.tsx");
     expect(tail, "the tail mounts no switch").not.toContain("ArcWorkedSwitch");
     for (const s of AP_HOGESCHOOL_ARC.sections) {
       expect(s.worked, `${s.id}: a panel stamp on a page with no switch`).toBeUndefined();

@@ -58,6 +58,7 @@ import { MODE_LEGEND } from "./shared/loop-tools";
  */
 export const PORTFOLIO_ARC: ArcDef = {
   slug: "loop-earplugs",
+  leaf: "portfolio",
   /* The engagement this page IS (ADR-098). Nothing else about the arc
      moves: the slug, the sections and the URL are byte-identical, and a
      link already forwarded still lands here. */

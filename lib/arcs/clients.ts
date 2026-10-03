@@ -9,12 +9,14 @@
  * Types and plain data only, like the rest of `lib/arcs` — no runtime
  * imports, so nothing here can pull weight into the route.
  *
- * ⚠ A CLIENT SLUG AND AN ARC SLUG SHARE ONE NAMESPACE. `/arcs/[slug]`
- * resolves a client first and an arc second, so a collision would shadow a
- * live page with a listing. `tests/lib/arcs-registry.test.ts` pins the two
- * sets disjoint.
+ * ⚠ A CLIENT SLUG AND AN ARC SLUG SHARE ONE ID NAMESPACE. Until ADR-142
+ * they shared one ROUTE too (`/arcs/[slug]` resolved a client first, an arc
+ * second); arcs nest under their group now, but the overview and the client
+ * pages still use both as element ids, so `tests/lib/arcs-registry.test.ts`
+ * keeps the two sets disjoint.
  */
 
+import { HOUSE_SLUG } from "./routes";
 import type { ArcDef, ArcKind } from "./types";
 
 /**
@@ -32,8 +34,9 @@ import type { ArcDef, ArcKind } from "./types";
  * that honours both.
  */
 export interface ClientPageDef {
-  /** Where the card goes — a site route OUTSIDE `/arcs/` (the registry test
-   *  pins it), because an `/arcs/` page is an arc and belongs in `ARCS`. */
+  /** Where the card goes: `/arcs/<group>/<leaf>`, two segments deep under
+   *  its own group like an arc (ADR-099, ADR-142; the registry test pins
+   *  it), as a real route folder rather than an `ARCS` record. */
   href: string;
   /** The card's chip, e.g. "pitch". The overview smoke asserts every chip
    *  on the page is distinct, this one included. */
@@ -157,9 +160,51 @@ export const PLOPSA_CLIENT: ClientDef = {
   },
 };
 
+export const AP_HOGESCHOOL_CLIENT: ClientDef = {
+  slug: "ap-hogeschool",
+  name: "AP Hogeschool",
+  lede: "A university college in Antwerp, and a room of students who would build brand worlds with AI.",
+  // The year the relationship began (ADR-114): the guest lecture of October 2026.
+  since: "2026",
+};
+
+/**
+ * The house (ADR-142): the formats that belong to no client, listed at
+ * `/arcs/thoughtform` the way a client's engagements are listed at
+ * `/arcs/<client>`.
+ *
+ * ⚠ NOT IN `CLIENTS`. The house is a group for the ROUTES and the listing,
+ * not a client: its arcs carry no `client`, the overview keeps drawing them
+ * as the house formats, and nothing that counts clients counts it.
+ * `GROUPS` is the list that includes it.
+ */
+export const THOUGHTFORM_HOUSE: ClientDef = {
+  slug: HOUSE_SLUG,
+  name: "Thoughtform",
+  lede: "The formats the practice runs itself: the workshop, the keynote, the course, and every cut of them.",
+  /* The first workshop page, a homepage variant (ADR-053) and not an arc: it
+     re-orders the corridor with About second. Authored at `/claude-workshop`
+     and moved here by ADR-142; the old address redirects. */
+  pages: [
+    {
+      href: `/arcs/${HOUSE_SLUG}/claude-workshop-corridor`,
+      chip: "corridor",
+      title: "The Claude workshop · on the corridor",
+      lede: "The homepage's corridor, re-ordered for a workshop: the person running it first, then the arc.",
+      image: { src: "/images/services/workshop.webp", alt: "" },
+      kind: "workshop",
+      status: "shipped",
+      // OWNER-TO-CONFIRM: ADR-053's date, when the page became the corridor variant.
+      date: "2026-07-27",
+    },
+  ],
+  since: "2025",
+};
+
 /** Every client with an engagement on the site, in the order the overview
  *  reads them. */
 export const CLIENTS: readonly ClientDef[] = [
+  AP_HOGESCHOOL_CLIENT,
   PLOPSA_CLIENT,
   PANDORA_CLIENT,
   HUNGRY_MINDS_CLIENT,
@@ -175,6 +220,18 @@ export function clientSlugs(): string[] {
 
 export function getClient(slug: string): ClientDef | undefined {
   return CLIENTS.find((client) => client.slug === slug);
+}
+
+/** Every group with a page at `/arcs/<slug>` (ADR-142): the clients, then
+ *  the house. */
+export const GROUPS: readonly ClientDef[] = [...CLIENTS, THOUGHTFORM_HOUSE];
+
+export function groupSlugs(): string[] {
+  return GROUPS.map((group) => group.slug);
+}
+
+export function getGroup(slug: string): ClientDef | undefined {
+  return GROUPS.find((group) => group.slug === slug);
 }
 
 /** Everything a client's band lists: its non-arc pages and its arcs. */

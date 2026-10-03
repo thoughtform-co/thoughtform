@@ -13,6 +13,7 @@ import type { ArcDef } from "../types";
  */
 export const CLAUDE_WORKSHOP_ARC: ArcDef = {
   slug: "claude-workshop",
+  leaf: "claude-workshop-v1",
   format: "workshop",
   status: "shipped",
   date: "2026-07-27",

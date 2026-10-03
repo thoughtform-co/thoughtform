@@ -4,8 +4,9 @@ import { publishedPosts } from "@/lib/musings/registry";
 
 /**
  * The sitemap lists exactly the routes meant to be found (2026-09-01):
- * the landing and the workshop variant, which is indexable by explicit
- * owner decision (ADR-053 — see the commented-out noindex in its page).
+ * the landing and the sheet pages. The workshop variant was listed until
+ * ADR-142 moved it under `/arcs/thoughtform/` (owner, 2026-10-03), where it
+ * is noindexed like every arc.
  *
  * Deliberately absent: `/arcs/*` (noindexed client decks), the admin
  * shells and `/api/*` (disallowed in robots.ts), and `/test/*`
@@ -20,12 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "weekly",
       priority: 1,
-    },
-    {
-      url: "https://thoughtform.co/claude-workshop",
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.6,
     },
     /* The sheet pages (ADR-114): public and listed, unlike anything under
        `/arcs`. A musing joins when it is published (`draft: false`). */

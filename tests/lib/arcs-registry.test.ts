@@ -28,7 +28,8 @@ import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
-import { ARCS, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
+import { ARCS, arcHrefs, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
+import { arcHref } from "@/lib/arcs/routes";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
 import { LIGHT_LOCKED_ROUTES } from "@/lib/theme/themeLock";
 import { ROLLOUT_ROWS } from "@/lib/cases/content/loop-earplugs";
@@ -1190,9 +1191,8 @@ describe("arcs registry (ADR-052)", () => {
              root (ADR-136): a gated arc loads through /unlock and drops a
              fragment, so a fragment here would be a link to nowhere. */
           if (c.page) {
-            expect(c.page.href, `${here}: page is an arc's root`).toMatch(/^\/arcs\/[a-z0-9-]+$/);
-            expect(arcSlugs(), `${here}: ${c.page.href} is not a registered arc`).toContain(
-              c.page.href.slice("/arcs/".length)
+            expect(arcHrefs(), `${here}: ${c.page.href} is not a registered arc's root`).toContain(
+              c.page.href
             );
             expect(c.page.label.trim().length, `${here}: page label`).toBeGreaterThan(0);
           }
@@ -1519,12 +1519,12 @@ describe("arcs registry (ADR-052)", () => {
       expect(
         [...LIGHT_LOCKED_ROUTES],
         `${arc.slug}: theme "light" with no LIGHT_LOCKED_ROUTES row`
-      ).toContain(`/arcs/${arc.slug}`);
+      ).toContain(arcHref(arc));
     }
     for (const arc of ARCS) {
       if (arc.hero.plate !== "gateway") continue;
       expect([...HERO_ROUTES], `${arc.slug}: the gateway plate with no HERO_ROUTES row`).toContain(
-        `/arcs/${arc.slug}`
+        arcHref(arc)
       );
     }
   });
@@ -1627,7 +1627,7 @@ describe("the hero-board kind (ADR-137)", () => {
         readers.push(arc.slug);
       }
     }
-    expect(readers.sort()).toEqual(["ap-hogeschool", "thoughtform-workshop-v2"]);
+    expect(readers.sort()).toEqual(["ap-hogeschool-lecture", "thoughtform-workshop-v2"]);
   });
 });
 

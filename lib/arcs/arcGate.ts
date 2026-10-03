@@ -48,7 +48,7 @@ export function arcPagePath(pathname: string): string {
 
 /**
  * The page's key: its path under `/arcs/`, in the environment's own shape
- * (`/arcs/pandora-proposal` → `PANDORA_PROPOSAL`,
+ * (`/arcs/pandora/proposal` → `PANDORA_PROPOSAL`,
  * `/arcs/trinny-london/proposal` → `TRINNY_LONDON_PROPOSAL`). `null` for
  * anything the gate does not cover.
  */

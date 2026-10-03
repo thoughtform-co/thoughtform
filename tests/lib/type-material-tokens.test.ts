@@ -187,7 +187,7 @@ const PINS: Record<string, Pin> = {
     content: { A: 45, B: 5, C: 2 },
     frame: { A: 0, B: 0, C: 0 },
   },
-  "app/(marketing)/claude-workshop/claude-workshop.css": {
+  "app/(marketing)/arcs/thoughtform/claude-workshop-corridor/claude-workshop.css": {
     tier: "content",
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },

@@ -39,10 +39,10 @@ export const LIGHT_LOCKED_ROUTES = [
      The arc declares `theme: "light"`, which is what mounts `ThemeLock`
      and hides the switch; this row is the pre-paint half, and the
      registry test fails a locked arc that has no row here. */
-  "/arcs/suri-proposal",
-  "/arcs/perfect-ted-proposal",
-  "/arcs/hungry-minds-proposal",
-  "/arcs/pandora-proposal",
+  "/arcs/suri/proposal",
+  "/arcs/perfect-ted/proposal",
+  "/arcs/hungry-minds/proposal",
+  "/arcs/pandora/proposal",
   /* The Trinny brand bench (ADR-120, Update 1): one module on the plain
      warm grey of the client's own product tiles, no sheet and no switch
      drawn. Dev-only (`(internal)/test`), but a locked route is locked

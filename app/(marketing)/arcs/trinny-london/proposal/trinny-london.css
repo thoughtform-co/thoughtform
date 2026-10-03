@@ -7,7 +7,7 @@
 
    ⚠ Never port these rules into landing.css / home-v2.css / services.css
    / rail-instruments.css. They are variant-local by design; a shared-sheet
-   edit would change `/` and `/claude-workshop`.
+   edit would change `/` and `/arcs/thoughtform/claude-workshop-corridor`.
    Imported LAST of the route sheets (before theme.css) so it wins the
    cascade over the composition sheets it corrects.
    ═══════════════════════════════════════════════════════════════════ */
@@ -257,7 +257,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    moves the block and changes nothing about the type.
 
    ⚠ ROUTE-SCOPED, AND THE HOMEPAGE HAS THE SAME DIVERGENCE (rule 1: a rule
-   in `landing.css` would land on `/` and `/claude-workshop`). It is NOT the
+   in `landing.css` would land on `/` and `/arcs/thoughtform/claude-workshop-corridor`). It is NOT the
    same defect there: `/` runs hero → corridor, so the hero's neighbour is a
    full-bleed canvas rather than nine banded heads, and nothing sits beside
    it to be inconsistent with. Flagged, not taken.

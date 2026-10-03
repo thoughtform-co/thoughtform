@@ -293,7 +293,7 @@ var(--mu-note-len)`) and `.mu-note__open` under it goes `grid-template-rows:
   ⚠ **THE PROPERTY IS ASSERTED AT THE COVER'S OWN TOP**, where the envelope
   reaches zero — the frame the footer finishes covering the list — with the
   one sub-pixel of tolerance the document's last element needs (ADR-105 U2).
-  ⚠ **`?? contactEl` IS LOAD-BEARING**: `/claude-workshop` and the Trinny
+  ⚠ **`?? contactEl` IS LOAD-BEARING**: `/arcs/thoughtform/claude-workshop-corridor` and the Trinny
   proposal mount the same hook from their own prototypes and have no
   `#musings`. On those routes the answer is still `#contact`.
 - ⚠ **THE COVER SATISFIES ITS CONTRACT BY INHERITANCE, SO DO NOT TAKE ITS

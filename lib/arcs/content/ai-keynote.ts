@@ -19,6 +19,7 @@ import { SOFTWARE_FEW_LINE, VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vinc
  */
 export const AI_KEYNOTE_ARC: ArcDef = {
   slug: "ai-keynote",
+  leaf: "keynote-v1",
   format: "keynote",
   status: "shipped",
   date: "2026-07-27",

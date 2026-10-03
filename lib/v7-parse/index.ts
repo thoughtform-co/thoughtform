@@ -44,7 +44,7 @@ export function getV7Content(options?: ParseOptions): V7Content {
 /**
  * Forked variant that points at the Claude-workshop prototype HTML
  * but reuses the same parse pipeline — including the optional station
- * surgery, which `/claude-workshop` uses to swap its middle stations
+ * surgery, which `/arcs/thoughtform/claude-workshop-corridor` uses to swap its middle stations
  * for the depth corridor (ADR-053, the homepage-variant recipe).
  */
 export function getClaudeWorkshopContent(options?: ParseOptions): V7Content {
@@ -58,7 +58,7 @@ export function getClaudeWorkshopContent(options?: ParseOptions): V7Content {
  * on its own prototype: hero → about → corridor → the proof stack, then the
  * house workshop arc in `#workshop`. Its own file for the reason the Trinny
  * fork gives: the two slots it declares are this route's, and a shared read
- * would make every edit here a change to `/claude-workshop`. The path is a
+ * would make every edit here a change to `/arcs/thoughtform/claude-workshop-corridor`. The path is a
  * string LITERAL inside `join` so Vercel's file tracer follows it.
  */
 export function getThoughtformWorkshopContent(options?: ParseOptions): V7Content {
@@ -75,7 +75,7 @@ export function getThoughtformWorkshopContent(options?: ParseOptions): V7Content
  * reason is dated: this page's hero copy and its proposition stations are
  * client-specific and land in a later phase. Pointing both routes at one
  * prototype would make every Trinny copy edit a change to
- * `/claude-workshop` — silently, since that route's own drift guard only
+ * `/arcs/thoughtform/claude-workshop-corridor` — silently, since that route's own drift guard only
  * pins structure. Two files, two guards.
  *
  * The path is a string LITERAL inside `join(process.cwd(), …)` exactly as

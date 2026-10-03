@@ -1773,9 +1773,18 @@ export type ArcKind = "keynote" | "workshop" | "production";
 export type ArcMotion = "reveal" | "terminal";
 
 export interface ArcDef {
-  /** Route segment — kebab-case, unique across the registry, and never
-   *  equal to a client slug (they share `/arcs/[slug]`). */
+  /** The arc's id — kebab-case, unique across the registry, and never
+   *  equal to a client slug (the overview and the client pages use both as
+   *  element ids). Since ADR-142 it is NOT the address: that is `leaf`. */
   slug: string;
+  /**
+   * The arc's last address segment (ADR-142): the page lives at
+   * `/arcs/<client>/<leaf>`, or `/arcs/thoughtform/<leaf>` for a house
+   * format. Kebab-case and unique within its group (the registry test).
+   * ⚠ A `-v2` cut that spreads its v1 inherits the v1's leaf and must
+   * restate it, or the two pages claim one address.
+   */
+  leaf: string;
   /** Overview card chip text (WORKSHOP / KEYNOTE) and the layout family. */
   format: ArcFormat;
   /**

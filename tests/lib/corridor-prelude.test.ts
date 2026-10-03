@@ -122,7 +122,7 @@ describe("the corridor's readers are identity at level 0", () => {
   });
 
   it("the DOM layers open on feathered masks, never a hard inset", () => {
-    const css = read("app/(marketing)/arcs/thoughtform-workshop/thoughtform-workshop.css");
+    const css = read("app/(marketing)/arcs/thoughtform/workshop-v1/thoughtform-workshop.css");
     expect(css).toMatch(/\.home-v2-copy-layer \{\s*-webkit-mask-image:/);
     // The mask sits UNDER the shell's drop-shadow, so the halo follows it.
     expect(css).toMatch(/\.home-v2-projected-brandmark > div \{\s*-webkit-mask-image:/);
@@ -130,7 +130,7 @@ describe("the corridor's readers are identity at level 0", () => {
   });
 
   it("only the workshop route writes it", () => {
-    const writer = read("app/(marketing)/arcs/thoughtform-workshop/flow/useWorkshopFlow.ts");
+    const writer = read("app/(marketing)/arcs/thoughtform/workshop-v1/flow/useWorkshopFlow.ts");
     expect(writer).toMatch(/writePrelude\(/);
     expect(writer).toMatch(/clearPrelude\(\)/);
   });

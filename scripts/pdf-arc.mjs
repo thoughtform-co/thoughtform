@@ -1,8 +1,10 @@
 /**
  * pdf-arc — any arc, one 1280x720 page per section, as a pixel-perfect PDF.
  *
- *   node scripts/pdf-arc.mjs --slug plopsa-workshop --out "<file.pdf>"
- *   node scripts/pdf-arc.mjs --slug plopsa-workshop --base http://localhost:3005 --vp 1280x720 --scale 2
+ *   node scripts/pdf-arc.mjs --slug plopsa/workshop --out "<file.pdf>"
+ *   node scripts/pdf-arc.mjs --slug plopsa/workshop --base http://localhost:3005 --vp 1280x720 --scale 2
+ *
+ * `--slug` is the arc's path under /arcs/, `<group>/<leaf>` since ADR-142.
  *
  * The site has no print stylesheet and the arcs are flowing pages, so the
  * handout is made the way the decks' PDFs are checked: a screenshot of every
@@ -30,7 +32,7 @@ const arg = (flag, fallback) => {
 };
 const BASE = arg("--base", "http://localhost:3003");
 const SLUG = arg("--slug", "");
-const OUT = arg("--out", `${SLUG}.pdf`);
+const OUT = arg("--out", `${SLUG.replace(/\//g, "-")}.pdf`);
 const [W, H] = arg("--vp", "1280x720").split("x").map(Number);
 const SCALE = Number(arg("--scale", "2"));
 if (!SLUG) {
@@ -38,7 +40,7 @@ if (!SLUG) {
   process.exit(1);
 }
 
-const shots = path.join(os.tmpdir(), `pdf-arc-${SLUG}-${Date.now()}`);
+const shots = path.join(os.tmpdir(), `pdf-arc-${SLUG.replace(/\//g, "-")}-${Date.now()}`);
 await mkdir(shots, { recursive: true });
 
 const browser = await chromium.launch();

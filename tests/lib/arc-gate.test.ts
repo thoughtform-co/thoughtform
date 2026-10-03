@@ -16,7 +16,7 @@ import {
 
 describe("the arcs' password (ADR-135)", () => {
   it("covers every page under /arcs/, keyed in the environment's own shape", () => {
-    expect(arcGateKey("/arcs/pandora-proposal")).toBe("PANDORA_PROPOSAL");
+    expect(arcGateKey("/arcs/pandora/proposal")).toBe("PANDORA_PROPOSAL");
     expect(arcGateKey("/arcs/pandora-proposal/")).toBe("PANDORA_PROPOSAL");
     expect(arcGateKey("/arcs/pandora")).toBe("PANDORA");
     expect(arcGateKey("/arcs/trinny-london/proposal")).toBe("TRINNY_LONDON_PROPOSAL");
@@ -33,7 +33,7 @@ describe("the arcs' password (ADR-135)", () => {
     expect(arcGateKey("/%61rcs/pandora-proposal")).toBe("PANDORA_PROPOSAL");
     expect(arcGateKey("/arcs/%70andora-proposal")).toBe("PANDORA_PROPOSAL");
     expect(arcGateKey("/arcs//pandora-proposal")).toBe("PANDORA_PROPOSAL");
-    expect(arcGateKey("//arcs/pandora-proposal")).toBe("PANDORA_PROPOSAL");
+    expect(arcGateKey("//arcs/pandora/proposal")).toBe("PANDORA_PROPOSAL");
   });
 
   it("leaves the owner's overview, the assets and everything else alone", () => {
@@ -65,8 +65,8 @@ describe("the arcs' password (ADR-135)", () => {
   });
 
   it("sends a reader back only to an arc page on this site", () => {
-    expect(safeArcNext("/arcs/pandora-proposal")).toBe("/arcs/pandora-proposal");
-    expect(safeArcNext("/arcs/pandora-proposal#phases")).toBe("/arcs/pandora-proposal#phases");
+    expect(safeArcNext("/arcs/pandora/proposal")).toBe("/arcs/pandora/proposal");
+    expect(safeArcNext("/arcs/pandora/proposal#phases")).toBe("/arcs/pandora/proposal#phases");
     expect(safeArcNext("//evil.example/arcs/x")).toBeNull();
     expect(safeArcNext("https://evil.example/arcs/x")).toBeNull();
     expect(safeArcNext("/admin")).toBeNull();
@@ -91,15 +91,15 @@ describe("the gate, end to end (ADR-135)", () => {
     const { NextRequest } = await import("next/server");
     const { proxy } = await import("@/proxy");
     await withEnv({ ARC_PASSWORD_PANDORA_PROPOSAL: "Copenhagen" }, async () => {
-      const blocked = await proxy(new NextRequest("http://localhost/arcs/pandora-proposal"));
+      const blocked = await proxy(new NextRequest("http://localhost/arcs/pandora/proposal"));
       expect(blocked.status).toBe(307);
       const to = new URL(blocked.headers.get("location") ?? "");
       expect(to.pathname).toBe("/unlock");
-      expect(to.searchParams.get("next")).toBe("/arcs/pandora-proposal");
+      expect(to.searchParams.get("next")).toBe("/arcs/pandora/proposal");
 
       const token = await arcPassToken("PANDORA_PROPOSAL", "Copenhagen");
       const open = await proxy(
-        new NextRequest("http://localhost/arcs/pandora-proposal", {
+        new NextRequest("http://localhost/arcs/pandora/proposal", {
           headers: { cookie: `tf_arc_pandora_proposal=${token}` },
         })
       );
@@ -109,11 +109,11 @@ describe("the gate, end to end (ADR-135)", () => {
       // The payload is gated with the page, and the reader is sent back to
       // the PAGE, never to the payload.
       const payload = await proxy(
-        new NextRequest("http://localhost/arcs/pandora-proposal.rsc?_rsc=abc")
+        new NextRequest("http://localhost/arcs/pandora/proposal.rsc?_rsc=abc")
       );
       expect(payload.status).toBe(307);
       expect(new URL(payload.headers.get("location") ?? "").searchParams.get("next")).toBe(
-        "/arcs/pandora-proposal"
+        "/arcs/pandora/proposal"
       );
       const escaped = await proxy(new NextRequest("http://localhost/%61rcs/pandora-proposal"));
       expect(escaped.status).toBe(307);
@@ -130,12 +130,12 @@ describe("the gate, end to end (ADR-135)", () => {
       const post = (password: string) => {
         const body = new FormData();
         body.set("password", password);
-        body.set("next", "/arcs/pandora-proposal");
+        body.set("next", "/arcs/pandora/proposal");
         return POST(new Request("http://localhost/api/arcs/unlock", { method: "POST", body }));
       };
       const ok = await post("Copenhagen");
       expect(ok.status).toBe(303);
-      expect(new URL(ok.headers.get("location") ?? "").pathname).toBe("/arcs/pandora-proposal");
+      expect(new URL(ok.headers.get("location") ?? "").pathname).toBe("/arcs/pandora/proposal");
       const cookie = ok.headers.get("set-cookie") ?? "";
       expect(cookie).toContain("tf_arc_pandora_proposal=");
       expect(cookie).not.toContain("Copenhagen");

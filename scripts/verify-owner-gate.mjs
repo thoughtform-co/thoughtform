@@ -233,9 +233,9 @@ try {
   // ── 7 · What stays public ───────────────────────────────────────────────────
   for (const p of [
     "/arcs/loop",
-    "/arcs/suri-proposal",
+    "/arcs/suri/proposal",
     "/arcs/trinny-london/proposal",
-    "/arcs/loop-earplugs",
+    "/arcs/loop/portfolio",
   ]) {
     const r = await get(p);
     check(`anonymous ${p} → 200`, r.status === 200, `status ${r.status}`);

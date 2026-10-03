@@ -32,7 +32,7 @@ import {
   featherStops,
   flowState,
   windowOf,
-} from "@/app/(marketing)/arcs/thoughtform-workshop/flow/flowClock";
+} from "@/app/(marketing)/arcs/thoughtform/workshop-v1/flow/flowClock";
 
 /**
  * The workshop's opening flow (ADR-138): About → the eras → the Arc. The
@@ -42,7 +42,7 @@ import {
 
 const ROOT = resolve(__dirname, "../..");
 const CSS = readFileSync(
-  resolve(ROOT, "app/(marketing)/arcs/thoughtform-workshop/thoughtform-workshop.css"),
+  resolve(ROOT, "app/(marketing)/arcs/thoughtform/workshop-v1/thoughtform-workshop.css"),
   "utf8"
 );
 const VOIDWALKER_CSS = readFileSync(

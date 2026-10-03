@@ -6,8 +6,8 @@ import type { ArcBenchExample, ArcImage, ArcPathStage, ArcSectionOf } from "../.
  * The ship's own record (`Arcs_Tom On The Moon`): a brand world for an agency
  * of specialist creators, rebranding to Tom on the Moon. Every frame below is
  * on file there, every date and figure is the eval log's, and every quote is
- * the client's, verbatim. The course page (`/arcs/ai-storytelling`) and the
- * class-one deck (`/arcs/ai-storytelling-class-1`) import these by reference
+ * the client's, verbatim. The course page (`/arcs/thoughtform/ai-storytelling`) and the
+ * class-one deck (`/arcs/thoughtform/ai-storytelling-class-1`) import these by reference
  * and author only their heads; the registry pins the two pages `toBe` the
  * same records, so the worked example cannot drift between them.
  *

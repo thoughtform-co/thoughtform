@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { CLIENTS, KIND_LABEL, clientPageCount, kindOf } from "@/lib/arcs/clients";
+import {
+  CLIENTS,
+  GROUPS,
+  KIND_LABEL,
+  THOUGHTFORM_HOUSE,
+  clientPageCount,
+  kindOf,
+} from "@/lib/arcs/clients";
 import { PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
-import { ARCS, arcSlugs, arcsOf, houseArcs } from "@/lib/arcs/registry";
+import { ARCS, arcHrefs, arcsOf, houseArcs } from "@/lib/arcs/registry";
+import { HOUSE_SLUG, arcHref, groupHref } from "@/lib/arcs/routes";
 import {
   KIND_ONE,
   STANDING,
@@ -26,7 +34,8 @@ import type { SheetSection } from "@/lib/sheet/types";
  * number the registry does not hold would be a live dashboard lying.
  */
 
-const CLIENTS_LISTED = CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
+/* Every group with a page (ADR-142): the clients, and the house. */
+const CLIENTS_LISTED = GROUPS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
 const KINDS = ["keynote", "workshop", "production"];
 
 describe("the arcs sheet (ADR-114)", () => {
@@ -36,7 +45,7 @@ describe("the arcs sheet (ADR-114)", () => {
       expect(arc.status, `${arc.slug}: status`).toBeDefined();
       expect(Object.keys(STANDING), `${arc.slug}: status`).toContain(arc.status);
     }
-    for (const client of CLIENTS) {
+    for (const client of GROUPS) {
       expect(client.since, `${client.slug}: since`).toMatch(/^\d{4}$/);
       for (const page of client.pages ?? [])
         expect(Object.keys(STANDING), `${client.slug}: page status`).toContain(page.status);
@@ -57,8 +66,13 @@ describe("the arcs sheet (ADR-114)", () => {
       const pages = client.pages ?? [];
       expect(rows[0].value).toBe(String(arcs.length + pages.length));
       expect([...Object.values(STANDING), "On record"]).toContain(rows[1].value);
-      const latest = pages[0]?.chip ?? arcs[0]?.cardChip ?? arcs[0]?.format;
-      expect(rows[2].value).toBe(latest);
+      // The newest filing by date; a tie goes to the band's order, pages first.
+      const filed = [
+        ...pages.map((p) => ({ chip: p.chip, date: p.date })),
+        ...arcs.map((a) => ({ chip: a.cardChip ?? a.format, date: a.date })),
+      ];
+      const newestDate = filed.map((f) => f.date).sort()[filed.length - 1];
+      expect(rows[2].value, client.slug).toBe(filed.find((f) => f.date === newestDate)?.chip);
       expect(rows[3].value).toBe(client.since);
       const kinds = rows[4].value.split(" · ");
       expect(kinds.length).toBeGreaterThan(0);
@@ -76,10 +90,12 @@ describe("the arcs sheet (ADR-114)", () => {
       const pages = client.pages ?? [];
       const arcs = arcsOf(client.slug);
       expect(cards).toHaveLength(pages.length + arcs.length);
-      expect(cards.slice(0, pages.length).map((c) => c.href)).toEqual(pages.map((p) => p.href));
-      expect(cards.slice(pages.length).map((c) => c.href)).toEqual(
-        arcs.map((a) => `/arcs/${a.slug}`)
-      );
+      // The house lists its formats first and its one older page last (ADR-142).
+      const expected =
+        client.slug === HOUSE_SLUG
+          ? [...arcs.map(arcHref), ...pages.map((p) => p.href)]
+          : [...pages.map((p) => p.href), ...arcs.map(arcHref)];
+      expect(cards.map((c) => c.href)).toEqual(expected);
       expect(new Set(cards.map((c) => c.href)).size).toBe(cards.length);
       for (const card of cards) {
         expect(card.kicker.length, card.id).toBeGreaterThan(0);
@@ -88,13 +104,12 @@ describe("the arcs sheet (ADR-114)", () => {
         expect(KINDS).toContain(card.data?.kind);
         expect(card.figure.kind).toBe("image");
         if (card.figure.kind === "image") expect(card.figure.src).toMatch(/^\/(arcs|images)\//);
-        if (card.href.startsWith("/arcs/") && !card.href.slice(6).includes("/"))
-          expect(arcSlugs()).toContain(card.href.slice(6));
+        expect([...arcHrefs(), ...pages.map((p) => p.href)], card.id).toContain(card.href);
       }
       const console = consoleFor(client);
       expect(console.id).toBe(client.slug);
       expect(console.menuPrimary).toBe(true);
-      expect(console.panel.href).toBe(`/arcs/${client.slug}`);
+      expect(console.panel.href).toBe(groupHref(client.slug));
       expect(console.data).toEqual({ "sh-filter": "kind", kinds: kindsOf(client).join(" ") });
       for (const k of kindsOf(client)) expect(KINDS).toContain(k);
     }
@@ -146,6 +161,20 @@ function registryRecord() {
         // board and phases are the one configuration a client page carries.
         configured: p.href === "/arcs/trinny-london/proposal",
       });
+  // The house's pages are house formats, read as the kind of page they are.
+  for (const p of THOUGHTFORM_HOUSE.pages ?? [])
+    out.push({
+      id: `${THOUGHTFORM_HOUSE.slug}-${p.chip}`,
+      client: null,
+      date: p.date,
+      status: p.status ?? "",
+      kind: p.kind,
+      href: p.href,
+      title: p.title,
+      chip: p.kind,
+      sections: null,
+      configured: false,
+    });
   for (const a of ARCS)
     out.push({
       id: a.slug,
@@ -153,7 +182,7 @@ function registryRecord() {
       date: a.date,
       status: a.status ?? "",
       kind: kindOf(a),
-      href: `/arcs/${a.slug}`,
+      href: arcHref(a),
       title: a.cardTitle,
       chip: a.format,
       sections: a.sections.length,
@@ -299,7 +328,7 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
       expect(d.kind, r.id).toBe(KIND_ONE[r.kind as keyof typeof KIND_ONE]);
       expect(d.title, r.id).toBe(r.title);
       expect(d.cta.href, r.id).toBe(r.href);
-      expect(d.designation.href, r.id).toBe(client ? `/arcs/${client.slug}` : undefined);
+      expect(d.designation.href, r.id).toBe(groupHref(client ? client.slug : HOUSE_SLUG));
       // Only a proposal draws a configuration — "not every type of arc has
       // this intelligence configuration" (owner, ADR-118 U2).
       expect(d.configuration !== null, `${r.id}: a board`).toBe(r.configured);

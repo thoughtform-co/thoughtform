@@ -115,7 +115,9 @@ const AUTHORED: readonly FooterColumn[] = [
       station("services"),
       station("about"),
       station("voidwalker"),
-      { label: "Claude workshop", href: "/claude-workshop" },
+      /* No "Claude workshop" row since ADR-142: the corridor variant moved
+         under `/arcs/thoughtform/`, which is unlisted and behind the arcs'
+         password, and a footer does not link into a gated page. */
       /* The sheet pages (ADR-114). ⚠ MUSINGS IS LIT SINCE ADR-119 — the
          three posts are published (`draft: false`) and the homepage carries
          a station that racks them, so a footer row pointing at the index is

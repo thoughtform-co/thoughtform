@@ -25,6 +25,7 @@ import type { ArcDef } from "../types";
  */
 export const PLOPSA_WORKSHOP_ARC: ArcDef = {
   slug: "plopsa-workshop",
+  leaf: "workshop",
   format: "workshop",
   client: "plopsa",
   kind: "workshop",

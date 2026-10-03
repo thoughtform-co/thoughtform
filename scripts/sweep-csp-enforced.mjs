@@ -41,15 +41,15 @@ const OWNER_ROOT = process.env.OWNER_PASS_SECRET?.trim() || null;
 
 const ROUTES = [
   "/",
-  "/claude-workshop",
+  "/arcs/thoughtform/claude-workshop-corridor",
   "/arcs/trinny-london/proposal",
   ...(OWNER_ROOT ? ["/arcs"] : []),
-  "/arcs/loop-earplugs",
-  "/arcs/ai-keynote",
+  "/arcs/loop/portfolio",
+  "/arcs/thoughtform/keynote-v1",
   /* The proposal (ADR-098): a new section kind with its own client leaf,
      and the one arc that is light-LOCKED, so it is the route where a
      policy violation would show up in a theme nobody could toggle out of. */
-  "/arcs/suri-proposal",
+  "/arcs/suri/proposal",
   "/arcs/suri",
 ];
 const THEMES = ["dark", "light"];

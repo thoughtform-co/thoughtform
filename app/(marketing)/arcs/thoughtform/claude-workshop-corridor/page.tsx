@@ -31,13 +31,17 @@ export const metadata: Metadata = {
   title: "Thoughtform — Claude Workshop",
   description:
     "Hands-on Claude workshop. Encode how your team works into a substrate every model, tool, and surface inherits.",
-  // OWNER DECISION (ADR-053): this route is currently indexable, like the
-  // rest of (marketing). To make it link-only, uncomment:
-  // robots: { index: false, follow: false },
+  // LINK-ONLY SINCE ADR-142 (owner, 2026-10-03). ADR-053 left it indexable
+  // at `/claude-workshop`; it moved under the house's arcs, which are
+  // unlisted, behind the arcs' password and out of the sitemap, and the
+  // old address redirects here.
+  robots: { index: false, follow: false },
 };
 
 /**
- * /claude-workshop — the workshop surface as a HOMEPAGE VARIANT (ADR-053).
+ * /arcs/thoughtform/claude-workshop-corridor — the workshop surface as a
+ * HOMEPAGE VARIANT (ADR-053), authored at `/claude-workshop` and moved under
+ * the house by ADR-142.
  *
  * Same LandingPage, same depth corridor, different narrative order:
  *

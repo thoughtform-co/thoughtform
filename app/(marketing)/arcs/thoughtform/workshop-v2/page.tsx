@@ -33,7 +33,7 @@ import "@/components/arcs/arcs.css";
 // prototype, so it shares v1's overrides too; a copy would be a second thing
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
-import "../thoughtform-workshop/thoughtform-workshop.css";
+import "../workshop-v1/thoughtform-workshop.css";
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";
 // The instruments after it, exactly as `/` and the arcs route do; without it
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * /arcs/thoughtform-workshop-v2 — the workshop's SECOND CUT (ADR-139).
+ * /arcs/thoughtform/workshop-v2 — the workshop's SECOND CUT (ADR-139).
  *
  * The same page as v1 down to the proof stack, and a different chapter after
  * it: the framing runs as before, gains the ground beat, and then the

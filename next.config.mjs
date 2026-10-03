@@ -2,6 +2,7 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { LEGACY_ARC_ROUTES } from "./lib/arcs/legacyRoutes.mjs";
 import { buildSecurityHeaders } from "./lib/security/headers.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -88,32 +89,20 @@ const nextConfig = {
         async redirects() {
           return [
             { source: "/v7", destination: "/", permanent: true },
-            // The Loop arc was authored at `/arcs/portfolio` and renamed to name
-            // its client. `dynamicParams = false` closes the prerendered set, so
-            // the old slug 404s rather than falling through — and an arc is an
-            // UNLISTED page whose whole distribution is a link somebody forwards,
-            // which means the links in the wild are in inboxes. 308, because that
-            // slug is retired rather than parked.
-            // ⚠ Redirects resolve BEFORE `proxy.ts` and long before the dynamic
-            // route resolves, so this never reaches the not-found boundary.
-            {
-              source: "/arcs/portfolio",
-              destination: "/arcs/loop-earplugs",
+            // Every address an arc page had and no longer has (the Loop arc's
+            // first slug, the Trinny pitch's first route, and every flat
+            // engagement ADR-142 nested under its group). An arc is an
+            // UNLISTED page whose whole distribution is a link somebody
+            // forwarded, so the links in the wild are in inboxes. 308,
+            // because each old address is retired rather than parked.
+            // ⚠ Redirects resolve BEFORE `proxy.ts` and long before the
+            // dynamic routes resolve, so none reaches the not-found boundary,
+            // and the password is asked at the page's address today.
+            ...LEGACY_ARC_ROUTES.map(([source, destination]) => ({
+              source,
+              destination,
               permanent: true,
-            },
-            // The Trinny pitch was authored at `/trinny-london` and moved
-            // under its client (ADR-099, owner). Same reasoning as the arc
-            // rename above, and the same 308: the page's whole distribution
-            // is a link somebody forwarded, so the links in the wild are in
-            // inboxes and the cheapest way to keep them working is to
-            // forward the address rather than ask anyone to re-send it.
-            // ⚠ THE OLD PATH IS NOT A ROUTE ANY MORE, so without this row it
-            // reaches the not-found boundary rather than falling through.
-            {
-              source: "/trinny-london",
-              destination: "/arcs/trinny-london/proposal",
-              permanent: true,
-            },
+            })),
           ];
         },
         async headers() {

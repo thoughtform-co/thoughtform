@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform-workshop/journey";
+import { WORKSHOP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v1/journey";
 import { THOUGHTFORM_WORKSHOP_ARC } from "@/lib/arcs/content/thoughtform-workshop";
 import { PORTRAIT_BACK_SRC } from "@/lib/services-ring/portraitBake";
 import { getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 /**
- * /arcs/thoughtform-workshop (ADR-137) — drift guard for the third fork of
+ * /arcs/thoughtform/workshop-v1 (ADR-137) — drift guard for the third fork of
  * the ADR-053 recipe, against its own prototype.
  *
  * Duplicated from the route's page.tsx (importing the server component would

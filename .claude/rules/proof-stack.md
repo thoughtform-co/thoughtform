@@ -15,7 +15,7 @@ Four projects from one casefile as a scroll-stacked pile of cards. Built for
 casefile's place (ADR-096). **One module, one sheet, three hosts** since
 ADR-128: the pile on `/`, the pile on `/arcs/trinny-london/proposal`, and the
 card AT REST on a registered arc through the `proof-card` section kind
-(`components/arcs/ArcProofCard.tsx`, first on `/arcs/pandora-proposal`).
+(`components/arcs/ArcProofCard.tsx`, first on `/arcs/pandora/proposal`).
 
 ⚠ **THE THIRD HOST MOUNTS THE CARD WHOLE AND CHANGES NOTHING IN THE MODULE.**
 Its wrapper is `.pf-stack > .pf-slot`, because every selector in this sheet is

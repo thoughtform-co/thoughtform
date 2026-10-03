@@ -3733,7 +3733,7 @@ html[data-arc-entry]
   /* ⚠ THE READER TURNS IT (ADR-080 U1) — and could not, on the page. That
      update gave the object real `OrbitControls` and shipped the drag in the
      LAB; this host kept `pointer-events: none`, so no pointerdown ever
-     reached the canvas on `/arcs/loop-earplugs`. The station layer above stays
+     reached the canvas on `/arcs/loop/portfolio`. The station layer above stays
      transparent to the pointer except on its own anchors, so a drag anywhere
      else lands here. Zoom is off in the canvas, so no wheel listener is bound
      and the page keeps scrolling over the object. */
@@ -4727,8 +4727,8 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
    ⚠ `:has()` IS THE WHOLE MECHANISM. Only a beat that DRAWS a head takes the
    datum; a chapter head, an interstitial callout and the close band have no
    `.arc-head` and keep centring, which is what they are composed for.
-   ⚠ FORMAT-SCOPED, so it reaches `/arcs/suri-proposal`,
-   `/arcs/perfect-ted-proposal` and `/arcs/hungry-minds-proposal` too —
+   ⚠ FORMAT-SCOPED, so it reaches `/arcs/suri/proposal`,
+   `/arcs/perfect-ted/proposal` and `/arcs/hungry-minds/proposal` too —
    deliberately: they have the same defect for the same reason, and a fix
    scoped to one client's page would be a rule that is true on one surface.
    ⚠ GATED TO THE TIER WHERE A BEAT OWNS A FRAME — the exact complement of

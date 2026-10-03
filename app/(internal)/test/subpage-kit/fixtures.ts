@@ -77,7 +77,7 @@ export function kitSections(now: Date): SheetSection[] {
               caption: t.tab,
               treatment: "duotone" as const,
             },
-            href: "/arcs/loop-earplugs",
+            href: "/arcs/loop/portfolio",
             data: { kind: "production" },
           })),
           data: { "sh-filter": "kind", kinds: "production" },

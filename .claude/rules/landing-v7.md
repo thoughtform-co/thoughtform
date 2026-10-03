@@ -179,7 +179,7 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
   `top < 0`, a proxy that only holds while something FOLLOWS the station; the footer is
   the last viewport, so what is measured now is that an opaque station FILLS the screen.
 - ⚠ **`.approach*` AND `.foot*` CSS STAY IN `landing.css`.** The first is inert; the
-  second is still shipped by `/claude-workshop` and `/arcs/trinny-london/proposal` from
+  second is still shipped by `/arcs/thoughtform/claude-workshop-corridor` and `/arcs/trinny-london/proposal` from
   their OWN prototypes, **neither of which has a visual guard on its footer**.
 - **Verifying:** `node scripts/capture-site-footer.mjs --vp 1920x1247 --theme dark`
   (and `--theme light`, and `--vp 390x844`) — headed, real scrolls, and it prints the
@@ -229,7 +229,7 @@ retired with the form; nothing 3D survives in the station. ⚠ **ADR-121 U1**: t
   ⚠ **NOT `data-corridor-kill`**: it is consulted before the
   whole chain, so a stamp on the cover would also win on the rungs where the
   station is opaque, and `killEl` is cached against `isConnected`. ⚠
-  `?? contactEl` is load-bearing: `/claude-workshop` and the Trinny proposal
+  `?? contactEl` is load-bearing: `/arcs/thoughtform/claude-workshop-corridor` and the Trinny proposal
   mount the same hook from their own prototypes and have no `#musings`.
 - ⚠ **TRANSPARENCY AND PROMOTION ARE ORTHOGONAL.** The docked canvas composites
   at its host's z 3 and `#musings` carries an inherited z 2, so an un-promoted
@@ -396,7 +396,7 @@ the drawer trigger, on every viewport. Contracts:
 - **`captionScramble` only.** Never `scrambleText`-style capture-restore
   on this node (ADR-031 U21).
 - **`.bars` stay** as the trigger below 641px pre-collapse and on
-  `/claude-workshop` (whose station order is not the manifest's).
+  `/arcs/thoughtform/claude-workshop-corridor` (whose station order is not the manifest's).
 - **`HudNav` state stays LOCAL** (nested-root safety) and it remains the
   only writer of `.hud__brand.is-collapsed` — the ADR-043 wordmark dock.
 - The desktop detent diamond stays hidden (ADR-031 U20), now because the

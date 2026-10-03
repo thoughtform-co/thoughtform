@@ -14,7 +14,7 @@
  * Contracts:
  *   - `readBrandmarkMorph()` is 0 whenever no spec is registered — every
  *     consumer (the vertex mix, the colour lerp, the orbit fade) is an exact
- *     identity at 0, which is what keeps `/` and `/claude-workshop`
+ *     identity at 0, which is what keeps `/` and `/arcs/thoughtform/claude-workshop-corridor`
  *     pixel-identical without a flag.
  *   - ONE writer of `progress`: the registering route's turn writer. The
  *     actor and the armillary only read it, per frame, never per scroll

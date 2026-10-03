@@ -44,10 +44,16 @@ import {
  * at 1280×720. English, like the spine it hangs off.
  */
 export const AP_HOGESCHOOL_ARC: ArcDef = {
-  slug: "ap-hogeschool",
+  /* The id is not the school's slug: since ADR-142 the school has its own
+     page at `/arcs/ap-hogeschool`, and the two share one id namespace. */
+  slug: "ap-hogeschool-lecture",
+  leaf: "lecture",
   format: "workshop",
-  /* No `client` (a lecture, not an engagement), no `theme` (it reads in
-     both), no `motion` (reveal is the default), no `worked` anywhere. */
+  /* The school is the client since ADR-142 (owner, 2026-10-03: AP gets its
+     own group), so the lecture lives at `/arcs/ap-hogeschool/lecture`. No
+     `theme` (it reads in both), no `motion` (reveal is the default), no
+     `worked` anywhere. */
+  client: "ap-hogeschool",
   cardChip: "lecture",
   status: "running",
   date: "2026-10-01",

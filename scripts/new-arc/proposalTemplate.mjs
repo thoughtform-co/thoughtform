@@ -54,6 +54,8 @@ import { MODE_LEGEND } from "./shared/loop-tools";
  */
 export const ${CONST}: ArcDef = {
   slug: ${q(slug)},
+  // The page lives at /arcs/${client}/${engagement} (ADR-142).
+  leaf: ${q(engagement)},
   format: "proposal",
   client: ${q(client)},
   kind: ${q(kind)},

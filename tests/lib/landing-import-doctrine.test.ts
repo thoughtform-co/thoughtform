@@ -32,14 +32,14 @@ import { describe, expect, it } from "vitest";
  * ⚠ EVERY MARKETING ENTRY IS WALKED, not just `/` (ADR-093). The doctrine is
  * about a ROUTE's First Load JS, and each of these routes has its own — so a
  * variant that pulled three in through one careless import would have been
- * invisible to a guard that only ever walked the homepage. `/claude-workshop`
+ * invisible to a guard that only ever walked the homepage. `/arcs/thoughtform/claude-workshop-corridor`
  * had been unwalked since ADR-053 for exactly that reason.
  */
 
 const ROOT = join(__dirname, "..", "..");
 const ENTRIES = [
   "app/(marketing)/page.tsx",
-  "app/(marketing)/claude-workshop/page.tsx",
+  "app/(marketing)/arcs/thoughtform/claude-workshop-corridor/page.tsx",
   "app/(marketing)/arcs/trinny-london/proposal/page.tsx",
 ] as const;
 

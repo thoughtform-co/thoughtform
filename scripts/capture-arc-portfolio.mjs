@@ -1,5 +1,5 @@
 /**
- * capture-arc-portfolio — one shot per beat of /arcs/loop-earplugs (ADR-078).
+ * capture-arc-portfolio — one shot per beat of /arcs/loop/portfolio (ADR-078).
  *
  * The page FLOWS (ADR-076), so there is no corridor to drive and no
  * settle marker to wait on — but the reveal is a ONE-SHOT
@@ -19,7 +19,7 @@
  *   node scripts/capture-arc-portfolio.mjs --vp 1280x720 --theme light
  *   node scripts/capture-arc-portfolio.mjs --only overview,studio
  *   node scripts/capture-arc-portfolio.mjs --holo --only overview
- *   node scripts/capture-arc-portfolio.mjs --slug suri-proposal --vp 1280x720
+ *   node scripts/capture-arc-portfolio.mjs --slug suri/proposal --vp 1280x720
  *
  * ⚠ `--slug` SHOOTS ANY ARC (ADR-098). The sweep is the reveal grammar's,
  * which every flowing arc shares, so the one thing that was portfolio-
@@ -36,7 +36,9 @@ const arg = (flag, fallback) => {
 };
 
 const BASE = arg("--base", "http://localhost:3003");
-const SLUG = arg("--slug", "loop-earplugs");
+// The arc's path under /arcs/, `<group>/<leaf>` since ADR-142 (a flat slug
+// still works through its redirect, for the arcs that had one).
+const SLUG = arg("--slug", "loop/portfolio");
 const THEME = arg("--theme", "dark");
 const ONLY = arg("--only", "");
 /* ⚠ NOT under `public/` — that ships. The repo's throwaway shoots live
@@ -47,7 +49,7 @@ const ONLY = arg("--only", "");
    directory, covered by the `arc-shots-*` pattern beside it. */
 const OUT = arg(
   "--out",
-  path.join(".cursor", SLUG === "loop-earplugs" ? "arc-portfolio-shots" : `arc-shots-${SLUG}`)
+  path.join(".cursor", SLUG === "loop/portfolio" ? "arc-portfolio-shots" : `arc-shots-${SLUG.replace(/\//g, "-")}`)
 );
 const [W, H] = arg("--vp", "1440x800")
   .split("x")

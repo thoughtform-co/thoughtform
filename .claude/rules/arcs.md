@@ -17,7 +17,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 
 - [ADR-052: Client arcs](../sentinel/decisions/052-client-arcs.md)
 - [ADR-057: Terminal motion](../sentinel/decisions/057-arc-terminal-motion.md) — the pinned-beat grammar on the `-v2` cuts
-- [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/loop-earplugs`, the ninth kind, the shared evidence, the envelope on arcs
+- [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/loop/portfolio`, the ninth kind, the shared evidence, the envelope on arcs
 - [ADR-073: The site's header on the arc pages](../sentinel/decisions/073-arc-header.md) — `ArcHudNav` replaces the left reel; `menuPrimary` chapters; the hero's top band
 - [ADR-075: The arc hero IS the homepage hero](../sentinel/decisions/075-arc-hero-curtain.md) — the plate, the shared boot, and the curtain seam
 - [ADR-076: The portfolio flows, and the architecture closes it](../sentinel/decisions/076-portfolio-flows-and-the-architecture-beat.md) — reveal motion on the portfolio, the curtain on the flowing path, the `intelligence` kind
@@ -28,8 +28,9 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - ⚠ [ADR-098: Clients and the proposal on /arcs](../sentinel/decisions/098-arcs-clients-and-the-proposal.md) — **PROPOSED (2026-09-12), built and guarded, pending the owner's live read.** `client` / `kind` / `theme` on an `ArcDef`, the client page inside the existing route, the overview's groups and filter, the `configuration` kind, and `scripts/new-arc.mjs`. See §The client model below
 - ⚠ [ADR-099: The pitch nests under its client, the configuration scrolls in, and the flow is drawn](../sentinel/decisions/099-proposal-nests-and-the-configuration-scrolls-in.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read.** ONE nesting exception (a `ClientDef.pages` record, outside `[slug]`'s one-segment namespace — ADR-098 §2's flat engagements are untouched), a DATUM under every proposal head (format-scoped, so all three proposal arcs take it), and the `flow` kind — ADR-052's third enumerated exception. See §The client model and §One beat per screen below
 - ⚠ [ADR-100: The configuration is a board in two states](../sentinel/decisions/100-the-configuration-is-a-board-in-two-states.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read.** The `board` kind — ADR-052's **fourth enumerated exception**: the client's configuration as a circuit board, dormant beside lit, the proof's R4 grammar at page scale, no frame, one leaf with no picker. On the Trinny page it REPLACES the `configuration` beat (`ArcConfiguration` is byte-identical for the registered proposals). See §The client model below
-- ⚠ [ADR-139: The workshop's second cut](../sentinel/decisions/139-the-workshop-second-cut.md) — **PROPOSED (2026-09-30), built and guarded, pending the owner's live read.** `/arcs/thoughtform-workshop-v2`, a SECOND own route sharing v1's prototype, route sheet and `.tw-root` (fork all three together or none). `ArcSectionBase.worked` — the page-wide worked-example switch, which touches NO kind: a switched beat is authored once per example as sibling sections and the renderer gathers the contiguous run. The resting state is the markup and the control is absent without JS. **Four kinds, ADR-052's nineteenth to twenty-second exceptions**: `ground` (why it is built here — no vendor named, no digit lettered), `plugin-board` (where the six answers live — every plate carries its `answers` tie, the lit pair is the FIRST two), `skill-file` (a Skill as the file it is — every line quoted from a Skill on disk, never invented) and `chat` (drawn, never screenshotted; the feedback reading shows the issue whole BEFORE the yes). The `bench` is REUSED and is the one beat of the chapter that does not switch. See §One beat per screen below ⚠ **U1 (2026-10-02, owner) adds the `hull` kind, the twenty-third exception**: `agent-shaped`, between the turn and the horizon, Matthew Schwartz's convex hull (a jagged star of roles, a dashed hull round the tips, gold particles in the bays; people are shapes, the agent is particles). Geometry pure in `components/arcs/hull/hullLayout.ts`, the SVG letters nothing, `source` REQUIRED (the workshop clause), every tip a hull vertex (`arc-hull.test.ts`, which caught one that was not). ⚠ **The spectrum is ONE record now** (`shared/toolAndCollaborator.ts`, spread by all four pages that show it and pinned `toBe` in `arcs-registry`); its middle line is Schwartz's turn and the figure carries `source` as a caption.
-- ⚠ [ADR-141: The AP Hogeschool lecture is the workshop's third cut](../sentinel/decisions/141-the-ap-hogeschool-lecture.md) — **PROPOSED (2026-10-01), built and guarded, pending the owner's live read.** `/arcs/ap-hogeschool`, a THIRD own route on ADR-139's share rule (v1's prototype, sheet, `.tw-root`, About flow, portrait deck and proof by import; fork all or none), with a tail for a room of students: show and tell, no hands-on chapter, no `worked` switch anywhere. Sixteen sections in five chapters; the situation minus the ledger, Tom on the Moon's board verbatim, the path · bench · wall · verdict by reference (the registry's `toBe` pin has a third reader), one NEW picture — In The Pocket's nine sector finals on a 3 × 3 wall with 16:9 cells, because `.arc-media__frame img` is `height: auto` and the wall's aspect IS the beat's height — and a takeaway rung, never a room exercise. ⚠ A readout row may not link to the pile (`#services` is not an arc section id). ⚠ `horizon` is deliberately absent: the stages' "drawn, graded, delivered" is answered by the bench and the wall. The wall is written by `scripts/arcs/prep-ap-hogeschool-assets.mjs` (reads the Drive finals only). ⚠ **U1 (2026-10-02, owner: "really smushed together")**: v1's shared route sheet released `#workshop` at (0,2,0) and won only by cascade ORDER; adding `course.css` made the bundler put the route sheet before landing.css, in dev AND production, so the station kept its side padding (every beat ~820px wide at 2000px) and `content-visibility: auto`. The release rule names the station BY ID now (`.tw-root #workshop.station.tw-arc`). **A sheet shared across routes wins on specificity, never on order**. ⚠ **U2 (2026-10-02, owner)**: the Today readout is replaced by v2's opening slide ("Hand it to an agent. Trust what comes back."), now ONE shared record (`shared/handItToAnAgent.ts`, the whole `hero-board` section) read by reference by v2 and this page and pinned `toBe` in `arcs-registry`; v1's opening has a different sub and is not a reader
+- ⚠ [ADR-139: The workshop's second cut](../sentinel/decisions/139-the-workshop-second-cut.md) — **PROPOSED (2026-09-30), built and guarded, pending the owner's live read.** `/arcs/thoughtform/workshop-v2`, a SECOND own route sharing v1's prototype, route sheet and `.tw-root` (fork all three together or none). `ArcSectionBase.worked` — the page-wide worked-example switch, which touches NO kind: a switched beat is authored once per example as sibling sections and the renderer gathers the contiguous run. The resting state is the markup and the control is absent without JS. **Four kinds, ADR-052's nineteenth to twenty-second exceptions**: `ground` (why it is built here — no vendor named, no digit lettered), `plugin-board` (where the six answers live — every plate carries its `answers` tie, the lit pair is the FIRST two), `skill-file` (a Skill as the file it is — every line quoted from a Skill on disk, never invented) and `chat` (drawn, never screenshotted; the feedback reading shows the issue whole BEFORE the yes). The `bench` is REUSED and is the one beat of the chapter that does not switch. See §One beat per screen below ⚠ **U1 (2026-10-02, owner) adds the `hull` kind, the twenty-third exception**: `agent-shaped`, between the turn and the horizon, Matthew Schwartz's convex hull (a jagged star of roles, a dashed hull round the tips, gold particles in the bays; people are shapes, the agent is particles). Geometry pure in `components/arcs/hull/hullLayout.ts`, the SVG letters nothing, `source` REQUIRED (the workshop clause), every tip a hull vertex (`arc-hull.test.ts`, which caught one that was not). ⚠ **The spectrum is ONE record now** (`shared/toolAndCollaborator.ts`, spread by all four pages that show it and pinned `toBe` in `arcs-registry`); its middle line is Schwartz's turn and the figure carries `source` as a caption.
+- ⚠ [ADR-141: The AP Hogeschool lecture is the workshop's third cut](../sentinel/decisions/141-the-ap-hogeschool-lecture.md) — **PROPOSED (2026-10-01), built and guarded, pending the owner's live read.** `/arcs/ap-hogeschool/lecture`, a THIRD own route on ADR-139's share rule (v1's prototype, sheet, `.tw-root`, About flow, portrait deck and proof by import; fork all or none), with a tail for a room of students: show and tell, no hands-on chapter, no `worked` switch anywhere. Sixteen sections in five chapters; the situation minus the ledger, Tom on the Moon's board verbatim, the path · bench · wall · verdict by reference (the registry's `toBe` pin has a third reader), one NEW picture — In The Pocket's nine sector finals on a 3 × 3 wall with 16:9 cells, because `.arc-media__frame img` is `height: auto` and the wall's aspect IS the beat's height — and a takeaway rung, never a room exercise. ⚠ A readout row may not link to the pile (`#services` is not an arc section id). ⚠ `horizon` is deliberately absent: the stages' "drawn, graded, delivered" is answered by the bench and the wall. The wall is written by `scripts/arcs/prep-ap-hogeschool-assets.mjs` (reads the Drive finals only). ⚠ **U1 (2026-10-02, owner: "really smushed together")**: v1's shared route sheet released `#workshop` at (0,2,0) and won only by cascade ORDER; adding `course.css` made the bundler put the route sheet before landing.css, in dev AND production, so the station kept its side padding (every beat ~820px wide at 2000px) and `content-visibility: auto`. The release rule names the station BY ID now (`.tw-root #workshop.station.tw-arc`). **A sheet shared across routes wins on specificity, never on order**. ⚠ **U2 (2026-10-02, owner)**: the Today readout is replaced by v2's opening slide ("Hand it to an agent. Trust what comes back."), now ONE shared record (`shared/handItToAnAgent.ts`, the whole `hero-board` section) read by reference by v2 and this page and pinned `toBe` in `arcs-registry`; v1's opening has a different sub and is not a reader
+- ⚠ [ADR-142: Every arc nests under its group](../sentinel/decisions/142-arcs-nest-under-their-group.md) — **PROPOSED (2026-10-03, owner), built and guarded.** Reverses ADR-098 §2: an arc lives at `/arcs/<group>/<leaf>` (its client, or `thoughtform` for a house format; `ArcDef.leaf`), `/arcs/<group>` is the group's listing, every address is derived by `arcHref`, and every flat address 308s from `lib/arcs/legacyRoutes.mjs`. AP Hogeschool is a client (`/arcs/ap-hogeschool/lecture`); the May corridor variant moved to `/arcs/thoughtform/claude-workshop-corridor`, link-only. See §The client model below
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -492,31 +493,43 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
 
 ## The client model, the filter and the proposal (ADR-098)
 
-- ⚠ **TWO SLUG SETS, ONE NAMESPACE.** `/arcs/[slug]` resolves a CLIENT first
-  (`getClient` → `ArcClientPage`) and an arc second. A client slug equal to an
-  arc's would shadow a live page with a listing, silently, on a page whose
-  whole distribution is a link somebody already forwarded — `arcs-registry`
-  pins the sets disjoint, and `generateStaticParams` is their union.
-- ⚠ **NO URL MOVED, AND THAT WAS THE POINT.** Engagements stay FLAT
-  (`/arcs/suri-proposal`, not `/arcs/suri/proposal`). Nesting reads better
-  and costs a second route file repeating the seven-sheet cascade order, a
-  308 chain on top of the one already in `next.config.mjs`, and every
-  hardcoded slug in two smokes, the capture script and `HERO_ROUTES` moved at
-  once. The hierarchy is expressed on the OVERVIEW, which is where a reader
-  meets it.
-- ⚠ **ONE EXCEPTION, AND IT IS NOT AN ARC (ADR-099).** The Trinny pitch moved
-  to `/arcs/trinny-london/proposal`, with a 308 from `/trinny-london` beside
-  the `/arcs/portfolio` one. **The engagements above are UNTOUCHED**: what
-  nests is a `ClientDef.pages` record — a client's own page, never an `ArcDef`
-  — and `/arcs/<client>/<leaf>` is outside `[slug]`'s namespace **by
-  construction, because `[slug]` matches ONE segment**. So it shadows nothing,
-  needs no `generateStaticParams` row, and `/arcs/trinny-london` still
-  resolves to the client page (verified 200 / 200 / 308). ⚠ `arcs-registry`
-  pins BOTH halves — such an href is two segments deep AND its first segment
-  is its own client's slug, because a page nested under another client's would
-  resolve fine and lie about whose work it is. ⚠ **`isLightLockedPath` AND
-  `HERO_ROUTES` ARE EXACT-MATCH**, so a moved route earns both rows by hand;
-  both lists are `toEqual`-pinned so a route joins or leaves by a reviewed hand.
+- ⚠ **EVERY ARC NESTS UNDER ITS GROUP (ADR-142, owner 2026-10-03), WHICH
+  REVERSES ADR-098 §2's FLAT ENGAGEMENTS.** An arc lives at
+  `/arcs/<group>/<leaf>`: the group is `arc.client`, or `thoughtform` for a
+  house format (`HOUSE_SLUG`); the leaf is the required `ArcDef.leaf`.
+  `/arcs/<group>` is the group's own page (`[slug]/page.tsx`, a listing), the
+  arc is `[slug]/[leaf]/page.tsx`. ⚠ **THE ADDRESS IS DERIVED**: every link to
+  an arc goes through `arcHref` (`lib/arcs/routes.ts`), never
+  `` `/arcs/${arc.slug}` ``. The slug stays as the arc's ID (`getArc`,
+  element ids, `OWN_ROUTE_SLUGS`) and is no longer the address. ⚠ A `-v2` cut
+  that spreads its v1 inherits the v1's leaf and must restate it.
+- ⚠ **THE HOUSE IS A GROUP, NEVER A CLIENT.** `THOUGHTFORM_HOUSE` is a
+  `ClientDef` outside `CLIENTS`; `GROUPS` adds it for the routes and listings
+  only. House arcs carry no `client` and stay house formats on the overview.
+  Its listing letters `House formats` and `// House` (a `panel.house` flag,
+  never the string) and lists the formats before its one non-arc page, the
+  corridor variant at `/arcs/thoughtform/claude-workshop-corridor` (ADR-053's
+  page, `/claude-workshop` until ADR-142).
+- ⚠ **EVERY OLD ADDRESS FORWARDS, IN ONE HOP.** `lib/arcs/legacyRoutes.mjs`
+  (plain `.mjs`, read by `next.config.mjs` as 308s) lists every flat address
+  with its page today. Moving an arc again means re-pointing its old rows, not
+  chaining. `arcs-routes` pins every address ever handed out to a live page.
+  ⚠ `/arcs/ap-hogeschool` is the one old address with no row: it was the
+  lecture and is now the school's page, which lists it.
+- ⚠ **CLIENT AND ARC IDS STAY DISJOINT** — no longer for the route (an arc is
+  two segments deep now) but because the overview and the group pages use both
+  as element ids. That is why the lecture's id is `ap-hogeschool-lecture`.
+- ⚠ **A GROUP'S FOLDER NEVER RENDERS A PAGE OF ITS OWN.** `thoughtform/`,
+  `ap-hogeschool/`, `trinny-london/` hold pages one level down; a `page.tsx`
+  at their root would shadow the listing. A nested folder that renders is an
+  arc (its id in `[slug]/[leaf]`'s `OWN_ROUTE_SLUGS`) or one of its group's
+  `pages` records (the Trinny pitch, the corridor variant), never neither —
+  the folder walk in `thoughtform-workshop-v2.test.ts` fails both. ⚠
+  **`isLightLockedPath` AND `HERO_ROUTES` ARE EXACT-MATCH**, so a moved route
+  earns both rows by hand; both lists are `toEqual`-pinned.
+- ⚠ **THE PASSWORD KEY FOLLOWS THE ADDRESS** (ADR-135). A client's proposal
+  keeps its key (`/arcs/pandora/proposal` is `PANDORA_PROPOSAL`); a house
+  format's gains `THOUGHTFORM_`. Name a new page password after the address.
 - **`kind` is DERIVED where it can be** (`kindOf`, `lib/arcs/clients.ts`):
   a workshop is a workshop, a portfolio and a proposal are productions. None
   of the five pre-existing content modules was edited to author a taxonomy it
@@ -745,7 +758,7 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   "not a simulacrum of those three modules". Rules for the scene it lives in:
   `.claude/rules/trinny-london.md` §The head decodes.
 - ⚠ **THE WORKSHOP FRAMES THE LOOP BEFORE IT SHOWS IT (ADR-130, Proposed
-  2026-09-27).** `/arcs/plopsa-workshop` opens on two panels and Moira's
+  2026-09-27).** `/arcs/plopsa/workshop` opens on two panels and Moira's
   argument in the house's drawings. **`list-groups` `layout: "readout"`** is two
   notched plates of READOUT ROWS (key framed and filled, value framed and set
   right), an item's in-page `href` making the row a link to that beat; a layout,
@@ -897,7 +910,7 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   the page's). Grammar: [`hologram-stage-grammar.md`](../skills/thoughtform-design/references/hologram-stage-grammar.md)
   §The material since ADR-140.
 - ⚠ **THE WORKSHOP IS A HOUSE ARC AND THE CLIENT PAGES ARE CUTS OF IT
-  (ADR-131, Proposed 2026-09-28, owner).** `/arcs/thoughtform-workshop` carries
+  (ADR-131, Proposed 2026-09-28, owner).** `/arcs/thoughtform/workshop-v1` carries
   no `client` — ADR-052's own reading of that field — and leads the house block.
   Five chapters (the registry CAP exactly, so the first fork wanting a sixth
   fails loudly), fifteen beats, four figures each in its own beat: `stages`,
@@ -936,10 +949,10 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   swaps words, never shape. `what-you-build` lost its chapter slot to it; the
   page is 22 sections against the shell's 16, each half inside it.
 - ⚠ **THE WORKSHOP OPENS ON THE CORRIDOR (ADR-137, Proposed 2026-09-29).**
-  `/arcs/thoughtform-workshop` is a STATIC FOLDER under `/arcs` (the third fork
+  `/arcs/thoughtform/workshop-v1` is a STATIC FOLDER under `/arcs` (the third fork
   of ADR-053's recipe): hero → about → the eras (ADR-138) → corridor → the homepage's proof stack in
   `#services` (ring off) → the arc's sections in `#workshop` → contact.
-  `[slug]`'s `generateStaticParams` filters the slug (`OWN_ROUTE_SLUGS`); the
+  `[slug]/[leaf]`'s `generateStaticParams` filters the slug (`OWN_ROUTE_SLUGS`); the
   `ArcDef` stays in `ARCS`. The tail renders through `ArcSectionRenderer`,
   reached only through `lazy()`. ⚠ The station is `content-visibility:
 visible` or the document grows ~12,400px on arrival. The opening slide is the
@@ -996,7 +1009,7 @@ no-preference)`), and the four lengths are pinned equal between the sheet and
     (upper right) paid as an in-plane step in `%` of the card, with the
     perspective origin left at the orbit's centre the flip was approved on.
 - ⚠ **THE AI STORYTELLING COURSE IS ONE PROJECT, NINE GATES (ADR-132, Proposed
-  2026-09-28).** `/arcs/ai-storytelling`, a house arc with `cardChip: "course"`:
+  2026-09-28).** `/arcs/thoughtform/ai-storytelling`, a house arc with `cardChip: "course"`:
   a readout, one quote beat, one `anatomy` beat per week with the same four rows
   (Objective · You make · The gate · The tool), a close. The student builds one
   brand world all term, around themselves or a fictional product. ⚠ Motion is
@@ -1029,11 +1042,11 @@ contents`** and each station a subgrid item of the track's grid, so the rail
   `scripts/arcs/prep-ai-storytelling-assets.mjs`, which only reads the ship;
   the registry pins every path frame under `/arcs/`, on disk, sized and alt'd.
 - ⚠ **THE CLASS-ONE DECK, AND THE ARCHETYPE'S SITUATION RE-CUT ON THE MOIRA
-  SESSION (ADR-136, Proposed 2026-09-29, owner).** `/arcs/ai-storytelling-class-1`
+  SESSION (ADR-136, Proposed 2026-09-29, owner).** `/arcs/thoughtform/ai-storytelling-class-1`
   is a house arc in the workshop format, the course's class-one station linking
   to it (`ArcSyllabusClass.page`, a registered arc's ROOT, never a fragment — a
   gated arc drops one through `/unlock`); it runs the Loop Moira second
-  session's flow beat for beat, and `/arcs/thoughtform-workshop`'s situation
+  session's flow beat for beat, and `/arcs/thoughtform/workshop-v1`'s situation
   runs the same sequence between its proof and `what-you-build`. **Three kinds,
   ADR-052's sixteenth to eighteenth exceptions, ported by hand** (ADR-106):
   `spectrum` (the tool ↔ collaborator rail; the word frames a BAND, never the
@@ -1161,7 +1174,7 @@ line }, socket, alt }`: six small configurations in the board's cross whose
     by command.** ⚠ **A traveller paints last.** ⚠ **CSS `font-weight` beats
     the SVG attribute**, so lit is a class.
 - ⚠ **THE PANDORA PROPOSAL IS THE FOURTH CUT OF THE FORMAT (ADR-128, Proposed
-  2026-09-26; Phase A shipped).** `/arcs/pandora-proposal` is a FLAT registered
+  2026-09-26; Phase A shipped).** `/arcs/pandora/proposal` is a registered
   arc, never a fork of the Trinny route (a homepage-variant fork is that route's
   whole file list copied; a proposal is read cold). Its proof is ADR-126's
   register on the flat kinds: `films` · a chapter `head` over the `heimdall`

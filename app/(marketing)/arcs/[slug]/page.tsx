@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ArcHero } from "@/components/arcs/ArcHero";
-import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
-import { ArcShell } from "@/components/arcs/ArcShell";
 import { SheetRenderer } from "@/components/sheet/SheetRenderer";
 import { SheetShell } from "@/components/sheet/SheetShell";
-import { clientSlugs, getClient } from "@/lib/arcs/clients";
-import { arcSlugs, getArc } from "@/lib/arcs/registry";
+import { getGroup, groupSlugs } from "@/lib/arcs/clients";
+import { HOUSE_SLUG } from "@/lib/arcs/routes";
 import { clientSheetSections } from "@/lib/sheet/arcs";
 import { chaptersOf } from "@/lib/sheet/composition";
 import { sliceV7Sections } from "@/lib/v7-parse";
@@ -53,139 +50,71 @@ import "@/components/landing/v7/theme.css";
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 
 /**
- * /arcs/[slug] — one client arc (ADR-052), or one CLIENT (ADR-098).
+ * /arcs/[slug] — one GROUP's page (ADR-098, ADR-114, ADR-142): a client's,
+ * or the house's at `/arcs/thoughtform`. A listing of what the group holds,
+ * drawn as a sheet. The arcs themselves are one level down, at
+ * `/arcs/<group>/<leaf>` (`./[leaf]/page.tsx`).
  *
  * Statically generated; unknown slugs 404 (`dynamicParams = false`).
- * Unlisted: robots noindex on both shapes. The detail shell writes
- * `--hero-lift` from scroll so the HUD rails clip-uncover with the hero
- * curtain, exactly like the landing.
+ * Unlisted: robots noindex.
  *
- * ⚠ TWO SLUG SETS, ONE NAMESPACE, AND THE CLIENT RESOLVES FIRST. A client
- * page is a listing of that client's engagements; an arc is one of them.
- * `tests/lib/arcs-registry.test.ts` pins the sets disjoint, because a
- * collision here would shadow a live page — silently, and only for the
- * one reader holding the link to it.
+ * ⚠ THE ENGAGEMENTS NEST NOW (ADR-142, owner 2026-10-03), which reverses
+ * ADR-098 §2's "the engagements stay flat". Its reason was that an arc's
+ * links are in inboxes; the answer is that every flat address it had
+ * redirects (308) to the nested one, from `lib/arcs/legacyRoutes.mjs`, and
+ * `arcs-routes` pins every address ever handed out to a live page.
  *
- * ⚠ THE ENGAGEMENTS STAY FLAT (`/arcs/<slug>`, not `/arcs/<client>/<slug>`).
- * An arc is an unlisted page whose whole distribution is a link somebody
- * forwarded, so the links in the wild are in inboxes: the cheapest way to
- * keep them working is not to move the page. The hierarchy is expressed on
- * the overview, which is where a reader meets it.
+ * ⚠ A GROUP'S OWN ROUTE FOLDER DOES NOT SHADOW THIS PAGE. `trinny-london/`,
+ * `thoughtform/` and `ap-hogeschool/` are real folders holding pages one
+ * level down, with no page of their own, so `/arcs/<group>` still resolves
+ * here: the router matches whole paths, never a folder first.
  *
- * ⚠ ONE EXCEPTION, AND IT IS NOT AN ARC (ADR-099, owner 2026-09-13). A
- * client's own PAGE — a homepage variant like the Trinny pitch, a
- * `ClientDef.pages` record rather than an `ArcDef` — nests at
- * `/arcs/<client>/<leaf>` as a real route folder. That address is outside
- * this route's namespace by construction (`[slug]` matches ONE segment),
- * so it shadows nothing and needs no entry in `generateStaticParams`; and
- * the rule above is untouched, because the thing that moved was never an
- * engagement in `ARCS`. `arcs-registry` pins both halves: such an href
- * must be two segments deep, and the first must be its own client's slug.
+ * ⚠ THE STYLESHEETS ARE THE ARC ROUTE'S, IN ITS ORDER. Until ADR-142 one
+ * route rendered both shapes, so a client page was always drawn under this
+ * whole cascade; it keeps it, byte for byte, rather than find out which
+ * sheet it silently depended on.
  */
 export const dynamicParams = false;
 
-/**
- * Arcs served by a STATIC folder of their own under `/arcs` (ADR-137): the
- * folder wins over this dynamic segment, so emitting the slug here too would
- * build a page nobody can reach. The `ArcDef` stays in `ARCS` — the overview,
- * the registry guards and `HERO_ROUTES` read it — and only the route moves.
- */
-const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set([
-  "thoughtform-workshop",
-  "thoughtform-workshop-v2",
-  "ap-hogeschool",
-]);
-
 export function generateStaticParams() {
-  return [...arcSlugs().filter((s) => !OWN_ROUTE_SLUGS.has(s)), ...clientSlugs()].map((slug) => ({
-    slug,
-  }));
+  return groupSlugs().map((slug) => ({ slug }));
 }
 
-interface ArcRouteParams {
+interface GroupRouteParams {
   /* Next 16: route params arrive as a Promise. */
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: ArcRouteParams): Promise<Metadata> {
+export async function generateMetadata({ params }: GroupRouteParams): Promise<Metadata> {
   const { slug } = await params;
-  const client = getClient(slug);
-  if (client) {
-    return {
-      title: `${client.name} — Thoughtform`,
-      description: client.lede,
-      robots: { index: false, follow: false },
-    };
-  }
-  const arc = getArc(slug);
-  if (!arc) return { robots: { index: false, follow: false } };
+  const group = getGroup(slug);
+  if (!group) return { robots: { index: false, follow: false } };
   return {
-    title: arc.meta.title,
-    description: arc.meta.description,
+    // The house's page is Thoughtform's own, so it is titled by what it lists.
+    title:
+      group.slug === HOUSE_SLUG ? "House formats — Thoughtform" : `${group.name} — Thoughtform`,
+    description: group.lede,
     robots: { index: false, follow: false },
   };
 }
 
-export default async function ArcPage({ params }: ArcRouteParams) {
+export default async function GroupPage({ params }: GroupRouteParams) {
   const { slug } = await params;
+  const group = getGroup(slug);
+  if (!group) notFound();
   const slice = sliceV7Sections([]);
-  const client = getClient(slug);
-  if (client) {
-    /* A client page is a SHEET page (ADR-114): a split head with the
-       client's name and lede, that client's console at page scale, the
-       close. `SheetShell` is the index-style shell — no hero, rails
-       uncovered from the first paint. */
-    const sections = clientSheetSections(client);
-    return (
-      <SheetShell
-        hudHtml={slice.hudHtml}
-        bodyClass={slice.bodyClass}
-        page={`arcs-${client.slug}`}
-        chapters={chaptersOf(sections)}
-      >
-        <SheetRenderer sections={sections} />
-      </SheetShell>
-    );
-  }
-  const arc = getArc(slug);
-  if (!arc) notFound();
-  const menu = arc.sections
-    .filter((section) => section.menuLabel)
-    .map((section) => ({
-      id: section.id,
-      label: section.menuLabel as string,
-      primary: section.menuPrimary,
-    }));
-  // Absent motion is the ADR-052 reveal — resolved once, here, so the
-  // rest of the tree never has to know the flag is optional.
-  const motion = arc.motion ?? "reveal";
-  const gatewayPlate = arc.hero.plate === "gateway";
+  /* A group page is a SHEET page (ADR-114): a split head with the group's
+     name and lede, its console at page scale, the close. `SheetShell` is the
+     index-style shell — no hero, rails uncovered from the first paint. */
+  const sections = clientSheetSections(group);
   return (
-    <>
-      {/* ⚠ NO STATIC PRELOAD FOR A GATEWAY HERO (ADR-075). The plate is
-          theme-dependent, and the preload scanner runs before any script:
-          a static link would always pull the DARK plate and light
-          visitors would pay for both. `lib/theme/heroPreload.ts` injects
-          the right one from the theme the bootstrap just stamped. An arc
-          with its own plate has one file for both themes and keeps the
-          static link. */}
-      {gatewayPlate ? null : <link rel="preload" as="image" href={arc.hero.image.src} />}
-      <ArcShell
-        hudHtml={slice.hudHtml}
-        bodyClass={slice.bodyClass}
-        variant="detail"
-        menu={menu}
-        motion={motion}
-        gatewayPlate={gatewayPlate}
-        curtain={arc.hero.curtain ?? false}
-        format={arc.format}
-        lock={arc.theme}
-        rhythm={arc.rhythm}
-        clientMark={arc.client ? getClient(arc.client)?.mark : undefined}
-      >
-        <ArcHero hero={arc.hero} />
-        <ArcSectionRenderer sections={arc.sections} motion={motion} />
-      </ArcShell>
-    </>
+    <SheetShell
+      hudHtml={slice.hudHtml}
+      bodyClass={slice.bodyClass}
+      page={`arcs-${group.slug}`}
+      chapters={chaptersOf(sections)}
+    >
+      <SheetRenderer sections={sections} />
+    </SheetShell>
   );
 }

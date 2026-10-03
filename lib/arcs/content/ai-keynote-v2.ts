@@ -12,6 +12,7 @@ import type { ArcDef } from "../types";
 export const AI_KEYNOTE_V2_ARC: ArcDef = {
   ...AI_KEYNOTE_ARC,
   slug: "ai-keynote-v2",
+  leaf: "keynote-v2",
   motion: "terminal",
   // The cut's OWN date — the spread above would inherit v1's (ADR-118).
   date: "2026-08-01",

@@ -48,6 +48,7 @@ const eur = (n: number) => `€${n.toLocaleString("en-GB")}`;
 
 export const PANDORA_PROPOSAL_ARC: ArcDef = {
   slug: "pandora-proposal",
+  leaf: "proposal",
   format: "proposal",
   client: "pandora",
   // A proposal is out until the client answers it (ADR-114).
