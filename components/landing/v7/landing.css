@@ -2572,16 +2572,74 @@
   .hero__cta__btn {
     justify-content: center;
   }
-  /* ⚠ A PORTRAIT WINDOW IS A ~26 % SLICE OF THE PLATE, AND THE X TERM PICKS IT
-     (the footer's own finding, site-footer.css). The Thought + Form plate
-     (ADR-144) puts the head at ~76 % across and this rung centres the copy
-     over the plate, so no window shows the whole head AND a clear headline:
-     50 % loses the head, 72 % sets the headline on the face. 60 % keeps the
-     copy on black sky with the profile entering from the right (shot at
-     50/60/66/72/80, 390x844). Showing the whole head on a phone means moving
-     the copy, which `/test/hero-kv-lab` proposes and the owner has not ruled. */
-  .hero__bg img {
-    object-position: 60% center;
+  /* ⚠ THE PHONE PAINTS ITS OWN PORTRAIT PLATE, AND THE COPY GOES TO THE TOP
+     (ADR-145, owner 2026-10-04: "move the head to the bottom ... create a space
+     above it ... move the paragraph and the call to action to the upper part").
+     ADR-144 had to slice the LANDSCAPE plate here (a ~26 % window, 60 %, the
+     head cut by the right edge) because no window gave both the head and a
+     clear headline. The `<picture>`'s `(max-width: 640px)` source now paints
+     `ThoughtForm_v1-portrait` (MF-04 extended to 9:16 by an edit: the head on
+     the floor, the sky above it empty), so the copy is seated in that sky.
+     ⚠ SCOPED TO A HERO THAT PAINTS THE HOUSE `<picture>`: an arc that owns its
+     key visual (`data-plate="own"`, a bare `<img>`) keeps its centred copy over
+     its own landscape art. ⚠ The plate is cover-fit and height-bound on every
+     portrait phone (its 0.558 is wider than 390x844's 0.462), so `y` only
+     bites on a landscape-held phone, where `100%` keeps the head on the floor;
+     `x` 60 % keeps the ring's right edge (u 0.92) inside the ~83 % window at
+     390 and the drafting lines' left end out of the copy. */
+  .hero:has(> .hero__bg > picture) {
+    justify-content: flex-start;
+  }
+  .hero__bg picture img {
+    object-position: 60% 100%;
+  }
+  /* Light paints its own portrait: the obsidian lower-third reframe, anchored
+     to the floor exactly as the dark `<img>` is, so the theme glitch tears
+     between two pictures in one place. A full `background` restatement, not a
+     longhand, so the landscape url in theme.css never paints first; it outranks
+     theme.css's light block (0,2,1) on the `:has()` weight, media-scoped here
+     because that block is pinned byte-for-byte by `theme-css-sweep`. */
+  html[data-theme="light"] .hero:has(> .hero__bg > picture) .hero__bg {
+    background:
+      url("/images/ThoughtForm_v1-portrait-light.webp") 60% 100% / cover no-repeat,
+      var(--void);
+  }
+  /* ⚠ THE PRONUNCIATION LINE JOINS THE COPY ON THIS PLATE. Its ADR-043 seat is
+     the foot of the right-hand column, which on the portrait plate is the
+     brightest dust in the frame: gold mono measured 1.0–1.2:1 there, and 2.0
+     mean even under the floor bed. The floor belongs to the head here, so the
+     line comes into flow under the CTA row, on the sky, as the copy's last line
+     (the hero is a flex column; the line follows `.hero__content` in source). */
+  .hero:has(> .hero__bg > picture) .hero__flywheel--ipa {
+    position: relative;
+    inset: auto;
+    margin-top: 22px;
+    align-self: flex-start;
+  }
+  /* Two beds. The FLOOR one is the footer's law (site-footer.css, its bottom
+     band): the pronunciation line and the HUD's fixed bottom corners print
+     over whatever is under them, and on this plate that is the brightest dust
+     in the frame — gold mono measured 1.5:1 there with no bed. The head's base
+     ends above it. The bed under the copy: the desktop wash runs left-to-right under a copy
+     column on the LEFT; here the copy is a band across the TOP, so the bed
+     turns with it (the footer's own rotated-bed finding, site-footer.css).
+     ⚠ DARK ONLY, AND SAID IN THE SELECTOR: `:has()` lends this rule its
+     argument's weight, (0,3,1) against theme.css's light overlay at (0,2,1),
+     so without the `:not()` it would paint a void bed over the parchment. */
+  html:not([data-theme="light"]) .hero:has(> .hero__bg > picture) .hero__video__overlay {
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(var(--void-deep-rgb), 0.5) 0%,
+        rgba(var(--void-deep-rgb), 0.3) 40%,
+        transparent 58%
+      ),
+      linear-gradient(
+        to top,
+        rgba(var(--void-deep-rgb), 0.85) 0%,
+        rgba(var(--void-deep-rgb), 0.6) 7%,
+        transparent 17%
+      );
   }
   /* Lift clear of the bottom-left brandmark sigil on mobile. */
   .hero__flywheel {

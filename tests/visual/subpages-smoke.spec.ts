@@ -557,7 +557,10 @@ test.describe("subpages (ADR-114)", () => {
         });
         expect(read.imgs, route).toBe(2);
         expect(read.painted, `${route}: one theme's plate paints`).toBe(1);
-        expect(read.paintedSrc, `${route}: the dark plate is the hero's`).toMatch(/ThoughtForm_v1/);
+        // ADR-145: the footer's dark plate is its OWN (MF-10), no longer the hero's.
+        expect(read.paintedSrc, `${route}: the dark plate is the footer's own`).toMatch(
+          /ThoughtForm_footer_v1/
+        );
         for (const src of read.hiddenSrc)
           expect(src, `${route}: the hidden theme's plate was fetched`).toBe("");
         expect(Math.abs(read.plate.left), `${route}: the plate bleeds left`).toBeLessThanOrEqual(1);

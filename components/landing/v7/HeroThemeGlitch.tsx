@@ -7,13 +7,18 @@ import {
   createGlitchPlan,
   glitchFrame,
   GLITCH_DURATION_MS,
+  parseObjectPosition,
   type GlitchBand,
 } from "@/lib/key-visual/themeGlitch";
 import { readThemeMode, type ThemeMode } from "@/lib/theme/themeModeRef";
 import {
+  HERO_PHONE_MEDIA,
   HERO_PLATE_DARK,
   HERO_PLATE_DARK_FALLBACK,
+  HERO_PLATE_DARK_PORTRAIT,
+  HERO_PLATE_DARK_PORTRAIT_FALLBACK,
   HERO_PLATE_LIGHT,
+  HERO_PLATE_LIGHT_PORTRAIT,
 } from "@/lib/theme/heroPreload";
 import { useThemeStore } from "@/lib/stores/themeStore";
 
@@ -55,10 +60,17 @@ const CANVAS_CLASS = "hero-glitch-canvas";
  *  for a 640 ms effect; 2 is the cap the retired seam field used too. */
 const MAX_DPR = 2;
 
-type Plates = Record<ThemeMode, HTMLImageElement | null>;
+/** Each plate is held with the src it was loaded from: on a phone the dark
+ *  plate is the PORTRAIT one (ADR-145), and a window resized across the rung
+ *  after warming would otherwise tear from the wrong picture. */
+type Plates = Record<ThemeMode, { img: HTMLImageElement; src: string } | null>;
 
-const plateSrc = (mode: ThemeMode): string =>
-  mode === "light" ? HERO_PLATE_LIGHT : HERO_PLATE_DARK;
+/** The dark plate the `<picture>` paints at this viewport: the same media
+ *  string as its `<source media>` and the preload. */
+const darkPortrait = (): boolean =>
+  typeof window !== "undefined" &&
+  !!window.matchMedia &&
+  window.matchMedia(HERO_PHONE_MEDIA).matches;
 
 /**
  * Load a plate, falling back for the dark AVIF.
@@ -68,19 +80,35 @@ const plateSrc = (mode: ThemeMode): string =>
  * browser without AVIF would silently fail to load the dark plate and the
  * glitch would skip for exactly the users whose hero is the fallback WebP.
  */
-function loadPlate(mode: ThemeMode): Promise<HTMLImageElement> {
-  const attempt = (src: string) =>
-    new Promise<HTMLImageElement>((resolve, reject) => {
+function loadPlate(mode: ThemeMode): Promise<{ img: HTMLImageElement; src: string }> {
+  const attempt = (src: string, key = src) =>
+    new Promise<{ img: HTMLImageElement; src: string }>((resolve, reject) => {
       const img = new Image();
       img.decoding = "async";
-      img.onload = () => resolve(img);
+      img.onload = () => resolve({ img, src: key });
       img.onerror = () => reject(new Error(src));
       img.src = src;
     });
 
-  if (mode === "light") return attempt(HERO_PLATE_LIGHT);
-  return attempt(HERO_PLATE_DARK).catch(() => attempt(HERO_PLATE_DARK_FALLBACK));
+  if (mode === "light")
+    return attempt(darkPortrait() ? HERO_PLATE_LIGHT_PORTRAIT : HERO_PLATE_LIGHT);
+  // The cache key is the AVIF's path whichever format loaded, so the paint
+  // check compares like with like.
+  if (darkPortrait()) {
+    return attempt(HERO_PLATE_DARK_PORTRAIT).catch(() =>
+      attempt(HERO_PLATE_DARK_PORTRAIT_FALLBACK, HERO_PLATE_DARK_PORTRAIT)
+    );
+  }
+  return attempt(HERO_PLATE_DARK).catch(() => attempt(HERO_PLATE_DARK_FALLBACK, HERO_PLATE_DARK));
 }
+
+/** The src each plate SHOULD be at this viewport (the AVIF path, the key). The
+ *  phone rung paints a portrait in BOTH themes since ADR-145. */
+const wantedSrc = (mode: ThemeMode): string => {
+  const phone = darkPortrait();
+  if (mode === "light") return phone ? HERO_PLATE_LIGHT_PORTRAIT : HERO_PLATE_LIGHT;
+  return phone ? HERO_PLATE_DARK_PORTRAIT : HERO_PLATE_DARK;
+};
 
 export function HeroThemeGlitch({
   containerRef,
@@ -130,10 +158,10 @@ export function HeroThemeGlitch({
     const warm = () => {
       if (disposed) return;
       (["dark", "light"] as const).forEach((mode) => {
-        if (plates[mode]) return;
+        if (plates[mode]?.src === wantedSrc(mode)) return;
         loadPlate(mode)
-          .then((img) => {
-            if (!disposed) plates[mode] = img;
+          .then((plate) => {
+            if (!disposed) plates[mode] = plate;
           })
           .catch(() => {
             /* The glitch skips; the CSS swap already happened. */
@@ -175,9 +203,28 @@ export function HeroThemeGlitch({
       ctx = null;
     };
 
-    const drawPlate = (img: HTMLImageElement, band: GlitchBand, boxW: number, boxH: number) => {
+    /* Where each plate is PAINTED. The dark one is the `<img>`'s own computed
+       `object-position` (60 % on the old phone window, floor-anchored on the
+       portrait one since ADR-145) — read even while it is `display: none` in
+       light, since a computed value resolves either way. The light plate is
+       a background: `center / cover` (theme.css) on a wide frame, and its
+       portrait painted `60% 100%` on the phone rung (landing.css), the dark
+       `<img>`'s own seat there. */
+    const heroImg = bg.querySelector<HTMLImageElement>("img");
+    const platePos = (mode: ThemeMode): [number, number] => {
+      if (mode === "light") return darkPortrait() ? [0.6, 1] : [0.5, 0.5];
+      return heroImg ? parseObjectPosition(getComputedStyle(heroImg).objectPosition) : [0.5, 0.5];
+    };
+
+    const drawPlate = (
+      img: HTMLImageElement,
+      pos: [number, number],
+      band: GlitchBand,
+      boxW: number,
+      boxH: number
+    ) => {
       if (!ctx) return;
-      const fit = coverRect(img.naturalWidth, img.naturalHeight, boxW, boxH);
+      const fit = coverRect(img.naturalWidth, img.naturalHeight, boxW, boxH, pos[0], pos[1]);
       const dy = band.y0 * boxH;
       const dh = (band.y1 - band.y0) * boxH;
 
@@ -215,9 +262,16 @@ export function HeroThemeGlitch({
     const paint = (elapsed: number, plan: ReturnType<typeof createGlitchPlan>, to: ThemeMode) => {
       if (!ctx || !canvas) return true;
       const from: ThemeMode = to === "light" ? "dark" : "light";
-      const oldImg = plates[from];
-      const newImg = plates[to];
-      if (!oldImg || !newImg) return true;
+      const oldPlate = plates[from];
+      const newPlate = plates[to];
+      // A plate warmed at another viewport is a different picture: skip, the
+      // CSS swap has already happened (the hard cut is the safe failure).
+      if (!oldPlate || !newPlate) return true;
+      if (oldPlate.src !== wantedSrc(from) || newPlate.src !== wantedSrc(to)) return true;
+      const oldImg = oldPlate.img;
+      const newImg = newPlate.img;
+      const oldPos = platePos(from);
+      const newPos = platePos(to);
 
       const boxW = canvas.clientWidth;
       const boxH = canvas.clientHeight;
@@ -225,7 +279,8 @@ export function HeroThemeGlitch({
 
       ctx.clearRect(0, 0, boxW, boxH);
       for (const band of frame.bands) {
-        drawPlate(band.source === "old" ? oldImg : newImg, band, boxW, boxH);
+        if (band.source === "old") drawPlate(oldImg, oldPos, band, boxW, boxH);
+        else drawPlate(newImg, newPos, band, boxW, boxH);
       }
 
       if (frame.scanline) {

@@ -1054,7 +1054,7 @@ html[data-theme="light"] .home-v2-copy-title em {
    ═══════════════════════════════════════════════════════════════════ */
 html[data-theme="light"] .hero__bg {
   background:
-    url("/images/Gateway_v2-light.webp") center / cover no-repeat,
+    url("/images/ThoughtForm_v1-light.webp") center / cover no-repeat,
     var(--void);
 }
 html[data-theme="light"] .hero__bg img {

@@ -18,33 +18,10 @@
   }
 }
 
-/* ⚠ A LAB PROPOSAL FOR THE PHONE, NOT THE SHIPPED LAYOUT. The production
-   phone hero centres its copy over the plate, and with a head on the right
-   that puts the headline on the face. Here the copy rises to the top band and
-   the plate drops by a fifth, so the head sits under the copy against the
-   plate's own black sky (the hero's ground is void, so the gap above reads as
-   sky). */
-@media (max-width: 640px) {
-  .hkv .hero {
-    justify-content: flex-start;
-  }
-  .hkv .hero__bg img {
-    transform: translateY(22%);
-  }
-  /* The dropped plate's top edge would read as a seam; the overlay carries
-     the void down over it before the head begins. */
-  .hkv .hero__video__overlay {
-    background:
-      linear-gradient(
-        to bottom,
-        rgb(var(--void-deep-rgb)) 0%,
-        rgb(var(--void-deep-rgb)) 22%,
-        rgba(var(--void-deep-rgb), 0.55) 34%,
-        transparent 52%
-      ),
-      linear-gradient(to top, rgba(var(--void-deep-rgb), 0.45) 0%, transparent 30%);
-  }
-}
+/* The lab's phone proposal (copy in the top band over a dropped landscape
+   plate) shipped as the real thing in ADR-145: the hero paints its own
+   PORTRAIT plate on the <=640 rung now (landing.css), so this block is gone.
+   The lab still swaps the landscape plates there, for comparison only. */
 
 /* T hides the copy so the plate can be read on its own. */
 .hkv[data-copy="off"] .hero__content,
@@ -161,5 +138,23 @@
   }
   .hkv__keys {
     display: none;
+  }
+}
+
+/* The cinemagraph preview (ADR-145, wave 07): over the plate, under the scrim,
+   framed exactly as the plate is (centred on desktop, floor-anchored on the
+   <=640 rung, where the phone loop is the portrait plate's own). */
+.hkv .hkv__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .hkv .hkv__video {
+    object-position: 60% 100%;
   }
 }

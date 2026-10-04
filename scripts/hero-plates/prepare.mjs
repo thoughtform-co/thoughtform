@@ -49,6 +49,9 @@
  *   node scripts/hero-plates/prepare.mjs           # write both plates
  *   node scripts/hero-plates/prepare.mjs --dry     # report sizes, write nothing
  *   node scripts/hero-plates/prepare.mjs --thoughtform   # the Thought + Form plate + share card only
+ *   node scripts/hero-plates/prepare.mjs --footer        # the footer's own plate (ADR-145)
+ *   node scripts/hero-plates/prepare.mjs --portrait      # the phone hero's portrait plate (ADR-145)
+ *   node scripts/hero-plates/prepare.mjs --light-tf      # the three Thought + Form LIGHT plates (ADR-145)
  */
 
 import sharp from "sharp";
@@ -224,8 +227,107 @@ async function encodeThoughtForm() {
   return avif.length;
 }
 
+/* ── The footer's own plate and the phone's portrait plate (ADR-145) ─────
+   The footer stopped sharing the hero's file: it takes MF-10 (Midjourney job
+   `c8f094c8`), the keeper whose left half is the quietest in the Selection
+   (text band p95 luminance 0.173, phone window 0.376 against 0.70 for the
+   hero's). The phone hero takes a PORTRAIT plate: MF-04 extended to 9:16 by
+   an edit (the world ship's waves 05/06), the head on the floor and the sky
+   above for the copy. Both are the Thought + Form plate's recipe exactly:
+   native size, AVIF q50 on near-black, WebP q80 fallback, no resampling.
+   Masters staged and gitignored:
+     assets-staging/hero-candidates/ThoughtForm_footer_v1-master.png    ← c8f094c8
+     assets-staging/hero-candidates/ThoughtForm_v1-portrait-master.png  ← the picked 9:16 */
+async function encodePlate(label, master, name, keeper) {
+  const src = staged(master);
+  if (!fs.existsSync(src)) {
+    console.error(`✗ ${label} master missing: ${path.relative(REPO, src)}`);
+    console.error(`  Copy ${keeper} there and re-run.`);
+    return null;
+  }
+  const meta = await sharp(src).metadata();
+  const avif = await sharp(src).avif({ quality: TF_AVIF_Q, effort: 6 }).toBuffer();
+  const webp = await sharp(src).webp({ quality: TF_WEBP_Q, effort: 5 }).toBuffer();
+  console.log(`${label}  ${meta.width}×${meta.height}`);
+  console.log(`  png master      ${kb(fs.statSync(src).size)}`);
+  console.log(`  avif q${TF_AVIF_Q}        ${kb(avif.length)}  ← shipping`);
+  console.log(`  webp q${TF_WEBP_Q}        ${kb(webp.length)}  ← fallback`);
+  if (!DRY) {
+    fs.writeFileSync(pub("images", `${name}.avif`), avif);
+    fs.writeFileSync(pub("images", `${name}.webp`), webp);
+    console.log(`  → public/images/${name}.avif, .webp`);
+  }
+  return avif.length;
+}
+
+/* ── Thought + Form in LIGHT (ADR-145, owner 2026-10-04: "A · obsidian ring")
+   The light theme stops painting the gateway: the same keepers, the statue in
+   black obsidian on a pale ground, made by EDITING his frames (the world
+   ship's wave 06), never by re-prompting. Three plates, one per surface:
+     hero      ThoughtForm_v1-light            ← MO-arcdark__r2__nano_01  (MF-04)
+     phone     ThoughtForm_v1-portrait-light   ← MO-arcdarkthird916__nano_01
+     footer    ThoughtForm_footer_v1-light     ← MO-risedark__r2__nano_02 (MF-10)
+   The gateway light plate's own recipe, re-measured per master: the PAPER is
+   read off an open-sky crop (pixels with min(r,g,b) > 190) and white-balanced
+   onto the light `--void` #ece3d6 by per-channel gains, so no plate reads as a
+   pasted rectangle on the page. WebP q85 for the same reason the gateway is:
+   AVIF bands parchment. The gains are printed, not stored — each is a
+   measurement of THIS master against THIS token. */
+const LIGHT_PAGE = [236, 227, 214];
+
+async function encodeLightThoughtForm(label, master, name, sky) {
+  const src = staged(master);
+  if (!fs.existsSync(src)) {
+    console.error(`✗ ${label} master missing: ${path.relative(REPO, src)}`);
+    return null;
+  }
+  const meta = await sharp(src).metadata();
+  const crop = {
+    left: Math.round(sky[0] * meta.width),
+    top: Math.round(sky[1] * meta.height),
+    width: Math.round((sky[2] - sky[0]) * meta.width),
+    height: Math.round((sky[3] - sky[1]) * meta.height),
+  };
+  const { data, info } = await sharp(src).extract(crop).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const sum = [0, 0, 0];
+  let n = 0;
+  for (let i = 0; i < data.length; i += info.channels) {
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    if (Math.min(r, g, b) <= 190) continue;
+    sum[0] += r; sum[1] += g; sum[2] += b; n++;
+  }
+  if (!n) {
+    console.error(`✗ ${label}: no paper pixels in the sky crop`);
+    return null;
+  }
+  const paper = sum.map((s) => s / n);
+  const gains = LIGHT_PAGE.map((t, c) => t / paper[c]);
+  const webp = await sharp(src)
+    .removeAlpha()
+    .linear(gains, [0, 0, 0])
+    .webp({ quality: LIGHT_WEBP_Q, effort: 5 })
+    .toBuffer();
+  console.log(`${label}  ${meta.width}×${meta.height}`);
+  console.log(`  paper ${paper.map((v) => v.toFixed(1)).join(", ")}  (${n} px)  gains ${gains.map((g) => g.toFixed(4)).join(" · ")}`);
+  console.log(`  webp q${LIGHT_WEBP_Q}        ${kb(webp.length)}${webp.length > LIGHT_BUDGET_BYTES ? "  ⚠ OVER BUDGET" : ""}`);
+  if (!DRY) {
+    fs.writeFileSync(pub("images", `${name}.webp`), webp);
+    console.log(`  → public/images/${name}.webp`);
+  }
+  return webp.length;
+}
+
 console.log(DRY ? "hero plates (dry run)\n" : "hero plates\n");
-if (process.argv.includes("--thoughtform")) {
+if (process.argv.includes("--light-tf")) {
+  // Sky crops as fractions (x0, y0, x1, y1): the open upper-left of each frame.
+  await encodeLightThoughtForm("hero light (MF-04 obsidian)", "ThoughtForm_v1-light-master.png", "ThoughtForm_v1-light", [0.03, 0.05, 0.4, 0.45]);
+  await encodeLightThoughtForm("phone light (lower third)", "ThoughtForm_v1-portrait-light-master.png", "ThoughtForm_v1-portrait-light", [0.05, 0.05, 0.95, 0.5]);
+  await encodeLightThoughtForm("footer light (MF-10 obsidian)", "ThoughtForm_footer_v1-light-master.png", "ThoughtForm_footer_v1-light", [0.03, 0.05, 0.4, 0.45]);
+} else if (process.argv.includes("--footer")) {
+  await encodePlate("footer (MF-10)", "ThoughtForm_footer_v1-master.png", "ThoughtForm_footer_v1", "his keeper c8f094c8");
+} else if (process.argv.includes("--portrait")) {
+  await encodePlate("phone portrait", "ThoughtForm_v1-portrait-master.png", "ThoughtForm_v1-portrait", "the picked 9:16 reframe");
+} else if (process.argv.includes("--thoughtform")) {
   await encodeThoughtForm();
 } else {
   await promoteDark();

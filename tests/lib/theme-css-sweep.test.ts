@@ -152,7 +152,8 @@ describe("theme.css — the two authoring laws", () => {
     // `content: url()` on an <img> does not replace in Firefox — so the
     // light plate is a background on the wrapper and the img is hidden.
     const bg = block(theme, 'html[data-theme="light"] .hero__bg');
-    expect(bg).toContain("Gateway_v2-light.webp");
+    // ADR-145: light is the Thought + Form plate in obsidian, not the gateway.
+    expect(bg).toContain("ThoughtForm_v1-light.webp");
     expect(block(theme, 'html[data-theme="light"] .hero__bg img')).toContain("display: none");
   });
 

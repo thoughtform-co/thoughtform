@@ -1,7 +1,11 @@
 import type { ArcDef } from "@/lib/arcs/types";
 import {
+  HERO_PHONE_MEDIA,
   HERO_PLATE_DARK,
   HERO_PLATE_DARK_FALLBACK,
+  HERO_PLATE_DARK_PORTRAIT,
+  HERO_PLATE_DARK_PORTRAIT_FALLBACK,
+  HERO_PLATE_DARK_PORTRAIT_SIZE,
   HERO_PLATE_DARK_SIZE,
 } from "@/lib/theme/heroPreload";
 
@@ -46,6 +50,23 @@ export function ArcHero({ hero }: { hero: ArcDef["hero"] }) {
             {/* The landing's plate by its constants (ADR-144): a gateway-plate
                 arc shows the house key visual whatever its own `image` names,
                 or a browser without AVIF fell back to that arc's older art. */}
+            {/* The phone's portrait plate first (ADR-145): the same media
+                string the preload reads, or a phone preloads one plate and
+                paints the other. */}
+            <source
+              media={HERO_PHONE_MEDIA}
+              srcSet={HERO_PLATE_DARK_PORTRAIT}
+              type="image/avif"
+              width={HERO_PLATE_DARK_PORTRAIT_SIZE.width}
+              height={HERO_PLATE_DARK_PORTRAIT_SIZE.height}
+            />
+            <source
+              media={HERO_PHONE_MEDIA}
+              srcSet={HERO_PLATE_DARK_PORTRAIT_FALLBACK}
+              type="image/webp"
+              width={HERO_PLATE_DARK_PORTRAIT_SIZE.width}
+              height={HERO_PLATE_DARK_PORTRAIT_SIZE.height}
+            />
             <source srcSet={HERO_PLATE_DARK} type="image/avif" />
             <img
               src={HERO_PLATE_DARK_FALLBACK}

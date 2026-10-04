@@ -58,8 +58,14 @@ Load order for an anonymous first visit to `/`:
 3. **Hero key visual — TWO plates, one per theme** (ADR-058 Update 2). Dark
    `/images/ThoughtForm_v1.avif` since ADR-144 (133 kB, in a `<picture>` with
    the 313 kB `ThoughtForm_v1.webp` as fallback; the gateway's dark AVIF it
-   replaced was 346 kB); light `/images/Gateway_v2-light.webp`
-   (435 kB, a CSS background on `.hero__bg`). Explicit `width`/`height` +
+   replaced was 346 kB); light `/images/ThoughtForm_v1-light.webp` since
+   ADR-145 (275 kB, the same picture in obsidian, a CSS background on
+   `.hero__bg`; the gateway it replaced was 435 kB). ⚠ **AT ≤640 BOTH THEMES
+   PAINT A PORTRAIT** (`ThoughtForm_v1-portrait.avif` 37 kB dark,
+   `-portrait-light.webp` 108 kB light), chosen by ONE media string
+   (`HERO_PHONE_MEDIA`) that the `<source media>`, the injected preload and
+   the theme glitch all read — a phone that preloaded the landscape plate and
+   painted the portrait would pay for two plates on the LCP path. Explicit `width`/`height` +
    `fetchpriority="high"` live in the prototype markup, plus
    **`loading="lazy"`** — that is what stops light mode fetching the dark
    plate it has hidden with `display: none`. The preload is **injected by an

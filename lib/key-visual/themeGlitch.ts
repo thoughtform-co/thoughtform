@@ -228,12 +228,19 @@ export function glitchFrame(plan: GlitchPlan, elapsedMs: number): GlitchFrame {
  * The two plates have slightly different aspect ratios (2880×1620 vs
  * 2912×1632), so the canvas cannot reuse one mapping for both — each is
  * cover-fitted to the same box independently, exactly as CSS does it.
+ *
+ * `posX` / `posY` are the `object-position` fractions (0.5 = `center`, the
+ * default). ADR-145: the ≤640 hero paints its portrait plate floor-anchored
+ * and the phone window was never centred (60 % since ADR-144), so a centred
+ * canvas tore from a picture offset from the one on screen.
  */
 export function coverRect(
   imgW: number,
   imgH: number,
   boxW: number,
-  boxH: number
+  boxH: number,
+  posX = 0.5,
+  posY = 0.5
 ): { x: number; y: number; w: number; h: number } {
   if (imgW <= 0 || imgH <= 0 || boxW <= 0 || boxH <= 0) {
     return { x: 0, y: 0, w: boxW, h: boxH };
@@ -241,5 +248,14 @@ export function coverRect(
   const scale = Math.max(boxW / imgW, boxH / imgH);
   const w = imgW * scale;
   const h = imgH * scale;
-  return { x: (boxW - w) / 2, y: (boxH - h) / 2, w, h };
+  return { x: (boxW - w) * posX, y: (boxH - h) * posY, w, h };
+}
+
+/** A computed `object-position` (always two lengths or percentages once
+ *  resolved, keywords included) as fractions; anything else reads as centred. */
+export function parseObjectPosition(value: string | null | undefined): [number, number] {
+  const parts = (value ?? "").trim().split(/\s+/);
+  const frac = (p: string | undefined) =>
+    p && p.endsWith("%") && Number.isFinite(parseFloat(p)) ? parseFloat(p) / 100 : 0.5;
+  return [frac(parts[0]), frac(parts[1])];
 }

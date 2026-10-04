@@ -4,10 +4,17 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  FOOTER_PLATE_DARK,
+  FOOTER_PLATE_DARK_FALLBACK,
+  FOOTER_PLATE_LIGHT,
+  HERO_PHONE_MEDIA,
   HERO_PLATE_DARK,
   HERO_PLATE_DARK_FALLBACK,
+  HERO_PLATE_DARK_PORTRAIT,
+  HERO_PLATE_DARK_PORTRAIT_FALLBACK,
   HERO_PLATE_DARK_TYPE,
   HERO_PLATE_LIGHT,
+  HERO_PLATE_LIGHT_PORTRAIT,
   HERO_PLATE_LIGHT_TYPE,
   HERO_ROUTES,
   heroPreloadScript,
@@ -42,7 +49,17 @@ describe("hero preload", () => {
     // The whole point of the injection is that exactly one of these is
     // fetched per visit — but both have to be on disk, and the dark
     // fallback is the one most likely to be deleted by a tidy-up.
-    for (const plate of [HERO_PLATE_DARK, HERO_PLATE_DARK_FALLBACK, HERO_PLATE_LIGHT]) {
+    for (const plate of [
+      HERO_PLATE_DARK,
+      HERO_PLATE_DARK_FALLBACK,
+      HERO_PLATE_DARK_PORTRAIT,
+      HERO_PLATE_DARK_PORTRAIT_FALLBACK,
+      HERO_PLATE_LIGHT,
+      HERO_PLATE_LIGHT_PORTRAIT,
+      FOOTER_PLATE_DARK,
+      FOOTER_PLATE_DARK_FALLBACK,
+      FOOTER_PLATE_LIGHT,
+    ]) {
       expect(exists(plate), `missing from public/: ${plate}`).toBe(true);
     }
   });
@@ -55,6 +72,40 @@ describe("hero preload", () => {
     // both plates.
     expect(script).toContain(HERO_PLATE_DARK_TYPE);
     expect(script).toContain(HERO_PLATE_LIGHT_TYPE);
+  });
+
+  it("preloads the portrait plate on a phone, with the markup's own media string (ADR-145)", () => {
+    // A phone that preloaded the landscape plate and then painted the
+    // portrait would pay for two plates on the LCP path; the two only agree
+    // if the script and every `<source media>` read ONE string.
+    expect(script).toContain(HERO_PLATE_DARK_PORTRAIT);
+    expect(script).toContain(JSON.stringify(HERO_PHONE_MEDIA));
+    // Dark only: the light branch is decided before the media query runs.
+    // Both themes take a portrait on the phone since the obsidian light plate.
+    expect(script).toContain(HERO_PLATE_LIGHT_PORTRAIT);
+    const prototypes = [
+      "landing-v7-motion.html",
+      "landing-trinny-london.html",
+      "landing-thoughtform-workshop.html",
+      "landing-claude-workshop.html",
+    ];
+    for (const file of prototypes) {
+      const html = readFileSync(join(ROOT, "public", "prototypes", "v7", file), "utf8");
+      const portrait = `<source media="${HERO_PHONE_MEDIA}" srcset="${HERO_PLATE_DARK_PORTRAIT}"`;
+      const fallback = `<source media="${HERO_PHONE_MEDIA}" srcset="${HERO_PLATE_DARK_PORTRAIT_FALLBACK}"`;
+      expect(html, `${file}: the portrait AVIF source`).toContain(portrait);
+      expect(html, `${file}: the portrait WebP source`).toContain(fallback);
+      // ORDER IS SELECTION: the first matching <source> wins, so the phone's
+      // pair must come before the unconditional landscape one.
+      expect(html.indexOf(portrait), `${file}: portrait before landscape`).toBeLessThan(
+        html.indexOf(`<source srcset="${HERO_PLATE_DARK}"`)
+      );
+    }
+    const arcHero = readFileSync(join(ROOT, "components", "arcs", "ArcHero.tsx"), "utf8");
+    expect(arcHero).toContain("media={HERO_PHONE_MEDIA}");
+    expect(arcHero.indexOf("srcSet={HERO_PLATE_DARK_PORTRAIT}")).toBeLessThan(
+      arcHero.indexOf("srcSet={HERO_PLATE_DARK}")
+    );
   });
 
   it("covers exactly the routes that paint the GATEWAY plate", () => {

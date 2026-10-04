@@ -74,15 +74,42 @@ export function HeroKvLab({
   const kv = HERO_KVS[i];
 
   // The plates are dark; the lab pins the dark theme so a stored light
-  // preference cannot hide the <picture> behind theme.css's light plate.
+  // preference cannot hide the <picture> behind theme.css's light plate. A
+  // LIGHT entry (ADR-145) flips it, so production's own light rules paint.
   useEffect(() => {
     const html = document.documentElement;
     const prev = html.getAttribute("data-theme");
-    html.setAttribute("data-theme", "dark");
+    html.setAttribute("data-theme", kv.theme ?? "dark");
     return () => {
       if (prev) html.setAttribute("data-theme", prev);
     };
-  }, []);
+  }, [kv.theme]);
+
+  // The cinemagraph (ADR-145, wave 07): a muted loop laid over the plate,
+  // under the scrim, started by script (an `autoplay` attribute fetches even
+  // when hidden). The phone loop on the <=640 rung, read once per swap.
+  useEffect(() => {
+    const bg = heroRef.current?.querySelector<HTMLElement>(".hero__bg");
+    if (!bg || !kv.video) return;
+    const phone = window.matchMedia("(max-width: 640px)").matches;
+    const v = document.createElement("video");
+    v.className = "hkv__video";
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.preload = "auto";
+    const add = (src: string, type: string) => {
+      const s = document.createElement("source");
+      s.src = src;
+      s.type = type;
+      v.appendChild(s);
+    };
+    add(phone ? kv.video.phoneAv1 : kv.video.av1, 'video/mp4; codecs="av01.0.08M.08"');
+    add(phone ? kv.video.phoneH264 : kv.video.h264, "video/mp4");
+    bg.insertBefore(v, bg.querySelector(".hero__video__overlay"));
+    void v.play().catch(() => {});
+    return () => v.remove();
+  }, [kv]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -141,11 +168,15 @@ export function HeroKvLab({
         <div className="hkv__readout">
           <span className="hkv__label">{kv.label}</span>
           <span className="hkv__meta">
-            {kv.job === "live"
-              ? "shipped plate"
-              : kv.job === "gateway"
-                ? "retired plate"
-                : `job ${kv.job}`}
+            {kv.job === "light"
+              ? "light theme"
+              : kv.job === "live"
+                ? kv.video
+                  ? "shipped plate + cinemagraph"
+                  : "shipped plate"
+                : kv.job === "gateway"
+                  ? "retired plate"
+                  : `job ${kv.job}`}
             {kv.mirror ? " · mirrored" : ""}
             {zoom > 1.001 ? ` · zoom ${zoom.toFixed(2)}` : ""}
           </span>

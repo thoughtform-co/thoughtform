@@ -36,6 +36,11 @@ export type HeroKv = {
   /** The owner's favourites and the approved frame lead the strip. */
   tag?: string;
   note?: string;
+  /** ADR-145: the plate shown in the LIGHT theme (production's own rule paints it). */
+  theme?: "light";
+  /** ADR-145: a cinemagraph over the plate (the world ship's wave 07), AV1 + H.264,
+   *  with the phone loop for the <=640 rung. Gitignored previews, never shipped. */
+  video?: { av1: string; h264: string; phoneAv1: string; phoneH264: string };
 };
 
 export const HERO_KVS: readonly HeroKv[] = [
@@ -46,6 +51,31 @@ export const HERO_KVS: readonly HeroKv[] = [
     fx: 0.76,
     fy: 0.4,
     note: "ThoughtForm_v1 (MF-04), the shipped plate since ADR-144",
+  },
+  {
+    id: "motion",
+    label: "MOTION",
+    job: "live",
+    fx: 0.76,
+    fy: 0.4,
+    tag: "cinemagraph",
+    note: "wave 07: Veo 3.1 Fast, anchored loop, composited on the plate's own pixels",
+    video: {
+      av1: "/_previews/hero-kv/motion/hero.av1.mp4",
+      h264: "/_previews/hero-kv/motion/hero.h264.mp4",
+      phoneAv1: "/_previews/hero-kv/motion/phone.av1.mp4",
+      phoneH264: "/_previews/hero-kv/motion/phone.h264.mp4",
+    },
+  },
+  {
+    id: "light",
+    label: "LIGHT",
+    job: "light",
+    fx: 0.76,
+    fy: 0.4,
+    theme: "light",
+    tag: "obsidian",
+    note: "MF-04 in obsidian on parchment, the light plate since ADR-145",
   },
   {
     id: "gateway",
@@ -108,6 +138,7 @@ export function framing(kv: HeroKv): { fx: number; zoom: number } {
 
 export function plateSrc(kv: HeroKv, thumb = false): string {
   if (kv.job === "live") return "/images/ThoughtForm_v1.webp";
+  if (kv.job === "light") return "/images/ThoughtForm_v1-light.webp";
   if (kv.job === "gateway") return "/images/Gateway_v1b.webp";
   return `/_previews/hero-kv/${kv.job}${kv.mirror ? "-m" : ""}${thumb ? "-thumb" : ""}.webp`;
 }

@@ -2,6 +2,12 @@
 
 import { CONTACT_EMAIL } from "@/lib/site/socials";
 import { footerColumns } from "@/lib/site/footer-nav";
+import {
+  FOOTER_PLATE_DARK,
+  FOOTER_PLATE_DARK_FALLBACK,
+  FOOTER_PLATE_DARK_SIZE,
+  FOOTER_PLATE_LIGHT,
+} from "@/lib/theme/heroPreload";
 
 export function SiteFooter() {
   const columns = footerColumns();
@@ -26,20 +32,22 @@ export function SiteFooter() {
             ⚠ THE SWAP CLASS IS ON THE `<img>`, NEVER THE `<picture>`: source
             selection is part of the img's own deferred fetch, so a hidden lazy
             img requests NEITHER format. The hero hides only its img for the
-            same reason. And no `fetchpriority` and no `HERO_ROUTES` row — this
-            is the same file the hero already preloaded, so in dark it is a
-            cache hit, and a footer must never compete with the hero's LCP. */}
+            same reason. And no `fetchpriority` and no `HERO_ROUTES` row: since
+            ADR-145 the dark plate is the footer's OWN (MF-10), no longer the
+            hero's cache hit, so it is a lazy fetch below the fold, which is
+            where a footer's bytes belong. A footer must never compete with the
+            hero's LCP. Its light plate is its own obsidian twin. */}
         {/* ⚠ No `eslint-disable` here and one on the light plate below: the
             `no-img-element` rule does not fire on an `<img>` inside a
             `<picture>`, and an unused directive is itself a lint warning. */}
         <picture>
-          <source srcSet="/images/ThoughtForm_v1.avif" type="image/avif" />
+          <source srcSet={FOOTER_PLATE_DARK} type="image/avif" />
           <img
             className="ft-foot__plate-img ft-foot__plate-img--dark"
-            src="/images/ThoughtForm_v1.webp"
+            src={FOOTER_PLATE_DARK_FALLBACK}
             alt=""
-            width={2912}
-            height={1632}
+            width={FOOTER_PLATE_DARK_SIZE.width}
+            height={FOOTER_PLATE_DARK_SIZE.height}
             loading="lazy"
             decoding="async"
           />
@@ -47,7 +55,7 @@ export function SiteFooter() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="ft-foot__plate-img ft-foot__plate-img--light"
-          src="/images/Gateway_v2-light.webp"
+          src={FOOTER_PLATE_LIGHT}
           alt=""
           width={2912}
           height={1632}

@@ -8,6 +8,7 @@ import {
   GLITCH_DURATION_MS,
   GLITCH_GRID,
   GLITCH_TEAR_END,
+  parseObjectPosition,
 } from "@/lib/key-visual/themeGlitch";
 
 /**
@@ -173,5 +174,29 @@ describe("coverRect", () => {
 
   it("degrades to the box rather than NaN on a zero-sized source", () => {
     expect(coverRect(0, 0, 50, 40)).toEqual({ x: 0, y: 0, w: 50, h: 40 });
+  });
+
+  it("honours object-position, so the tear lands on the painted frame (ADR-145)", () => {
+    // The phone's portrait plate is painted `60% 100%`; a centred canvas tore
+    // from a picture offset from the one on screen.
+    const centred = coverRect(1536, 2752, 390, 664);
+    expect(coverRect(1536, 2752, 390, 664, 0.5, 0.5)).toEqual(centred);
+    const floor = coverRect(1536, 2752, 390, 664, 0.6, 1);
+    expect(floor.w).toBe(centred.w);
+    expect(floor.y).toBeCloseTo(664 - floor.h, 6); // anchored to the floor
+    expect(floor.x).toBeCloseTo((390 - floor.w) * 0.6, 6);
+  });
+});
+
+describe("parseObjectPosition", () => {
+  it("reads a computed pair of percentages as fractions", () => {
+    expect(parseObjectPosition("60% 100%")).toEqual([0.6, 1]);
+    expect(parseObjectPosition("50% 50%")).toEqual([0.5, 0.5]);
+  });
+
+  it("reads anything it cannot resolve as centred, never NaN", () => {
+    expect(parseObjectPosition("")).toEqual([0.5, 0.5]);
+    expect(parseObjectPosition("12px 4px")).toEqual([0.5, 0.5]);
+    expect(parseObjectPosition(undefined)).toEqual([0.5, 0.5]);
   });
 });

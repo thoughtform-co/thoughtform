@@ -650,7 +650,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       expect(hero.bgImage, "no poster frame behind it").not.toMatch(/posters\//);
       if (theme === "light") {
         // theme.css paints the light plate as a background and hides the img.
-        expect(hero.bgImage).toContain("Gateway_v2-light");
+        expect(hero.bgImage).toContain("ThoughtForm_v1-light");
         expect(hero.imgShown, "the dark plate is hidden in light").toBe(false);
       }
       expect(hero.curtainArmed, `the curtain arms @ ${theme}`).toBe(true);

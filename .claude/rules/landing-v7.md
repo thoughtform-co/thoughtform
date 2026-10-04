@@ -107,6 +107,16 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
 - ⚠ **THE STATION KEEPS ITS OWN OPAQUE `var(--void)` GROUND AND THE PLATE IS A LAYER
   INSIDE IT.** The handoff guard asserts the cover has `alpha === 1` AND a background
   image; a station whose only ground is the image fails one of the two.
+- ⚠ **SINCE ADR-145 (2026-10-04) THE FOOTER HAS ITS OWN PLATES, AND U1's "BOTH PLATES ARE
+  THE HERO'S" BELOW IS HISTORY.** Dark is MF-10 (`ThoughtForm_footer_v1.*`), light its
+  obsidian twin (`ThoughtForm_footer_v1-light.webp`), read through `FOOTER_PLATE_*` in
+  `lib/theme/heroPreload.ts` — a lazy fetch below the fold, still no preload and no
+  `HERO_ROUTES` row. `plateSrc` / `heroSrc` are DIFFERENT files now, so the capture's
+  "must be the same file" reading is retired; `subpages-smoke` pins `ThoughtForm_footer_v1`.
+  The dark plate sits at 64 % on a tall desktop window (aspect ≤ 31:20) and centred on a
+  wider one; light stays centred (64 % put its CTA at 4.4:1). The ≤960 windows are dark 20 %
+  / light 24 %, re-measured on the new plates. Every G3 role ≥ 4.9:1 in both themes at
+  1920×1247, 1440×900, 1280×720 and 390×844.
 - ⚠ **U1 (same day, owner: _"it looks really bad, especially in dark mode; the visual
   needs to be as full bleed as possible"_): THE PLATE IS THE STATION'S WHOLE GROUND, AND
   BOTH PLATES ARE THE HERO'S.** U0 anchored a 46svh strip to the floor and washed half of

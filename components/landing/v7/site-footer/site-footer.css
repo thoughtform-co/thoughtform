@@ -205,6 +205,28 @@
    rewrites. ⚠ The swap is on the `<img>`, never the `<picture>` — `<source>`
    selection is part of the img's own deferred fetch, so an img with no box
    requests neither format. */
+/* ⚠ THE FOOTER'S OWN PLATE SITS RIGHT OF CENTRE (ADR-145). MF-10's profile
+   reaches u ≈ 0.88 of the image and the glide's 25svh oversize makes the
+   plate height-bound with ~69 % of its width visible at 1920×1247, so a
+   centred window (u 0.155–0.845) cut the face at the frame's right edge.
+   64 % moves the window to u ≈ 0.20–0.89: the face whole, while the band's
+   right end (54vw) still lands left of the raster trail's first bright
+   column (u 0.58).
+   ⚠ ONLY ON A TALL WINDOW. The visible fraction is the window's aspect over
+   the plate's, so a WIDER window already shows the face whole when centred,
+   and there 64 % lands a bright flake under the link grid: G3 failed the
+   links at 1440×900 (1.67:1) and 1280×720 (1.48:1) while 1920×1247 passed
+   every role (title 5.4:1 the binding ink). Centred passes all three. So
+   the shift is scoped to windows no wider than 31:20 (1.55, the owner's
+   1920×1247 is 1.54); the ≤960 rung re-picks its own window later in the
+   file. Measured with `capture-site-footer.mjs` G3. */
+@media (min-width: 961px) and (max-aspect-ratio: 31/20) {
+  /* Dark only. The obsidian light twin (ADR-145) at 64 % put the CTA at
+     4.4:1 at 1920×1247 (centred, 5.66 at 1440×900), so light stays centred. */
+  .ft-foot__plate-img--dark {
+    object-position: 64% center;
+  }
+}
 .ft-foot__plate-img--light {
   display: none;
 }

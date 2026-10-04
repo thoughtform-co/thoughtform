@@ -52,17 +52,58 @@ export const HERO_PLATE_DARK_FALLBACK = "/images/ThoughtForm_v1.webp";
 export const HERO_PLATE_DARK_SIZE = { width: 2912, height: 1632 } as const;
 
 /**
+ * The phone hero's PORTRAIT plate (ADR-145, 2026-10-04): MF-04 extended to 9:16
+ * by an edit (the world ship's wave 06, `MF-arcfloor916__nano_02`), the head on
+ * the floor and the sky above it empty for the copy, which the ≤640 rung seats at
+ * the top. 85 kB AVIF at native 1536×2752, 180 kB WebP fallback.
+ *
+ * ⚠ ONE MEDIA STRING FEEDS THE `<source media>` IN EVERY HERO AND THE PRELOAD.
+ * A phone that preloaded the landscape plate and then painted the portrait would
+ * pay for two plates on the LCP path, and the two only agree if they read the
+ * same query. Light takes its own portrait (`HERO_PLATE_LIGHT_PORTRAIT`) on
+ * the same query.
+ */
+export const HERO_PHONE_MEDIA = "(max-width: 640px)";
+export const HERO_PLATE_DARK_PORTRAIT = "/images/ThoughtForm_v1-portrait.avif";
+export const HERO_PLATE_DARK_PORTRAIT_FALLBACK = "/images/ThoughtForm_v1-portrait.webp";
+export const HERO_PLATE_DARK_PORTRAIT_SIZE = { width: 1536, height: 2752 } as const;
+
+/**
  * Light plate — a CSS background on `.hero__bg` (theme.css BLOCK 5), not an
- * `<img>`. WebP q85, 435 kB: AVIF bands this artwork's parchment flats, so
- * the two plates ship in different formats on purpose (see
- * `scripts/hero-plates/prepare.mjs`).
+ * `<img>`. Since ADR-145 (owner, 2026-10-04: "A · obsidian ring") it is the
+ * Thought + Form plate in light — MF-04 EDITED so the statue and its ring are
+ * black obsidian on a pale ground (the world ship's wave 06), its paper graded
+ * onto the light `--void` #ece3d6. WebP q85, 275 kB (the gateway it replaced
+ * was 435 kB): AVIF bands parchment flats, so the two plates ship in
+ * different formats on purpose (see `scripts/hero-plates/prepare.mjs`). The
+ * dark and light heroes are one picture again, ADR-058 U2's premise restored.
  *
  * It needs no fallback for the same reason it is not AVIF — WebP has been
  * universal since Safari 14. So the light path is one file and one format,
  * and the format question only ever arises on the dark side.
  */
-export const HERO_PLATE_LIGHT = "/images/Gateway_v2-light.webp";
+export const HERO_PLATE_LIGHT = "/images/ThoughtForm_v1-light.webp";
 export const HERO_PLATE_LIGHT_TYPE = "image/webp";
+/** The phone's light plate: the obsidian lower-third reframe, 108 kB. A CSS
+ *  background like its landscape twin (landing.css's ≤640 rung). */
+export const HERO_PLATE_LIGHT_PORTRAIT = "/images/ThoughtForm_v1-portrait-light.webp";
+
+/**
+ * The footer's dark plate (ADR-145, 2026-10-04): its OWN picture since the
+ * owner asked for "another version" — MF-10 (Midjourney job c8f094c8), the
+ * keeper whose left half is quietest under the footer's text band. 156 kB AVIF
+ * at native 2912×1632 + a 300 kB WebP fallback, the hero plate's own recipe.
+ *
+ * ⚠ NOT PRELOADED AND NOT IN `HERO_ROUTES`. Until ADR-145 the footer painted
+ * the hero's file, so in dark it was a cache hit; now it is a lazy fetch below
+ * the fold, which is exactly where a footer's bytes belong — it must never
+ * compete with the hero's LCP. Its LIGHT plate is its own obsidian twin
+ * (MF-10 edited, 274 kB WebP), the light hero's recipe.
+ */
+export const FOOTER_PLATE_DARK = "/images/ThoughtForm_footer_v1.avif";
+export const FOOTER_PLATE_DARK_FALLBACK = "/images/ThoughtForm_footer_v1.webp";
+export const FOOTER_PLATE_DARK_SIZE = { width: 2912, height: 1632 } as const;
+export const FOOTER_PLATE_LIGHT = "/images/ThoughtForm_footer_v1-light.webp";
 
 /**
  * The routes that render the hero on THIS key visual. `/arcs/thoughtform/claude-workshop-corridor`
@@ -117,9 +158,10 @@ export const heroPreloadScript = (): string =>
   `var p=location.pathname.replace(/\\/+$/,"")||"/";` +
   `if(${JSON.stringify(HERO_ROUTES)}.indexOf(p)<0)return;` +
   `var l=document.documentElement.getAttribute("data-theme")==="light";` +
+  `var m=window.matchMedia&&matchMedia(${JSON.stringify(HERO_PHONE_MEDIA)}).matches;` +
   `var e=document.createElement("link");` +
   `e.rel="preload";e.as="image";e.fetchPriority="high";` +
-  `e.href=l?${JSON.stringify(HERO_PLATE_LIGHT)}:${JSON.stringify(HERO_PLATE_DARK)};` +
+  `e.href=l?(m?${JSON.stringify(HERO_PLATE_LIGHT_PORTRAIT)}:${JSON.stringify(HERO_PLATE_LIGHT)}):m?${JSON.stringify(HERO_PLATE_DARK_PORTRAIT)}:${JSON.stringify(HERO_PLATE_DARK)};` +
   `e.type=l?${JSON.stringify(HERO_PLATE_LIGHT_TYPE)}:${JSON.stringify(HERO_PLATE_DARK_TYPE)};` +
   `document.head.appendChild(e);` +
   `}catch(e){}})();`;

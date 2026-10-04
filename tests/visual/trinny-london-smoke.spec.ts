@@ -476,9 +476,12 @@ test.describe("Trinny London pitch variant", () => {
         (l) => l.href
       )
     );
-    expect(preloads.some((h) => h.includes("Gateway_v2-light.webp"))).toBe(true);
-    expect(preloads.some((h) => h.includes("ThoughtForm_v1"))).toBe(false);
-    expect(imageRequests.filter((u) => /ThoughtForm_v1/.test(u))).toEqual([]);
+    // ADR-145: the light plate is the obsidian Thought + Form plate, so the
+    // dark files are named by what they are, never by the family prefix.
+    expect(preloads.some((h) => /ThoughtForm_v1(-portrait)?-light\.webp/.test(h))).toBe(true);
+    const dark = /ThoughtForm_v1(-portrait)?\.(avif|webp)/;
+    expect(preloads.some((h) => dark.test(h))).toBe(false);
+    expect(imageRequests.filter((u) => dark.test(u))).toEqual([]);
 
     // The switch is hidden, not absent — the leaf still mounts and still
     // hydrates the store from the attribute.
