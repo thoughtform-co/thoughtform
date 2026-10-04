@@ -44,6 +44,10 @@ export type HeroKv = {
   /** A light-theme CANDIDATE painted over production's light plate (wave 06 round 4),
    *  landscape and phone portrait; gitignored previews, never shipped from here. */
   light?: { hero: string; phone: string };
+  /** The plate on the <=640 rung (ADR-145's portrait). The shipped one for LIVE, a candidate
+   *  for a phone option; without it the lab paints the landscape plate on a phone, which is
+   *  not what ships. */
+  portrait?: string;
 };
 
 export const HERO_KVS: readonly HeroKv[] = [
@@ -54,7 +58,38 @@ export const HERO_KVS: readonly HeroKv[] = [
     fx: 0.76,
     fy: 0.4,
     note: "ThoughtForm_v1 (MF-04), the shipped plate since ADR-144",
+    portrait: "/images/ThoughtForm_v1-portrait.webp",
   },
+  // Phone framing options (2026-10-04, owner: the head at the bottom is "a bit too small ...
+  // increase the size and move it a bit upwards"). Judged at 390x664 under the real copy.
+  ...(
+    [
+      "crop12",
+      "crop13",
+      "crop13-lift",
+      "fill-1",
+      "fill-2",
+      "half-1",
+      "half-2",
+      "fill-2-seated",
+    ] as const
+  ).map((k) => ({
+    id: `phone-${k}`,
+    label: `PHONE · ${k.toUpperCase()}`,
+    job: "live",
+    fx: 0.76,
+    fy: 0.4,
+    tag: "phone option",
+    note:
+      k === "fill-2-seated"
+        ? "FILL 2 cropped to 9:16 with its bottom tenth off, so the group seats under the pronunciation line at 664"
+        : k.startsWith("crop")
+          ? `the shipped portrait cropped ${k.slice(4, 6).split("").join(".")}x about the floor${k.endsWith("lift") ? ", lifted 4 %" : ""}`
+          : k.startsWith("fill")
+            ? "wave 06 phone2: the group fills the lower two fifths, the ring to the frame's edge"
+            : "wave 06 phone2: the group fills the lower half",
+    portrait: `/_previews/hero-kv/phone/${k}.webp`,
+  })),
   {
     id: "motion",
     label: "MOTION",

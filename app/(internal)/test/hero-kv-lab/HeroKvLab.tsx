@@ -74,6 +74,8 @@ export function HeroKvLab({
     const id = new URLSearchParams(window.location.search).get("kv");
     const n = id ? HERO_KVS.findIndex((k) => k.id === id) : -1;
     if (n >= 0) setI(n);
+    // `?chrome=off` opens with the dock hidden (a capture of a phone option wants the plate alone).
+    if (new URLSearchParams(window.location.search).get("chrome") === "off") setChrome(false);
   }, []);
   const [chrome, setChrome] = useState(true);
   const [copy, setCopy] = useState(true);
@@ -144,11 +146,18 @@ export function HeroKvLab({
     img.removeAttribute("srcset");
     img.onload = () => setMissing(false);
     img.onerror = () => setMissing(true);
-    img.src = plateSrc(kv);
+    // The <=640 rung paints the portrait (ADR-145): the shipped one, or a phone option's.
+    const phone = window.matchMedia("(max-width: 640px)").matches;
+    img.src = phone && kv.portrait ? kv.portrait : plateSrc(kv);
     const { fx, zoom } = framing(kv);
     root.style.setProperty("--kv-zoom", String(zoom));
     root.style.setProperty("--kv-origin-y", `${(kv.fy * 100).toFixed(1)}%`);
-    root.style.setProperty("--kv-pos-phone", `${(fx * 100).toFixed(1)}% 50%`);
+    // A portrait plate takes production's own seat on the phone (landing.css: `60% 100%`,
+    // the head on the floor); the subject-centred position is for a landscape plate's window.
+    root.style.setProperty(
+      "--kv-pos-phone",
+      kv.portrait ? "60% 100%" : `${(fx * 100).toFixed(1)}% 50%`
+    );
   }, [kv]);
 
   const step = useCallback(
@@ -196,9 +205,11 @@ export function HeroKvLab({
                 ? "light candidate"
                 : "light theme"
               : kv.job === "live"
-                ? kv.video
-                  ? "shipped plate + cinemagraph"
-                  : "shipped plate"
+                ? kv.tag === "phone option"
+                  ? "phone option over the shipped landscape plate"
+                  : kv.video
+                    ? "shipped plate + cinemagraph"
+                    : "shipped plate"
                 : kv.job === "gateway"
                   ? "retired plate"
                   : `job ${kv.job}`}
