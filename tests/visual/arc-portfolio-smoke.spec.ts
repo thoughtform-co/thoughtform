@@ -643,7 +643,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       });
       expect(hero.plate, `gateway plate @ ${theme}`).toBe("gateway");
       expect(hero.picture, "the landing's <picture>, AVIF over WebP").toBe(1);
-      expect(hero.src, `the dark plate @ ${theme}`).toContain("Gateway_v1b");
+      expect(hero.src, `the dark plate @ ${theme}`).toContain("ThoughtForm_v1");
       /* ⚠ NO FILM FRAME AS A HERO — the reel owns that image, and a still
          at 100vh is evidence spent as decoration. */
       expect(hero.src, "no poster frame in the hero").not.toMatch(/posters\//);

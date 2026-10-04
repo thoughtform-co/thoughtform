@@ -48,6 +48,7 @@
  * Usage:
  *   node scripts/hero-plates/prepare.mjs           # write both plates
  *   node scripts/hero-plates/prepare.mjs --dry     # report sizes, write nothing
+ *   node scripts/hero-plates/prepare.mjs --thoughtform   # the Thought + Form plate + share card only
  */
 
 import sharp from "sharp";
@@ -125,7 +126,9 @@ async function encodeLight() {
   // CSS swap and the glitch loader treat it as one file per theme.
   const avifBuf = await corrected().avif({ quality: 50, effort: 4 }).toBuffer();
 
-  console.log(`light  ${meta.width}×${meta.height}  (paper → #ece3d6, gains ${LIGHT_GAINS.join(" / ")})`);
+  console.log(
+    `light  ${meta.width}×${meta.height}  (paper → #ece3d6, gains ${LIGHT_GAINS.join(" / ")})`
+  );
   console.log(`  png master      ${kb(fs.statSync(src).size)}`);
   console.log(`  webp q${LIGHT_WEBP_Q}        ${kb(buf.length)}  ← shipping`);
   console.log(`  avif q50        ${kb(avifBuf.length)}  (reference)`);
@@ -167,7 +170,67 @@ async function promoteDark() {
   return bytes;
 }
 
+/* ── The Thought + Form plate (owner, 2026-10-04) ────────────────────────
+   "MF-04 looks insane; let's promote that as our key visual across our
+   website." The dark hero becomes his Midjourney keeper (job 63c6e199): the
+   marble head in its broken ring on the right, the open plain and black sky
+   on the left. The gateway's two files stay in `public/images/`: the light
+   theme still paints `Gateway_v2-light.webp` (the obsidian light plate does
+   not exist yet), and two course decks show the gateway as a CASE, not as
+   the house's hero.
+
+   ⚠ A NEW NAME, NOT AN OVERWRITE. Encoding the head into `Gateway_v1b.*` would
+   have reached every consumer in one move and left a file named for a
+   picture it no longer holds; the hero's readers point at `ThoughtForm_v1.*`
+   instead (heroPreload.ts holds the constants; the prototypes, ArcHero, the
+   footer and two arcs' heroes name the file).
+
+   Encoded from the master at NATIVE size (2912×1632, the same as the light
+   plate), AVIF q50 on near-black as the dark gateway was measured to want,
+   with a WebP fallback at q80. The share card is a 1200×630 crop of the same
+   master: it is the first pixel most people see of the site (app/layout.tsx).
+   The master is staged, gitignored:
+     assets-staging/hero-candidates/ThoughtForm_v1-master.png  ← the keeper */
+const TF_AVIF_Q = 50;
+const TF_WEBP_Q = 80;
+
+async function encodeThoughtForm() {
+  const src = staged("ThoughtForm_v1-master.png");
+  if (!fs.existsSync(src)) {
+    console.error(`✗ Thought + Form master missing: ${path.relative(REPO, src)}`);
+    console.error("  Copy his keeper (Midjourney job 63c6e199) there and re-run.");
+    return null;
+  }
+  const meta = await sharp(src).metadata();
+  const avif = await sharp(src).avif({ quality: TF_AVIF_Q, effort: 6 }).toBuffer();
+  const webp = await sharp(src).webp({ quality: TF_WEBP_Q, effort: 5 }).toBuffer();
+  // The share card: the master cut to 1.905:1 around its vertical centre, so
+  // the head and ring keep their place on the right, then 1200×630.
+  const og = await sharp(src)
+    .resize({ width: 1200, height: 630, fit: "cover", position: "centre" })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+  console.log(`thought + form  ${meta.width}×${meta.height}`);
+  console.log(`  png master      ${kb(fs.statSync(src).size)}`);
+  console.log(`  avif q${TF_AVIF_Q}        ${kb(avif.length)}  ← shipping`);
+  console.log(`  webp q${TF_WEBP_Q}        ${kb(webp.length)}  ← fallback`);
+  console.log(`  og 1200×630     ${kb(og.length)}`);
+  if (!DRY) {
+    fs.writeFileSync(pub("images", "ThoughtForm_v1.avif"), avif);
+    fs.writeFileSync(pub("images", "ThoughtForm_v1.webp"), webp);
+    fs.writeFileSync(pub("images", "og", "thoughtform-og.jpg"), og);
+    console.log("  → public/images/ThoughtForm_v1.avif, .webp, og/thoughtform-og.jpg");
+  }
+  return avif.length;
+}
+
 console.log(DRY ? "hero plates (dry run)\n" : "hero plates\n");
-await promoteDark();
-console.log("");
-await encodeLight();
+if (process.argv.includes("--thoughtform")) {
+  await encodeThoughtForm();
+} else {
+  await promoteDark();
+  console.log("");
+  await encodeLight();
+  console.log("");
+  await encodeThoughtForm();
+}

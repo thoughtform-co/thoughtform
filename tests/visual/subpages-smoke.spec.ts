@@ -557,7 +557,7 @@ test.describe("subpages (ADR-114)", () => {
         });
         expect(read.imgs, route).toBe(2);
         expect(read.painted, `${route}: one theme's plate paints`).toBe(1);
-        expect(read.paintedSrc, `${route}: the dark plate is the hero's`).toMatch(/Gateway_v1b/);
+        expect(read.paintedSrc, `${route}: the dark plate is the hero's`).toMatch(/ThoughtForm_v1/);
         for (const src of read.hiddenSrc)
           expect(src, `${route}: the hidden theme's plate was fetched`).toBe("");
         expect(Math.abs(read.plate.left), `${route}: the plate bleeds left`).toBeLessThanOrEqual(1);

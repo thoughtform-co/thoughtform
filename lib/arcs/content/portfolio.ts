@@ -97,10 +97,10 @@ export const PORTFOLIO_ARC: ArcDef = {
        hero grade; if one arrives, it belongs here — a film frame does not.
        (`.claude/rules/arcs.md`, the hero clause.) */
     image: {
-      src: "/images/Gateway_v1b.webp",
+      src: "/images/ThoughtForm_v1.webp",
       alt: "",
-      width: 2880,
-      height: 1620,
+      width: 2912,
+      height: 1632,
     },
     plate: "gateway",
     /* ⚠ DECLARED EVEN THOUGH THE GATEWAY PLATE IMPLIES IT (ADR-078 U1).

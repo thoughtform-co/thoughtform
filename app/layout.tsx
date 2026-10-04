@@ -54,15 +54,16 @@ export const viewport: Viewport = {
   viewportFit: "cover", // Enables env(safe-area-inset-*) CSS functions
 };
 
-// The share card is a 1200×630 centre crop of the dark Gateway plate
-// (public/images/Gateway_v1b.webp → sharp, jpeg q82, 57 KB). Regenerate it
-// from the plate if the hero art ever changes — a share of this URL is the
+// The share card is a 1200×630 centre crop of the dark hero plate, the
+// Thought + Form key visual since 2026-10-04 (ADR-144): written by
+// `node scripts/hero-plates/prepare.mjs --thoughtform` from the staged master,
+// jpeg q82, 59 KB. Regenerate it with the plate — a share of this URL is the
 // first pixel most people see of the site.
 const OG_IMAGE = {
   url: "/images/og/thoughtform-og.jpg",
   width: 1200,
   height: 630,
-  alt: "Thoughtform — the Gateway remnant structure",
+  alt: "Thoughtform — a marble head inside a broken stone ring, under a black sky",
 };
 
 export const metadata: Metadata = {

@@ -31,20 +31,25 @@
  */
 
 /**
- * Dark plate — the AVIF source of the hero's `<picture>`. 346 kB, down from
- * the 835 kB WebP that is still there as the fallback `<img src>`.
+ * Dark plate — the AVIF source of the hero's `<picture>`. Since 2026-10-04 it is
+ * the Thought + Form key visual (his Midjourney keeper, job 63c6e199; ADR-144):
+ * 133 kB at native 2912×1632, with a 313 kB WebP as the fallback `<img src>`.
+ * The gateway's dark plate it replaced was 346 kB.
  *
  * ⚠ PRELOADED WITH `type`, which is not decoration: a browser that cannot
  * decode AVIF skips a typed preload, then takes the `<picture>`'s WebP
  * fallback. Drop the `type` and those browsers download the AVIF they
  * cannot use AND the WebP they can — the hero would cost them both plates.
  */
-export const HERO_PLATE_DARK = "/images/Gateway_v1b.avif";
+export const HERO_PLATE_DARK = "/images/ThoughtForm_v1.avif";
 export const HERO_PLATE_DARK_TYPE = "image/avif";
 
 /** The `<picture>` fallback, for browsers without AVIF (Edge only got it in
  *  121, and this is the LCP element — a blank hero is not an option). */
-export const HERO_PLATE_DARK_FALLBACK = "/images/Gateway_v1b.webp";
+export const HERO_PLATE_DARK_FALLBACK = "/images/ThoughtForm_v1.webp";
+
+/** The dark plate's intrinsic size, for every `<img>` that names it. */
+export const HERO_PLATE_DARK_SIZE = { width: 2912, height: 1632 } as const;
 
 /**
  * Light plate — a CSS background on `.hero__bg` (theme.css BLOCK 5), not an

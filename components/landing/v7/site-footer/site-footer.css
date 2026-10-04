@@ -13,8 +13,9 @@
    and washed half of it out — the ring floated in a band of void with a
    tonal seam above it, which is the one thing no reference in the folder
    does. The plate's box equals the station's border box by construction
-   (§plate below), and the dark plate is the HERO's own (`Gateway_v1b`), so
-   the page opens and closes on the same pair in both themes.
+   (§plate below), and the dark plate is the HERO's own (`ThoughtForm_v1`
+   since ADR-144, `Gateway_v1b` before it), so the page opens and closes on
+   the same pair in both themes.
 
    ⚠ THE STATION'S OWN GROUND STAYS OPAQUE. `#contact` is the corridor's
    opaque COVER (home-v2.css + `useCorridorExitScroll`, one commit), and
@@ -188,10 +189,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* `Gateway_v1b`'s ring sits at ~68–90 % x / 32–73 % y over deep void, with
+  /* `Gateway_v1b`'s ring sat at ~68–90 % x / 32–73 % y over deep void, with
      its trail running out to the left third — so centred, every desktop
      ratio keeps the ring right-of-centre and leaves the copy column on
-     empty void. Same frame the hero shows. */
+     empty void. Same frame the hero shows. Since ADR-144 the plate is the
+     Thought + Form head (~76 % x, open black sky on the left), and centred
+     still holds: every role measured ≥ 5.4:1 at 1280, 1440 and 1920. */
   object-position: center center;
 }
 
@@ -369,7 +372,13 @@ html[data-theme="light"] .ft-foot__plate-img--light {
    The copy sits in the top third: the station's own `--station-pad-top` is
    the seat, so the band's padding is only a trim. */
 /* ── the band: the ask, and the link grid under it ──────────────────── */
-/* ⚠ THE CAP IS THE RING'S MEASURED LEFT EDGE, NOT A TASTE VALUE (ADR-105 U2).
+/* ⚠ SINCE ADR-144 (2026-10-04) THE NUMBERS BELOW DESCRIBE THE GATEWAY, AND THE
+   CAP WAS KEPT RATHER THAN RE-SOLVED. The Thought + Form head sits right of
+   it, but its raster-line glitch trails left into the band's right end, so
+   what clears it is the capture's glyph-masked gate, not this arithmetic:
+   the title's last letters are the binding ink, 5.4:1 at 1440x900, 6.4 at
+   1280x720, 10.8 at 1920x1247. Re-measure there before moving the cap.
+   ⚠ THE CAP IS THE RING'S MEASURED LEFT EDGE, NOT A TASTE VALUE (ADR-105 U2).
    `scripts/measure-plate-luminance.mjs` profiles `Gateway_v1b`: its bright
    mass is y 0.23–0.67 and x 0.563–0.896 in IMAGE fractions. Every desktop rung
    is height-bound (station aspect < image aspect), so the y figures were
@@ -647,8 +656,13 @@ html[data-theme="light"] .ft-foot__plate-img--light {
      approach: that is where its BRIGHT METAL TRAIL is, and it ran straight
      through the lede and the CTA. 88 % takes the ring's BODY instead, whose
      bright limb is low in the frame, under the copy rather than through it. */
+  /* ⚠ SINCE ADR-144 (2026-10-04) THE DARK PLATE IS THE THOUGHT + FORM KEY
+     VISUAL, AND 88 % FRAMES ITS BRIGHTEST MASS: the marble head and the lit
+     dust under it, where the link grid and the mark measured 3.1–3.2:1. The
+     picture's quiet ground is its LEFT third (open black sky above the dust),
+     so the dark window now goes the way the light one always did. */
   .ft-foot__plate-img--dark {
-    object-position: 88% 50%;
+    object-position: 20% 50%;
   }
   /* ⚠ AND THE LIGHT PLATE'S WINDOW GOES THE OTHER WAY, BECAUSE THE TWO
      PICTURES PUT THEIR SUBJECT IN DIFFERENT PLACES. `Gateway_v2-light` is

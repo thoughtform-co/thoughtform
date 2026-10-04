@@ -56,8 +56,9 @@ Load order for an anonymous first visit to `/`:
    `PTMono-Regular`, `PTMono-Bold`, `PPNeueMontreal-Book` — the three faces the
    canvas bake paths draw with (see invariant 5).
 3. **Hero key visual — TWO plates, one per theme** (ADR-058 Update 2). Dark
-   `/images/Gateway_v1b.avif` (346 kB, in a `<picture>` with the 835 kB
-   `Gateway_v1b.webp` as fallback); light `/images/Gateway_v2-light.webp`
+   `/images/ThoughtForm_v1.avif` since ADR-144 (133 kB, in a `<picture>` with
+   the 313 kB `ThoughtForm_v1.webp` as fallback; the gateway's dark AVIF it
+   replaced was 346 kB); light `/images/Gateway_v2-light.webp`
    (435 kB, a CSS background on `.hero__bg`). Explicit `width`/`height` +
    `fetchpriority="high"` live in the prototype markup, plus
    **`loading="lazy"`** — that is what stops light mode fetching the dark
@@ -67,7 +68,8 @@ Load order for an anonymous first visit to `/`:
    link would always pull the dark plate and light visitors would pay for
    both. It is typed, so non-AVIF browsers skip it and take the fallback,
    and it sits OUTSIDE the `THEME_TOGGLE` gate so the rollback keeps its
-   preload. Re-encode with `node scripts/hero-plates/prepare.mjs`.
+   preload. Re-encode with `node scripts/hero-plates/prepare.mjs` (`--thoughtform`
+   for the dark plate and the share card alone).
    ⚠ Verify fetches in a FRESH tab — a tab that has visited the other theme
    reports the other plate as a memory-cache hit with `initiatorType:
 "link"`, indistinguishable from a real second preload.

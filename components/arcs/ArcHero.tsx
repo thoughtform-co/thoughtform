@@ -1,4 +1,9 @@
 import type { ArcDef } from "@/lib/arcs/types";
+import {
+  HERO_PLATE_DARK,
+  HERO_PLATE_DARK_FALLBACK,
+  HERO_PLATE_DARK_SIZE,
+} from "@/lib/theme/heroPreload";
 
 import { ArcTitleText } from "./chrome";
 
@@ -38,12 +43,15 @@ export function ArcHero({ hero }: { hero: ArcDef["hero"] }) {
              WebP in dark, `loading="lazy"` so the light theme — which
              `display: none`s this img — never fetches the dark plate. */
           <picture>
-            <source srcSet="/images/Gateway_v1b.avif" type="image/avif" />
+            {/* The landing's plate by its constants (ADR-144): a gateway-plate
+                arc shows the house key visual whatever its own `image` names,
+                or a browser without AVIF fell back to that arc's older art. */}
+            <source srcSet={HERO_PLATE_DARK} type="image/avif" />
             <img
-              src={hero.image.src}
+              src={HERO_PLATE_DARK_FALLBACK}
               alt=""
-              width={hero.image.width}
-              height={hero.image.height}
+              width={HERO_PLATE_DARK_SIZE.width}
+              height={HERO_PLATE_DARK_SIZE.height}
               decoding="async"
               loading="lazy"
               fetchPriority="high"

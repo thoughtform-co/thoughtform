@@ -29,7 +29,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
       { id: "see-layer", label: "See the layer", href: "#substrate-map", primary: true },
       { id: "receipts", label: "See the receipts", href: "#skills-engine" },
     ],
-    image: { src: "/images/Gateway_v1b.webp", alt: "", width: 2880, height: 1620 },
+    image: { src: "/images/ThoughtForm_v1.webp", alt: "", width: 2912, height: 1632 },
   },
   meta: {
     title: "Claude workshop — Thoughtform",

@@ -19,7 +19,7 @@ import { HERO_KVS, framing, plateSrc } from "./kvs";
  *
  * ⚠ The `<source>` (AVIF) element is removed on first swap: a `<picture>`
  * prefers its source over the `<img>`'s `src`, so leaving it would keep the
- * gateway on screen whatever the strip says.
+ * shipped plate on screen whatever the strip says.
  */
 const HudFrame = memo(function HudFrame({ hudHtml }: { hudHtml: string }) {
   const hudRef = useRef<HTMLDivElement>(null);
@@ -141,7 +141,11 @@ export function HeroKvLab({
         <div className="hkv__readout">
           <span className="hkv__label">{kv.label}</span>
           <span className="hkv__meta">
-            {kv.job === "live" ? "shipped plate" : `job ${kv.job}`}
+            {kv.job === "live"
+              ? "shipped plate"
+              : kv.job === "gateway"
+                ? "retired plate"
+                : `job ${kv.job}`}
             {kv.mirror ? " · mirrored" : ""}
             {zoom > 1.001 ? ` · zoom ${zoom.toFixed(2)}` : ""}
           </span>
@@ -161,7 +165,11 @@ export function HeroKvLab({
               title={`${k.label}${k.tag ? " · " + k.tag : ""}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- local lab thumbs from the gitignored previews folder */}
-              <img src={plateSrc(k, k.job !== "live")} alt={k.label} loading="lazy" />
+              <img
+                src={plateSrc(k, k.job !== "live" && k.job !== "gateway")}
+                alt={k.label}
+                loading="lazy"
+              />
               <span>{k.label}</span>
             </button>
           ))}

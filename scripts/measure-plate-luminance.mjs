@@ -56,7 +56,7 @@ const GRID_H = Number(argOf("--gh", "135"));
  *  subject is the DARK mass. Reading both as "bright" would return the light
  *  plate's empty sky. */
 const PLATES = [
-  { src: "/images/Gateway_v1b.webp", theme: "dark", polarity: "bright", threshold: 0.35 },
+  { src: "/images/ThoughtForm_v1.webp", theme: "dark", polarity: "bright", threshold: 0.35 },
   { src: "/images/Gateway_v2-light.webp", theme: "light", polarity: "dark", threshold: 0.45 },
 ];
 

@@ -2572,8 +2572,16 @@
   .hero__cta__btn {
     justify-content: center;
   }
+  /* ⚠ A PORTRAIT WINDOW IS A ~26 % SLICE OF THE PLATE, AND THE X TERM PICKS IT
+     (the footer's own finding, site-footer.css). The Thought + Form plate
+     (ADR-144) puts the head at ~76 % across and this rung centres the copy
+     over the plate, so no window shows the whole head AND a clear headline:
+     50 % loses the head, 72 % sets the headline on the face. 60 % keeps the
+     copy on black sky with the profile entering from the right (shot at
+     50/60/66/72/80, 390x844). Showing the whole head on a phone means moving
+     the copy, which `/test/hero-kv-lab` proposes and the owner has not ruled. */
   .hero__bg img {
-    object-position: center center;
+    object-position: 60% center;
   }
   /* Lift clear of the bottom-left brandmark sigil on mobile. */
   .hero__flywheel {

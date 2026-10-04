@@ -477,8 +477,8 @@ test.describe("Trinny London pitch variant", () => {
       )
     );
     expect(preloads.some((h) => h.includes("Gateway_v2-light.webp"))).toBe(true);
-    expect(preloads.some((h) => h.includes("Gateway_v1b"))).toBe(false);
-    expect(imageRequests.filter((u) => /Gateway_v1b/.test(u))).toEqual([]);
+    expect(preloads.some((h) => h.includes("ThoughtForm_v1"))).toBe(false);
+    expect(imageRequests.filter((u) => /ThoughtForm_v1/.test(u))).toEqual([]);
 
     // The switch is hidden, not absent — the leaf still mounts and still
     // hydrates the store from the attribute.

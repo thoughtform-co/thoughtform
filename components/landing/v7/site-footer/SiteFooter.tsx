@@ -33,13 +33,13 @@ export function SiteFooter() {
             `no-img-element` rule does not fire on an `<img>` inside a
             `<picture>`, and an unused directive is itself a lint warning. */}
         <picture>
-          <source srcSet="/images/Gateway_v1b.avif" type="image/avif" />
+          <source srcSet="/images/ThoughtForm_v1.avif" type="image/avif" />
           <img
             className="ft-foot__plate-img ft-foot__plate-img--dark"
-            src="/images/Gateway_v1b.webp"
+            src="/images/ThoughtForm_v1.webp"
             alt=""
-            width={2880}
-            height={1620}
+            width={2912}
+            height={1632}
             loading="lazy"
             decoding="async"
           />
@@ -101,7 +101,9 @@ export function SiteFooter() {
             quiet upper region to seat a wide band in and the band must clear
             the ring HORIZONTALLY — which leaves ~680px at 1920x1247, enough
             for the ask OR a column row beside it, not both. U1's own principle:
-            the layout yields, the picture stays whole.
+            the layout yields, the picture stays whole. (Measured on the
+            gateway; the Thought + Form plate, ADR-144, kept the layout and
+            passes the same glyph-masked gate.)
             ⚠ The track is count-agnostic (`grid-auto-flow: column`), so the
             third column costs one data entry the day its destinations exist —
             no rung, no JS-fed count. */}

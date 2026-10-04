@@ -1,6 +1,7 @@
 /**
  * The key visuals `/test/hero-kv-lab` swaps under the live hero copy: the
- * live gateway plate for comparison, then the owner's Thought + Form keepers
+ * shipped plate (MF-04 since ADR-144, 2026-10-04) and the gateway it replaced
+ * for comparison, then the owner's Thought + Form keepers
  * (Midjourney, 2026-10-03/04; pixels prepared by
  * `scripts/hero-kv-lab/prepare.mjs` into the gitignored `public/_previews/`).
  *
@@ -26,7 +27,7 @@ export const ZOOM_MAX = 1.3;
 export type HeroKv = {
   id: string;
   label: string;
-  /** Midjourney job id, or `live` for the shipped plate. */
+  /** Midjourney job id, `live` for the shipped plate, `gateway` for the one it replaced. */
   job: string;
   /** Subject centre (head + ring) as fractions of the source image, before any mirror. */
   fx: number;
@@ -42,9 +43,17 @@ export const HERO_KVS: readonly HeroKv[] = [
     id: "live",
     label: "LIVE",
     job: "live",
+    fx: 0.76,
+    fy: 0.4,
+    note: "ThoughtForm_v1 (MF-04), the shipped plate since ADR-144",
+  },
+  {
+    id: "gateway",
+    label: "GATEWAY",
+    job: "gateway",
     fx: 0.72,
     fy: 0.45,
-    note: "Gateway_v1b, the shipped plate",
+    note: "Gateway_v1b, the plate MF-04 replaced",
   },
   { id: "c8f094c8", label: "MF-10", job: "c8f094c8", fx: 0.8, fy: 0.42, tag: "his favourite" },
   { id: "63c6e199", label: "MF-04", job: "63c6e199", fx: 0.76, fy: 0.4, tag: "his favourite" },
@@ -98,6 +107,7 @@ export function framing(kv: HeroKv): { fx: number; zoom: number } {
 }
 
 export function plateSrc(kv: HeroKv, thumb = false): string {
-  if (kv.job === "live") return "/images/Gateway_v1b.webp";
+  if (kv.job === "live") return "/images/ThoughtForm_v1.webp";
+  if (kv.job === "gateway") return "/images/Gateway_v1b.webp";
   return `/_previews/hero-kv/${kv.job}${kv.mirror ? "-m" : ""}${thumb ? "-thumb" : ""}.webp`;
 }
