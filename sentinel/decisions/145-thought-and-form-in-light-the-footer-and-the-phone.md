@@ -80,11 +80,45 @@ The owner, 2026-10-04:
    `/test/hero-kv-lab` (MOTION) from the gitignored previews; shipping one is its own
    decision (LCP, `autoplay` fetching while hidden, the theme pair).
 
+## Update 1 (2026-10-04, owner): the phone head in the lower half, the pronunciation line off the phone
+
+His read of the shipped phone hero: the head at the bottom "is a bit too small. I think if we can
+increase the size and move it a bit upwards … one third and then the rest is like two thirds, or
+maybe it's like in four parts and then two of the four. Let's find some different options." Eight
+options were put under the real copy at 390×664 and 390×844 (wave 06 round 6 in the world ship;
+the site's lab gained a `portrait` field per entry and `?chrome=off`): three code crops of the
+shipped plate and four drawn framings of MF-04 (FILL, the lower two fifths; HALF, the lower half).
+His pick: **"Use HALF 2 for the phone and drop the pronunciation line."**
+
+1. **`ThoughtForm_v1b-portrait.avif` / `.webp`** (104 kB / 225 kB, from
+   `MF-archalf916__nano_02`, 1536×2752) replaces `ThoughtForm_v1-portrait` under a NEW name so
+   no cache serves the old framing; every reader takes the `HERO_PLATE_DARK_PORTRAIT*` constants.
+   The head and ring fill the lower half of the plate, the ring's outer edge at the frame's edge.
+2. **The pronunciation line is `display: none` on the portrait rung** (the `.hero:has(> .hero\_\_bg
+   > picture)` scope, both themes). ADR-145 §2 had brought it into flow under the CTA row; that row
+   > is the 40px the bigger head needs. The desktop and the wordmark keep it.
+3. **The plate seats at `object-position: 60% 0%`**: on a short frame the plate is width-bound
+   (697px tall at 390×664) and the 33px it loses now come off the FLOOR, under the HUD's bottom
+   band, so the head sits 33px lower; on a tall frame the plate is height-bound and `y` does
+   nothing.
+4. **The top bed deepens through the CTA row**: `0.55 → 0.5 @ 38 % → 0.92 @ 47–55 % → 0.35 @ 63 %
+→ 0 @ 72 %`. The arithmetic: a gold ghost CTA over pale stone needs the stone under it below
+   ~0.05 relative luminance for 4.5:1, which is a 0.92 void; so the ring's apex is lost in the
+   dark under the buttons and the head emerges below them, the picture's own found-and-lost
+   grammar. ⚠ This is what the collision at 664 cost; the copy owns the top 55 % of that frame
+   (104–363px) and no framing with the head in the lower half clears it otherwise.
+
+Measured (G3, glyph-masked): 390×664 dark headline 14.9 · paragraph 14.2 · ghost CTA 7.7;
+390×844 dark 15.0 · 14.7 · 7.7; a phone fetches `ThoughtForm_v1b-portrait.avif` alone and a
+desktop never fetches it. The light phone keeps `ThoughtForm_v1-portrait-light` (the lower third
+in obsidian) until his light pick (haze or veils, in basalt) lands, when both the light hero and
+its phone are re-cut in this framing; its ghost CTA on parchment stays the pre-existing 1.8:1.
+
 ## Consequences
 
 - One picture in two polarities on every surface; the share card stays dark.
 - The footer pays a lazy ~156 kB (dark) or ~274 kB (light) below the fold.
-- A phone's LCP plate is lighter: 37 kB (dark) / 108 kB (light) against 133 / 435.
+- A phone's LCP plate is lighter: 104 kB (dark, U1; 37 kB before it) / 108 kB (light) against 133 / 435.
 - Live client proposals changed picture in light.
 
 ## Left open

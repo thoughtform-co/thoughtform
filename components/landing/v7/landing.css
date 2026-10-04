@@ -2591,7 +2591,11 @@
     justify-content: flex-start;
   }
   .hero__bg picture img {
-    object-position: 60% 100%;
+    /* y 0 %: the plate is width-bound on a short frame (697 tall at 390x664),
+       so the 33px it loses come off the FLOOR, under the HUD's bottom band,
+       and the head sits 33px lower, clear of the CTA row (ADR-145 U1). On a
+       tall frame the plate is height-bound and y does nothing. */
+    object-position: 60% 0%;
   }
   /* Light paints its own portrait: the obsidian lower-third reframe, anchored
      to the floor exactly as the dark `<img>` is, so the theme glitch tears
@@ -2604,17 +2608,14 @@
       url("/images/ThoughtForm_v1-portrait-light.webp") 60% 100% / cover no-repeat,
       var(--void);
   }
-  /* ⚠ THE PRONUNCIATION LINE JOINS THE COPY ON THIS PLATE. Its ADR-043 seat is
-     the foot of the right-hand column, which on the portrait plate is the
-     brightest dust in the frame: gold mono measured 1.0–1.2:1 there, and 2.0
-     mean even under the floor bed. The floor belongs to the head here, so the
-     line comes into flow under the CTA row, on the sky, as the copy's last line
-     (the hero is a flex column; the line follows `.hero__content` in source). */
+  /* ⚠ THE PRONUNCIATION LINE IS OFF THE PHONE (ADR-145 U1, owner 2026-10-04:
+     "use HALF 2 for the phone and drop the pronunciation line"). Its ADR-043
+     seat is the foot of the right-hand column, which on the portrait plate is
+     the head; ADR-145 had brought it into flow under the CTA row, and that
+     row is the 40px the bigger head needs. The wordmark and the desktop keep
+     it. */
   .hero:has(> .hero__bg > picture) .hero__flywheel--ipa {
-    position: relative;
-    inset: auto;
-    margin-top: 22px;
-    align-self: flex-start;
+    display: none;
   }
   /* Two beds. The FLOOR one is the footer's law (site-footer.css, its bottom
      band): the pronunciation line and the HUD's fixed bottom corners print
@@ -2630,9 +2631,12 @@
     background:
       linear-gradient(
         to bottom,
-        rgba(var(--void-deep-rgb), 0.5) 0%,
-        rgba(var(--void-deep-rgb), 0.3) 40%,
-        transparent 58%
+        rgba(var(--void-deep-rgb), 0.55) 0%,
+        rgba(var(--void-deep-rgb), 0.5) 38%,
+        rgba(var(--void-deep-rgb), 0.92) 47%,
+        rgba(var(--void-deep-rgb), 0.92) 55%,
+        rgba(var(--void-deep-rgb), 0.35) 63%,
+        transparent 72%
       ),
       linear-gradient(
         to top,

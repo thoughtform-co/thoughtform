@@ -237,7 +237,7 @@ async function encodeThoughtForm() {
    native size, AVIF q50 on near-black, WebP q80 fallback, no resampling.
    Masters staged and gitignored:
      assets-staging/hero-candidates/ThoughtForm_footer_v1-master.png    ← c8f094c8
-     assets-staging/hero-candidates/ThoughtForm_v1-portrait-master.png  ← the picked 9:16 */
+     assets-staging/hero-candidates/ThoughtForm_v1b-portrait-master.png ← the picked 9:16 (v1b: the lower half) */
 async function encodePlate(label, master, name, keeper) {
   const src = staged(master);
   if (!fs.existsSync(src)) {
@@ -326,7 +326,9 @@ if (process.argv.includes("--light-tf")) {
 } else if (process.argv.includes("--footer")) {
   await encodePlate("footer (MF-10)", "ThoughtForm_footer_v1-master.png", "ThoughtForm_footer_v1", "his keeper c8f094c8");
 } else if (process.argv.includes("--portrait")) {
-  await encodePlate("phone portrait", "ThoughtForm_v1-portrait-master.png", "ThoughtForm_v1-portrait", "the picked 9:16 reframe");
+  // v1b (2026-10-04, owner: "use HALF 2 for the phone"): MF-04 reframed with the head and
+  // ring filling the lower half (wave 06 round 6, MF-archalf916__nano_02); v1 was the lower third.
+  await encodePlate("phone portrait", "ThoughtForm_v1b-portrait-master.png", "ThoughtForm_v1b-portrait", "the picked 9:16 reframe, the head in the lower half");
 } else if (process.argv.includes("--thoughtform")) {
   await encodeThoughtForm();
 } else {

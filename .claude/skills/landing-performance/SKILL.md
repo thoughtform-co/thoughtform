@@ -61,7 +61,7 @@ Load order for an anonymous first visit to `/`:
    replaced was 346 kB); light `/images/ThoughtForm_v1-light.webp` since
    ADR-145 (275 kB, the same picture in obsidian, a CSS background on
    `.hero__bg`; the gateway it replaced was 435 kB). ⚠ **AT ≤640 BOTH THEMES
-   PAINT A PORTRAIT** (`ThoughtForm_v1-portrait.avif` 37 kB dark,
+   PAINT A PORTRAIT** (`ThoughtForm_v1b-portrait.avif` 104 kB dark since ADR-145 U1,
    `-portrait-light.webp` 108 kB light), chosen by ONE media string
    (`HERO_PHONE_MEDIA`) that the `<source media>`, the injected preload and
    the theme glitch all read — a phone that preloaded the landscape plate and

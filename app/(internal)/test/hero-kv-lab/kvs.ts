@@ -58,7 +58,7 @@ export const HERO_KVS: readonly HeroKv[] = [
     fx: 0.76,
     fy: 0.4,
     note: "ThoughtForm_v1 (MF-04), the shipped plate since ADR-144",
-    portrait: "/images/ThoughtForm_v1-portrait.webp",
+    portrait: "/images/ThoughtForm_v1b-portrait.webp",
   },
   // Phone framing options (2026-10-04, owner: the head at the bottom is "a bit too small ...
   // increase the size and move it a bit upwards"). Judged at 390x664 under the real copy.

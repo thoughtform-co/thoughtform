@@ -107,6 +107,7 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
 - ⚠ **THE STATION KEEPS ITS OWN OPAQUE `var(--void)` GROUND AND THE PLATE IS A LAYER
   INSIDE IT.** The handoff guard asserts the cover has `alpha === 1` AND a background
   image; a station whose only ground is the image fails one of the two.
+- ⚠ **THE PHONE HERO IS ADR-145 U1 (2026-10-04, owner): `ThoughtForm_v1b-portrait`, the head in the LOWER HALF, the pronunciation line `display: none` on the portrait rung, the plate at `object-position: 60% 0%` (the short frame loses its 33px off the FLOOR) and a 0.92 void bed through the CTA row.** The copy owns the top 55 % of a 390×664 frame; a bigger head meets the ghost CTA there, and gold on pale stone cannot pass without the stone under it going near black, so the ring's apex is lost under the buttons by design. Judge any phone framing at 664 AND 844, under the real copy, with `scripts/capture-hero-phone.mjs`; the lab renders a candidate per entry (`portrait`, `?kv=…&chrome=off`).
 - ⚠ **SINCE ADR-145 (2026-10-04) THE FOOTER HAS ITS OWN PLATES, AND U1's "BOTH PLATES ARE
   THE HERO'S" BELOW IS HISTORY.** Dark is MF-10 (`ThoughtForm_footer_v1.*`), light its
   obsidian twin (`ThoughtForm_footer_v1-light.webp`), read through `FOOTER_PLATE_*` in

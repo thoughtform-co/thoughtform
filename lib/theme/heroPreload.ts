@@ -64,8 +64,8 @@ export const HERO_PLATE_DARK_SIZE = { width: 2912, height: 1632 } as const;
  * the same query.
  */
 export const HERO_PHONE_MEDIA = "(max-width: 640px)";
-export const HERO_PLATE_DARK_PORTRAIT = "/images/ThoughtForm_v1-portrait.avif";
-export const HERO_PLATE_DARK_PORTRAIT_FALLBACK = "/images/ThoughtForm_v1-portrait.webp";
+export const HERO_PLATE_DARK_PORTRAIT = "/images/ThoughtForm_v1b-portrait.avif";
+export const HERO_PLATE_DARK_PORTRAIT_FALLBACK = "/images/ThoughtForm_v1b-portrait.webp";
 export const HERO_PLATE_DARK_PORTRAIT_SIZE = { width: 1536, height: 2752 } as const;
 
 /**

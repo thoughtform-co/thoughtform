@@ -178,7 +178,7 @@ console.log(`  G3 ${fails === 0 ? "pass" : `FAIL on ${fails}`}`);
    (ADR-145), so the check is per theme: a phone fetches THIS theme's portrait
    alone, a desktop never fetches a portrait at all. */
 const portraitFetched = plates.some((p) => p.includes("portrait"));
-const want = THEME === "light" ? "ThoughtForm_v1-portrait-light.webp" : "ThoughtForm_v1-portrait.avif";
+const want = THEME === "light" ? "ThoughtForm_v1-portrait-light.webp" : "ThoughtForm_v1b-portrait.avif";
 const onlyWanted = plates.length > 0 && plates.every((p) => p === want);
 console.log(
   `  fetch check: portrait ${portraitFetched ? "yes" : "no"}  ` +
