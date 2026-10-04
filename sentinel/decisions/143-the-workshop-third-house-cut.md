@@ -324,3 +324,48 @@ only"), no structure change.
   at 1470 (`arcs.css`, `.claude/rules/arcs.md`).
 - **05** loses its subline on V3 (owner): the question stands alone
   (`WORKSHOP_INTRO.question`); the AP lecture keeps the shared beat whole.
+
+## Update 5: the era title becomes the thesis title (2026-10-04, owner)
+
+The owner: "I want the titles from the era section (eg the intelligence architect)
+to glitch morph and move into 'AI sits somewhere between tool and collaborator'
+from the next section." V3 only; v1, v2 and the AP lecture call the same hook
+without the option and are unchanged.
+
+- **One leaf per line, one writer.** `useWorkshopFlow({ titleMorph: true })` (the
+  v3 portal) stamps `data-tw-title` on `.tw-root` while the era's `p` is in the
+  seam, and `flow/seamTitleCarrier.ts` carries the title on a fixed layer appended
+  to `.stations` (z 6: above the era at 4 and the corridor at 3, under the grain
+  and the HUD). Each leaf starts on the era title's rendered line (`textRuns` on
+  the decode's live span, so the glyphs are the title's own), travels to the
+  thesis title's line, and its face eases from the era's (display caps, 0.04em,
+  the gold glow) to the thesis's. The house decode (`captionScramble`, scrubbed,
+  so scrolling back un-morphs it) turns one string into the other, lines on a
+  cascade; a line pairs by index, so the era's one line becomes the thesis's
+  first and the second decodes in from blank. The thesis title's `em` words are
+  MARKS on the leaf: gold ink and weight from the start, the wash rising as each
+  word is spelled (`segmentResolved`), so the landing frame is the real title's.
+- **The clock** (`flowClock.ts`): `TITLE_GLIDE` [0.74, 0.96] eased, starting with
+  the exit and the mark's TRAVEL; `TITLE_DECODE` [0.74, 0.93] linear, so the line
+  is settled for the last stretch. The leaf holds the seat from 0.96 to `p` 1
+  while the square finishes opening round it, and the real title takes over when
+  the flow is done.
+- **The sheet** (v1's rule 1b, keyed on the stamp): the mast holds its seat (its
+  exit translate would move the box the leaf was measured off; its one child is
+  hidden), and both real titles hide by `visibility`, which keeps their boxes
+  for the measure. The thesis title is therefore no longer revealed by the
+  square: the leaf lands on it outside the copy layer's mask.
+- **Measured** (headed, real scrolls): the landing hand-over is within 0.01px on
+  every character at 1920×1247, 1440×900 and 1280×720, in both themes; on the
+  next frames the corridor's fixed → sticky swap moves the real title 0.47–0.66px,
+  the drift ADR-138 records. The start lands on the era title's line with the
+  same face; the first frame already shuffles the line's first characters, whose
+  widths differ, so the rest of the line shifts by up to 8px as the glitch begins.
+- ⚠ **On a straight scroll the title at the exit is the LAST era's** ("The street
+  organiser", 2016): the band runs 2026 → 2016, so "The Intelligence Architect"
+  morphs only for a reader who picked it. The morph takes whatever title is
+  showing, and re-measures if an era is picked during the exit.
+- **Guards**: `workshop-flow.test.ts` (the windows' order against TRAVEL and OPEN;
+  each line says its outgoing text before its window and its incoming text at 1;
+  a scrambling line keeps its cells; the segment split; the wash's ramp; the
+  computed colour and shadow parsing).

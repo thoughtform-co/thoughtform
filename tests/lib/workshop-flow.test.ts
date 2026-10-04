@@ -19,6 +19,8 @@ import {
   NAME_GLIDE,
   OPEN,
   RINGS_CLOSE,
+  TITLE_DECODE,
+  TITLE_GLIDE,
   TRAVEL,
   aboutState,
   aboutU,
@@ -31,6 +33,15 @@ import {
   easeInOutCubic,
   featherStops,
   flowState,
+  mixRgba,
+  mixShadow,
+  morphLineT,
+  morphLineText,
+  morphWall,
+  parseRgba,
+  parseShadow,
+  segmentResolved,
+  splitSegments,
   windowOf,
 } from "@/app/(marketing)/arcs/thoughtform/workshop-v1/flow/flowClock";
 
@@ -111,7 +122,7 @@ describe("the windows are ordered", () => {
     ]) {
       inUnit(w);
     }
-    for (const w of [TRAVEL, FOLD, OPEN]) inUnit(w);
+    for (const w of [TRAVEL, FOLD, OPEN, TITLE_GLIDE, TITLE_DECODE]) inUnit(w);
   });
 
   it("the era pins at u 0.8, and the card and the name are seated by then", () => {
@@ -145,6 +156,80 @@ describe("the windows are ordered", () => {
     expect(OPEN[0]).toBeGreaterThanOrEqual(FOLD[0]);
     expect(OPEN[0]).toBeLessThan(FOLD[1] + 1e-9);
     expect(OPEN[1]).toBe(1);
+  });
+
+  it("the title leaves with the exit and lands before the flow is done (ADR-143 U5)", () => {
+    // It leaves as the stage starts to clear, never during the era band.
+    expect(TITLE_GLIDE[0]).toBe(TRAVEL[0]);
+    expect(TITLE_DECODE[0]).toBeGreaterThanOrEqual(TITLE_GLIDE[0]);
+    // The decode settles before the glide lands, so the last stretch is the
+    // whole line travelling home.
+    expect(TITLE_DECODE[1]).toBeLessThan(TITLE_GLIDE[1]);
+    // It lands inside the seam, while the square is still opening, and holds
+    // the seat until the real title takes over at p 1.
+    expect(TITLE_GLIDE[1]).toBeGreaterThan(OPEN[0]);
+    expect(TITLE_GLIDE[1]).toBeLessThan(1);
+  });
+});
+
+describe("the title morph's arithmetic (ADR-143 U5)", () => {
+  const pairs = [
+    { from: "THE INTELLIGENCE ARCHITECT", to: "AI sits somewhere between tool" },
+    { from: "", to: "and collaborator." },
+  ];
+  const fixed = () => 0;
+
+  it("each line says its outgoing text before its window and its incoming text at 1", () => {
+    const wall = morphWall(pairs);
+    pairs.forEach((pair, i) => {
+      expect(morphLineText(pair.from, pair.to, morphLineT(0, i, wall), fixed)).toBe(pair.from);
+      expect(morphLineText(pair.from, pair.to, morphLineT(1, i, wall), fixed)).toBe(pair.to);
+    });
+  });
+
+  it("the second line starts one stagger after the first, and both finish on the wall", () => {
+    const wall = morphWall(pairs);
+    expect(morphLineT(0.5, 0, wall) - morphLineT(0.5, 1, wall)).toBeCloseTo(0.16, 12);
+    // At s = 1 every line has had at least its own whole scramble.
+    expect(morphLineT(1, 1, wall)).toBeGreaterThan(0);
+  });
+
+  it("a scrambling line never drops a character, so the leaf holds its cells", () => {
+    const wall = morphWall(pairs);
+    const mid = morphLineText(pairs[0]!.from, pairs[0]!.to, morphLineT(0.3, 0, wall), fixed);
+    expect(mid.length).toBe(Math.max(pairs[0]!.from.length, pairs[0]!.to.length));
+  });
+
+  it("splitSegments cuts at the incoming text's segment ends and keeps any surplus on the last", () => {
+    expect(splitSegments("AI sits between tool", [16, 20])).toEqual(["AI sits between ", "tool"]);
+    expect(splitSegments("AI sits", [16, 20])).toEqual(["AI sits", ""]);
+    expect(splitSegments("AI sits between tool and more", [16, 20])).toEqual([
+      "AI sits between ",
+      "tool and more",
+    ]);
+  });
+
+  it("a mark's wash rises from its first character's resolve to its last's", () => {
+    // "tool" at 26..30: its first character resolves at 0.12 + 26·0.03.
+    const first = 0.12 + 26 * 0.03;
+    const last = 0.12 + 29 * 0.03;
+    expect(segmentResolved(first - 0.01, 26, 30)).toBe(0);
+    expect(segmentResolved((first + last) / 2, 26, 30)).toBeCloseTo(0.5, 6);
+    expect(segmentResolved(last, 26, 30)).toBeCloseTo(1, 9);
+    expect(segmentResolved(last + 0.01, 26, 30)).toBe(1);
+  });
+
+  it("parses computed colours and shadows, and fades an absent glow to zero alpha", () => {
+    expect(parseRgba("rgb(235, 227, 214)")).toEqual([235, 227, 214, 1]);
+    expect(parseRgba("rgba(202, 165, 84, 0.16)")).toEqual([202, 165, 84, 0.16]);
+    expect(parseRgba("rgb(235 227 214 / 50%)")).toEqual([235, 227, 214, 0.5]);
+    expect(parseRgba("oklch(0.7 0.1 80)")).toBeNull();
+    expect(mixRgba([0, 0, 0, 1], [200, 100, 50, 0], 0.5)).toBe("rgba(100, 50, 25, 0.5000)");
+    const glow = parseShadow("rgba(202, 165, 84, 0.18) 0px 0px 22px");
+    expect(glow).toEqual({ color: [202, 165, 84, 0.18], x: 0, y: 0, blur: 22 });
+    expect(parseShadow("none")).toBeNull();
+    expect(mixShadow(glow, null, 1)).toBe("0.00px 0.00px 22.00px rgba(202, 165, 84, 0.0000)");
+    expect(mixShadow(null, null, 0.5)).toBe("none");
   });
 });
 

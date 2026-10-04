@@ -26,6 +26,8 @@ import {
   DECK_SQUARE,
   FOLD,
   RINGS_CLOSE,
+  TITLE_DECODE,
+  TITLE_GLIDE,
   TRAVEL,
   aboutState,
   aboutU,
@@ -43,6 +45,12 @@ import {
   type FlowState,
   type Rect,
 } from "./flowClock";
+import {
+  measureTitleMorph,
+  parkTitleMorph,
+  writeTitleMorph,
+  type TitleMorph,
+} from "./seamTitleCarrier";
 
 /**
  * useWorkshopFlow — the one writer for the workshop's opening flow on
@@ -58,7 +66,9 @@ import {
  *
  * WHAT IT WRITES, AND ONLY THAT.
  *   · `data-tw-flow` (`about` → `era` → `seam` → `done`) and `data-tw-about`
- *     (`hold` → `run` → `done`) on `.tw-root`;
+ *     (`hold` → `run` → `done`) on `.tw-root`, and with `titleMorph` (v3,
+ *     ADR-143 U5) `data-tw-title` while the era title's leaf carries it onto
+ *     the thesis title (`seamTitleCarrier.ts`);
  *   · the corridor's PRELUDE (`corridorPreludeRef`): the parked mark behind
  *     the About and the eras, its travel onto the thesis anchor, its fold
  *     into the glyph, and the square the thesis frame opens through;
@@ -83,6 +93,7 @@ export const WORKSHOP_FLOW_QUERY =
   "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
 const FLOW_ATTR = "data-tw-flow";
 const ABOUT_ATTR = "data-tw-about";
+const TITLE_ATTR = "data-tw-title";
 
 interface Dom {
   root: HTMLElement;
@@ -150,7 +161,30 @@ const SEAM_VARS = ["--tw-ap", "--tw-apg"].flatMap((p) =>
   [0, 1, 2, 3].flatMap((i) => [`${p}x${i}`, `${p}y${i}`])
 );
 
-export function useWorkshopFlow(): void {
+export interface WorkshopFlowOptions {
+  /**
+   * v3 (ADR-143 U5): the era title glides and decodes into the thesis title
+   * across the seam. Off on every other cut, which is then byte-identical.
+   */
+  titleMorph?: boolean;
+}
+
+/** The two titles the morph runs between: the era's, the thesis's. */
+interface Titles {
+  era: HTMLElement;
+  thesis: HTMLElement;
+}
+
+function resolveTitles(root: HTMLElement): Titles | null {
+  const era = root.querySelector<HTMLElement>('#voidwalker [data-vwh-handoff-target="era-title"]');
+  const thesis = root.querySelector<HTMLElement>(
+    ".home-v2-copy-layer .home-v2-copy-block--thoughtform-left .home-v2-copy-title"
+  );
+  return era && thesis ? { era, thesis } : null;
+}
+
+export function useWorkshopFlow(options: WorkshopFlowOptions = {}): void {
+  const titleMorph = options.titleMorph === true;
   useEffect(() => {
     let dom = resolveDom();
     if (!dom) return;
@@ -178,6 +212,32 @@ export function useWorkshopFlow(): void {
     let tail = 0;
     let lastP = Number.NaN;
     const TAIL_FRAMES = 3;
+
+    /* The title morph (v3 only). Its layer is fixed over the frame, in the
+       stations' stacking context so the grain still lies over it. */
+    let morphLayer: HTMLElement | null = null;
+    let morph: TitleMorph | null = null;
+    let titles: Titles | null = null;
+    let morphing = false;
+    /** A measure found no box; tried again on the next resize. */
+    let morphFailed = false;
+    const ensureMorphLayer = (): HTMLElement | null => {
+      if (!titleMorph || !dom) return null;
+      if (morphLayer?.isConnected) return morphLayer;
+      morphLayer ??= Object.assign(document.createElement("div"), {
+        className: "tw-morph-layer",
+        hidden: true,
+      });
+      morphLayer.setAttribute("aria-hidden", "true");
+      (dom.root.querySelector(".stations") ?? dom.root).appendChild(morphLayer);
+      return morphLayer;
+    };
+    const stopMorph = () => {
+      morphing = false;
+      morph = null;
+      dom?.root.removeAttribute(TITLE_ATTR);
+      parkTitleMorph(morphLayer);
+    };
 
     const d = () => dom!;
 
@@ -209,6 +269,7 @@ export function useWorkshopFlow(): void {
       resetSeam();
       d().root.removeAttribute(FLOW_ATTR);
       d().root.removeAttribute(ABOUT_ATTR);
+      stopMorph();
       clearPrelude();
       flow = null;
       about = null;
@@ -346,7 +407,47 @@ export function useWorkshopFlow(): void {
         dom.root.setAttribute(FLOW_ATTR, nextFlow);
         flow = nextFlow;
       }
+      /* The title morph reads its seat BEFORE the seam writes, so the one
+         rect it needs per frame never forces a layout of its own. */
+      let seat: { x: number; y: number } | null = null;
+      if (titleMorph) {
+        const want = nextFlow === "seam" && p >= TITLE_GLIDE[0] && !morphFailed;
+        if (want) {
+          if (!titles || !titles.era.isConnected || !titles.thesis.isConnected) {
+            titles = resolveTitles(dom.root);
+          }
+          const layer = ensureMorphLayer();
+          const label = titles?.era.getAttribute("aria-label") ?? "";
+          if (!morphing || !morph || morph.label !== label) {
+            /* The stamp first: it holds the mast on its seat and hides both
+               real titles, and the measure's own reads pick that up. */
+            dom.root.setAttribute(TITLE_ATTR, "");
+            morphing = true;
+            morph = titles && layer ? measureTitleMorph(layer, titles.era, titles.thesis) : null;
+            if (!morph) {
+              morphFailed = true;
+              stopMorph();
+            }
+          }
+          if (morph && titles) {
+            const r = titles.thesis.getBoundingClientRect();
+            seat = { x: r.left, y: r.top };
+          }
+        } else if (morphing) {
+          stopMorph();
+        }
+      }
+
       writeSeam(p, nextFlow !== "done");
+      if (morph && seat && morphLayer) {
+        writeTitleMorph(
+          morphLayer,
+          morph,
+          easedWindow(p, TITLE_GLIDE),
+          windowOf(p, TITLE_DECODE),
+          seat
+        );
+      }
 
       const u = aboutU(dom.about.getBoundingClientRect().top, layoutViewportHeight());
       const nextAbout = aboutState(u);
@@ -390,6 +491,8 @@ export function useWorkshopFlow(): void {
       if (!next && capable) park();
       capable = next;
       if (capable && about && about !== "hold") remeasure();
+      morph = null;
+      morphFailed = false;
       schedule();
     };
 
@@ -418,6 +521,7 @@ export function useWorkshopFlow(): void {
       mq.removeEventListener("change", evaluate);
       if (raf) window.cancelAnimationFrame(raf);
       park();
+      morphLayer?.remove();
     };
-  }, []);
+  }, [titleMorph]);
 }

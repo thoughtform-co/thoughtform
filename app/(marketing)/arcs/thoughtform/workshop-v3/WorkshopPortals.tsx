@@ -54,7 +54,8 @@ export function WorkshopV3Portals() {
     </Suspense>
   );
   usePortraitDeck();
-  useWorkshopFlow();
+  // v3 alone: the era title glides and decodes into the thesis title (ADR-143 U5).
+  useWorkshopFlow({ titleMorph: true });
 
   return null;
 }

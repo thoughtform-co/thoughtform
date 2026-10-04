@@ -127,6 +127,26 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
 .tw-root .tw-flow-layer {
   display: none;
 }
+/* The title morph's layer (v3, ADR-143 U5): fixed over the frame, inside the
+   stations' stacking context and above the era (z 4) and the corridor (z 3).
+   Its `hidden` attribute is the writer's switch; nothing here sets `display`,
+   so the UA's `[hidden]` rule holds it away. Created only on the capable
+   rung, by the writer. */
+.tw-root .tw-morph-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.tw-root .tw-morph-line {
+  position: absolute;
+  margin: 0;
+  white-space: pre;
+}
+.tw-root .tw-morph-mark {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
 /* The era's hook welds it over the About whenever it is capable; on this
    route that overlap is the FLOW'S, so without the flow it does not apply
    (re-declared under the stamp below). */
@@ -297,6 +317,22 @@ html[data-corridor-entry="1"] .tw-root .home-v2-stage__sticky {
       mask-composite: intersect;
       -webkit-mask-repeat: no-repeat;
       mask-repeat: no-repeat;
+    }
+
+    /* ── The era title becomes the thesis title (`data-tw-title`, v3 only,
+       ADR-143 U5) ── */
+    /* While the leaf carries the title, the mast holds its seat (its exit
+       would move the box the leaf was measured off; its one child is hidden,
+       so holding it shows nothing) and both real titles hide by `visibility`,
+       which keeps their boxes for the measure. The thesis title is not
+       masked by the square on the way in: the leaf lands on it, outside the
+       copy layer, and hands over when the flow is done. */
+    .tw-root[data-tw-title] #voidwalker .vwd[data-vwh-ready] .vwd__mast {
+      transform: none;
+    }
+    .tw-root[data-tw-title] #voidwalker .vwd__mast__title,
+    .tw-root[data-tw-title] .home-v2-copy-block--thoughtform-left .home-v2-copy-title {
+      visibility: hidden;
     }
 
     /* ── About → the eras (`data-tw-about` on `.tw-root`) ── */

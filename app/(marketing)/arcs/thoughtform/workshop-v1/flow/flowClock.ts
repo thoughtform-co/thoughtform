@@ -27,6 +27,14 @@
  * published progress, so scrolling back unwinds the flow exactly.
  */
 
+import {
+  SCRAMBLE_LEAD_S,
+  SCRAMBLE_STAGGER_S,
+  scrambleDuration,
+  scrambleFrame,
+} from "@/lib/home-v2/captionScramble";
+import { LINE_STAGGER_S } from "@/lib/home-v2/scrubbedDecode";
+
 /** Pinned scroll spent reading the bio before anything moves, in svh. */
 export const ABOUT_DWELL_SVH = 50;
 /** Pinned scroll the About's handoff into the eras takes, in svh. */
@@ -79,6 +87,21 @@ export const TRAVEL: FlowWindow = [0.74, 0.88];
 export const FOLD: FlowWindow = [0.8, 0.92];
 /** The square opens from the glyph's centre onto the thesis frame. */
 export const OPEN: FlowWindow = [0.9, 1];
+
+/* ── The era title becomes the thesis title, on the era's `p` ──────────
+   v3 only (ADR-143 U5; `useWorkshopFlow({ titleMorph: true })`). */
+
+/**
+ * The era title's leaf leaves its seat as the exit begins (the panels clear
+ * on [0.74, 0.96]) and lands on the thesis title's seat while the square is
+ * still opening over the copy, so the frame opens round a title that is
+ * already there. From the end of the glide to `p` 1 the leaf holds the seat;
+ * the real title takes over when the flow is done.
+ */
+export const TITLE_GLIDE: FlowWindow = [0.74, 0.96];
+/** Its characters resolve a little before it lands, so the last stretch is
+ *  the settled line travelling home rather than noise arriving. */
+export const TITLE_DECODE: FlowWindow = [0.74, 0.93];
 
 export type AboutState = "hold" | "run" | "done";
 export type FlowState = "about" | "era" | "seam" | "done";
@@ -233,4 +256,124 @@ export function featherStops(
   const y0 = cy - h - oy;
   const y3 = cy + h - oy;
   return { x: [x0, x0 + f, x3 - f, x3], y: [y0, y0 + f, y3 - f, y3] };
+}
+
+/* ── The title morph's arithmetic (TITLE_GLIDE / TITLE_DECODE) ───────── */
+
+export function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+/** One line of the morph: what it says leaving, what it says arriving. */
+export interface MorphPair {
+  from: string;
+  to: string;
+}
+
+/**
+ * The decode's wall for a set of lines: the longest line's scramble plus one
+ * stagger per line after the first, so the block resolves as a cascade and
+ * every line is whole at decode progress 1.
+ */
+export function morphWall(pairs: readonly MorphPair[]): number {
+  const longest = pairs.reduce((m, p) => Math.max(m, scrambleDuration(p.from, p.to)), 0);
+  return longest + LINE_STAGGER_S * Math.max(0, pairs.length - 1);
+}
+
+/** Line `i`'s own time on the wall at decode progress `s`. */
+export function morphLineT(s: number, i: number, wall: number): number {
+  return clamp01(s) * wall - i * LINE_STAGGER_S;
+}
+
+/**
+ * Line text at its own time `t` (seconds on the house kernel's clock): the
+ * outgoing text until its first window opens, then the kernel's shuffle,
+ * then the incoming text once every character has resolved. Pure in `t`,
+ * so a scroll-derived `t` runs it backwards for free (ADR-115).
+ */
+export function morphLineText(
+  from: string,
+  to: string,
+  t: number,
+  random: () => number = Math.random
+): string {
+  if (!(t > 0)) return from;
+  return scrambleFrame({ from, to }, t, random) ?? to;
+}
+
+/**
+ * Split a line's display string at its segments' END offsets (the incoming
+ * text's). Whatever runs past the last end, an outgoing line longer than
+ * the incoming one, rides the last segment, so nothing is dropped.
+ */
+export function splitSegments(text: string, ends: readonly number[]): string[] {
+  const out: string[] = [];
+  let a = 0;
+  ends.forEach((end, k) => {
+    const b = k === ends.length - 1 ? text.length : Math.max(a, Math.min(end, text.length));
+    out.push(text.slice(a, b));
+    a = b;
+  });
+  return out;
+}
+
+/**
+ * How much of segment `[start, end)` of the incoming text has RESOLVED at its
+ * line's time `t`, from its first character's resolve moment (0) to its last
+ * one's (1). The marker's wash rides it, so a word lights as it is spelled.
+ */
+export function segmentResolved(t: number, start: number, end: number): number {
+  const a = SCRAMBLE_LEAD_S + start * SCRAMBLE_STAGGER_S;
+  const span = Math.max(1, end - 1 - start) * SCRAMBLE_STAGGER_S;
+  return clamp01((t - a) / span);
+}
+
+/** An sRGB colour as `[r, g, b, alpha]`. */
+export type Rgba = [number, number, number, number];
+
+/** A computed `rgb()` / `rgba()` colour, either syntax; `null` for anything
+ *  else (a caller then switches the colour at the midpoint instead). */
+export function parseRgba(s: string): Rgba | null {
+  const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)$/.exec(
+    s.trim()
+  );
+  if (!m) return null;
+  const alpha = m[4] === undefined ? 1 : Number(m[4]) / (m[5] === "%" ? 100 : 1);
+  return [Number(m[1]), Number(m[2]), Number(m[3]), alpha];
+}
+
+export function mixRgba(a: Rgba, b: Rgba, t: number): string {
+  const e = clamp01(t);
+  const c = (i: number) => Math.round(lerp(a[i]!, b[i]!, e));
+  return `rgba(${c(0)}, ${c(1)}, ${c(2)}, ${lerp(a[3], b[3], e).toFixed(4)})`;
+}
+
+/** The first shadow of a computed `text-shadow`; `null` for `none`. */
+export interface Shadow {
+  color: Rgba;
+  x: number;
+  y: number;
+  blur: number;
+}
+
+export function parseShadow(s: string): Shadow | null {
+  const m = /^(rgba?\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px(?:\s+([\d.]+)px)?/.exec(s.trim());
+  if (!m) return null;
+  const color = parseRgba(m[1]!);
+  if (!color) return null;
+  return { color, x: Number(m[2]), y: Number(m[3]), blur: m[4] ? Number(m[4]) : 0 };
+}
+
+/** A shadow between two ends; an absent end is the other's geometry at zero
+ *  alpha, so a glow fades out where it is not wanted rather than snapping. */
+export function mixShadow(a: Shadow | null, b: Shadow | null, t: number): string {
+  if (!a && !b) return "none";
+  const from = a ?? { ...b!, color: [b!.color[0], b!.color[1], b!.color[2], 0] as Rgba };
+  const to = b ?? { ...a!, color: [a!.color[0], a!.color[1], a!.color[2], 0] as Rgba };
+  const e = clamp01(t);
+  return `${lerp(from.x, to.x, e).toFixed(2)}px ${lerp(from.y, to.y, e).toFixed(2)}px ${lerp(
+    from.blur,
+    to.blur,
+    e
+  ).toFixed(2)}px ${mixRgba(from.color, to.color, e)}`;
 }
