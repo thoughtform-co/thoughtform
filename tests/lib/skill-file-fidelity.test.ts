@@ -59,22 +59,39 @@ const SKILLS_DIR = join(
  */
 const LOOP_AI_STUDIO_DIR =
   process.env.LOOP_AI_STUDIO_DIR ?? join(__dirname, "..", "..", "..", "loop-ai-studio");
-const ELSEWHERE: Record<string, string> = {
-  "motion-design": join(
-    LOOP_AI_STUDIO_DIR,
-    "plugins",
-    "ai-studio-motion",
-    "skills",
-    "motion-design",
-    "SKILL.md"
-  ),
+/**
+ * The Armada companion (ADR-146) quotes Suri's own skills, kept in the
+ * client's plugin repository on the names of 3 October (kit 0.6.0).
+ * `SURI_AI_STUDIO_DIR` points at a checkout of it; the sibling folder is the
+ * default. Absent, or still on the old names, the Skill is skipped.
+ */
+const SURI_AI_STUDIO_DIR =
+  process.env.SURI_AI_STUDIO_DIR ?? join(__dirname, "..", "..", "..", "suri-ai-studio");
+const suriSkill = (plugin: string, skill: string) =>
+  join(SURI_AI_STUDIO_DIR, "plugins", plugin, "skills", skill, "SKILL.md");
+const ELSEWHERE: Record<string, { root: string; file: string }> = {
+  "motion-design": {
+    root: LOOP_AI_STUDIO_DIR,
+    file: join(
+      LOOP_AI_STUDIO_DIR,
+      "plugins",
+      "ai-studio-motion",
+      "skills",
+      "motion-design",
+      "SKILL.md"
+    ),
+  },
+  brief: { root: SURI_AI_STUDIO_DIR, file: suriSkill("ai-studio-strategy", "brief") },
+  "monday-read": { root: SURI_AI_STUDIO_DIR, file: suriSkill("ai-studio-strategy", "monday-read") },
+  mother: { root: SURI_AI_STUDIO_DIR, file: suriSkill("ai-studio-design", "mother") },
 };
 
-/** The file a beat's Skill is read from, and whether this checkout has it. */
-function sourceOf(skill: string): { file: string; external: boolean } {
+/** The file a beat's Skill is read from, the checkout that holds it, and
+ *  whether that is a repository other than the practice's plugins. */
+function sourceOf(skill: string): { file: string; root: string; external: boolean } {
   const other = ELSEWHERE[skill];
-  if (other) return { file: other, external: true };
-  return { file: join(SKILLS_DIR, skill, "SKILL.md"), external: false };
+  if (other) return { ...other, external: true };
+  return { file: join(SKILLS_DIR, skill, "SKILL.md"), root: SKILLS_DIR, external: false };
 }
 
 /** Strip the markdown the source uses and the page does not. */
@@ -108,9 +125,9 @@ describe("a skill-file beat quotes a file that exists (ADR-139)", () => {
     expect(panels.length, "no skill-file beat is registered").toBeGreaterThan(0);
     for (const { arc, section } of panels) {
       const skill = section.path.split(" / ")[0];
-      const { file, external } = sourceOf(skill);
+      const { file, root } = sourceOf(skill);
       // The repository that holds it is not checked out here.
-      if (external ? !existsSync(LOOP_AI_STUDIO_DIR) : !existsSync(SKILLS_DIR)) continue;
+      if (!existsSync(root)) continue;
       expect(
         existsSync(file),
         `${arc}#${section.id}: ${skill} is drawn as a real Skill but is not on disk`

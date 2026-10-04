@@ -10178,6 +10178,289 @@ html[data-theme="light"] .arc-root .arc-hull {
   padding: 6px 12px;
 }
 
+/* ── 14 · The repository (ADR-146) ───────────────────────────────────
+   The configuration made real as CONTAINMENT, so it cannot read as the
+   six-plate board a second time: the organisation is the outer frame, the
+   marketplace a dashed frame inside it, the plugins cartridges inside that,
+   the skills rows inside those. No SVG and no ribbon anywhere on it. Gold is
+   what the team writes; the mono gold line under an element is the question
+   it answers, the plugin board's own tie. */
+/* The densest drawing on its page, so it takes the framing beats' tight air
+   and the second cut's head gap (the fit law: one screen at 1280x720). */
+.arc-sec--repo {
+  --arc-sec-pad: clamp(28px, 4vh, 72px);
+}
+.arc-sec--repo .arc-head {
+  margin-bottom: clamp(18px, 3.2vh, 32px);
+}
+.arc-repo {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+  width: min(100%, 1180px);
+  margin-inline: auto;
+}
+/* The organisation. A solid hairline: this one is a thing of its own, the
+   client's Claude, where the marketplace inside it is only a wrapper. */
+.arc-repo__org {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  padding: clamp(16px, 2.2vh, 22px) clamp(14px, 1.8vw, 24px) clamp(10px, 1.6vh, 16px);
+  border: 1px solid var(--arc-rule);
+}
+.arc-repo__mast {
+  position: absolute;
+  top: 0;
+  left: clamp(14px, 1.8vw, 24px);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 10px;
+  transform: translateY(-50%);
+  background: var(--void, #0a0908);
+}
+.arc-repo__label {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-repo__name {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(14px, min(1.1vw, 2.2vh), 18px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-repo__name--mono {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, min(1vw, 2vh), 16px);
+  letter-spacing: 0;
+}
+.arc-repo__mastline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  color: var(--arc-ink-50);
+}
+/* What the organisation holds for everyone: one row of plates. */
+.arc-repo__settings {
+  display: grid;
+  grid-template-columns: repeat(var(--repo-cols, 3), minmax(0, 1fr));
+  gap: clamp(8px, 1.2vw, 14px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-repo__settings[data-repo-n="2"] {
+  --repo-cols: 2;
+}
+.arc-repo__settings[data-repo-n="4"] {
+  --repo-cols: 4;
+}
+/* The name and the question it answers share the first line. */
+.arc-repo__setting {
+  --arc-plate-ch: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 2px;
+  padding: clamp(7px, 1.1vh, 11px) clamp(12px, 1.4vw, 18px);
+}
+.arc-repo__setting .arc-repo__line {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.arc-repo__setting .arc-repo__answers {
+  grid-column: 2;
+  grid-row: 1;
+}
+.arc-repo__settingname {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 16px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-repo__line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--arc-ink-62);
+}
+/* The marketplace: dashed, the plugin board's frame, because a marketplace
+   is a wrapper round plugins that already exist. */
+.arc-repo__market {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  margin-top: 4px;
+  padding: clamp(16px, 2.2vh, 22px) clamp(12px, 1.5vw, 20px) clamp(10px, 1.4vh, 14px);
+  border: 1px dashed var(--arc-seam);
+}
+.arc-repo__plugins {
+  display: grid;
+  grid-template-columns: repeat(var(--repo-cols, 3), minmax(0, 1fr));
+  gap: clamp(8px, 1.2vw, 14px);
+  align-items: stretch;
+}
+.arc-repo__plugins[data-repo-n="2"] {
+  --repo-cols: 2;
+}
+.arc-repo__plugins[data-repo-n="4"] {
+  --repo-cols: 4;
+}
+.arc-repo__plugin {
+  --arc-plate-ch: 10px;
+  gap: 0;
+  padding: 0;
+}
+.arc-repo__pluginhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 1px;
+  padding: clamp(6px, 1vh, 10px) clamp(12px, 1.3vw, 16px);
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-repo__pluginid {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: clamp(12px, 0.9vw, 14px);
+  color: var(--arc-ink-90);
+}
+.arc-repo__pluginshown {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  color: var(--arc-ink-50);
+}
+.arc-repo__who {
+  flex-basis: 100%;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-repo__items {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-repo__item {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: baseline;
+  padding: clamp(4px, 0.7vh, 7px) clamp(12px, 1.3vw, 16px);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-repo__item:first-child {
+  border-top: 0;
+}
+.arc-repo__item .arc-repo__answers {
+  grid-column: 2;
+}
+.arc-repo__item[data-repo-tone="lit"] {
+  background: var(--arc-gold-wash);
+  box-shadow: inset 2px 0 0 var(--gold-line);
+}
+.arc-repo__item[data-repo-tone="ghost"] {
+  opacity: 0.62;
+  border-top-style: dashed;
+}
+.arc-repo__itemname {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--arc-ink-90);
+  white-space: nowrap;
+}
+.arc-repo__itemline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--arc-ink-62);
+}
+/* The files the repository keeps beside its plugins, along the foot. */
+.arc-repo__files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px clamp(14px, 2vw, 28px);
+  margin: 0;
+  padding: clamp(6px, 1vh, 10px) 2px 0;
+  list-style: none;
+  border-top: 1px solid var(--arc-rule);
+}
+/* One line each: the path, then what it holds. */
+.arc-repo__file {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.arc-repo__path {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--arc-ink-80);
+}
+/* The tie back to the six questions, as on the plugin board. */
+.arc-repo__answers {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-repo__bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(6px, 1vh, 10px) clamp(14px, 1.6vw, 20px);
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-sheen);
+}
+.arc-repo__barline {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(13px, min(1vw, 2vh), 16px);
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-80);
+}
+@media (max-width: 1000px) {
+  .arc-repo__settings,
+  .arc-repo__plugins {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-repo__mast {
+    position: static;
+    transform: none;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .arc-repo__org,
+  .arc-repo__market {
+    padding-top: clamp(12px, 2vh, 18px);
+  }
+  .arc-repo__bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
 /* Light.
    ⚠ `--void` AND `--dawn` SWAP WHOLESALE (ADR-058), so a rule written
    against either NEEDS NO OVERRIDE — it inverts for free. The frame mast

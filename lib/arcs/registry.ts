@@ -12,6 +12,7 @@ import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "./content/thoughtform-workshop-v3";
+import { THOUGHTFORM_ARMADA_ARC } from "./content/thoughtform-armada";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
@@ -54,6 +55,9 @@ export const ARCS: readonly ArcDef[] = [
      Loop as its worked example and the economics after its bill. The
      template the next presentations are cut from. */
   THOUGHTFORM_WORKSHOP_V3_ARC,
+  /* Its technical companion (ADR-146): one piece of work through the
+     machinery, from the configuration to the next team. */
+  THOUGHTFORM_ARMADA_ARC,
   AI_STORYTELLING_ARC,
   /* The course's class decks sit beside the course (ADR-136). */
   AI_STORYTELLING_CLASS_1_ARC,

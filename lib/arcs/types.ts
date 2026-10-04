@@ -1231,7 +1231,98 @@ export type ArcSection = ArcSectionBase &
         /** The drawing's accessible name. */
         alt: string;
       }
+    | {
+        /**
+         * THE REPOSITORY (ADR-146): the configuration made real a second way,
+         * as CONTAINMENT. The client's Claude organisation is the outer frame,
+         * with the settings it holds; inside it, the marketplace it syncs from
+         * GitHub, drawn as a dashed frame around the plugins, each a cartridge
+         * of the skills it carries; at the marketplace's foot, the files the
+         * repository keeps beside them; under everything, where people meet it.
+         *
+         * ⚠ WHY NOT `plugin-board`. The owner, 2026-10-04: the "made real"
+         * beat "looks too similar to the intelligence configuration". A frame
+         * around four plates round a chip reads as the six-plate board a second
+         * time. What this beat has to say is that the answers NEST — the
+         * organisation holds the marketplace, which holds the plugins, which
+         * hold the skills — and no kind drew a nesting.
+         *
+         * ⚠ EVERY ELEMENT THAT ANSWERS A QUESTION SAYS WHICH, as the plugin
+         * board's plates do: the tie back to the six is the argument. Gold is
+         * what the team writes, so only an item answering the context or the
+         * evaluations may be lit, and the guard pins it.
+         *
+         * ⚠ THE TWENTY-FOURTH ENUMERATED EXCEPTION. One leaf, no state, no
+         * script and NO SVG: frames and plates on `.arc-plate`, so nothing on
+         * it can be read as the board's ribbons.
+         */
+        kind: "repository";
+        head: ArcHead;
+        /** The outer frame: whose Claude it is, and what it sets. */
+        org: { label: string; name: string; settings: readonly ArcRepoSetting[] };
+        /** The dashed frame: the marketplace, and the files kept beside the
+         *  plugins in the same repository. */
+        repo: { label: string; name: string; line: string; files: readonly ArcRepoFile[] };
+        /** The cartridges, left to right. Two to four. */
+        plugins: readonly ArcRepoPlugin[];
+        /** The bar under the frame: where people meet it. */
+        bar: { line: string; answers: string };
+        /** The drawing's accessible name. */
+        alt: string;
+      }
   );
+
+/* ── The repository (ADR-146) ─────────────────────────────────────── */
+
+/** A setting the organisation holds for everyone, e.g. the model. */
+export interface ArcRepoSetting {
+  id: string;
+  /** ≤ 20. */
+  name: string;
+  /** ≤ 56. */
+  line: string;
+  /** Which of the six questions it answers, if any. ≤ 24. */
+  answers?: string;
+}
+
+/** A file or folder the repository keeps beside its plugins. */
+export interface ArcRepoFile {
+  id: string;
+  /** The path as it is on disk, e.g. "MAINTAINERS.json". ≤ 24. */
+  path: string;
+  /** ≤ 40. */
+  line: string;
+  /** Which of the six questions it answers, if any. ≤ 24. */
+  answers?: string;
+}
+
+/** One plugin, drawn as a cartridge of what it carries. */
+export interface ArcRepoPlugin {
+  id: string;
+  /** The plugin's id, as Claude keys it, e.g. "ai-suri". ≤ 24. */
+  name: string;
+  /** The name a person sees in Claude, e.g. "Suri AI". ≤ 28. */
+  shown: string;
+  /** Who gets it. ≤ 32. */
+  who: string;
+  /** Two to five. */
+  items: readonly ArcRepoItem[];
+}
+
+/** A skill, an agent or a folder inside a plugin. */
+export interface ArcRepoItem {
+  id: string;
+  /** As on disk, e.g. "brief" or "evals/". ≤ 20. */
+  name: string;
+  /** ≤ 44. */
+  line: string;
+  /** Which of the six questions it answers, if any. ≤ 24. */
+  answers?: string;
+  /** One of the two the team writes: the context or the evaluations. */
+  lit?: true;
+  /** Not in the plugin yet; `line` says when it arrives. Never lit. */
+  ghost?: true;
+}
 
 /* ── The syllabus (ADR-134) ────────────────────────────────────────── */
 

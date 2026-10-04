@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArcHero } from "@/components/arcs/ArcHero";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { ArcShell } from "@/components/arcs/ArcShell";
+import { ArcWorkedSwitch } from "@/components/arcs/ArcWorkedSwitch";
 import { getClient } from "@/lib/arcs/clients";
 import { ARCS, getArcAt } from "@/lib/arcs/registry";
 import { groupOf } from "@/lib/arcs/routes";
@@ -143,6 +144,12 @@ export default async function ArcPage({ params }: ArcRouteParams) {
       >
         <ArcHero hero={arc.hero} />
         <ArcSectionRenderer sections={arc.sections} motion={motion} />
+        {/* The worked-example switch (ADR-139), mounted only where a record
+            carries one: until ADR-146 every switched page had its own route
+            and mounted the island there; the first switched arc on this
+            route is the Armada companion. Without it the first panel of
+            each group reads whole and the bar stays away, by design. */}
+        {arc.sections.some((section) => section.worked) ? <ArcWorkedSwitch /> : null}
       </ArcShell>
     </>
   );

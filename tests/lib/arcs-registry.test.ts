@@ -1935,3 +1935,72 @@ describe("an interstitial's clip", () => {
     }
   });
 });
+
+describe("the repository kind (ADR-146)", () => {
+  /* The configuration made real as a NESTING: the organisation, the
+     marketplace inside it, the plugins inside that. Pinned: what the
+     drawing is built for (two to four cartridges of two to five rows), the
+     tie back to the six questions on everything that answers one, gold only
+     on what the team writes, a ghost never lit, and NO DIGIT on its
+     lettering, the house habit on every instrument. */
+  const noDigits = (value: unknown, at: string) =>
+    scanArc(value, at, (s, p) => expect(s, `${p} letters a digit`).not.toMatch(/\d/));
+  const WRITTEN = new Set(["the context", "the evaluations"]);
+
+  it("nests, ties every answer to a question, and lights only what the team writes", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "repository") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.plugins.length, `${at}: two to four plugins`).toBeGreaterThanOrEqual(2);
+        expect(s.plugins.length, `${at}: two to four plugins`).toBeLessThanOrEqual(4);
+        expect(new Set(s.plugins.map((p) => p.id)).size, `${at}: duplicate plugin`).toBe(
+          s.plugins.length
+        );
+        expect(s.org.settings.length, `${at}: settings`).toBeGreaterThanOrEqual(2);
+        expect(s.org.settings.length, `${at}: settings`).toBeLessThanOrEqual(4);
+        for (const st of s.org.settings) {
+          expect(st.name.length, `${at}/${st.id}: name`).toBeLessThanOrEqual(20);
+          expect(st.line.length, `${at}/${st.id}: line`).toBeLessThanOrEqual(56);
+        }
+        for (const f of s.repo.files) {
+          expect(f.path.length, `${at}/${f.id}: path`).toBeLessThanOrEqual(24);
+          expect(f.line.length, `${at}/${f.id}: line`).toBeLessThanOrEqual(40);
+        }
+        for (const p of s.plugins) {
+          expect(p.name.length, `${at}/${p.id}: id`).toBeLessThanOrEqual(24);
+          expect(p.shown.length, `${at}/${p.id}: shown`).toBeLessThanOrEqual(28);
+          expect(p.who.length, `${at}/${p.id}: who`).toBeLessThanOrEqual(32);
+          expect(p.items.length, `${at}/${p.id}: rows`).toBeGreaterThanOrEqual(2);
+          expect(p.items.length, `${at}/${p.id}: rows`).toBeLessThanOrEqual(5);
+          for (const item of p.items) {
+            const where = `${at}/${p.id}/${item.id}`;
+            expect(item.name.length, `${where}: name`).toBeLessThanOrEqual(20);
+            expect(item.line.length, `${where}: line`).toBeLessThanOrEqual(44);
+            if (item.lit) {
+              /* ⚠ GOLD IS WHAT THE TEAM WRITES, the board's law at a third
+                 scale: a lit row says which of the two it is. */
+              expect(
+                WRITTEN.has(item.answers ?? ""),
+                `${where}: a lit row answers one of the two`
+              ).toBe(true);
+              expect(item.ghost, `${where}: a ghost is never lit`).toBeUndefined();
+            }
+          }
+        }
+        const answers = [
+          ...s.org.settings.map((x) => x.answers),
+          ...s.repo.files.map((x) => x.answers),
+          ...s.plugins.flatMap((p) => p.items.map((x) => x.answers)),
+          s.bar.answers,
+        ].filter((x): x is string => Boolean(x));
+        for (const a of answers) {
+          expect(a.length, `${at}: "${a}" over the measure`).toBeLessThanOrEqual(24);
+        }
+        /* ⚠ THE TIE IS THE BEAT: all six answers land somewhere on it. */
+        expect(new Set(answers).size, `${at}: the six answers, each once at least`).toBe(6);
+        noDigits({ org: s.org, repo: s.repo, plugins: s.plugins, bar: s.bar }, at);
+      }
+    }
+  });
+});
