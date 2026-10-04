@@ -5,7 +5,12 @@
  * course cannot rename "the gate" on one class and not the next.
  */
 
-import type { ArcSyllabusClass, ArcSyllabusGlyph, ArcSyllabusPhase } from "@/lib/arcs/types";
+import type {
+  ArcSyllabusClass,
+  ArcSyllabusGlyph,
+  ArcSyllabusPhase,
+  ArcSyllabusWords,
+} from "@/lib/arcs/types";
 
 /** The sheet's four rows, in the order a student reads a class. */
 export const SYLLABUS_ROWS = [
@@ -17,6 +22,24 @@ export const SYLLABUS_ROWS = [
 
 export const SYLLABUS_TABLIST_LABEL = "The classes";
 export const SYLLABUS_CLASS_WORD = "Class";
+
+/**
+ * The words the renderer letters, resolved once (ADR-147): a course keeps the
+ * defaults above; a page that is not a course (Suri's setup, whose stations
+ * are steps) authors its own in `words`. The row IDS are the record's and do
+ * not move, so `[data-syl-row="gate"]` keeps its wash whatever the label says.
+ */
+export function syllabusWords(words: ArcSyllabusWords | undefined): {
+  station: string;
+  tablist: string;
+  rows: readonly { id: (typeof SYLLABUS_ROWS)[number]["id"]; label: string }[];
+} {
+  return {
+    station: words?.station ?? SYLLABUS_CLASS_WORD,
+    tablist: words?.tablist ?? SYLLABUS_TABLIST_LABEL,
+    rows: SYLLABUS_ROWS.map((r, i) => ({ id: r.id, label: words?.rows?.[i] ?? r.label })),
+  };
+}
 export const SYLLABUS_EXAMPLE_FLAG = "Worked example";
 /** The flag on a class's own page link (ADR-136). */
 export const SYLLABUS_PAGE_FLAG = "The class";
@@ -146,4 +169,16 @@ export const GLYPHS: Record<ArcSyllabusGlyph, readonly GlyphPart[]> = {
     line(47, 18, 60, 18),
     line(47, 30, 60, 30),
   ],
+  /* A skill as the file it is: one sheet, a title line, three lines of rules
+     (ADR-147). */
+  skill: [
+    rect(17, 5, 30, 38),
+    line(23, 13, 36, 13),
+    line(23, 21, 41, 21),
+    line(23, 27, 41, 27),
+    line(23, 33, 35, 33),
+  ],
+  /* A plugin as a nesting: the marketplace holds the plugin, which holds its
+     skills, side by side (ADR-147). */
+  plugin: [rect(4, 6, 56, 36), rect(10, 12, 44, 24), rect(15, 17, 15, 14), rect(34, 17, 15, 14)],
 };

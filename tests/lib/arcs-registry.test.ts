@@ -35,6 +35,17 @@ import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
+import {
+  SURI_CONFIGURATION_BODIES,
+  SURI_CONFIGURATION_TITLE,
+  SURI_FEEDBACK_STEPS,
+  SURI_MONTH_CARDS,
+  SURI_REPOSITORY_BODY,
+  SURI_USING_BODIES,
+  SURI_WORKED,
+  SURI_WORKS,
+  SURI_WRONG_THREADS,
+} from "@/lib/arcs/content/shared/suriWork";
 import { ARCS, arcHrefs, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
 import { arcHref } from "@/lib/arcs/routes";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
@@ -1157,7 +1168,18 @@ describe("arcs registry (ADR-052)", () => {
        class names a phase that exists, that a station's name fits its column,
        that the fork has exactly two ways in, and that a worked-example link
        lands on a section of this page. */
-    const GLYPHS = ["setup", "board", "wall", "offer", "poster", "site", "film", "launch"];
+    const GLYPHS = [
+      "setup",
+      "board",
+      "wall",
+      "offer",
+      "poster",
+      "site",
+      "film",
+      "launch",
+      "skill",
+      "plugin",
+    ];
     for (const arc of ARCS) {
       const ids = new Set(arc.sections.map((x) => x.id));
       for (const s of arc.sections) {
@@ -1168,6 +1190,14 @@ describe("arcs registry (ADR-052)", () => {
         expect(s.entry.ways.length, `${at}: two ways in`).toBe(2);
         expect(s.launch.items.length, `${at}: one to three things launched`).toBeGreaterThan(0);
         expect(s.launch.items.length, `${at}: one to three things launched`).toBeLessThanOrEqual(3);
+        /* A page that is not a course letters its own words (ADR-147): four
+           row labels that fit the key column. */
+        if (s.words?.rows) {
+          expect(s.words.rows, `${at}: four row labels`).toHaveLength(4);
+          for (const label of s.words.rows) {
+            expect(label.length, `${at}: row label "${label}"`).toBeLessThanOrEqual(24);
+          }
+        }
         const phaseIds = s.phases.map((p) => p.id);
         expect(new Set(phaseIds).size, `${at}: a phase twice`).toBe(phaseIds.length);
         expect(new Set(s.classes.map((c) => c.id)).size, `${at}: a class twice`).toBe(
@@ -1658,6 +1688,7 @@ describe("the workshop's shared beats (ADR-143)", () => {
       }
     }
     expect(readers.get("three-ways")?.sort()).toEqual([
+      "suri-lunch-and-learn",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
@@ -1692,6 +1723,60 @@ describe("the workshop's shared beats (ADR-143)", () => {
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
     ]);
+  });
+
+  /* ⚠ ONE SECTION, ONE RECORD (ADR-147). Suri's three pieces of work are one
+     record (`shared/suriWork.ts`) read by the Armada companion and by Suri's
+     own two pages; each page authors the frame and spreads the body, so the
+     body is pinned `toBe` on every reader and the readers are pinned. */
+  it("every page drawing Suri's work reads the shared bodies", () => {
+    const readers = new Map<string, string[]>([
+      ["config", []],
+      ["repository", []],
+      ["using", []],
+      ["wrong", []],
+      ["month", []],
+    ]);
+    const work = (id: string) =>
+      SURI_WORKS.find((w) => SURI_WORKED[w].id === id.replace(/^(config|using|wrong)-/, ""));
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind === "questions" && s.worked?.group === "config") {
+          const body = SURI_CONFIGURATION_BODIES[work(s.id)!];
+          expect(s.left, `${arc.slug}#${s.id}`).toBe(body.left);
+          expect(s.right, `${arc.slug}#${s.id}`).toBe(body.right);
+          expect(s.work, `${arc.slug}#${s.id}`).toBe(body.work);
+          expect(s.head.title, `${arc.slug}#${s.id}: the record's title`).toBe(
+            SURI_CONFIGURATION_TITLE
+          );
+          if (s.id === "config-brief") readers.get("config")?.push(arc.slug);
+        }
+        if (s.kind === "repository" && s.repo.name === "suri-ai-studio") {
+          expect(s.plugins, `${arc.slug}#${s.id}`).toBe(SURI_REPOSITORY_BODY.plugins);
+          expect(s.org, `${arc.slug}#${s.id}`).toBe(SURI_REPOSITORY_BODY.org);
+          readers.get("repository")?.push(arc.slug);
+        }
+        if (s.kind === "chat" && s.worked?.group === "using") {
+          expect(s.thread, `${arc.slug}#${s.id}`).toBe(SURI_USING_BODIES[work(s.id)!].thread);
+          if (s.id === "using-brief") readers.get("using")?.push(arc.slug);
+        }
+        if (s.kind === "chat" && s.worked?.group === "wrong") {
+          expect(s.thread, `${arc.slug}#${s.id}`).toBe(SURI_WRONG_THREADS[work(s.id)!]);
+          expect(s.aside, `${arc.slug}#${s.id}`).toBe(SURI_FEEDBACK_STEPS);
+          if (s.id === "wrong-brief") readers.get("wrong")?.push(arc.slug);
+        }
+        if (s.kind === "cards" && s.id === "the-month") {
+          expect(s.cards, `${arc.slug}#${s.id}`).toBe(SURI_MONTH_CARDS);
+          readers.get("month")?.push(arc.slug);
+        }
+      }
+    }
+    const pages = ["suri-configuration", "suri-lunch-and-learn", "thoughtform-armada"];
+    for (const [group, who] of readers) {
+      expect(who.sort(), group).toEqual(
+        group === "config" ? ["suri-lunch-and-learn", "thoughtform-armada"] : pages
+      );
+    }
   });
 });
 

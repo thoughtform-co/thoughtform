@@ -2110,6 +2110,27 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   height: auto;
   background: #050403;
 }
+/* A 9:16 piece (ADR-147): the band's 880px would run a vertical loop ~1,560px
+   tall, so the FRAME's width is solved from the height the beat leaves under
+   its head, caption and air, and the beat gives up most of the format's
+   padding. The cap sits on the frame, never on the figure: the caption keeps
+   the band's width, or it wraps into a tall column beside a thin frame
+   (measured: 549px of figure for 362px of video at 1280×720). Landscape media
+   never carries the attribute and is byte-identical. */
+.arc-sec:has(> .arc-band > .arc-media[data-media-aspect="portrait"]) {
+  --arc-sec-pad: clamp(28px, 4vh, 72px);
+}
+.arc-media[data-media-aspect="portrait"] {
+  /* What the beat spends above and below the frame: its padding, the head,
+     the figure's top margin, the frame's own padding and the caption. The
+     padding and the margin grow with the viewport, so the budget does too
+     (measured: ~286px at 1280×720, ~342px at 1920×1247). */
+  --arc-media-head: calc(210px + 12svh);
+}
+.arc-media[data-media-aspect="portrait"] .arc-media__frame {
+  width: min(100%, calc((100svh - var(--arc-media-head)) * 9 / 16));
+  margin-inline: auto;
+}
 .arc-media__cap {
   display: flex;
   flex-wrap: wrap;

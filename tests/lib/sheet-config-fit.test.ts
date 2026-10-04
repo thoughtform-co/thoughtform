@@ -79,6 +79,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "hungry-minds-proposal",
       "perfect-ted-proposal",
       "plopsa-workshop",
+      "suri-lunch-and-learn",
       "suri-proposal",
       "suri-workshop",
       "thoughtform-armada",
@@ -173,6 +174,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
          the board reads the first panel, the brief: Claude in the model's
          answer, Monday in the data's. */
       "thoughtform-armada": {
+        rows: ["A brief for the studio||"],
+        links: ["Claude×1", "Monday×1"],
+      },
+      /* Suri's lunch and learn (ADR-147) switches the same three pieces of
+         work from the shared record, so it derives the same row and chips. */
+      "suri-lunch-and-learn": {
         rows: ["A brief for the studio||"],
         links: ["Claude×1", "Monday×1"],
       },

@@ -315,6 +315,10 @@ export type ArcSection = ArcSectionBase &
           /** Required for video (preload="none" shows only the poster). */
           poster?: string;
           alt?: string;
+          /** A 9:16 piece (ADR-147): the frame is capped by the beat's height
+           *  instead of the band's width, so a vertical loop fits one screen.
+           *  Absent, the landscape frame, byte-identical. */
+          aspect?: "portrait";
         };
         caption: {
           label: string;
@@ -990,6 +994,12 @@ export type ArcSection = ArcSectionBase &
         launch: { label: string; items: readonly string[] };
         /** One line under the track: what a gate is. */
         note?: string;
+        /** The renderer's own words when the track is not a course (ADR-147):
+         *  the station word in the sheet's kicker, the tablist's label and
+         *  the sheet's four row labels. Absent, the course's: Class · The
+         *  classes · Objective · You make · The gate · The tool. The row IDS
+         *  never change, so the gate's wash and the record's fields hold. */
+        words?: ArcSyllabusWords;
       }
     | {
         /**
@@ -1332,6 +1342,17 @@ export interface ArcSyllabusPhase {
   label: string;
 }
 
+/** The syllabus's lettered chrome, when a page is not a course (ADR-147). */
+export interface ArcSyllabusWords {
+  /** The sheet kicker's word before the numeral, e.g. "Step". */
+  station?: string;
+  /** The tablist's accessible name, e.g. "The steps". */
+  tablist?: string;
+  /** The sheet's four row labels, in the record's order
+   *  (objective · make · gate · tool), each ≤ 24 characters. */
+  rows?: readonly [string, string, string, string];
+}
+
 /** The shape of what a class makes, drawn as a hairline frame on its
  *  station. A shape, never a picture: the track is the course, not the work. */
 export type ArcSyllabusGlyph =
@@ -1342,7 +1363,10 @@ export type ArcSyllabusGlyph =
   | "poster"
   | "site"
   | "film"
-  | "launch";
+  | "launch"
+  /* ADR-147: a skill as the file it is, and a plugin as nested boxes. */
+  | "skill"
+  | "plugin";
 
 export interface ArcSyllabusClass {
   id: string;

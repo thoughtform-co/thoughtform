@@ -131,6 +131,8 @@ describe("hero preload", () => {
       "/arcs/pandora/proposal",
       "/arcs/plopsa/workshop",
       "/arcs/suri/workshop",
+      "/arcs/suri/lunch-and-learn",
+      "/arcs/suri/configuration",
       "/arcs/thoughtform/workshop-v1",
       "/arcs/thoughtform/workshop-v2",
       "/arcs/thoughtform/workshop-v3",
