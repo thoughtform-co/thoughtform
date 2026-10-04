@@ -54,7 +54,10 @@ day) land here without a copy. The tail is v2's shape (one run plus `ArcWorkedSw
 `runs.ts`): the shared board with Suri's own head ("What this looks like at Suri."), the
 situation by reference, the three pieces of work as tabs, the two you write for Suri's work,
 the kickoff's loop and asks by reference, the month, an IT beat written from `IT.md`, then the
-ending, then the close. The journey file is a copy, as every own route's is.
+ending, then the close. The journey file is a copy, as every own route's is. ⚠ **v3's
+equilibrium opener (ADR-143 U7, the same afternoon, still moving through U8 and U9) is NOT
+on this page**: the owner ports v3's later changes to it himself, so the corridor is v3's
+without that one station, and `suri-pages` pins the journey as exactly that.
 
 **The ending is the loop he made, as a `media` beat, and the kind grew an `aspect`.** The
 15-second "No reflection" Halloween loop (2 October, from one line and Suri's own product

@@ -73,7 +73,12 @@ describe("Suri's lunch and learn (ADR-147)", () => {
     const tail = routeFile("suri", "lunch-and-learn", "WorkshopTail.tsx");
     expect(tail, "mounts the worked switch beside the sections").toContain("ArcWorkedSwitch");
     expect(tail, "no breakdown").not.toContain("PromptToLoop");
-    expect([...SURI_LUNCH_JOURNEY_ORDER]).toEqual([...WORKSHOP_V3_JOURNEY_ORDER]);
+    /* v3's journey without its equilibrium opener (ADR-143 U7): that station is
+       v3's own, still moving (U8, U9), and the owner ports v3's later changes
+       to this page himself. Everything else in the corridor is the same. */
+    expect([...SURI_LUNCH_JOURNEY_ORDER]).toEqual(
+      WORKSHOP_V3_JOURNEY_ORDER.filter((id) => id !== "equilibrium")
+    );
   });
 
   it("opens on the shared board with Suri's own head, then the situation by reference", () => {
