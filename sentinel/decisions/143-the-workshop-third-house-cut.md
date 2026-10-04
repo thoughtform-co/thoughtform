@@ -586,3 +586,62 @@ fallback pipeline and the canvas shell are untouched.
 - **Verified** headed at 1920×1247 and 1280×720 dark and 1470×956 light; the phone
   (390×844) and the WebGL-off desktop show the same object, static, with the words
   as a list.
+
+## Update 9 — a second figure: the river of data, in the lab (2026-10-04, owner)
+
+His read of U8 ("this looks much better"), then: "I wanted to create like a new
+variant … to visualize the upstream and the downstream, I'm thinking of like a
+river of data, like a sort of a diorama isolated, super clean, a bit tilted,
+where you really see the upstream and the downstream, like a digital
+artifact." **A second figure behind the same station, judged in a lab; the live
+page still shows U8's instrument.**
+
+- **The river** (`components/holo-program/equilibriumRiverGeom.ts`, pure;
+  `HoloRiverScene.tsx`): one block of terrain, cut clean, floating over its
+  dashed shadow, seen from the front right and above (azimuth 30°, elevation
+  27°) so its long side runs across the frame and its top is open to the eye.
+  UPSTREAM is contoured high ground at the back left (marching squares over a
+  ridged heightfield and one massif), three tributaries branching out of it
+  into one river that winds down a valley; ENCODE is a gate across the river
+  where the valley opens, ADR-080's collar as an arch (plates, teeth), the sill
+  gold, a marker on a stalk above it; DOWNSTREAM is a plain ruled into even
+  plots, where the river splits into four straight channels that run out
+  through the cut face. The block's faces carry strata and a graduated plinth;
+  its two cut corners sit on the house diagonal, the right end's upper corner
+  and the left end's lower one (ADR-065).
+- **The water is the data and the one gold thing**: four routes (the source and
+  each tributary, down the river, out along one channel each), ten motes a
+  route, slow to the gate and fast after it, so they crowd on the meanders and
+  run at one pace down the channels.
+- ⚠ **Every river only falls, by construction**: the relief stands up only
+  upstream and is held flat along every watercourse, so each valley floor is
+  the base slope, which falls with `x`, and every course's `x` only grows. The
+  test walks every sample of the river and the tributaries.
+- ⚠ **Contours stop at the gate**: a plane's contours are only the channels'
+  grooves (little loops along each channel, which read as noise); past the gate
+  the plain is the plots.
+- **One station, two figures.** `equilibriumFigures.ts` (pure) is the record
+  each reader takes a figure from: the station's markup (`equilibriumStationHtml(copy,
+variant)`, which stamps `data-eq-variant`), the mount (which reads the stamp)
+  and the canvas (its camera, drag band and scene). The two figures share
+  `eqCamera.ts`, the rest camera written out, pinned against a real
+  `THREE.PerspectiveCamera` for both. `EQ_FIGURE_LIVE` is `"instrument"`:
+  promoting the river is that one constant.
+- **The lab**: `/test/equilibrium-lab?v=river` (and `?v=instrument`, `&theme=light`)
+  renders the real station markup with the real mount, armed at once. ⚠ The lab
+  hydrates the theme store itself: on the page the theme switch does it, and
+  without it the canvas painted the dark palette on parchment. The switch is a
+  full load, since the canvas is a nested root in the station's slot.
+- The shared mote shader moved to `holoDustShader.ts`; the instrument's pixels
+  are unchanged.
+- **Guards** (`workshop-v3-equilibrium.test.tsx`): the river's rest projection
+  against three's camera; every river and tributary only falls, the source well
+  above the gate, the gate above the mouth; contours inside the footprint and
+  short of the gate; the two cut corners on the diagonal; gold on the water
+  alone; each route crowded upstream, one pace downstream, leaving through the
+  cut face on its own channel; everything inside the frame; the words in
+  reading order; the static drawing under 72 KB; the station stamping its
+  figure, and the live page on the instrument.
+- **Verified** headed at 1920×1247 and 1280×720 dark and 1470×956 light in the
+  lab; the phone (390×844) shows the static diorama with the words as a list;
+  the live v3 page still renders the instrument.

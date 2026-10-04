@@ -1,0 +1,39 @@
+/* /test/equilibrium-lab — the lab's own chrome only. The station is styled by
+   the route's real sheet (workshop-v3/equilibrium.css). */
+
+.eql-bar {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  z-index: 50;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  transform: translateX(-50%);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+}
+
+.eql-bar__title {
+  margin-right: 10px;
+  color: var(--gold-ink, var(--gold));
+}
+
+.eql-bar__tab {
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.2);
+  color: rgba(var(--dawn-rgb), 0.72);
+  text-decoration: none;
+}
+
+.eql-bar__tab[aria-current="page"] {
+  border-color: var(--gold-line, var(--gold));
+  color: rgb(var(--dawn-rgb));
+}
+
+.eql-root {
+  min-height: 100svh;
+  background: var(--void, #0a0908);
+}

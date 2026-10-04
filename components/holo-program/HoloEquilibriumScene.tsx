@@ -68,7 +68,12 @@ import {
   thoughtVertCount,
   type P3,
 } from "./equilibriumGeom";
-import { holoDustFragmentShader, holoDustVertexShader } from "./holoDustShader";
+import {
+  holoDustFragmentShader,
+  holoDustVertexShader,
+  holoMoteFragmentShader,
+  holoMoteVertexShader,
+} from "./holoDustShader";
 import type { HoloPalette } from "./holoPalette";
 
 /** The arrival, ms, told left to right: the thought, its cradle, the gate,
@@ -103,42 +108,6 @@ function dashedRun(a: P3, b: P3, n: number): P3[] {
   }
   return out;
 }
-
-/** The motes' soft point, with a per-mote fade so they arrive and leave at
- *  the axis's two ends without popping. The dust shader's own recipe. */
-const moteVertexShader = /* glsl */ `
-  attribute float aRand;
-  attribute float aFade;
-  uniform float uPointSize;
-  uniform float uPixelRatio;
-  varying float vRand;
-  varying float vFade;
-  void main() {
-    vRand = aRand;
-    vFade = aFade;
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_Position = projectionMatrix * mv;
-    float dist = max(0.5, -mv.z);
-    float depthFactor = clamp(11.0 / dist, 0.5, 1.4);
-    gl_PointSize = uPointSize * uPixelRatio * depthFactor * (0.8 + aRand * 0.4);
-  }
-`;
-const moteFragmentShader = /* glsl */ `
-  precision mediump float;
-  uniform vec3 uColor;
-  uniform float uOpacity;
-  varying float vRand;
-  varying float vFade;
-  void main() {
-    vec2 uv = gl_PointCoord - 0.5;
-    float d = length(uv);
-    float core = smoothstep(0.10, 0.0, d);
-    float halo = smoothstep(0.5, 0.12, d);
-    float alpha = max(core, halo * 0.5) * uOpacity * vFade;
-    if (alpha < 0.012) discard;
-    gl_FragColor = vec4(uColor, alpha);
-  }
-`;
 
 interface SegLayer {
   id: string;
@@ -478,8 +447,8 @@ export function HoloEquilibriumScene({
   const moteMat = useMemo(
     () =>
       new THREE.ShaderMaterial({
-        vertexShader: moteVertexShader,
-        fragmentShader: moteFragmentShader,
+        vertexShader: holoMoteVertexShader,
+        fragmentShader: holoMoteFragmentShader,
         uniforms: {
           uPointSize: { value: palette.additive ? 6.6 : 6 },
           uPixelRatio: { value: 1 },

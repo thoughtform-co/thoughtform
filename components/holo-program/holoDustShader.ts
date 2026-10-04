@@ -79,3 +79,40 @@ export const holoDustFragmentShader = /* glsl */ `
     gl_FragColor = vec4(uColor, alpha);
   }
 `;
+
+/**
+ * The flow's motes (ADR-143 U7/U9): the dust's soft point, larger, with a
+ * per-mote fade (`aFade`) so a mote arrives and leaves at the ends of its
+ * course without popping. Shared by both opener figures.
+ */
+export const holoMoteVertexShader = /* glsl */ `
+  attribute float aRand;
+  attribute float aFade;
+  uniform float uPointSize;
+  uniform float uPixelRatio;
+  varying float vFade;
+  void main() {
+    vFade = aFade;
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mv;
+    float dist = max(0.5, -mv.z);
+    float depthFactor = clamp(11.0 / dist, 0.5, 1.4);
+    gl_PointSize = uPointSize * uPixelRatio * depthFactor * (0.8 + aRand * 0.4);
+  }
+`;
+
+export const holoMoteFragmentShader = /* glsl */ `
+  precision mediump float;
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  varying float vFade;
+  void main() {
+    vec2 uv = gl_PointCoord - 0.5;
+    float d = length(uv);
+    float core = smoothstep(0.10, 0.0, d);
+    float halo = smoothstep(0.5, 0.12, d);
+    float alpha = max(core, halo * 0.5) * uOpacity * vFade;
+    if (alpha < 0.012) discard;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`;

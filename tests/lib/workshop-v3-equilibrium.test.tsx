@@ -36,6 +36,29 @@ import {
   thoughtVertCount,
   thoughtWobble,
 } from "@/components/holo-program/equilibriumGeom";
+import { EQ_FIGURE_LIVE, EQ_FIGURES } from "@/components/holo-program/equilibriumFigures";
+import {
+  BLOCK,
+  CHANNEL_Z,
+  contourLines,
+  FLOW,
+  flowAt,
+  flowRoutes,
+  FOOTPRINT,
+  GATE,
+  height,
+  insideFootprint,
+  mainLine,
+  RIVER_ANCHORS,
+  RIVER_CAMERA,
+  RIVER_FRAME,
+  riverCameraPosition,
+  riverPolylines,
+  riverProject,
+  riverSeatWords,
+  riverSvgMarkup,
+  tributaryLines,
+} from "@/components/holo-program/equilibriumRiverGeom";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "@/lib/arcs/content/thoughtform-workshop-v3";
 import type { ArcSectionOf } from "@/lib/arcs/types";
@@ -214,11 +237,13 @@ describe("the equilibrium object", () => {
 
   it("cannot flicker: no dropout, no breathing, no grain on paper", () => {
     // The code, not its comments (which say what is NOT here, by name).
-    const scene = read("components/holo-program/HoloEquilibriumScene.tsx")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/\/\/.*$/gm, "");
-    for (const banned of ["FLICKER", "BREATHE", "flickerSeeds", "scale.setScalar"]) {
-      expect(scene, banned).not.toContain(banned);
+    for (const file of ["HoloEquilibriumScene.tsx", "HoloRiverScene.tsx"]) {
+      const scene = read(`components/holo-program/${file}`)
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/\/.*$/gm, "");
+      for (const banned of ["FLICKER", "BREATHE", "flickerSeeds", "scale.setScalar"]) {
+        expect(scene, `${file}: ${banned}`).not.toContain(banned);
+      }
     }
     const canvas = read("components/holo-program/HoloEquilibriumCanvas.tsx");
     expect(canvas).toContain("palette.additive ? POST.grain * palette.grainScale : 0");
@@ -230,6 +255,153 @@ describe("the equilibrium object", () => {
     expect(mount).toMatch(/import\("@\/components\/holo-program\/HoloEquilibriumCanvas"\)/);
     expect(mount).not.toMatch(/^import[^;]*from "@\/components\/holo-program\/HoloEquilibrium/m);
     expect(mount).not.toMatch(/from "three"|@react-three/);
+  });
+});
+
+describe("the river figure (ADR-143 U9)", () => {
+  it("projects at rest exactly as three's camera does", () => {
+    const cam = new THREE.PerspectiveCamera(
+      RIVER_CAMERA.fovDeg,
+      RIVER_FRAME.w / RIVER_FRAME.h,
+      0.1,
+      60
+    );
+    cam.position.set(...riverCameraPosition());
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+    const v = new THREE.Vector3();
+    const points: (readonly [number, number, number])[] = [
+      ...Object.values(RIVER_ANCHORS),
+      contourLines()[3][2],
+      mainLine()[40],
+      [BLOCK.hx, BLOCK.floor, BLOCK.hz],
+    ];
+    for (const p of points) {
+      v.set(p[0], p[1], p[2]).project(cam);
+      const q = riverProject(p);
+      expect(q.x).toBeCloseTo(((v.x + 1) / 2) * RIVER_FRAME.w, 3);
+      expect(q.y).toBeCloseTo(((1 - v.y) / 2) * RIVER_FRAME.h, 3);
+    }
+  });
+
+  it("only ever runs downhill: source high, gate lower, the cut face lowest", () => {
+    const main = mainLine();
+    for (let i = 1; i < main.length; i++) {
+      expect(main[i][1], `main ${i}`).toBeLessThanOrEqual(main[i - 1][1] + 1e-9);
+    }
+    for (const [k, t] of tributaryLines().entries()) {
+      for (let i = 1; i < t.length; i++) {
+        expect(t[i][1], `tributary ${k} at ${i}`).toBeLessThanOrEqual(t[i - 1][1] + 1e-9);
+      }
+    }
+    const source = main[0][1];
+    const gate = height(GATE[0], GATE[1]);
+    const mouth = height(BLOCK.hx, CHANNEL_Z[0]);
+    expect(source - gate).toBeGreaterThan(0.4);
+    expect(gate).toBeGreaterThan(mouth);
+  });
+
+  it("is crumpled upstream and ruled downstream: contours stop at the gate", () => {
+    expect(contourLines().length).toBeGreaterThan(20);
+    for (const l of contourLines()) {
+      for (const p of l) {
+        expect(p[0]).toBeLessThan(GATE[0] + 0.13);
+        expect(insideFootprint(p[0], p[2], 0.03)).toBe(true);
+      }
+    }
+  });
+
+  it("cuts its two corners on the house diagonal: top right and bottom left", () => {
+    // Each end of the block has two corners on screen, one above the other;
+    // the right end is cut on its UPPER corner, the left end on its LOWER one.
+    const f = BLOCK.floor;
+    const at = (x: number, z: number) => riverProject([x, f, z]);
+    const cutAt = (i: number) => {
+      const a = FOOTPRINT[i];
+      const b = FOOTPRINT[(i + 1) % FOOTPRINT.length];
+      return at((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+    };
+    const near = (p: { x: number; y: number }, q: { x: number; y: number }) =>
+      Math.hypot(p.x - q.x, p.y - q.y);
+    const rightUpper = at(BLOCK.hx, -BLOCK.hz);
+    const rightLower = at(BLOCK.hx, BLOCK.hz);
+    const leftUpper = at(-BLOCK.hx, -BLOCK.hz);
+    const leftLower = at(-BLOCK.hx, BLOCK.hz);
+    expect(rightUpper.y).toBeLessThan(rightLower.y);
+    expect(leftLower.y).toBeGreaterThan(leftUpper.y);
+    // FOOTPRINT 1 to 2 is the downstream far cut, 4 to 5 the upstream near one.
+    const tr = cutAt(1);
+    const bl = cutAt(4);
+    expect(near(tr, rightUpper)).toBeLessThan(near(tr, rightLower));
+    expect(near(bl, leftLower)).toBeLessThan(near(bl, leftUpper));
+    expect(tr.x).toBeGreaterThan(bl.x);
+  });
+
+  it("spends gold on the water alone", () => {
+    const gold = riverPolylines().filter((l) => l.role === "gold");
+    for (const l of gold) expect(l.id).toMatch(/^(main|trib-\d|channel-\d|sill)$/);
+    expect(gold.map((l) => l.id)).toContain("sill");
+  });
+
+  it("crowds the data on the meanders and runs it evenly down each channel", () => {
+    const routes = flowRoutes();
+    expect(routes.length).toBe(CHANNEL_Z.length);
+    for (const [k, r] of routes.entries()) {
+      const motes = Array.from({ length: FLOW.perRoute }, (_, i) =>
+        flowAt(r, (i / FLOW.perRoute) * r.period)
+      );
+      const up = motes.filter((m) => m.p[0] < GATE[0]);
+      const down = motes
+        .filter((m) => m.p[0] > GATE[0] + 0.8)
+        .map((m) => m.p[0])
+        .sort((a, b) => a - b);
+      expect(up.length, `route ${k}`).toBeGreaterThan(down.length);
+      const gaps = down.slice(1).map((x, i) => x - down[i]);
+      if (gaps.length > 1) {
+        expect(Math.max(...gaps) - Math.min(...gaps), `route ${k}: one pace`).toBeLessThan(0.02);
+      }
+      const end = r.points[r.points.length - 1];
+      expect(end[0], "it leaves through the cut face").toBeCloseTo(BLOCK.hx, 6);
+      expect(end[2]).toBeCloseTo(CHANNEL_Z[k], 6);
+    }
+  });
+
+  it("draws inside its frame, seats the words in reading order, and stays light", () => {
+    for (const l of riverPolylines()) {
+      if (l.role === "grid") continue;
+      for (const p of l.points) {
+        const q = riverProject(p);
+        expect(q.x, l.id).toBeGreaterThan(0);
+        expect(q.x, l.id).toBeLessThan(RIVER_FRAME.w);
+        expect(q.y, l.id).toBeGreaterThan(0);
+        expect(q.y, l.id).toBeLessThan(RIVER_FRAME.h);
+      }
+    }
+    const seats = riverSeatWords();
+    expect(seats.map((s) => s.id)).toEqual(["upstream", "encode", "downstream"]);
+    expect(seats[0].ax).toBeLessThan(seats[1].ax);
+    expect(seats[1].ax).toBeLessThan(seats[2].ax);
+    for (const s of seats) {
+      expect(s.ax, s.id).toBeGreaterThan(0.15);
+      expect(s.ax, s.id).toBeLessThan(0.85);
+      expect(s.at, s.id).toBeGreaterThan(0.05);
+      expect(s.at, s.id).toBeLessThan(0.95);
+    }
+    // The static drawing ships in the page's HTML.
+    expect(riverSvgMarkup("x").length).toBeLessThan(72 * 1024);
+  });
+
+  it("is a variant of the one station: the live page shows the instrument until picked", () => {
+    expect(EQ_FIGURE_LIVE).toBe("instrument");
+    const html = equilibriumStationHtml(WORKSHOP_INTRO.equilibrium, "river");
+    expect(html).toContain('data-eq-variant="river"');
+    expect(html).toContain(`viewBox="0 0 ${RIVER_FRAME.w} ${RIVER_FRAME.h}"`);
+    expect(equilibriumStationHtml(WORKSHOP_INTRO.equilibrium)).toContain(
+      'data-eq-variant="instrument"'
+    );
+    for (const f of Object.values(EQ_FIGURES)) {
+      expect(Object.keys(f.anchors).sort()).toEqual(["downstream", "encode", "upstream"]);
+    }
   });
 });
 

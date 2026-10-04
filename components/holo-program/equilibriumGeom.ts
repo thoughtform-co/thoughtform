@@ -28,6 +28,7 @@
  * World axes are three's: `y` up, the axis along `x`, the gate on the origin.
  */
 
+import { cameraBasis, cameraPosition, type EqCamBasis, projectThrough } from "./eqCamera";
 import { mulberry32 } from "./holoProgramGeom";
 
 export type P3 = readonly [number, number, number];
@@ -39,11 +40,6 @@ const add = (p: P3, q: P3): V => [p[0] + q[0], p[1] + q[1], p[2] + q[2]];
 const sub = (p: P3, q: P3): V => [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
 const mul = (p: P3, s: number): V => [p[0] * s, p[1] * s, p[2] * s];
 const dot = (p: P3, q: P3) => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
-const cross = (p: P3, q: P3): V => [
-  p[1] * q[2] - p[2] * q[1],
-  p[2] * q[0] - p[0] * q[2],
-  p[0] * q[1] - p[1] * q[0],
-];
 const unit = (p: P3): V => mul(p, 1 / (Math.hypot(p[0], p[1], p[2]) || 1));
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -67,45 +63,21 @@ export const EQ_CAMERA = { azimuthDeg: -46, elevationDeg: 12, distance: 12.4, fo
 export const EQ_DRAG = { azimuthDeg: 18, polarDeg: 6 } as const;
 
 export function eqCameraPosition(): V {
-  const az = EQ_CAMERA.azimuthDeg * RAD;
-  const el = EQ_CAMERA.elevationDeg * RAD;
-  const d = EQ_CAMERA.distance;
-  return [d * Math.sin(az) * Math.cos(el), d * Math.sin(el), d * Math.cos(az) * Math.cos(el)];
-}
-
-interface CamBasis {
-  eye: V;
-  right: V;
-  up: V;
-  /** Into the screen, from the eye toward the target. */
-  fwd: V;
+  return cameraPosition(EQ_CAMERA);
 }
 
 /** The rest camera's basis, exactly as three's `lookAt(0,0,0)` with `y` up. */
-export function eqCameraBasis(eye: V = eqCameraPosition()): CamBasis {
-  const fwd = unit(mul(eye, -1));
-  const right = unit(cross(fwd, [0, 1, 0]));
-  const up = cross(right, fwd);
-  return { eye, right, up, fwd };
+export function eqCameraBasis(eye: V = eqCameraPosition()): EqCamBasis {
+  return cameraBasis(eye);
 }
 
 /** A world point on the frame at rest, in the frame's px. */
 export function eqProject(
   p: P3,
   frame: { w: number; h: number } = EQ_FRAME,
-  cam: CamBasis = eqCameraBasis()
+  cam: EqCamBasis = eqCameraBasis()
 ): { x: number; y: number; depth: number } {
-  const d = sub(p, cam.eye);
-  const xc = dot(d, cam.right);
-  const yc = dot(d, cam.up);
-  const zc = dot(d, cam.fwd);
-  const t = Math.tan((EQ_CAMERA.fovDeg * RAD) / 2);
-  const aspect = frame.w / frame.h;
-  return {
-    x: ((xc / (zc * t * aspect) + 1) / 2) * frame.w,
-    y: ((1 - yc / (zc * t)) / 2) * frame.h,
-    depth: zc,
-  };
+  return projectThrough(p, frame, EQ_CAMERA.fovDeg, cam);
 }
 
 /** A circle round the axis at `x`, in the plane facing it. `θ` 0 is the top

@@ -8,11 +8,11 @@
  * frameloop pumped only while the object is on screen, real `OrbitControls`
  * with zoom and pan off, and the reference's bloom and grain.
  *
- * ⚠ A REAL PERSPECTIVE CAMERA, AT ONE REST POSE. The figure box holds
- * `EQ_FRAME`'s aspect and the lens is `EQ_CAMERA`'s, so the hologram at rest
- * is exactly the static drawing the server projected from the same numbers,
- * and the DOM words seated over it land on it. The reader may turn it inside
- * a band (`EQ_DRAG`); the words follow through the anchor channel.
+ * ⚠ A REAL PERSPECTIVE CAMERA, AT ONE REST POSE. The figure box holds the
+ * figure's frame aspect and the lens is its camera's (`equilibriumFigures`),
+ * so the hologram at rest is exactly the static drawing the server projected
+ * from the same numbers, and the DOM words seated over it land on it. The reader may turn it inside
+ * a band (the figure's `drag`); the words follow through the anchor channel.
  *
  * ⚠ THE LIGHT GROUND'S TWO RECTANGLES ARE CLOSED, as on the stage (ADR-140):
  * bloom's threshold sits ABOVE the paper's luminance there, and the vignette
@@ -30,8 +30,10 @@ import type { AnchorChannel } from "@/components/holo-stage/stageAnchors";
 import { useDprCeiling } from "@/lib/hooks/useQualityTier";
 import { useThemeStore } from "@/lib/stores/themeStore";
 
-import { EQ_CAMERA, EQ_DRAG, eqCameraPosition } from "./equilibriumGeom";
+import { cameraPosition } from "./eqCamera";
+import { EQ_FIGURES, type EqFigureId } from "./equilibriumFigures";
 import { HoloEquilibriumScene } from "./HoloEquilibriumScene";
+import { HoloRiverScene } from "./HoloRiverScene";
 import { holoGroundCss, resolveHoloPalette } from "./holoPalette";
 import { POST } from "./holoProgramGeom";
 
@@ -62,6 +64,8 @@ export interface HoloEquilibriumCanvasProps {
   ground?: string;
   onReady?: () => void;
   className?: string;
+  /** Which figure (ADR-143 U8 instrument, U9 river); the camera follows it. */
+  variant?: EqFigureId;
 }
 
 export function HoloEquilibriumCanvas({
@@ -71,7 +75,10 @@ export function HoloEquilibriumCanvas({
   ground,
   onReady,
   className = "tw-eq__gl-canvas",
+  variant = "instrument",
 }: HoloEquilibriumCanvasProps) {
+  const figure = EQ_FIGURES[variant];
+  const Scene = variant === "river" ? HoloRiverScene : HoloEquilibriumScene;
   const wrapRef = useRef<HTMLDivElement>(null);
   const [glEpoch, setGlEpoch] = useState(0);
   const [onScreen, setOnScreen] = useState(false);
@@ -91,14 +98,15 @@ export function HoloEquilibriumCanvas({
   /* ⚠ MEMOISED: R3F re-applies changed camera PROPS. */
   const cameraProps = useMemo(
     () => ({
-      position: eqCameraPosition(),
-      fov: EQ_CAMERA.fovDeg,
+      position: cameraPosition(figure.camera),
+      fov: figure.camera.fovDeg,
       near: 0.1,
       far: 60,
     }),
-    []
+    [figure]
   );
-  const polarRest = (90 - EQ_CAMERA.elevationDeg) * RAD;
+  const { camera: cam, drag } = figure;
+  const polarRest = (90 - cam.elevationDeg) * RAD;
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -126,7 +134,7 @@ export function HoloEquilibriumCanvas({
     >
       <CanvasErrorBoundary fallback={null}>
         <Canvas
-          key={glEpoch}
+          key={`${variant}-${glEpoch}`}
           camera={cameraProps}
           dpr={[1, dprCeiling]}
           gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
@@ -147,17 +155,17 @@ export function HoloEquilibriumCanvas({
                Pan off: it cannot be dragged out of its own frame. */
             enablePan={false}
             enableZoom={false}
-            minAzimuthAngle={(EQ_CAMERA.azimuthDeg - EQ_DRAG.azimuthDeg) * RAD}
-            maxAzimuthAngle={(EQ_CAMERA.azimuthDeg + EQ_DRAG.azimuthDeg) * RAD}
-            minPolarAngle={polarRest - EQ_DRAG.polarDeg * RAD}
-            maxPolarAngle={polarRest + EQ_DRAG.polarDeg * RAD}
-            minDistance={EQ_CAMERA.distance}
-            maxDistance={EQ_CAMERA.distance}
+            minAzimuthAngle={(cam.azimuthDeg - drag.azimuthDeg) * RAD}
+            maxAzimuthAngle={(cam.azimuthDeg + drag.azimuthDeg) * RAD}
+            minPolarAngle={polarRest - drag.polarDeg * RAD}
+            maxPolarAngle={polarRest + drag.polarDeg * RAD}
+            minDistance={cam.distance}
+            maxDistance={cam.distance}
             rotateSpeed={0.22}
           />
 
-          <HoloEquilibriumScene
-            key={mode}
+          <Scene
+            key={`${variant}-${mode}`}
             palette={palette}
             armed={armed}
             still={still}

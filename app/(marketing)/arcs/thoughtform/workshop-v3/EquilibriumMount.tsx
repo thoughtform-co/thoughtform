@@ -22,6 +22,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
+import { type EqFigureId, isEqFigureId } from "@/components/holo-program/equilibriumFigures";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { useThemeStore } from "@/lib/stores/themeStore";
@@ -55,10 +56,22 @@ function resolveGround(host: HTMLElement): string | null {
   return null;
 }
 
-export default function EquilibriumMount() {
+export interface EquilibriumMountProps {
+  /** Arm when `scrollY` reaches this fraction of the viewport. The lab, which
+   *  has no hero to lift off the figure, passes 0. */
+  armAt?: number;
+}
+
+export default function EquilibriumMount({ armAt = ARM_AT }: EquilibriumMountProps = {}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery(MEDIA);
-  const [gl, setGl] = useState<boolean | null>(null);
+  /* The WebGL probe, and the figure the server drew (ADR-143 U9, off the
+     station's `data-eq-variant` stamp): both read once, on mount. */
+  const [probe, setProbe] = useState<{ gl: boolean | null; variant: EqFigureId }>({
+    gl: null,
+    variant: "instrument",
+  });
+  const { gl, variant } = probe;
   const [loadable, setLoadable] = useState(false);
   const [armed, setArmed] = useState(false);
   const [live, setLive] = useState(false);
@@ -67,10 +80,11 @@ export default function EquilibriumMount() {
   const channel = useMemo(() => createAnchorChannel(), []);
 
   useEffect(() => {
-    /* eslint-disable-next-line react-hooks/set-state-in-effect --
-       ADR-080's probe shape: the WebGL test may not run during render or on
-       the server, so a mount effect is the one place left. */
-    setGl(probeWebGL());
+    const v = hostRef.current?.closest("section")?.getAttribute("data-eq-variant");
+    /* ADR-080's probe shape: the WebGL test may not run during render or on
+       the server, and the stamp is on the server's markup, so a mount effect
+       is the one place left. */
+    setProbe({ gl: probeWebGL(), variant: isEqFigureId(v) ? v : "instrument" });
   }, []);
   const allowed = capable && gl === true;
 
@@ -102,7 +116,7 @@ export default function EquilibriumMount() {
   useEffect(() => {
     if (!allowed || armed) return;
     const check = () => {
-      if (window.scrollY >= window.innerHeight * ARM_AT) {
+      if (window.scrollY >= window.innerHeight * armAt) {
         setArmed(true);
         window.removeEventListener("scroll", check);
       }
@@ -110,7 +124,7 @@ export default function EquilibriumMount() {
     check();
     window.addEventListener("scroll", check, { passive: true });
     return () => window.removeEventListener("scroll", check);
-  }, [allowed, armed]);
+  }, [allowed, armed, armAt]);
 
   /* The ground, re-read a frame after the theme's sheet has applied. */
   useEffect(() => {
@@ -169,6 +183,7 @@ export default function EquilibriumMount() {
           armed={armed}
           ground={ground ?? undefined}
           onReady={() => setLive(true)}
+          variant={variant}
         />
       </CanvasErrorBoundary>
     </div>

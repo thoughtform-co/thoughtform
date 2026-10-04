@@ -26,12 +26,10 @@
  */
 
 import {
-  EQ_FRAME,
-  EQ_WORD_SEATS,
-  eqContentSpan,
-  eqSvgMarkup,
-  seatWords,
-} from "@/components/holo-program/equilibriumGeom";
+  EQ_FIGURE_LIVE,
+  EQ_FIGURES,
+  type EqFigureId,
+} from "@/components/holo-program/equilibriumFigures";
 import type { WorkshopIntro } from "@/lib/arcs/content/shared/workshopIntro";
 
 export const EQUILIBRIUM_STATION_ID = "equilibrium";
@@ -44,14 +42,21 @@ const esc = (s: string) =>
 
 const f3 = (v: number) => (Math.round(v * 1000) / 1000).toString();
 
-/** The station's markup, from the record and the object. */
-export function equilibriumStationHtml(copy: WorkshopIntro["equilibrium"]): string {
-  const { w, h } = EQ_FRAME;
-  const span = eqContentSpan();
-  const words = seatWords()
+/** The station's markup, from the record and the figure (ADR-143 U9: the
+ *  live page shows `EQ_FIGURE_LIVE`; the lab passes either). The figure is
+ *  stamped on the station as `data-eq-variant`, where the mount reads it. */
+export function equilibriumStationHtml(
+  copy: WorkshopIntro["equilibrium"],
+  variant: EqFigureId = EQ_FIGURE_LIVE
+): string {
+  const figure = EQ_FIGURES[variant];
+  const { w, h } = figure.frame;
+  const span = figure.contentSpan();
+  const words = figure
+    .seatWords()
     .map(({ id, ax, at }) => {
       const word = copy.labels[id];
-      const seat = EQ_WORD_SEATS[id];
+      const seat = figure.seats[id];
       const style = [`--ax:${f3(ax)}`, `--at:${f3(at)}`, `--dx:${seat.dx}`].join(";");
       return (
         `<li class="tw-eq__word" data-word="${id}" data-anchor="${seat.anchor}"` +
@@ -62,7 +67,7 @@ export function equilibriumStationHtml(copy: WorkshopIntro["equilibrium"]): stri
     })
     .join("");
   return (
-    `<section class="station tw-eq" id="${EQUILIBRIUM_STATION_ID}" data-station="${EQUILIBRIUM_STATION_ID}" aria-labelledby="tw-eq-title">` +
+    `<section class="station tw-eq" id="${EQUILIBRIUM_STATION_ID}" data-station="${EQUILIBRIUM_STATION_ID}" data-eq-variant="${variant}" aria-labelledby="tw-eq-title">` +
     `<div class="tw-eq__stage">` +
     `<header class="tw-eq__head">` +
     `<p class="tw-eq__eyebrow">${esc(copy.eyebrow)}</p>` +
@@ -70,7 +75,7 @@ export function equilibriumStationHtml(copy: WorkshopIntro["equilibrium"]): stri
     `<p class="tw-eq__sub">${esc(copy.sub)}</p>` +
     `</header>` +
     `<figure class="tw-eq__figure" style="--eq-w:${w};--eq-h:${h};--eq-x0:${f3(span.x0)};--eq-x1:${f3(span.x1)}">` +
-    eqSvgMarkup("tw-eq__svg") +
+    figure.svgMarkup("tw-eq__svg") +
     `<div class="tw-eq__canvas" data-tw-eq-canvas></div>` +
     `<ul class="tw-eq__words">${words}</ul>` +
     `</figure>` +
