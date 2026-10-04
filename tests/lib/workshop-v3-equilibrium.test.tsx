@@ -17,9 +17,11 @@ import {
   EQ_ANCHORS,
   EQ_AXIS,
   EQ_CAMERA,
+  EQ_DRAG,
   EQ_FLOW,
   EQ_FRAME,
   EQ_GATE,
+  EQ_MARK,
   EQ_STACK,
   EQ_THOUGHT,
   eqCameraPosition,
@@ -28,15 +30,23 @@ import {
   fillThoughtSegments,
   flowPoint,
   FLOW_PERIOD,
+  markLines,
   seatWords,
+  STACK_END,
   stackX,
   thoughtGirth,
   thoughtIslands,
+  thoughtPoint,
   thoughtSlices,
   thoughtVertCount,
   thoughtWobble,
 } from "@/components/holo-program/equilibriumGeom";
-import { EQ_FIGURE_LIVE, EQ_FIGURES } from "@/components/holo-program/equilibriumFigures";
+import {
+  bearingReadout,
+  EQ_FIGURE_LIVE,
+  EQ_FIGURES,
+  trackerReadout,
+} from "@/components/holo-program/equilibriumFigures";
 import {
   BLOCK,
   CHANNEL_Z,
@@ -59,6 +69,11 @@ import {
   riverSvgMarkup,
   tributaryLines,
 } from "@/components/holo-program/equilibriumRiverGeom";
+import {
+  BRANDMARK_PATHS,
+  BRANDMARK_VIEWBOX,
+  brandmarkPolylines,
+} from "@/lib/brandmark/brandmarkPaths";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "@/lib/arcs/content/thoughtform-workshop-v3";
 import type { ArcSectionOf } from "@/lib/arcs/types";
@@ -209,11 +224,13 @@ describe("the equilibrium object", () => {
     }
   });
 
-  it("spends gold on the encode alone: the gate's ring, its arc, and the axis", () => {
-    const gold = eqPolylines()
-      .filter((l) => l.role === "gold")
-      .map((l) => l.id);
-    expect(gold.sort()).toEqual(["axis", "gate-arc", "gate-ring"]);
+  it("spends gold on the encode alone: the gate's ring, its arc, the mark, the axis", () => {
+    const gold = new Set(
+      eqPolylines()
+        .filter((l) => l.role === "gold")
+        .map((l) => l.id)
+    );
+    expect([...gold].sort()).toEqual(["axis", "gate-arc", "gate-ring", "mark"]);
   });
 
   it("draws everything but the fading floor inside its frame, and seats the words on it", () => {
@@ -241,9 +258,14 @@ describe("the equilibrium object", () => {
       const scene = read(`components/holo-program/${file}`)
         .replace(/\/\*[\s\S]*?\*\//g, "")
         .replace(/\/\/.*$/gm, "");
-      for (const banned of ["FLICKER", "BREATHE", "flickerSeeds", "scale.setScalar"]) {
+      for (const banned of ["FLICKER", "BREATHE", "flickerSeeds"]) {
         expect(scene, `${file}: ${banned}`).not.toContain(banned);
       }
+      // A scale may settle an arrival (the mark into the gate, U10), never
+      // follow the clock: that is ADR-080's breathing.
+      expect(scene, `${file}: a scale on the clock`).not.toMatch(
+        /scale\.setScalar\([^)]*\b(t|clock)\b/
+      );
     }
     const canvas = read("components/holo-program/HoloEquilibriumCanvas.tsx");
     expect(canvas).toContain("palette.additive ? POST.grain * palette.grainScale : 0");
@@ -255,6 +277,71 @@ describe("the equilibrium object", () => {
     expect(mount).toMatch(/import\("@\/components\/holo-program\/HoloEquilibriumCanvas"\)/);
     expect(mount).not.toMatch(/^import[^;]*from "@\/components\/holo-program\/HoloEquilibrium/m);
     expect(mount).not.toMatch(/from "three"|@react-three/);
+  });
+});
+
+describe("the mark in the gate, the free turn, holo's trackers (ADR-143 U10)", () => {
+  it("draws the brandmark from the asset itself, path for path", () => {
+    const svg = read("public/logos/Thoughtform_Brandmark.svg");
+    const ds = [...svg.matchAll(/\sd="([^"]+)"/g)].map((m) => m[1]);
+    expect(ds).toEqual([...BRANDMARK_PATHS]);
+    expect(svg).toContain(`viewBox="0 0 ${BRANDMARK_VIEWBOX.w} ${BRANDMARK_VIEWBOX.h}"`);
+    const lines = brandmarkPolylines();
+    expect(lines.length).toBeGreaterThanOrEqual(BRANDMARK_PATHS.length);
+    for (const l of lines) {
+      for (const [u, v] of l) {
+        expect(u).toBeGreaterThanOrEqual(-0.5);
+        expect(u).toBeLessThanOrEqual(BRANDMARK_VIEWBOX.w + 0.5);
+        expect(v).toBeGreaterThanOrEqual(-0.5);
+        expect(v).toBeLessThanOrEqual(BRANDMARK_VIEWBOX.h + 0.5);
+      }
+    }
+  });
+
+  it("seats the mark inside the gold ring, in the gate's plane, the axis broken round it", () => {
+    let top = -Infinity;
+    for (const l of markLines()) {
+      for (const p of l) {
+        expect(p[0]).toBe(EQ_GATE.x);
+        expect(Math.hypot(p[1], p[2])).toBeLessThan(EQ_GATE.inner);
+        top = Math.max(top, p[1]);
+      }
+    }
+    expect(top).toBeCloseTo(EQ_MARK.half, 1);
+    expect(EQ_AXIS.gap).toBeGreaterThan(EQ_MARK.half * 0.6);
+  });
+
+  it("turns all the way round, never under its own floor", () => {
+    expect(EQ_DRAG.azimuthDeg).toBe(Infinity);
+    expect(EQ_DRAG.polarDeg).toBeLessThanOrEqual(EQ_CAMERA.elevationDeg + 6);
+    const scene = read("components/holo-program/HoloEquilibriumScene.tsx");
+    expect(scene, "depth is fog, so it holds from any side").toContain('<fog attach="fog"');
+    expect(scene, "drei's fat lines carry fog only when asked").toContain("fog: true");
+  });
+
+  it("tracks points ON the object: the thought's crown, the gate's marker, the far ring", () => {
+    expect(EQ_ANCHORS.upstream).toEqual(thoughtPoint(0.42, -8));
+    expect(EQ_ANCHORS.encode[0]).toBe(EQ_GATE.x);
+    expect(EQ_ANCHORS.encode[1]).toBeGreaterThan(EQ_GATE.outer);
+    const [x, y, z] = EQ_ANCHORS.downstream;
+    expect(x).toBe(STACK_END);
+    expect(Math.hypot(y, z)).toBeCloseTo(EQ_STACK.r, 9);
+  });
+
+  it("letters holo's readouts: where the point is, and the eye's bearing", () => {
+    expect(trackerReadout(0.314, 0.2666)).toBe(" \u00b7 X0.31 Y0.27 \u00b7 LOCK");
+    expect(bearingReadout(-46, 12)).toEqual({ az: "314.0\u00b0", el: "12.0\u00b0" });
+    expect(bearingReadout(0, 0).az).toBe("000.0\u00b0");
+    expect(bearingReadout(725.4, -3.25).az).toBe("005.4\u00b0");
+    const html = equilibriumStationHtml(WORKSHOP_INTRO.equilibrium, "instrument");
+    for (const { id, ax, at } of seatWords()) {
+      const word = new RegExp(`data-word="${id}"[\\s\\S]*?</li>`).exec(html)?.[0] ?? "";
+      expect(word, id).toContain('class="tw-eq__trk"');
+      expect(word, id).toContain(trackerReadout(ax, at).replace(/\u00b7/g, "\u00b7"));
+    }
+    const rest = bearingReadout(EQ_CAMERA.azimuthDeg, EQ_CAMERA.elevationDeg);
+    expect(html).toContain(`<span data-az>${rest.az}</span>`);
+    expect(html).toContain(`<span data-el>${rest.el}</span>`);
   });
 });
 

@@ -119,6 +119,9 @@ export interface HoloRiverSceneProps {
   still?: boolean;
   onReady?: () => void;
   channel: AnchorChannel;
+  /** Where the eye is (azimuth, elevation, degrees), reported every frame
+   *  for the bearing readout. */
+  onView?: (azDeg: number, elDeg: number) => void;
 }
 
 export function HoloRiverScene({
@@ -127,6 +130,7 @@ export function HoloRiverScene({
   still = false,
   onReady,
   channel,
+  onView,
 }: HoloRiverSceneProps) {
   const { invalidate, camera, viewport } = useThree();
 
@@ -406,6 +410,12 @@ export function HoloRiverScene({
         };
       })
     );
+
+    if (onView) {
+      const c = camera.position;
+      const len = c.length() || 1;
+      onView((Math.atan2(c.x, c.z) * 180) / Math.PI, (Math.asin(c.y / len) * 180) / Math.PI);
+    }
 
     if (!ready.current) {
       ready.current = true;

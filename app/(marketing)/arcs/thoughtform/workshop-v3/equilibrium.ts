@@ -26,9 +26,11 @@
  */
 
 import {
+  bearingReadout,
   EQ_FIGURE_LIVE,
   EQ_FIGURES,
   type EqFigureId,
+  trackerReadout,
 } from "@/components/holo-program/equilibriumFigures";
 import type { WorkshopIntro } from "@/lib/arcs/content/shared/workshopIntro";
 
@@ -52,20 +54,34 @@ export function equilibriumStationHtml(
   const figure = EQ_FIGURES[variant];
   const { w, h } = figure.frame;
   const span = figure.contentSpan();
+  /* Each word is a TRACKER, holo.ui8's: brackets on the point it tracks, and
+     above them the meaning over the readout line (key, where the point is,
+     LOCK). The readout's numbers are the seat's; once live the mount writes
+     the moving point's through the same formatter. */
   const words = figure
     .seatWords()
     .map(({ id, ax, at }) => {
       const word = copy.labels[id];
-      const seat = figure.seats[id];
-      const style = [`--ax:${f3(ax)}`, `--at:${f3(at)}`, `--dx:${seat.dx}`].join(";");
       return (
-        `<li class="tw-eq__word" data-word="${id}" data-anchor="${seat.anchor}"` +
-        `${id === "encode" ? " data-lit" : ""} style="${style}">` +
-        `<span class="tw-eq__key">${esc(word.key)}</span>` +
-        `<span class="tw-eq__val">${esc(word.text)}</span></li>`
+        `<li class="tw-eq__word" data-word="${id}"` +
+        `${id === "encode" ? " data-lit" : ""} style="--ax:${f3(ax)};--at:${f3(at)}">` +
+        `<span class="tw-eq__trk" aria-hidden="true"></span>` +
+        `<span class="tw-eq__tag">` +
+        `<span class="tw-eq__val">${esc(word.text)}</span>` +
+        `<span class="tw-eq__line"><span class="tw-eq__key">${esc(word.key)}</span>` +
+        `<span class="tw-eq__coord" aria-hidden="true" data-coord>${esc(trackerReadout(ax, at))}</span>` +
+        `</span></span></li>`
       );
     })
     .join("");
+  /* The bearing: holo.ui8's peripheral readout, the eye's azimuth and
+     elevation, live as the reader turns the object. */
+  const bearing = bearingReadout(figure.camera.azimuthDeg, figure.camera.elevationDeg);
+  const tele =
+    `<p class="tw-eq__tele" aria-hidden="true">` +
+    `<span class="tw-eq__tele-row">AZ <span data-az>${bearing.az}</span></span>` +
+    `<span class="tw-eq__tele-row">EL <span data-el>${bearing.el}</span></span>` +
+    `</p>`;
   return (
     `<section class="station tw-eq" id="${EQUILIBRIUM_STATION_ID}" data-station="${EQUILIBRIUM_STATION_ID}" data-eq-variant="${variant}" aria-labelledby="tw-eq-title">` +
     `<div class="tw-eq__stage">` +
@@ -78,6 +94,7 @@ export function equilibriumStationHtml(
     figure.svgMarkup("tw-eq__svg") +
     `<div class="tw-eq__canvas" data-tw-eq-canvas></div>` +
     `<ul class="tw-eq__words">${words}</ul>` +
+    tele +
     `</figure>` +
     `</div>` +
     `</section>`

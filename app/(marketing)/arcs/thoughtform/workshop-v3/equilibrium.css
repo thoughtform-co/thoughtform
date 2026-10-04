@@ -123,7 +123,13 @@
   stroke: var(--gold-line);
 }
 
-/* ── The words: a key over a line, on a 1px leader to the drawing ────── */
+/* ── The words: holo.ui8's trackers (ADR-143 U10) ──────────────────────
+   Each word TRACKS a point on the object: four corner brackets round the
+   point, and above them, set from the bracket's left edge, the meaning over
+   the readout line (`UPSTREAM · X0.31 Y0.42 · LOCK`, the reference's own
+   grammar; the numbers are where the point is on the frame, live as the
+   object turns). Nothing here takes a side, so the words follow the object
+   all the way round. */
 .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words {
   position: absolute;
   inset: 0;
@@ -136,93 +142,122 @@
   position: absolute;
   left: calc(var(--ax) * 100%);
   top: calc(var(--at) * 100%);
-  display: grid;
-  gap: 4px;
-  width: max-content;
+  width: 0;
+  height: 0;
   font-family: var(--font-pt-mono);
 }
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="end"] {
-  transform: translate(calc(-100% + var(--dx) * 1px), -50%);
-  text-align: right;
-  justify-items: end;
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="start"] {
-  transform: translate(calc(var(--dx) * 1px), -50%);
-  text-align: left;
-  justify-items: start;
-}
-/* The key is FRAMED (the house readout grammar): an outlined chip, dawn on
-   the two systems, gold only on the flow's own word. */
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__key {
-  padding: 3px 8px 2px;
-  border: 1px solid rgba(var(--dawn-rgb), 0.42);
-  background: rgba(var(--dawn-rgb), 0.05);
-  font-size: 10.5px;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.92);
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__key {
-  border-color: var(--gold-line);
-  background: rgba(var(--gold-rgb), 0.12);
-}
-/* ⚠ THE MEASURE IS ON THE VALUE, in its own 12px `ch`: on the word it read
-   the list's body size and let ENCODE run 24 characters wide, into the line
-   rising to upstream at 1280x720 (the leaders are px, the drawing scales).
-   A `ch` is the advance WITHOUT the label tracking, so a character costs
-   ~1.13ch here: 30ch holds 26 characters, ENCODE's 23ch holds its 19. */
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__val {
-  max-width: 30ch;
-  font-size: 12px;
-  line-height: 1.35;
-  letter-spacing: var(--track-label);
-  color: rgba(var(--dawn-rgb), 0.62);
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-word="encode"] .tw-eq__val {
-  max-width: 23ch;
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__key {
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__trk {
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
   color: var(--gold-ink);
+  --c: currentColor;
+  background:
+    linear-gradient(var(--c), var(--c)) left top / 5px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) left top / 1px 5px no-repeat,
+    linear-gradient(var(--c), var(--c)) right top / 5px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) right top / 1px 5px no-repeat,
+    linear-gradient(var(--c), var(--c)) left bottom / 5px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) left bottom / 1px 5px no-repeat,
+    linear-gradient(var(--c), var(--c)) right bottom / 5px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) right bottom / 1px 5px no-repeat;
 }
-/* The leader runs from the word's edge to the point on the drawing; a small
-   diamond sits on that point. */
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::before,
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::after {
+/* The tag hangs from the bracket's left edge, above it. ⚠ A GROUND HALO, not
+   a plate: the words sit over line work (holo.ui8's do too), and the halo is
+   the page's own ground (`--void-rgb` IS the paper in light, ADR-058), so it
+   reads in both themes and paints no box. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tag {
+  position: absolute;
+  left: -9px;
+  /* `--lift`: written by the mount when two readouts would collide. */
+  bottom: calc(14px + var(--lift, 0px));
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  white-space: nowrap;
+  text-shadow:
+    0 0 2px rgb(var(--void-rgb)),
+    0 0 6px rgb(var(--void-rgb)),
+    0 0 10px rgb(var(--void-rgb));
+}
+/* A tag with no room on its own side hangs to the left of its bracket,
+   set from the bracket's right edge (written by the mount). */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-flip] .tw-eq__tag {
+  left: auto;
+  right: -9px;
+  justify-items: end;
+  text-align: right;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-flip] .tw-eq__tag::after {
+  left: auto;
+  right: 9px;
+}
+/* The hairline that keeps a lifted tag tied to its bracket. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tag::after {
   content: "";
   position: absolute;
+  left: 9px;
+  top: 100%;
+  width: 1px;
+  height: var(--lift, 0px);
+  background: var(--gold-ink);
+  opacity: 0.5;
 }
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::before {
-  background: rgba(var(--dawn-rgb), 0.38);
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__val {
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  color: rgba(var(--dawn-rgb), 0.86);
 }
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::after {
-  width: 5px;
-  height: 5px;
-  border: 1px solid rgba(var(--dawn-rgb), 0.7);
-  transform: translate(-50%, -50%) rotate(45deg);
-  box-sizing: border-box;
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__line {
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
 }
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit]::after {
-  border-color: var(--gold-line);
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__key {
+  color: var(--gold-ink-lit, var(--gold-ink));
 }
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="end"]::before {
+
+/* The bearing: holo.ui8's peripheral readout on a leader, the eye's azimuth
+   and elevation, written live as the reader turns the object. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tele {
+  position: absolute;
+  left: 3%;
+  bottom: 7%;
+  margin: 0;
+  padding-right: 64px;
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  color: var(--gold-ink);
+  pointer-events: none;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tele::after,
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tele::before {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tele::after {
+  right: 0;
   top: 50%;
-  right: calc(var(--dx) * 1px);
-  width: calc(var(--dx) * -1px - 6px);
+  width: 54px;
   height: 1px;
+  opacity: 0.55;
 }
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="end"]::after {
-  top: 50%;
-  left: calc(100% - var(--dx) * 1px);
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="start"]::before {
-  top: 50%;
-  left: calc(var(--dx) * -1px);
-  width: calc(var(--dx) * 1px - 6px);
-  height: 1px;
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="start"]::after {
-  top: 50%;
-  left: calc(var(--dx) * -1px);
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tele::before {
+  right: 0;
+  top: calc(50% - 4px);
+  width: 1px;
+  height: 9px;
 }
 
 /* ── Live: the hologram takes the drawing's place, the words stay ────── */
@@ -260,12 +295,11 @@
 }
 
 /* ── The phone: the words become a list under the drawing ──────────────
-   ⚠ EVERY SELECTOR HERE OUTRANKS THE SEATS ABOVE. Those carry an attribute
-   (`[data-anchor]`), so a plain `.tw-eq__word` override loses to them on
-   specificity and the words stay seated over the drawing, transformed.
-   The static drawing is cropped back to its own content (`--eq-x0/x1`, from
-   the server): the crop also holds the room the desktop words take beside
-   it, which a list does not need. */
+   The trackers lose their brackets, their readouts and their seats (every
+   selector here outranks the seated rules above on specificity, never on
+   order), and the bearing goes: the phone shows the static drawing. The
+   drawing is cropped back to its own content (`--eq-x0/x1`, from the
+   server): the crop also holds the room the desktop words take beside it. */
 @media (max-width: 960px) {
   .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__stage .tw-eq__figure {
     width: 100%;
@@ -288,15 +322,28 @@
     margin-top: 20px;
     justify-items: center;
   }
-  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-anchor] {
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-word] {
     position: static;
-    transform: none;
+    width: auto;
+    height: auto;
     text-align: center;
-    justify-items: center;
   }
-  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-anchor]::before,
-  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-anchor]::after {
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-word] .tw-eq__tag {
+    position: static;
+    justify-items: center;
+    white-space: normal;
+    text-shadow: none;
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-word] .tw-eq__val {
+    order: 2;
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-word] .tw-eq__tag::after {
     content: none;
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-word] .tw-eq__trk,
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-word] .tw-eq__coord,
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__figure .tw-eq__tele {
+    display: none;
   }
 }
 

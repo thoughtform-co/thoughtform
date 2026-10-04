@@ -803,14 +803,6 @@ export const RIVER_ANCHORS: Readonly<Record<"upstream" | "encode" | "downstream"
   downstream: [BLOCK.hx, (height(BLOCK.hx, 0) + BLOCK.floor) / 2, 0],
 };
 
-export const RIVER_WORD_SEATS: Readonly<
-  Record<keyof typeof RIVER_ANCHORS, { anchor: "start" | "end"; dx: number }>
-> = {
-  upstream: { anchor: "end", dx: -26 },
-  encode: { anchor: "start", dx: 26 },
-  downstream: { anchor: "start", dx: 26 },
-};
-
 export function riverSeatWords(): { id: keyof typeof RIVER_ANCHORS; ax: number; at: number }[] {
   return (Object.keys(RIVER_ANCHORS) as (keyof typeof RIVER_ANCHORS)[]).map((id) => {
     const p = riverProject(RIVER_ANCHORS[id]);

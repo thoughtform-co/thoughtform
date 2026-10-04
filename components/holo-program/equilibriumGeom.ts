@@ -10,9 +10,10 @@
  *
  *   THOUGHT  holo.ui8's crumpled contour mass: slices of a lumpy body, alive,
  *            its outline drifting. It tapers and calms as it nears the gate.
- *   ENCODE   ADR-080's plated collar, in gold: a ring of plates, a toothed
- *            fringe, a horizon line across it, a fulcrum under it on a level
- *            bar. The balance point the whole instrument rests on.
+ *   ENCODE   ADR-080's plated collar, in gold, with the Thoughtform
+ *            brandmark seated inside it (U10): a ring of plates, a toothed
+ *            fringe, a fulcrum under it on a level bar. The balance point the
+ *            whole instrument rests on, and it is the mark.
  *   FORM     ADR-080's coaxial ring stack: identical toothed rings at one
  *            pitch along the axis, receding into depth. Work that runs.
  *
@@ -27,6 +28,8 @@
  *
  * World axes are three's: `y` up, the axis along `x`, the gate on the origin.
  */
+
+import { BRANDMARK_VIEWBOX, brandmarkPolylines } from "@/lib/brandmark/brandmarkPaths";
 
 import { cameraBasis, cameraPosition, type EqCamBasis, projectThrough } from "./eqCamera";
 import { mulberry32 } from "./holoProgramGeom";
@@ -58,9 +61,11 @@ export const EQ_FRAME = { w: 1100, h: 500 } as const;
  *  recession and not as a fisheye. Three's `fov` is VERTICAL (ADR-080 U3). */
 export const EQ_CAMERA = { azimuthDeg: -46, elevationDeg: 12, distance: 12.4, fovDeg: 22 } as const;
 
-/** How far the reader may turn it, each side of rest (degrees). Never past
- *  the axis, where the stack would turn edge-on and the reading reverse. */
-export const EQ_DRAG = { azimuthDeg: 18, polarDeg: 6 } as const;
+/** How far the reader may turn it (degrees). ALL THE WAY ROUND (owner,
+ *  2026-10-04: "make sure we can rotate it 360"): an infinite azimuth is a
+ *  free turn. The tilt stays a band either side of rest, so it is never seen
+ *  from under its own floor. */
+export const EQ_DRAG = { azimuthDeg: Infinity, polarDeg: 16 } as const;
 
 export function eqCameraPosition(): V {
   return cameraPosition(EQ_CAMERA);
@@ -314,31 +319,10 @@ export function cradleTicks(): V[] {
   return out;
 }
 
-/** The reticle that tracks the thought: holo.ui8's target, a ring with four
- *  arms, standing in the plane of the axis. */
-export const EQ_RETICLE = { centre: [-2.98, 1.3, 0.16] as V, r: 0.13, inner: 0.045, arm: 0.09 };
-
-export function reticleLines(): V[][] {
-  const { centre: c, r, inner, arm } = EQ_RETICLE;
-  const circle = (rr: number) =>
-    Array.from({ length: 41 }, (_, i) => {
-      const th = (i / 40) * TAU;
-      return [c[0] + rr * Math.cos(th), c[1] + rr * Math.sin(th), c[2]] as V;
-    });
-  const arms: V[][] = [0, 90, 180, 270].map((deg) => {
-    const th = (deg + 45) * RAD;
-    return [
-      [c[0] + (r + 0.02) * Math.cos(th), c[1] + (r + 0.02) * Math.sin(th), c[2]],
-      [c[0] + (r + 0.02 + arm) * Math.cos(th), c[1] + (r + 0.02 + arm) * Math.sin(th), c[2]],
-    ];
-  });
-  return [circle(r), circle(inner), ...arms];
-}
-
 /* ── ENCODE: the gate ──────────────────────────────────────────────────── */
 
 /** The gate on the origin: a gold inner ring, a ring of plates, an outer
- *  ring, a toothed fringe, a horizon across it, markers above and below. */
+ *  ring, a toothed fringe, a marker above, and the brandmark inside it. */
 export const EQ_GATE = {
   x: 0,
   inner: 1.02,
@@ -373,19 +357,23 @@ export function gatePlateSegments(): V[] {
   return out;
 }
 
-/** The horizon: the level line across the gate, broken where the axis passes,
- *  with two pitch marks each side — the instrument reading level. Pairs. */
-export function gateHorizon(): V[] {
-  const { x, inner } = EQ_GATE;
-  const w = inner * 0.86;
-  const gap = 0.13;
-  const out: V[] = [
-    [x, 0, -w],
-    [x, 0, -gap],
-    [x, 0, gap],
-    [x, 0, w],
-  ];
-  return out;
+/**
+ * The brandmark seated in the gate (owner, 2026-10-04: "put the brandmark
+ * inside the gold gate"): ENCODE is the mark. Live it is the corridor's own
+ * volumetric mark (`VolumetricBrandmarkArtifact`, ADR-080's centre); here it
+ * is the same mark as an outline in the gate's plane, for the static drawing.
+ * `half` is its half-height in the world, inside the gold ring's 1.02.
+ */
+export const EQ_MARK = { half: 0.74 } as const;
+
+/** The mark's outline in the gate's plane, facing upstream (the rest camera's
+ *  side): the viewBox's right runs along +z, its up along +y. */
+export function markLines(): V[][] {
+  const { w, h } = BRANDMARK_VIEWBOX;
+  const s = (2 * EQ_MARK.half) / h;
+  return brandmarkPolylines(4).map((line) =>
+    line.map(([u, v]) => [EQ_GATE.x, -(v - h / 2) * s, (u - w / 2) * s] as V)
+  );
 }
 
 /** The marker above the gate: holo.ui8's triangle, pointing at the axis. */
@@ -484,17 +472,11 @@ export function stackRuler(): V[] {
   return out;
 }
 
-/** The drop from the stack's far end to the floor (ADR-080's grid stick),
- *  where the downstream word is seated, clear of the rings. */
-export const EQ_DROP: readonly [V, V] = [
-  [stackX(EQ_STACK.count - 1), -EQ_STACK.r - 0.1, 0],
-  [stackX(EQ_STACK.count - 1), EQ_FLOOR.y, 0],
-];
-
 /* ── The flow ──────────────────────────────────────────────────────────── */
 
-/** The axis: gold from where the thought calms to past the stack's last ring. */
-export const EQ_AXIS = { x0: EQ_THOUGHT.x1 - 0.06, x1: STACK_END + 0.34 } as const;
+/** The axis: gold from where the thought calms to past the stack's last ring,
+ *  broken through the gate (`gap` either side), where the mark is. */
+export const EQ_AXIS = { x0: EQ_THOUGHT.x1 - 0.06, x1: STACK_END + 0.34, gap: 0.62 } as const;
 
 /**
  * The motes: they drift slowly through the thought, wandering off the axis,
@@ -560,8 +542,9 @@ export function floorSegments(): { a: V; b: V; fade: number }[] {
   return out;
 }
 
-/** Seeded dust in a long shell round the instrument. */
-export function eqDust(count = 360, seed = 4821): V[] {
+/** Seeded dust in a long shell round the instrument: fine and dense, as
+ *  holo.ui8's field is. */
+export function eqDust(count = 900, seed = 4821): V[] {
   const rnd = mulberry32(seed);
   const out: V[] = [];
   while (out.length < count) {
@@ -569,30 +552,57 @@ export function eqDust(count = 360, seed = 4821): V[] {
     const y = rnd() * 2 - 1;
     const z = rnd() * 2 - 1;
     const l = Math.hypot(x, y, z);
-    if (l > 1 || l < 0.35) continue;
-    out.push([-0.2 + x * 4.8, y * 1.8, z * 2.4]);
+    if (l > 1 || l < 0.3) continue;
+    out.push([0.4 + x * 5.6, y * 2.4, z * 3.4]);
+  }
+  return out;
+}
+
+/**
+ * Bokeh: a few large, soft, out-of-focus discs round the instrument, as
+ * holo.ui8 carries — some between the eye and the object, most beyond it, so
+ * they part as the reader turns it. Seeded; `size` in CSS px at rest depth.
+ */
+export function eqBokeh(
+  count = 12,
+  seed = 9157
+): { p: V; size: number; alpha: number; gold: boolean }[] {
+  const rnd = mulberry32(seed);
+  const out: { p: V; size: number; alpha: number; gold: boolean }[] = [];
+  while (out.length < count) {
+    const a = rnd() * TAU;
+    /* Close enough round the object to stay inside the frame from any side,
+       and above the floor, so none sits on the frame's lower edge. */
+    const r = 3.6 + rnd() * 2.4;
+    const y = -0.4 + rnd() * 2.2;
+    out.push({
+      p: [0.4 + Math.cos(a) * r * 1.2, y, Math.sin(a) * r * 0.8],
+      size: 34 + rnd() * 56,
+      alpha: 0.03 + rnd() * 0.045,
+      gold: rnd() < 0.6,
+    });
   }
   return out;
 }
 
 /* ── The words ─────────────────────────────────────────────────────────── */
 
-/** Where each word's leader lands on the object, in the world: the reticle
- *  on the thought, the marker over the gate, the stack's far end. The order
- *  is the reading order, which is the phone's list order too. */
-export const EQ_ANCHORS: Readonly<Record<"upstream" | "encode" | "downstream", V>> = {
-  upstream: [EQ_RETICLE.centre[0], EQ_RETICLE.centre[1], EQ_RETICLE.centre[2]],
-  encode: [0, EQ_GATE.outer + 0.27, 0],
-  downstream: [EQ_DROP[1][0], EQ_DROP[1][1], EQ_DROP[1][2]],
-};
+/** A point on the thought's own outline: slice `u`, at `deg` round it. */
+export function thoughtPoint(u: number, deg: number, t = 0): V {
+  const f = thoughtSlice(u);
+  const th = deg * RAD;
+  const r = f.R * (1 + f.A * thoughtWob(th, u, t));
+  return [f.x, f.cy + r * Math.cos(th), f.cz + r * Math.sin(th)];
+}
 
-/** How each word sits off its point: the side, and the leader's length (px). */
-export const EQ_WORD_SEATS: Readonly<
-  Record<keyof typeof EQ_ANCHORS, { anchor: "start" | "end"; dx: number }>
-> = {
-  upstream: { anchor: "end", dx: -26 },
-  encode: { anchor: "start", dx: 26 },
-  downstream: { anchor: "start", dx: 26 },
+/** What each word TRACKS, as holo.ui8's trackers do: a point on the object,
+ *  bracketed, its readout above it. The thought's crown, the marker over the
+ *  gate, the far ring's top. The order is the reading order, which is the
+ *  phone's list order too. */
+export const EQ_ANCHORS: Readonly<Record<"upstream" | "encode" | "downstream", V>> = {
+  upstream: thoughtPoint(0.42, -8),
+  encode: [0, EQ_GATE.outer + 0.27, 0],
+  downstream: [STACK_END, EQ_STACK.r, 0],
 };
 
 /** The words' seats at rest, as fractions of the frame. */
@@ -666,10 +676,6 @@ export function eqPolylines(): EqPolyline[] {
     width: 2.4,
     opacity: 1,
   });
-  reticleLines().forEach((l, k) =>
-    out.push({ id: `reticle-${k}`, points: l, role: "structure", width: 0.9, opacity: 0.8 })
-  );
-
   /* Encode. */
   out.push({
     id: "gate-ring",
@@ -720,14 +726,9 @@ export function eqPolylines(): EqPolyline[] {
     width: 0.8,
     opacity: 0.5,
   });
-  out.push({
-    id: "gate-horizon",
-    points: gateHorizon(),
-    segments: true,
-    role: "structure",
-    width: 0.9,
-    opacity: 0.6,
-  });
+  markLines().forEach((l) =>
+    out.push({ id: "mark", points: l, role: "gold", width: 1.1, opacity: 0.95 })
+  );
   out.push({ id: "gate-marker", points: gateMarker(), role: "bright", width: 1.2, opacity: 0.95 });
   out.push({ id: "level-bar", points: levelBar(), role: "structure", width: 0.9, opacity: 0.7 });
   levelLit().forEach((l, k) =>
@@ -789,20 +790,14 @@ export function eqPolylines(): EqPolyline[] {
     opacity: 0.46,
   });
   out.push({
-    id: "drop",
-    points: [...EQ_DROP],
-    dashed: true,
-    role: "structure",
-    width: 0.8,
-    opacity: 0.4,
-  });
-
-  out.push({
     id: "axis",
     points: [
       [EQ_AXIS.x0, 0, 0],
+      [-EQ_AXIS.gap, 0, 0],
+      [EQ_AXIS.gap, 0, 0],
       [EQ_AXIS.x1, 0, 0],
     ],
+    segments: true,
     role: "gold",
     width: 1,
     opacity: 0.6,

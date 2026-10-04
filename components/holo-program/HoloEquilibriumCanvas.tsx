@@ -66,6 +66,8 @@ export interface HoloEquilibriumCanvasProps {
   className?: string;
   /** Which figure (ADR-143 U8 instrument, U9 river); the camera follows it. */
   variant?: EqFigureId;
+  /** Where the eye is, reported by the scene each frame (the bearing readout). */
+  onView?: (azDeg: number, elDeg: number) => void;
 }
 
 export function HoloEquilibriumCanvas({
@@ -76,6 +78,7 @@ export function HoloEquilibriumCanvas({
   onReady,
   className = "tw-eq__gl-canvas",
   variant = "instrument",
+  onView,
 }: HoloEquilibriumCanvasProps) {
   const figure = EQ_FIGURES[variant];
   const Scene = variant === "river" ? HoloRiverScene : HoloEquilibriumScene;
@@ -105,8 +108,11 @@ export function HoloEquilibriumCanvas({
     }),
     [figure]
   );
-  const { camera: cam, drag } = figure;
+  const { camera: cam, drag, bloom } = figure;
   const polarRest = (90 - cam.elevationDeg) * RAD;
+  /* A free turn (U10): no azimuth clamp, and a quicker hand, so a full turn
+     is one easy drag rather than four. */
+  const freeTurn = !Number.isFinite(drag.azimuthDeg);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -155,13 +161,13 @@ export function HoloEquilibriumCanvas({
                Pan off: it cannot be dragged out of its own frame. */
             enablePan={false}
             enableZoom={false}
-            minAzimuthAngle={(cam.azimuthDeg - drag.azimuthDeg) * RAD}
-            maxAzimuthAngle={(cam.azimuthDeg + drag.azimuthDeg) * RAD}
+            minAzimuthAngle={freeTurn ? -Infinity : (cam.azimuthDeg - drag.azimuthDeg) * RAD}
+            maxAzimuthAngle={freeTurn ? Infinity : (cam.azimuthDeg + drag.azimuthDeg) * RAD}
             minPolarAngle={polarRest - drag.polarDeg * RAD}
             maxPolarAngle={polarRest + drag.polarDeg * RAD}
             minDistance={cam.distance}
             maxDistance={cam.distance}
-            rotateSpeed={0.22}
+            rotateSpeed={freeTurn ? 0.5 : 0.22}
           />
 
           <Scene
@@ -171,6 +177,7 @@ export function HoloEquilibriumCanvas({
             still={still}
             onReady={handleReady}
             channel={channel}
+            onView={onView}
           />
 
           <EffectComposer multisampling={0} enableNormalPass={false}>
@@ -178,9 +185,10 @@ export function HoloEquilibriumCanvas({
                 the threshold on void; on paper nothing is brighter than the
                 paper, so 0.97 leaves bloom nothing to lift (ADR-140). */}
             <Bloom
-              intensity={POST.bloom * palette.bloomScale}
-              luminanceThreshold={palette.additive ? 0.62 : 0.97}
+              intensity={bloom.intensity * palette.bloomScale}
+              luminanceThreshold={palette.additive ? bloom.threshold : 0.97}
               luminanceSmoothing={POST.bloomRadius}
+              radius={bloom.radius}
               mipmapBlur
             />
             {/* ⚠ NO GRAIN ON PAPER. The pass blends by SCREEN, which only

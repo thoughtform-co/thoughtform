@@ -645,3 +645,50 @@ variant)`, which stamps `data-eq-variant`), the mount (which reads the stamp)
 - **Verified** headed at 1920×1247 and 1280×720 dark and 1470×956 light in the
   lab; the phone (390×844) shows the static diorama with the words as a list;
   the live v3 page still renders the instrument.
+
+## Update 10 — the mark in the gate, a full turn, holo's trackers (2026-10-04, owner)
+
+On the instrument (still the live figure): "put the brandmark inside the gold gate
+… I like how the upstream visual resembles a brain, which is correct … make sure
+we can rotate it 360°, and let's use the same type of labeling as holo.ui8.dev,
+and a bit of a bokeh / bloom effect like holo." The brain is untouched.
+
+- **ENCODE is the mark.** The corridor's volumetric brandmark (ADR-080's centre,
+  `VolumetricBrandmarkArtifact`, `entrance="off"`) seated in the gold gate, turned
+  a quarter so its face looks upstream, at `EQ_MARK.half` (0.74 world units, inside
+  the 1.02 gold ring; the artifact fits its larger side to 1.74 at scale 1). On its
+  own its particles read as a cloud of dashes, so its crisp OUTLINE is drawn too,
+  gold, the same lines the static drawing projects (`markLines`). The horizon
+  across the gate is gone (the mark fills it) and the axis breaks round the mark
+  (`EQ_AXIS.gap`); the motes still pass through it. The paths are ONE record now,
+  `lib/brandmark/brandmarkPaths.ts`, byte-equal to `public/logos/Thoughtform_Brandmark.svg`
+  and read by `ThoughtformSigil` as well (it held its own copy).
+- **A full turn.** `EQ_DRAG.azimuthDeg` is infinite (OrbitControls unclamped in
+  azimuth, a quicker hand so a full turn is one drag); the tilt stays a band.
+  ⚠ **Depth is FOG now, never baked.** The near/far shade was baked at the rest
+  pose, which a half turn inverts; linear fog toward the ground fades whatever is
+  far from the eye at that moment. ⚠ drei's fat lines carry fog's shader code but
+  leave `material.fog` off; every `Line` passes `fog`.
+- **holo's labelling.** Each word is a TRACKER: four corner brackets on a point ON
+  the object (the brain's crown, the gate's marker, the far ring's top; the
+  reticle and the floor drop are gone), and above them the meaning over the
+  readout line, `UPSTREAM · X0.31 Y0.27 · LOCK` (the reference's own grammar; the
+  numbers are where the point is on the frame, written live as it turns, through
+  one formatter, `trackerReadout`, on the server and in the mount). One callout
+  reads the bearing, `AZ 314.0° / EL 12.0°`, on a leader. A ground halo (the
+  page's own `--void-rgb`) keeps the words legible over line work in both themes.
+  ⚠ **Turned, readouts collide**: the mount places each tag on its own side, then
+  the left, then lifts it on a hairline, keeping clear of every other tag AND
+  every other tracker's brackets (the first cut only checked tags against tags,
+  and Upstream's line ran through Encode's marker at 1470×956).
+- **Bloom and bokeh.** The instrument's bloom is its own (`EqFigure.bloom`:
+  intensity 1.05, radius 0.86, threshold 0.56 on void; paper keeps 0.97). Twelve
+  soft out-of-focus discs (a body and a faint rim, never a hard disc: the first
+  cut read as moons and sat on the canvas edge) part as the object turns; the dust
+  is denser (900). Nothing pulses: the flicker guard now bans a scale on the clock
+  rather than any scale, since the mark's one arrival settles by scale.
+- **Guards**: the paths equal the asset's; the mark inside the gold ring in the
+  gate's plane; the free turn, fog on, fat lines fogged; the trackers on the
+  object; the readout and bearing formats; the station's trackers and bearing at
+  rest. Shot headed at 1920×1247 (rest and turned 140°, 327°, dark and light),
+  1470×956 and 1280×720 on the live page.
