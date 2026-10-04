@@ -1,4 +1,4 @@
-import type { CorridorCopyOverride } from "@/lib/v7-parse/types";
+import type { CorridorCopyOverride, CorridorStackCopy } from "@/lib/v7-parse/types";
 
 import type { ArcSectionOf } from "../../types";
 import { HAND_IT_TO_AN_AGENT } from "./handItToAnAgent";
@@ -18,33 +18,54 @@ import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./worksh
  * today's intro; every seam this record feeds is the identity when it is not
  * passed, so they render byte-identical.
  *
- * ⚠ THE THESIS IS THE HOMEPAGE'S (owner, 2026-10-03, on the built page:
- * "restore the copy from the home page"). The corridor's opening beat reads
- * `extractV7Text()` unchanged, so it has no field here.
+ * ⚠ THE THESIS TITLE IS THE HOMEPAGE'S, ITS PARAGRAPHS ARE NOT (owner,
+ * 2026-10-03: "restore the copy from the home page"; then 2026-10-04, ADR-143
+ * U6: reword the paragraphs). "AI sits somewhere between tool and
+ * collaborator." stays, because the era title morphs into it (U5); the two
+ * paragraphs under it stop asking beat 05's question early and stop selling.
+ *
+ * ⚠ THE INTRO BUILDS UP, IT DOES NOT GIVE AWAY (owner, 2026-10-04). The
+ * captions point at the workshop's three parts in plain words and never name
+ * the skills, the evals or the intelligence configuration: beat 06 reveals
+ * that term. The Arc is a philosophy the work came out of, hinted at as a
+ * loop once (the thesis's second paragraph), never explained; so the proof
+ * cards carry no phase either.
  *
  * ⚠ THE ARC KEEPS ITS OWN WORDS (owner, 2026-10-03): Navigate / Encode /
- * Build and "intelligence configuration" stay, which overrides, for this page
- * only, the Suri sprint plan's list of words kept out of the room.
+ * Build stay, which overrides, for this page only, the Suri sprint plan's
+ * list of words kept out of the room.
  *
  * ⚠ THE COPY LAW, pinned by `workshop-intro.test.ts`: no em dash, nothing
  * from the voice skill's banned list, no digit but the frontier's
- * "30-second", one `<br>` per caption, ledes at most 180 characters.
+ * "30-second", one `<br>` per caption, ledes at most 180 characters, the
+ * hero inside the house measure.
  */
 
 /** The four Loop tracks the pile shows, in its order (`PROOF_STACK_ORDER`). */
 export type WorkshopProofTrack = "atl-films" | "tooling" | "studio" | "ai-transformation";
 
 export interface WorkshopIntro {
+  /** The hero's headline and lede, inner HTML each (ADR-143 U6), written
+   *  over the shared workshop prototype's at parse time. The two buttons are
+   *  the prototype's. */
+  hero: { headlineHtml: string; descHtml: string };
   /** The About's bio paragraphs, inner HTML each. The role line and the
    *  meta row are the prototype's, unchanged: the eras name the present. */
   about: readonly string[];
-  /** Each station's caption: the Arc's move, then which part of today it is. */
+  /** The thesis's two paragraphs, under the homepage's title (ADR-143 U6). */
+  thesis: { body1Html: string; body2Html: string };
+  /** The thesis glyphs' second words, in place of See / Crystallize / Ship. */
+  phases: NonNullable<CorridorCopyOverride["phaseSubs"]>;
+  /** Each station's caption: the Arc's move, then what it means in practice. */
   stations: NonNullable<CorridorCopyOverride["stations"]>;
-  /** The epilogue's signal line: the homepage's title and button, without
-   *  the ticker (beat 09 shows the same news). */
+  /** The Build station's right-hand column: the agents the layer runs. */
+  stack: CorridorStackCopy;
+  /** The epilogue's signal line: this cut's own title, the homepage's
+   *  button, no ticker (beat 09 shows the same news). */
   signal: NonNullable<CorridorCopyOverride["signal"]>;
   proof: {
-    /** One line per card, in place of `card.lede`; titles stay the record's. */
+    /** One line per card, in place of `card.lede`; titles stay the record's.
+     *  The card heads letter the client alone, no phase (ADR-143 U6). */
     ledes: Readonly<Record<WorkshopProofTrack, string>>;
     /** The card that glows, in dark only (the route sheet). */
     lit: WorkshopProofTrack;
@@ -61,31 +82,69 @@ export interface WorkshopIntro {
 }
 
 export const WORKSHOP_INTRO: WorkshopIntro = {
+  // Names the subject; 01, "How to work with a new kind of intelligence.",
+  // answers it. The lede is the three parts in plain words.
+  hero: {
+    headlineHtml: "A new kind<br />of intelligence.",
+    descHtml:
+      "A workshop on how it behaves, what it needs from your team, and how to hand it real work.",
+  },
   about: [
     "<strong>Vince</strong> has spent a decade inside digital change: social media, online communities, now <em>intelligence itself.</em>",
     // Hands over to the era's motto, "Owning the map between work and
     // intelligence."
     'Today he maps which intelligence runs which work, inside the teams that do it: at <span class="voidwalker__bio-mark">Loop Earplugs</span>, and for other teams through Thoughtform.',
   ],
+  // The second paragraph is the one place the Arc is hinted at as a loop.
+  thesis: {
+    body1Html: "Working with it well takes practice, and it can be learned.",
+    body2Html: "I do it in three moves, and make them again for every piece of work.",
+  },
+  // "Ship" was the Build that made tools; each word echoes its caption.
+  phases: { navigate: "Learn", encode: "Write down", build: "Hand over" },
+  // Part one, part two, part three of the day, without naming them: the
+  // skills, the evals and the configuration are the workshop's to reveal.
   stations: {
     navigate:
-      "Learn how this <em>intelligence</em> behaves before you hand it work.<br>Part one today: from a prompt to an agent, and why it is hard to steer.",
+      "Learn how this <em>intelligence</em> behaves before you hand it work.<br>What it does well, where it slips, and how long it can run on its own.",
     diagnostic:
-      "Write down what your team knows and what <em>good looks like</em>.<br>Part two: the skills and the evals an agent runs on.",
+      "It is already smart. What it lacks is <em>your context</em>.<br>So the team writes down what it knows, and what good looks like.",
     intelligence:
-      "Give each piece of work its <em>intelligence configuration</em>.<br>Part three: one motion ad, end to end, and the plugin your team installs.",
+      "Set the work up for <em>agents</em> to run, with people steering.<br>Each piece gets its own, built on what the team wrote down.",
   },
-  // The title and the button are the homepage's (owner, 2026-10-03: the
-  // positioning line, "we embed until it runs without us", is the one to
-  // keep); only the ticker goes.
-  signal: { ticker: false },
+  // Build is for agents now (owner, 2026-10-04): the column the homepage
+  // letters as rented surfaces, with the Model lit, read as "output: model".
+  // One agent per piece of work on the left, row for row, none lit.
+  // ⚠ ONE SHORT WORD A CHIP: the head says AGENTS, and "Pricing agent" ran
+  // the fan's lowest chip onto the right rail at 1920x1247. Each label stays
+  // within two characters of the homepage's at its row ("Reports", not
+  // "Reporting", which reached the rail line at 1470x956). The column is
+  // tight at laptop sizes on the homepage too: its own chips sit on the
+  // SECTOR and LOCAL readouts there (measured 2026-10-04).
+  stack: {
+    surfacesTitle: "Agents",
+    surfacesSub: "what runs on the layer",
+    surfaceLabels: ["Pricing", "Review", "Copy", "Support", "Reports"],
+    surfaceLit: null,
+  },
+  // Owner, 2026-10-04: the homepage's "we embed in your team until it runs
+  // without us" is an offer, and this page is a story; the practice, said as
+  // what the work is. The button stays the homepage's, the ticker goes.
+  signal: {
+    titleHtml: "EMBEDDED IN THE WORK<br><em>UNTIL THE TEAM IS SELF-SUFFICIENT.</em>",
+    ariaLabel: "Embedded in the work until the team is self-sufficient",
+    ticker: false,
+  },
   proof: {
     ledes: {
       "atl-films":
         "Two 30-second films made with generative models to the craft bar of live action, and run as paid media.",
       tooling:
         "Four tools built with the people who run the work, where it got stuck. Those teams own them.",
-      studio: "Embedded in the studio until the team ran paid social with AI on its own.",
+      // Evidence, not a restatement: the signal line and this card's title
+      // already say the team runs it alone (ADR-143 U6).
+      studio:
+        "Three months after the films, every designer in the studio was making their own ads with AI.",
       "ai-transformation":
         "Then we built for the agents: what each team knows, written down, and the checks they run on their own work. The rest of today is how.",
     },

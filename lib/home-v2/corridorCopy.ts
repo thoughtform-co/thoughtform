@@ -1,7 +1,9 @@
 import type {
   CorridorCopyOverride,
   CorridorCopyStationId,
+  CorridorPhaseId,
   CorridorSignalCopy,
+  CorridorStackCopy,
 } from "@/lib/v7-parse/types";
 
 import { stationById, type NodeContent } from "./corridorMap";
@@ -23,6 +25,13 @@ import { stationById, type NodeContent } from "./corridorMap";
  *
  * Pure: no React, no DOM. Titles and telemetry are never overridden; a
  * station's caption replaces its `supportHtml` and `floorHtml` together.
+ *
+ * Since ADR-143 U6 two more things ride the same seam, both read by
+ * `CopyAnchors`: the thesis glyphs' second words (`phaseSubs`, defaulting to
+ * the homepage's See / Crystallize / Ship below) and the Build station's
+ * right-hand column (`stack`, ABSENT by default, so `CopyAnchors` keeps the
+ * scene's own labels; this module never imports the scene, which drags
+ * three in).
  */
 
 export const CORRIDOR_COPY_STATIONS: readonly CorridorCopyStationId[] = [
@@ -67,10 +76,10 @@ export const DEFAULT_SIGNAL_COPY: Readonly<CorridorSignalCopy> = {
   // product"). The owner collapsed it to the capability; the pair is still
   // what the offer below unpacks.
   //
-  // ⚠ AND IT MAY NEVER SAY "SELF-SUFFICIENT" — the same reference bans
-  // the word outright: say the behaviour, because the abstraction hides
-  // the mechanics that make it real. "Your team owns" is the behaviour;
-  // "a self-sufficient team" is the abstraction.
+  // (A ban on "self-sufficient" used to be recorded here. It is LIFTED: the
+  // strategy skill dropped it on 2026-09-26 and the owner deleted the
+  // site's copy of it on 2026-09-28. The workshop's third cut says it in
+  // this very slot, ADR-143 U6.)
   //
   // ⚠ THE TITLE IS THE GOAL THE ARC HANDS TO THE PROOF (owner, 2026-09-26,
   // ADR-126 — supersedes the 2026-09-14 line above on THIS surface only).
@@ -93,9 +102,19 @@ export const DEFAULT_SIGNAL_COPY: Readonly<CorridorSignalCopy> = {
   ticker: true,
 };
 
+/** The thesis glyphs' second words, the homepage's since the v7 port. */
+export const DEFAULT_PHASE_SUBS: Readonly<Record<CorridorPhaseId, string>> = {
+  navigate: "See",
+  encode: "Crystallize",
+  build: "Ship",
+};
+
 export interface CorridorCopy {
   stations: Record<CorridorCopyStationId, NodeContent | undefined>;
   signal: Readonly<CorridorSignalCopy>;
+  phaseSubs: Readonly<Record<CorridorPhaseId, string>>;
+  /** Absent unless a route passes its own: the scene's labels stand. */
+  stack?: CorridorStackCopy;
 }
 
 export function resolveCorridorCopy(override?: CorridorCopyOverride): CorridorCopy {
@@ -111,7 +130,12 @@ export function resolveCorridorCopy(override?: CorridorCopyOverride): CorridorCo
   const signal = override?.signal
     ? { ...DEFAULT_SIGNAL_COPY, ...override.signal }
     : DEFAULT_SIGNAL_COPY;
-  return { stations, signal };
+  const phaseSubs = override?.phaseSubs
+    ? { ...DEFAULT_PHASE_SUBS, ...override.phaseSubs }
+    : DEFAULT_PHASE_SUBS;
+  return override?.stack
+    ? { stations, signal, phaseSubs, stack: override.stack }
+    : { stations, signal, phaseSubs };
 }
 
 /** The phone sets the signal title against a narrow box, so its one

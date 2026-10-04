@@ -135,9 +135,30 @@ export interface CorridorSignalCopy {
   ticker: boolean;
 }
 
+/** The thesis's three phase glyphs, by the label they carry. */
+export type CorridorPhaseId = "navigate" | "encode" | "build";
+
+/** The Build station's right-hand column (ADR-143 U6): its head and one
+ *  label per surface tip, in order. The item ids, and so the world anchors
+ *  the labels are projected on, are the scene's own and never move. */
+export interface CorridorStackCopy {
+  /** The column head's name, e.g. "Intelligence". */
+  surfacesTitle: string;
+  /** The column head's sub-line, e.g. "what you rent". */
+  surfacesSub: string;
+  /** One label per surface tip, top to bottom. */
+  surfaceLabels: readonly string[];
+  /** The index of the chip given the gold lift, or null for none. */
+  surfaceLit: number | null;
+}
+
 /** What a route may override. Each station's caption replaces both its
- *  `supportHtml` and its `floorHtml`; titles and telemetry stay the map's. */
+ *  `supportHtml` and its `floorHtml`; titles and telemetry stay the map's.
+ *  `phaseSubs` replaces the thesis glyphs' second words (See / Crystallize /
+ *  Ship); `stack` replaces the Build station's right-hand column whole. */
 export interface CorridorCopyOverride {
   stations?: Partial<Record<CorridorCopyStationId, string>>;
   signal?: Partial<CorridorSignalCopy>;
+  phaseSubs?: Partial<Record<CorridorPhaseId, string>>;
+  stack?: CorridorStackCopy;
 }

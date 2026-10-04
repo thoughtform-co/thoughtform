@@ -76,7 +76,10 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // through `text` (untouched).
   // ...through the route's corridor copy (ADR-143 U3), which is the
   // map's own content unless the route passed captions of its own.
-  const { stations } = useCorridorCopy();
+  // ADR-143 U6: the glyphs' second words and the Build station's right-hand
+  // column ride the same seam. `stack` is absent unless a route passes its
+  // own, so every other route keeps the scene's labels and its gold Model.
+  const { stations, phaseSubs, stack } = useCorridorCopy();
   const nav = stations.navigate;
   const enc = stations.diagnostic;
   const bld = stations.intelligence;
@@ -171,7 +174,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         data-anchor-origin="top-right"
       >
         <span className="home-v2-copy-phase__label">{tf.phaseLabels.navigate}</span>
-        <span className="home-v2-copy-phase__sub">See</span>
+        <span className="home-v2-copy-phase__sub">{phaseSubs.navigate}</span>
       </div>
       <div
         className="home-v2-copy-phase home-v2-copy-phase--encode"
@@ -179,7 +182,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         data-anchor-origin="top-right"
       >
         <span className="home-v2-copy-phase__label">{tf.phaseLabels.encode}</span>
-        <span className="home-v2-copy-phase__sub">Crystallize</span>
+        <span className="home-v2-copy-phase__sub">{phaseSubs.encode}</span>
       </div>
       <div
         className="home-v2-copy-phase home-v2-copy-phase--build"
@@ -187,7 +190,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         data-anchor-origin="top-left"
       >
         <span className="home-v2-copy-phase__label">{tf.phaseLabels.build}</span>
-        <span className="home-v2-copy-phase__sub">Ship</span>
+        <span className="home-v2-copy-phase__sub">{phaseSubs.build}</span>
       </div>
 
       {/* ─────────── NAVIGATE / ENCODE / BUILD ───────────
@@ -275,8 +278,12 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           <span className="home-v2-stack-label__rule" aria-hidden="true" />
           <div className="home-v2-stack-label__body">
             <span className="home-v2-stack-label__num">{stackSurfacesLabel.ordinal}</span>
-            <span className="home-v2-stack-label__name">{stackSurfacesLabel.title}</span>
-            <span className="home-v2-stack-label__sub">{stackSurfacesLabel.sub}</span>
+            <span className="home-v2-stack-label__name">
+              {stack?.surfacesTitle ?? stackSurfacesLabel.title}
+            </span>
+            <span className="home-v2-stack-label__sub">
+              {stack?.surfacesSub ?? stackSurfacesLabel.sub}
+            </span>
           </div>
         </div>
       )}
@@ -324,12 +331,17 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           data-stack-idx={idx}
           // The rented MODEL is the centre of the intelligence stack —
           // give it a quiet gold lift so it reads as the load-bearing node.
-          data-stack-emphasis={item.id === "model" ? "true" : undefined}
+          // A route's own column names its lit chip, or none (ADR-143 U6).
+          data-stack-emphasis={
+            (stack ? stack.surfaceLit === idx : item.id === "model") ? "true" : undefined
+          }
         >
           <span className="home-v2-stack-item__leader" aria-hidden="true" />
           <span className="home-v2-stack-item__chip">
             <span className="home-v2-stack-item__index">{String(idx + 1).padStart(2, "0")}</span>
-            <span className="home-v2-stack-item__label">{item.label}</span>
+            <span className="home-v2-stack-item__label">
+              {stack?.surfaceLabels[idx] ?? item.label}
+            </span>
           </span>
         </div>
       ))}

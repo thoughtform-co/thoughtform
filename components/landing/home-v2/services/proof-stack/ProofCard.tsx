@@ -136,6 +136,10 @@ export function ProofCard({
   const titleId = `pf-card-${track.id}`;
   const claims = track.blocks ?? [];
   const phase = track.stamp?.phase ?? "Build";
+  /* An EMPTY phase letters the client alone (ADR-143 U6: the workshop's
+     third cut does not map its proof onto one phase of the Arc). Every
+     record carries "Build", so every other host is byte-identical. */
+  const kicker = phase ? `${client.name} · ${phase}` : client.name;
 
   const stations = proofTabs(track.visual);
   const [idx, setIdx] = useState(0);
@@ -176,9 +180,7 @@ export function ProofCard({
           bay's own verticals rather than near them. */}
       {inHead ? (
         <div className="pf-card__headid">
-          <p className="pf-card__kicker">
-            {client.name} · {phase}
-          </p>
+          <p className="pf-card__kicker">{kicker}</p>
         </div>
       ) : null}
       {inHead ? (
@@ -194,11 +196,7 @@ export function ProofCard({
       {/* The client from the RECORD (ADR-097) — this was the one string
           literal on the surface, and the tab's colour now keys off the same
           `CaseDef` the name comes from. */}
-      {inHead ? null : (
-        <p className="pf-card__kicker">
-          {client.name} · {phase}
-        </p>
-      )}
+      {inHead ? null : <p className="pf-card__kicker">{kicker}</p>}
       {panel === "record" ? <p className="pf-card__headtitle">{title}</p> : null}
       {/* ⚠ THE ORDINAL IS GONE (U7, owner: "remove the numbers (01 etc)").
           It had been the head's whole right slot since ADR-094 U4, kept

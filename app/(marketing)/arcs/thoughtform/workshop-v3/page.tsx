@@ -7,6 +7,7 @@ import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 import { replaceAboutBio } from "./about";
+import { replaceHeroCopy } from "./hero";
 import { WORKSHOP_V3_JOURNEY, WORKSHOP_V3_NAV_ITEMS } from "./journey";
 import { WorkshopV3Portals } from "./WorkshopPortals";
 
@@ -76,10 +77,11 @@ export const metadata: Metadata = {
  * ⚠ IT SHARES v1's PROTOTYPE AND v1's SHEET. The corridor half is the same
  * page, so `getThoughtformWorkshopContent` is called with the same removed
  * stations and `.tw-root` is rendered unchanged. Its intro COPY diverges
- * through seams instead (ADR-143 U3): `WORKSHOP_INTRO` rewrites the About's
- * bio here and passes the corridor's captions and
- * signal as `corridorText.copy`, and `data-tw-cut="v3"` scopes its rules in
- * v1's sheet. The day its STRUCTURE diverges, the prototype, the sheet and
+ * through seams instead (ADR-143 U3, U6): `WORKSHOP_INTRO` rewrites the
+ * hero's copy and the About's bio here, spreads the thesis's paragraphs over
+ * the homepage's, and passes the corridor's captions, glyph words, Build
+ * column and signal as `corridorText.copy`; `data-tw-cut="v3"` scopes its
+ * rules in v1's sheet. The day its STRUCTURE diverges, the prototype, the sheet and
  * the root class still fork together (ADR-139).
  *
  * ⚠ NO `course.css`: this page draws no `path` and none of the Tom caps.
@@ -103,14 +105,25 @@ export default async function ThoughtformWorkshopV3Page() {
     removeStations: WORKSHOP_REMOVED_STATIONS,
     corridorMountId: CORRIDOR_MOUNT_ID,
   });
-  // The intro leads into the workshop (ADR-143 U3): the About, the captions
-  // and the signal line are this cut's own, from one record; the thesis is
-  // the homepage's. Each seam is the identity on every other route.
-  const bodyHtml = replaceAboutBio(protoHtml, WORKSHOP_INTRO.about);
+  // The intro leads into the workshop (ADR-143 U3, U6): the hero, the About,
+  // the thesis's paragraphs, the glyphs' words, the captions, the Build
+  // column and the signal line are this cut's own, from one record; the
+  // thesis title is the homepage's. Each seam is the identity on every
+  // other route.
+  const bodyHtml = replaceAboutBio(
+    replaceHeroCopy(protoHtml, WORKSHOP_INTRO.hero),
+    WORKSHOP_INTRO.about
+  );
   const shared = extractV7Text();
   const corridorText = {
     ...shared,
-    copy: { stations: WORKSHOP_INTRO.stations, signal: WORKSHOP_INTRO.signal },
+    thoughtform: { ...shared.thoughtform, ...WORKSHOP_INTRO.thesis },
+    copy: {
+      stations: WORKSHOP_INTRO.stations,
+      signal: WORKSHOP_INTRO.signal,
+      phaseSubs: WORKSHOP_INTRO.phases,
+      stack: WORKSHOP_INTRO.stack,
+    },
   };
   const celestialSlots = await getCelestialSlotsCached();
 

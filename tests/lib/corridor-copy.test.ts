@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CORRIDOR_COPY_STATIONS,
+  DEFAULT_PHASE_SUBS,
   DEFAULT_SIGNAL_COPY,
   phoneSignalTitleHtml,
   resolveCorridorCopy,
@@ -21,6 +22,12 @@ describe("corridor copy", () => {
     }
     expect(copy.signal).toBe(DEFAULT_SIGNAL_COPY);
     expect(resolveCorridorCopy({}).signal).toBe(DEFAULT_SIGNAL_COPY);
+    // ADR-143 U6: the glyphs' words are the homepage's, and the Build column
+    // is ABSENT, so `CopyAnchors` keeps the scene's labels and its gold Model.
+    expect(copy.phaseSubs).toBe(DEFAULT_PHASE_SUBS);
+    expect(DEFAULT_PHASE_SUBS).toEqual({ navigate: "See", encode: "Crystallize", build: "Ship" });
+    expect("stack" in copy, "no column unless a route passes one").toBe(false);
+    expect("stack" in resolveCorridorCopy({}), "an empty override passes none").toBe(false);
   });
 
   it("keeps the homepage's signal line verbatim", () => {
@@ -49,5 +56,18 @@ describe("corridor copy", () => {
     expect(copy.stations.navigate).toBe(stationById("navigate")?.content);
     expect(copy.signal).toEqual({ ...DEFAULT_SIGNAL_COPY, cta: "GO", ticker: false });
     expect(base.supportHtml, "the map is never written").not.toBe("A<br>B");
+  });
+
+  it("merges the glyphs' words and passes a route's Build column through", () => {
+    const stack = {
+      surfacesTitle: "T",
+      surfacesSub: "s",
+      surfaceLabels: ["a", "b", "c", "d", "e"],
+      surfaceLit: null,
+    };
+    const copy = resolveCorridorCopy({ phaseSubs: { build: "Hand over" }, stack });
+    expect(copy.phaseSubs).toEqual({ ...DEFAULT_PHASE_SUBS, build: "Hand over" });
+    expect(DEFAULT_PHASE_SUBS.build, "the defaults are never written").toBe("Ship");
+    expect(copy.stack).toBe(stack);
   });
 });

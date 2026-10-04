@@ -369,3 +369,66 @@ without the option and are unchanged.
   each line says its outgoing text before its window and its incoming text at 1;
   a scrambling line keeps its cells; the segment split; the wash's ramp; the
   computed colour and shadow parsing).
+
+## Update 6: the intro builds up to the workshop (2026-10-04, owner)
+
+The owner on the intro: hero, About and the eras work, but the thesis and the Arc
+still talk like the landing page. "Navigate · Encode · Build" is perfect; the text
+around it sells, gives away what the workshop builds up to, and draws Build as it
+was first devised (building interfaces), where Build is now building for agents.
+"We embed in your team until it runs without us" is a pitch on this page. And the
+proof cards' "LOOP EARPLUGS · BUILD" maps the proof onto one phase of the Arc,
+which is a philosophy applied organically, as a loop, not a funnel the projects
+were filed into. V3 only; every seam is the identity elsewhere.
+
+- **The rulings** (picked from drafts): the signal is "EMBEDDED IN THE WORK /
+  UNTIL THE TEAM IS SELF-SUFFICIENT." (the practice, said as what the work is,
+  never "we … your team"); the Build column is the agents the layer runs; the
+  thesis paragraphs, the glyphs' words and the hero are reworded too; "· BUILD"
+  comes off the cards on V3 only.
+- **The copy** (all in `WORKSHOP_INTRO`):
+  - Hero: "A new kind / of intelligence." over "A workshop on how it behaves, what
+    it needs from your team, and how to hand it real work." 01 answers it.
+  - Thesis (title kept, the era title morphs into it): "Working with it well takes
+    practice, and it can be learned." / "I do it in three moves, and make them
+    again for every piece of work." The second is the one place the loop is hinted.
+    The old first paragraph asked beat 05's question early; the second was the pitch.
+  - Glyph words: See · Crystallize · Ship → Learn · Write down · Hand over.
+  - Captions point at the day's three parts without naming skills, evals or the
+    configuration (06 reveals that term, which the U3 Build caption gave away, and
+    the "Part one / two / three" lines contradicted the page's order since U1).
+  - Build column: "03 / Agents / what runs on the layer", one agent per piece of
+    work on the left, row for row, none lit: Pricing · Review · Copy · Support ·
+    Reports. The homepage's column (Memory · API · Model · CLI · Agent, Model
+    lit) read as "output: model".
+  - Card 3's lede is evidence now ("Three months after the films, every designer
+    in the studio was making their own ads with AI."), because the signal and the
+    card's title already say the team runs it alone.
+- **Two seams added to the corridor copy** (`CorridorCopyOverride`):
+  `phaseSubs` (merged over `DEFAULT_PHASE_SUBS`, See / Crystallize / Ship) and
+  `stack` (the right column's head, five labels and the lit index, passed through
+  and ABSENT by default, so `CopyAnchors` keeps the scene's labels and `corridorCopy`
+  never imports the scene). The item ids, and so the world anchors, never change.
+  The thesis paragraphs need no seam: V3's page spreads them over
+  `extractV7Text().thoughtform`. The hero is a parse-time rewrite,
+  `workshop-v3/hero.ts` `replaceHeroCopy`, which throws on a miss like `about.ts`.
+- **The cards**: `ProofCard` letters the client alone when the phase is EMPTY
+  (one string, `kicker`); V3's `workshopV3Tracks()` empties `stamp.phase`. Every
+  record carries "Build", so the homepage, Trinny and Pandora print what they did.
+- ⚠ **ONE SHORT WORD A CHIP, AND THE COLUMN IS TIGHT ON EVERY ROUTE.** "Pricing
+  agent" ran the fan's lowest chip onto the right rail at 1920×1247. Measured over
+  the Build window (headed, real scrolls): at 1280×720 and 1470×956 the homepage's
+  own chips cross the rail in motion (its "Agent" by 79px) and sit on the SECTOR
+  and LOCAL readouts at rest at 1470×956. V3's labels stay within two characters of
+  the homepage's at each row ("Reports", not "Reporting", which reached the rail
+  line at 1470×956). The clamp in `getStackColumnLocalX` is the open item: its
+  "~130px chip never reaches the rail" does not hold at laptop sizes for either page.
+- **Guards**: `workshop-intro.test.ts` (the copy law over every new string, the
+  hero inside `HERO_MEASURE`, the signal's one break and one accent and its phone
+  label, five unique unlit chips, the hero rewrite on the real prototype and its
+  three throws, the pile changes only the lede and the phase),
+  `corridor-copy.test.ts` (the defaults by reference, no column unless passed, the
+  merge).
+- **Verified** headed with real scrolls: every beat at 1920×1247 dark and light,
+  1470×956 and 1280×720 dark, 390×844; `/` keeps See / Crystallize / Ship,
+  "Intelligence / what you rent" with Model lit, and the homepage's signal.
