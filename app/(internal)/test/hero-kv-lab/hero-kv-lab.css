@@ -1,0 +1,165 @@
+/* /test/hero-kv-lab — the plate's framing and the switcher. Everything else on
+   the page is the production hero and HUD, styled by landing.css. */
+
+/* The framing kvs.ts solves: a zoom about the plate's LEFT edge pushes the
+   subject right of the text column, at the head's own height so the face does
+   not climb out of the frame. */
+.hkv .hero__bg img {
+  transform: scale(var(--kv-zoom, 1));
+  transform-origin: 0% var(--kv-origin-y, 50%);
+}
+
+/* A phone shows a narrow window of a wide plate: no zoom, positioned on the
+   subject instead (the hero's copy sits over the plate there anyway). */
+@media (max-width: 960px) {
+  .hkv .hero__bg img {
+    transform: none;
+    object-position: var(--kv-pos-phone, 50% 50%);
+  }
+}
+
+/* ⚠ A LAB PROPOSAL FOR THE PHONE, NOT THE SHIPPED LAYOUT. The production
+   phone hero centres its copy over the plate, and with a head on the right
+   that puts the headline on the face. Here the copy rises to the top band and
+   the plate drops by a fifth, so the head sits under the copy against the
+   plate's own black sky (the hero's ground is void, so the gap above reads as
+   sky). */
+@media (max-width: 640px) {
+  .hkv .hero {
+    justify-content: flex-start;
+  }
+  .hkv .hero__bg img {
+    transform: translateY(22%);
+  }
+  /* The dropped plate's top edge would read as a seam; the overlay carries
+     the void down over it before the head begins. */
+  .hkv .hero__video__overlay {
+    background:
+      linear-gradient(
+        to bottom,
+        rgb(var(--void-deep-rgb)) 0%,
+        rgb(var(--void-deep-rgb)) 22%,
+        rgba(var(--void-deep-rgb), 0.55) 34%,
+        transparent 52%
+      ),
+      linear-gradient(to top, rgba(var(--void-deep-rgb), 0.45) 0%, transparent 30%);
+  }
+}
+
+/* T hides the copy so the plate can be read on its own. */
+.hkv[data-copy="off"] .hero__content,
+.hkv[data-copy="off"] .hero__flywheel {
+  visibility: hidden;
+}
+
+.hkv__missing {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 70;
+  padding: 16px 20px;
+  background: rgba(var(--void-deep-rgb), 0.92);
+  border: 1px solid rgba(var(--gold-rgb), 0.6);
+  color: var(--dawn);
+  font-family: var(--font-pt-mono);
+  font-size: 13px;
+  letter-spacing: var(--track-label);
+}
+
+/* The dock sits bottom centre, between the wordmark (bottom left) and the
+   pronunciation line (bottom right), and H takes it away entirely. */
+.hkv__dock {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: min(1100px, calc(100vw - 32px));
+  font-family: var(--font-pt-mono);
+  color: var(--dawn);
+}
+.hkv__dock[data-open="off"] {
+  display: none;
+}
+
+.hkv__readout {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+.hkv__label {
+  color: var(--gold);
+  letter-spacing: var(--track-eyebrow);
+}
+.hkv__meta,
+.hkv__keys {
+  opacity: 0.65;
+}
+.hkv__tag {
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+.hkv__strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px;
+  background: rgba(var(--void-deep-rgb), 0.72);
+  border: 1px solid rgba(var(--dawn-rgb), 0.18);
+  scrollbar-width: thin;
+}
+.hkv__thumb {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0;
+  background: none;
+  border: 1px solid rgba(var(--dawn-rgb), 0.2);
+  color: var(--dawn);
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: var(--track-label);
+  cursor: pointer;
+}
+.hkv__thumb img {
+  display: block;
+  width: 80px;
+  height: 45px;
+  object-fit: cover;
+}
+.hkv__thumb span {
+  padding: 0 4px 3px;
+  text-align: left;
+  opacity: 0.7;
+}
+.hkv__thumb:hover {
+  border-color: rgba(var(--gold-rgb), 0.5);
+}
+.hkv__thumb[aria-selected="true"] {
+  border-color: var(--gold);
+}
+.hkv__thumb[aria-selected="true"] span {
+  color: var(--gold);
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .hkv__thumb img {
+    width: 56px;
+    height: 32px;
+  }
+  .hkv__keys {
+    display: none;
+  }
+}
