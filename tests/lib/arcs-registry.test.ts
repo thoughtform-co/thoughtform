@@ -1909,3 +1909,29 @@ describe("the second cut's four kinds (ADR-139)", () => {
     }
   });
 });
+
+/**
+ * An interstitial's silent loop (ADR-143 U7). CSP's `media-src` allows only
+ * the site itself, so a clip is self-hosted under `/arcs/`, on disk, with
+ * its still and its words; a file that is not there is a black frame where
+ * the line used to stand alone.
+ */
+describe("an interstitial's clip", () => {
+  it("is self-hosted under /arcs/, on disk, with a still and an alt", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "interstitial" || !s.clip) continue;
+        const at = `${arc.slug}#${s.id}`;
+        for (const src of [s.clip.src, s.clip.poster]) {
+          expect(src.startsWith("/arcs/"), `${at}: ${src} is not under /arcs/`).toBe(true);
+          expect(
+            existsSync(join(process.cwd(), "public", src)),
+            `${at}: ${src} is not on disk`
+          ).toBe(true);
+        }
+        expect(s.clip.src, `${at}: a video, not a GIF`).toMatch(/\.(mp4|webm)$/);
+        expect(s.clip.alt.trim().length, `${at}: the clip says what it shows`).toBeGreaterThan(0);
+      }
+    }
+  });
+});

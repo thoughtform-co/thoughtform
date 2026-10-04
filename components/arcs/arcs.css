@@ -1997,6 +1997,23 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   position: relative;
   z-index: 1;
 }
+/* The silent loop (ADR-143 U7): one framed picture above the line, the size
+   of a held slide. Square, on a hairline: a picture on a page, not a
+   machined housing (ADR-065). Absent unless the section carries a `clip`. */
+.arc-inter__clip {
+  margin: 0;
+  width: min(100%, 640px, calc(46svh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+  overflow: hidden;
+}
+.arc-inter__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .arc-inter__line {
   margin: 0;
   max-width: 24ch;

@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcClipLoop } from "./ArcClipLoop";
 import { ArcDecodeTitle, ArcTypeCopy } from "./ArcDecodeText";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -39,6 +40,13 @@ export function ArcInterstitial({
         {...rung(motion, 0.1)}
       >
         {section.eyebrow ? <p className="arc-desig arc-inter__eyebrow">{section.eyebrow}</p> : null}
+        {/* The silent loop (ADR-143 U7), above the line it pictures. Absent,
+            nothing is drawn: a beat with no file is the line alone. */}
+        {section.clip ? (
+          <figure className="arc-inter__clip">
+            <ArcClipLoop clip={section.clip} />
+          </figure>
+        ) : null}
         <ArcDecodeTitle
           title={section.line}
           motion={motion}

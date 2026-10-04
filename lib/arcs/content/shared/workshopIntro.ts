@@ -49,6 +49,18 @@ export interface WorkshopIntro {
    *  over the shared workshop prototype's at parse time. The two buttons are
    *  the prototype's. */
   hero: { headlineHtml: string; descHtml: string };
+  /** The station after the hero (ADR-143 U7): the Thoughtform equilibrium,
+   *  a holographic object in three.js (a core between two ring systems).
+   *  Plain text throughout; the title carries no gold word, because the
+   *  object's one gold is the flow from upstream to downstream. */
+  equilibrium: {
+    eyebrow: string;
+    title: string;
+    sub: string;
+    /** The three words the object names, keyed by the point the geometry
+     *  gives each (`components/holo-program/equilibriumGeom.ts`). */
+    labels: Readonly<Record<"downstream" | "upstream" | "encode", { key: string; text: string }>>;
+  };
   /** The About's bio paragraphs, inner HTML each. The role line and the
    *  meta row are the prototype's, unchanged: the eras name the present. */
   about: readonly string[];
@@ -61,7 +73,7 @@ export interface WorkshopIntro {
   /** The Build station's right-hand column: the agents the layer runs. */
   stack: CorridorStackCopy;
   /** The epilogue's signal line: this cut's own title, the homepage's
-   *  button, no ticker (beat 09 shows the same news). */
+   *  button, no ticker (beat 10 shows the same news). */
   signal: NonNullable<CorridorCopyOverride["signal"]>;
   proof: {
     /** One line per card, in place of `card.lede`; titles stay the record's.
@@ -88,6 +100,18 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     headlineHtml: "A new kind<br />of intelligence.",
     descHtml:
       "A workshop on how it behaves, what it needs from your team, and how to hand it real work.",
+  },
+  // Owner, 2026-10-04 (his Wispr note "Thoughtform workshop V3"): instant
+  // ideas are no longer the edge; the balance is. His own phrase is the name.
+  equilibrium: {
+    eyebrow: "Before we start",
+    title: "The Thoughtform equilibrium.",
+    sub: "AI closed the distance between thought and form. The edge now is balance: agents run the work downstream, so people go further upstream.",
+    labels: {
+      downstream: { key: "Downstream", text: "Decks, analyses, synthesis" },
+      upstream: { key: "Upstream", text: "Strategy, architecture, work across teams" },
+      encode: { key: "Encode", text: "What works upstream runs downstream" },
+    },
   },
   about: [
     "<strong>Vince</strong> has spent a decade inside digital change: social media, online communities, now <em>intelligence itself.</em>",
@@ -130,9 +154,12 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
   // Owner, 2026-10-04: the homepage's "we embed in your team until it runs
   // without us" is an offer, and this page is a story; the practice, said as
   // what the work is. The button stays the homepage's, the ticker goes.
+  // ADR-143 U7 (owner, same day): the line takes the stations' own grammar,
+  // a verb in gold and its object (NAVIGATE THE INTELLIGENCE. · ENCODE THE
+  // CONTEXT. · BUILD ON THE LAYER.), so it reads as the Arc's last move.
   signal: {
-    titleHtml: "EMBEDDED IN THE WORK<br><em>UNTIL THE TEAM IS SELF-SUFFICIENT.</em>",
-    ariaLabel: "Embedded in the work until the team is self-sufficient",
+    titleHtml: "<em>EMBED</em> IN THE WORK<br>TO MAKE THE TEAMS SELF-SUFFICIENT.",
+    ariaLabel: "Embed in the work to make the teams self-sufficient",
     ticker: false,
   },
   proof: {
@@ -163,7 +190,7 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     },
   },
   /* 02 ends on "each runs longer without you", so 03 stays on length (the
-     price moves to its sub, the money's own beat is 11) and 04 turns on it. */
+     price moves to its sub, the money's own beat is 12) and 04 turns on it. */
   curve: {
     ...THE_CURVE_BEAT,
     head: {

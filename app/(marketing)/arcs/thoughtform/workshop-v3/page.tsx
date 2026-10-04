@@ -7,6 +7,7 @@ import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 import { replaceAboutBio } from "./about";
+import { insertEquilibriumStation } from "./equilibrium";
 import { replaceHeroCopy } from "./hero";
 import { WORKSHOP_V3_JOURNEY, WORKSHOP_V3_NAV_ITEMS } from "./journey";
 import { WorkshopV3Portals } from "./WorkshopPortals";
@@ -40,6 +41,11 @@ import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
 import "../workshop-v1/thoughtform-workshop.css";
+// This cut's own opener (ADR-143 U7): the equilibrium station and the curtain
+// chain it puts between the hero and the About. Every rule is scoped
+// `.tw-root[data-tw-cut="v3"]` and wins on SPECIFICITY, never on order
+// (ADR-141 U1: the bundler does not keep route sheets where they are written).
+import "./equilibrium.css";
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";
 // The instruments after it, exactly as `/` and the arcs route do; without it
@@ -64,7 +70,8 @@ export const metadata: Metadata = {
  * Loop as the worked example, split around the economics chapter that answers
  * its bill, then Laura's test and the close.
  *
- *   hero → about → the eras → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)
+ *   hero → the equilibrium (U7) → about → the eras
+ *        → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)
  *        → the proof stack (#services, no card ring)
  *        → the third cut's arc (#workshop) → contact
  *
@@ -108,10 +115,14 @@ export default async function ThoughtformWorkshopV3Page() {
   // The intro leads into the workshop (ADR-143 U3, U6): the hero, the About,
   // the thesis's paragraphs, the glyphs' words, the captions, the Build
   // column and the signal line are this cut's own, from one record; the
-  // thesis title is the homepage's. Each seam is the identity on every
-  // other route.
+  // thesis title is the homepage's. And since U7 a station of its own, the
+  // Thoughtform equilibrium, between the hero and the About. Each seam is the
+  // identity on every other route.
   const bodyHtml = replaceAboutBio(
-    replaceHeroCopy(protoHtml, WORKSHOP_INTRO.hero),
+    insertEquilibriumStation(
+      replaceHeroCopy(protoHtml, WORKSHOP_INTRO.hero),
+      WORKSHOP_INTRO.equilibrium
+    ),
     WORKSHOP_INTRO.about
   );
   const shared = extractV7Text();

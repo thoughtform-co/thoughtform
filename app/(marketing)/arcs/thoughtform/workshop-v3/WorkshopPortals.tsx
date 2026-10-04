@@ -31,6 +31,9 @@ import { useWorkshopFlow } from "../workshop-v1/flow/useWorkshopFlow";
 // The pile is this cut's own since ADR-143 U3: v1's, with one-line ledes.
 const WorkshopProof = lazy(() => import("./WorkshopProof"));
 const WorkshopV3Tail = lazy(() => import("./WorkshopTail"));
+/* The opener's hologram (ADR-143 U7), lazy like its neighbours; the canvas
+   behind it is a second, dynamic chunk the mount loads at idle. */
+const EquilibriumMount = lazy(() => import("./EquilibriumMount"));
 
 const RING_ATTR = "data-services-ring";
 
@@ -41,6 +44,12 @@ export function WorkshopV3Portals() {
     return () => html.removeAttribute(RING_ATTR);
   }, []);
 
+  useNestedRoot(
+    ".tw-root [data-tw-eq-canvas]",
+    <Suspense fallback={null}>
+      <EquilibriumMount />
+    </Suspense>
+  );
   useNestedRoot(
     ".tw-root [data-tw-proof-root]",
     <Suspense fallback={null}>

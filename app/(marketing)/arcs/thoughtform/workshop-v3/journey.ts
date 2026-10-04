@@ -23,6 +23,9 @@ import { buildJourneyRoster } from "@/components/landing/v7/rail-instruments/jou
  */
 export const WORKSHOP_V3_JOURNEY_ORDER = [
   "hero",
+  // ADR-143 U7: the opener, a station the manifest does not know, so it
+  // resolves directly off `data-active-station` (`rosterDirectId`).
+  "equilibrium",
   "about",
   "voidwalker",
   "thesis",
@@ -41,7 +44,8 @@ export const WORKSHOP_V3_JOURNEY = buildJourneyRoster(
   // whole Arc.
   "voidwalker",
   [
-    { id: "hero", name: "Home" },
+    // Home holds through the opener (ADR-143 U7), which has no mark of its own.
+    { id: "hero", name: "Home", range: ["hero", "equilibrium"] },
     { id: "about" },
     { id: "voidwalker" },
     { id: "thesis", name: "Thesis" },

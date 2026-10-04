@@ -66,8 +66,14 @@ describe("the workshop's third house cut (ADR-143)", () => {
     const proof = routeFile("thoughtform", "workshop-v3", "WorkshopProof.tsx");
     expect(proof, "maps the homepage's pile, never a copy").toContain("proofStackTracks()");
     expect(portals, "reuses v1's About flow").toContain('"../workshop-v1/flow/useWorkshopFlow"');
-    /* Equal TODAY; separate files so the owner's intro pass can change one. */
-    expect([...WORKSHOP_V3_JOURNEY_ORDER]).toEqual([...WORKSHOP_JOURNEY_ORDER]);
+    /* v1's order with the opener after the hero (ADR-143 U7): separate files
+       so the owner's intro pass could change one, and it has. */
+    expect([...WORKSHOP_V3_JOURNEY_ORDER]).toEqual([
+      "hero",
+      "equilibrium",
+      ...WORKSHOP_JOURNEY_ORDER.filter((id) => id !== "hero"),
+    ]);
+    expect(WORKSHOP_JOURNEY_ORDER[0]).toBe("hero");
   });
 
   it("carries no worked-example switch", () => {
@@ -150,6 +156,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
       "real-question",
       "configuration-motion",
       "leverage-motion",
+      "pensieve",
       "the-horizon",
       "signal",
       "its-evals-motion",
@@ -232,6 +239,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(ids.slice(ids.indexOf("configuration-motion"), ids.indexOf("the-money"))).toEqual([
       "configuration-motion",
       "leverage-motion",
+      "pensieve",
       "the-horizon",
       "signal",
       "its-evals-motion",
@@ -297,7 +305,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(close.head.title).toBe(WHAT_FOLLOWS_TITLE);
     expect(close.head.sub).toBe(WHAT_FOLLOWS_SUB);
     expect(close.actions).toBe(WHAT_FOLLOWS_CLOSE.actions);
-    expect(close.head.eyebrow).toBe("22 · What follows");
+    expect(close.head.eyebrow).toBe("23 · What follows");
     const v2 = THOUGHTFORM_WORKSHOP_V2_ARC.sections.at(-1);
     expect(v2?.kind === "close" && v2.head.title, "v2's close reads it too").toBe(
       WHAT_FOLLOWS_TITLE

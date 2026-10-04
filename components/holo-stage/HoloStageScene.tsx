@@ -637,9 +637,13 @@ export function HoloStageScene({
       ready.current = true;
       onReady?.();
     }
-    const drifting = spec.dust.some((d) => (d.drift ?? 0) > 0);
-    if (!still || drifting) invalidate();
-    else if (p < 1 || groupsMoving) invalidate();
+    /* ⚠ THE SCENE KEEPS ITSELF ALIVE ONLY THROUGH A TRANSITION (ADR-143 U7).
+       Continuous life — the beads' travel, the twinkle, the drift — is the
+       canvas's `LifePump`, which runs only while the beat is on screen and
+       the tab visible. This used to invalidate every frame whenever the
+       figure was not `still`, so no canvas ever idled: the pump's gate was
+       dead, and every figure on a page rendered for as long as it was open. */
+    if ((armed && p < 1 && frozen === undefined) || groupsMoving) invalidate();
   });
 
   return (

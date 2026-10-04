@@ -1,0 +1,353 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   The third cut's opener (ADR-143 U7): THE THOUGHTFORM EQUILIBRIUM.
+
+   A station between the hero and the About, spliced into the shared
+   prototype at parse time (`equilibrium.ts`). The copy above, the object
+   centred under it: the static drawing for every reader, the hologram
+   (`EquilibriumMount` → `HoloEquilibriumCanvas`, ADR-080's perspective
+   shell) over it where the canvas runs, and the three words seated from
+   the object's own geometry, following it once it is live.
+
+   ⚠ EVERY RULE IS SCOPED `.tw-root[data-tw-cut="v3"]` AND WINS ON
+   SPECIFICITY, NEVER ON ORDER (ADR-141 U1): the bundler does not keep a
+   route sheet where the page writes it, so a rule here that ties v1's sheet
+   loses or wins by accident.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.tw-root[data-tw-cut="v3"] {
+  /* How long the opener holds still before it lifts off the About, as the
+     About itself dwells (`--tw-about-dwell`). */
+  --tw-eq-dwell: 50svh;
+  /* The figure's ceiling: the drawing takes at most half the frame's
+     height, so the copy above it and the air around it keep theirs. */
+  --tw-eq-fig-h: 50svh;
+}
+
+/* ── The station, everywhere ─────────────────────────────────────────── */
+
+/* ⚠ A PLAIN GROUND, NO STAR TILE. The canvas paints its host's first opaque
+   colour; over a starfield its box would read as a rectangle cut out of the
+   stars (ADR-080 U2's finding, the edge rather than the colour). */
+.tw-root[data-tw-cut="v3"] #equilibrium.station {
+  background-image: none;
+  padding-block: clamp(72px, 10svh, 128px);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 3.4svh, 44px);
+}
+
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__head {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  /* The title takes one line at every desktop width; the sub carries its own
+     measure. (`ch` here is the head's body size, so 60ch capped a 58px title
+     at ~500px and broke it in two.) */
+  max-width: 100%;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__eyebrow {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(30px, 0.9rem + 2.3vw, 58px);
+  line-height: 1.05;
+  letter-spacing: var(--track-display);
+  color: rgb(var(--dawn-rgb));
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__sub {
+  margin: 0;
+  max-width: 64ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(15px, 0.82rem + 0.36vw, 19px);
+  line-height: 1.45;
+  letter-spacing: var(--track-copy);
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+
+/* The figure holds the drawing's own aspect, so the canvas (which frames
+   the same crop) and the seated words land on the drawing at every width. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__figure {
+  position: relative;
+  margin: 0;
+  width: min(100%, calc(var(--tw-eq-fig-h) * var(--eq-w) / var(--eq-h)));
+  aspect-ratio: var(--eq-w) / var(--eq-h);
+  /* ⚠ A DRAG MAY NOT SELECT THE WORDS IT PASSES OVER (ADR-080 U2: a turned
+     object painted a selection plate behind every label). */
+  user-select: none;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__svg,
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* ⚠ THE CANVAS'S EDGE IS FEATHERED. Its painted ground sits ~0.76 of a unit
+   off the page's in light (the post chain's rounding, measured at 1920x1247),
+   invisible as a colour and visible as a RECTANGLE along four straight edges
+   (ADR-080 U2's finding, a third time). A mask that fades the slot's outer
+   band leaves no edge to see; the drawing sits inside its crop's pads, and
+   the words are DOM outside the canvas, so nothing drawn is cut. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__canvas {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+  mask-composite: intersect;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__svg path {
+  fill: none;
+  stroke: rgb(var(--dawn-rgb));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+/* Gold buys one thing: the flow (the bright arcs and the axis). The LINE
+   rung, so it clears paper too. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__svg [data-role="gold"] path {
+  stroke: var(--gold-line);
+}
+
+/* ── The words: a key over a line, on a 1px leader to the drawing ────── */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word {
+  position: absolute;
+  left: calc(var(--ax) * 100%);
+  top: calc(var(--at) * 100%);
+  display: grid;
+  gap: 4px;
+  width: max-content;
+  font-family: var(--font-pt-mono);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="end"] {
+  transform: translate(calc(-100% + var(--dx) * 1px), -50%);
+  text-align: right;
+  justify-items: end;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="start"] {
+  transform: translate(calc(var(--dx) * 1px), -50%);
+  text-align: left;
+  justify-items: start;
+}
+/* The key is FRAMED (the house readout grammar): an outlined chip, dawn on
+   the two systems, gold only on the flow's own word. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__key {
+  padding: 3px 8px 2px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.42);
+  background: rgba(var(--dawn-rgb), 0.05);
+  font-size: 10.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.92);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__key {
+  border-color: var(--gold-line);
+  background: rgba(var(--gold-rgb), 0.12);
+}
+/* ⚠ THE MEASURE IS ON THE VALUE, in its own 12px `ch`: on the word it read
+   the list's body size and let ENCODE run 24 characters wide, into the line
+   rising to upstream at 1280x720 (the leaders are px, the drawing scales).
+   A `ch` is the advance WITHOUT the label tracking, so a character costs
+   ~1.13ch here: 30ch holds 26 characters, ENCODE's 23ch holds its 19. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__val {
+  max-width: 30ch;
+  font-size: 12px;
+  line-height: 1.35;
+  letter-spacing: var(--track-label);
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-word="encode"] .tw-eq__val {
+  max-width: 23ch;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__key {
+  color: var(--gold-ink);
+}
+/* The leader runs from the word's edge to the point on the drawing; a small
+   diamond sits on that point. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::before,
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::after {
+  content: "";
+  position: absolute;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::before {
+  background: rgba(var(--dawn-rgb), 0.38);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word::after {
+  width: 5px;
+  height: 5px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.7);
+  transform: translate(-50%, -50%) rotate(45deg);
+  box-sizing: border-box;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit]::after {
+  border-color: var(--gold-line);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="end"]::before {
+  top: 50%;
+  right: calc(var(--dx) * 1px);
+  width: calc(var(--dx) * -1px - 6px);
+  height: 1px;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="end"]::after {
+  top: 50%;
+  left: calc(100% - var(--dx) * 1px);
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="start"]::before {
+  top: 50%;
+  left: calc(var(--dx) * -1px);
+  width: calc(var(--dx) * 1px - 6px);
+  height: 1px;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-anchor="start"]::after {
+  top: 50%;
+  left: calc(var(--dx) * -1px);
+}
+
+/* ── Live: the hologram takes the drawing's place, the words stay ────── */
+.tw-root[data-tw-cut="v3"] #equilibrium[data-holo="live"] .tw-eq__svg {
+  visibility: hidden;
+}
+/* The hologram's host: invisible until its first frame, then the reader
+   may turn the object (zoom and pan are off, so the page still scrolls over
+   it). The words above it take no pointer. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__gl {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.42s ease-out;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__gl[data-live] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__gl-canvas,
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__gl-canvas canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  cursor: grab;
+}
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__gl-canvas:active,
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__gl-canvas:active canvas {
+  cursor: grabbing;
+}
+/* A word whose point has turned out of view goes with it. */
+.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-hidden] {
+  visibility: hidden;
+}
+
+/* ── The phone: the words become a list under the drawing ──────────────
+   ⚠ EVERY SELECTOR HERE OUTRANKS THE SEATS ABOVE. Those carry an attribute
+   (`[data-anchor]`), so a plain `.tw-eq__word` override loses to them on
+   specificity and the words stay seated over the drawing, transformed.
+   The static drawing is cropped back to its own content (`--eq-x0/x1`, from
+   the server): the crop also holds the room the desktop words take beside
+   it, which a list does not need. */
+@media (max-width: 960px) {
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__stage .tw-eq__figure {
+    width: 100%;
+    aspect-ratio: auto;
+    overflow: hidden;
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__figure .tw-eq__svg {
+    position: relative;
+    inset: auto;
+    width: calc(100% / (var(--eq-x1) - var(--eq-x0)));
+    max-width: none;
+    height: auto;
+    margin-left: calc(var(--eq-x0) / (var(--eq-x1) - var(--eq-x0)) * -100%);
+    aspect-ratio: var(--eq-w) / var(--eq-h);
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__figure .tw-eq__words {
+    position: static;
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+    justify-items: center;
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-anchor] {
+    position: static;
+    transform: none;
+    text-align: center;
+    justify-items: center;
+  }
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-anchor]::before,
+  .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__words .tw-eq__word[data-anchor]::after {
+    content: none;
+  }
+}
+
+/* ── The curtain chain, on the capable rung ──────────────────────────────
+   v1's rule 1a holds the About's stage while the opaque hero lifts off it,
+   on `animation-range: 0 100dvh` of the ROOT scroll — absolute, so it only
+   holds while the About starts exactly one viewport down. Here the opener
+   takes that seat: the hero lifts off a held opener, the opener dwells,
+   then it lifts off a held About.
+
+   ⚠ BOTH HOLDS RIDE THEIR OWN STATION'S VIEW TIMELINE. `entry 0% → entry
+   100%` is, for any station at least a viewport tall, exactly the viewport
+   of scroll that lifts it into place, wherever it sits in the page — so the
+   About's hold needs no arithmetic for the opener above it, and the opener
+   needs none for the hero (the precedent: `musings.css`, `site-footer.css`).
+   The keyframes are v1's own `tw-about-curtain-hold`.
+   ⚠ `content-visibility: auto` stays (`.station:not(.hero)`): its paint
+   containment clips each held stage to its station's box, which is exactly
+   the curtain's edge. */
+@supports (animation-timeline: view()) {
+  @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+    /* The hero over the opener, the opener over the About (z 4, v1's). */
+    .tw-root[data-tw-cut="v3"] .hero {
+      z-index: 6;
+    }
+    .tw-root[data-tw-cut="v3"] #equilibrium.station {
+      display: block;
+      position: relative;
+      z-index: 5;
+      height: calc(100svh + var(--tw-eq-dwell));
+      min-height: 0;
+      padding: 0;
+      view-timeline: --tw-eq block;
+    }
+    .tw-root[data-tw-cut="v3"] #equilibrium.station > .tw-eq__stage {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      box-sizing: border-box;
+      justify-content: center;
+      padding-inline: var(--hud-content-inset);
+      animation: tw-about-curtain-hold linear both;
+      animation-timeline: --tw-eq;
+      animation-range: entry 0% entry 100%;
+    }
+    .tw-root[data-tw-cut="v3"] #about.station {
+      view-timeline: --tw-about block;
+    }
+    .tw-root[data-tw-cut="v3"] #about.station > .tw-about-stage {
+      animation-timeline: --tw-about;
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}

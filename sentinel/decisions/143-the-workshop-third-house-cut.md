@@ -432,3 +432,96 @@ were filed into. V3 only; every seam is the identity elsewhere.
 - **Verified** headed with real scrolls: every beat at 1920×1247 dark and light,
   1470×956 and 1280×720 dark, 390×844; `/` keeps See / Crystallize / Ship,
   "Intelligence / what you rent" with Model lit, and the homepage's signal.
+
+## Update 7: the Thoughtform equilibrium opens the day, the Arc ends on its own grammar (2026-10-04, owner)
+
+The owner's Wispr note "Thoughtform workshop V3" (2026-10-04) and three asks: the
+signal line "needs to follow the same flow" as the stations so it ends the Arc; a
+new section after the hero, "super clean, super visual", for the Thoughtform
+equilibrium (instant ideas are no longer the edge; agents run the DOWNSTREAM,
+people go further UPSTREAM, what works upstream is encoded and becomes
+downstream); and a Pensieve GIF where the page talks about skills and evals.
+V3 only.
+
+- **The signal** is his line, in the stations' grammar (`NAVIGATE THE
+INTELLIGENCE.` · `ENCODE THE CONTEXT.` · `BUILD ON THE LAYER.`):
+  `<em>EMBED</em> IN THE WORK<br>TO MAKE THE TEAMS SELF-SUFFICIENT.` The verb takes
+  the gold, so `workshop-intro.test.ts`'s accent rule changed from "the whole second
+  line" to "the verb that opens the line".
+- **The opener is a station spliced in at parse time**
+  (`workshop-v3/equilibrium.ts` `insertEquilibriumStation`, after `#hero`; it
+  THROWS on no hero, a hero not followed by `#about`, or a second insert). ⚠ **An
+  exception to ADR-139's share rule, recorded**: one station before the About is the
+  whole divergence, so v1, v2 and the AP lecture read the prototype untouched and
+  every rule is `.tw-root[data-tw-cut="v3"]` in the route's own sheet
+  (`equilibrium.css`), winning on specificity. The fork is still the answer the day
+  the corridor diverges.
+- **A curtain chain, on view timelines.** Rule 1a held the About on
+  `animation-range: 0 100dvh` of the ROOT scroll, which only holds while the About
+  starts one viewport down. Now the hero (z 6) lifts off a held opener (z 5, 150svh,
+  a 50svh dwell), which lifts off a held About; both holds ride their OWN station's
+  `view-timeline` on `entry 0% entry 100%` (the musings and footer precedent), so no
+  arithmetic follows a station's position. Measured headed at 1920×1247, 1470×956 and
+  1280×720: each held stage sits at 0 (±0.5px) through the travel that reveals it.
+- ⚠ **THE FIRST CUT WAS REFUSED: "I want actual three js 3D object like holo."** It
+  drew a binary star on the workshop's orthographic stage (`holo-stage`, the
+  isometric technical drawing) because that engine took the least new code; his
+  pointer was ADR-080's perspective object. **The object is ADR-080's family**:
+  `components/holo-program/equilibriumGeom.ts` (pure, three-free: the contour-sliced
+  core, UPSTREAM above tilted up and open, DOWNSTREAM below tilted down and tight,
+  graduated bands, one bright gold arc gliding round each system, gold motes running
+  evenly and fast round the downstream rings and unevenly and slow round the
+  upstream one, motes falling down the axis from one to the other, a faint level and
+  floor), `HoloEquilibriumScene.tsx` (drei `Line` drawn on by `instanceCount`,
+  `LineSegments` by `drawRange`, the dust shader for every mote) and
+  `HoloEquilibriumCanvas.tsx` (`HoloProgramCanvas`'s shell: a real perspective camera
+  at one rest pose, OrbitControls with zoom and pan off and the drag clamped to a
+  readable band, bloom, grain), reached through `workshop-v3/EquilibriumMount.tsx`
+  by `next/dynamic` only.
+  - ⚠ **The fallback IS the hologram at rest**: the server projects the same
+    geometry through `eqProject`, and a test pins `eqProject` against a real
+    `THREE.PerspectiveCamera` at the rest pose to three decimals. The words are
+    seated from that projection and, once live, follow the object through an anchor
+    channel (`--ax`/`--at` written on the same DOM words; a word hides when its point
+    turns out of view).
+  - ⚠ **Nothing flickers**: ADR-080's per-ring dropout and breathing are not in this
+    scene (the guard reads the code, not its comments), no chromatic aberration
+    (ADR-080 measured it as confetti on fine line work).
+  - ⚠ **No grain on paper**: the Noise pass blends by SCREEN, which only lightens, so
+    on parchment it lifted the canvas ~0.8 of a unit over the page and its box read
+    as a rectangle (measured; 0.05 after). The canvas slot's edge is also feathered by
+    a mask. Light is the ink drawing (`HOLO_LIGHT`); every baked shade fades toward
+    the GROUND, never toward black, on paper.
+  - The dust takes the structure's tone: on dark the machine rung is a gold, and
+    gold dust competed with the gold flow.
+- **The holo-stage scenes now idle off screen.** Both stage scenes invalidated every
+  frame whenever they were not `still`, so the canvas pump's on-screen gate never
+  stopped anything and every stage figure on a page rendered for as long as the page
+  was open (v3's tail has two). The scene keeps itself drawing only through the
+  arrival or a group's travel; continuous life is the on-screen pump. Pixels are
+  unchanged.
+- **The Pensieve is a slot.** `interstitial` gains an optional `clip` (`ArcClip`:
+  `src`, `poster`, `alt`), drawn by `ArcClipLoop`: muted, looping, played only in
+  view, never under reduced motion (the poster stands) — an exception to arcs.md's
+  "never autoplay", recorded there. `arcs-registry` requires a set clip under
+  `/arcs/`, on disk, a video, with an alt. V3's `08 · pensieve` ("Out of their
+  heads, and into a skill.") follows "The two you write" with NO clip, by his choice:
+  it is film footage he supplies, cut to a silent loop and checked for flashes when
+  it lands. Every later beat renumbers; the close is 23.
+- **Guards**: `workshop-v3-equilibrium.test.tsx` (the seam and its throws, the
+  station's copy and slots, the rest projection against three's camera, the two
+  systems right-handed and tilted opposite ways on screen, the encoded difference,
+  gold on the flow alone, everything but the fading floor inside the frame, no
+  flicker path, no grain on paper, the dynamic reach, the copy law, the sheet's
+  scoping, both view timelines, the Pensieve with and without a clip); the v3 test's
+  journey order, setup run and close number; `arcs-registry`'s clip rule.
+- **Verified**: `npm run verify` (lint 336 warnings against 337, typecheck, 2,811
+  tests). Headed captures at 1920×1247, 1470×956 and 1280×720, dark and light; the
+  phone (390×844) and WebGL-off desktop show the static object with the words as a
+  list; the signal renders with its gold verb. ⚠ **Not measured**: the corridor's
+  quality governor with a second live canvas on the owner's MacBook Air; if its
+  resolution drops after the opener, a v3 option can write the prelude's level 0
+  while `#equilibrium` covers the frame.
+- **Left for him**: the opener's copy (eyebrow, sub, the three words) is a draft to
+  pick from; 01's title toward the client and client-specific examples (the note's
+  item 1) are the next pass.

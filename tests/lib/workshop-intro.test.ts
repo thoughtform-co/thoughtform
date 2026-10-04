@@ -94,8 +94,12 @@ describe("the workshop intro record (ADR-143 U3)", () => {
     const { titleHtml, ariaLabel, ...rest } = WORKSHOP_INTRO.signal;
     expect(rest).toEqual({ ticker: false });
     expect(titleHtml?.match(/<br>/g)?.length, "one break").toBe(1);
-    expect(titleHtml?.match(/<em>/g)?.length, "one accent, on the close").toBe(1);
-    expect(titleHtml).toMatch(/<br><em>[^<]+<\/em>$/);
+    expect(titleHtml?.match(/<em>/g)?.length, "one accent").toBe(1);
+    // ADR-143 U7: the stations' grammar, the verb in gold and its object, so
+    // the line reads as the Arc's last move.
+    expect(titleHtml, "the accent is the verb that opens the line").toMatch(
+      /^<em>[A-Z]+<\/em> [^<]+<br>[^<]+$/
+    );
     expect(ariaLabel?.toUpperCase(), "the phone label says the title").toBe(
       plain(titleHtml!.replace("<br>", " ")).replace(/\.$/, "")
     );

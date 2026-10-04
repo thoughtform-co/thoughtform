@@ -28,6 +28,15 @@ export interface ArcImage {
   alt: string;
 }
 
+/** A silent looping clip (ADR-143 U7): a self-hosted video and its still. */
+export interface ArcClip {
+  /** Under `/arcs/`, self-hosted — CSP's `media-src` allows nothing else. */
+  src: string;
+  /** The still shown before it plays, and instead of it under reduced motion. */
+  poster: string;
+  alt: string;
+}
+
 export interface ArcMetaRow {
   label: string;
   value: string;
@@ -288,6 +297,13 @@ export type ArcSection = ArcSectionBase &
         subline?: string;
         /** Quote variant only — the mono attribution line. */
         attribution?: string;
+        /**
+         * A silent loop above the line, the GIF of a deck (ADR-143 U7): the
+         * one autoplaying picture this kind allows, muted, played only while
+         * in view and never under reduced motion (the poster stands). Absent,
+         * the beat is the line alone — never an empty frame.
+         */
+        clip?: ArcClip;
       }
     | {
         /** Framed video or image figure with a two-column head. */
