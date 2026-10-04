@@ -68,6 +68,13 @@ export function HeroKvLab({
   const rootRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const [i, setI] = useState(1);
+  // `?kv=<id>` opens the lab on an entry (captures address a candidate by URL). Read after
+  // mount: the server renders entry 1, so a URL read during render would mismatch hydration.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("kv");
+    const n = id ? HERO_KVS.findIndex((k) => k.id === id) : -1;
+    if (n >= 0) setI(n);
+  }, []);
   const [chrome, setChrome] = useState(true);
   const [copy, setCopy] = useState(true);
   const [missing, setMissing] = useState(false);
@@ -84,6 +91,22 @@ export function HeroKvLab({
       if (prev) html.setAttribute("data-theme", prev);
     };
   }, [kv.theme]);
+
+  // A light CANDIDATE (wave 06 round 4): painted inline over production's light rule,
+  // the portrait on the <=640 rung, floor-anchored exactly as the shipped one is.
+  useEffect(() => {
+    const bg = heroRef.current?.querySelector<HTMLElement>(".hero__bg");
+    if (!bg || !kv.light) return;
+    const phone = window.matchMedia("(max-width: 640px)").matches;
+    bg.style.backgroundImage = `url("${phone ? kv.light.phone : kv.light.hero}")`;
+    bg.style.backgroundPosition = phone ? "60% 100%" : "center";
+    bg.style.backgroundSize = "cover";
+    return () => {
+      bg.style.backgroundImage = "";
+      bg.style.backgroundPosition = "";
+      bg.style.backgroundSize = "";
+    };
+  }, [kv]);
 
   // The cinemagraph (ADR-145, wave 07): a muted loop laid over the plate,
   // under the scrim, started by script (an `autoplay` attribute fetches even
@@ -169,7 +192,9 @@ export function HeroKvLab({
           <span className="hkv__label">{kv.label}</span>
           <span className="hkv__meta">
             {kv.job === "light"
-              ? "light theme"
+              ? kv.light
+                ? "light candidate"
+                : "light theme"
               : kv.job === "live"
                 ? kv.video
                   ? "shipped plate + cinemagraph"

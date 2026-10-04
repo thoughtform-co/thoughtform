@@ -41,6 +41,9 @@ export type HeroKv = {
   /** ADR-145: a cinemagraph over the plate (the world ship's wave 07), AV1 + H.264,
    *  with the phone loop for the <=640 rung. Gitignored previews, never shipped. */
   video?: { av1: string; h264: string; phoneAv1: string; phoneH264: string };
+  /** A light-theme CANDIDATE painted over production's light plate (wave 06 round 4),
+   *  landscape and phone portrait; gitignored previews, never shipped from here. */
+  light?: { hero: string; phone: string };
 };
 
 export const HERO_KVS: readonly HeroKv[] = [
@@ -76,6 +79,34 @@ export const HERO_KVS: readonly HeroKv[] = [
     theme: "light",
     tag: "obsidian",
     note: "MF-04 in obsidian on parchment, the light plate since ADR-145",
+  },
+  {
+    id: "light-haze",
+    label: "LIGHT · HAZE",
+    job: "light",
+    fx: 0.76,
+    fy: 0.4,
+    theme: "light",
+    tag: "direction",
+    note: "round 4: deep sepia sky overhead, lifted sand haze behind the copy, glassy obsidian",
+    light: {
+      hero: "/_previews/hero-kv/light/haze-hero.webp",
+      phone: "/_previews/hero-kv/light/haze-phone.webp",
+    },
+  },
+  {
+    id: "light-veils",
+    label: "LIGHT · VEILS",
+    job: "light",
+    fx: 0.76,
+    fy: 0.4,
+    theme: "light",
+    tag: "direction",
+    note: "round 4: bright sky, dust clouds rolling in low, glassy obsidian",
+    light: {
+      hero: "/_previews/hero-kv/light/veils-hero.webp",
+      phone: "/_previews/hero-kv/light/veils-phone.webp",
+    },
   },
   {
     id: "gateway",
