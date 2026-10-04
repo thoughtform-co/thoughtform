@@ -35,6 +35,17 @@ import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
+import {
+  SURI_CONFIGURATION_BODIES,
+  SURI_CONFIGURATION_TITLE,
+  SURI_FEEDBACK_STEPS,
+  SURI_MONTH_CARDS,
+  SURI_REPOSITORY_BODY,
+  SURI_USING_BODIES,
+  SURI_WORKED,
+  SURI_WORKS,
+  SURI_WRONG_THREADS,
+} from "@/lib/arcs/content/shared/suriWork";
 import { ARCS, arcHrefs, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
 import { arcHref } from "@/lib/arcs/routes";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
@@ -1157,7 +1168,18 @@ describe("arcs registry (ADR-052)", () => {
        class names a phase that exists, that a station's name fits its column,
        that the fork has exactly two ways in, and that a worked-example link
        lands on a section of this page. */
-    const GLYPHS = ["setup", "board", "wall", "offer", "poster", "site", "film", "launch"];
+    const GLYPHS = [
+      "setup",
+      "board",
+      "wall",
+      "offer",
+      "poster",
+      "site",
+      "film",
+      "launch",
+      "skill",
+      "plugin",
+    ];
     for (const arc of ARCS) {
       const ids = new Set(arc.sections.map((x) => x.id));
       for (const s of arc.sections) {
@@ -1168,6 +1190,14 @@ describe("arcs registry (ADR-052)", () => {
         expect(s.entry.ways.length, `${at}: two ways in`).toBe(2);
         expect(s.launch.items.length, `${at}: one to three things launched`).toBeGreaterThan(0);
         expect(s.launch.items.length, `${at}: one to three things launched`).toBeLessThanOrEqual(3);
+        /* A page that is not a course letters its own words (ADR-147): four
+           row labels that fit the key column. */
+        if (s.words?.rows) {
+          expect(s.words.rows, `${at}: four row labels`).toHaveLength(4);
+          for (const label of s.words.rows) {
+            expect(label.length, `${at}: row label "${label}"`).toBeLessThanOrEqual(24);
+          }
+        }
         const phaseIds = s.phases.map((p) => p.id);
         expect(new Set(phaseIds).size, `${at}: a phase twice`).toBe(phaseIds.length);
         expect(new Set(s.classes.map((c) => c.id)).size, `${at}: a class twice`).toBe(
@@ -1658,6 +1688,7 @@ describe("the workshop's shared beats (ADR-143)", () => {
       }
     }
     expect(readers.get("three-ways")?.sort()).toEqual([
+      "suri-lunch-and-learn",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
@@ -1692,6 +1723,60 @@ describe("the workshop's shared beats (ADR-143)", () => {
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
     ]);
+  });
+
+  /* ⚠ ONE SECTION, ONE RECORD (ADR-147). Suri's three pieces of work are one
+     record (`shared/suriWork.ts`) read by the Armada companion and by Suri's
+     own two pages; each page authors the frame and spreads the body, so the
+     body is pinned `toBe` on every reader and the readers are pinned. */
+  it("every page drawing Suri's work reads the shared bodies", () => {
+    const readers = new Map<string, string[]>([
+      ["config", []],
+      ["repository", []],
+      ["using", []],
+      ["wrong", []],
+      ["month", []],
+    ]);
+    const work = (id: string) =>
+      SURI_WORKS.find((w) => SURI_WORKED[w].id === id.replace(/^(config|using|wrong)-/, ""));
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind === "questions" && s.worked?.group === "config") {
+          const body = SURI_CONFIGURATION_BODIES[work(s.id)!];
+          expect(s.left, `${arc.slug}#${s.id}`).toBe(body.left);
+          expect(s.right, `${arc.slug}#${s.id}`).toBe(body.right);
+          expect(s.work, `${arc.slug}#${s.id}`).toBe(body.work);
+          expect(s.head.title, `${arc.slug}#${s.id}: the record's title`).toBe(
+            SURI_CONFIGURATION_TITLE
+          );
+          if (s.id === "config-brief") readers.get("config")?.push(arc.slug);
+        }
+        if (s.kind === "repository" && s.repo.name === "suri-ai-studio") {
+          expect(s.plugins, `${arc.slug}#${s.id}`).toBe(SURI_REPOSITORY_BODY.plugins);
+          expect(s.org, `${arc.slug}#${s.id}`).toBe(SURI_REPOSITORY_BODY.org);
+          readers.get("repository")?.push(arc.slug);
+        }
+        if (s.kind === "chat" && s.worked?.group === "using") {
+          expect(s.thread, `${arc.slug}#${s.id}`).toBe(SURI_USING_BODIES[work(s.id)!].thread);
+          if (s.id === "using-brief") readers.get("using")?.push(arc.slug);
+        }
+        if (s.kind === "chat" && s.worked?.group === "wrong") {
+          expect(s.thread, `${arc.slug}#${s.id}`).toBe(SURI_WRONG_THREADS[work(s.id)!]);
+          expect(s.aside, `${arc.slug}#${s.id}`).toBe(SURI_FEEDBACK_STEPS);
+          if (s.id === "wrong-brief") readers.get("wrong")?.push(arc.slug);
+        }
+        if (s.kind === "cards" && s.id === "the-month") {
+          expect(s.cards, `${arc.slug}#${s.id}`).toBe(SURI_MONTH_CARDS);
+          readers.get("month")?.push(arc.slug);
+        }
+      }
+    }
+    const pages = ["suri-configuration", "suri-lunch-and-learn", "thoughtform-armada"];
+    for (const [group, who] of readers) {
+      expect(who.sort(), group).toEqual(
+        group === "config" ? ["suri-lunch-and-learn", "thoughtform-armada"] : pages
+      );
+    }
   });
 });
 
@@ -1931,6 +2016,75 @@ describe("an interstitial's clip", () => {
         }
         expect(s.clip.src, `${at}: a video, not a GIF`).toMatch(/\.(mp4|webm)$/);
         expect(s.clip.alt.trim().length, `${at}: the clip says what it shows`).toBeGreaterThan(0);
+      }
+    }
+  });
+});
+
+describe("the repository kind (ADR-146)", () => {
+  /* The configuration made real as a NESTING: the organisation, the
+     marketplace inside it, the plugins inside that. Pinned: what the
+     drawing is built for (two to four cartridges of two to five rows), the
+     tie back to the six questions on everything that answers one, gold only
+     on what the team writes, a ghost never lit, and NO DIGIT on its
+     lettering, the house habit on every instrument. */
+  const noDigits = (value: unknown, at: string) =>
+    scanArc(value, at, (s, p) => expect(s, `${p} letters a digit`).not.toMatch(/\d/));
+  const WRITTEN = new Set(["the context", "the evaluations"]);
+
+  it("nests, ties every answer to a question, and lights only what the team writes", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "repository") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.plugins.length, `${at}: two to four plugins`).toBeGreaterThanOrEqual(2);
+        expect(s.plugins.length, `${at}: two to four plugins`).toBeLessThanOrEqual(4);
+        expect(new Set(s.plugins.map((p) => p.id)).size, `${at}: duplicate plugin`).toBe(
+          s.plugins.length
+        );
+        expect(s.org.settings.length, `${at}: settings`).toBeGreaterThanOrEqual(2);
+        expect(s.org.settings.length, `${at}: settings`).toBeLessThanOrEqual(4);
+        for (const st of s.org.settings) {
+          expect(st.name.length, `${at}/${st.id}: name`).toBeLessThanOrEqual(20);
+          expect(st.line.length, `${at}/${st.id}: line`).toBeLessThanOrEqual(56);
+        }
+        for (const f of s.repo.files) {
+          expect(f.path.length, `${at}/${f.id}: path`).toBeLessThanOrEqual(24);
+          expect(f.line.length, `${at}/${f.id}: line`).toBeLessThanOrEqual(40);
+        }
+        for (const p of s.plugins) {
+          expect(p.name.length, `${at}/${p.id}: id`).toBeLessThanOrEqual(24);
+          expect(p.shown.length, `${at}/${p.id}: shown`).toBeLessThanOrEqual(28);
+          expect(p.who.length, `${at}/${p.id}: who`).toBeLessThanOrEqual(32);
+          expect(p.items.length, `${at}/${p.id}: rows`).toBeGreaterThanOrEqual(2);
+          expect(p.items.length, `${at}/${p.id}: rows`).toBeLessThanOrEqual(5);
+          for (const item of p.items) {
+            const where = `${at}/${p.id}/${item.id}`;
+            expect(item.name.length, `${where}: name`).toBeLessThanOrEqual(20);
+            expect(item.line.length, `${where}: line`).toBeLessThanOrEqual(44);
+            if (item.lit) {
+              /* ⚠ GOLD IS WHAT THE TEAM WRITES, the board's law at a third
+                 scale: a lit row says which of the two it is. */
+              expect(
+                WRITTEN.has(item.answers ?? ""),
+                `${where}: a lit row answers one of the two`
+              ).toBe(true);
+              expect(item.ghost, `${where}: a ghost is never lit`).toBeUndefined();
+            }
+          }
+        }
+        const answers = [
+          ...s.org.settings.map((x) => x.answers),
+          ...s.repo.files.map((x) => x.answers),
+          ...s.plugins.flatMap((p) => p.items.map((x) => x.answers)),
+          s.bar.answers,
+        ].filter((x): x is string => Boolean(x));
+        for (const a of answers) {
+          expect(a.length, `${at}: "${a}" over the measure`).toBeLessThanOrEqual(24);
+        }
+        /* ⚠ THE TIE IS THE BEAT: all six answers land somewhere on it. */
+        expect(new Set(answers).size, `${at}: the six answers, each once at least`).toBe(6);
+        noDigits({ org: s.org, repo: s.repo, plugins: s.plugins, bar: s.bar }, at);
       }
     }
   });

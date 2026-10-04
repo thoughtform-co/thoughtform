@@ -1,4 +1,4 @@
-import type { ArcDef } from "../types";
+import type { ArcDef, ArcSectionOf } from "../types";
 
 /**
  * Suri, the kickoff of the four-week sprint, as an arc: the page the room
@@ -16,6 +16,108 @@ import type { ArcDef } from "../types";
  * it prints no fee, no break clause and no fleet vocabulary, and the
  * proposal copy law does not run on a workshop, so it was read by hand.
  */
+/**
+ * The loop on one brief, and who decides at each step: the kickoff's record
+ * (27 September), read by the lunch-and-learn too (ADR-147). ONE SECTION, ONE
+ * RECORD: a page spreads these under its own head, never a copy of them.
+ */
+export const SURI_LOOP_GROUPS: ArcSectionOf<"list-groups">["groups"] = [
+  {
+    id: "run",
+    label: "The loop, on one brief",
+    blurb: "A real brief that is live this week. Every other brief runs on the same loop.",
+    items: [
+      {
+        id: "brief",
+        tag: "Brief",
+        name: "The questions, answered",
+        body: "Asks until the brief is complete, then writes the Monday item.",
+      },
+      {
+        id: "set",
+        tag: "Set",
+        name: "Variants of one idea",
+        body: "From your components and library. One thing varies, named in the brief.",
+      },
+      {
+        id: "checks",
+        tag: "Checks",
+        name: "Read three times",
+        body: "In the words Kate uses to send work back. They advise, never decide.",
+      },
+      {
+        id: "finish",
+        tag: "Finish",
+        name: "The last details, by hand",
+        body: "The designer takes it live. That part stays human, and gets shorter.",
+      },
+    ],
+  },
+  {
+    id: "people",
+    label: "Who decides, and where",
+    blurb: "Who is the last gate at each step.",
+    items: [
+      {
+        id: "owner",
+        tag: "Suri",
+        name: "The channel owner, on the brief",
+        body: "Answers the questions. An unready brief goes back before the studio.",
+      },
+      {
+        id: "strategists",
+        tag: "Suri",
+        name: "The strategists, on the idea",
+        body: "Decide what a set tests and which ad type it is.",
+      },
+      {
+        id: "kate",
+        tag: "Suri",
+        name: "Kate, the last gate on the work",
+        body: "Says what goes live and why. What she says twice becomes a check.",
+      },
+      {
+        id: "vince",
+        tag: "Thoughtform",
+        name: "Vince, on the setup and the checks",
+        body: "Writes down what you send back. By week three he watches.",
+      },
+    ],
+  },
+];
+
+/** What the month asks of the team on top of the week, the kickoff's record. */
+export const SURI_ASK_CARDS: ArcSectionOf<"cards">["cards"] = [
+  {
+    id: "kate",
+    n: "01",
+    kicker: "This week",
+    title: "Kate, two half-days",
+    body: "What a complete brief holds, and what she sends back most.",
+  },
+  {
+    id: "strategist",
+    n: "02",
+    kicker: "Tuesday",
+    title: "A strategist at the keyboard",
+    body: "The briefing skill, built on one live brief.",
+  },
+  {
+    id: "designer",
+    n: "03",
+    kicker: "Wed and Thu",
+    title: "The lead designer in Figma",
+    body: "The first two ad types, on your own components.",
+  },
+  {
+    id: "access",
+    n: "04",
+    kicker: "Today",
+    title: "Access, and one live brief",
+    body: "Monday, Claude and Figma, on your own accounts.",
+  },
+];
+
 export const SURI_WORKSHOP_ARC: ArcDef = {
   slug: "suri-workshop",
   leaf: "workshop",
@@ -193,70 +295,7 @@ export const SURI_WORKSHOP_ARC: ArcDef = {
         title: { pre: "Brief, set, checks,", em: "and then you." },
         sub: "One loop, one ad type at a time. We set it up this week and run it with you until you run it without us.",
       },
-      groups: [
-        {
-          id: "run",
-          label: "The loop, on one brief",
-          blurb: "A real brief that is live this week. Every other brief runs on the same loop.",
-          items: [
-            {
-              id: "brief",
-              tag: "Brief",
-              name: "The questions, answered",
-              body: "Asks until the brief is complete, then writes the Monday item.",
-            },
-            {
-              id: "set",
-              tag: "Set",
-              name: "Variants of one idea",
-              body: "From your components and library. One thing varies, named in the brief.",
-            },
-            {
-              id: "checks",
-              tag: "Checks",
-              name: "Read three times",
-              body: "In the words Kate uses to send work back. They advise, never decide.",
-            },
-            {
-              id: "finish",
-              tag: "Finish",
-              name: "The last details, by hand",
-              body: "The designer takes it live. That part stays human, and gets shorter.",
-            },
-          ],
-        },
-        {
-          id: "people",
-          label: "Who decides, and where",
-          blurb: "Who is the last gate at each step.",
-          items: [
-            {
-              id: "owner",
-              tag: "Suri",
-              name: "The channel owner, on the brief",
-              body: "Answers the questions. An unready brief goes back before the studio.",
-            },
-            {
-              id: "strategists",
-              tag: "Suri",
-              name: "The strategists, on the idea",
-              body: "Decide what a set tests and which ad type it is.",
-            },
-            {
-              id: "kate",
-              tag: "Suri",
-              name: "Kate, the last gate on the work",
-              body: "Says what goes live and why. What she says twice becomes a check.",
-            },
-            {
-              id: "vince",
-              tag: "Thoughtform",
-              name: "Vince, on the setup and the checks",
-              body: "Writes down what you send back. By week three he watches.",
-            },
-          ],
-        },
-      ],
+      groups: SURI_LOOP_GROUPS,
     },
     {
       id: "live",
@@ -324,36 +363,7 @@ export const SURI_WORKSHOP_ARC: ArcDef = {
         title: { pre: "A few hours,", em: "on top of the week." },
         sub: "Most of the month runs inside the meetings and tools you already have. These are the hours it needs on top.",
       },
-      cards: [
-        {
-          id: "kate",
-          n: "01",
-          kicker: "This week",
-          title: "Kate, two half-days",
-          body: "What a complete brief holds, and what she sends back most.",
-        },
-        {
-          id: "strategist",
-          n: "02",
-          kicker: "Tuesday",
-          title: "A strategist at the keyboard",
-          body: "The briefing skill, built on one live brief.",
-        },
-        {
-          id: "designer",
-          n: "03",
-          kicker: "Wed and Thu",
-          title: "The lead designer in Figma",
-          body: "The first two ad types, on your own components.",
-        },
-        {
-          id: "access",
-          n: "04",
-          kicker: "Today",
-          title: "Access, and one live brief",
-          body: "Monday, Claude and Figma, on your own accounts.",
-        },
-      ],
+      cards: SURI_ASK_CARDS,
     },
     {
       id: "four-weeks",

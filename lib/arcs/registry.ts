@@ -8,10 +8,13 @@ import { PERFECT_TED_PROPOSAL_ARC } from "./content/perfect-ted-proposal";
 import { HUNGRY_MINDS_PROPOSAL_ARC } from "./content/hungry-minds-proposal";
 import { PANDORA_PROPOSAL_ARC } from "./content/pandora-proposal";
 import { PLOPSA_WORKSHOP_ARC } from "./content/plopsa-workshop";
+import { SURI_CONFIGURATION_ARC } from "./content/suri-configuration";
+import { SURI_LUNCH_AND_LEARN_ARC } from "./content/suri-lunch-and-learn";
 import { SURI_WORKSHOP_ARC } from "./content/suri-workshop";
 import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "./content/thoughtform-workshop-v3";
+import { THOUGHTFORM_ARMADA_ARC } from "./content/thoughtform-armada";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
@@ -37,6 +40,10 @@ export const ARCS: readonly ArcDef[] = [
   /* The AP Hogeschool guest lecture (ADR-141): the workshop's third cut,
      for a room of students. A client's since ADR-142, the school's. */
   AP_HOGESCHOOL_ARC,
+  /* Suri, newest first (ADR-147): the setup the team runs, the page the room
+     saw on 5 October, then the kickoff handout. */
+  SURI_CONFIGURATION_ARC,
+  SURI_LUNCH_AND_LEARN_ARC,
   SURI_WORKSHOP_ARC,
   PLOPSA_WORKSHOP_ARC,
   PANDORA_PROPOSAL_ARC,
@@ -54,6 +61,9 @@ export const ARCS: readonly ArcDef[] = [
      Loop as its worked example and the economics after its bill. The
      template the next presentations are cut from. */
   THOUGHTFORM_WORKSHOP_V3_ARC,
+  /* Its technical companion (ADR-146): one piece of work through the
+     machinery, from the configuration to the next team. */
+  THOUGHTFORM_ARMADA_ARC,
   AI_STORYTELLING_ARC,
   /* The course's class decks sit beside the course (ADR-136). */
   AI_STORYTELLING_CLASS_1_ARC,

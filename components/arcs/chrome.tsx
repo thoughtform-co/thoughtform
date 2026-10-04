@@ -88,6 +88,8 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   chat: "CHAT",
   /* ADR-139 U1. */
   hull: "REACH",
+  /* ADR-146. `plugin-board` already letters PLUGIN. */
+  repository: "REPOSITORY",
 };
 
 /**

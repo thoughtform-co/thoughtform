@@ -27,6 +27,7 @@ import { ArcPath } from "./ArcPath";
 import { ArcPluginBoard } from "./ArcPluginBoard";
 import { ArcPortrait } from "./ArcPortrait";
 import { ArcQuestions } from "./ArcQuestions";
+import { ArcRepository } from "./ArcRepository";
 import { ArcResource } from "./ArcResource";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcSignal } from "./ArcSignal";
@@ -145,6 +146,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcChat key={section.id} section={section} index={index} motion={motion} />;
     case "hull":
       return <ArcHull key={section.id} section={section} index={index} motion={motion} />;
+    case "repository":
+      return <ArcRepository key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;

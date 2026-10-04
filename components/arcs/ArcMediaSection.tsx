@@ -42,7 +42,12 @@ export function ArcMediaSection({ section, index, motion = "reveal" }: ArcMediaS
           sectionId={section.id}
           motion={motion}
         />
-        <figure className="arc-media arc-reveal">
+        <figure
+          className="arc-media arc-reveal"
+          /* A 9:16 piece is capped by the beat's height, never the band's
+             width (ADR-147); absent, the landscape frame as it was. */
+          {...(media.aspect ? { "data-media-aspect": media.aspect } : {})}
+        >
           <div className={`arc-media__frame${terminal ? " arc-ap" : ""}`} {...rung(motion, 0.22)}>
             {media.type === "video" ? (
               <video

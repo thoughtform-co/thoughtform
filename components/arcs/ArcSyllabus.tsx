@@ -12,17 +12,15 @@ import {
   GLYPH_H,
   GLYPH_W,
   GLYPHS,
-  SYLLABUS_CLASS_WORD,
   SYLLABUS_EXAMPLE_FLAG,
   SYLLABUS_PAGE_FLAG,
-  SYLLABUS_ROWS,
-  SYLLABUS_TABLIST_LABEL,
   TRACK_ENTRY_COL,
   classCol,
   classNumeral,
   launchCol,
   phaseLabel,
   phaseSpans,
+  syllabusWords,
 } from "./syllabus/syllabusLayout";
 
 interface ArcSyllabusProps {
@@ -80,6 +78,8 @@ export function ArcSyllabus({ section, index, motion = "reveal" }: ArcSyllabusPr
   const { classes, phases } = section;
   const [open, setOpen] = useState(0);
   const spans = phaseSpans(phases, classes);
+  // The course's words unless the record authors its own (ADR-147).
+  const words = syllabusWords(section.words);
   const n = classes.length;
   const tabId = (i: number) => `${section.id}-class-${i + 1}`;
   const panelId = (i: number) => `${section.id}-sheet-${i + 1}`;
@@ -154,7 +154,7 @@ export function ArcSyllabus({ section, index, motion = "reveal" }: ArcSyllabusPr
             <div
               className="arc-syl__stations"
               role="tablist"
-              aria-label={SYLLABUS_TABLIST_LABEL}
+              aria-label={words.tablist}
               onKeyDown={onKey}
             >
               {classes.map((c, i) => (
@@ -211,7 +211,7 @@ export function ArcSyllabus({ section, index, motion = "reveal" }: ArcSyllabusPr
               >
                 <div className="arc-syl__sheethead">
                   <span className="arc-syl__kicker">
-                    {SYLLABUS_CLASS_WORD} {classNumeral(i)} · {phaseLabel(phases, c.phase)}
+                    {words.station} {classNumeral(i)} · {phaseLabel(phases, c.phase)}
                   </span>
                   <span className="arc-syl__sheetname">{c.name}</span>
                   {/* What the class makes, at the size a student reads it. */}
@@ -235,7 +235,7 @@ export function ArcSyllabus({ section, index, motion = "reveal" }: ArcSyllabusPr
                   ) : null}
                 </div>
                 <dl className="arc-syl__rows">
-                  {SYLLABUS_ROWS.map((r) => (
+                  {words.rows.map((r) => (
                     <div key={r.id} className="arc-syl__row" data-syl-row={r.id}>
                       <dt className="arc-syl__key">{r.label}</dt>
                       <dd className="arc-syl__val">{c[r.id]}</dd>

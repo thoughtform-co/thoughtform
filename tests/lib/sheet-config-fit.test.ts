@@ -79,8 +79,10 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "hungry-minds-proposal",
       "perfect-ted-proposal",
       "plopsa-workshop",
+      "suri-lunch-and-learn",
       "suri-proposal",
       "suri-workshop",
+      "thoughtform-armada",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
@@ -89,8 +91,20 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
   });
 
   it("reads one configuration per arc: a picker or a six-question board, never both", () => {
+    /* A switched beat (ADR-139) is ONE instrument in several panels, so only
+       its first panel counts; the board reads that one (ADR-146). */
+    const firstPanels = new Set<string>();
+    const counted = (s: (typeof ARCS)[number]["sections"][number]) => {
+      if (!s.worked) return true;
+      if (firstPanels.has(s.worked.group)) return false;
+      firstPanels.add(s.worked.group);
+      return true;
+    };
     for (const a of ARCS) {
-      const n = a.sections.filter((s) => s.kind === "configuration" || s.kind === "questions");
+      firstPanels.clear();
+      const n = a.sections.filter(
+        (s) => (s.kind === "configuration" || s.kind === "questions") && counted(s)
+      );
       expect(n.length, `${a.slug}: two configuration instruments on one page`).toBeLessThan(2);
     }
   });
@@ -155,6 +169,19 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "thoughtform-workshop-v3": {
         rows: ["A ten-second motion ad||"],
         links: ["Claude×1", "Figma×1"],
+      },
+      /* The Armada companion (ADR-146) switches three pieces of Suri's work;
+         the board reads the first panel, the brief: Claude in the model's
+         answer, Monday in the data's. */
+      "thoughtform-armada": {
+        rows: ["A brief for the studio||"],
+        links: ["Claude×1", "Monday×1"],
+      },
+      /* Suri's lunch and learn (ADR-147) switches the same three pieces of
+         work from the shared record, so it derives the same row and chips. */
+      "suri-lunch-and-learn": {
+        rows: ["A brief for the studio||"],
+        links: ["Claude×1", "Monday×1"],
       },
       /* The class-one deck's board is Tom on the Moon's world; the image
          model is named generically ("chosen per wave"), so Claude in the
