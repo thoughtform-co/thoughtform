@@ -128,7 +128,7 @@ its phone are re-cut in this framing; its ghost CTA on parchment stays the pre-e
   before this pass). Flagged as its own task.
 - **The desktop pronunciation line in dark sits on MF-04's bright dust** (1.1–1.9:1 at
   1920×1247), pre-existing since ADR-144; its ADR-043 seat was not moved unasked.
-- Wiring a cinemagraph into the hero.
+- Wiring a cinemagraph into the hero: CLOSED 2026-10-04 (owner: "no, wanna go for stills instead of videos"). The two loops stay on the drive as a record (`_explore/dir-07/_build`), the lab's MOTION entry, its `video` field and its `.hkv__video` seam are deleted, and the hero ships stills in both themes.
 
 ## Verifying
 

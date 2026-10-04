@@ -110,32 +110,6 @@ export function HeroKvLab({
     };
   }, [kv]);
 
-  // The cinemagraph (ADR-145, wave 07): a muted loop laid over the plate,
-  // under the scrim, started by script (an `autoplay` attribute fetches even
-  // when hidden). The phone loop on the <=640 rung, read once per swap.
-  useEffect(() => {
-    const bg = heroRef.current?.querySelector<HTMLElement>(".hero__bg");
-    if (!bg || !kv.video) return;
-    const phone = window.matchMedia("(max-width: 640px)").matches;
-    const v = document.createElement("video");
-    v.className = "hkv__video";
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    v.preload = "auto";
-    const add = (src: string, type: string) => {
-      const s = document.createElement("source");
-      s.src = src;
-      s.type = type;
-      v.appendChild(s);
-    };
-    add(phone ? kv.video.phoneAv1 : kv.video.av1, 'video/mp4; codecs="av01.0.08M.08"');
-    add(phone ? kv.video.phoneH264 : kv.video.h264, "video/mp4");
-    bg.insertBefore(v, bg.querySelector(".hero__video__overlay"));
-    void v.play().catch(() => {});
-    return () => v.remove();
-  }, [kv]);
-
   useEffect(() => {
     const root = rootRef.current;
     const bg = heroRef.current?.querySelector<HTMLElement>(".hero__bg");
@@ -207,9 +181,7 @@ export function HeroKvLab({
               : kv.job === "live"
                 ? kv.tag === "phone option"
                   ? "phone option over the shipped landscape plate"
-                  : kv.video
-                    ? "shipped plate + cinemagraph"
-                    : "shipped plate"
+                  : "shipped plate"
                 : kv.job === "gateway"
                   ? "retired plate"
                   : `job ${kv.job}`}

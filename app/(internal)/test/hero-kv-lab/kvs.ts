@@ -38,9 +38,6 @@ export type HeroKv = {
   note?: string;
   /** ADR-145: the plate shown in the LIGHT theme (production's own rule paints it). */
   theme?: "light";
-  /** ADR-145: a cinemagraph over the plate (the world ship's wave 07), AV1 + H.264,
-   *  with the phone loop for the <=640 rung. Gitignored previews, never shipped. */
-  video?: { av1: string; h264: string; phoneAv1: string; phoneH264: string };
   /** A light-theme CANDIDATE painted over production's light plate (wave 06 round 4),
    *  landscape and phone portrait; gitignored previews, never shipped from here. */
   light?: { hero: string; phone: string };
@@ -90,21 +87,6 @@ export const HERO_KVS: readonly HeroKv[] = [
             : "wave 06 phone2: the group fills the lower half",
     portrait: `/_previews/hero-kv/phone/${k}.webp`,
   })),
-  {
-    id: "motion",
-    label: "MOTION",
-    job: "live",
-    fx: 0.76,
-    fy: 0.4,
-    tag: "cinemagraph",
-    note: "wave 07: Veo 3.1 Fast, anchored loop, composited on the plate's own pixels",
-    video: {
-      av1: "/_previews/hero-kv/motion/hero.av1.mp4",
-      h264: "/_previews/hero-kv/motion/hero.h264.mp4",
-      phoneAv1: "/_previews/hero-kv/motion/phone.av1.mp4",
-      phoneH264: "/_previews/hero-kv/motion/phone.h264.mp4",
-    },
-  },
   {
     id: "light",
     label: "LIGHT",
