@@ -50,7 +50,8 @@ export interface WorkshopIntro {
    *  the prototype's. */
   hero: { headlineHtml: string; descHtml: string };
   /** The station after the hero (ADR-143 U7): the Thoughtform equilibrium,
-   *  a holographic object in three.js (a core between two ring systems).
+   *  a holographic object in three.js (ADR-143 U8: a crumpled contour mass,
+   *  a gold gate on a fulcrum, a receding stack of toothed rings, on one axis).
    *  Plain text throughout; the title carries no gold word, because the
    *  object's one gold is the flow from upstream to downstream. */
   equilibrium: {

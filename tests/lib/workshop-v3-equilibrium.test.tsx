@@ -12,19 +12,29 @@ import {
 import { replaceHeroCopy } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/hero";
 import { ArcInterstitial } from "@/components/arcs/ArcInterstitial";
 import {
-  coreSlices,
+  axisRing,
+  cradlePoint,
   EQ_ANCHORS,
+  EQ_AXIS,
   EQ_CAMERA,
-  EQ_DOWN,
-  EQ_DOWN_SPEC,
+  EQ_FLOW,
   EQ_FRAME,
-  EQ_UP,
-  EQ_UP_SPEC,
+  EQ_GATE,
+  EQ_STACK,
+  EQ_THOUGHT,
   eqCameraPosition,
   eqPolylines,
   eqProject,
+  fillThoughtSegments,
+  flowPoint,
+  FLOW_PERIOD,
   seatWords,
-  toWorld,
+  stackX,
+  thoughtGirth,
+  thoughtIslands,
+  thoughtSlices,
+  thoughtVertCount,
+  thoughtWobble,
 } from "@/components/holo-program/equilibriumGeom";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "@/lib/arcs/content/thoughtform-workshop-v3";
@@ -95,8 +105,10 @@ describe("the equilibrium object", () => {
     const v = new THREE.Vector3();
     const points = [
       ...Object.values(EQ_ANCHORS),
-      toWorld(EQ_DOWN, [1.32, 0, 0]),
-      toWorld(EQ_UP, [0, 0, 1.48]),
+      axisRing(stackX(3), EQ_STACK.r)[17],
+      axisRing(EQ_GATE.x, EQ_GATE.outer)[61],
+      cradlePoint(1.36, 210),
+      thoughtSlices()[5][30],
     ];
     for (const p of points) {
       v.set(...p).project(cam);
@@ -106,42 +118,79 @@ describe("the equilibrium object", () => {
     }
   });
 
-  it("is a real object: each system a right-handed frame, the two tilted opposite ways", () => {
-    for (const sys of [EQ_UP, EQ_DOWN]) {
-      const [a, n, b] = [sys.a, sys.n, sys.b];
-      const c = [a[1] * n[2] - a[2] * n[1], a[2] * n[0] - a[0] * n[2], a[0] * n[1] - a[1] * n[0]];
-      expect(c[0] * b[0] + c[1] * b[1] + c[2] * b[2], sys.id).toBeCloseTo(1, 6);
+  it("is one instrument on one axis, read left to right: thought, gate, form", () => {
+    expect(EQ_THOUGHT.x1).toBeLessThan(EQ_GATE.x);
+    expect(EQ_GATE.x).toBeLessThan(EQ_STACK.x0);
+    // ⚠ The owner refused the sphere between two ring systems: nothing here
+    // is a ring system round a centre; every ring is coaxial on `x`.
+    for (let i = 0; i < EQ_STACK.count; i++) {
+      for (const p of axisRing(stackX(i), EQ_STACK.r, 36)) {
+        expect(Math.hypot(p[1], p[2]), `stack ${i}`).toBeCloseTo(EQ_STACK.r, 9);
+      }
     }
-    // On screen, upstream rises to the right and downstream falls to it.
-    const slope = (sys: typeof EQ_UP) => {
-      const l = eqProject(toWorld(sys, [-1, 0, 0]));
-      const r = eqProject(toWorld(sys, [1, 0, 0]));
-      return l.y - r.y; // positive: the right end is higher
-    };
-    expect(slope(EQ_UP)).toBeGreaterThan(0);
-    expect(slope(EQ_DOWN)).toBeLessThan(0);
-    expect(EQ_UP.centre[1]).toBeGreaterThan(EQ_DOWN.centre[1]);
+    const seats = seatWords();
+    expect(
+      seats.map((s) => s.id),
+      "the words in reading order"
+    ).toEqual(["upstream", "encode", "downstream"]);
+    expect(seats[0].ax).toBeLessThan(seats[1].ax);
+    expect(seats[1].ax).toBeLessThan(seats[2].ax);
   });
 
-  it("encodes the difference: downstream tight and steady, upstream wide and slow", () => {
-    expect(EQ_DOWN_SPEC.rings.length).toBe(3);
-    expect(EQ_UP_SPEC.rings.length).toBe(2);
-    const gaps = (at: readonly number[]) =>
-      at.map((d, i) => (at[(i + 1) % at.length] - d + 360) % 360);
-    for (const m of EQ_DOWN_SPEC.motes) {
-      const g = gaps(m.at);
-      expect(Math.max(...g) - Math.min(...g), `${m.id}: evenly spaced`).toBeLessThan(1e-6);
+  it("encodes the difference: a crumpled thought that calms, identical rings at one pitch", () => {
+    expect(thoughtWobble(0)).toBeGreaterThan(thoughtWobble(1) * 3);
+    expect(thoughtGirth(1), "it narrows toward the gate").toBeLessThan(
+      Math.max(...[0.2, 0.3, 0.4, 0.5].map(thoughtGirth))
+    );
+    // The slices are not circles: the thought's outline wanders.
+    const slice = thoughtSlices()[3];
+    const radii = slice.map((p) => Math.hypot(p[1], p[2]));
+    expect(Math.max(...radii) - Math.min(...radii)).toBeGreaterThan(0.12);
+    // The stack is one pitch, ring to ring.
+    for (let i = 1; i < EQ_STACK.count; i++) {
+      expect(stackX(i) - stackX(i - 1)).toBeCloseTo(EQ_STACK.pitch, 9);
     }
-    const up = gaps(EQ_UP_SPEC.motes[0].at);
-    expect(Math.max(...up) - Math.min(...up), "upstream motes are uneven").toBeGreaterThan(20);
-    expect(EQ_DOWN_SPEC.motes[0].speed).toBeGreaterThan(EQ_UP_SPEC.motes[0].speed * 2);
   });
 
-  it("spends gold on the flow alone: the bright arcs and the axis", () => {
+  it("drifts the thought in place, from the same numbers as the static drawing", () => {
+    const n = thoughtVertCount();
+    const at0 = new Float32Array(n * 3);
+    expect(fillThoughtSegments(0, at0)).toBe(n);
+    const flat = [...thoughtSlices(0), ...thoughtIslands(0)].flatMap((ring) => {
+      const out: number[] = [];
+      for (let i = 0; i + 1 < ring.length; i++) out.push(...ring[i], ...ring[i + 1]);
+      return out;
+    });
+    expect(flat.length).toBe(n * 3);
+    flat.forEach((v, i) => expect(at0[i]).toBeCloseTo(v, 5));
+    const later = new Float32Array(n * 3);
+    fillThoughtSegments(8, later);
+    let moved = 0;
+    for (let i = 0; i < later.length; i++) moved = Math.max(moved, Math.abs(later[i] - at0[i]));
+    expect(moved, "it is alive").toBeGreaterThan(0.01);
+  });
+
+  it("crowds the flow in the thought and runs it evenly down the stack", () => {
+    const motes = Array.from({ length: EQ_FLOW.count }, (_, i) =>
+      flowPoint((i / EQ_FLOW.count) * FLOW_PERIOD, i)
+    );
+    const up = motes.filter((m) => m.p[0] < EQ_GATE.x);
+    const down = motes.filter((m) => m.p[0] >= EQ_GATE.x).map((m) => m.p[0]);
+    expect(up.length).toBeGreaterThan(down.length);
+    down.sort((a, b) => a - b);
+    const gaps = down.slice(1).map((x, i) => x - down[i]);
+    expect(Math.max(...gaps) - Math.min(...gaps), "one rhythm downstream").toBeLessThan(1e-6);
+    for (const m of motes) {
+      if (m.p[0] > EQ_THOUGHT.x1) expect(Math.hypot(m.p[1], m.p[2]), "on the axis").toBe(0);
+      expect(m.p[0]).toBeLessThanOrEqual(EQ_AXIS.x1 + 1e-9);
+    }
+  });
+
+  it("spends gold on the encode alone: the gate's ring, its arc, and the axis", () => {
     const gold = eqPolylines()
       .filter((l) => l.role === "gold")
       .map((l) => l.id);
-    expect(gold.sort()).toEqual(["axis", "down-arc", "up-arc"]);
+    expect(gold.sort()).toEqual(["axis", "gate-arc", "gate-ring"]);
   });
 
   it("draws everything but the fading floor inside its frame, and seats the words on it", () => {
@@ -155,10 +204,7 @@ describe("the equilibrium object", () => {
         expect(q.y, l.id).toBeLessThan(EQ_FRAME.h);
       }
     }
-    expect(coreSlices().length).toBe(13);
-    const seats = seatWords();
-    expect(seats.map((s) => s.id).sort()).toEqual(["downstream", "encode", "upstream"]);
-    for (const s of seats) {
+    for (const s of seatWords()) {
       expect(s.ax, s.id).toBeGreaterThan(0.1);
       expect(s.ax, s.id).toBeLessThan(0.9);
       expect(s.at, s.id).toBeGreaterThan(0.05);

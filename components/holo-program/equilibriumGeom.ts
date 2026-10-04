@@ -2,23 +2,30 @@
  * equilibriumGeom — the workshop opener's holographic object (ADR-143 U7),
  * as data.
  *
- * ⚠ A REAL OBJECT IN PERSPECTIVE, NOT A DIAGRAM (owner, 2026-10-04: "I want
- * actual three js 3D object like holo"). The first cut drew a binary star on
- * the workshop's orthographic stage — a technical drawing — and was refused.
- * This is the ADR-080 family instead (`HoloProgramCanvas`'s shell, his
- * holo.ui8.dev reference): a contour-sliced core and two ring systems around
- * it like a gyroscope in balance — UPSTREAM tilted up, DOWNSTREAM tilted
- * down — graduated tick arcs, a few bright arcs, and gold motes: running
- * steadily round the downstream rings, drifting round the upstream one, and
- * falling down the axis from one to the other (what works upstream is
- * encoded and runs downstream).
+ * ⚠ ONE INSTRUMENT ON ONE AXIS, READ LEFT TO RIGHT (owner, 2026-10-04: "shapes
+ * that are closer to the holo and the one we had already created … I don't
+ * want the sphere and orbit"). Two cuts were refused: a binary star on the
+ * orthographic stage (a technical drawing), then a contour sphere between two
+ * ring systems (an atom). This is the two references' own vocabulary instead:
+ *
+ *   THOUGHT  holo.ui8's crumpled contour mass: slices of a lumpy body, alive,
+ *            its outline drifting. It tapers and calms as it nears the gate.
+ *   ENCODE   ADR-080's plated collar, in gold: a ring of plates, a toothed
+ *            fringe, a horizon line across it, a fulcrum under it on a level
+ *            bar. The balance point the whole instrument rests on.
+ *   FORM     ADR-080's coaxial ring stack: identical toothed rings at one
+ *            pitch along the axis, receding into depth. Work that runs.
+ *
+ * Gold motes drift through the thought, find the axis as it calms, pass the
+ * gate and run down the stack at one rhythm: what works upstream is encoded
+ * and runs downstream.
  *
  * ⚠ THREE-FREE AND PURE. The canvas builds its geometry from here; the route
  * renders the static drawing and seats the DOM words from the SAME numbers,
  * projected through the same rest camera (`eqProject`), so the fallback and
  * the hologram at rest are one picture and the swap moves nothing.
  *
- * World axes are three's: `y` up, the object centred on the origin.
+ * World axes are three's: `y` up, the axis along `x`, the gate on the origin.
  */
 
 import { mulberry32 } from "./holoProgramGeom";
@@ -27,6 +34,7 @@ export type P3 = readonly [number, number, number];
 type V = [number, number, number];
 
 const RAD = Math.PI / 180;
+const TAU = Math.PI * 2;
 const add = (p: P3, q: P3): V => [p[0] + q[0], p[1] + q[1], p[2] + q[2]];
 const sub = (p: P3, q: P3): V => [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
 const mul = (p: P3, s: number): V => [p[0] * s, p[1] * s, p[2] * s];
@@ -37,6 +45,10 @@ const cross = (p: P3, q: P3): V => [
   p[0] * q[1] - p[1] * q[0],
 ];
 const unit = (p: P3): V => mul(p, 1 / (Math.hypot(p[0], p[1], p[2]) || 1));
+const smooth = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
 
 /* ── The frame and the camera ──────────────────────────────────────────── */
 
@@ -44,13 +56,15 @@ const unit = (p: P3): V => mul(p, 1 / (Math.hypot(p[0], p[1], p[2]) || 1));
  *  box of this aspect, so the rest projection here is the canvas's. */
 export const EQ_FRAME = { w: 1100, h: 500 } as const;
 
-/** The rest pose: from the front right, a little above. Three's `fov` is
- *  VERTICAL (ADR-080 U3's finding), so the frame's aspect sets the width. */
-export const EQ_CAMERA = { azimuthDeg: 24, elevationDeg: 14, distance: 9.4, fovDeg: 26 } as const;
+/** The rest pose: from the front LEFT, a little above, so the axis recedes to
+ *  the right — the thought near and large, the stack running off into depth
+ *  (ADR-080's own negative yaw). A long lens, so the depth reads as a
+ *  recession and not as a fisheye. Three's `fov` is VERTICAL (ADR-080 U3). */
+export const EQ_CAMERA = { azimuthDeg: -46, elevationDeg: 12, distance: 12.4, fovDeg: 22 } as const;
 
-/** How far the reader may turn it, each side of rest (degrees). A held
- *  instrument may be turned, never into a pose that cannot be read. */
-export const EQ_DRAG = { azimuthDeg: 24, polarDeg: 7 } as const;
+/** How far the reader may turn it, each side of rest (degrees). Never past
+ *  the axis, where the stack would turn edge-on and the reading reverse. */
+export const EQ_DRAG = { azimuthDeg: 18, polarDeg: 6 } as const;
 
 export function eqCameraPosition(): V {
   const az = EQ_CAMERA.azimuthDeg * RAD;
@@ -94,240 +108,488 @@ export function eqProject(
   };
 }
 
-/* ── The two ring systems ──────────────────────────────────────────────── */
-
-/**
- * A ring system's frame: its centre, its in-plane axes `a` (the ellipse's
- * long axis at rest, tilted on screen by `tilt`) and `b`, and its normal.
- * `open` is how far the ring faces the viewer: the ellipse's short axis is
- * `sin(open)` of its long one. The rings are fixed in the WORLD; the rest
- * camera only decides how they were laid out, so a drag turns real objects.
- */
-export interface EqSystem {
-  id: "up" | "down";
-  centre: V;
-  a: V;
-  /** The normal: `a`, `n`, `b` is a right-handed basis (local x, y, z). */
-  n: V;
-  b: V;
-}
-
-function systemFrame(id: EqSystem["id"], centre: V, tiltDeg: number, openDeg: number): EqSystem {
-  const cam = eqCameraBasis();
-  const g = tiltDeg * RAD;
-  const o = openDeg * RAD;
-  const a = add(mul(cam.right, Math.cos(g)), mul(cam.up, Math.sin(g)));
-  const s = add(mul(cam.right, -Math.sin(g)), mul(cam.up, Math.cos(g)));
-  const b = unit(add(mul(s, Math.sin(o)), mul(cam.fwd, Math.cos(o))));
-  const n = unit(cross(b, a));
-  return { id, centre, a, n, b };
-}
-
-/** UPSTREAM: above, tilted up to the right, open — the work that explores. */
-export const EQ_UP = systemFrame("up", [0, 0.24, 0], 18, 30);
-/** DOWNSTREAM: below, tilted down to the right, flatter — the work that runs. */
-export const EQ_DOWN = systemFrame("down", [0, -0.24, 0], -18, 22);
-
-/** A local point of a system (x along `a`, y along `n`, z along `b`) in the world. */
-export function toWorld(sys: EqSystem, p: P3): V {
-  return add(sys.centre, add(mul(sys.a, p[0]), add(mul(sys.n, p[1]), mul(sys.b, p[2]))));
-}
-
-/** A ring in a system's own plane, in LOCAL coordinates. */
-export function ringLocal(r: number, n = 160, from = 0, to = 360): V[] {
+/** A circle round the axis at `x`, in the plane facing it. `θ` 0 is the top
+ *  (+y), 90 the side toward the viewer (+z). */
+export function axisRing(x: number, r: number, n = 160, from = 0, to = 360): V[] {
   const out: V[] = [];
   const steps = Math.max(2, Math.round((n * Math.abs(to - from)) / 360));
   for (let i = 0; i <= steps; i++) {
     const th = (from + ((to - from) * i) / steps) * RAD;
-    out.push([r * Math.cos(th), 0, r * Math.sin(th)]);
+    out.push([x, r * Math.cos(th), r * Math.sin(th)]);
   }
   return out;
 }
 
-export interface EqRing {
-  id: string;
-  r: number;
-  width: number;
-  opacity: number;
-  /** Drawn as dashes (1px segments), the exploratory ring. */
-  dashed?: boolean;
-  reveal: readonly [number, number];
-}
-
-export interface EqTicks {
-  id: string;
-  r: number;
-  /** Arcs the graduation runs along, in degrees. */
-  arcs: readonly (readonly [number, number])[];
-  step: number;
-  majorEvery: number;
-  len: number;
-  reveal: readonly [number, number];
-}
-
-/** A bright arc: the energy, gliding round its ring at `speed` rad/s. */
-export interface EqArc {
-  id: string;
-  r: number;
-  span: number;
-  start: number;
-  speed: number;
-}
-
-/** Motes that run round a ring, as a rigid set turning at `speed` rad/s. */
-export interface EqMotes {
-  id: string;
-  r: number;
-  /** Angles of the motes at rest, degrees. */
-  at: readonly number[];
-  speed: number;
-}
-
-export interface EqSystemSpec {
-  sys: EqSystem;
-  rings: readonly EqRing[];
-  ticks: readonly EqTicks[];
-  arc: EqArc;
-  motes: readonly EqMotes[];
-}
-
-const evenly = (n: number, offset = 0) =>
-  Array.from({ length: n }, (_, i) => offset + (i * 360) / n);
-
-/** Upstream: one ring, a graduated partial band outside it, a dashed ring
- *  wider still; five motes, unevenly spaced, drifting slowly. */
-export const EQ_UP_SPEC: EqSystemSpec = {
-  sys: EQ_UP,
-  rings: [
-    { id: "up-main", r: 1.48, width: 1.3, opacity: 0.92, reveal: [0.3, 0.7] },
-    { id: "up-wide", r: 1.82, width: 1, opacity: 0.4, dashed: true, reveal: [0.55, 0.85] },
-  ],
-  ticks: [
-    {
-      id: "up-ticks",
-      r: 1.6,
-      arcs: [
-        [18, 92],
-        [148, 206],
-        [252, 318],
-      ],
-      step: 3,
-      majorEvery: 5,
-      len: 0.06,
-      reveal: [0.55, 0.82],
-    },
-  ],
-  arc: { id: "up-arc", r: 1.48, span: 40, start: 54, speed: 0.07 },
-  motes: [{ id: "up-motes", r: 1.48, at: [12, 71, 158, 203, 296], speed: 0.09 }],
-};
-
-/** Downstream: three tight rings and a full graduated band; motes evenly
- *  spaced on every ring, running steadily. */
-export const EQ_DOWN_SPEC: EqSystemSpec = {
-  sys: EQ_DOWN,
-  rings: [
-    { id: "down-0", r: 1.16, width: 1.1, opacity: 0.8, reveal: [0.14, 0.52] },
-    { id: "down-1", r: 1.24, width: 1.2, opacity: 0.9, reveal: [0.2, 0.58] },
-    { id: "down-2", r: 1.32, width: 1.1, opacity: 0.8, reveal: [0.26, 0.64] },
-  ],
-  ticks: [
-    {
-      id: "down-ticks",
-      r: 1.42,
-      arcs: [[0, 360]],
-      step: 5,
-      majorEvery: 6,
-      len: 0.055,
-      reveal: [0.46, 0.72],
-    },
-  ],
-  arc: { id: "down-arc", r: 1.24, span: 52, start: 200, speed: 0.24 },
-  motes: [
-    { id: "down-motes-0", r: 1.16, at: evenly(14, 0), speed: 0.3 },
-    { id: "down-motes-1", r: 1.24, at: evenly(14, 8), speed: 0.3 },
-    { id: "down-motes-2", r: 1.32, at: evenly(14, 16), speed: 0.3 },
-  ],
-};
-
-export const EQ_SYSTEMS: readonly EqSystemSpec[] = [EQ_DOWN_SPEC, EQ_UP_SPEC];
-
-/** A graduation's tick segments, in LOCAL coordinates (pairs of points). */
-export function ticksLocal(t: EqTicks): V[] {
+/** A toothed fringe round the axis at `x` — ADR-080's tick ring: a tooth every
+ *  `step` degrees out from `r`, every `majorEvery`th one longer. Pairs. */
+export function axisTeeth(
+  x: number,
+  r: number,
+  step: number,
+  len: number,
+  majorEvery: number,
+  arcs: readonly (readonly [number, number])[] = [[0, 360]]
+): V[] {
   const out: V[] = [];
-  for (const [from, to] of t.arcs) {
+  for (const [from, to] of arcs) {
     let k = 0;
-    for (let deg = from; deg <= to + 1e-6; deg += t.step, k++) {
-      const major = k % t.majorEvery === 0;
+    for (let deg = from; deg < to - 1e-6; deg += step, k++) {
+      const major = majorEvery > 0 && k % majorEvery === 0;
+      const l = major ? len * 1.8 : len;
       const th = deg * RAD;
-      const l = major ? t.len * 1.8 : t.len;
-      out.push([t.r * Math.cos(th), 0, t.r * Math.sin(th)]);
-      out.push([(t.r + l) * Math.cos(th), 0, (t.r + l) * Math.sin(th)]);
+      out.push([x, r * Math.cos(th), r * Math.sin(th)]);
+      out.push([x, (r + l) * Math.cos(th), (r + l) * Math.sin(th)]);
     }
   }
   return out;
 }
 
-/* ── The core, the axis, the level, the floor, the dust ────────────────── */
+/* ── THOUGHT: the contour mass ─────────────────────────────────────────── */
 
-/** The thought: a body of horizontal contour slices, its outline wobbling as
- *  holo.ui8's does, seeded so it is the same body on every render. */
-export const EQ_CORE = { r: 0.56, slices: 13, segments: 72 } as const;
+/**
+ * The thought: slices of a lumpy body, each a closed outline in the plane
+ * facing the axis. Its girth swells, then narrows toward the gate, and its
+ * crumple calms there: the thought settling toward form.
+ * `t` (seconds) drifts the wobble's phases — the mass is alive, the stack
+ * never moves — and is 0 for the static drawing.
+ */
+export const EQ_THOUGHT = { x0: -3.0, x1: -1.2, slices: 14, segments: 96 } as const;
 
-export function coreSlices(): V[][] {
+/** Girth along the mass, `u` 0 (far tip) → 1 (gate end). */
+export function thoughtGirth(u: number): number {
+  const swell = Math.pow(Math.sin(Math.PI * (0.08 + 0.78 * u)), 0.62);
+  return 0.3 + 0.7 * swell * (1 + 0.08 * Math.sin(5.1 * u + 0.6)) - 0.08 * smooth(0.7, 1, u);
+}
+
+/** How crumpled a slice is, `u` 0 → 1: calm at the gate end. */
+export function thoughtWobble(u: number): number {
+  return 1 - 0.78 * smooth(0.42, 1, u);
+}
+
+const WAVES = [
+  { k: 2, a: 0.15, ph: 1.1, du: 2.6, w: 0.11 },
+  { k: 3, a: 0.1, ph: -0.7, du: 3.4, w: -0.08 },
+  { k: 5, a: 0.06, ph: 2.2, du: -4.3, w: 0.14 },
+  { k: 7, a: 0.035, ph: 0.4, du: 5.6, w: -0.17 },
+] as const;
+
+/** One slice's frame at `u`: where it sits, its girth, its crumple, and its
+ *  centre (the body's spine wanders a little, so it is lumpy, not turned). */
+export function thoughtSlice(u: number): {
+  x: number;
+  R: number;
+  A: number;
+  cy: number;
+  cz: number;
+} {
+  const { x0, x1 } = EQ_THOUGHT;
+  const A = thoughtWobble(u);
+  return {
+    x: x0 + (x1 - x0) * u,
+    R: thoughtGirth(u),
+    A,
+    cy: 0.1 * Math.sin(2.2 * u + 0.4) * A,
+    cz: 0.09 * Math.cos(1.9 * u + 1.2) * A,
+  };
+}
+
+/** The outline's radius factor at angle `th` on slice `u`, at time `t`. */
+export function thoughtWob(th: number, u: number, t: number): number {
+  let wob = 0;
+  for (const w of WAVES) wob += w.a * Math.sin(w.k * th + w.ph + w.du * u + w.w * t);
+  return wob;
+}
+
+export function thoughtSlices(t = 0): V[][] {
   const out: V[][] = [];
-  const { r, slices, segments } = EQ_CORE;
-  for (let k = 0; k < slices; k++) {
-    const t = (k + 0.5) / slices;
-    const y = (t * 2 - 1) * r * 0.94;
-    const base = Math.sqrt(Math.max(0, r * r - y * y));
+  const { slices, segments } = EQ_THOUGHT;
+  for (let s = 0; s < slices; s++) {
+    const u = s / (slices - 1);
+    const f = thoughtSlice(u);
     const ring: V[] = [];
     for (let i = 0; i <= segments; i++) {
-      const th = (i / segments) * Math.PI * 2;
-      const wob = 1 + 0.11 * Math.sin(3 * th + 1.7 + 4 * y) + 0.07 * Math.sin(5 * th - 0.9 - 6 * y);
-      ring.push([base * wob * Math.cos(th), y, base * wob * Math.sin(th)]);
+      const th = (i / segments) * TAU;
+      const r = f.R * (1 + f.A * thoughtWob(th, u, t));
+      ring.push([f.x, f.cy + r * Math.cos(th), f.cz + r * Math.sin(th)]);
     }
     out.push(ring);
   }
   return out;
 }
 
-/** The axis the motes fall down: from above the upstream ring to below the
- *  downstream one, through the core. */
-export const EQ_AXIS = { top: 1.5, bottom: -1.56 } as const;
-/** How many motes fall at once, and how long one takes top to bottom (s). */
-export const EQ_FALL = { count: 7, period: 5.2 } as const;
-
-/** The level: the plane the two systems balance about, a faint dashed ring. */
-export const EQ_LEVEL = { r: 2.06, y: 0 } as const;
-
-/** The floor, faint and wide, fading to nothing toward its rim. */
-export const EQ_FLOOR = { y: -1.86, half: 4.2, pitch: 0.46, alpha: 0.075 } as const;
-
-/** Floor segments with each one's fade (0..1), one grid cell long. */
-export function floorSegments(): { a: V; b: V; fade: number }[] {
-  const out: { a: V; b: V; fade: number }[] = [];
-  const { y, half, pitch } = EQ_FLOOR;
-  const n = Math.round((2 * half) / pitch);
-  for (let i = 0; i <= n; i++) {
-    const c = -half + i * pitch;
-    for (let j = 0; j < n; j++) {
-      const s0 = -half + j * pitch;
-      const s1 = s0 + pitch;
-      for (const along of ["x", "z"] as const) {
-        const a: V = along === "x" ? [s0, y, c] : [c, y, s0];
-        const b: V = along === "x" ? [s1, y, c] : [c, y, s1];
-        const m = mul(add(a, b), 0.5);
-        const r = Math.hypot(m[0], m[2]) / half;
-        const fade = Math.max(0, 1 - r * r);
-        if (fade > 0.03) out.push({ a, b, fade });
+/** The slices AND the islands as segment pairs, written into `out` in place —
+ *  the live mass drifts every frame, and a frame may not allocate. Returns
+ *  the vertex count written. Same numbers as `thoughtSlices` /
+ *  `thoughtIslands`, so the drawing at `t` 0 is the static one. */
+export function fillThoughtSegments(t: number, out: Float32Array): number {
+  const { slices, segments } = EQ_THOUGHT;
+  let o = 0;
+  const put = (x: number, y: number, z: number) => {
+    out[o++] = x;
+    out[o++] = y;
+    out[o++] = z;
+  };
+  for (let s = 0; s < slices; s++) {
+    const u = s / (slices - 1);
+    const f = thoughtSlice(u);
+    let px = 0;
+    let py = 0;
+    let pz = 0;
+    for (let i = 0; i <= segments; i++) {
+      const th = (i / segments) * TAU;
+      const r = f.R * (1 + f.A * thoughtWob(th, u, t));
+      const y = f.cy + r * Math.cos(th);
+      const z = f.cz + r * Math.sin(th);
+      if (i > 0) {
+        put(px, py, pz);
+        put(f.x, y, z);
       }
+      px = f.x;
+      py = y;
+      pz = z;
+    }
+  }
+  for (const loop of thoughtIslands(t)) {
+    for (let i = 0; i + 1 < loop.length; i++) {
+      put(...loop[i]);
+      put(...loop[i + 1]);
+    }
+  }
+  return o / 3;
+}
+
+/** How many vertices `fillThoughtSegments` writes. */
+export function thoughtVertCount(): number {
+  return EQ_THOUGHT.slices * EQ_THOUGHT.segments * 2 + EQ_ISLANDS.length * ISLAND_STEPS * 2;
+}
+
+/** Small closed loops inside a few slices — holo.ui8's islands, the kinks a
+ *  half-formed idea still has. Calm slices carry none. */
+const ISLAND_STEPS = 40;
+
+export const EQ_ISLANDS = [
+  { slice: 3, at: 128, off: 0.46, r: 0.12, flat: 0.62 },
+  { slice: 6, at: 300, off: 0.52, r: 0.15, flat: 0.55 },
+  { slice: 8, at: 40, off: 0.4, r: 0.1, flat: 0.7 },
+] as const;
+
+export function thoughtIslands(t = 0): V[][] {
+  const { x0, x1, slices } = EQ_THOUGHT;
+  return EQ_ISLANDS.map((isl) => {
+    const u = isl.slice / (slices - 1);
+    const x = x0 + (x1 - x0) * u;
+    const R = thoughtGirth(u);
+    const a = (isl.at + 9 * Math.sin(0.07 * t + isl.slice)) * RAD;
+    const cy = Math.cos(a) * R * isl.off;
+    const cz = Math.sin(a) * R * isl.off;
+    const ring: V[] = [];
+    for (let i = 0; i <= ISLAND_STEPS; i++) {
+      const th = (i / ISLAND_STEPS) * TAU;
+      ring.push([x, cy + isl.r * Math.cos(th), cz + isl.r * isl.flat * Math.sin(th)]);
+    }
+    return ring;
+  });
+}
+
+/**
+ * The cradle the thought is studied in: holo.ui8's large graduated ring, as
+ * two partial arcs in a plane leaning away from the slices', a tick band on
+ * each, and one bright arc — the reference's highlight, in dawn.
+ */
+export const EQ_CRADLE = {
+  centre: [-2.1, 0.04, 0] as V,
+  r: 1.36,
+  arcs: [
+    [-28, 118],
+    [158, 262],
+  ] as const,
+  ticks: { step: 3, len: 0.05, majorEvery: 6, inset: 0.07 },
+  bright: { from: 196, span: 48 },
+} as const;
+
+/** The cradle's plane: leaning back and over, so its ellipse crosses the
+ *  slices' rather than repeating them. */
+export function cradleBasis(): { e1: V; e2: V } {
+  const e1 = unit([0.34, 0.94, -0.06]);
+  const raw: V = [0.78, -0.22, 0.58];
+  const e2 = unit(sub(raw, mul(e1, dot(raw, e1))));
+  return { e1, e2 };
+}
+
+export function cradlePoint(r: number, deg: number): V {
+  const { e1, e2 } = cradleBasis();
+  const th = deg * RAD;
+  return add(EQ_CRADLE.centre, add(mul(e1, r * Math.cos(th)), mul(e2, r * Math.sin(th))));
+}
+
+export function cradleArc(r: number, from: number, to: number, n = 200): V[] {
+  const steps = Math.max(2, Math.round((n * Math.abs(to - from)) / 360));
+  return Array.from({ length: steps + 1 }, (_, i) =>
+    cradlePoint(r, from + ((to - from) * i) / steps)
+  );
+}
+
+export function cradleTicks(): V[] {
+  const out: V[] = [];
+  const { r, arcs, ticks } = EQ_CRADLE;
+  for (const [from, to] of arcs) {
+    let k = 0;
+    for (let deg = from; deg <= to + 1e-6; deg += ticks.step, k++) {
+      const l = k % ticks.majorEvery === 0 ? ticks.len * 1.9 : ticks.len;
+      out.push(cradlePoint(r - ticks.inset, deg), cradlePoint(r - ticks.inset - l, deg));
     }
   }
   return out;
 }
 
-/** Seeded dust in a shell round the object. */
-export function eqDust(count = 320, seed = 4821): V[] {
+/** The reticle that tracks the thought: holo.ui8's target, a ring with four
+ *  arms, standing in the plane of the axis. */
+export const EQ_RETICLE = { centre: [-2.98, 1.3, 0.16] as V, r: 0.13, inner: 0.045, arm: 0.09 };
+
+export function reticleLines(): V[][] {
+  const { centre: c, r, inner, arm } = EQ_RETICLE;
+  const circle = (rr: number) =>
+    Array.from({ length: 41 }, (_, i) => {
+      const th = (i / 40) * TAU;
+      return [c[0] + rr * Math.cos(th), c[1] + rr * Math.sin(th), c[2]] as V;
+    });
+  const arms: V[][] = [0, 90, 180, 270].map((deg) => {
+    const th = (deg + 45) * RAD;
+    return [
+      [c[0] + (r + 0.02) * Math.cos(th), c[1] + (r + 0.02) * Math.sin(th), c[2]],
+      [c[0] + (r + 0.02 + arm) * Math.cos(th), c[1] + (r + 0.02 + arm) * Math.sin(th), c[2]],
+    ];
+  });
+  return [circle(r), circle(inner), ...arms];
+}
+
+/* ── ENCODE: the gate ──────────────────────────────────────────────────── */
+
+/** The gate on the origin: a gold inner ring, a ring of plates, an outer
+ *  ring, a toothed fringe, a horizon across it, markers above and below. */
+export const EQ_GATE = {
+  x: 0,
+  inner: 1.02,
+  plates: { r: 1.12, sides: 14, fill: 0.78 },
+  outer: 1.22,
+  teeth: { step: 3, len: 0.055, majorEvery: 5 },
+  /** The gold highlight gliding round the inner ring. */
+  arc: { span: 44, start: 34, speed: 0.06 },
+} as const;
+
+export function gatePlates(): V[] {
+  const { x, plates } = EQ_GATE;
+  const out: V[] = [];
+  const step = 360 / plates.sides;
+  for (let i = 0; i < plates.sides; i++) {
+    const a0 = i * step + step * 0.11;
+    out.push(...axisRing(x, plates.r, 160, a0, a0 + step * plates.fill));
+  }
+  return out;
+}
+
+/** The plates as pairs of points, for a segments buffer. */
+export function gatePlateSegments(): V[] {
+  const { x, plates } = EQ_GATE;
+  const out: V[] = [];
+  const step = 360 / plates.sides;
+  for (let i = 0; i < plates.sides; i++) {
+    const a0 = i * step + step * 0.11;
+    const run = axisRing(x, plates.r, 160, a0, a0 + step * plates.fill);
+    for (let k = 0; k + 1 < run.length; k++) out.push(run[k], run[k + 1]);
+  }
+  return out;
+}
+
+/** The horizon: the level line across the gate, broken where the axis passes,
+ *  with two pitch marks each side — the instrument reading level. Pairs. */
+export function gateHorizon(): V[] {
+  const { x, inner } = EQ_GATE;
+  const w = inner * 0.86;
+  const gap = 0.13;
+  const out: V[] = [
+    [x, 0, -w],
+    [x, 0, -gap],
+    [x, 0, gap],
+    [x, 0, w],
+  ];
+  return out;
+}
+
+/** The marker above the gate: holo.ui8's triangle, pointing at the axis. */
+export function gateMarker(): V[] {
+  const top = EQ_GATE.outer + 0.2;
+  return [
+    [-0.08, top + 0.13, 0],
+    [0.08, top + 0.13, 0],
+    [0, top, 0],
+    [-0.08, top + 0.13, 0],
+  ];
+}
+
+/** The floor the instrument stands on, faint and wide, fading to its rim. */
+export const EQ_FLOOR = { y: -1.62, x0: -5.4, x1: 5.6, z0: -3.4, z1: 3, pitch: 0.5, alpha: 0.08 };
+
+/** The level under the gate: holo.ui8's bar with its lit segment centred, and
+ *  the fulcrum standing on it, pointing up at the gate. */
+export const EQ_LEVEL = { y: EQ_FLOOR.y + 0.02, half: 0.62, h: 0.07, lit: 0.13, fulcrum: 0.16 };
+
+export function levelBar(): V[] {
+  const { y, half, h } = EQ_LEVEL;
+  return [
+    [-half, y, 0],
+    [half, y, 0],
+    [half, y + h, 0],
+    [-half, y + h, 0],
+    [-half, y, 0],
+  ];
+}
+
+/** The lit segment, as three runs filling the bar's middle. */
+export function levelLit(): V[][] {
+  const { y, h, lit } = EQ_LEVEL;
+  return [0.22, 0.5, 0.78].map((f) => [
+    [-lit, y + h * f, 0],
+    [lit, y + h * f, 0],
+  ]);
+}
+
+export function levelFulcrum(): V[] {
+  const { y, h, fulcrum } = EQ_LEVEL;
+  const base = y + h + 0.03;
+  return [
+    [-fulcrum * 0.6, base, 0],
+    [fulcrum * 0.6, base, 0],
+    [0, base + fulcrum, 0],
+    [-fulcrum * 0.6, base, 0],
+  ];
+}
+
+/* ── FORM: the stack ───────────────────────────────────────────────────── */
+
+/** Identical rings at one pitch, receding: every other one toothed, the rest
+ *  carrying a dashed inner ring. Two rails tie them into one body. */
+export const EQ_STACK = {
+  x0: 1.0,
+  pitch: 0.6,
+  count: 7,
+  r: 0.78,
+  inner: 0.68,
+  teeth: { step: 6, len: 0.05, majorEvery: 5 },
+} as const;
+
+export const stackX = (i: number) => EQ_STACK.x0 + i * EQ_STACK.pitch;
+export const STACK_END = stackX(EQ_STACK.count - 1);
+
+/** The dashed inner rings as pairs (every other segment of a 120-step ring). */
+export function stackDashes(i: number): V[] {
+  const ring = axisRing(stackX(i), EQ_STACK.inner, 120);
+  const out: V[] = [];
+  for (let k = 0; k + 1 < ring.length; k += 2) out.push(ring[k], ring[k + 1]);
+  return out;
+}
+
+/** The two rails along the stack's top and bottom. */
+export function stackRails(): V[][] {
+  const { r } = EQ_STACK;
+  return [r, -r].map((y) => [
+    [EQ_STACK.x0, y, 0],
+    [STACK_END, y, 0],
+  ]);
+}
+
+/** The ruler under the stack: a tick at every ring and three between, down
+ *  from the bottom rail — the pace the work runs at, measured. Pairs. */
+export function stackRuler(): V[] {
+  const out: V[] = [];
+  const y = -EQ_STACK.r;
+  const steps = (EQ_STACK.count - 1) * 4;
+  for (let k = 0; k <= steps; k++) {
+    const x = EQ_STACK.x0 + (k * EQ_STACK.pitch) / 4;
+    const l = k % 4 === 0 ? 0.1 : 0.045;
+    out.push([x, y, 0], [x, y - l, 0]);
+  }
+  return out;
+}
+
+/** The drop from the stack's far end to the floor (ADR-080's grid stick),
+ *  where the downstream word is seated, clear of the rings. */
+export const EQ_DROP: readonly [V, V] = [
+  [stackX(EQ_STACK.count - 1), -EQ_STACK.r - 0.1, 0],
+  [stackX(EQ_STACK.count - 1), EQ_FLOOR.y, 0],
+];
+
+/* ── The flow ──────────────────────────────────────────────────────────── */
+
+/** The axis: gold from where the thought calms to past the stack's last ring. */
+export const EQ_AXIS = { x0: EQ_THOUGHT.x1 - 0.06, x1: STACK_END + 0.34 } as const;
+
+/**
+ * The motes: they drift slowly through the thought, wandering off the axis,
+ * find it as the mass calms, then run down the stack at a steady pace. A
+ * phase `τ` in seconds maps to a point; the slow upstream leg is what crowds
+ * the motes there and spaces them evenly downstream.
+ */
+export const EQ_FLOW = {
+  count: 20,
+  x0: EQ_THOUGHT.x0 + 0.25,
+  slow: 0.15,
+  fast: 0.42,
+  /** Wander off the axis, as a fraction of the thought's girth. */
+  wander: 0.5,
+} as const;
+
+const UP_LEN = EQ_GATE.x - EQ_FLOW.x0;
+const DOWN_LEN = EQ_AXIS.x1 - EQ_GATE.x;
+export const FLOW_PERIOD = UP_LEN / EQ_FLOW.slow + DOWN_LEN / EQ_FLOW.fast;
+
+/** A mote's point and fade (0 at the two ends, 1 between) at phase `τ` (s),
+ *  with its own seed `k` for the wander. */
+export function flowPoint(tau: number, k: number): { p: V; fade: number } {
+  const T1 = UP_LEN / EQ_FLOW.slow;
+  const s = ((tau % FLOW_PERIOD) + FLOW_PERIOD) % FLOW_PERIOD;
+  const x = s < T1 ? EQ_FLOW.x0 + s * EQ_FLOW.slow : EQ_GATE.x + (s - T1) * EQ_FLOW.fast;
+  /* Wander only inside the thought, dying out as the mass calms. */
+  const u = Math.min(1, Math.max(0, (x - EQ_THOUGHT.x0) / (EQ_THOUGHT.x1 - EQ_THOUGHT.x0)));
+  const amp = x < EQ_THOUGHT.x1 ? EQ_FLOW.wander * thoughtGirth(u) * (1 - smooth(0.55, 1, u)) : 0;
+  const a = k * 2.399 + s * 0.31;
+  const p: V = [x, amp * Math.cos(a) * 0.9, amp * Math.sin(a * 1.3)];
+  const fade =
+    smooth(EQ_FLOW.x0, EQ_FLOW.x0 + 0.35, x) * (1 - smooth(EQ_AXIS.x1 - 0.4, EQ_AXIS.x1, x));
+  return { p, fade };
+}
+
+/* ── The floor and the dust ────────────────────────────────────────────── */
+
+/** Floor segments with each one's fade (0..1), one grid cell long. */
+export function floorSegments(): { a: V; b: V; fade: number }[] {
+  const out: { a: V; b: V; fade: number }[] = [];
+  const { y, x0, x1, z0, z1, pitch } = EQ_FLOOR;
+  const cx = (x0 + x1) / 2;
+  const cz = (z0 + z1) / 2;
+  const hx = (x1 - x0) / 2;
+  const hz = (z1 - z0) / 2;
+  const nx = Math.round((x1 - x0) / pitch);
+  const nz = Math.round((z1 - z0) / pitch);
+  const push = (a: V, b: V) => {
+    const m = mul(add(a, b), 0.5);
+    const r = Math.hypot((m[0] - cx) / hx, (m[2] - cz) / hz);
+    const fade = Math.max(0, 1 - r * r);
+    if (fade > 0.03) out.push({ a, b, fade });
+  };
+  for (let i = 0; i <= nz; i++) {
+    const z = z0 + i * pitch;
+    for (let j = 0; j < nx; j++) push([x0 + j * pitch, y, z], [x0 + (j + 1) * pitch, y, z]);
+  }
+  for (let j = 0; j <= nx; j++) {
+    const x = x0 + j * pitch;
+    for (let i = 0; i < nz; i++) push([x, y, z0 + i * pitch], [x, y, z0 + (i + 1) * pitch]);
+  }
+  return out;
+}
+
+/** Seeded dust in a long shell round the instrument. */
+export function eqDust(count = 360, seed = 4821): V[] {
   const rnd = mulberry32(seed);
   const out: V[] = [];
   while (out.length < count) {
@@ -335,29 +597,30 @@ export function eqDust(count = 320, seed = 4821): V[] {
     const y = rnd() * 2 - 1;
     const z = rnd() * 2 - 1;
     const l = Math.hypot(x, y, z);
-    if (l > 1 || l < 0.2) continue;
-    const rr = 2.3 + rnd() * 1.2;
-    out.push([(x / l) * rr, (y / l) * rr * 0.7, (z / l) * rr]);
+    if (l > 1 || l < 0.35) continue;
+    out.push([-0.2 + x * 4.8, y * 1.8, z * 2.4]);
   }
   return out;
 }
 
 /* ── The words ─────────────────────────────────────────────────────────── */
 
-/** Where each word's leader lands on the object, in the world. */
-export const EQ_ANCHORS: Readonly<Record<"downstream" | "upstream" | "encode", V>> = {
-  downstream: toWorld(EQ_DOWN, [-1.46, 0, 0]),
-  upstream: toWorld(EQ_UP, [1.62, 0, 0]),
-  encode: [0, EQ_AXIS.top, 0],
+/** Where each word's leader lands on the object, in the world: the reticle
+ *  on the thought, the marker over the gate, the stack's far end. The order
+ *  is the reading order, which is the phone's list order too. */
+export const EQ_ANCHORS: Readonly<Record<"upstream" | "encode" | "downstream", V>> = {
+  upstream: [EQ_RETICLE.centre[0], EQ_RETICLE.centre[1], EQ_RETICLE.centre[2]],
+  encode: [0, EQ_GATE.outer + 0.27, 0],
+  downstream: [EQ_DROP[1][0], EQ_DROP[1][1], EQ_DROP[1][2]],
 };
 
 /** How each word sits off its point: the side, and the leader's length (px). */
 export const EQ_WORD_SEATS: Readonly<
   Record<keyof typeof EQ_ANCHORS, { anchor: "start" | "end"; dx: number }>
 > = {
-  downstream: { anchor: "end", dx: -22 },
-  upstream: { anchor: "start", dx: 22 },
-  encode: { anchor: "end", dx: -22 },
+  upstream: { anchor: "end", dx: -26 },
+  encode: { anchor: "start", dx: 26 },
+  downstream: { anchor: "start", dx: 26 },
 };
 
 /** The words' seats at rest, as fractions of the frame. */
@@ -370,13 +633,14 @@ export function seatWords(): { id: keyof typeof EQ_ANCHORS; ax: number; at: numb
 
 /* ── The static drawing ────────────────────────────────────────────────── */
 
-export type EqRole = "structure" | "machine" | "gold" | "grid";
+export type EqRole = "structure" | "bright" | "gold" | "grid";
 
 export interface EqPolyline {
   id: string;
   /** World points; `segments` lines are drawn pair by pair. */
   points: readonly P3[];
   segments?: boolean;
+  dashed?: boolean;
   role: EqRole;
   width: number;
   opacity: number;
@@ -394,56 +658,182 @@ export function eqPolylines(): EqPolyline[] {
       opacity: EQ_FLOOR.alpha * s.fade,
     });
   }
-  out.push({
-    id: "level",
-    points: ringLocal(EQ_LEVEL.r, 200).map((p) => [p[0], EQ_LEVEL.y, p[2]] as V),
-    role: "machine",
-    width: 0.8,
-    opacity: 0.22,
-  });
-  coreSlices().forEach((slice, k) =>
-    out.push({ id: `core-${k}`, points: slice, role: "structure", width: 0.9, opacity: 0.62 })
+
+  /* Thought. */
+  thoughtSlices().forEach((slice, k) =>
+    out.push({ id: `thought-${k}`, points: slice, role: "structure", width: 0.9, opacity: 0.66 })
   );
-  for (const spec of EQ_SYSTEMS) {
-    for (const r of spec.rings) {
+  thoughtIslands().forEach((loop, k) =>
+    out.push({ id: `island-${k}`, points: loop, role: "structure", width: 0.8, opacity: 0.5 })
+  );
+  EQ_CRADLE.arcs.forEach(([from, to], k) =>
+    out.push({
+      id: `cradle-${k}`,
+      points: cradleArc(EQ_CRADLE.r, from, to),
+      role: "structure",
+      width: 1,
+      opacity: 0.55,
+    })
+  );
+  out.push({
+    id: "cradle-ticks",
+    points: cradleTicks(),
+    segments: true,
+    role: "structure",
+    width: 0.8,
+    opacity: 0.42,
+  });
+  out.push({
+    id: "cradle-bright",
+    points: cradleArc(
+      EQ_CRADLE.r,
+      EQ_CRADLE.bright.from,
+      EQ_CRADLE.bright.from + EQ_CRADLE.bright.span
+    ),
+    role: "bright",
+    width: 2.4,
+    opacity: 1,
+  });
+  reticleLines().forEach((l, k) =>
+    out.push({ id: `reticle-${k}`, points: l, role: "structure", width: 0.9, opacity: 0.8 })
+  );
+
+  /* Encode. */
+  out.push({
+    id: "gate-ring",
+    points: axisRing(EQ_GATE.x, EQ_GATE.inner, 220),
+    role: "gold",
+    width: 1.2,
+    opacity: 0.9,
+  });
+  out.push({
+    id: "gate-arc",
+    points: axisRing(
+      EQ_GATE.x,
+      EQ_GATE.inner,
+      220,
+      EQ_GATE.arc.start,
+      EQ_GATE.arc.start + EQ_GATE.arc.span
+    ),
+    role: "gold",
+    width: 2.6,
+    opacity: 1,
+  });
+  out.push({
+    id: "gate-plates",
+    points: gatePlateSegments(),
+    segments: true,
+    role: "structure",
+    width: 1.6,
+    opacity: 0.62,
+  });
+  out.push({
+    id: "gate-outer",
+    points: axisRing(EQ_GATE.x, EQ_GATE.outer, 220),
+    role: "structure",
+    width: 1,
+    opacity: 0.75,
+  });
+  out.push({
+    id: "gate-teeth",
+    points: axisTeeth(
+      EQ_GATE.x,
+      EQ_GATE.outer,
+      EQ_GATE.teeth.step,
+      EQ_GATE.teeth.len,
+      EQ_GATE.teeth.majorEvery
+    ),
+    segments: true,
+    role: "structure",
+    width: 0.8,
+    opacity: 0.5,
+  });
+  out.push({
+    id: "gate-horizon",
+    points: gateHorizon(),
+    segments: true,
+    role: "structure",
+    width: 0.9,
+    opacity: 0.6,
+  });
+  out.push({ id: "gate-marker", points: gateMarker(), role: "bright", width: 1.2, opacity: 0.95 });
+  out.push({ id: "level-bar", points: levelBar(), role: "structure", width: 0.9, opacity: 0.7 });
+  levelLit().forEach((l, k) =>
+    out.push({ id: `level-lit-${k}`, points: l, role: "bright", width: 1.4, opacity: 1 })
+  );
+  out.push({
+    id: "level-fulcrum",
+    points: levelFulcrum(),
+    role: "bright",
+    width: 1.1,
+    opacity: 0.9,
+  });
+
+  /* Form. */
+  for (let i = 0; i < EQ_STACK.count; i++) {
+    const x = stackX(i);
+    out.push({
+      id: `stack-${i}`,
+      points: axisRing(x, EQ_STACK.r, 140),
+      role: "structure",
+      width: 1,
+      opacity: 0.82,
+    });
+    if (i % 2 === 0) {
       out.push({
-        id: r.id,
-        points: ringLocal(r.r).map((p) => toWorld(spec.sys, p)),
-        role: "structure",
-        width: r.width,
-        opacity: r.dashed ? r.opacity * 0.8 : r.opacity,
-      });
-    }
-    for (const t of spec.ticks) {
-      out.push({
-        id: t.id,
-        points: ticksLocal(t).map((p) => toWorld(spec.sys, p)),
+        id: `stack-teeth-${i}`,
+        points: axisTeeth(
+          x,
+          EQ_STACK.r,
+          EQ_STACK.teeth.step,
+          EQ_STACK.teeth.len,
+          EQ_STACK.teeth.majorEvery
+        ),
         segments: true,
         role: "structure",
         width: 0.8,
-        opacity: 0.5,
+        opacity: 0.46,
+      });
+    } else {
+      out.push({
+        id: `stack-dash-${i}`,
+        points: stackDashes(i),
+        segments: true,
+        role: "structure",
+        width: 0.8,
+        opacity: 0.42,
       });
     }
-    const arc = spec.arc;
-    out.push({
-      id: arc.id,
-      points: ringLocal(arc.r, 160, arc.start, arc.start + arc.span).map((p) =>
-        toWorld(spec.sys, p)
-      ),
-      role: "gold",
-      width: 2.4,
-      opacity: 1,
-    });
   }
+  stackRails().forEach((l, k) =>
+    out.push({ id: `rail-${k}`, points: l, role: "structure", width: 0.8, opacity: 0.32 })
+  );
+  out.push({
+    id: "stack-ruler",
+    points: stackRuler(),
+    segments: true,
+    role: "structure",
+    width: 0.8,
+    opacity: 0.46,
+  });
+  out.push({
+    id: "drop",
+    points: [...EQ_DROP],
+    dashed: true,
+    role: "structure",
+    width: 0.8,
+    opacity: 0.4,
+  });
+
   out.push({
     id: "axis",
     points: [
-      [0, EQ_AXIS.top, 0],
-      [0, EQ_AXIS.bottom, 0],
+      [EQ_AXIS.x0, 0, 0],
+      [EQ_AXIS.x1, 0, 0],
     ],
     role: "gold",
     width: 1,
-    opacity: 0.55,
+    opacity: 0.6,
   });
   return out;
 }
@@ -451,7 +841,7 @@ export function eqPolylines(): EqPolyline[] {
 const r1 = (v: number) => (Math.round(v * 10) / 10).toString();
 
 /** The static drawing as markup: one `<g>` per role, so the sheet colours each
- *  from the theme's own tokens; the dashed level as a dash array. */
+ *  from the theme's own tokens. */
 export function eqSvgMarkup(className: string): string {
   const byRole = new Map<EqRole, string[]>();
   for (const l of eqPolylines()) {
@@ -464,7 +854,7 @@ export function eqSvgMarkup(className: string): string {
     } else {
       d = pts.map((q, i) => `${i === 0 ? "M" : "L"}${r1(q.x)} ${r1(q.y)}`).join("");
     }
-    const dash = l.id === "level" || l.id === "up-wide" ? ' stroke-dasharray="3 5"' : "";
+    const dash = l.dashed ? ' stroke-dasharray="3 4"' : "";
     const path = `<path d="${d}" stroke-width="${l.width}" stroke-opacity="${Math.round(l.opacity * 1000) / 1000}"${dash}/>`;
     const list = byRole.get(l.role) ?? [];
     list.push(path);

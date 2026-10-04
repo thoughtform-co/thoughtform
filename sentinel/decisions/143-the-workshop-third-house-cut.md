@@ -525,3 +525,64 @@ INTELLIGENCE.` · `ENCODE THE CONTEXT.` · `BUILD ON THE LAYER.`):
 - **Left for him**: the opener's copy (eyebrow, sub, the three words) is a draft to
   pick from; 01's title toward the client and client-specific examples (the note's
   item 1) are the next pass.
+
+## Update 8 — the opener's object is one instrument on one axis (2026-10-04, owner)
+
+His read of U7 on a phone: "I want you now to create shapes that are closer to the
+holo and the one we had already created a while back. I don't want the sphere and
+orbit you built for this section … push yourself creatively." The U7 object was a
+contour sphere between two tilted ring systems: an atom, the one shape neither
+reference draws. **The object is redrawn in the two references' own vocabulary, on
+one axis, read left to right**; the station, the copy, the curtains, the words, the
+fallback pipeline and the canvas shell are untouched.
+
+- **THOUGHT** is holo.ui8's crumpled contour mass: fourteen slices of a lumpy body,
+  each a closed outline facing the axis (`thoughtSlices`), three small inner loops
+  (`thoughtIslands`, the reference's kinks), held in a graduated CRADLE (two partial
+  arcs with tick bands in a plane leaning across the slices', one bright dawn arc,
+  the reference's highlight) and tracked by a RETICLE, where the Upstream word sits.
+  Its girth narrows and its crumple calms toward the gate (`thoughtGirth`,
+  `thoughtWobble`), and live, its outline DRIFTS: the wave phases advance with time,
+  written in place every frame (`fillThoughtSegments`, no allocation). The thought
+  is the only thing on the object whose shape moves.
+- **ENCODE** is ADR-080's plated collar, in gold: a gold inner ring with a gold
+  highlight gliding round it, a ring of fourteen plates, an outer ring, a toothed
+  fringe, a horizon line across it broken where the axis passes, holo's triangle
+  marker above it (the Encode word), and under it holo's bar with its lit segment
+  centred and a FULCRUM standing on it, pointing up at the gate. The balance is
+  drawn: the whole instrument rests on that point.
+- **FORM** is ADR-080's coaxial stack: seven identical rings at one pitch along the
+  axis, every other one toothed and the rest carrying a dashed inner ring, two rails
+  tying them into one body, a ruler under them (a tick at every ring, three
+  between), and a drop to the floor at the far end, where the Downstream word sits
+  clear of the rings.
+- **The flow**: twenty gold motes drift slowly through the thought, wandering off
+  the axis, find it as the mass calms, pass the gate and run down the stack at one
+  pace (`flowPoint`: the slow upstream leg is what crowds them there and spaces them
+  evenly downstream; a per-mote fade so nothing pops at the axis's two ends).
+- **The camera** looks down the axis from the front left (azimuth −46°, elevation
+  12°, a 22° lens at 12.4): the thought near and large, its slices nesting like the
+  reference's contours, the stack running off into depth (ADR-080's own negative
+  yaw). A first try from −33° read as a cabbage beside a spring, because the slices
+  were seen almost edge-on and the rings crowded; the drag stays inside ±18° of
+  rest, never past the axis.
+- **Gold buys one thing, the encode**: the gate's ring, its gliding arc, the axis
+  and the motes (`eqPolylines`' gold role is `axis` · `gate-arc` · `gate-ring`,
+  pinned). The cradle's highlight, the marker, the bar's lit segment and the fulcrum
+  are a BRIGHT role in dawn (×1.7 on void so bloom takes them; full ink on paper).
+- **Still no flicker**: every motion is travel (the drift, the two glides, the
+  flow). Measured headed at 1470×956 over six seconds: the figure's mean luminance
+  moves 18.57 → 18.41 while about 4 % of its pixels change. On paper the far
+  shade's floor is 0.44 (0.28 on void), since dark ink on parchment reads weaker
+  at equal alpha (ADR-063 U2).
+- **Guards** (`workshop-v3-equilibrium.test.tsx`): the rest projection against
+  three's camera on points of all three parts; one axis read left to right (thought
+  before the gate before the stack; every stack ring a true circle on the axis; the
+  words in reading order on screen); the encoded difference (the thought crumpled at
+  its tip and calm at the gate, its slices not circles, the stack at one pitch); the
+  live drift written from the same numbers as the static drawing and moving; the
+  flow crowded upstream, evenly spaced and on the axis downstream; gold on the
+  encode alone; everything but the floor inside the frame.
+- **Verified** headed at 1920×1247 and 1280×720 dark and 1470×956 light; the phone
+  (390×844) and the WebGL-off desktop show the same object, static, with the words
+  as a list.
