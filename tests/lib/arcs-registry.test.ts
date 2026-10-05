@@ -1799,7 +1799,10 @@ describe("the workshop's shared beats (ADR-143)", () => {
         }
       }
     }
-    const pages = ["suri-configuration", "suri-lunch-and-learn", "thoughtform-armada"];
+    /* Since ADR-147 U8 the lunch and learn reads the configuration alone:
+       its technical half (made real, using, when wrong, the month) is off
+       the page, and the configuration page and the Armada companion keep it. */
+    const pages = ["suri-configuration", "thoughtform-armada"];
     for (const [group, who] of readers) {
       expect(who.sort(), group).toEqual(
         group === "config" ? ["suri-lunch-and-learn", "thoughtform-armada"] : pages

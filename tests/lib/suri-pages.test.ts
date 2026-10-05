@@ -14,7 +14,7 @@ import { WHAT_FOLLOWS_TITLE } from "@/lib/arcs/content/shared/whatFollows";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { SURI_CONFIGURATION_ARC } from "@/lib/arcs/content/suri-configuration";
 import { SURI_LUNCH_AND_LEARN_ARC } from "@/lib/arcs/content/suri-lunch-and-learn";
-import { SURI_ASK_CARDS, SURI_LOOP_GROUPS } from "@/lib/arcs/content/suri-workshop";
+import { SURI_LOOP_GROUPS } from "@/lib/arcs/content/suri-workshop";
 
 /**
  * Suri's two pages (ADR-147): the lunch and learn, cut from the workshop's
@@ -61,7 +61,8 @@ describe("Suri's lunch and learn (ADR-147)", () => {
       '"../../thoughtform/workshop-v3/about"'
     );
     expect(page, "reads the intro record").toContain("WORKSHOP_INTRO");
-    expect(page, "carries no breakdown").not.toContain(
+    /* ADR-147 U8: the breakdown's own sheet, for Prompt to Loop after the loop. */
+    expect(page, "carries the breakdown's sheet").toContain(
       '"@/components/arcs/prompt-to-loop/prompt-to-loop.css"'
     );
     const portals = routeFile("suri", "lunch-and-learn", "WorkshopPortals.tsx");
@@ -73,7 +74,6 @@ describe("Suri's lunch and learn (ADR-147)", () => {
     );
     const tail = routeFile("suri", "lunch-and-learn", "WorkshopTail.tsx");
     expect(tail, "mounts the worked switch beside the sections").toContain("ArcWorkedSwitch");
-    expect(tail, "no breakdown").not.toContain("PromptToLoop");
     /* v3's journey, its equilibrium opener included since ADR-147 U1 (owner,
        2026-10-05), mounted from v3's own modules. */
     expect([...SURI_LUNCH_JOURNEY_ORDER]).toEqual([...WORKSHOP_V3_JOURNEY_ORDER]);
@@ -130,22 +130,23 @@ describe("Suri's lunch and learn (ADR-147)", () => {
       if (!s.worked) continue;
       groups.set(s.worked.group, [...(groups.get(s.worked.group) ?? []), s.worked.id]);
     }
-    expect([...groups.keys()]).toEqual(["config", "using", "wrong"]);
+    // ADR-147 U8: the configuration is the one switched group left on the page.
+    expect([...groups.keys()]).toEqual(["config"]);
     for (const [group, ids] of groups) {
       expect(ids, group).toEqual(SURI_WORKS.map((w) => SURI_WORKED[w].id));
     }
   });
 
-  it("reads the kickoff's loop and asks by reference, and authors its own IT beat", () => {
+  it("reads the kickoff's loop by reference, then runs Prompt to Loop (U8)", () => {
     const loop = LUNCH.sections.find((s) => s.id === "the-loop");
     expect(loop?.kind === "list-groups" && loop.groups).toBe(SURI_LOOP_GROUPS);
-    const ask = LUNCH.sections.find((s) => s.id === "what-we-ask");
-    expect(ask?.kind === "cards" && ask.cards).toBe(SURI_ASK_CARDS);
-    const it = LUNCH.sections.find((s) => s.id === "what-it-connects");
-    expect(it?.kind).toBe("cards");
-    /* The kickoff's IT beat predates the marketplace story; this page's own
-       says the plugins sync from GitHub. */
-    expect(JSON.stringify(it)).toContain("GitHub");
+    /* After the loop: the shared breakdown from "How it runs", then the
+       ending. The technical beats are off this page. */
+    const ids = LUNCH.sections.map((s) => s.id);
+    expect(ids.slice(ids.indexOf("the-loop") + 1)).toEqual(["no-reflection", "close"]);
+    const tail = routeFile("suri", "lunch-and-learn", "WorkshopTail.tsx");
+    expect(tail, "mounts the shared breakdown").toContain("PromptToLoop");
+    expect(tail, "from How it runs").toContain('"ptl-runs"');
   });
 
   it("ends on the loop he made, then the shared close", () => {
@@ -171,11 +172,17 @@ describe("Suri's lunch and learn (ADR-147)", () => {
   });
 
   it("numbers its beats in order, a switched group once, and its hero lands on the page", () => {
-    beats(LUNCH).forEach((s, i) => {
-      const eyebrow =
-        s.kind === "interstitial" ? s.eyebrow : "head" in s ? s.head?.eyebrow : undefined;
-      expect(eyebrow?.startsWith(String(i + 1).padStart(2, "0")), `${s.id}: ${eyebrow}`).toBe(true);
-    });
+    /* The ending after the breakdown is unnumbered (U8): the breakdown
+       numbers its own slides. */
+    beats(LUNCH)
+      .filter((s) => s.id !== "no-reflection" && s.kind !== "close")
+      .forEach((s, i) => {
+        const eyebrow =
+          s.kind === "interstitial" ? s.eyebrow : "head" in s ? s.head?.eyebrow : undefined;
+        expect(eyebrow?.startsWith(String(i + 1).padStart(2, "0")), `${s.id}: ${eyebrow}`).toBe(
+          true
+        );
+      });
     const ids = new Set(LUNCH.sections.map((s) => s.id));
     for (const action of LUNCH.hero.actions ?? []) {
       expect(ids.has(action.href.slice(1)), action.href).toBe(true);
