@@ -1,19 +1,13 @@
 import type { ArcDef, ArcStage } from "../types";
 
 import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
-import {
-  suriConfiguration,
-  suriMonth,
-  suriRepository,
-  suriUsing,
-  suriWrong,
-} from "./shared/suriWork";
+import { suriConfiguration } from "./shared/suriWork";
 import { theLabsBet } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { whatFollows } from "./shared/whatFollows";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { theHorizon } from "./shared/workshopPractice";
-import { SURI_ASK_CARDS, SURI_LOOP_GROUPS } from "./suri-workshop";
+import { SURI_LOOP_GROUPS } from "./suri-workshop";
 
 /**
  * SURI, THE LUNCH AND LEARN (ADR-147): the page the room sees on Monday
@@ -232,73 +226,12 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       groups: SURI_LOOP_GROUPS,
     },
 
-    /* ── Chapter four · MADE REAL ───────────────────────────────────────────
-       Where the six answers live, how it is used, and what happens when a
-       skill is wrong: the shared bodies, numbered for this page. */
-    suriRepository({ eyebrow: "12 · Made real", menuLabel: "Made real", menuPrimary: true }),
-    ...suriUsing({ eyebrow: "13 · Using it", menuLabel: "Using it" }),
-    ...suriWrong({ eyebrow: "14 · When it's wrong", menuLabel: "When it's wrong" }),
-
-    /* ── Chapter five · THIS MONTH ──────────────────────────────────────────
-       The month as planned on 4 October (shared), what the month asks on top
-       of the week (the kickoff's record), and what IT connects (`IT.md`). */
-    suriMonth({ eyebrow: "15 · This month", menuLabel: "The month", menuPrimary: true }),
-    {
-      id: "what-we-ask",
-      kind: "cards",
-      menuLabel: "What we ask",
-      columns: 4,
-      head: {
-        eyebrow: "16 · What we ask",
-        title: { pre: "A few hours,", em: "on top of the week." },
-        sub: "Most of the month runs inside the meetings and tools you already have. These are the hours it needs on top, this week.",
-      },
-      cards: SURI_ASK_CARDS,
-    },
-    {
-      /* From `IT.md` and `docs/SETUP.md`: two things today, two with IT on
-         Thursday, one key in week three. The full steps are the
-         configuration page's. */
-      id: "what-it-connects",
-      kind: "cards",
-      menuLabel: "IT",
-      columns: 4,
-      head: {
-        eyebrow: "17 · What IT connects",
-        title: { pre: "What IT connects,", em: "in Suri's name." },
-        sub: "Everything in Suri's accounts, nothing in ours. Two things today, two more with IT on Thursday; the step-by-step is on the configuration page.",
-      },
-      cards: [
-        {
-          id: "plugins",
-          n: "01",
-          kicker: "Today",
-          title: "The plugins",
-          body: "Synced from GitHub into Suri's Claude by an Owner, or added as three files until that is possible.",
-        },
-        {
-          id: "connectors",
-          n: "02",
-          kicker: "Today",
-          title: "Monday and Figma",
-          body: "Both connectors on for the creative team; each person signs in once with their own account.",
-        },
-        {
-          id: "accounts",
-          n: "03",
-          kicker: "Thursday",
-          title: "Suri's own accounts",
-          body: "A GitHub organisation for the repository, a Google Cloud project for the feedback sign-in, a Vercel team for the connector.",
-        },
-        {
-          id: "key",
-          n: "04",
-          kicker: "Week three",
-          title: "One key",
-          body: "A Gemini key in Suri's name for the picture test, on the laptop that runs it, never in the repository.",
-        },
-      ],
-    },
+    /* ── Chapter four · PROMPT TO LOOP ───────────────────────────────────────
+       ADR-147 U8 (owner, 2026-10-05, twenty minutes before the room): after
+       the loop, the Prompt to Loop breakdown from "How it runs" to "Just
+       ask", mounted by the tail from the shared component (never a copy).
+       The made-real, using, when-wrong, month, asks and IT beats come off
+       this page; the technical half is for later. */
 
     /* ── The ending · THE LOOP HE MADE ──────────────────────────────────────
        Visual and tangible (owner, 2026-10-04): the finished Halloween loop,
@@ -310,7 +243,7 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       kind: "media",
       menuLabel: "One more thing",
       head: {
-        eyebrow: "18 · One more thing",
+        eyebrow: "One more thing",
         title: { pre: "No reflection:", em: "a Suri loop." },
         sub: "Made for this room from one line and your own product photograph, with the same setup: a skill, its checks, and a person who picks. Not this month's work; what the setup does once it is yours.",
       },
@@ -330,6 +263,6 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
     },
 
     /* ── What follows ─────────────────────────────────────────────────────── */
-    whatFollows("19 · What follows"),
+    whatFollows("What follows"),
   ],
 };

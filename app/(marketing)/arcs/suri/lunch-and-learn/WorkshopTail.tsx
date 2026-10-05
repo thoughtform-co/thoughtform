@@ -4,6 +4,8 @@ import { useRef } from "react";
 
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { ArcWorkedSwitch } from "@/components/arcs/ArcWorkedSwitch";
+import { PromptToLoop } from "@/components/arcs/prompt-to-loop/PromptToLoop";
+import { PROMPT_TO_LOOP_SLIDES } from "@/components/arcs/prompt-to-loop/promptToLoopSlides";
 import { useArcReveal } from "@/components/arcs/useArcReveal";
 import { SURI_LUNCH_AND_LEARN_ARC } from "@/lib/arcs/content/suri-lunch-and-learn";
 
@@ -22,6 +24,16 @@ import { SURI_LUNCH_AND_LEARN_ARC } from "@/lib/arcs/content/suri-lunch-and-lear
  *
  * Default export, because `WorkshopPortals` mounts it through `lazy()`.
  */
+/* ADR-147 U8: the page up to the loop, then Prompt to Loop from "How it
+   runs" to the end, then the ending. One running index across the three runs. */
+const SECTIONS = SURI_LUNCH_AND_LEARN_ARC.sections;
+const AFTER_LOOP = SECTIONS.findIndex((s) => s.id === "the-loop") + 1;
+const BEFORE = SECTIONS.slice(0, AFTER_LOOP);
+const AFTER = SECTIONS.slice(AFTER_LOOP);
+const BREAKDOWN = PROMPT_TO_LOOP_SLIDES.slice(
+  PROMPT_TO_LOOP_SLIDES.findIndex((s) => s.id === "ptl-runs")
+);
+
 export default function SuriLunchAndLearnTail() {
   const rootRef = useRef<HTMLDivElement>(null);
   useArcReveal({ rootRef, selector: ".arc-reveal", jsClass: "is-arc-js" });
@@ -32,7 +44,9 @@ export default function SuriLunchAndLearnTail() {
       className="arc-root arc-root--detail tw-arc__root"
       data-arc-format={SURI_LUNCH_AND_LEARN_ARC.format}
     >
-      <ArcSectionRenderer sections={SURI_LUNCH_AND_LEARN_ARC.sections} />
+      <ArcSectionRenderer sections={BEFORE} />
+      <PromptToLoop startIndex={BEFORE.length} slides={BREAKDOWN} />
+      <ArcSectionRenderer sections={AFTER} indexOffset={BEFORE.length + BREAKDOWN.length} />
       <ArcWorkedSwitch />
     </div>
   );

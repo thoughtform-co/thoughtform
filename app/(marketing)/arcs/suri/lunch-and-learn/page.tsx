@@ -32,8 +32,10 @@ import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";
 // re-derivation. Before the route sheet, so the route can overrule it.
 import "@/components/arcs/arcs.css";
 // about-stage.css / continuum-stage.css are deliberately NOT imported: this
-// page mounts no about deck stage (ADR-053). No prompt-to-loop.css: this cut
-// carries no breakdown (owner, 2026-10-04).
+// page mounts no about deck stage (ADR-053). The Prompt to Loop breakdown's
+// own sheet, after the arcs' sheet, as v3 imports it (ADR-147 U8: the page
+// now runs the breakdown from "How it runs").
+import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 // ⚠ v1's ROUTE SHEET, BY PATH. This page renders `.tw-root` and shares v1's
 // prototype, so it shares v1's overrides too; a copy would be a second thing
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
