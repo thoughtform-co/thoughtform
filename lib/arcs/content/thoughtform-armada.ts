@@ -228,7 +228,7 @@ const SKILL: ArcSection[] = [
         id: "desc",
         as: "meta",
         key: "description",
-        text: "Runs Suri's Studio Design team from a request to a result and back. Says which skill does each step, which check reads the step and who decides it, then writes the record and reads it back.",
+        text: "Runs Suri's Studio Design team from an approved brief to a set of paid social statics and back. Says which step comes next, which check reads it and who decides, then writes the record and reads it back.",
         mark: 1,
       },
       { id: "fm-close", as: "meta", text: "---" },
@@ -248,7 +248,7 @@ const SKILL: ArcSection[] = [
       {
         id: "never",
         as: "rule",
-        text: "It never makes the work, never approves it, never merges a pull request and never changes a rule on its own.",
+        text: "It never makes an ad, never approves it, never merges a pull request and never changes a rule on its own.",
         mark: 3,
       },
     ],
