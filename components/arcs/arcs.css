@@ -8992,6 +8992,21 @@ html[data-theme="light"] .arc-root .arc-signal {
   background-image: radial-gradient(circle, var(--arc-grid) 1px, transparent 1.5px);
   background-size: 20px 20px;
 }
+/* ADR-147 U1: a key visual in place of the board. No housing, no dot grid:
+   the plate's edges dissolve into the page's ground so the beat reads as a
+   continuation of the dark it arrives from, not a picture in a frame. */
+.arc-hb__visual--plate {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.arc-hb__plate-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+}
 .arc-hb__svg {
   display: block;
   width: 100%;

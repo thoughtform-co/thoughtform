@@ -73,6 +73,10 @@ export interface WorkshopIntro {
    *  button, no ticker (beat 09 shows the same news). */
   signal: NonNullable<CorridorCopyOverride["signal"]>;
   proof: {
+    /** The pile's order on these cuts (ADR-147 U1, owner 2026-10-05): the
+     *  studio right after the films, as it happened at Loop, where the
+     *  homepage keeps the record's order (ADR-126). Every track once. */
+    order: readonly WorkshopProofTrack[];
     /** One line per card, in place of `card.lede`; titles stay the record's.
      *  The card heads letter the client alone, no phase (ADR-143 U6). */
     ledes: Readonly<Record<WorkshopProofTrack, string>>;
@@ -147,21 +151,26 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
   // ADR-143 U7 (owner, same day): the line takes the stations' own grammar,
   // a verb in gold and its object (NAVIGATE THE INTELLIGENCE. · ENCODE THE
   // CONTEXT. · BUILD ON THE LAYER.), so it reads as the Arc's last move.
+  // ADR-147 U1 (owner, 2026-10-05: "more concise, non AI slop"): said as
+  // the work's end state, and no longer pre-empting the studio card's title,
+  // which says "self-sufficient" a scroll later.
   signal: {
-    titleHtml: "<em>EMBED</em> IN THE WORK<br>TO MAKE THE TEAMS SELF-SUFFICIENT.",
-    ariaLabel: "Embed in the work to make the teams self-sufficient",
+    titleHtml: "<em>EMBED</em> UNTIL THE TEAM<br>RUNS IT ALONE.",
+    ariaLabel: "Embed until the team runs it alone",
     ticker: false,
   },
   proof: {
+    order: ["atl-films", "studio", "tooling", "ai-transformation"],
     ledes: {
       "atl-films":
         "Two 30-second films made with generative models to the craft bar of live action, and run as paid media.",
       tooling:
         "Four tools built with the people who run the work, where it got stuck. Those teams own them.",
-      // Evidence, not a restatement: the signal line and this card's title
-      // already say the team runs it alone (ADR-143 U6).
+      // ADR-147 U1 (owner, 2026-10-05): the guardrails the studio set for
+      // itself, every clause from the card's own sheets (THE GOVERNANCE,
+      // THE RED LINE) and its brief; the card follows the films now.
       studio:
-        "Three months after the films, every designer in the studio was making their own ads with AI.",
+        "The studio drew its own lines for AI: real photography wherever an image says who Loop is, no AI-generated creators, and the time saved goes back into live-action craft.",
       "ai-transformation":
         "Then we built for the agents: what each team knows, written down, and the checks they run on their own work. The rest of today is how.",
     },

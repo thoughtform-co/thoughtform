@@ -22,6 +22,9 @@ import { buildJourneyRoster } from "@/components/landing/v7/rail-instruments/jou
  */
 export const SURI_LUNCH_JOURNEY_ORDER = [
   "hero",
+  // v3's opener (ADR-147 U1): a station the manifest does not know, so it
+  // resolves directly off `data-active-station` (`rosterDirectId`).
+  "equilibrium",
   "about",
   "voidwalker",
   "thesis",
@@ -40,7 +43,8 @@ export const SURI_LUNCH_JOURNEY = buildJourneyRoster(
   // whole Arc.
   "voidwalker",
   [
-    { id: "hero", name: "Home" },
+    // Home holds through the opener, which has no mark of its own.
+    { id: "hero", name: "Home", range: ["hero", "equilibrium"] },
     { id: "about" },
     { id: "voidwalker" },
     { id: "thesis", name: "Thesis" },

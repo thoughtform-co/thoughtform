@@ -77,81 +77,113 @@ export function ArcHeroBoard({ section, index, motion = "reveal" }: ArcHeroBoard
           ) : null}
         </div>
 
-        <figure className="arc-hb__visual arc-reveal" {...rung(motion, 0.16, 28, 0)}>
-          <svg
-            className="arc-hb__svg"
-            viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
-            preserveAspectRatio="xMidYMid meet"
-            role="img"
-            aria-label="One piece of work in the middle, wired to six plates around it. The wires to the plates a person writes are lit, and one frame holds them."
+        {section.plate ? (
+          // ADR-147 U1: a key visual in place of the board, unframed. A plain
+          // `img` (the arcs' own media are), lazy, with its box declared.
+          <figure
+            className="arc-hb__visual arc-hb__visual--plate arc-reveal"
+            {...rung(motion, 0.16, 28, 0)}
           >
-            <g className="arc-hb__wires">
-              {bundles
-                .filter((b) => !isLit(b.side, b.i))
-                .flatMap((b) => [
-                  ...b.lines.map((line, k) => (
-                    <path key={`${b.side}${b.i}-${k}`} d={toPath(line)} />
-                  )),
-                  ...pinsOf(b).map((p, k) => (
-                    <rect key={`${b.side}${b.i}-p${k}`} x={p.x} y={p.y} width={p.w} height={p.h} />
-                  )),
-                ])}
-            </g>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="arc-hb__plate-img"
+              src={section.plate.src}
+              alt={section.plate.alt}
+              width={section.plate.width}
+              height={section.plate.height}
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        ) : (
+          <figure className="arc-hb__visual arc-reveal" {...rung(motion, 0.16, 28, 0)}>
+            <svg
+              className="arc-hb__svg"
+              viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
+              preserveAspectRatio="xMidYMid meet"
+              role="img"
+              aria-label="One piece of work in the middle, wired to six plates around it. The wires to the plates a person writes are lit, and one frame holds them."
+            >
+              <g className="arc-hb__wires">
+                {bundles
+                  .filter((b) => !isLit(b.side, b.i))
+                  .flatMap((b) => [
+                    ...b.lines.map((line, k) => (
+                      <path key={`${b.side}${b.i}-${k}`} d={toPath(line)} />
+                    )),
+                    ...pinsOf(b).map((p, k) => (
+                      <rect
+                        key={`${b.side}${b.i}-p${k}`}
+                        x={p.x}
+                        y={p.y}
+                        width={p.w}
+                        height={p.h}
+                      />
+                    )),
+                  ])}
+              </g>
 
-            <g className="arc-hb__lit">
-              {bundles
-                .filter((b) => isLit(b.side, b.i))
-                .flatMap((b) => [
-                  ...b.lines.map((line, k) => (
-                    <path
-                      key={`${b.side}${b.i}-${k}`}
-                      d={toPath(line)}
-                      pathLength={1}
-                      data-hb-side={b.side}
-                    />
-                  )),
-                  ...pinsOf(b).map((p, k) => (
-                    <rect key={`${b.side}${b.i}-p${k}`} x={p.x} y={p.y} width={p.w} height={p.h} />
-                  )),
-                ])}
-            </g>
+              <g className="arc-hb__lit">
+                {bundles
+                  .filter((b) => isLit(b.side, b.i))
+                  .flatMap((b) => [
+                    ...b.lines.map((line, k) => (
+                      <path
+                        key={`${b.side}${b.i}-${k}`}
+                        d={toPath(line)}
+                        pathLength={1}
+                        data-hb-side={b.side}
+                      />
+                    )),
+                    ...pinsOf(b).map((p, k) => (
+                      <rect
+                        key={`${b.side}${b.i}-p${k}`}
+                        x={p.x}
+                        y={p.y}
+                        width={p.w}
+                        height={p.h}
+                      />
+                    )),
+                  ])}
+              </g>
 
-            {frame ? <path className="arc-hb__frame" d={chamfer(frame, PLATE_CUT + 6)} /> : null}
+              {frame ? <path className="arc-hb__frame" d={chamfer(frame, PLATE_CUT + 6)} /> : null}
 
-            {(["left", "right"] as const).flatMap((side) =>
-              PLATES[side].map((r, i) => {
-                const on = isLit(side, i as PlateIndex);
-                return (
-                  <g
-                    key={`${side}${i}`}
-                    className="arc-hb__plate"
-                    data-hb-lit={on ? "" : undefined}
-                  >
-                    <path d={chamfer(r, PLATE_CUT)} />
-                    <rect x={r.x + 22} y={r.y + 30} width={on ? 120 : 96} height="8" />
-                    <rect x={r.x + 22} y={r.y + 56} width={on ? 190 : 150} height="8" />
-                  </g>
-                );
-              })
-            )}
+              {(["left", "right"] as const).flatMap((side) =>
+                PLATES[side].map((r, i) => {
+                  const on = isLit(side, i as PlateIndex);
+                  return (
+                    <g
+                      key={`${side}${i}`}
+                      className="arc-hb__plate"
+                      data-hb-lit={on ? "" : undefined}
+                    >
+                      <path d={chamfer(r, PLATE_CUT)} />
+                      <rect x={r.x + 22} y={r.y + 30} width={on ? 120 : 96} height="8" />
+                      <rect x={r.x + 22} y={r.y + 56} width={on ? 190 : 150} height="8" />
+                    </g>
+                  );
+                })
+              )}
 
-            <g className="arc-hb__card">
-              <path d={chamfer(CARD, CARD_CUT)} />
-              <path
-                className="arc-hb__lip"
-                d={`M${CARD.x} ${CARD.y + 1}H${CARD.x + CARD.w - CARD_CUT - 0.4}`}
-              />
-              <rect x={CARD.x + 28} y={CARD.y + 34} width="84" height="8" />
-              <rect x={CARD.x + 28} y={CARD.y + 62} width="210" height="18" />
-              <rect x={CARD.x + 28} y={CARD.y + 118} width="240" height="8" />
-              <rect x={CARD.x + 28} y={CARD.y + 140} width="190" height="8" />
-              <rect x={CARD.x + 28} y={CARD.y + 272} width="80" height="16" />
-              <rect x={CARD.x + 116} y={CARD.y + 272} width="80" height="16" data-hb-on="" />
-              <rect x={CARD.x + 204} y={CARD.y + 272} width="80" height="16" />
-              <rect x={CARD.x + 28} y={CARD.y + 306} width="200" height="8" />
-            </g>
-          </svg>
-        </figure>
+              <g className="arc-hb__card">
+                <path d={chamfer(CARD, CARD_CUT)} />
+                <path
+                  className="arc-hb__lip"
+                  d={`M${CARD.x} ${CARD.y + 1}H${CARD.x + CARD.w - CARD_CUT - 0.4}`}
+                />
+                <rect x={CARD.x + 28} y={CARD.y + 34} width="84" height="8" />
+                <rect x={CARD.x + 28} y={CARD.y + 62} width="210" height="18" />
+                <rect x={CARD.x + 28} y={CARD.y + 118} width="240" height="8" />
+                <rect x={CARD.x + 28} y={CARD.y + 140} width="190" height="8" />
+                <rect x={CARD.x + 28} y={CARD.y + 272} width="80" height="16" />
+                <rect x={CARD.x + 116} y={CARD.y + 272} width="80" height="16" data-hb-on="" />
+                <rect x={CARD.x + 204} y={CARD.y + 272} width="80" height="16" />
+                <rect x={CARD.x + 28} y={CARD.y + 306} width="200" height="8" />
+              </g>
+            </svg>
+          </figure>
+        )}
       </div>
     </ArcBeat>
   );

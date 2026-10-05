@@ -7,6 +7,7 @@ import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 import { replaceAboutBio } from "../../thoughtform/workshop-v3/about";
+import { insertEquilibriumStation } from "../../thoughtform/workshop-v3/equilibrium";
 import { replaceHeroCopy } from "../../thoughtform/workshop-v3/hero";
 import { SURI_LUNCH_JOURNEY, SURI_LUNCH_NAV_ITEMS } from "./journey";
 import { SuriLunchAndLearnPortals } from "./WorkshopPortals";
@@ -38,6 +39,10 @@ import "@/components/arcs/arcs.css";
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
 import "../../thoughtform/workshop-v1/thoughtform-workshop.css";
+// v3's opener, BY PATH (ADR-147 U1, owner 2026-10-05: "port v3's equilibrium
+// opener"). Every rule is scoped `.tw-root[data-tw-cut="v3"]`, which this
+// page renders, and wins on specificity, never on order (ADR-141 U1).
+import "../../thoughtform/workshop-v3/equilibrium.css";
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";
 // The instruments after it, exactly as `/` and the arcs route do; without it
@@ -62,7 +67,7 @@ export const metadata: Metadata = {
  * (`WORKSHOP_INTRO`, through the same four seams, so the owner's edits to v3
  * land here), and this client's own arc after the proof.
  *
- *   hero → about → the eras → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)
+ *   hero → the equilibrium → about → the eras → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)
  *        → the proof stack (#services, no card ring)
  *        → Suri's arc (#workshop) → contact
  *
@@ -97,9 +102,13 @@ export default async function SuriLunchAndLearnPage() {
     removeStations: WORKSHOP_REMOVED_STATIONS,
     corridorMountId: CORRIDOR_MOUNT_ID,
   });
-  // The intro leads into the workshop (ADR-143 U3, U6), read from v3's record.
+  // The intro leads into the workshop (ADR-143 U3, U6), read from v3's record,
+  // with v3's equilibrium station between the hero and the About (ADR-147 U1).
   const bodyHtml = replaceAboutBio(
-    replaceHeroCopy(protoHtml, WORKSHOP_INTRO.hero),
+    insertEquilibriumStation(
+      replaceHeroCopy(protoHtml, WORKSHOP_INTRO.hero),
+      WORKSHOP_INTRO.equilibrium
+    ),
     WORKSHOP_INTRO.about
   );
   const shared = extractV7Text();

@@ -89,6 +89,16 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
         title: { pre: "What this looks like", em: "at Suri." },
         sub: "Three pieces of your own work, set up this month so the team runs them: the brief, the Monday read, and the statics. First, how the intelligence behaves.",
       },
+      // ADR-147 U1 (owner, 2026-10-05): a Thought + Form keeper in place of
+      // the board, for a clean hand from the proof into the room's own part.
+      // MF-01 (Midjourney 6f2a7b44, "the approved frame"); the hero is MF-04
+      // and the footer MF-10, so this one is not seen twice.
+      plate: {
+        src: "/arcs/suri/at-suri-mf01.webp",
+        alt: "A head shaped from sand inside a broken ring, rising out of a dune.",
+        width: 1456,
+        height: 816,
+      },
     },
 
     /* ── Chapter two · THE SITUATION ────────────────────────────────────────

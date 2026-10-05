@@ -10,7 +10,7 @@ import type { CaseTrack } from "@/lib/cases/types";
 
 /**
  * The third cut's proof (ADR-143 U3, U6): v1's pile, the same four Loop
- * projects in the record's order, with each card's lede said in one line for
+ * projects in the cut's own order (the studio after the films, ADR-147 U1), with each card's lede said in one line for
  * the room and the head lettering the client alone.
  *
  * ⚠ A COPY OF THE RECORD WITH TWO FIELDS REPLACED, never a prop on
@@ -22,7 +22,11 @@ import type { CaseTrack } from "@/lib/cases/types";
  * last card.
  */
 export function workshopV3Tracks(): readonly CaseTrack[] {
-  return proofStackTracks().map((track) => {
+  const byId = new Map(proofStackTracks().map((t) => [t.id, t]));
+  /* The cut's own order (ADR-147 U1): the studio follows the films. */
+  return WORKSHOP_INTRO.proof.order.map((id) => {
+    const track = byId.get(id);
+    if (!track) throw new Error(`[workshop-v3 proof] "${id}" is not on the pile`);
     const lede = WORKSHOP_INTRO.proof.ledes[track.id as WorkshopProofTrack];
     if (lede === undefined) {
       throw new Error(`[workshop-v3 proof] no lede for track "${track.id}"`);

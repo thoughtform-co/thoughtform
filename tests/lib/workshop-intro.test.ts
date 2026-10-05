@@ -191,7 +191,17 @@ describe("the hero rewrite", () => {
 
 describe("the third cut's proof pile", () => {
   it("replaces each card's lede and empties its phase, nothing else", () => {
-    const record = proofStackTracks();
+    const pile = proofStackTracks();
+    // ADR-147 U1: the cut's own order, the studio after the films, every
+    // track of the pile exactly once.
+    expect([...WORKSHOP_INTRO.proof.order]).toEqual([
+      "atl-films",
+      "studio",
+      "tooling",
+      "ai-transformation",
+    ]);
+    expect([...WORKSHOP_INTRO.proof.order].sort()).toEqual(pile.map((t) => t.id).sort());
+    const record = WORKSHOP_INTRO.proof.order.map((id) => pile.find((t) => t.id === id)!);
     const v3 = workshopV3Tracks();
     expect(v3.map((t) => t.id)).toEqual(record.map((t) => t.id));
     v3.forEach((track, i) => {

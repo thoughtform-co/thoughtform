@@ -26,6 +26,8 @@ import { useWorkshopFlow } from "../../thoughtform/workshop-v1/flow/useWorkshopF
  */
 const WorkshopProof = lazy(() => import("../../thoughtform/workshop-v3/WorkshopProof"));
 const SuriLunchAndLearnTail = lazy(() => import("./WorkshopTail"));
+/* v3's opener hologram (ADR-147 U1), v3's own mount by import. */
+const EquilibriumMount = lazy(() => import("../../thoughtform/workshop-v3/EquilibriumMount"));
 
 const RING_ATTR = "data-services-ring";
 
@@ -36,6 +38,12 @@ export function SuriLunchAndLearnPortals() {
     return () => html.removeAttribute(RING_ATTR);
   }, []);
 
+  useNestedRoot(
+    ".tw-root [data-tw-eq-canvas]",
+    <Suspense fallback={null}>
+      <EquilibriumMount />
+    </Suspense>
+  );
   useNestedRoot(
     ".tw-root [data-tw-proof-root]",
     <Suspense fallback={null}>

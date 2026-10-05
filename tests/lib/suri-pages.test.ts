@@ -73,11 +73,15 @@ describe("Suri's lunch and learn (ADR-147)", () => {
     const tail = routeFile("suri", "lunch-and-learn", "WorkshopTail.tsx");
     expect(tail, "mounts the worked switch beside the sections").toContain("ArcWorkedSwitch");
     expect(tail, "no breakdown").not.toContain("PromptToLoop");
-    /* v3's journey without its equilibrium opener (ADR-143 U7): that station is
-       v3's own, still moving (U8, U9), and the owner ports v3's later changes
-       to this page himself. Everything else in the corridor is the same. */
-    expect([...SURI_LUNCH_JOURNEY_ORDER]).toEqual(
-      WORKSHOP_V3_JOURNEY_ORDER.filter((id) => id !== "equilibrium")
+    /* v3's journey, its equilibrium opener included since ADR-147 U1 (owner,
+       2026-10-05), mounted from v3's own modules. */
+    expect([...SURI_LUNCH_JOURNEY_ORDER]).toEqual([...WORKSHOP_V3_JOURNEY_ORDER]);
+    expect(page, "splices v3's opener").toContain('"../../thoughtform/workshop-v3/equilibrium"');
+    expect(page, "imports v3's opener sheet").toContain(
+      '"../../thoughtform/workshop-v3/equilibrium.css"'
+    );
+    expect(portals, "mounts v3's hologram, never a copy").toContain(
+      '"../../thoughtform/workshop-v3/EquilibriumMount"'
     );
   });
 

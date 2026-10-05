@@ -539,6 +539,11 @@ export type ArcSection = ArcSectionBase &
          *  them. Every lit plate must sit on one side, adjacent, or the frame
          *  encloses a plate that is not lit (registry-pinned). */
         lit: readonly (readonly ["left" | "right", 0 | 1 | 2])[];
+        /** A key visual IN PLACE OF the board (ADR-147 U1, owner 2026-10-05:
+         *  "one of the variants … that way we have a clean transition"). Kept
+         *  dark imagery, unframed, its edges dissolving into the ground; absent,
+         *  the board draws as before. */
+        plate?: ArcImage & { width: number; height: number };
       }
     | {
         /**

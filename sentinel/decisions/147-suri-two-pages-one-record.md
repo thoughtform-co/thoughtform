@@ -81,8 +81,8 @@ exactly what the `syllabus` kind draws (a tablist of stations under phase bracke
 after each, the open station's four-row sheet, every sheet in the DOM for print), and what it
 could not do was letter anything but a course: `SYLLABUS_ROWS`, `SYLLABUS_CLASS_WORD`,
 `SYLLABUS_TABLIST_LABEL` were constants. `words?: { station, tablist, rows }` on the section,
-resolved once in `syllabusWords()`, lets this page letter *Step · The steps · What you do · What
-you end with · Done when · Where*; the row IDS never change, so the gate row's wash and the
+resolved once in `syllabusWords()`, lets this page letter _Step · The steps · What you do · What
+you end with · Done when · Where_; the row IDS never change, so the gate row's wash and the
 record's fields hold, and a course without `words` renders as before. Two hairline glyphs join
 the closed set, `skill` (a file with lines) and `plugin` (nested boxes). The steps are written
 from the doctrine and the plugin repository, never invented: the bench's first session (one
@@ -111,6 +111,24 @@ printed handout; nothing is deleted.
 - `sheet-config-fit`: the lunch and learn's board derives the Armada page's row and chips.
 - `thoughtform-workshop-v2`'s folder walk, `hero-preload`, `thoughtform-armada` (unchanged,
   green on the hoisted module).
+
+## U1 (2026-10-05, owner, the morning of the room)
+
+- **The opener is v3's.** The equilibrium station (ADR-143 U7 to U11) is spliced in BY IMPORT
+  (`insertEquilibriumStation`, `equilibrium.css` by path, `EquilibriumMount` in the portals), so
+  the journey is v3's exactly and `suri-pages` pins it equal now, where it pinned the absence.
+- **The signal line is shorter, on the shared record** (v3 takes it too): EMBED UNTIL THE TEAM /
+  RUNS IT ALONE. It no longer says "self-sufficient" a scroll before the studio card does.
+- **The studio card follows the films on these cuts** (`WORKSHOP_INTRO.proof.order`, read by
+  `workshopV3Tracks`; the homepage keeps ADR-126's order), and its lede is the guardrails the
+  studio drew for itself, every clause from the card's own sheets: real photography wherever an
+  image says who Loop is, no AI-generated creators, the time saved going back into live-action
+  craft. `workshop-intro` pins the order and that every pile track appears once.
+- **The opening beat takes a key visual in place of the board** (`hero-board.plate`, additive:
+  absent, the board draws as before). MF-01 (Midjourney `6f2a7b44`), encoded at its native
+  1456x816 to `public/arcs/suri/at-suri-mf01.webp` (88 kB, lazy); the hero is MF-04 and the
+  footer MF-10, so no keeper is seen twice. Unframed, its edges dissolving into the ground
+  (`closest-side` mask). ⚠ Kept-dark imagery: in light it reads as a dark oval on parchment.
 
 ## Next
 
