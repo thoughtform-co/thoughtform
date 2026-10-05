@@ -178,9 +178,9 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     order: ["atl-films", "studio", "tooling", "ai-transformation"],
     ledes: {
       "atl-films":
-        "Two 30-second films made with generative models to the craft bar of live action, and run as paid media.",
+        "Two 30-second films by Loop's own creative team, made with generative models and run as paid media beside two live-action spots.",
       tooling:
-        "Four tools built with the people who run the work, where it got stuck. Those teams own them.",
+        "Four tools built with the people who run the work, at the points where it got stuck. Those teams own and run them now.",
       // ADR-147 U1 (owner, 2026-10-05): the guardrails the studio set for
       // itself, every clause from the card's own sheets (THE GOVERNANCE,
       // THE RED LINE) and its brief; the card follows the films now.
@@ -194,8 +194,84 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     // own sheets (THE GOVERNANCE, THE RED LINE) and its brief.
     // The title says who drew them; the record's "We make the creative team
     // self-sufficient" stays on the homepage.
-    titles: { studio: "The Studio set its own guidelines" },
+    // ADR-147 U3 (owner, same day: "change the copy on the other proof cards
+    // too"): all four in the Studio card's register, what happened, in the
+    // past tense; the homepage keeps the record's "We ..." lines.
+    titles: {
+      "atl-films": "The films matched live action",
+      studio: "The Studio set its own guidelines",
+      tooling: "Each team got the tool its work needed",
+      "ai-transformation": "The agents got a layer to run on",
+    },
+    // The three other cards' claims, digit-free (this record's copy law),
+    // each from its own track's blocks and brief.
     claims: {
+      "atl-films": [
+        {
+          glyph: "masters",
+          title: "Two narrative films",
+          desc: "Made with generative image and video models for top-of-funnel paid media.",
+        },
+        {
+          glyph: "level",
+          title: "The live-action bar",
+          desc: "Direction, art direction, edit, colour and sound held to the standard of a shoot.",
+        },
+        {
+          glyph: "broadcast",
+          title: "On YouTube and connected TV",
+          desc: "Run as paid media in the US.",
+        },
+        {
+          glyph: "parallel",
+          title: "Next to live action",
+          desc: "The two AI films ran in the same campaign as two traditionally produced spots.",
+        },
+      ],
+      tooling: [
+        {
+          glyph: "gap",
+          title: "Too specific to buy",
+          desc: "Too specific for off-the-shelf software, too small for an agency build.",
+        },
+        {
+          glyph: "collapse",
+          title: "One surface for the work",
+          desc: "Five sources became one surface and five handoffs one flow. Nothing is retyped.",
+        },
+        {
+          glyph: "ownership",
+          title: "The teams own them",
+          desc: "Built with whoever runs the workflow. Localization now runs its own tool end to end.",
+        },
+        {
+          glyph: "substrate",
+          title: "Shared judgment underneath",
+          desc: "The tools share one written-down judgment; one was even extracted from another.",
+        },
+      ],
+      "ai-transformation": [
+        {
+          glyph: "board",
+          title: "Built for agents first",
+          desc: "Per piece of work: which model runs it, what it can reach, what it decides, who owns it.",
+        },
+        {
+          glyph: "encode",
+          title: "Know-how, written down",
+          desc: "What each team knows, written once, as the briefing every agent starts from.",
+        },
+        {
+          glyph: "envelope",
+          title: "Checks it runs on itself",
+          desc: "What good looks like, written as checks: a result passes, goes to review, or is blocked.",
+        },
+        {
+          glyph: "reuse",
+          title: "Set the goal, let it run",
+          desc: "Say what success looks like and let it work for hours. A person judges what comes back.",
+        },
+      ],
       studio: [
         {
           glyph: "field",
