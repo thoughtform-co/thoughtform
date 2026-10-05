@@ -105,7 +105,6 @@ export default async function SuriLunchAndLearnPage() {
   const shared = extractV7Text();
   const corridorText = {
     ...shared,
-    thoughtform: { ...shared.thoughtform, ...WORKSHOP_INTRO.thesis },
     copy: {
       stations: WORKSHOP_INTRO.stations,
       signal: WORKSHOP_INTRO.signal,

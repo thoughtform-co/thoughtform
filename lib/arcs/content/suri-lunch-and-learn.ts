@@ -111,6 +111,8 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       kind: "cards",
       menuLabel: "The two you write",
       columns: 2,
+      // The board's two lit plates, opened up (ADR-143 U11, owner 2026-10-05).
+      plates: { tag: "You write this" },
       head: {
         eyebrow: "07 · The two you write",
         title: { pre: "Two of the six", em: "nobody can write for you." },

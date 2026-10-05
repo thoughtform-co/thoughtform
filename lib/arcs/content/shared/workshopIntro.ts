@@ -18,18 +18,17 @@ import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./worksh
  * today's intro; every seam this record feeds is the identity when it is not
  * passed, so they render byte-identical.
  *
- * ⚠ THE THESIS TITLE IS THE HOMEPAGE'S, ITS PARAGRAPHS ARE NOT (owner,
- * 2026-10-03: "restore the copy from the home page"; then 2026-10-04, ADR-143
- * U6: reword the paragraphs). "AI sits somewhere between tool and
- * collaborator." stays, because the era title morphs into it (U5); the two
- * paragraphs under it stop asking beat 05's question early and stop selling.
+ * ⚠ THE THESIS IS THE HOMEPAGE'S, TITLE AND PARAGRAPHS (owner, 2026-10-05,
+ * ADR-143 U11: "restore copy from homepage"). U6 had reworded the two
+ * paragraphs; they are read from the homepage's prototype again, so this
+ * record carries no thesis and the cuts pass the shared text through. The
+ * glyphs' words below stay this cut's own.
  *
  * ⚠ THE INTRO BUILDS UP, IT DOES NOT GIVE AWAY (owner, 2026-10-04). The
  * captions point at the workshop's three parts in plain words and never name
  * the skills, the evals or the intelligence configuration: beat 06 reveals
- * that term. The Arc is a philosophy the work came out of, hinted at as a
- * loop once (the thesis's second paragraph), never explained; so the proof
- * cards carry no phase either.
+ * that term. The Arc is a philosophy the work came out of, never explained;
+ * so the proof cards carry no phase either.
  *
  * ⚠ THE ARC KEEPS ITS OWN WORDS (owner, 2026-10-03): Navigate / Encode /
  * Build stay, which overrides, for this page only, the Suri sprint plan's
@@ -52,12 +51,11 @@ export interface WorkshopIntro {
   /** The station after the hero (ADR-143 U7): the Thoughtform equilibrium,
    *  a holographic object in three.js (ADR-143 U8: a crumpled contour mass,
    *  a gold gate on a fulcrum, a receding stack of toothed rings, on one axis).
-   *  Plain text throughout; the title carries no gold word, because the
-   *  object's one gold is the flow from upstream to downstream. */
+   *  ⚠ THE STATION LETTERS NO HEAD (U11, owner 2026-10-05: "don't think we
+   *  need the text either"): the object and its three words carry it, and
+   *  the title is the station's accessible name alone. */
   equilibrium: {
-    eyebrow: string;
     title: string;
-    sub: string;
     /** The three words the object names, keyed by the point the geometry
      *  gives each (`components/holo-program/equilibriumGeom.ts`). */
     labels: Readonly<Record<"downstream" | "upstream" | "encode", { key: string; text: string }>>;
@@ -65,8 +63,6 @@ export interface WorkshopIntro {
   /** The About's bio paragraphs, inner HTML each. The role line and the
    *  meta row are the prototype's, unchanged: the eras name the present. */
   about: readonly string[];
-  /** The thesis's two paragraphs, under the homepage's title (ADR-143 U6). */
-  thesis: { body1Html: string; body2Html: string };
   /** The thesis glyphs' second words, in place of See / Crystallize / Ship. */
   phases: NonNullable<CorridorCopyOverride["phaseSubs"]>;
   /** Each station's caption: the Arc's move, then what it means in practice. */
@@ -74,7 +70,7 @@ export interface WorkshopIntro {
   /** The Build station's right-hand column: the agents the layer runs. */
   stack: CorridorStackCopy;
   /** The epilogue's signal line: this cut's own title, the homepage's
-   *  button, no ticker (beat 10 shows the same news). */
+   *  button, no ticker (beat 09 shows the same news). */
   signal: NonNullable<CorridorCopyOverride["signal"]>;
   proof: {
     /** One line per card, in place of `card.lede`; titles stay the record's.
@@ -105,9 +101,7 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
   // Owner, 2026-10-04 (his Wispr note "Thoughtform workshop V3"): instant
   // ideas are no longer the edge; the balance is. His own phrase is the name.
   equilibrium: {
-    eyebrow: "Before we start",
     title: "The Thoughtform equilibrium.",
-    sub: "AI closed the distance between thought and form. The edge now is balance: agents run the work downstream, so people go further upstream.",
     labels: {
       downstream: { key: "Downstream", text: "Decks, analyses, synthesis" },
       upstream: { key: "Upstream", text: "Strategy, architecture, work across teams" },
@@ -120,11 +114,6 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     // intelligence."
     'Today he maps which intelligence runs which work, inside the teams that do it: at <span class="voidwalker__bio-mark">Loop Earplugs</span>, and for other teams through Thoughtform.',
   ],
-  // The second paragraph is the one place the Arc is hinted at as a loop.
-  thesis: {
-    body1Html: "Working with it well takes practice, and it can be learned.",
-    body2Html: "I do it in three moves, and make them again for every piece of work.",
-  },
   // "Ship" was the Build that made tools; each word echoes its caption.
   phases: { navigate: "Learn", encode: "Write down", build: "Hand over" },
   // Part one, part two, part three of the day, without naming them: the
@@ -191,7 +180,7 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     },
   },
   /* 02 ends on "each runs longer without you", so 03 stays on length (the
-     price moves to its sub, the money's own beat is 12) and 04 turns on it. */
+     price moves to its sub, the money's own beat is 11) and 04 turns on it. */
   curve: {
     ...THE_CURVE_BEAT,
     head: {

@@ -14,6 +14,15 @@
  * from the same numbers, and the DOM words seated over it land on it. The reader may turn it inside
  * a band (the figure's `drag`); the words follow through the anchor channel.
  *
+ * ⚠ BARE ON THE PAGE (ADR-143 U11, owner 2026-10-05: "remove the background
+ * and grid; i want this to blend as elegantly as possible with the rest of
+ * the site"). `bare` clears the canvas to transparent, paints no ground, runs
+ * the grain and the vignette at zero, and has the instrument draw no floor,
+ * no dust of its own and no bokeh: the page's own starfield behind the
+ * station is the object's air, as it is the About's. Bloom stays, on the
+ * object alone. The lab's river keeps its ground (it is a diorama, a block
+ * with a ground of its own).
+ *
  * ⚠ THE LIGHT GROUND'S TWO RECTANGLES ARE CLOSED, as on the stage (ADR-140):
  * bloom's threshold sits ABOVE the paper's luminance there, and the vignette
  * is zero on paper. ⚠ No chromatic aberration: ADR-080 measured it splitting
@@ -38,6 +47,8 @@ import { holoGroundCss, resolveHoloPalette } from "./holoPalette";
 import { POST } from "./holoProgramGeom";
 
 const RAD = Math.PI / 180;
+/** The bloom's spread on the page (ADR-143 U11): the glow stays on the lines. */
+export const BARE_BLOOM_RADIUS = 0.5;
 
 /** Pumps the loop only while the object is on screen AND the tab is visible:
  *  the object is alive, and this gate is where that life's cost is reclaimed. */
@@ -68,6 +79,9 @@ export interface HoloEquilibriumCanvasProps {
   variant?: EqFigureId;
   /** Where the eye is, reported by the scene each frame (the bearing readout). */
   onView?: (azDeg: number, elDeg: number) => void;
+  /** Blend into the page (ADR-143 U11): a transparent canvas, no ground, no
+   *  grain or vignette, and the instrument without its floor, dust or bokeh. */
+  bare?: boolean;
 }
 
 export function HoloEquilibriumCanvas({
@@ -79,9 +93,9 @@ export function HoloEquilibriumCanvas({
   className = "tw-eq__gl-canvas",
   variant = "instrument",
   onView,
+  bare = false,
 }: HoloEquilibriumCanvasProps) {
   const figure = EQ_FIGURES[variant];
-  const Scene = variant === "river" ? HoloRiverScene : HoloEquilibriumScene;
   const wrapRef = useRef<HTMLDivElement>(null);
   const [glEpoch, setGlEpoch] = useState(0);
   const [onScreen, setOnScreen] = useState(false);
@@ -136,14 +150,14 @@ export function HoloEquilibriumCanvas({
       ref={wrapRef}
       /* A touch drag turns the object rather than scrolling the page; safe
          because this canvas never mounts below the desktop tier. */
-      style={{ background: groundCss, touchAction: "none" }}
+      style={{ background: bare ? "transparent" : groundCss, touchAction: "none" }}
     >
       <CanvasErrorBoundary fallback={null}>
         <Canvas
-          key={`${variant}-${glEpoch}`}
+          key={`${variant}-${bare ? "bare" : "ground"}-${glEpoch}`}
           camera={cameraProps}
           dpr={[1, dprCeiling]}
-          gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+          gl={{ antialias: true, alpha: bare, powerPreference: "high-performance" }}
           frameloop="demand"
           onCreated={({ gl }) => {
             const canvas = gl.domElement;
@@ -151,7 +165,7 @@ export function HoloEquilibriumCanvas({
             canvas.addEventListener("webglcontextrestored", () => setGlEpoch((n) => n + 1), false);
           }}
         >
-          <color attach="background" args={[groundCss]} />
+          {bare ? null : <color attach="background" args={[groundCss]} />}
           <LifePump active={onScreen} />
           <OrbitControls
             makeDefault
@@ -170,15 +184,28 @@ export function HoloEquilibriumCanvas({
             rotateSpeed={freeTurn ? 0.5 : 0.22}
           />
 
-          <Scene
-            key={`${variant}-${mode}`}
-            palette={palette}
-            armed={armed}
-            still={still}
-            onReady={handleReady}
-            channel={channel}
-            onView={onView}
-          />
+          {variant === "river" ? (
+            <HoloRiverScene
+              key={`${variant}-${mode}`}
+              palette={palette}
+              armed={armed}
+              still={still}
+              onReady={handleReady}
+              channel={channel}
+              onView={onView}
+            />
+          ) : (
+            <HoloEquilibriumScene
+              key={`${variant}-${mode}`}
+              palette={palette}
+              armed={armed}
+              still={still}
+              onReady={handleReady}
+              channel={channel}
+              onView={onView}
+              bare={bare}
+            />
+          )}
 
           <EffectComposer multisampling={0} enableNormalPass={false}>
             {/* The bright arcs and the gold motes are the only things above
@@ -188,7 +215,11 @@ export function HoloEquilibriumCanvas({
               intensity={bloom.intensity * palette.bloomScale}
               luminanceThreshold={palette.additive ? bloom.threshold : 0.97}
               luminanceSmoothing={POST.bloomRadius}
-              radius={bloom.radius}
+              /* Bare, a tighter glow: at the figure's 0.86 the widest mips
+                 lift the whole slot ~1.6 levels even 100px off any line
+                 (measured, canvas shown against hidden), and a lift that
+                 wide meets the slot's edge and draws its box (U11). */
+              radius={bare ? Math.min(bloom.radius, BARE_BLOOM_RADIUS) : bloom.radius}
               mipmapBlur
             />
             {/* ⚠ NO GRAIN ON PAPER. The pass blends by SCREEN, which only
@@ -196,10 +227,15 @@ export function HoloEquilibriumCanvas({
                 the page and its box showed as a rectangle (measured). On void
                 it is the reference's grain. Mounted in both, at zero on paper,
                 so the composer's child count never changes. */}
-            <Noise opacity={palette.additive ? POST.grain * palette.grainScale : 0} premultiply />
+            {/* Bare, both at zero: grain over a transparent canvas would
+                draw the canvas's box back onto the page. */}
+            <Noise
+              opacity={palette.additive && !bare ? POST.grain * palette.grainScale : 0}
+              premultiply
+            />
             <Vignette
               offset={0.2}
-              darkness={palette.additive ? POST.vignette * palette.vignetteScale : 0}
+              darkness={palette.additive && !bare ? POST.vignette * palette.vignetteScale : 0}
               eskil={false}
             />
           </EffectComposer>

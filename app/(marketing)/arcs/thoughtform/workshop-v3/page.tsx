@@ -85,8 +85,8 @@ export const metadata: Metadata = {
  * page, so `getThoughtformWorkshopContent` is called with the same removed
  * stations and `.tw-root` is rendered unchanged. Its intro COPY diverges
  * through seams instead (ADR-143 U3, U6): `WORKSHOP_INTRO` rewrites the
- * hero's copy and the About's bio here, spreads the thesis's paragraphs over
- * the homepage's, and passes the corridor's captions, glyph words, Build
+ * hero's copy and the About's bio here (the thesis is the homepage's again
+ * since U11), and passes the corridor's captions, glyph words, Build
  * column and signal as `corridorText.copy`; `data-tw-cut="v3"` scopes its
  * rules in v1's sheet. The day its STRUCTURE diverges, the prototype, the sheet and
  * the root class still fork together (ADR-139).
@@ -113,9 +113,9 @@ export default async function ThoughtformWorkshopV3Page() {
     corridorMountId: CORRIDOR_MOUNT_ID,
   });
   // The intro leads into the workshop (ADR-143 U3, U6): the hero, the About,
-  // the thesis's paragraphs, the glyphs' words, the captions, the Build
-  // column and the signal line are this cut's own, from one record; the
-  // thesis title is the homepage's. And since U7 a station of its own, the
+  // the glyphs' words, the captions, the Build column and the signal line
+  // are this cut's own, from one record; the thesis, title and paragraphs, is
+  // the homepage's (U11). And since U7 a station of its own, the
   // Thoughtform equilibrium, between the hero and the About. Each seam is the
   // identity on every other route.
   const bodyHtml = replaceAboutBio(
@@ -128,7 +128,6 @@ export default async function ThoughtformWorkshopV3Page() {
   const shared = extractV7Text();
   const corridorText = {
     ...shared,
-    thoughtform: { ...shared.thoughtform, ...WORKSHOP_INTRO.thesis },
     copy: {
       stations: WORKSHOP_INTRO.stations,
       signal: WORKSHOP_INTRO.signal,

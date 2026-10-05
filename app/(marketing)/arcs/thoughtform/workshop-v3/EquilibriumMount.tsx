@@ -267,6 +267,7 @@ export default function EquilibriumMount({ armAt = ARM_AT }: EquilibriumMountPro
           onReady={() => setLive(true)}
           variant={variant}
           onView={onView}
+          bare={variant === "instrument"}
         />
       </CanvasErrorBoundary>
     </div>

@@ -39,8 +39,6 @@ function strings(): { at: string; text: string }[] {
   const out: { at: string; text: string }[] = [];
   for (const [k, t] of Object.entries(WORKSHOP_INTRO.hero)) out.push({ at: `hero.${k}`, text: t });
   WORKSHOP_INTRO.about.forEach((t, i) => out.push({ at: `about[${i}]`, text: t }));
-  for (const [k, t] of Object.entries(WORKSHOP_INTRO.thesis))
-    out.push({ at: `thesis.${k}`, text: t });
   for (const [k, t] of Object.entries(WORKSHOP_INTRO.phases))
     out.push({ at: `phases.${k}`, text: t ?? "" });
   for (const [k, t] of Object.entries(WORKSHOP_INTRO.stations))

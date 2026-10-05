@@ -692,3 +692,49 @@ and a bit of a bokeh / bloom effect like holo." The brain is untouched.
   object; the readout and bearing formats; the station's trackers and bearing at
   rest. Shot headed at 1920×1247 (rest and turned 140°, 327°, dark and light),
   1470×956 and 1280×720 on the live page.
+
+## Update 11 — the opener bare, the homepage's thesis, the two plates opened up (2026-10-05, owner)
+
+Five notes on v3, and the four that apply carried to the Suri lunch-and-learn
+(it reads the same record; it has no opener and no Pensieve).
+
+- **The opener sits bare on the page** ("remove the background and grid; i want
+  this to blend as elegantly as possible with the rest of the site. don't think
+  we need the text either"). The station letters no head: the eyebrow and the
+  sub leave the record, the title stays as the station's `aria-label`. What read
+  as a background was the CANVAS, not the station (whose colour is the page's
+  own): its painted ground, grain and vignette in a box, the floor grid, its own
+  dust and bokeh. `HoloEquilibriumCanvas` takes `bare` (the live instrument
+  only; the lab's river keeps its ground): `alpha: true`, no `<color>`, grain
+  and vignette at zero, and `HoloEquilibriumScene` draws no floor, dust or
+  bokeh. The static drawing drops the grid with it, so the swap still moves
+  nothing. ⚠ **The bloom drew the box back**: at the figure's radius 0.86 the
+  widest mips lifted the whole slot ~1.6 levels even 100px off any line
+  (measured canvas shown against hidden), so `BARE_BLOOM_RADIUS` is 0.5 and the
+  edge feather widens to the drawing's own pads (15 % across, 18 % / 11 % down);
+  off the lines the canvas now adds 0.0. ⚠ **THE STATION STAYS OPAQUE.** A
+  transparent station was built and measured first: the corridor's parked mark
+  (the flow's prelude, raised on/off as the era stage engages) switched on behind
+  the leaving object, a second brandmark in frame. The opaque void is the page's
+  colour, so it shows no edge, and it keeps the curtain chain as built.
+- **The thesis is the homepage's again** ("restore copy from homepage"): the
+  record carries no `thesis`, the two cuts stop spreading one over
+  `extractV7Text().thoughtform`. The glyph words stay this cut's own (Learn ·
+  Write down · Hand over).
+- **The signal keeps each authored line whole** ("make sure self-sufficient is
+  on the same line"): its second line runs 838px at the 42px cap against an
+  820px block, so it broke after the hyphen. PP Neue Montreal has no U+2011, so
+  the fix is the box: v1's sheet §6, `[data-tw-cut="v3"]`, the block at
+  `min(90vw, 960px)` and the title `nowrap`. The phone already keeps the word.
+- **The two you write are the board's plates, opened up** ("should match the
+  design of those cards in the section before, but … an expanded version";
+  "The Context and The Evaluations titles are too small"): `cards` takes
+  `plates: { tag }` (`ArcCardPlate`): the board's TR + BL pair cut, gold wash,
+  gold ring, rule stopping at the cut and `You write this`; the part's name is
+  the heading (24 to 38px, sans, `--weight-lit`), its question a dim line under
+  it, then the answer and each row as a mono key beside a sentence. The board's
+  plate tokens are declared once for both (`.arc-q, .arc-cards--plates`). v2's
+  beat is untouched.
+- **"Out of their heads, and into a skill." is gone**, and the beats after it
+  renumber (08 · Why it needs checks … 22 · What follows). The `interstitial`'s
+  `clip` slot stays, tested on a probe.

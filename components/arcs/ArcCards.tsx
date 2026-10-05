@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+import type { ArcCardItem, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
@@ -23,6 +23,9 @@ interface ArcCardsProps {
  * With `ledger` set (ADR-098 U2) the same cards render as the deck's fee
  * TABLE instead — see `ArcLedger`. The grid branch is byte-identical to
  * what shipped before the ledger existed.
+ *
+ * With `plates` set (ADR-143 U11) each card is the configuration board's lit
+ * plate, opened up — see `ArcCardPlate`.
  *
  * Terminal rungs: cards rise from below in sequence, the tips strip
  * drifts in from the left as hairline chrome, and the receipt/footnote
@@ -50,8 +53,22 @@ export function ArcCards({ section, index, motion = "reveal" }: ArcCardsProps) {
           <ArcLedger section={section} columns={section.ledger.columns} motion={motion} />
         ) : (
           <>
-            <div className="arc-cards" style={{ "--arc-cols": cols } as CSSProperties}>
+            <div
+              className={section.plates ? "arc-cards arc-cards--plates" : "arc-cards"}
+              style={{ "--arc-cols": cols } as CSSProperties}
+            >
               {section.cards.map((card, ci) => {
+                if (section.plates) {
+                  return (
+                    <ArcCardPlate
+                      key={card.id}
+                      card={card}
+                      tag={section.plates.tag}
+                      index={ci}
+                      motion={motion}
+                    />
+                  );
+                }
                 return (
                   <article
                     key={card.id}
@@ -131,6 +148,56 @@ export function ArcCards({ section, index, motion = "reveal" }: ArcCardsProps) {
         ) : null}
       </div>
     </ArcBeat>
+  );
+}
+
+/**
+ * One of the two plates the team writes, opened up (ADR-143 U11): the
+ * configuration board's lit plate (`ArcQuestions`, the `questions` kind) at
+ * the size of a card. The same cut, wash, ring and tag, so the eye reads the
+ * two as the board's two lit plates come forward; the part's NAME is promoted
+ * to the heading (the board letters it as a 10px kicker, which on a card this
+ * size read as too small), its question sits under it, then the answer and
+ * the rows the plate holds.
+ */
+function ArcCardPlate({
+  card,
+  tag,
+  index,
+  motion,
+}: {
+  card: ArcCardItem;
+  tag: string;
+  index: number;
+  motion: ArcMotion;
+}) {
+  const name = card.kicker ?? card.title;
+  return (
+    <article
+      className="arc-plate arc-plate--pair arc-cplate arc-reveal"
+      aria-label={name}
+      data-cards-plate={card.id}
+      {...rung(motion, ladder(0.16, 0.06, index, 0.46), 0, 36)}
+    >
+      <header className="arc-plate__head arc-cplate__head">
+        <h3 className="arc-cplate__name">{name}</h3>
+        <span className="arc-cplate__tag">{tag}</span>
+        {card.kicker ? <p className="arc-cplate__question">{card.title}</p> : null}
+      </header>
+      <div className="arc-cplate__body">
+        <p className="arc-cplate__answer">{card.body}</p>
+        {card.metaRows && card.metaRows.length > 0 ? (
+          <dl className="arc-cplate__rows">
+            {card.metaRows.map((row) => (
+              <div key={row.label} className="arc-cplate__row">
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+      </div>
+    </article>
   );
 }
 

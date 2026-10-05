@@ -114,15 +114,18 @@ describe("the opener's insert seam", () => {
     expect(() => insertEquilibriumStation(once, WORKSHOP_INTRO.equilibrium)).toThrow(/already/);
   });
 
-  it("carries the copy, the static drawing, the canvas slot and the three words", () => {
+  it("carries the static drawing, the canvas slot and the three words, and no head", () => {
     const html = section(
       insertEquilibriumStation(withHero, WORKSHOP_INTRO.equilibrium),
       "equilibrium"
     );
     const copy = WORKSHOP_INTRO.equilibrium;
     expect(html).toContain('class="station tw-eq"');
-    expect(html).toContain(`>${copy.title}</h2>`);
-    expect(html).toContain(`>${copy.sub}</p>`);
+    /* U11 (owner, 2026-10-05): no text on the station; the title names it. */
+    expect(html).toContain(`aria-label="${copy.title}"`);
+    expect(html).not.toMatch(/<h2|tw-eq__head|tw-eq__sub/);
+    /* No floor under the object, in the drawing as in the canvas. */
+    expect(html).not.toContain('data-role="grid"');
     expect(html).toContain(`viewBox="0 0 ${EQ_FRAME.w} ${EQ_FRAME.h}"`);
     expect(html).toContain("data-tw-eq-canvas");
     for (const { key, text } of Object.values(copy.labels)) {
@@ -268,7 +271,7 @@ describe("the equilibrium object", () => {
       );
     }
     const canvas = read("components/holo-program/HoloEquilibriumCanvas.tsx");
-    expect(canvas).toContain("palette.additive ? POST.grain * palette.grainScale : 0");
+    expect(canvas).toContain("palette.additive && !bare ? POST.grain * palette.grainScale : 0");
     expect(canvas, "no aberration (ADR-080's confetti)").not.toContain("ChromaticAberration");
   });
 
@@ -317,6 +320,21 @@ describe("the mark in the gate, the free turn, holo's trackers (ADR-143 U10)", (
     const scene = read("components/holo-program/HoloEquilibriumScene.tsx");
     expect(scene, "depth is fog, so it holds from any side").toContain('<fog attach="fog"');
     expect(scene, "drei's fat lines carry fog only when asked").toContain("fog: true");
+  });
+
+  it("sits bare on the page: no ground, no floor, no air of its own (U11)", () => {
+    const canvas = read("components/holo-program/HoloEquilibriumCanvas.tsx");
+    expect(canvas, "a transparent canvas when bare").toContain("alpha: bare");
+    expect(canvas, "no painted ground when bare").toContain(
+      '{bare ? null : <color attach="background"'
+    );
+    expect(canvas, "no grain over a transparent canvas").toMatch(/palette\.additive && !bare/);
+    const scene = read("components/holo-program/HoloEquilibriumScene.tsx");
+    expect(scene, "the floor, dust and bokeh only off the page").toMatch(
+      /\{bare \? null : \(\s*<>\s*<points ref=\{bokehRef\}/
+    );
+    const mount = read("app/(marketing)/arcs/thoughtform/workshop-v3/EquilibriumMount.tsx");
+    expect(mount, "the live instrument is bare").toContain('bare={variant === "instrument"}');
   });
 
   it("tracks points ON the object: the thought's crown, the gate's marker, the far ring", () => {
@@ -494,12 +512,7 @@ describe("the river figure (ADR-143 U9)", () => {
 
 describe("the opener's copy", () => {
   const copy = WORKSHOP_INTRO.equilibrium;
-  const strings = [
-    copy.eyebrow,
-    copy.title,
-    copy.sub,
-    ...Object.values(copy.labels).flatMap((l) => [l.key, l.text]),
-  ];
+  const strings = [copy.title, ...Object.values(copy.labels).flatMap((l) => [l.key, l.text])];
 
   it("keeps the copy law and the label measure", () => {
     for (const s of strings) {
@@ -514,7 +527,6 @@ describe("the opener's copy", () => {
       expect(key.length, key).toBeLessThanOrEqual(12);
       expect(text.length, text).toBeLessThanOrEqual(42);
     }
-    expect(copy.sub.length, "two lines at the head's measure").toBeLessThanOrEqual(150);
   });
 });
 
@@ -540,23 +552,30 @@ describe("the opener's sheet", () => {
     expect(sheet).toContain("view-timeline: --tw-about block");
     expect(sheet.match(/animation-range: entry 0% entry 100%/g)?.length).toBe(2);
   });
+
+  it("keeps the page's ground under a bare canvas: it is the About's curtain (U11)", () => {
+    const station = /#equilibrium\.station \{([^}]*)\}/.exec(sheet)?.[1] ?? "";
+    expect(station, "no star tile").toContain("background-image: none");
+    expect(station, "never transparent: it covers the held About").not.toMatch(
+      /background(-color)?:\s*(none|transparent)/
+    );
+  });
 });
 
-describe("the Pensieve", () => {
-  const ids = THOUGHTFORM_WORKSHOP_V3_ARC.sections.map((s) => s.id);
-  const pensieve = THOUGHTFORM_WORKSHOP_V3_ARC.sections.find((s) => s.id === "pensieve");
-
-  it("follows the two you write, as a line until its clip lands", () => {
-    expect(ids[ids.indexOf("leverage-motion") + 1]).toBe("pensieve");
-    if (pensieve?.kind !== "interstitial") throw new Error("the Pensieve is an interstitial");
-    expect(pensieve.clip, "the owner supplies the footage").toBeUndefined();
-    expect(renderToStaticMarkup(<ArcInterstitial section={pensieve} />)).not.toContain("<video");
+describe("the interstitial's clip slot (ADR-143 U7, the Pensieve removed in U11)", () => {
+  it("is off v3: the line after the two you write is gone (owner, 2026-10-05)", () => {
+    const ids = THOUGHTFORM_WORKSHOP_V3_ARC.sections.map((s) => s.id);
+    expect(ids).not.toContain("pensieve");
+    expect(ids[ids.indexOf("leverage-motion") + 1]).toBe("the-horizon");
   });
 
-  it("plays a silent loop above the line once it has one", () => {
-    if (pensieve?.kind !== "interstitial") throw new Error("the Pensieve is an interstitial");
+  it("plays a silent loop above the line once an interstitial has one", () => {
     const withClip: ArcSectionOf<"interstitial"> = {
-      ...pensieve,
+      id: "clip-probe",
+      kind: "interstitial",
+      variant: "question",
+      eyebrow: "00 · Probe",
+      line: { pre: "A line", em: "under a clip." },
       clip: { src: "/arcs/x/clip.mp4", poster: "/arcs/x/clip.jpg", alt: "A memory drawn out" },
     };
     const html = renderToStaticMarkup(<ArcInterstitial section={withClip} />);
@@ -565,5 +584,9 @@ describe("the Pensieve", () => {
     expect(html).toContain("loop");
     expect(html).toContain('poster="/arcs/x/clip.jpg"');
     expect(html.indexOf("<video")).toBeLessThan(html.indexOf("arc-inter__line"));
+    const bare = renderToStaticMarkup(
+      <ArcInterstitial section={{ ...withClip, clip: undefined }} />
+    );
+    expect(bare).not.toContain("<video");
   });
 });

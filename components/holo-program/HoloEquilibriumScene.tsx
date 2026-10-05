@@ -169,6 +169,9 @@ export interface HoloEquilibriumSceneProps {
   /** Where the eye is (azimuth, elevation, degrees), reported every frame
    *  for the bearing readout. */
   onView?: (azDeg: number, elDeg: number) => void;
+  /** On the page (ADR-143 U11): no floor, no dust of its own, no bokeh. The
+   *  object and its gold motes are all that is drawn. */
+  bare?: boolean;
 }
 
 export function HoloEquilibriumScene({
@@ -178,6 +181,7 @@ export function HoloEquilibriumScene({
   onReady,
   channel,
   onView,
+  bare = false,
 }: HoloEquilibriumSceneProps) {
   const { invalidate, camera, viewport } = useThree();
 
@@ -741,17 +745,21 @@ export function HoloEquilibriumScene({
     <>
       <fog attach="fog" args={[C.fadeTo, FOG.near, FOG.far]} />
       <group>
-        <points ref={bokehRef} geometry={bokeh} material={bokehMat} />
-        <lineSegments ref={floorRef} geometry={floor}>
-          <lineBasicMaterial
-            vertexColors
-            transparent
-            opacity={0}
-            depthWrite={false}
-            blending={blend}
-          />
-        </lineSegments>
-        <points ref={dustRef} geometry={dust} material={dustMat} />
+        {bare ? null : (
+          <>
+            <points ref={bokehRef} geometry={bokeh} material={bokehMat} />
+            <lineSegments ref={floorRef} geometry={floor}>
+              <lineBasicMaterial
+                vertexColors
+                transparent
+                opacity={0}
+                depthWrite={false}
+                blending={blend}
+              />
+            </lineSegments>
+            <points ref={dustRef} geometry={dust} material={dustMat} />
+          </>
+        )}
 
         <lineSegments ref={thoughtRef} geometry={thought.g}>
           <lineBasicMaterial

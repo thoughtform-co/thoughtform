@@ -681,3 +681,22 @@ html[data-corridor-exit="true"] .tw-root [data-corridor-kill] {
      the card's tab rail sits outside, so the value rides as the fallback. */
   box-shadow: var(--con-mark-glow, 0 0 10px rgba(var(--gold-rgb), 0.5));
 }
+
+/* ── 6. The third cut's signal line keeps each line whole (ADR-143 U11) ──
+   v3's line is two authored lines, "EMBED IN THE WORK / TO MAKE THE TEAMS
+   SELF-SUFFICIENT." The second runs 838px at the title's 42px cap, past the
+   block's 820, so it broke after the hyphen (owner, 2026-10-05: "make sure
+   self-sufficient is on the same line"). The font carries no non-breaking
+   hyphen (PP Neue Montreal has no U+2011), so the fix is the box: each
+   authored line is set whole, and the block is wide enough to hold it. The
+   title scales with 2.8vw below its cap, so the line is ~59vw everywhere
+   under 1500px and the 90vw term never binds.
+   ⚠ SCOPED `[data-tw-cut="v3"]`, (0,3,0) against the corridor's (0,1,0): the
+   homepage's line is shorter and keeps its 820. The phone sets its own title
+   (`MobileEpilogueSignal`) and already keeps the word whole. */
+.tw-root[data-tw-cut="v3"] .home-v2-station-header--signal {
+  width: min(90vw, 960px);
+}
+.tw-root[data-tw-cut="v3"] .home-v2-station-header--signal .home-v2-station-header__title {
+  white-space: nowrap;
+}

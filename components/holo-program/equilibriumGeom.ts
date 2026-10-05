@@ -812,6 +812,9 @@ const r1 = (v: number) => (Math.round(v * 10) / 10).toString();
 export function eqSvgMarkup(className: string): string {
   const byRole = new Map<EqRole, string[]>();
   for (const l of eqPolylines()) {
+    /* No floor on the page (ADR-143 U11): the canvas draws none, and the
+       static drawing is what it lands on, so the swap moves nothing. */
+    if (l.role === "grid") continue;
     const pts = l.points.map((p) => eqProject(p));
     let d = "";
     if (l.segments) {

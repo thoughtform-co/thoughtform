@@ -14,8 +14,9 @@
  *
  * The station carries everything a reader without WebGL needs, rendered here
  * from the record and the object's own geometry (`equilibriumGeom.ts`): the
- * copy, the static drawing (the object projected through its rest camera)
- * and the three words at their seats. The live hologram mounts into
+ * static drawing (the object projected through its rest camera) and the three
+ * words at their seats. Since U11 it letters no head (owner, 2026-10-05): the
+ * record's title is its accessible name. The live hologram mounts into
  * `[data-tw-eq-canvas]` (`WorkshopPortals` → `EquilibriumMount`), framed by
  * the same camera, so at rest the swap moves nothing.
  *
@@ -83,13 +84,8 @@ export function equilibriumStationHtml(
     `<span class="tw-eq__tele-row">EL <span data-el>${bearing.el}</span></span>` +
     `</p>`;
   return (
-    `<section class="station tw-eq" id="${EQUILIBRIUM_STATION_ID}" data-station="${EQUILIBRIUM_STATION_ID}" data-eq-variant="${variant}" aria-labelledby="tw-eq-title">` +
+    `<section class="station tw-eq" id="${EQUILIBRIUM_STATION_ID}" data-station="${EQUILIBRIUM_STATION_ID}" data-eq-variant="${variant}" aria-label="${esc(copy.title)}">` +
     `<div class="tw-eq__stage">` +
-    `<header class="tw-eq__head">` +
-    `<p class="tw-eq__eyebrow">${esc(copy.eyebrow)}</p>` +
-    `<h2 class="tw-eq__title" id="tw-eq-title">${esc(copy.title)}</h2>` +
-    `<p class="tw-eq__sub">${esc(copy.sub)}</p>` +
-    `</header>` +
     `<figure class="tw-eq__figure" style="--eq-w:${w};--eq-h:${h};--eq-x0:${f3(span.x0)};--eq-x1:${f3(span.x1)}">` +
     figure.svgMarkup("tw-eq__svg") +
     `<div class="tw-eq__canvas" data-tw-eq-canvas></div>` +

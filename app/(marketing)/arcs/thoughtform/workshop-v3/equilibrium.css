@@ -2,8 +2,8 @@
    The third cut's opener (ADR-143 U7): THE THOUGHTFORM EQUILIBRIUM.
 
    A station between the hero and the About, spliced into the shared
-   prototype at parse time (`equilibrium.ts`). The copy above, the object
-   centred under it: the static drawing for every reader, the hologram
+   prototype at parse time (`equilibrium.ts`). The object, centred: the
+   static drawing for every reader, the hologram
    (`EquilibriumMount` → `HoloEquilibriumCanvas`, ADR-080's perspective
    shell) over it where the canvas runs, and the three words seated from
    the object's own geometry, following it once it is live.
@@ -19,15 +19,25 @@
      About itself dwells (`--tw-about-dwell`). */
   --tw-eq-dwell: 50svh;
   /* The figure's ceiling: the drawing takes at most half the frame's
-     height, so the copy above it and the air around it keep theirs. */
+     height, so the air around it keeps its share. */
   --tw-eq-fig-h: 50svh;
 }
 
 /* ── The station, everywhere ─────────────────────────────────────────── */
 
-/* ⚠ A PLAIN GROUND, NO STAR TILE. The canvas paints its host's first opaque
-   colour; over a starfield its box would read as a rectangle cut out of the
-   stars (ADR-080 U2's finding, the edge rather than the colour). */
+/* ⚠ THE PAGE'S GROUND, AND NOTHING OF THE CANVAS'S OWN (ADR-143 U11, owner
+   2026-10-05: "remove the background and grid; i want this to blend as
+   elegantly as possible with the rest of the site"). The station keeps the
+   page's plain void (no star tile), the same colour as the frame round it;
+   what read as a background was the CANVAS: its painted ground, grain and
+   vignette in a box, the floor grid, the bokeh. The canvas is `bare` now:
+   transparent, no floor, no dust or bokeh of its own, bloom held to the
+   lines. ⚠ THE STATION STAYS OPAQUE: it is the curtain the About is held
+   under (below), and a bare station showed the held About cut by an
+   invisible line and the corridor's parked mark switching on behind it
+   (both measured, 2026-10-05). And no head (same day: "don't think we need
+   the text either"): the object and its words are the station, its title
+   the accessible name. */
 .tw-root[data-tw-cut="v3"] #equilibrium.station {
   background-image: none;
   padding-block: clamp(72px, 10svh, 128px);
@@ -37,43 +47,6 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(20px, 3.4svh, 44px);
-}
-
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__head {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-  text-align: center;
-  /* The title takes one line at every desktop width; the sub carries its own
-     measure. (`ch` here is the head's body size, so 60ch capped a 58px title
-     at ~500px and broke it in two.) */
-  max-width: 100%;
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__eyebrow {
-  margin: 0;
-  font-family: var(--font-pt-mono);
-  font-size: 11px;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--gold-ink);
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__title {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(30px, 0.9rem + 2.3vw, 58px);
-  line-height: 1.05;
-  letter-spacing: var(--track-display);
-  color: rgb(var(--dawn-rgb));
-}
-.tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__sub {
-  margin: 0;
-  max-width: 64ch;
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(15px, 0.82rem + 0.36vw, 19px);
-  line-height: 1.45;
-  letter-spacing: var(--track-copy);
-  color: rgba(var(--dawn-rgb), 0.78);
 }
 
 /* The figure holds the drawing's own aspect, so the canvas (which frames
@@ -94,20 +67,22 @@
   width: 100%;
   height: 100%;
 }
-/* ⚠ THE CANVAS'S EDGE IS FEATHERED. Its painted ground sits ~0.76 of a unit
-   off the page's in light (the post chain's rounding, measured at 1920x1247),
-   invisible as a colour and visible as a RECTANGLE along four straight edges
-   (ADR-080 U2's finding, a third time). A mask that fades the slot's outer
-   band leaves no edge to see; the drawing sits inside its crop's pads, and
-   the words are DOM outside the canvas, so nothing drawn is cut. */
+/* ⚠ THE CANVAS'S EDGE IS FEATHERED, AND WIDER SINCE IT IS BARE (U11). It
+   paints no ground now, but its BLOOM still lifts the page 2 to 3 levels
+   round the bright arcs (measured at 1920x1247: the cradle's arc sits 12 % of
+   the slot above its floor), and a glow cut by a straight edge reads as a
+   RECTANGLE (ADR-080 U2's finding, a fourth time). So the mask fades the
+   glow to nothing inside the drawing's own pads: the object spans 19 % to
+   79 % across and 24 % to 88 % down at rest, and the words are DOM outside
+   the canvas, so nothing drawn is cut. */
 .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__canvas {
   -webkit-mask-image:
-    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
-    linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    linear-gradient(to right, transparent, #000 15%, #000 85%, transparent),
+    linear-gradient(to bottom, transparent, #000 18%, #000 89%, transparent);
   -webkit-mask-composite: source-in;
   mask-image:
-    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
-    linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    linear-gradient(to right, transparent, #000 15%, #000 85%, transparent),
+    linear-gradient(to bottom, transparent, #000 18%, #000 89%, transparent);
   mask-composite: intersect;
 }
 .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__svg path {

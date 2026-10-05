@@ -175,12 +175,14 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       kind: "cards",
       menuLabel: "The two you write",
       columns: 2,
+      // The board's two lit plates, opened up (ADR-143 U11, owner 2026-10-05).
+      plates: { tag: "You write this" },
       head: {
         eyebrow: "07 · The two you write",
         title: { pre: "Two of the six", em: "nobody can write for you." },
         // The seam with 06 (ADR-143 U4): 06 already says four parts are set up
         // once, so this sub opens on the two, and names them the context and the
-        // evals before 09's title uses those words.
+        // evals before 08's title uses those words.
         sub: "What it knows and what good looks like can only come from the team doing the work: the context and the evals. That is where a team steers the intelligence most, and both outlive the model that reads them. Written down, what it knows becomes a skill.",
       },
       cards: [
@@ -208,32 +210,15 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
         },
       ],
     },
-    {
-      /* The Pensieve (ADR-143 U7, owner's Wispr note of 2026-10-04): the
-         memory drawn out of a head and kept, his picture for what a skill
-         does with what a team knows. An interstitial with a silent loop.
-         ⚠ THE CLIP IS NOT IN THE REPO YET, by his choice: it is film footage
-         he supplies. Until then the beat is the line alone. When it lands it
-         goes to `public/arcs/thoughtform-workshop-v3/pensieve.mp4` with its
-         still beside it (`pensieve.jpg`), cut to a silent loop of a few
-         seconds, checked for flashes before it ships (the no-flashing law),
-         and this section takes `clip: { src, poster, alt }`. */
-      id: "pensieve",
-      kind: "interstitial",
-      variant: "question",
-      eyebrow: "08 · Written down",
-      // 07's sub has just said "Written down, what it knows becomes a skill."
-      line: { pre: "Out of their heads,", em: "and into a skill." },
-    },
     /* The horizon's two timelines are a SHARED RECORD (v2's); here they say
        why the two plates matter before the breakdown runs for two hours. */
-    theHorizon("09 · Why it needs checks"),
+    theHorizon("08 · Why it needs checks"),
     {
       id: "signal",
       kind: "signal",
       menuLabel: "The market",
       head: {
-        eyebrow: "10 · Where the money goes",
+        eyebrow: "09 · Where the money goes",
         title: {
           pre: "The labs just bet billions",
           em: "on the two things only your team can write.",
@@ -253,7 +238,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "Its evals",
       layout: "readout",
       head: {
-        eyebrow: "11 · Its evals",
+        eyebrow: "10 · Its evals",
         title: {
           pre: "This ad's skill comes with its own tests.",
           em: "Run with it, and without it.",
@@ -319,7 +304,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       variant: "question",
       menuLabel: "The economics",
       menuPrimary: true,
-      eyebrow: "12 · The bill",
+      eyebrow: "11 · The bill",
       line: { pre: "About $27 and an evening.", em: "Is it just about the money?" },
       subline:
         "The bill is the headline, but the bigger change is that this ad would not have existed: a week of stop-motion never paid back on an ad that might only run as a test.",
@@ -334,7 +319,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "Variety",
       columns: 4,
       head: {
-        eyebrow: "13 · The economics",
+        eyebrow: "12 · The economics",
         title: { pre: "More variety", em: "than a team can hire for." },
         sub: "That is the real change. Meta's Andromeda matches ads to people by their creative, so an account needs many genuinely different ads, and you rarely know in advance which one will work.",
       },
@@ -366,7 +351,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       id: "volume-and-taste",
       kind: "interstitial",
       variant: "callout",
-      eyebrow: "14 · Volume and taste",
+      eyebrow: "13 · Volume and taste",
       line: { pre: "AI solves the volume.", em: "Who keeps the taste current?" },
       subline:
         "Slop is easy at scale, and customers notice. And taste does not stay encoded: when every feed went Ghibli, the look was worth nothing within days. Keeping it current is the creative team's work, which makes them more important than ever.",
@@ -377,7 +362,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "The team",
       columns: 4,
       head: {
-        eyebrow: "15 · What changes for the team",
+        eyebrow: "14 · What changes for the team",
         title: { pre: "Agents run on", em: "the team's taste." },
         sub: "The team writes what good looks like and keeps it current. The agents take the longer tasks in parallel, under the team's supervision, without anyone babysitting them.",
       },
@@ -416,7 +401,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       kind: "cards",
       menuLabel: "In other hands",
       head: {
-        eyebrow: "16 · In other hands",
+        eyebrow: "15 · In other hands",
         title: { pre: "Laura gave Vesper", em: "the hardest variant of her own brief." },
         sub: "Laura is head of design at Loop. A week earlier she had made all four variants of this brief by hand; the day she tried Vesper, she wrote the team this comparison.",
       },
@@ -468,7 +453,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "Made real",
       menuPrimary: true,
       head: {
-        eyebrow: "17 · Made real",
+        eyebrow: "16 · Made real",
         title: { pre: "Every answer has somewhere to live.", em: "Together they make a plugin." },
         sub: "What the team knows becomes a skill, and what good looks like becomes its evals. The plugin is where those two sit with the connectors and the owner, so the whole answer travels as one thing. Here is the first of them, the skill.",
       },
@@ -534,7 +519,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "A skill",
       badge: "Claude · Skill",
       head: {
-        eyebrow: "18 · A skill",
+        eyebrow: "17 · A skill",
         title: { pre: "A skill is one piece of work,", em: "written down." },
         sub: "The first thing the team writes: what it knows. A folder with one main file in plain language, and Claude reaches for it when the request fits. This is the skill behind the ad you just saw, shortened.",
       },
@@ -613,7 +598,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "The plugin",
       layout: "readout",
       head: {
-        eyebrow: "19 · How it reaches the team",
+        eyebrow: "18 · How it reaches the team",
         title: { pre: "One install for the team,", em: "from a shelf that stays current." },
         sub: "The Studio's skills are packed into plugins, and the plugins sit on a shelf Loop owns. The shelf is added once; after that a new skill arrives without anybody being asked to install anything.",
       },
@@ -659,7 +644,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "Using it",
       variant: "ask",
       head: {
-        eyebrow: "20 · Using it",
+        eyebrow: "19 · Using it",
         title: { pre: "Ask in your own words.", em: "Or type a slash and pick." },
         sub: "Claude matches the request to the right skill and says which one it used. Nobody has to remember what is installed, or what it is called.",
       },
@@ -720,7 +705,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       menuLabel: "When it is wrong",
       variant: "feedback",
       head: {
-        eyebrow: "21 · When it is wrong",
+        eyebrow: "20 · When it is wrong",
         title: { pre: "When a skill gets it wrong,", em: "say so in the chat." },
         sub: "Say what went wrong where you are already working. You see exactly what will be filed before anything is filed, and nothing goes anywhere until you say yes.",
       },
@@ -760,9 +745,9 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
       },
       aside: FEEDBACK_STEPS,
     },
-    getStarted("22 · Get started"),
+    getStarted("21 · Get started"),
 
     /* ── Chapter six · WHAT FOLLOWS ─────────────────────────────────────── */
-    whatFollows("23 · What follows"),
+    whatFollows("22 · What follows"),
   ],
 };

@@ -256,6 +256,17 @@ export type ArcSection = ArcSectionBase &
          * records, drawn as the table they were on the deck.
          */
         ledger?: { columns: readonly [string, string, string] };
+        /**
+         * Present ⇒ each card renders as one of the configuration board's LIT
+         * plates (the `questions` kind), opened up (ADR-143 U11, owner
+         * 2026-10-05: the two cards "should match the design of those cards in
+         * the section before, but … an expanded version"). The board's TR + BL
+         * cut, its gold wash and gold ring, `tag` in the head band; the card's
+         * `kicker` is the plate's NAME at heading size, `title` its question
+         * under it, `body` its answer, `metaRows` what it holds. Unset, the
+         * grid is byte-identical.
+         */
+        plates?: { tag: string };
       }
     | {
         /** Grouped lists — status stacks (LIVE / IN PROGRESS / …) or column maps. */

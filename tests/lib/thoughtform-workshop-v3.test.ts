@@ -156,7 +156,6 @@ describe("the workshop's third house cut (ADR-143)", () => {
       "real-question",
       "configuration-motion",
       "leverage-motion",
-      "pensieve",
       "the-horizon",
       "signal",
       "its-evals-motion",
@@ -239,7 +238,6 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(ids.slice(ids.indexOf("configuration-motion"), ids.indexOf("the-money"))).toEqual([
       "configuration-motion",
       "leverage-motion",
-      "pensieve",
       "the-horizon",
       "signal",
       "its-evals-motion",
@@ -305,7 +303,7 @@ describe("the workshop's third house cut (ADR-143)", () => {
     expect(close.head.title).toBe(WHAT_FOLLOWS_TITLE);
     expect(close.head.sub).toBe(WHAT_FOLLOWS_SUB);
     expect(close.actions).toBe(WHAT_FOLLOWS_CLOSE.actions);
-    expect(close.head.eyebrow).toBe("23 · What follows");
+    expect(close.head.eyebrow).toBe("22 · What follows");
     const v2 = THOUGHTFORM_WORKSHOP_V2_ARC.sections.at(-1);
     expect(v2?.kind === "close" && v2.head.title, "v2's close reads it too").toBe(
       WHAT_FOLLOWS_TITLE

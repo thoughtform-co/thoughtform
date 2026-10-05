@@ -7762,7 +7762,8 @@ a.arc-readout__hit:focus-visible {
    ⚠ THE MODULES' CUT IS THE R4 MODULE'S, NOT THE PLATE RUNG: at the plate
    rung (up to 26px) the BL chamfer bites the answer's last line, and a cut
    is free only where nothing is set against it (ADR-098 U5). */
-.arc-q {
+.arc-q,
+.arc-cards--plates {
   --arc-q-quiet: var(--arc-seam);
   --arc-q-gold: var(--gold-line);
   --arc-q-green: var(--atreides-light, #5b7a4e);
@@ -7901,6 +7902,118 @@ a.arc-readout__hit:focus-visible {
 }
 .arc-q__mod[data-questions-tone="human"] .arc-plate__kicker {
   color: var(--atreides-ink, #7a9e6a);
+}
+/* ── 07 · The two plates the team writes, opened up (ADR-143 U11) ────
+   Owner, 2026-10-05: the two cards "should match the design of those cards
+   in the section before, but … an expanded version", and "The Context and
+   The Evaluations titles are too small". So each card IS the board's lit
+   plate at the size of a card: the same TR + BL cut (the pair rung, so the
+   BL chamfer bites nothing set against it), the same gold wash, gold ring,
+   2px rule stopping at the cut and `You write this` tag. What changes is
+   the hierarchy a bigger plate can afford: the part's NAME, a 10px kicker
+   on the board, is the heading; its question sits under it as a dim line;
+   then the answer and the rows the plate holds, each row a mono key with a
+   sentence beside it rather than two mono-caps strings pinned apart.
+   ⚠ Type rides the role tokens (`type-material-tokens`): sans display at
+   `--weight-lit`, mono chrome at `--track-eyebrow`. */
+.arc-cards--plates {
+  align-items: stretch;
+}
+.arc-cplate {
+  background: linear-gradient(0deg, var(--arc-gold-wash), var(--arc-gold-wash)), var(--arc-plate);
+}
+.arc-cplate::before,
+.arc-cplate .arc-plate__head::before {
+  background: var(--arc-q-gold);
+}
+.arc-cplate .arc-plate__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name tag"
+    "question question";
+  align-items: baseline;
+  column-gap: 16px;
+  row-gap: clamp(6px, 0.8vh, 10px);
+  padding: clamp(18px, 2.2vh, 28px) clamp(20px, 1.9vw, 32px) clamp(16px, 2vh, 24px);
+  background: var(--arc-gold-wash);
+}
+.arc-cplate__name {
+  grid-area: name;
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(24px, 1.2rem + 1vw, 38px);
+  line-height: 1.08;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-cplate__tag {
+  grid-area: tag;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-ink, #caa554);
+}
+.arc-cplate__question {
+  grid-area: question;
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(15px, 0.7rem + 0.5vw, 20px);
+  line-height: 1.3;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-62);
+}
+.arc-cplate__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: clamp(14px, 2vh, 24px);
+  padding: clamp(16px, 2vh, 24px) clamp(20px, 1.9vw, 32px) clamp(20px, 2.6vh, 32px);
+}
+.arc-cplate__answer {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(16px, 0.75rem + 0.55vw, 21px);
+  line-height: 1.4;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-90);
+}
+.arc-cplate__rows {
+  margin: 0;
+  display: grid;
+}
+.arc-cplate__row {
+  display: grid;
+  grid-template-columns: clamp(76px, 6.5vw, 116px) minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 16px;
+  padding-block: clamp(8px, 1.1vh, 13px);
+  border-top: 1px solid var(--arc-seam);
+}
+.arc-cplate__row dt {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-cplate__row dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(14px, 0.7rem + 0.4vw, 18px);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-80);
 }
 /* The work: the built thing, and what every ribbon meets. */
 .arc-q__card {
@@ -8785,7 +8898,8 @@ html[data-theme="light"] .arc-root .arc-readout {
 html[data-theme="light"] .arc-root .arc-floor {
   --arc-floor-band: rgba(var(--dawn-rgb), 0.07);
 }
-html[data-theme="light"] .arc-root .arc-q {
+html[data-theme="light"] .arc-root .arc-q,
+html[data-theme="light"] .arc-root .arc-cards--plates {
   --arc-q-band: rgba(var(--dawn-rgb), 0.07);
   --arc-q-green-wash: rgba(var(--atreides-rgb), 0.1);
 }
