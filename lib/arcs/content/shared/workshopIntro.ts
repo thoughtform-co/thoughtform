@@ -43,6 +43,14 @@ import { HARD_TO_STEER_BEAT, REAL_QUESTION_BEAT, THE_CURVE_BEAT } from "./worksh
 /** The four Loop tracks the pile shows, in its order (`PROOF_STACK_ORDER`). */
 export type WorkshopProofTrack = "atl-films" | "tooling" | "studio" | "ai-transformation";
 
+/** A proof claim, `CaseBlock`'s shape restated (lib/arcs keeps no lib/cases
+ *  import): a glyph key, a title of at most 27 characters, one sentence. */
+export interface WorkshopProofClaim {
+  glyph: string;
+  title: string;
+  desc: string;
+}
+
 export interface WorkshopIntro {
   /** The hero's headline and lede, inner HTML each (ADR-143 U6), written
    *  over the shared workshop prototype's at parse time. The two buttons are
@@ -80,6 +88,13 @@ export interface WorkshopIntro {
     /** One line per card, in place of `card.lede`; titles stay the record's.
      *  The card heads letter the client alone, no phase (ADR-143 U6). */
     ledes: Readonly<Record<WorkshopProofTrack, string>>;
+    /** A card's four claims in place of the record's (ADR-147 U2): the
+     *  studio's are its own rules on these cuts, where the homepage keeps
+     *  the outcomes. Same glyph keys as the record's track, one each. */
+    claims?: Partial<Record<WorkshopProofTrack, readonly WorkshopProofClaim[]>>;
+    /** A card's title in place of the record's `arc.title` (ADR-147 U2), at
+     *  most 44 characters, the record's own bound. */
+    titles?: Partial<Record<WorkshopProofTrack, string>>;
     /** The card that glows, in dark only (the route sheet). */
     lit: WorkshopProofTrack;
   };
@@ -170,9 +185,39 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
       // itself, every clause from the card's own sheets (THE GOVERNANCE,
       // THE RED LINE) and its brief; the card follows the films now.
       studio:
-        "The studio drew its own lines for AI: real photography wherever an image says who Loop is, no AI-generated creators, and the time saved goes back into live-action craft.",
+        "Every designer now makes their own ads with AI. These are the lines they drew to protect the craft.",
       "ai-transformation":
         "Then we built for the agents: what each team knows, written down, and the checks they run on their own work. The rest of today is how.",
+    },
+    // ADR-147 U2 (owner, 2026-10-05): the card is the guardrails the studio
+    // set for itself, so its claims are the rules, every one from the card's
+    // own sheets (THE GOVERNANCE, THE RED LINE) and its brief.
+    // The title says who drew them; the record's "We make the creative team
+    // self-sufficient" stays on the homepage.
+    titles: { studio: "The Studio set its own guidelines" },
+    claims: {
+      studio: [
+        {
+          glyph: "field",
+          title: "Identity stays photographed",
+          desc: "If an image says who Loop is, or who its people are, it is real photography.",
+        },
+        {
+          glyph: "threshold",
+          title: "AI shows the scenario",
+          desc: "Where an image only sets the scene for the product, AI is the right tool.",
+        },
+        {
+          glyph: "holdfast",
+          title: "No AI-generated creators",
+          desc: "AI makes the pipeline faster: briefing, editing, localization. It never replaces a creator.",
+        },
+        {
+          glyph: "cadence",
+          title: "Craft gets the time back",
+          desc: "What AI saves in paid social goes back into the live-action craft it should not replace.",
+        },
+      ],
     },
     lit: "ai-transformation",
   },

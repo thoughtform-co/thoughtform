@@ -52,6 +52,13 @@ function strings(): { at: string; text: string }[] {
     if (typeof t === "string") out.push({ at: `signal.${k}`, text: t });
   for (const [k, t] of Object.entries(WORKSHOP_INTRO.proof.ledes))
     out.push({ at: `proof.${k}`, text: t });
+  for (const [k, t] of Object.entries(WORKSHOP_INTRO.proof.titles ?? {}))
+    out.push({ at: `proof.titles.${k}`, text: t ?? "" });
+  for (const [k, list] of Object.entries(WORKSHOP_INTRO.proof.claims ?? {}))
+    (list ?? []).forEach((c, i) => {
+      out.push({ at: `proof.claims.${k}[${i}].title`, text: c.title });
+      out.push({ at: `proof.claims.${k}[${i}].desc`, text: c.desc });
+    });
   for (const [name, t] of [
     ["opening", WORKSHOP_INTRO.opening.head.title],
     ["curve", WORKSHOP_INTRO.curve.head.title],
@@ -205,9 +212,34 @@ describe("the third cut's proof pile", () => {
     const v3 = workshopV3Tracks();
     expect(v3.map((t) => t.id)).toEqual(record.map((t) => t.id));
     v3.forEach((track, i) => {
-      const { card, stamp, ...rest } = track;
-      const { card: recordCard, stamp: recordStamp, ...recordRest } = record[i];
+      const { card, stamp, blocks, arc, ...rest } = track;
+      const {
+        card: recordCard,
+        stamp: recordStamp,
+        blocks: recordBlocks,
+        arc: recordArc,
+        ...recordRest
+      } = record[i];
       expect(rest).toEqual(recordRest);
+      // ADR-147 U2: a card may take its own claims and title, nothing else.
+      const id = track.id as keyof typeof WORKSHOP_INTRO.proof.ledes;
+      const claims = WORKSHOP_INTRO.proof.claims?.[id];
+      expect(blocks).toEqual(claims ?? recordBlocks);
+      if (claims) {
+        expect(claims.map((c) => c.glyph).sort(), `${id}: the record's glyphs`).toEqual(
+          (recordBlocks ?? []).map((b) => b.glyph).sort()
+        );
+        for (const c of claims) {
+          expect(c.title.length, c.title).toBeLessThanOrEqual(27);
+          expect(c.desc.length, c.desc).toBeLessThanOrEqual(95);
+        }
+      }
+      const title = WORKSHOP_INTRO.proof.titles?.[id];
+      expect(arc).toEqual(title ? { ...recordArc, title } : recordArc);
+      if (title) {
+        expect(title.length).toBeLessThanOrEqual(44);
+        expect(title).not.toBe(recordArc?.title);
+      }
       expect(recordCard, track.id).toBeDefined();
       expect({ ...card, lede: undefined }).toEqual({ ...recordCard, lede: undefined });
       expect(card?.lede).toBe(

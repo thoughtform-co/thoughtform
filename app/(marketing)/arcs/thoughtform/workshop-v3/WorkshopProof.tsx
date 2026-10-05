@@ -34,8 +34,12 @@ export function workshopV3Tracks(): readonly CaseTrack[] {
     if (!track.card || !track.stamp) {
       throw new Error(`[workshop-v3 proof] track "${track.id}" has no card or stamp`);
     }
+    const claims = WORKSHOP_INTRO.proof.claims?.[id];
+    const title = WORKSHOP_INTRO.proof.titles?.[id];
     return {
       ...track,
+      ...(claims ? { blocks: claims } : {}),
+      ...(title && track.arc ? { arc: { ...track.arc, title } } : {}),
       card: { ...track.card, lede },
       stamp: { ...track.stamp, phase: "" },
     };
