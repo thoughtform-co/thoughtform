@@ -4,7 +4,6 @@ import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import { suriConfiguration } from "./shared/suriWork";
 import { theLabsBet } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
-import { whatFollows } from "./shared/whatFollows";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { theHorizon } from "./shared/workshopPractice";
 import { SURI_LOOP_GROUPS } from "./suri-workshop";
@@ -261,8 +260,7 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
         sourceLabel: "Thoughtform, 2 October 2026",
       },
     },
-
-    /* ── What follows ─────────────────────────────────────────────────────── */
-    whatFollows("What follows"),
+    /* No close after it (ADR-147 U8, owner 2026-10-05): the Suri video is
+       the last slide. */
   ],
 };

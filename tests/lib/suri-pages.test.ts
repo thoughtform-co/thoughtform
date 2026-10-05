@@ -143,14 +143,14 @@ describe("Suri's lunch and learn (ADR-147)", () => {
     /* After the loop: the shared breakdown from "How it runs", then the
        ending. The technical beats are off this page. */
     const ids = LUNCH.sections.map((s) => s.id);
-    expect(ids.slice(ids.indexOf("the-loop") + 1)).toEqual(["no-reflection", "close"]);
+    expect(ids.slice(ids.indexOf("the-loop") + 1)).toEqual(["no-reflection"]);
     const tail = routeFile("suri", "lunch-and-learn", "WorkshopTail.tsx");
     expect(tail, "mounts the shared breakdown").toContain("PromptToLoop");
     expect(tail, "from How it runs").toContain('"ptl-runs"');
   });
 
-  it("ends on the loop he made, then the shared close", () => {
-    const [video, close] = LUNCH.sections.slice(-2);
+  it("ends on the loop he made, the last slide (U8: no close)", () => {
+    const video = LUNCH.sections.at(-1)!;
     expect(video.kind).toBe("media");
     if (video.kind !== "media") return;
     expect(video.media.type).toBe("video");
@@ -159,9 +159,6 @@ describe("Suri's lunch and learn (ADR-147)", () => {
       expect(src?.startsWith("/arcs/suri/"), `${src} under the client's folder`).toBe(true);
       expect(existsSync(join(process.cwd(), "public", src ?? "")), `${src} on disk`).toBe(true);
     }
-    expect(close.kind).toBe("close");
-    if (close.kind !== "close") return;
-    expect(close.head.title).toBe(WHAT_FOLLOWS_TITLE);
   });
 
   it("lays every card grid of its own out in twos or fours", () => {

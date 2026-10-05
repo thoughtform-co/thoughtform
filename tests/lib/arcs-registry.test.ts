@@ -126,7 +126,10 @@ describe("arcs registry (ADR-052)", () => {
 
   it("every arc ends on a close section", () => {
     for (const arc of ARCS) {
-      expect(arc.sections[arc.sections.length - 1]?.kind).toBe("close");
+      /* One exception, the owner's (2026-10-05, ADR-147 U8): Suri's lunch and
+         learn ends on the loop made for the room, the last slide. */
+      if (arc.slug === "suri-lunch-and-learn") continue;
+      expect(arc.sections[arc.sections.length - 1]?.kind, arc.slug).toBe("close");
     }
   });
 
