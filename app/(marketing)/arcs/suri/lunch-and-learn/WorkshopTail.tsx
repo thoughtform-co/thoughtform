@@ -27,7 +27,7 @@ import { SURI_LUNCH_AND_LEARN_ARC } from "@/lib/arcs/content/suri-lunch-and-lear
 /* ADR-147 U8: the page up to the loop, then Prompt to Loop from "How it
    runs" to the end, then the ending. One running index across the three runs. */
 const SECTIONS = SURI_LUNCH_AND_LEARN_ARC.sections;
-const AFTER_LOOP = SECTIONS.findIndex((s) => s.id === "the-loop") + 1;
+const AFTER_LOOP = SECTIONS.findIndex((s) => s.id === "loop-ad") + 1;
 const BEFORE = SECTIONS.slice(0, AFTER_LOOP);
 const AFTER = SECTIONS.slice(AFTER_LOOP);
 const BREAKDOWN = PROMPT_TO_LOOP_SLIDES.slice(

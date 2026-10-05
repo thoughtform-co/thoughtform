@@ -2014,6 +2014,13 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   height: 100%;
   object-fit: cover;
 }
+/* A 9:16 loop (ADR-147 U8: the Loop ad on Suri's lunch and learn): the frame
+   takes the clip's own shape, sized from the height the line leaves it, so a
+   vertical ad is never cropped into a landscape slide. */
+.arc-root #loop-ad .arc-inter__clip {
+  width: min(100%, calc(44svh * 9 / 16));
+  aspect-ratio: 9 / 16;
+}
 .arc-inter__line {
   margin: 0;
   max-width: 24ch;

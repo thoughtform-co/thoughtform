@@ -6,7 +6,6 @@ import { theLabsBet } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { theHorizon } from "./shared/workshopPractice";
-import { SURI_LOOP_GROUPS } from "./suri-workshop";
 
 /**
  * SURI, THE LUNCH AND LEARN (ADR-147): the page the room sees on Monday
@@ -212,17 +211,20 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
     theHorizon("09 · Why it needs checks"),
     theLabsBet("10 · Where the money goes"),
     {
-      /* The loop on one brief, the kickoff page's record by reference. */
-      id: "the-loop",
-      kind: "list-groups",
-      menuLabel: "The loop",
-      layout: "columns",
-      head: {
-        eyebrow: "11 · The loop",
-        title: { pre: "Brief, set, checks,", em: "and then you." },
-        sub: "One loop, one ad type at a time, on a brief that is live this week. We set it up with you in the room and run it with you until you run it without us.",
+      /* ADR-147 U8 (owner): the finished Loop ad as an interstitial, looping
+         above its line, in place of "Brief, set, checks, and then you.",
+         straight into the breakdown. */
+      id: "loop-ad",
+      kind: "interstitial",
+      variant: "callout",
+      menuLabel: "The Loop ad",
+      eyebrow: "11 · Loop · Experience 2 Gold",
+      line: { pre: "From one prompt", em: "to a 10‑second ad." },
+      clip: {
+        src: "/arcs/prompt-to-loop/loop.mp4",
+        poster: "/arcs/prompt-to-loop/ptl-02.jpg",
+        alt: "The finished 10-second Halloween loop for Loop Experience 2 Gold",
       },
-      groups: SURI_LOOP_GROUPS,
     },
 
     /* ── Chapter four · PROMPT TO LOOP ───────────────────────────────────────

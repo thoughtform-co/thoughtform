@@ -14,7 +14,6 @@ import { WHAT_FOLLOWS_TITLE } from "@/lib/arcs/content/shared/whatFollows";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { SURI_CONFIGURATION_ARC } from "@/lib/arcs/content/suri-configuration";
 import { SURI_LUNCH_AND_LEARN_ARC } from "@/lib/arcs/content/suri-lunch-and-learn";
-import { SURI_LOOP_GROUPS } from "@/lib/arcs/content/suri-workshop";
 
 /**
  * Suri's two pages (ADR-147): the lunch and learn, cut from the workshop's
@@ -138,12 +137,13 @@ describe("Suri's lunch and learn (ADR-147)", () => {
   });
 
   it("reads the kickoff's loop by reference, then runs Prompt to Loop (U8)", () => {
-    const loop = LUNCH.sections.find((s) => s.id === "the-loop");
-    expect(loop?.kind === "list-groups" && loop.groups).toBe(SURI_LOOP_GROUPS);
+    const ad = LUNCH.sections.find((s) => s.id === "loop-ad");
+    expect(ad?.kind === "interstitial" && ad.clip?.src).toBe("/arcs/prompt-to-loop/loop.mp4");
     /* After the loop: the shared breakdown from "How it runs", then the
        ending. The technical beats are off this page. */
     const ids = LUNCH.sections.map((s) => s.id);
-    expect(ids.slice(ids.indexOf("the-loop") + 1)).toEqual(["no-reflection"]);
+    expect(ids.slice(ids.indexOf("loop-ad") + 1)).toEqual(["no-reflection"]);
+    expect(ids, "Brief, set, checks is off the page").not.toContain("the-loop");
     const tail = routeFile("suri", "lunch-and-learn", "WorkshopTail.tsx");
     expect(tail, "mounts the shared breakdown").toContain("PromptToLoop");
     expect(tail, "from How it runs").toContain('"ptl-runs"');
