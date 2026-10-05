@@ -8992,20 +8992,41 @@ html[data-theme="light"] .arc-root .arc-signal {
   background-image: radial-gradient(circle, var(--arc-grid) 1px, transparent 1.5px);
   background-size: 20px 20px;
 }
-/* ADR-147 U1: a key visual in place of the board. No housing, no dot grid:
-   the plate's edges dissolve into the page's ground so the beat reads as a
-   continuation of the dark it arrives from, not a picture in a frame. */
-.arc-hb__visual--plate {
-  padding: 0;
-  border: 0;
-  background: none;
+/* ADR-147 U1 + U5: a key visual in place of the board, FULL BLEED (owner,
+   2026-10-05). The plate is the beat's ground, edge to edge; the copy sits
+   over its dark left side. Masks, never a painted scrim, so the edges fall
+   to whatever the page's own ground is: the left so the copy reads, the top
+   and bottom so the beat hands in and out of the void without a seam.
+   Zoomed 1.2 about the left edge so the head lands right of the copy
+   (the hero lab's TARGET_X rule, MF-01's subject at x 0.58). */
+.arc-hb--plate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
-.arc-hb__plate-img {
+.arc-hb__bleed {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  margin: 0;
+  pointer-events: none;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 52%),
+    linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 52%),
+    linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  mask-composite: intersect;
+}
+.arc-hb__bleed-img {
   display: block;
   width: 100%;
-  height: auto;
-  -webkit-mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 52%, transparent 100%);
+  height: 100%;
+  object-fit: cover;
+  object-position: 0% 50%;
+  transform: scale(1.2);
+  transform-origin: 0% 55%;
 }
 .arc-hb__svg {
   display: block;

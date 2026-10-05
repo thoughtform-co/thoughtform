@@ -57,10 +57,27 @@ export function ArcHeroBoard({ section, index, motion = "reveal" }: ArcHeroBoard
     <ArcBeat
       id={section.id}
       kind="hero-board"
-      className="arc-section arc-sec arc-hb"
+      className={`arc-section arc-sec arc-hb${section.plate ? " arc-hb--plate" : ""}`}
       ariaLabel={section.ariaLabel ?? arcTitleText(head.title)}
       motion={motion}
     >
+      {section.plate ? (
+        // ADR-147 U1 + U5 (owner: "the key visual should be full bleed"): the
+        // plate is the beat's ground, edge to edge, the copy over its dark
+        // side; no travel (a translating ground would slide under the copy).
+        <figure className="arc-hb__bleed" aria-hidden={section.plate.alt ? undefined : true}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="arc-hb__bleed-img"
+            src={section.plate.src}
+            alt={section.plate.alt}
+            width={section.plate.width}
+            height={section.plate.height}
+            loading="lazy"
+            decoding="async"
+          />
+        </figure>
+      ) : null}
       <div className="arc-band arc-hb__band">
         {/* The masthead law (ADR-057): the head never moves and never fades;
             under terminal motion it is marked still and the decode is the
@@ -77,25 +94,7 @@ export function ArcHeroBoard({ section, index, motion = "reveal" }: ArcHeroBoard
           ) : null}
         </div>
 
-        {section.plate ? (
-          // ADR-147 U1: a key visual in place of the board, unframed. A plain
-          // `img` (the arcs' own media are), lazy, with its box declared.
-          <figure
-            className="arc-hb__visual arc-hb__visual--plate arc-reveal"
-            {...rung(motion, 0.16, 28, 0)}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="arc-hb__plate-img"
-              src={section.plate.src}
-              alt={section.plate.alt}
-              width={section.plate.width}
-              height={section.plate.height}
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        ) : (
+        {section.plate ? null : (
           <figure className="arc-hb__visual arc-reveal" {...rung(motion, 0.16, 28, 0)}>
             <svg
               className="arc-hb__svg"

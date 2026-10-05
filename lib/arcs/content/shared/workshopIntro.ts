@@ -195,13 +195,13 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     // The title says who drew them; the record's "We make the creative team
     // self-sufficient" stays on the homepage.
     // ADR-147 U3 (owner, same day: "change the copy on the other proof cards
-    // too"): all four in the Studio card's register, what happened, in the
-    // past tense; the homepage keeps the record's "We ..." lines.
+    // too"), then the owner's own lines, word for word: the record's "We"
+    // lines in the past tense, the Studio card and the tools card his.
     titles: {
-      "atl-films": "The films matched live action",
+      "atl-films": "We pushed the frontiers of AI creative",
       studio: "The Studio set its own guidelines",
-      tooling: "Each team got the tool its work needed",
-      "ai-transformation": "The agents got a layer to run on",
+      tooling: "We built tools around the creative process",
+      "ai-transformation": "We built the layer agents run on",
     },
     // The three other cards' claims, digit-free (this record's copy law),
     // each from its own track's blocks and brief.
