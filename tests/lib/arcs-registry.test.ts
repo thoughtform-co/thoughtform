@@ -20,6 +20,7 @@ import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
 import { TOM_BENCH_EXAMPLE, TOM_PATH_STAGES } from "@/lib/arcs/content/shared/tom-on-the-moon";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
+import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { MARKET_SIGNAL_COLUMNS } from "@/lib/arcs/content/shared/marketSignal";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
@@ -986,9 +987,28 @@ describe("arcs registry (ADR-052)", () => {
           );
         }
       }
-      /* The sequence is the pile's, filtered to what the page carries. */
-      const expected = PROOF_STACK_ORDER.filter((id) => ids.includes(id));
-      expect(ids, `${arc.slug}: proof cards out of the record's order`).toEqual(expected);
+      /* The sequence is the pile's, filtered to what the page carries, or
+         the workshop cuts' own (the studio after the films, ADR-147 U4). */
+      const orders = [PROOF_STACK_ORDER, WORKSHOP_INTRO.proof.order].map((o) =>
+        o.filter((id) => ids.includes(id))
+      );
+      expect(
+        orders.some((o) => o.join() === ids.join()),
+        `${arc.slug}: proof cards out of the record's order (${ids.join(", ")})`
+      ).toBe(true);
+      /* A page's own claims sit on the record's glyphs, inside its budgets. */
+      for (const card of cards) {
+        if (!card.claims) continue;
+        const track = tracks.find((t) => t.id === card.track);
+        expect(card.claims.map((c) => c.glyph).sort(), `${card.id}: glyphs`).toEqual(
+          (track?.blocks ?? []).map((b) => b.glyph).sort()
+        );
+        for (const c of card.claims) {
+          expect(c.title.length, c.title).toBeLessThanOrEqual(27);
+          expect(c.desc.length, c.desc).toBeLessThanOrEqual(95);
+        }
+        if (card.lede) expect(card.lede.length, `${card.id}: lede`).toBeLessThanOrEqual(180);
+      }
     }
   });
 

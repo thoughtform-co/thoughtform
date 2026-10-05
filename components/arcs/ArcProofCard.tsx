@@ -61,10 +61,17 @@ export function ArcProofCard({ section, index, motion = "reveal" }: ArcProofCard
      2026-09-28): the card reads `arc.title`, so the override is a copy of
      the record with that one field replaced, never a prop on `ProofCard`
      (whose markup the pile and the Trinny pitch share). */
-  const track =
-    section.title && record.arc
-      ? { ...record, arc: { ...record.arc, title: section.title } }
-      : record;
+  const track = {
+    ...record,
+    ...(section.title && record.arc ? { arc: { ...record.arc, title: section.title } } : {}),
+    // ADR-147 U4: the lede, the claims and the band's phase, each a copy of
+    // the record with one field replaced, the title's own law.
+    ...(section.lede && record.card ? { card: { ...record.card, lede: section.lede } } : {}),
+    ...(section.claims ? { blocks: section.claims } : {}),
+    ...(section.phase !== undefined && record.stamp
+      ? { stamp: { ...record.stamp, phase: section.phase } }
+      : {}),
+  };
   const client = proofStackClient();
   const accent = client.accentRgb
     ? ({ "--pf-accent-rgb": client.accentRgb } as CSSProperties)

@@ -1,11 +1,53 @@
-import type { ArcDef } from "../types";
+import type { ArcDef, ArcSectionOf } from "../types";
 
 import { suriMonth, suriOnceTwice, suriRepository, suriUsing, suriWrong } from "./shared/suriWork";
 import { whatFollows } from "./shared/whatFollows";
+import { WORKSHOP_INTRO, type WorkshopProofTrack } from "./shared/workshopIntro";
+
+/**
+ * The Loop proof as four cards, ADR-147 U4 (owner, 2026-10-05: "port the
+ * same changes to the configuration page"): the lunch and learn's pile, in
+ * its order, with its titles, ledes and claims READ FROM `WORKSHOP_INTRO`,
+ * so a copy edit there lands on both pages. One lede is this page's own:
+ * the layer card's "The rest of today is how." belongs to a room, and this
+ * is a document.
+ */
+const LAYER_LEDE =
+  "Then we built for the agents: what each team knows, written down, and the checks they run on their own work.";
+const PROOF_MENU: Readonly<Record<WorkshopProofTrack, string>> = {
+  "atl-films": "The films",
+  studio: "The Studio",
+  tooling: "The tools",
+  "ai-transformation": "The layer",
+};
+const SURI_CONFIG_PROOF: readonly ArcSectionOf<"proof-card">[] = WORKSHOP_INTRO.proof.order.map(
+  (track, i) => ({
+    id: `at-loop-${track}`,
+    kind: "proof-card",
+    menuLabel: PROOF_MENU[track],
+    ...(i === 0
+      ? {
+          menuPrimary: true,
+          head: {
+            eyebrow: "01 · At Loop",
+            title: { pre: "What this", em: "did at Loop." },
+          },
+        }
+      : {}),
+    track,
+    title: WORKSHOP_INTRO.proof.titles?.[track],
+    lede: track === "ai-transformation" ? LAYER_LEDE : WORKSHOP_INTRO.proof.ledes[track],
+    claims: WORKSHOP_INTRO.proof.claims?.[track],
+    phase: "",
+  })
+);
 
 /**
  * SURI, THE CREATIVE INTELLIGENCE CONFIGURATION (ADR-147): the document the
  * owner sends Suri so the team knows what to do, what to connect, and how.
+ *
+ * Since ADR-147 U4 it opens on the Loop proof, the lunch and learn's four
+ * cards from the same record, before the steps.
  *
  * Not the Armada page under another name: that page explains the machinery
  * to the house; this one is the client's own setup, in phases. It opens on
@@ -62,6 +104,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       "The setup Suri's creative team runs: what to connect, what to do in which week, and how the skills, the checks and the feedback reach everyone.",
   },
   sections: [
+    ...SURI_CONFIG_PROOF,
     /* ── 01 · The steps ─────────────────────────────────────────────────────
        The month as one track: the fork is how the plugins arrive, a station
        per step under the phases, a gate after every station, and what is
@@ -72,7 +115,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       menuLabel: "The steps",
       menuPrimary: true,
       head: {
-        eyebrow: "01 · The steps",
+        eyebrow: "02 · The steps",
         title: { pre: "From today", em: "to the handover." },
         sub: "One step open at a time: what you do, what you end with, when it is done, and where. The first two are this week in the office; the rest run inside the work, and the handover date is set in week one.",
       },
@@ -194,7 +237,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       menuPrimary: true,
       layout: "readout",
       head: {
-        eyebrow: "02 · What to connect",
+        eyebrow: "03 · What to connect",
         title: { pre: "The accounts,", em: "all Suri's." },
         sub: "Most people set up nothing: once the repository is synced, the plugins are in Claude for everyone they are set for. These are the things that need a person, in the order they are needed. Nothing here sits in our name.",
       },
@@ -243,13 +286,13 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
     },
 
     /* ── 03 to 07 · the shared bodies, numbered for this page ─────────────── */
-    suriRepository({ eyebrow: "03 · The setup, drawn", menuLabel: "The setup", menuPrimary: true }),
-    ...suriUsing({ eyebrow: "04 · Using it", menuLabel: "Using it" }),
-    ...suriWrong({ eyebrow: "05 · When it's wrong", menuLabel: "When it's wrong" }),
-    suriOnceTwice({ eyebrow: "06 · Once, then twice", menuLabel: "Once, then twice" }),
-    suriMonth({ eyebrow: "07 · The month", menuLabel: "The month", menuPrimary: true }),
+    suriRepository({ eyebrow: "04 · The setup, drawn", menuLabel: "The setup", menuPrimary: true }),
+    ...suriUsing({ eyebrow: "05 · Using it", menuLabel: "Using it" }),
+    ...suriWrong({ eyebrow: "06 · When it's wrong", menuLabel: "When it's wrong" }),
+    suriOnceTwice({ eyebrow: "07 · Once, then twice", menuLabel: "Once, then twice" }),
+    suriMonth({ eyebrow: "08 · The month", menuLabel: "The month", menuPrimary: true }),
 
     /* ── 08 · What follows ──────────────────────────────────────────────────── */
-    whatFollows("08 · What follows"),
+    whatFollows("09 · What follows"),
   ],
 };

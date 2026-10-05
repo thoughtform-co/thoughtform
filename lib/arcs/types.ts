@@ -735,6 +735,15 @@ export type ArcSection = ArcSectionBase &
          * own line).
          */
         title?: string;
+        /** The card's lede ON THIS PAGE, in place of `track.card.lede`
+         *  (ADR-147 U4): the workshop cuts' own lines, read from one record. */
+        lede?: string;
+        /** The four claims ON THIS PAGE, in place of `track.blocks`
+         *  (ADR-147 U4), on the record's own glyph keys. */
+        claims?: readonly { glyph: string; title: string; desc: string }[];
+        /** The band's phase ON THIS PAGE; `""` letters the client alone, as
+         *  the workshop cuts do (ADR-143 U6). */
+        phase?: string;
       }
     | {
         /**

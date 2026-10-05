@@ -167,8 +167,27 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     expect(existsSync(join(ARCS_DIR, "suri", "configuration")), "no own folder").toBe(false);
   });
 
-  it("opens on the month as a track that letters its own words", () => {
-    const track = CONFIG.sections[0];
+  it("opens on the lunch and learn's four proof cards, read from the same record (U4)", () => {
+    const cards = CONFIG.sections.slice(0, 4);
+    expect(cards.map((c) => c.kind)).toEqual(Array(4).fill("proof-card"));
+    expect(cards.map((c) => (c.kind === "proof-card" ? c.track : ""))).toEqual([
+      ...WORKSHOP_INTRO.proof.order,
+    ]);
+    for (const c of cards) {
+      if (c.kind !== "proof-card") continue;
+      const id = c.track as (typeof WORKSHOP_INTRO.proof.order)[number];
+      expect(c.title).toBe(WORKSHOP_INTRO.proof.titles?.[id]);
+      expect(c.claims).toBe(WORKSHOP_INTRO.proof.claims?.[id]);
+      expect(c.phase, "the band letters the client alone").toBe("");
+      /* The layer's lede hands to a room ("the rest of today"); this page is a
+         document and says it without the hand-off. */
+      if (id === "ai-transformation") expect(c.lede).not.toMatch(/today/i);
+      else expect(c.lede).toBe(WORKSHOP_INTRO.proof.ledes[id]);
+    }
+  });
+
+  it("then the month as a track that letters its own words", () => {
+    const track = CONFIG.sections.find((s) => s.kind === "syllabus")!;
     expect(track.kind).toBe("syllabus");
     if (track.kind !== "syllabus") return;
     expect(track.words?.station).toBe("Step");
@@ -208,7 +227,9 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
   });
 
   it("numbers its beats in order and closes on the shared close", () => {
-    beats(CONFIG).forEach((s, i) => {
+    /* The four proof cards are one beat: only the first carries a head. */
+    const numbered = beats(CONFIG).filter((s) => s.kind !== "proof-card" || s.head);
+    numbered.forEach((s, i) => {
       const eyebrow = "head" in s ? s.head?.eyebrow : undefined;
       expect(eyebrow?.startsWith(String(i + 1).padStart(2, "0")), `${s.id}: ${eyebrow}`).toBe(true);
     });
