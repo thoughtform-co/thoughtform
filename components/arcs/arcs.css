@@ -8992,13 +8992,15 @@ html[data-theme="light"] .arc-root .arc-signal {
   background-image: radial-gradient(circle, var(--arc-grid) 1px, transparent 1.5px);
   background-size: 20px 20px;
 }
-/* ADR-147 U1 + U5: a key visual in place of the board, FULL BLEED (owner,
-   2026-10-05). The plate is the beat's ground, edge to edge; the copy sits
-   over its dark left side. Masks, never a painted scrim, so the edges fall
-   to whatever the page's own ground is: the left so the copy reads, the top
-   and bottom so the beat hands in and out of the void without a seam.
-   Zoomed 1.2 about the left edge so the head lands right of the copy
-   (the hero lab's TARGET_X rule, MF-01's subject at x 0.58). */
+/* ADR-147 U1 + U5 + U6: a key visual in place of the board, FULL BLEED
+   LIKE THE HERO (owner, 2026-10-05: U5's masked plate "is not full bleed
+   like our hero section"). The plate fills the beat edge to edge with hard
+   edges, and the copy reads off a SCRIM, the hero overlay's own two
+   gradients. The scrim is a dark LITERAL: it sits over a photo, which stays
+   dark in both themes (ADR-077's stays-literal clause), and `--void-deep-rgb`
+   is re-pinned under the hero only. Zoomed 1.2 about the left edge so the
+   head lands right of the copy (the hero lab's TARGET_X rule, MF-01's
+   subject at x 0.58). */
 .arc-hb--plate {
   position: relative;
   isolation: isolate;
@@ -9009,15 +9011,17 @@ html[data-theme="light"] .arc-root .arc-signal {
   inset: 0;
   z-index: -1;
   margin: 0;
+  overflow: hidden;
   pointer-events: none;
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0%, #000 52%),
-    linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to right, transparent 0%, #000 52%),
-    linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
-  mask-composite: intersect;
+  background: #0a0908;
+}
+.arc-hb__bleed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(10, 9, 8, 0.72) 0%, rgba(10, 9, 8, 0.45) 40%, transparent 68%),
+    linear-gradient(to top, rgba(10, 9, 8, 0.35) 0%, transparent 38%);
 }
 .arc-hb__bleed-img {
   display: block;
@@ -9027,6 +9031,24 @@ html[data-theme="light"] .arc-root .arc-signal {
   object-position: 0% 50%;
   transform: scale(1.2);
   transform-origin: 0% 55%;
+}
+/* The copy is over a photo in BOTH themes, so it takes the hero's cream as
+   literals: the ramp would flip it to dark ink on parchment, over a dark
+   picture. The gold `em` stays the house gold. */
+.arc-root .arc-hb--plate .arc-hb__title {
+  color: #ebe3d6;
+}
+.arc-root .arc-hb--plate .arc-hb__lede {
+  color: rgba(235, 227, 214, 0.82);
+}
+.arc-root .arc-hb--plate .arc-hb__desig {
+  color: rgba(235, 227, 214, 0.66);
+}
+.arc-root .arc-hb--plate .arc-hb__desig::before {
+  background: rgba(235, 227, 214, 0.4);
+}
+.arc-root .arc-hb--plate .arc-hb__title em {
+  color: #caa554;
 }
 .arc-hb__svg {
   display: block;
