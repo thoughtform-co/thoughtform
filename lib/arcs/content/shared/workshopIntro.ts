@@ -185,7 +185,7 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
       // itself, every clause from the card's own sheets (THE GOVERNANCE,
       // THE RED LINE) and its brief; the card follows the films now.
       studio:
-        "Every designer now makes their own ads with AI. These are the lines they drew to protect the craft.",
+        "Every designer in the studio now makes their own ads with AI, inside these four lines.",
       "ai-transformation":
         "Then we built for the agents: what each team knows, written down, and the checks they run on their own work. The rest of today is how.",
     },
@@ -199,7 +199,7 @@ export const WORKSHOP_INTRO: WorkshopIntro = {
     // lines in the past tense, the Studio card and the tools card his.
     titles: {
       "atl-films": "We pushed the frontiers of AI creative",
-      studio: "The Studio set its own guidelines",
+      studio: "We set guidelines that respect the craft",
       tooling: "We built tools around the creative process",
       "ai-transformation": "We built the layer agents run on",
     },

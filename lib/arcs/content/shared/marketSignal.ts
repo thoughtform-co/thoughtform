@@ -102,3 +102,27 @@ export const MARKET_SIGNAL_COLUMNS: ArcSectionOf<"signal">["columns"] = [
     ],
   },
 ];
+
+/**
+ * v3's whole beat, hoisted (ADR-147 U7, owner 2026-10-05: Suri's lunch and
+ * learn takes "this section from our v3"): the head, the columns and the
+ * caption, one record two pages read. A page authors the eyebrow alone.
+ */
+export function theLabsBet(eyebrow: string): ArcSectionOf<"signal"> {
+  return {
+    id: "signal",
+    kind: "signal",
+    menuLabel: "The market",
+    head: {
+      eyebrow,
+      title: {
+        pre: "The labs just bet billions",
+        em: "on the two things only your team can write.",
+      },
+      sub: "Both labs are paying to put engineers inside companies to write their context down. The teams that write evals are the ones pulling ahead.",
+    },
+    columns: MARKET_SIGNAL_COLUMNS,
+    caption:
+      "Four public sources from May to September 2026, dated on each card. The figures are theirs, not ours, and none of it is a study.",
+  };
+}

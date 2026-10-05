@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { SURI_LUNCH_JOURNEY_ORDER } from "@/app/(marketing)/arcs/suri/lunch-and-learn/journey";
 import { WORKSHOP_V3_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/journey";
+import { arcTitleText } from "@/components/arcs/chrome";
 import { getArcAt } from "@/lib/arcs/registry";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import { SURI_WORKED, SURI_WORKS } from "@/lib/arcs/content/shared/suriWork";
@@ -86,7 +87,7 @@ describe("Suri's lunch and learn (ADR-147)", () => {
   });
 
   it("opens on the shared board with Suri's own head, then the situation by reference", () => {
-    const [open, stages, curve, steer, question] = LUNCH.sections;
+    const [open, stages, curve, resource, steer, question] = LUNCH.sections;
     expect(open.kind).toBe("hero-board");
     if (open.kind !== "hero-board") return;
     expect(open.id).toBe(HAND_IT_TO_AN_AGENT.id);
@@ -95,10 +96,32 @@ describe("Suri's lunch and learn (ADR-147)", () => {
     expect(open.head.sub, "its own sub keeps it off the shared slide's readers").not.toBe(
       HAND_IT_TO_AN_AGENT.head.sub
     );
-    expect(stages).toBe(THREE_WAYS_LOOP);
+    /* The stages at their names alone (ADR-147 U7): the shared figure, every
+       stage's sentence and Loop example dropped. */
+    expect(stages.kind).toBe("stages");
+    if (stages.kind === "stages") {
+      expect(stages.axes).toBe(THREE_WAYS_LOOP.axes);
+      expect(stages.stages.map((st) => st.name)).toEqual(
+        THREE_WAYS_LOOP.stages.map((st) => st.name)
+      );
+      expect(stages.stages.some((st) => st.body || st.example)).toBe(false);
+    }
     expect(curve).toBe(WORKSHOP_INTRO.curve);
-    expect(steer).toBe(WORKSHOP_INTRO.steer);
-    expect(question).toBe(WORKSHOP_INTRO.question);
+    /* ADR-147 U7: how we measure it leads into the spectrum, which keeps the
+       record's figure and sub under this room's title; the beat is his line. */
+    expect(resource.kind).toBe("resource");
+    expect(steer.kind === "spectrum" && steer.head.sub).toBe(WORKSHOP_INTRO.steer.head.sub);
+    expect(steer.kind === "spectrum" && arcTitleText(steer.head.title)).toBe(
+      "AI sits between a tool and a collaborator."
+    );
+    expect(question.kind === "interstitial" && question.line).toEqual({
+      pre: "AI is a superhuman intelligence,",
+      em: "but sucks at running itself.",
+    });
+    /* v3's horizon and the labs' bet, by reference, after the two plates. */
+    const ids = LUNCH.sections.map((s) => s.id);
+    expect(ids.indexOf("the-horizon")).toBe(ids.indexOf("leverage-suri") + 1);
+    expect(ids.indexOf("signal")).toBe(ids.indexOf("the-horizon") + 1);
   });
 
   it("switches Suri's three pieces of work, in the same order in every group", () => {

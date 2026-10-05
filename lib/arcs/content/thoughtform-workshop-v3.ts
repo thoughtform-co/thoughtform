@@ -1,6 +1,6 @@
 import type { ArcDef } from "../types";
 
-import { MARKET_SIGNAL_COLUMNS } from "./shared/marketSignal";
+import { theLabsBet } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { whatFollows } from "./shared/whatFollows";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
@@ -213,22 +213,7 @@ export const THOUGHTFORM_WORKSHOP_V3_ARC: ArcDef = {
     /* The horizon's two timelines are a SHARED RECORD (v2's); here they say
        why the two plates matter before the breakdown runs for two hours. */
     theHorizon("08 · Why it needs checks"),
-    {
-      id: "signal",
-      kind: "signal",
-      menuLabel: "The market",
-      head: {
-        eyebrow: "09 · Where the money goes",
-        title: {
-          pre: "The labs just bet billions",
-          em: "on the two things only your team can write.",
-        },
-        sub: "Both labs are paying to put engineers inside companies to write their context down. The teams that write evals are the ones pulling ahead.",
-      },
-      columns: MARKET_SIGNAL_COLUMNS,
-      caption:
-        "Four public sources from May to September 2026, dated on each card. The figures are theirs, not ours, and none of it is a study.",
-    },
+    theLabsBet("09 · Where the money goes"),
     {
       /* The plugin's own behaviour cases, the run of 2 October (0.1.0, the
          skill's EVAL_LOG): five real requests, three runs a side, graded three

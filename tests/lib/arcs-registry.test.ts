@@ -38,6 +38,7 @@ import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
 import {
   SURI_CONFIGURATION_BODIES,
+  SURI_CONFIGURATION_SUB,
   SURI_CONFIGURATION_TITLE,
   SURI_FEEDBACK_STEPS,
   SURI_MONTH_CARDS,
@@ -1297,7 +1298,7 @@ describe("arcs registry (ADR-052)", () => {
           for (const st of s.stages) {
             expect(st.label.length, `${at}/${st.id}: label`).toBeLessThanOrEqual(14);
             expect(st.name.length, `${at}/${st.id}: name`).toBeLessThanOrEqual(40);
-            expect(st.body.length, `${at}/${st.id}: body`).toBeLessThanOrEqual(130);
+            expect((st.body ?? "").length, `${at}/${st.id}: body`).toBeLessThanOrEqual(130);
           }
           noDigits({ axes: s.axes, ends: s.ends, stages: s.stages }, at);
         }
@@ -1707,8 +1708,9 @@ describe("the workshop's shared beats (ADR-143)", () => {
         }
       }
     }
+    // Suri's lunch and learn draws the stages at their names alone (ADR-147
+    // U7), so it is no longer a word-for-word reader.
     expect(readers.get("three-ways")?.sort()).toEqual([
-      "suri-lunch-and-learn",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
@@ -1739,6 +1741,7 @@ describe("the workshop's shared beats (ADR-143)", () => {
     }
     expect(readers.sort()).toEqual([
       "ai-storytelling-class-1",
+      "suri-lunch-and-learn",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
@@ -1766,9 +1769,14 @@ describe("the workshop's shared beats (ADR-143)", () => {
           expect(s.left, `${arc.slug}#${s.id}`).toBe(body.left);
           expect(s.right, `${arc.slug}#${s.id}`).toBe(body.right);
           expect(s.work, `${arc.slug}#${s.id}`).toBe(body.work);
-          expect(s.head.title, `${arc.slug}#${s.id}: the record's title`).toBe(
-            SURI_CONFIGURATION_TITLE
-          );
+          // A frame may letter its own title (ADR-147 U7: the lunch and learn);
+          // the sub and every panel stay the record's.
+          if (arc.slug !== "suri-lunch-and-learn") {
+            expect(s.head.title, `${arc.slug}#${s.id}: the record's title`).toBe(
+              SURI_CONFIGURATION_TITLE
+            );
+          }
+          expect(s.head.sub, `${arc.slug}#${s.id}: the record's sub`).toBe(SURI_CONFIGURATION_SUB);
           if (s.id === "config-brief") readers.get("config")?.push(arc.slug);
         }
         if (s.kind === "repository" && s.repo.name === "suri-ai-studio") {

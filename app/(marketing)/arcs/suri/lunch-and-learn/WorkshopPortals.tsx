@@ -5,6 +5,7 @@ import { lazy, Suspense, useLayoutEffect } from "react";
 import { useNestedRoot } from "../../trinny-london/proposal/useNestedRoot";
 import { usePortraitDeck } from "../../thoughtform/workshop-v1/about-deck/usePortraitDeck";
 import { useWorkshopFlow } from "../../thoughtform/workshop-v1/flow/useWorkshopFlow";
+import { useProofHold } from "./useProofHold";
 
 /**
  * SuriLunchAndLearnPortals — the Suri cut's nested roots (ADR-147), v3's
@@ -59,6 +60,8 @@ export function SuriLunchAndLearnPortals() {
   usePortraitDeck();
   // As v3: the era title glides and decodes into the thesis title (ADR-143 U5).
   useWorkshopFlow({ titleMorph: true });
+  // The pile stays behind as the room's part scrolls over it (ADR-147 U7).
+  useProofHold();
 
   return null;
 }

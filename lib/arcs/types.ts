@@ -1655,7 +1655,9 @@ export interface ArcStage {
   label: string;
   /** The row's name: what you do with it. */
   name: string;
-  body: string;
+  /** One sentence under the name; a page may leave the row at its name
+   *  (ADR-147 U7, owner: "radically simplified"). */
+  body?: string;
   /** One of the client's own pieces of work at this stage (ADR-136), drawn
    *  as a fourth line in the ROW under the section's `own` prefix — never on
    *  the plinth, whose labels are the walk's. ≤48, digit-free; all three

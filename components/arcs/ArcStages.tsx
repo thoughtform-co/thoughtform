@@ -161,7 +161,7 @@ export function ArcStages({ section, index, motion = "reveal" }: ArcStagesProps)
                     </span>
                     <span className="arc-plate__name">{stage.name}</span>
                   </header>
-                  <p className="arc-steps__body">{stage.body}</p>
+                  {stage.body ? <p className="arc-steps__body">{stage.body}</p> : null}
                   {/* The client's own work at this stage (ADR-136): a fourth
                       line in the ROW, never on the plinth — the plinth's
                       labels are the walk's, and a label on a slanted face is

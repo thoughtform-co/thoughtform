@@ -1,4 +1,4 @@
-import type { ArcDef } from "../types";
+import type { ArcDef, ArcStage } from "../types";
 
 import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import {
@@ -8,9 +8,11 @@ import {
   suriUsing,
   suriWrong,
 } from "./shared/suriWork";
+import { theLabsBet } from "./shared/marketSignal";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { whatFollows } from "./shared/whatFollows";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
+import { theHorizon } from "./shared/workshopPractice";
 import { SURI_ASK_CARDS, SURI_LOOP_GROUPS } from "./suri-workshop";
 
 /**
@@ -39,6 +41,15 @@ import { SURI_ASK_CARDS, SURI_LOOP_GROUPS } from "./suri-workshop";
  * authors, never in a shared body (the house page reads those). It prints no
  * fee, no break clause and no fleet word.
  */
+/** A stage at its label and name alone (ADR-147 U7, owner: the text blocks
+ *  "radically simplified"): no sentence, no Loop example. */
+const nameOnly = ({ id, label, name, lit }: ArcStage): ArcStage => ({
+  id,
+  label,
+  name,
+  ...(lit ? { lit } : {}),
+});
+
 export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
   slug: "suri-lunch-and-learn",
   leaf: "lunch-and-learn",
@@ -102,17 +113,67 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
     },
 
     /* ── Chapter two · THE SITUATION ────────────────────────────────────────
-       The stages and the three middle beats, by reference from v3. */
-    THREE_WAYS_LOOP,
+       ADR-147 U7 (owner, 2026-10-05): the stages radically simplified (each
+       row its label and its name, no sentence, no Loop example), the curve
+       by reference, then how we measure it, then the spectrum and the beat
+       under this page's own heads. */
+    {
+      ...THREE_WAYS_LOOP,
+      own: undefined,
+      stages: [
+        nameOnly(THREE_WAYS_LOOP.stages[0]),
+        nameOnly(THREE_WAYS_LOOP.stages[1]),
+        nameOnly(THREE_WAYS_LOOP.stages[2]),
+      ],
+    },
     WORKSHOP_INTRO.curve,
-    WORKSHOP_INTRO.steer,
-    WORKSHOP_INTRO.question,
+    {
+      /* Moira's resource table (class one, v1, v2), with this room's head:
+         the way into the tool and the collaborator. */
+      id: "resource",
+      kind: "resource",
+      menuLabel: "A resource",
+      head: {
+        eyebrow: "04 · A strange resource",
+        title: { pre: "We use it like a tool,", em: "when it's an intelligence." },
+        sub: "We count it in tokens, the way we count software in seats. Tokens say how much it read and wrote, and nothing about whether the work was any good.",
+      },
+      columns: ["Resource", "Counted in", "What the count tells you"],
+      rows: [
+        { id: "people", resource: "People", unit: "Hours", tells: "How long the work took" },
+        { id: "money", resource: "Money", unit: "Pounds", tells: "What the work cost" },
+        { id: "software", resource: "Software", unit: "Seats", tells: "Who can use it" },
+        {
+          id: "intelligence",
+          resource: "Intelligence",
+          unit: "Tokens",
+          tells: "How much the model read and wrote",
+          misses: "Nothing about what it was worth, or whether it worked",
+          open: true,
+        },
+      ],
+    },
+    {
+      ...WORKSHOP_INTRO.steer,
+      head: {
+        ...WORKSHOP_INTRO.steer.head,
+        eyebrow: "05 · Tool and collaborator",
+        title: { pre: "AI sits between a tool", em: "and a collaborator." },
+      },
+    },
+    {
+      ...WORKSHOP_INTRO.question,
+      eyebrow: "06 · The catch",
+      line: { pre: "AI is a superhuman intelligence,", em: "but sucks at running itself." },
+    },
 
     /* ── Chapter three · THE CONFIGURATION, FOR SURI'S WORK ─────────────────
        The three pieces of work as tabs, ONE RECORD with the Armada companion
-       and the configuration page (`shared/suriWork.ts`). */
+       and the configuration page (`shared/suriWork.ts`), under this page's
+       own title (ADR-147 U7). */
     ...suriConfiguration({
-      eyebrow: "06 · The configuration",
+      eyebrow: "07 · The configuration",
+      title: { pre: "Building an intelligence configuration", em: "around the work." },
       menuLabel: "Configuration",
       menuPrimary: true,
     }),
@@ -124,8 +185,8 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       // The board's two lit plates, opened up (ADR-143 U11, owner 2026-10-05).
       plates: { tag: "You write this" },
       head: {
-        eyebrow: "07 · The two you write",
-        title: { pre: "Two of the six", em: "nobody can write for you." },
+        eyebrow: "08 · The two you write",
+        title: { pre: "Context is your", em: "biggest lever." },
         sub: "What it knows and what good looks like can only come from the people doing the work: the context and the checks. For the brief, the intake in the studio's words and eleven checks. For the statics, each ad type's layout and Kate's verdicts, written down as she gives them.",
       },
       cards: [
@@ -153,6 +214,10 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
         },
       ],
     },
+    /* v3's two beats, by reference (ADR-147 U7): why it needs the checks,
+       and where the market's money goes. */
+    theHorizon("09 · Why it needs checks"),
+    theLabsBet("10 · Where the money goes"),
     {
       /* The loop on one brief, the kickoff page's record by reference. */
       id: "the-loop",
@@ -160,7 +225,7 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       menuLabel: "The loop",
       layout: "columns",
       head: {
-        eyebrow: "08 · The loop",
+        eyebrow: "11 · The loop",
         title: { pre: "Brief, set, checks,", em: "and then you." },
         sub: "One loop, one ad type at a time, on a brief that is live this week. We set it up with you in the room and run it with you until you run it without us.",
       },
@@ -170,21 +235,21 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
     /* ── Chapter four · MADE REAL ───────────────────────────────────────────
        Where the six answers live, how it is used, and what happens when a
        skill is wrong: the shared bodies, numbered for this page. */
-    suriRepository({ eyebrow: "09 · Made real", menuLabel: "Made real", menuPrimary: true }),
-    ...suriUsing({ eyebrow: "10 · Using it", menuLabel: "Using it" }),
-    ...suriWrong({ eyebrow: "11 · When it's wrong", menuLabel: "When it's wrong" }),
+    suriRepository({ eyebrow: "12 · Made real", menuLabel: "Made real", menuPrimary: true }),
+    ...suriUsing({ eyebrow: "13 · Using it", menuLabel: "Using it" }),
+    ...suriWrong({ eyebrow: "14 · When it's wrong", menuLabel: "When it's wrong" }),
 
     /* ── Chapter five · THIS MONTH ──────────────────────────────────────────
        The month as planned on 4 October (shared), what the month asks on top
        of the week (the kickoff's record), and what IT connects (`IT.md`). */
-    suriMonth({ eyebrow: "12 · This month", menuLabel: "The month", menuPrimary: true }),
+    suriMonth({ eyebrow: "15 · This month", menuLabel: "The month", menuPrimary: true }),
     {
       id: "what-we-ask",
       kind: "cards",
       menuLabel: "What we ask",
       columns: 4,
       head: {
-        eyebrow: "13 · What we ask",
+        eyebrow: "16 · What we ask",
         title: { pre: "A few hours,", em: "on top of the week." },
         sub: "Most of the month runs inside the meetings and tools you already have. These are the hours it needs on top, this week.",
       },
@@ -199,7 +264,7 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       menuLabel: "IT",
       columns: 4,
       head: {
-        eyebrow: "14 · What IT connects",
+        eyebrow: "17 · What IT connects",
         title: { pre: "What IT connects,", em: "in Suri's name." },
         sub: "Everything in Suri's accounts, nothing in ours. Two things today, two more with IT on Thursday; the step-by-step is on the configuration page.",
       },
@@ -245,7 +310,7 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
       kind: "media",
       menuLabel: "One more thing",
       head: {
-        eyebrow: "15 · One more thing",
+        eyebrow: "18 · One more thing",
         title: { pre: "No reflection:", em: "a Suri loop." },
         sub: "Made for this room from one line and your own product photograph, with the same setup: a skill, its checks, and a person who picks. Not this month's work; what the setup does once it is yours.",
       },
@@ -265,6 +330,6 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
     },
 
     /* ── What follows ─────────────────────────────────────────────────────── */
-    whatFollows("16 · What follows"),
+    whatFollows("19 · What follows"),
   ],
 };

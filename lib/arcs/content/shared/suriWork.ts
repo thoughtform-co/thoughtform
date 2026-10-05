@@ -1,4 +1,4 @@
-import type { ArcChatAside, ArcSectionOf } from "../../types";
+import type { ArcChatAside, ArcSectionOf, ArcTitle } from "../../types";
 
 /**
  * SURI'S THREE PIECES OF WORK, AS ONE RECORD (ADR-147): the brief, the Monday
@@ -52,6 +52,10 @@ export const suriPanel = (group: string, which: SuriWork) => ({
  *  beat is a chapter. `menuLabel` defaults to the body's own word. */
 export interface SuriFrame {
   eyebrow: string;
+  /** A page's own title for the beat (ADR-147 U7: the lunch and learn's
+   *  "Building an intelligence configuration around the work"); the body,
+   *  the sub and every panel stay the record's. */
+  title?: ArcTitle;
   menuLabel?: string;
   menuPrimary?: boolean;
 }
@@ -255,7 +259,7 @@ export const SURI_CONFIGURATION_BODIES: Record<SuriWork, ConfigurationBody> = {
 export function suriConfiguration(frame: SuriFrame): ArcSectionOf<"questions">[] {
   const head = {
     eyebrow: frame.eyebrow,
-    title: SURI_CONFIGURATION_TITLE,
+    title: frame.title ?? SURI_CONFIGURATION_TITLE,
     sub: SURI_CONFIGURATION_SUB,
   };
   return SURI_WORKS.map((which, i) => ({
