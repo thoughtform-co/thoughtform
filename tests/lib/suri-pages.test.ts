@@ -18,6 +18,7 @@ import {
   SURI_WORKSTREAMS,
 } from "@/lib/arcs/content/shared/suriWork";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
+import { THE_CATCH_LINE } from "@/lib/arcs/content/shared/workshopFraming";
 import { WHAT_FOLLOWS_TITLE } from "@/lib/arcs/content/shared/whatFollows";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import { SURI_CONFIGURATION_ARC } from "@/lib/arcs/content/suri-configuration";
@@ -206,7 +207,8 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
   it("is the simplified setup, in the owner's order (ADR-148)", () => {
     expect(beats(CONFIG).map((s) => `${s.kind}:${s.worked ? s.worked.group : s.id}`)).toEqual([
       "spectrum:tool-and-collaborator",
-      "interstitial:participate",
+      "curve:the-curve",
+      "interstitial:real-question",
       "questions:configuration",
       "cards:skills-and-evals",
       "horizon:the-horizon",
@@ -216,9 +218,19 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     ]);
     const steer = CONFIG.sections[0];
     expect(steer.kind === "spectrum" && steer.poles).toBe(WORKSHOP_INTRO.steer.poles);
-    const question = CONFIG.sections[1];
-    expect(question.kind === "interstitial" && arcTitleText(question.line)).toBe(
-      "How should intelligence participate in the work?"
+    /* ADR-148 U2: the curve, then the shared catch, and the configuration
+       carries the question in its own title. */
+    const curve = CONFIG.sections[1];
+    expect(curve.kind === "curve" && curve.lanes).toBe(WORKSHOP_INTRO.curve.lanes);
+    const caught = CONFIG.sections[2];
+    expect(caught.kind === "interstitial" && caught.line).toBe(THE_CATCH_LINE);
+    const lunchCatch = LUNCH.sections.find((s) => s.id === "real-question");
+    expect(lunchCatch?.kind === "interstitial" && lunchCatch.line, "one line, two pages").toBe(
+      THE_CATCH_LINE
+    );
+    const board = CONFIG.sections.find((s) => s.id === "configuration");
+    expect(board?.kind === "questions" && arcTitleText(board.head.title)).toBe(
+      "How intelligence should take part in the work."
     );
   });
 

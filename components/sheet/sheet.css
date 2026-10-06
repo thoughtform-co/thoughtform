@@ -873,12 +873,14 @@ a.sh-cell:focus-visible {
     100% 100%,
     var(--sh-card-ch) 100%,
     0 calc(100% - var(--sh-card-ch)),
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--sh-card-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--sh-card-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--sh-card-ch-in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--sh-card-ch-in))
+    1px calc(100% - 1px - var(--sh-card-ch-in)),
+    1px 1px
   );
 }
 /* the head bar, FUSED to the housing's top edge, a designation at each end */
@@ -1009,12 +1011,14 @@ a.sh-cell:focus-visible {
     100% 100%,
     var(--sh-card-ch) 100%,
     0 calc(100% - var(--sh-card-ch)),
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--sh-card-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--sh-card-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--sh-card-ch-in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--sh-card-ch-in))
+    1px calc(100% - 1px - var(--sh-card-ch-in)),
+    1px 1px
   );
   transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }

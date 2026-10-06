@@ -386,12 +386,14 @@
     100% 100%,
     var(--pf-card-ch) 100%,
     0 calc(100% - var(--pf-card-ch)),
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--pf-card-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--pf-card-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--pf-card-ch-in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--pf-card-ch-in))
+    1px calc(100% - 1px - var(--pf-card-ch-in)),
+    1px 1px
   );
 }
 
@@ -2646,11 +2648,13 @@
       100% 100%,
       var(--pf-card-ch) 100%,
       0 calc(100% - var(--pf-card-ch)),
+      0 0,
       1px 1px,
       calc(100% - 1px) 1px,
       calc(100% - 1px) calc(100% - 1px),
       calc(1px + var(--pf-card-ch-in)) calc(100% - 1px),
-      1px calc(100% - 1px - var(--pf-card-ch-in))
+      1px calc(100% - 1px - var(--pf-card-ch-in)),
+      1px 1px
     );
   }
   /* The band: the record's head row, exactly one peek tall whatever it

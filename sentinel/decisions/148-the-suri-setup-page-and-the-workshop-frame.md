@@ -97,6 +97,37 @@ the breakdown WHOLE between the horizon and the workstreams: the film, then 1 ·
   the `ARC / BRIEF · NN` designations stay in sequence.
 - The breakdown numbers its own slides; the page's own beats keep 01 to 07 around it.
 
+## Update 2 (2026-10-06, owner): the curve and the catch, the question in the title, the frames' edges, the heads
+
+**The order.** "First we introduce what AI is, then we explain how models are getting smarter and
+can work for longer tasks, and then the interstitial." After the spectrum the page takes v3's
+curve (`WORKSHOP_INTRO.curve`, its own eyebrow) and the catch ("AI is a superhuman intelligence,
+but sucks at running itself."). The catch was authored inline on the lunch and learn; a second
+reader makes it ONE record, `theCatch(eyebrow)` / `THE_CATCH_LINE` in `shared/workshopFraming.ts`,
+both pages pinned to the same line. The "participate" interstitial is deleted: the configuration's
+title now asks it, "How intelligence should take part in the work.", so the page asks the
+question once, where it is answered.
+
+**The frames' fading left edge was a bow-tie, house-wide.** Every two-contour `evenodd` ring that
+left its contours OPEN joins the outer outline's last point to the inner outline's first, and
+those connecting edges cross along the left side: the crossing erases part of the 1px edge,
+widest at mid-height. Measured on the configuration board's centre card at 1470×830: the edge's
+brightness fell from 451 to 72 at mid-height and recovered toward the corners, while hiding the
+ribbons and the reveal changed nothing. ADR-118 U2 recorded the same defect on the overview and
+fixed it there; eight rings elsewhere still carried it (the house plate, the pair plate, this
+ADR's own frame ring, the homepage proof card's two, the sheet's two, the Trinny proposal's one).
+Each now repeats its first point to close each outline; the geometry is unchanged. After: the
+edge reads 391 to 398 top to bottom.
+
+**The heads.** On a MacBook Air (1470×830) every workshop title sat under the 20ch cap at 393px
+inside a 596px column and stacked three or four lines. The workshop format takes the proposals'
+head grammar (ADR-099 U2, after Linear): two equal columns, the paragraph left-anchored at the
+midpoint, the title's measure its whole column. The size ramp is untouched. Measured: titles on
+two lines at 1470 and 1280, the longest on three; at 1920 the type grows faster than the column,
+so the longest titles reach three and one four. Prompt to Loop's heads bind a digit compound
+with a non-breaking hyphen (U+2011), in the port script and its output, because "10-second"
+broke across the line once the column widened.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside

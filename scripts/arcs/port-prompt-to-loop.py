@@ -62,6 +62,13 @@ def text(h):
     return html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h))).strip()
 
 
+def title(h):
+    # A compound like "10-second" binds with a NON-BREAKING hyphen (U+2011):
+    # since ADR-148 U2 the workshop titles take their whole column, and a
+    # plain hyphen broke "10- / second" at the line's end.
+    return re.sub(r"(\d)-(?=\w)", "\\1\u2011", text(h))
+
+
 def kick(h):
     m = re.match(r"\s*<b>(\d+)</b>(.*)", h, flags=re.S)
     return f"{m.group(1)} · {text(m.group(2))}" if m else text(h)
@@ -90,8 +97,8 @@ for m in re.finditer(r'<section class="sec[^"]*" id="(\w+)"[^>]*>(.*?)</section>
     slides.append({
         "id": f"ptl-{sid}",
         "eyebrow": kick(km.group(1)) if sid != "top" else text(km.group(1)),
-        "pre": text(tm.group(1)),
-        "em": text(tm.group(2)),
+        "pre": title(tm.group(1)),
+        "em": title(tm.group(2)),
         "sub": text(sm.group(1)),
         "band": 'data-tone="band"' in s[m.start(): m.start() + 200],
         "body": reclass(reid(re.sub(r"\s+", " ", body))),

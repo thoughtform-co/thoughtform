@@ -1316,11 +1316,13 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
     100% var(--arc-plate-ch),
     100% 100%,
     0 100%,
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--arc-plate-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--arc-plate-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
-    1px calc(100% - 1px)
+    1px calc(100% - 1px),
+    1px 1px
   );
 }
 /* ⚠ THE HEAD BAND IS THE CHIP (ADR-101 §B). It carries the board chip's own
@@ -7830,12 +7832,14 @@ a.arc-readout__hit:focus-visible {
     100% 100%,
     var(--arc-plate-ch) 100%,
     0 calc(100% - var(--arc-plate-ch)),
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--arc-plate-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--arc-plate-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--arc-plate-ch-in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--arc-plate-ch-in))
+    1px calc(100% - 1px - var(--arc-plate-ch-in)),
+    1px 1px
   );
 }
 .arc-q__mod::before {
@@ -10958,11 +10962,13 @@ html[data-theme="light"] .arc-root .arc-sf__n {
     100% var(--arc-frame-ch),
     100% 100%,
     0 100%,
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--arc-frame-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--arc-frame-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
-    1px calc(100% - 1px)
+    1px calc(100% - 1px),
+    1px 1px
   );
 }
 
@@ -11062,4 +11068,27 @@ html[data-theme="light"] .arc-root .arc-sf__n {
 }
 .arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj code {
   color: var(--gold-ink, #caa554);
+}
+
+/* ══ The workshop head (ADR-148 U2) ════════════════════════════════════
+   Owner, 2026-10-06, on a MacBook Air: the titles are "too stacked … which
+   isn't the case when you look at how Linear does it". Measured at 1470×830:
+   every title sat under the 20ch cap at 393px inside a 596px column, so a
+   title of 45 to 65 characters in capitals stacked three and four lines
+   deep. Linear's header grammar, which the proposals took in ADR-099 U2:
+   two equal columns, the paragraph left-anchored at the midpoint, and the
+   title's measure IS its column. The size is untouched (the ramp is solved
+   for 2560, `.claude/rules/arcs.md`); the column is what was missing. The
+   cap stays below 901px, where the column is the band. */
+@media (min-width: 901px) {
+  .arc-root[data-arc-format="workshop"] .arc-head--split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .arc-root[data-arc-format="workshop"] .arc-head--split .arc-head__intro {
+    justify-self: stretch;
+    max-width: none;
+  }
+  .arc-root[data-arc-format="workshop"] .arc-head--split .arc-head__title {
+    max-width: none;
+  }
 }

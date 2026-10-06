@@ -1796,11 +1796,13 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     100% var(--ch, 0px),
     100% 100%,
     0 100%,
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--ch-in)),
     calc(100% - 1px) calc(100% - 1px),
-    1px calc(100% - 1px)
+    1px calc(100% - 1px),
+    1px 1px
   );
 }
 

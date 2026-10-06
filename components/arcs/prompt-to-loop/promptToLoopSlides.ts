@@ -18,7 +18,7 @@ export const PROMPT_TO_LOOP_SLIDES: readonly PromptToLoopSlide[] = [
     id: "ptl-top",
     eyebrow: "How Claude made it · Loop Experience 2 Gold · 1 Oct 2026",
     pre: "From one prompt",
-    em: "to a 10-second ad.",
+    em: "to a 10‑second ad.",
     sub: "How the studio's motion skill is set up, then every step of one real video, in the order it happened.",
     body: '<div class="ptl-herobody"><div class="ptl-herobody__film"><div class="ptl-phone"> <video id="ptl-hero" src="/arcs/prompt-to-loop/loop.mp4" poster="/arcs/prompt-to-loop/ptl-02.jpg" autoplay muted loop playsinline aria-label="The finished 10-second loop"></video> <button class="ptl-sound" id="ptl-snd" type="button" aria-pressed="false">Sound on</button> </div> <div class="ptl-hero__meta"><span>9:16</span><span>240 frames</span><span>loops forever</span></div></div><ol class="ptl-steps"> <li><a href="#ptl-setup"><span>1</span>Setup</a></li><li><a href="#ptl-runs"><span>2</span>How it runs</a></li><li><a href="#ptl-ask"><span>3</span>Ask</a></li><li><a href="#ptl-look"><span>4</span>Look</a></li><li><a href="#ptl-idea"><span>5</span>Idea</a></li><li><a href="#ptl-plan"><span>6</span>Plan</a></li><li><a href="#ptl-stuff"><span>7</span>Ingredients</a></li><li><a href="#ptl-make"><span>8</span>Make</a></li><li><a href="#ptl-sound"><span>9</span>Sound</a></li><li><a href="#ptl-check"><span>10</span>Check</a></li><li><a href="#ptl-cost"><span>11</span>Cost</a></li><li><a href="#ptl-next"><span>12</span>Next time</a></li> </ol></div>',
   },

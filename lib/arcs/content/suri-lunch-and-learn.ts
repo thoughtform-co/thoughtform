@@ -3,6 +3,7 @@ import type { ArcDef, ArcStage } from "../types";
 import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
 import { suriConfiguration } from "./shared/suriWork";
 import { theLabsBet } from "./shared/marketSignal";
+import { theCatch } from "./shared/workshopFraming";
 import { THREE_WAYS_LOOP } from "./shared/threeWaysLoop";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { theHorizon } from "./shared/workshopPractice";
@@ -153,11 +154,7 @@ export const SURI_LUNCH_AND_LEARN_ARC: ArcDef = {
         title: { pre: "AI sits between a tool", em: "and a collaborator." },
       },
     },
-    {
-      ...WORKSHOP_INTRO.question,
-      eyebrow: "06 · The catch",
-      line: { pre: "AI is a superhuman intelligence,", em: "but sucks at running itself." },
-    },
+    theCatch("06 · The catch"),
 
     /* ── Chapter three · THE CONFIGURATION, FOR SURI'S WORK ─────────────────
        The three pieces of work as tabs, ONE RECORD with the Armada companion

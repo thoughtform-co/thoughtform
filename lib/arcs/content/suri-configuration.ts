@@ -2,6 +2,7 @@ import type { ArcDef } from "../types";
 
 import { SURI_STUDIO_CONFIGURATION, suriRuns } from "./shared/suriWork";
 import { whatFollows } from "./shared/whatFollows";
+import { theCatch } from "./shared/workshopFraming";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { theHorizon } from "./shared/workshopPractice";
 
@@ -13,9 +14,11 @@ import { theHorizon } from "./shared/workshopPractice";
  * simplified version because we have so many different versions"). The
  * lunch and learn stays the record of the room and the kick-off page the
  * printed handout; this page is the setup, short. The order is the owner's:
- * where AI sits (between a tool and a collaborator), the question that
- * raises (how should it take part in the work), the configuration that
- * answers it, the two things the team writes (the skill and its evals), why
+ * where AI sits (between a tool and a collaborator), how each release
+ * finishes longer work on its own (the curve), the catch (it is a superhuman
+ * intelligence that sucks at running itself), the configuration titled as
+ * the question it answers (how intelligence should take part in the work,
+ * ADR-148 U2), the two things the team writes (the skill and its evals), why
  * it needs them (the horizon), the setup run end to end on one real piece of
  * work (Prompt to Loop, whole: every step Claude took to make the Loop ad,
  * ADR-148 U1), and then the setup run on three of Suri's own workstreams
@@ -81,24 +84,28 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
         sub: "Tell it exactly what to do and it executes. Describe what you are after and it works out how. Suri's setup decides, workstream by workstream, where on that line the work sits.",
       },
     },
+    /* ── 02 · The curve, then 03 · the catch (ADR-148 U2, owner 2026-10-06:
+       "first we introduce what AI is, then we explain how models are getting
+       smarter and can work for longer tasks, and then the interstitial").
+       The curve is v3's by reference; the catch is the shared line. */
     {
-      id: "participate",
-      kind: "interstitial",
-      variant: "question",
-      menuLabel: "The question",
-      eyebrow: "02 · The question",
-      line: { pre: "How should intelligence", em: "participate in the work?" },
+      ...WORKSHOP_INTRO.curve,
+      menuLabel: "The curve",
+      head: { ...WORKSHOP_INTRO.curve.head, eyebrow: "02 · The curve" },
     },
+    { ...theCatch("03 · The catch"), menuLabel: "The catch" },
 
-    /* ── 03 · The configuration, once for the studio ─────────────────────── */
+    /* ── 04 · The configuration, once for the studio ───────────────────────
+       ADR-148 U2: its title carries the question the interstitial used to
+       ask, so the page asks it once, where it is answered. */
     {
       id: "configuration",
       kind: "questions",
       menuLabel: "Configuration",
       menuPrimary: true,
       head: {
-        eyebrow: "03 · The configuration",
-        title: { pre: "Building an intelligence configuration", em: "around the work." },
+        eyebrow: "04 · The configuration",
+        title: { pre: "How intelligence should", em: "take part in the work." },
         sub: "Six questions, answered once for the studio. Suri sets four for everyone: the model, the data, the interface and the owner. The team writes the other two, workstream by workstream.",
       },
       ...SURI_STUDIO_CONFIGURATION,
@@ -113,7 +120,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       columns: 2,
       plates: { tag: "You write this" },
       head: {
-        eyebrow: "04 · Skills and evals",
+        eyebrow: "05 · Skills and evals",
         title: { pre: "Context is your", em: "biggest lever." },
         sub: "The rest of the setup is set once. The skill and its evals can only come from the people doing the work, and they are what decide whether the work is any good.",
       },
@@ -144,7 +151,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
     },
 
     /* ── 05 · Why it needs them, by reference ────────────────────────────── */
-    theHorizon("05 · Why it needs evals"),
+    theHorizon("06 · Why it needs evals"),
 
     /* ── The setup, run end to end: Prompt to Loop, whole (ADR-148 U1) ──────
        Owner, 2026-10-06: the steps Claude took to make the Loop ad are "the
@@ -159,9 +166,9 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
     },
 
     /* ── 06 · In practice: three workstreams under one floating switch ──── */
-    ...suriRuns({ eyebrow: "06 · In practice", menuLabel: "In practice", menuPrimary: true }),
+    ...suriRuns({ eyebrow: "07 · In practice", menuLabel: "In practice", menuPrimary: true }),
 
     /* ── 07 · What follows ─────────────────────────────────────────────────── */
-    whatFollows("07 · What follows"),
+    whatFollows("08 · What follows"),
   ],
 };

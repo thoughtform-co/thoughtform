@@ -56,3 +56,24 @@ export const REAL_QUESTION_BEAT: ArcSectionOf<"interstitial"> = {
   subline:
     "Which model, how many tokens, whether it was any good: every question you will ever ask about it sits downstream of this one.",
 };
+
+/**
+ * THE CATCH (ADR-147 U7, shared since ADR-148 U2): the real question's beat
+ * re-lined as the owner's own, "AI is a superhuman intelligence, but sucks
+ * at running itself." The lunch and learn says it after the spectrum; the
+ * Suri setup page after the curve. One line, one record, a page's own
+ * eyebrow (the `theHorizon(eyebrow)` idiom).
+ */
+export const THE_CATCH_LINE = {
+  pre: "AI is a superhuman intelligence,",
+  em: "but sucks at running itself.",
+} as const;
+
+export function theCatch(eyebrow: string): ArcSectionOf<"interstitial"> {
+  return {
+    ...REAL_QUESTION_BEAT,
+    subline: undefined,
+    eyebrow,
+    line: THE_CATCH_LINE,
+  };
+}
