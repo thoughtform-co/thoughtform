@@ -79,6 +79,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "hungry-minds-proposal",
       "perfect-ted-proposal",
       "plopsa-workshop",
+      "suri-configuration",
       "suri-lunch-and-learn",
       "suri-proposal",
       "suri-workshop",
@@ -182,6 +183,13 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "suri-lunch-and-learn": {
         rows: ["A brief for the studio||"],
         links: ["Claude×1", "Monday×1"],
+      },
+      /* Suri's setup page (ADR-148) draws the studio's board once: the
+         work is the studio's whole creative work, and its data answer names
+         Monday and Figma, its interface Claude. */
+      "suri-configuration": {
+        rows: ["Suri's creative work||"],
+        links: ["Claude×1", "Figma×1", "Monday×1"],
       },
       /* The class-one deck's board is Tom on the Moon's world; the image
          model is named generically ("chosen per wave"), so Claude in the

@@ -1,0 +1,101 @@
+# ADR-148: The Suri setup page is one simplified page, and the workshop arcs take one frame
+
+- **Status:** Proposed (2026-10-06, owner). Built and guarded, not pushed; flips to Accepted
+  once the owner has read `/arcs/suri/configuration` live.
+- **Surface:** `lib/arcs/content/suri-configuration.ts` (rewritten), `lib/arcs/content/shared/suriWork.ts`
+  (`SURI_STUDIO_CONFIGURATION`, `SURI_RUNS`, `suriRuns()`, `SURI_WORKSTREAMS`), the new
+  `skill-run` kind (`lib/arcs/types.ts`, `components/arcs/ArcSkillRun.tsx`, `chrome.tsx`'s
+  `RUN` designation), `components/arcs/arcs.css` (§The skill run, §The workshop frame, and the
+  worked group's flex order); tests `suri-pages`, `arcs-registry`, `sheet-config-fit`,
+  `arc-run` (new).
+- **Related:** [ADR-147](147-suri-two-pages-one-record.md) (the two Suri pages and the shared
+  record), [ADR-139](139-the-workshop-second-cut.md) (the `worked` switch),
+  [ADR-143](143-the-workshop-third-house-cut.md) (Prompt to Loop as one record),
+  [ADR-065](065-corner-law.md) (the corner law), [ADR-089](089-casefile-is-one-housing.md)
+  (a clip cuts a border and never strokes one; fill among outlines),
+  [ADR-101](101-the-configuration-strikes-in-and-the-chip-becomes-the-plates.md) (why the
+  proposals keep their plates).
+
+## The call
+
+The owner, 2026-10-06, after the lunch and learn at Suri: update the configuration page so it
+explains how the setup works and carries the lunch and learn's breakdown of the process,
+"and maybe this is a good time we make a simplified version because we have so many different
+versions". His order: the hero; a variant of "AI sits between a tool and a collaborator"; an
+interstitial, "How should intelligence participate in the work"; the configuration; skills
+and evals; "It can only work for hours when it has the context and the evals"; then the setup
+applied to a few Suri workstreams "where we have a floating bar that allows you to switch
+elegantly between the different workstreams", "super simple … a nice clean overview of how
+the flow works in practice". Not the stages, the curve or the resource. And the frames: "the
+general frames we use, I want to harmonize them and really make them more minimalistic while
+respecting our brand", everywhere they are used.
+
+## The decision
+
+**1. One Suri setup page, short.** `/arcs/suri/configuration` is seven beats in his order. The
+lunch and learn stays the record of the room; the kick-off page stays the printed handout. The
+proof cards, the steps track, what to connect, the repository, the two chats, once-twice and
+the month left this page; their records stay in `suriWork.ts`, where the Armada companion
+reads them, so `arcs-registry`'s reader lists for those groups are the companion alone.
+
+**2. The configuration is drawn once, for the studio.** One `questions` board
+(`SURI_STUDIO_CONFIGURATION`): Suri's creative work at the centre, the six answers at studio
+level. The lunch and learn switched three boards; this page leaves the specifics to the
+workstreams that follow it.
+
+**3. The workstreams are three `skill-run` panels under the page's one switch.** Briefing +
+naming, Iterations, Video retouch + edit: three of the eight in
+`suri-ai-studio/workstreams.toml`, the three the 5 October sessions and the Monday board
+"Creative Intelligence Project" put first. Each run's ask is the plugin's own starting prompt,
+its steps and checks its `SKILL.md` and rubric, its figures `records/eval-log.md` (4 and
+6 October). What has not run says "Not run yet" rather than being drawn as if it had.
+
+**4. The `skill-run` kind, ADR-052's twenty-fifth enumerated exception.** Prompt to Loop's
+"How it runs" slide as data: you ask · Claude picks the skill · it follows the steps · it checks
+itself · you decide, the evals under the rail. The station names are chrome constants, never
+content. Server, no state, `data-run-*`, no SVG; the connectors are CSS pseudo-elements in the
+gap. Prompt to Loop's own slide is untouched (generated, one example); this is the same
+breakdown for any workstream.
+
+**5. One frame for the workshop arcs.** Scoped to `.arc-root[data-arc-format="workshop"]`
+(v1, v2, v3, the AP lecture, both Suri pages, Plopsa, the class-one deck, Armada):
+
+- A 1px ring in `--arc-edge` with ONE top-right notch at `--arc-frame-ch: clamp(10px, 1vw, 14px)`.
+  The pair plate (TR + BL) becomes a single notch.
+- A plate's head is type over a hairline: no gold wash band, no 2px gold rule.
+- Gold is the one lit object of a beat: a `--gold-line` ring over a faint wash, never a solid
+  gold block. Prompt to Loop's solid "Your call." station takes it.
+- The plain rectangles take the same ring: `.arc-card-item`, `.arc-syl__sheet`, the worked
+  bar's tabs, Prompt to Loop's stations and evals strip, the run's boxes.
+
+The proposals and the portfolio keep their plates: on the Trinny scene the board chip lands as
+the plates' gold head band (ADR-101 §B, one material) and is measured against them.
+
+**6. The worked bar floats.** Measured: the bar sat at its group's top edge, so `bottom`
+sticky held only while that edge was below the fold, and it scrolled away (y −31) the moment a
+panel filled the screen, on every page with a switch. The group is a flex column with the bar
+`order: 1`: laid out last, anchored on the group's floor, it holds the bottom of the screen
+while any panel is in view and leaves with the group. The DOM order is untouched, so the tabs
+are still first for a keyboard.
+
+## Mechanics worth keeping
+
+- **The ring is a pseudo, never a clip on the host, for a box with something hanging outside
+  it.** Prompt to Loop's chevrons and the run's connectors sit in the gap to the right of a
+  station; a clip on the station would cut them off. So a station has no ground at all, and only
+  the lit last station (no connector after it), the evals strip, the cards and the bar take the
+  host clip and keep their ground inside the notch.
+- **The host keeps its 1px border, coloured transparent,** so nothing re-flows; the ring's box
+  is `inset: -1px`, exactly the border box. A box with no border would lose its whole ring to
+  its own clip, which is why the run's boxes declare one.
+- **Prompt to Loop's sheet is generated** (`scripts/arcs/port-prompt-to-loop.py`), so its frame
+  rules live in `arcs.css` under the format scope and outrank `.ptl .ptl-station` on
+  specificity, never in the generated file.
+
+## Left open
+
+- The worked bar's label is still the shared "One piece of work"; "Workstream" would read
+  better on this page and would need a per-group label.
+- Two unit tests fail on the clean tree and are not this change: `thoughtform-armada` and
+  `skill-file-fidelity` read `../suri-ai-studio`, whose 0.3.0 folded `ai-studio-strategy` into
+  `ai-suri`.

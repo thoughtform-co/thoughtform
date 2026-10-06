@@ -831,3 +831,201 @@ export function suriMonth(frame: SuriFrame): ArcSectionOf<"cards"> {
     cards: SURI_MONTH_CARDS,
   };
 }
+
+/* ── The studio's configuration (ADR-148) ───────────────────────────────
+   The six answers once, for the studio as a whole: the simplified setup
+   page shows one board where the lunch and learn switched three. The
+   workstreams that follow it are where each answer gets specific. */
+
+export const SURI_STUDIO_CONFIGURATION: ConfigurationBody = {
+  work: {
+    label: "The work",
+    name: "Suri's creative work",
+    line: "Briefs, iterations and edits, one workstream at a time.",
+    bar: {
+      label: "Good looks like",
+      line: "Each workstream's own checks passed, and a person who decides.",
+    },
+  },
+  left: [
+    {
+      id: "model",
+      title: "The model",
+      question: "What runs it",
+      answer: "Claude, in Suri's own organisation",
+    },
+    {
+      id: "context",
+      title: "The context",
+      question: "What it knows",
+      answer: "A skill per workstream, with the brand file and the library",
+      lit: true,
+    },
+    {
+      id: "evals",
+      title: "The evaluations",
+      question: "How we know it is good",
+      answer: "The rubric, the cases, and the creative lead's verdicts",
+      lit: true,
+    },
+  ],
+  right: [
+    {
+      id: "data",
+      title: "The data",
+      question: "What it can reach",
+      answer: "Monday, Figma and the Drive folders",
+    },
+    {
+      id: "interface",
+      title: "The interface",
+      question: "Where you meet it",
+      answer: "Claude or Cowork: ask in your own words",
+    },
+    {
+      id: "owner",
+      title: "The owner",
+      question: "Who answers for it",
+      answer: "One owner per workstream, by role",
+      human: true,
+    },
+  ],
+  tag: "You write this",
+  alt: "Suri's creative work at the centre, with six questions wired around it: the context and the evaluations lit, the owner in green",
+};
+
+/* ── The workstreams, run (ADR-148) ─────────────────────────────────────
+   Three of the eight workstreams in `suri-ai-studio/workstreams.toml`, the
+   ones the 5 October sessions put first: the brief and its ad names, the
+   Black Friday iterations, the video retouch. Each is one `skill-run`: the
+   ask is the plugin's own starting prompt, the steps and checks its
+   SKILL.md and rubric, the figures `records/eval-log.md` (4 and 6 October).
+   What has not run says so. */
+
+export const SURI_WORKSTREAMS = {
+  briefing: { id: "briefing", label: "Briefing + naming" },
+  iterations: { id: "iterations", label: "Iterations" },
+  video: { id: "video", label: "Video retouch + edit" },
+} as const;
+
+export type SuriWorkstream = keyof typeof SURI_WORKSTREAMS;
+
+export const SURI_WORKSTREAM_ORDER: readonly SuriWorkstream[] = ["briefing", "iterations", "video"];
+
+export const SURI_RUN_TITLE = { pre: "How it runs", em: "on Suri's own work." } as const;
+
+export const SURI_RUN_SUB =
+  "Pick a workstream. Each one runs the same way: you ask in your own words, Claude picks the skill, follows its steps, checks its own work against the rubric, and hands you the decision.";
+
+type RunBody = Pick<
+  ArcSectionOf<"skill-run">,
+  "ask" | "skill" | "steps" | "checks" | "decide" | "evals"
+>;
+
+export const SURI_RUNS: Record<SuriWorkstream, RunBody> = {
+  briefing: {
+    ask: "A newsletter for the Pro 2 next week.",
+    skill: { name: "brief", also: ["ad-naming"] },
+    steps: [
+      "Asks one question at a time, in the studio's words",
+      "Lists what is still missing, and flags a short lead time",
+      "Writes the brief, every claim in brackets",
+      "Fills the ad names from the brief's own fields",
+      "Shows the names before it writes to Monday",
+    ],
+    checks: [
+      { line: "Channel, formats and timing named", gate: true },
+      { line: "Every claim in brackets", gate: true },
+      { line: "Every name from its list", gate: true },
+      { line: "Names shown before they are written", gate: true },
+    ],
+    decide: {
+      who: "The strategist",
+      line: "Marks the brief ready. It lands as a Monday item, with its ad names.",
+    },
+    evals: {
+      cases: [
+        { name: "brief-waits-for-answers", with: "3 of 3" },
+        { name: "names-at-brief-stage" },
+        { name: "an-iteration-keeps-its-original" },
+      ],
+      note: "The brief held on every run on 4 October. The naming cases are written, and run on the first real brief.",
+    },
+  },
+  iterations: {
+    ask: "Three iterations of last week's winner: a new hook, a footage swap, a copy line. UK and US.",
+    skill: { name: "video-edit", also: ["figma-variants", "ad-naming"] },
+    steps: [
+      "Reads the result and names one change per iteration",
+      "Cuts each iteration from the master, which stays as it is",
+      "Makes the 4:5 and 9:16 crops",
+      "Names each one with the original's code",
+    ],
+    checks: [
+      { line: "The product is real footage", gate: true },
+      { line: "One change per iteration", gate: true },
+      { line: "The master stays untouched", gate: true },
+      { line: "The crops hold the product and the supers" },
+    ],
+    decide: {
+      who: "The creative lead",
+      line: "Picks what goes live, and reviews anything above an agreed spend.",
+    },
+    evals: {
+      cases: [
+        { name: "iterate-a-winner-one-change", with: "2 of 3", without: "0 of 3" },
+        { name: "rushes-to-a-thirty-second-cut", with: "3 of 3", without: "1 of 3" },
+      ],
+      note: "Run on 6 October. The miss asked for the clip's path before proposing anything; the one-change rule held.",
+    },
+  },
+  video: {
+    ask: "Scratches on the backdrop from 00:04 to 00:09 on the sink clip. It can't look AI.",
+    skill: { name: "video-retouch", also: ["asset-review"] },
+    steps: [
+      "Picks the cheapest fix that works: a curve before a model",
+      "Never touches the product",
+      "Holds the fix across every frame of the span",
+      "Saves a new numbered file and keeps the original",
+      "Makes a before and after sheet at 1x and 4x",
+    ],
+    checks: [
+      { line: "The product untouched", gate: true },
+      { line: "The original kept, the fix a new file", gate: true },
+      { line: "Nothing invented" },
+      { line: "The fix holds across frames" },
+    ],
+    decide: {
+      who: "The video editor",
+      line: "Reads the sheet. The creative lead signs it off.",
+    },
+    evals: {
+      cases: [
+        { name: "remove-the-whole-background", with: "3 of 3", without: "0 of 3" },
+        { name: "scratch-on-the-background", with: "2 of 3", without: "0 of 3" },
+      ],
+      note: "Run on 6 October: the video skills scored 0.73 above Claude without them, on average.",
+    },
+  },
+};
+
+/** The three `skill-run` panels of the `workstream` group, under one head. */
+export function suriRuns(frame: SuriFrame): ArcSectionOf<"skill-run">[] {
+  const head = {
+    eyebrow: frame.eyebrow,
+    title: frame.title ?? SURI_RUN_TITLE,
+    sub: SURI_RUN_SUB,
+  };
+  return SURI_WORKSTREAM_ORDER.map((which, i) => ({
+    id: `in-practice-${SURI_WORKSTREAMS[which].id}`,
+    kind: "skill-run" as const,
+    ...menu(frame, "In practice", i === 0),
+    worked: {
+      group: "workstream",
+      id: SURI_WORKSTREAMS[which].id,
+      label: SURI_WORKSTREAMS[which].label,
+    },
+    head,
+    ...SURI_RUNS[which],
+  }));
+}

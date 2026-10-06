@@ -90,6 +90,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   hull: "REACH",
   /* ADR-146. `plugin-board` already letters PLUGIN. */
   repository: "REPOSITORY",
+  "skill-run": "RUN",
 };
 
 /**

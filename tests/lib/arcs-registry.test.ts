@@ -43,7 +43,12 @@ import {
   SURI_FEEDBACK_STEPS,
   SURI_MONTH_CARDS,
   SURI_REPOSITORY_BODY,
+  SURI_RUN_SUB,
+  SURI_RUNS,
+  SURI_STUDIO_CONFIGURATION,
   SURI_USING_BODIES,
+  SURI_WORKSTREAM_ORDER,
+  SURI_WORKSTREAMS,
   SURI_WORKED,
   SURI_WORKS,
   SURI_WRONG_THREADS,
@@ -1804,12 +1809,70 @@ describe("the workshop's shared beats (ADR-143)", () => {
     }
     /* Since ADR-147 U8 the lunch and learn reads the configuration alone:
        its technical half (made real, using, when wrong, the month) is off
-       the page, and the configuration page and the Armada companion keep it. */
-    const pages = ["suri-configuration", "thoughtform-armada"];
+       the page. Since ADR-148 the configuration page is the simplified setup
+       and reads none of these either: the Armada companion keeps them. */
     for (const [group, who] of readers) {
       expect(who.sort(), group).toEqual(
-        group === "config" ? ["suri-lunch-and-learn", "thoughtform-armada"] : pages
+        group === "config" ? ["suri-lunch-and-learn", "thoughtform-armada"] : ["thoughtform-armada"]
       );
+    }
+  });
+
+  /* ADR-148: the simplified setup page draws the studio's board once and
+     runs three workstreams, each body one record in `suriWork.ts`. */
+  it("the Suri setup page reads the studio board and the workstream runs", () => {
+    const runs = ARCS.flatMap((arc) =>
+      arc.sections.flatMap((s) => (s.kind === "skill-run" ? [{ arc: arc.slug, s }] : []))
+    );
+    for (const { arc, s } of runs.filter((r) => r.s.worked?.group === "workstream")) {
+      const which = SURI_WORKSTREAM_ORDER.find((w) => SURI_WORKSTREAMS[w].id === s.worked?.id);
+      expect(which, `${arc}#${s.id}: a known workstream`).toBeDefined();
+      const body = SURI_RUNS[which!];
+      expect(s.steps, `${arc}#${s.id}`).toBe(body.steps);
+      expect(s.checks, `${arc}#${s.id}`).toBe(body.checks);
+      expect(s.evals, `${arc}#${s.id}`).toBe(body.evals);
+      expect(s.head.sub, `${arc}#${s.id}: the record's sub`).toBe(SURI_RUN_SUB);
+    }
+    const page = ARCS.find((a) => a.slug === "suri-configuration")!;
+    const board = page.sections.find((s) => s.kind === "questions");
+    expect(board?.kind === "questions" && board.left).toBe(SURI_STUDIO_CONFIGURATION.left);
+    expect(board?.kind === "questions" && board.right).toBe(SURI_STUDIO_CONFIGURATION.right);
+  });
+
+  /* ADR-148: a skill run is the five steps as data. The station names are
+     chrome; the body is held to what one station can letter. */
+  it("every skill run holds its shape", () => {
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "skill-run") continue;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(110);
+        expect(s.steps.length, `${at}: steps`).toBeGreaterThanOrEqual(3);
+        expect(s.steps.length, `${at}: steps`).toBeLessThanOrEqual(5);
+        for (const step of s.steps) expect(step.length, `${at}: ${step}`).toBeLessThanOrEqual(64);
+        expect(s.checks.length, `${at}: checks`).toBeGreaterThanOrEqual(2);
+        expect(s.checks.length, `${at}: checks`).toBeLessThanOrEqual(4);
+        expect(
+          s.checks.some((c) => c.gate),
+          `${at}: at least one gate`
+        ).toBe(true);
+        for (const c of s.checks) expect(c.line.length, `${at}: ${c.line}`).toBeLessThanOrEqual(48);
+        expect(s.evals.cases.length, `${at}: cases`).toBeGreaterThanOrEqual(1);
+        for (const c of s.evals.cases) {
+          expect(c.name, `${at}: a case is named as filed`).toMatch(/^[a-z0-9-]+$/);
+          for (const r of [c.with, c.without])
+            if (r) expect(r, `${at}/${c.name}`).toMatch(/^\d+ of \d+$/);
+          expect(!c.without || !!c.with, `${at}/${c.name}: without needs with`).toBe(true);
+        }
+        const text = JSON.stringify({
+          ask: s.ask,
+          steps: s.steps,
+          checks: s.checks,
+          decide: s.decide,
+          note: s.evals.note,
+        });
+        expect(text, `${at}: no em dash`).not.toMatch(/\u2014/);
+      }
     }
   });
 });

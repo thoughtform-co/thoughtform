@@ -9188,8 +9188,22 @@ html[data-theme="light"] .arc-root .arc-hb__frame {
    screen; a bar in flow would spend a line of that budget on every one of
    them. It is a zero-height sticky rail whose inner is dropped clear of
    the masthead. */
+/* ⚠ THE BAR IS LAID OUT LAST AND READ FIRST (ADR-148). A sticky element
+   stays inside its containing block, and the bar's own place is its anchor:
+   placed first, as the markup has it, `bottom` sticky only held while the
+   group's TOP was still below the fold, and then the bar rode up with that
+   top edge and scrolled away the moment a panel filled the screen (measured:
+   at the group's top it sat at y −31). Laid out last with `order`, its
+   anchor is the group's floor, so it holds the bottom of the screen for as
+   long as any panel is in view. The DOM order is untouched: the tabs are
+   still the first thing a keyboard reaches in the group. */
 .arc-worked-group {
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.arc-worked-group > .arc-worked__bar {
+  order: 1;
 }
 .arc-worked:not([data-arc-worked-default]) {
   display: none;
@@ -10677,4 +10691,375 @@ html[data-theme="light"] .arc-root .arc-ground__tool {
    the one pairing on this page that falls under the standard. */
 html[data-theme="light"] .arc-root .arc-sf__n {
   color: var(--dawn, #110f09);
+}
+
+/* ══ The skill run (ADR-148) ═══════════════════════════════════════════
+   One workstream, run once: five stations on one rail, the evals under it.
+   Prompt to Loop's "How it runs" slide as data. Every frame here is the
+   workshop frame below; this block is layout and type only. */
+.arc-run {
+  display: grid;
+  gap: clamp(14px, 2.4vh, 24px);
+  margin-top: clamp(20px, 3.2vh, 40px);
+}
+.arc-run__rail {
+  display: grid;
+  /* The two lists carry the most text; the ask, the skill and the decision
+     are a line or two each. */
+  grid-template-columns:
+    minmax(0, 0.85fr) minmax(0, 0.75fr) minmax(0, 1.35fr) minmax(0, 1.3fr)
+    minmax(0, 0.95fr);
+  gap: clamp(14px, 1.4vw, 22px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-run__stn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: clamp(14px, 1.8vh, 20px) clamp(14px, 1.2vw, 18px) clamp(16px, 2vh, 22px);
+  /* A plain rectangle off the workshop format; the frame below rings it. */
+  border: 1px solid var(--arc-edge);
+}
+/* The connector: a 1px rule and a 6px chevron, DOM, in the gap. */
+.arc-run__stn:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(-0.5 * clamp(14px, 1.4vw, 22px) - 3px);
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--gold-line, rgba(202, 165, 84, 0.34));
+  border-right: 1px solid var(--gold-line, rgba(202, 165, 84, 0.34));
+  transform: translateY(-50%) rotate(45deg);
+}
+.arc-run__key {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-run__ask {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--arc-seam);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: clamp(14px, 0.6rem + 0.4vw, 17px);
+  line-height: 1.4;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-90);
+}
+.arc-run__skill,
+.arc-run__also code,
+.arc-run__case code {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  letter-spacing: 0;
+}
+.arc-run__skill {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  line-height: 1.3;
+  color: var(--arc-ink-90);
+  border: 1px solid var(--arc-seam);
+}
+.arc-run__also {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-run__also code {
+  font-size: 12px;
+  color: var(--arc-ink-50);
+}
+.arc-run__also code::before {
+  content: "then ";
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  color: var(--arc-ink-40);
+}
+.arc-run__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-run__list > li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block: 6px;
+  border-top: 1px solid var(--arc-rule);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 13px;
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-80);
+}
+.arc-run__list > li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.arc-run__gate {
+  flex: none;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-style: normal;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-run__who {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(20px, 0.8rem + 0.8vw, 28px);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-run__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-70);
+}
+.arc-run__stn--lit .arc-run__key {
+  color: var(--gold-ink, #caa554);
+}
+.arc-run__evals {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: end;
+  column-gap: clamp(16px, 2.4vw, 40px);
+  row-gap: 12px;
+  padding: clamp(14px, 2vh, 20px) clamp(16px, 1.6vw, 24px);
+  border: 1px solid var(--arc-edge);
+}
+.arc-run__evals > .arc-run__key {
+  grid-column: 1 / -1;
+}
+.arc-run__cases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(14px, 1.6vw, 28px);
+  margin: 0;
+}
+.arc-run__case {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.arc-run__case dt code {
+  font-size: 11px;
+  color: var(--arc-ink-62);
+}
+.arc-run__case dd {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+.arc-run__case b {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(18px, 0.7rem + 0.7vw, 24px);
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--arc-ink-90);
+}
+.arc-run__case b.arc-run__without {
+  margin-left: 8px;
+  color: var(--arc-ink-40);
+}
+.arc-run__case small {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 12px;
+  color: var(--arc-ink-50);
+}
+.arc-run__note {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-70);
+}
+@media (max-width: 1100px) {
+  .arc-run__rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .arc-run__stn--lit {
+    grid-column: 1 / -1;
+  }
+  .arc-run__stn::after {
+    display: none;
+  }
+  .arc-run__evals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .arc-run__rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ══ The workshop frame (ADR-148) ══════════════════════════════════════
+   Owner, 2026-10-06: "the general frames we use … harmonize them and really
+   make them more minimalistic while respecting our brand." ONE frame for
+   every box a workshop arc draws: a 1px ring with ONE top-right notch on one
+   rung, no ground beyond the plate's, no gold band across a head. Gold is
+   spent on the one lit object of a beat: its ring in `--gold-line` and its
+   kicker in the ink rung, over a faint wash — never a solid gold block.
+   ⚠ FORMAT-SCOPED. The proposals and the portfolio keep their plates: on
+   the Trinny scene the board chip lands AS the plates' gold head band
+   (ADR-101 §B, one material), and its measurements are taken against them.
+   ⚠ THE RING IS A PSEUDO, NEVER A CLIP ON THE HOST, for the boxes that were
+   plain rectangles: a clip on the host would cut off what hangs outside it
+   (Prompt to Loop's chevrons sit in the gap). The host keeps its 1px border
+   width, coloured transparent, so nothing re-flows; the ring sits on it.
+   ⚠ A clip CUTS a border and never strokes one (ADR-089), which is why the
+   ring is a two-contour `evenodd` polygon, inner leg `ch - 0.586px`. */
+.arc-root[data-arc-format="workshop"] {
+  --arc-frame-ch: clamp(10px, 1vw, 14px);
+  --arc-frame-ch-in: calc(var(--arc-frame-ch) - 0.586px);
+  --arc-frame-line: var(--arc-edge);
+  --arc-frame-clip: polygon(
+    0 0,
+    calc(100% - var(--arc-frame-ch)) 0,
+    100% var(--arc-frame-ch),
+    100% 100%,
+    0 100%
+  );
+  --arc-frame-ring: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--arc-frame-ch)) 0,
+    100% var(--arc-frame-ch),
+    100% 100%,
+    0 100%,
+    1px 1px,
+    calc(100% - 1px - var(--arc-frame-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--arc-frame-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px)
+  );
+}
+
+/* 1 · The house plate, on the one rung and the one corner. A pair plate
+   (TR + BL) becomes a single top-right notch like every other frame. */
+.arc-root[data-arc-format="workshop"] .arc-plate,
+.arc-root[data-arc-format="workshop"] .arc-plate--pair {
+  --arc-plate-ch: var(--arc-frame-ch);
+  --arc-plate-ch-in: var(--arc-frame-ch-in);
+  clip-path: var(--arc-frame-clip);
+}
+.arc-root[data-arc-format="workshop"] .arc-plate::before,
+.arc-root[data-arc-format="workshop"] .arc-plate--pair::before {
+  clip-path: var(--arc-frame-ring);
+}
+
+/* 2 · A head is type over a hairline: no gold wash, no 2px rule. */
+.arc-root[data-arc-format="workshop"] .arc-plate__head,
+.arc-root[data-arc-format="workshop"] .arc-q__mod .arc-plate__head,
+.arc-root[data-arc-format="workshop"] .arc-q__mod[data-questions-tone="lit"] .arc-plate__head,
+.arc-root[data-arc-format="workshop"] .arc-cplate .arc-plate__head {
+  background: none;
+}
+.arc-root[data-arc-format="workshop"] .arc-plate__head::before {
+  display: none;
+}
+
+/* 3 · The boxes that were plain rectangles take the same ring. */
+.arc-root[data-arc-format="workshop"] .arc-card-item,
+.arc-root[data-arc-format="workshop"] .arc-syl__sheet,
+.arc-root[data-arc-format="workshop"] .arc-run__stn,
+.arc-root[data-arc-format="workshop"] .arc-run__evals,
+.arc-root[data-arc-format="workshop"] .arc-worked__tabs,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-evals {
+  position: relative;
+  border-color: transparent;
+  box-shadow: none;
+}
+.arc-root[data-arc-format="workshop"] .arc-card-item::before,
+.arc-root[data-arc-format="workshop"] .arc-syl__sheet::before,
+.arc-root[data-arc-format="workshop"] .arc-run__stn::before,
+.arc-root[data-arc-format="workshop"] .arc-run__evals::before,
+.arc-root[data-arc-format="workshop"] .arc-worked__tabs::before,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station::before,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-evals::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--arc-frame-line);
+  clip-path: var(--arc-frame-ring);
+}
+/* A box with nothing hanging outside it is clipped to the notch, so its
+   ground stays inside the ring. A station is not: its connector sits in the
+   gap to its right, and a clip would cut it off, so a station has no ground
+   at all; only the last station, the lit one, has no connector and takes
+   the clip and the wash. */
+.arc-root[data-arc-format="workshop"] .arc-card-item,
+.arc-root[data-arc-format="workshop"] .arc-syl__sheet,
+.arc-root[data-arc-format="workshop"] .arc-run__evals,
+.arc-root[data-arc-format="workshop"] .arc-worked__tabs,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-evals,
+.arc-root[data-arc-format="workshop"] .arc-run__stn--lit,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj {
+  clip-path: var(--arc-frame-clip);
+}
+.arc-root[data-arc-format="workshop"] .arc-card-item,
+.arc-root[data-arc-format="workshop"] .arc-run__evals,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-evals {
+  background: var(--arc-plate);
+}
+.arc-root[data-arc-format="workshop"] .arc-run__stn,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station {
+  background: none;
+}
+
+/* 4 · The one lit object: a gold ring over a faint wash, ink stays ink. */
+.arc-root[data-arc-format="workshop"] .arc-run__stn--lit,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj {
+  background: linear-gradient(var(--arc-gold-wash), var(--arc-gold-wash)), var(--arc-plate);
+  color: var(--arc-ink);
+}
+.arc-root[data-arc-format="workshop"] .arc-run__stn--lit::before,
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj::before {
+  background: var(--gold-line, rgba(202, 165, 84, 0.34));
+}
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj .ptl-st {
+  color: var(--gold-ink, #caa554);
+}
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj small {
+  color: var(--arc-ink-70);
+}
+.arc-root[data-arc-format="workshop"] .ptl .ptl-station.ptl-obj code {
+  color: var(--gold-ink, #caa554);
 }

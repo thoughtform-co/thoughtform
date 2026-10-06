@@ -8,7 +8,13 @@ import { WORKSHOP_V3_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/wo
 import { arcTitleText } from "@/components/arcs/chrome";
 import { getArcAt } from "@/lib/arcs/registry";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
-import { SURI_WORKED, SURI_WORKS } from "@/lib/arcs/content/shared/suriWork";
+import {
+  SURI_RUNS,
+  SURI_WORKED,
+  SURI_WORKS,
+  SURI_WORKSTREAM_ORDER,
+  SURI_WORKSTREAMS,
+} from "@/lib/arcs/content/shared/suriWork";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import { WHAT_FOLLOWS_TITLE } from "@/lib/arcs/content/shared/whatFollows";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
@@ -194,70 +200,44 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     expect(existsSync(join(ARCS_DIR, "suri", "configuration")), "no own folder").toBe(false);
   });
 
-  it("opens on the lunch and learn's four proof cards, read from the same record (U4)", () => {
-    const cards = CONFIG.sections.slice(0, 4);
-    expect(cards.map((c) => c.kind)).toEqual(Array(4).fill("proof-card"));
-    expect(cards.map((c) => (c.kind === "proof-card" ? c.track : ""))).toEqual([
-      ...WORKSHOP_INTRO.proof.order,
+  /* ADR-148 (owner, 2026-10-06): the simplified setup, in his order. */
+  it("is the simplified setup, in the owner's order (ADR-148)", () => {
+    expect(beats(CONFIG).map((s) => `${s.kind}:${s.worked ? s.worked.group : s.id}`)).toEqual([
+      "spectrum:tool-and-collaborator",
+      "interstitial:participate",
+      "questions:configuration",
+      "cards:skills-and-evals",
+      "horizon:the-horizon",
+      "skill-run:workstream",
+      "close:close",
     ]);
-    for (const c of cards) {
-      if (c.kind !== "proof-card") continue;
-      const id = c.track as (typeof WORKSHOP_INTRO.proof.order)[number];
-      expect(c.title).toBe(WORKSHOP_INTRO.proof.titles?.[id]);
-      expect(c.claims).toBe(WORKSHOP_INTRO.proof.claims?.[id]);
-      expect(c.phase, "the band letters the client alone").toBe("");
-      /* The layer's lede hands to a room ("the rest of today"); this page is a
-         document and says it without the hand-off. */
-      if (id === "ai-transformation") expect(c.lede).not.toMatch(/today/i);
-      else expect(c.lede).toBe(WORKSHOP_INTRO.proof.ledes[id]);
-    }
+    const steer = CONFIG.sections[0];
+    expect(steer.kind === "spectrum" && steer.poles).toBe(WORKSHOP_INTRO.steer.poles);
+    const question = CONFIG.sections[1];
+    expect(question.kind === "interstitial" && arcTitleText(question.line)).toBe(
+      "How should intelligence participate in the work?"
+    );
   });
 
-  it("then the month as a track that letters its own words", () => {
-    const track = CONFIG.sections.find((s) => s.kind === "syllabus")!;
-    expect(track.kind).toBe("syllabus");
-    if (track.kind !== "syllabus") return;
-    expect(track.words?.station).toBe("Step");
-    expect(track.words?.rows).toEqual(["What you do", "What you end with", "Done when", "Where"]);
-    expect(track.phases.map((p) => p.id)).toEqual(["day-one", "day-two", "week-one", "after"]);
-    expect(track.classes.map((c) => c.name)).toEqual([
-      "Connect",
-      "One skill",
-      "Write it down",
-      "Into the plugin",
-      "Feedback",
-      "Run it",
-      "Hand over",
-    ]);
-    /* The owner's phases (2026-10-04): day one or two on one skill and
-       writing a way of working down; after a week, the plugins, the
-       marketplace and the feedback skill. */
-    const phaseOf = (name: string) => track.classes.find((c) => c.name === name)?.phase;
-    expect(phaseOf("One skill")).toBe("day-one");
-    expect(phaseOf("Write it down")).toBe("day-two");
-    expect(phaseOf("Into the plugin")).toBe("week-one");
-    expect(phaseOf("Feedback")).toBe("week-one");
-    const ids = new Set(CONFIG.sections.map((s) => s.id));
-    for (const c of track.classes) {
-      if (c.example) expect(ids.has(c.example.href.slice(1)), c.example.href).toBe(true);
+  it("runs three of Suri's workstreams under one switch, from one record", () => {
+    const runs = CONFIG.sections.filter((s) => s.kind === "skill-run");
+    expect(runs.map((s) => s.worked?.id)).toEqual([...SURI_WORKSTREAM_ORDER]);
+    expect(runs.map((s) => s.worked?.label)).toEqual(
+      SURI_WORKSTREAM_ORDER.map((w) => SURI_WORKSTREAMS[w].label)
+    );
+    for (const s of runs) {
+      if (s.kind !== "skill-run") continue;
+      const which = SURI_WORKSTREAM_ORDER.find((w) => SURI_WORKSTREAMS[w].id === s.worked?.id)!;
+      expect(s.ask).toBe(SURI_RUNS[which].ask);
+      expect(s.evals).toBe(SURI_RUNS[which].evals);
     }
-  });
-
-  it("says what to connect as two readout plates, in Suri's name, with no digit", () => {
-    const connect = CONFIG.sections.find((s) => s.id === "what-to-connect");
-    expect(connect?.kind === "list-groups" && connect.layout).toBe("readout");
-    if (connect?.kind !== "list-groups") return;
-    expect(connect.groups.map((g) => g.id)).toEqual(["claude", "suri"]);
-    /* The plates letter no digit: a week is "week three", never a number. */
-    expect(JSON.stringify(connect.groups)).not.toMatch(/\d/);
     expect(JSON.stringify(CONFIG), "no fee, no key").not.toMatch(/£|\$|€|GBP|sk-|AIza/);
   });
 
   it("numbers its beats in order and closes on the shared close", () => {
-    /* The four proof cards are one beat: only the first carries a head. */
-    const numbered = beats(CONFIG).filter((s) => s.kind !== "proof-card" || s.head);
-    numbered.forEach((s, i) => {
-      const eyebrow = "head" in s ? s.head?.eyebrow : undefined;
+    beats(CONFIG).forEach((s, i) => {
+      const eyebrow =
+        "head" in s && s.head ? s.head.eyebrow : "eyebrow" in s ? s.eyebrow : undefined;
       expect(eyebrow?.startsWith(String(i + 1).padStart(2, "0")), `${s.id}: ${eyebrow}`).toBe(true);
     });
     const close = CONFIG.sections.at(-1);

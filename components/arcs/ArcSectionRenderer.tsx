@@ -29,6 +29,7 @@ import { ArcPortrait } from "./ArcPortrait";
 import { ArcQuestions } from "./ArcQuestions";
 import { ArcRepository } from "./ArcRepository";
 import { ArcResource } from "./ArcResource";
+import { ArcSkillRun } from "./ArcSkillRun";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcSignal } from "./ArcSignal";
 import { ArcSkillFile } from "./ArcSkillFile";
@@ -148,6 +149,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcHull key={section.id} section={section} index={index} motion={motion} />;
     case "repository":
       return <ArcRepository key={section.id} section={section} index={index} motion={motion} />;
+    case "skill-run":
+      return <ArcSkillRun key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;
