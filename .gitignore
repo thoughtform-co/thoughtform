@@ -158,3 +158,6 @@ docs/design/interface-kit/**/*.png
 # findings in ADR-082 U24. A single wave runs to hundreds of MB.
 scripts/voidwalker-avatar/waves/
 scripts/voidwalker-avatar/__pycache__/
+
+# Standalone page exports (scripts/arcs/export-*.mjs); the script is the record
+/exports/
