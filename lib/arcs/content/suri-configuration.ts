@@ -6,6 +6,11 @@ import { theCatch } from "./shared/workshopFraming";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
 import { theHorizon } from "./shared/workshopPractice";
 
+/* The close's sub on this page (ADR-148 U3). Same three steps as the shared
+   close, without the word "loop" right after the Loop ad. */
+const CLOSE_SUB =
+  "The first workstream runs with Suri's own team at the controls, then a second. Then we hand over, with a date on it, and come back once to see what changed.";
+
 /**
  * SURI, THE CREATIVE INTELLIGENCE CONFIGURATION (ADR-147, simplified by
  * ADR-148): the one page the owner sends Suri on how the setup works.
@@ -21,7 +26,7 @@ import { theHorizon } from "./shared/workshopPractice";
  * ADR-148 U2), the two things the team writes (the skill and its evals), why
  * it needs them (the horizon), the setup run end to end on one real piece of
  * work (Prompt to Loop, whole: every step Claude took to make the Loop ad,
- * ADR-148 U1), and then the setup run on three of Suri's own workstreams
+ * ADR-148 U1, opened by one line on why it is here, U3), and then the setup run on three of Suri's own workstreams
  * under one floating switch. The proof cards, the steps, what to
  * connect, the repository, the chats and the month left this page; their
  * records stay in `shared/suriWork.ts`, which the Armada companion reads.
@@ -49,7 +54,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
   hero: {
     eyebrow: "Thoughtform · Suri · Creative Intelligence Configuration",
     title: { pre: "Creative intelligence,", em: "at Suri." },
-    lede: "How the setup works, and how it runs on Suri's own work: the brief, the iterations and the edit.",
+    lede: "How the setup works, one real ad made on it, and the same setup on three of Suri's workstreams.",
     actions: [
       { id: "start", label: "How it works", href: "#tool-and-collaborator", primary: true },
       { id: "practice", label: "In practice", href: "#in-practice-briefing" },
@@ -81,7 +86,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
         ...WORKSHOP_INTRO.steer.head,
         eyebrow: "01 · Tool and collaborator",
         title: { pre: "AI sits between a tool", em: "and a collaborator." },
-        sub: "Tell it exactly what to do and it executes. Describe what you are after and it works out how. Suri's setup decides, workstream by workstream, where on that line the work sits.",
+        sub: "Suri's setup decides, workstream by workstream, what it gets to work out and what stays with you.",
       },
     },
     /* ── 02 · The curve, then 03 · the catch (ADR-148 U2, owner 2026-10-06:
@@ -91,7 +96,11 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
     {
       ...WORKSHOP_INTRO.curve,
       menuLabel: "The curve",
-      head: { ...WORKSHOP_INTRO.curve.head, eyebrow: "02 · The curve" },
+      head: {
+        ...WORKSHOP_INTRO.curve.head,
+        eyebrow: "02 · The curve",
+        sub: "Each release makes fewer small mistakes, so it gets further on long, difficult work before it needs you.",
+      },
     },
     { ...theCatch("03 · The catch"), menuLabel: "The catch" },
 
@@ -106,7 +115,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       head: {
         eyebrow: "04 · The configuration",
         title: { pre: "How intelligence should", em: "take part in the work." },
-        sub: "Six questions, answered once for the studio. Suri sets four for everyone: the model, the data, the interface and the owner. The team writes the other two, workstream by workstream.",
+        sub: "Running it is the part you set up. Suri answers four of these once, for the whole studio; the team writes the other two, per workstream.",
       },
       ...SURI_STUDIO_CONFIGURATION,
     },
@@ -122,14 +131,14 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       head: {
         eyebrow: "05 · Skills and evals",
         title: { pre: "Context is your", em: "biggest lever." },
-        sub: "The rest of the setup is set once. The skill and its evals can only come from the people doing the work, and they are what decide whether the work is any good.",
+        sub: "Only the people doing the work can write these two, and they decide whether the work is any good.",
       },
       cards: [
         {
           id: "skill",
           kicker: "The skill",
           title: "What it knows and does",
-          body: "One per workstream: the steps in the studio's own words, and the files it reads.",
+          body: "One per workstream, in the studio's own words.",
           metaRows: [
             { label: "Steps", value: "The order the work is done in" },
             { label: "Context", value: "The brand file, working names, the library" },
@@ -140,7 +149,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
           id: "evals",
           kicker: "The evals",
           title: "How we know it is good",
-          body: "Real requests with the result we expect, and the rubric the skill checks itself against.",
+          body: "What the work is checked against, before anyone sees it.",
           metaRows: [
             { label: "Cases", value: "Real requests, run with and without the skill" },
             { label: "Gates", value: "What must be true, or the work fails" },
@@ -151,7 +160,29 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
     },
 
     /* ── 05 · Why it needs them, by reference ────────────────────────────── */
-    theHorizon("06 · Why it needs evals"),
+    (() => {
+      const horizon = theHorizon("06 · Why it needs evals");
+      return {
+        ...horizon,
+        head: {
+          ...horizon.head,
+          sub: "Without them it needs you at every step. With them it checks its own work, tries again, and stops to ask.",
+        },
+      };
+    })(),
+
+    /* ── 07 · The bridge into the breakdown (ADR-148 U3) ───────────────────
+       The breakdown is another client's ad, so the page says why it is
+       here before it starts: the same parts, on one real job. */
+    {
+      id: "one-real-job",
+      kind: "interstitial",
+      variant: "callout",
+      eyebrow: "07 · One real job",
+      menuLabel: "One real job",
+      line: { pre: "Before Suri's own work,", em: "the whole setup on one real job." },
+      subline: "A 10-second Halloween ad for Loop, the earplug brand, made in one evening.",
+    },
 
     /* ── The setup, run end to end: Prompt to Loop, whole (ADR-148 U1) ──────
        Owner, 2026-10-06: the steps Claude took to make the Loop ad are "the
@@ -165,10 +196,16 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       menuPrimary: true,
     },
 
-    /* ── 06 · In practice: three workstreams under one floating switch ──── */
-    ...suriRuns({ eyebrow: "07 · In practice", menuLabel: "In practice", menuPrimary: true }),
+    /* ── 08 · In practice: three workstreams under one floating switch ──── */
+    ...suriRuns({ eyebrow: "08 · In practice", menuLabel: "In practice", menuPrimary: true }),
 
-    /* ── 07 · What follows ─────────────────────────────────────────────────── */
-    whatFollows("08 · What follows"),
+    /* ── 09 · What follows ───────────────────────────────────────────────────
+       The shared close, with this page's own sub: the shared one says the
+       work "goes through the loop", which on this page reads as the Loop ad
+       the reader has just watched. */
+    (() => {
+      const close = whatFollows("09 · What follows");
+      return { ...close, head: { ...close.head, sub: CLOSE_SUB } };
+    })(),
   ],
 };

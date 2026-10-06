@@ -212,6 +212,7 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
       "questions:configuration",
       "cards:skills-and-evals",
       "horizon:the-horizon",
+      "interstitial:one-real-job",
       "prompt-to-loop:ptl-top",
       "skill-run:workstream",
       "close:close",
@@ -273,6 +274,8 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
       });
     const close = CONFIG.sections.at(-1);
     expect(close?.kind === "close" && close.head.title).toBe(WHAT_FOLLOWS_TITLE);
+    /* U3: right after the Loop ad, "the loop" reads as the ad. */
+    expect(close?.kind === "close" && close.head.sub).not.toMatch(/\bloop\b/i);
     const ids = new Set(CONFIG.sections.map((s) => s.id));
     for (const action of CONFIG.hero.actions ?? []) {
       expect(ids.has(action.href.slice(1)), action.href).toBe(true);

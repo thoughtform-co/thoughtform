@@ -128,6 +128,32 @@ so the longest titles reach three and one four. Prompt to Loop's heads bind a di
 with a non-breaking hyphen (U+2011), in the port script and its output, because "10-second"
 broke across the line once the column widened.
 
+## Update 3 (2026-10-06, owner): the copy reads as one page
+
+"We basically built this page using different slide decks": a copy sweep for the seams between
+beats, through `thoughtform-tov`. What changed, all on this page's own frame (the shared records
+are untouched, so v3, the AP lecture and the lunch and learn read as before):
+
+- **Said twice.** The configuration's sub and the skills beat's sub both said "four are set once,
+  the team writes two". The configuration now opens on the catch ("Running it is the part you set
+  up, in six questions") and the skills beat names the two.
+- **The Loop ad arrived unexplained.** A new callout, `07 · One real job`, says why another
+  client's ad is on Suri's page: the same parts, one evening, one real job.
+- **The run head restated Prompt to Loop's "How it runs" slide.** `SURI_RUN_SUB` now points back at
+  it and says where the asks, steps and figures come from.
+- **"Goes through the loop"** in the shared close reads as the Loop ad here, so this page takes its
+  own sub (the same three steps), guarded in `suri-pages`.
+- The hero's lede previews all three parts; the spectrum's sub ends on what stays with you; the
+  curve's sub on "before it needs you", which sets up the catch.
+
+- **Then cut for scanning** (owner: "really easy to read and scroll through"): every head's
+  sub now says only what the drawing under it does not (the spectrum's poles, the board's six
+  answers, the horizon's three checks were each said in prose and drawn), one or two lines at
+  1470×830; the horizon takes this page's own sub, and the skills cards' bodies are one line.
+
+Prompt to Loop's own slides were not swept: they are generated from the owner's artifact and read
+by four pages.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside

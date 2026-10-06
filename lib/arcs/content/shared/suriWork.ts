@@ -915,7 +915,7 @@ export const SURI_WORKSTREAM_ORDER: readonly SuriWorkstream[] = ["briefing", "it
 export const SURI_RUN_TITLE = { pre: "How it runs", em: "on Suri's own work." } as const;
 
 export const SURI_RUN_SUB =
-  "Pick a workstream. Each one runs the same way: you ask in your own words, Claude picks the skill, follows its steps, checks its own work against the rubric, and hands you the decision.";
+  "The same five steps as the Loop ad, on three of Suri's workstreams, taken from the studio's own plugin.";
 
 type RunBody = Pick<
   ArcSectionOf<"skill-run">,
