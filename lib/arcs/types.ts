@@ -1307,6 +1307,21 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
+         * PROMPT TO LOOP, MOUNTED (ADR-148 U1, owner 2026-10-06: the steps
+         * Claude took to make the Loop ad are "the entire point" of the Suri
+         * setup page). The owner's breakdown is ONE RECORD
+         * (`components/arcs/prompt-to-loop/`), mounted by hand on the own
+         * routes; this kind is how a GENERIC-route page mounts the same record.
+         * It authors nothing: `from` / `to` pick a run of the record's slides
+         * by id (inclusive), omitted the whole breakdown. The section's `id`
+         * is the first slide's, because the slide's beat carries it.
+         */
+        kind: "prompt-to-loop";
+        from?: string;
+        to?: string;
+      }
+    | {
+        /**
          * A SKILL RUN (ADR-148): one workstream, run once, in the five steps
          * Prompt to Loop's "How it runs" slide draws — you ask, Claude picks
          * the skill, it follows the steps, it checks itself, you decide —

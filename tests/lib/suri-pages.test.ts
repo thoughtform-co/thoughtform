@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 import { SURI_LUNCH_JOURNEY_ORDER } from "@/app/(marketing)/arcs/suri/lunch-and-learn/journey";
 import { WORKSHOP_V3_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/journey";
 import { arcTitleText } from "@/components/arcs/chrome";
+import { promptToLoopRun } from "@/components/arcs/prompt-to-loop/promptToLoopRun";
+import { PROMPT_TO_LOOP_SLIDES } from "@/components/arcs/prompt-to-loop/promptToLoopSlides";
 import { getArcAt } from "@/lib/arcs/registry";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import {
@@ -208,6 +210,7 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
       "questions:configuration",
       "cards:skills-and-evals",
       "horizon:the-horizon",
+      "prompt-to-loop:ptl-top",
       "skill-run:workstream",
       "close:close",
     ]);
@@ -234,12 +237,28 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     expect(JSON.stringify(CONFIG), "no fee, no key").not.toMatch(/£|\$|€|GBP|sk-|AIza/);
   });
 
+  /* ADR-148 U1 (owner): the steps Claude took to make the Loop ad are "the
+     entire point", so the breakdown is mounted whole, from the one record. */
+  it("mounts Prompt to Loop whole, from the one record (U1)", () => {
+    const ptl = CONFIG.sections.find((s) => s.kind === "prompt-to-loop");
+    expect(ptl?.kind === "prompt-to-loop" && promptToLoopRun(ptl)).toEqual(PROMPT_TO_LOOP_SLIDES);
+    expect(ptl?.id, "the section's id is the first slide's").toBe(PROMPT_TO_LOOP_SLIDES[0].id);
+    expect(routeFile("[slug]", "[leaf]", "page.tsx")).toContain(
+      "prompt-to-loop/prompt-to-loop.css"
+    );
+  });
+
   it("numbers its beats in order and closes on the shared close", () => {
-    beats(CONFIG).forEach((s, i) => {
-      const eyebrow =
-        "head" in s && s.head ? s.head.eyebrow : "eyebrow" in s ? s.eyebrow : undefined;
-      expect(eyebrow?.startsWith(String(i + 1).padStart(2, "0")), `${s.id}: ${eyebrow}`).toBe(true);
-    });
+    /* The breakdown numbers its own slides (1 · The setup … 12 · Next time). */
+    beats(CONFIG)
+      .filter((s) => s.kind !== "prompt-to-loop")
+      .forEach((s, i) => {
+        const eyebrow =
+          "head" in s && s.head ? s.head.eyebrow : "eyebrow" in s ? s.eyebrow : undefined;
+        expect(eyebrow?.startsWith(String(i + 1).padStart(2, "0")), `${s.id}: ${eyebrow}`).toBe(
+          true
+        );
+      });
     const close = CONFIG.sections.at(-1);
     expect(close?.kind === "close" && close.head.title).toBe(WHAT_FOLLOWS_TITLE);
     const ids = new Set(CONFIG.sections.map((s) => s.id));

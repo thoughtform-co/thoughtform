@@ -16,8 +16,10 @@ import { theHorizon } from "./shared/workshopPractice";
  * where AI sits (between a tool and a collaborator), the question that
  * raises (how should it take part in the work), the configuration that
  * answers it, the two things the team writes (the skill and its evals), why
- * it needs them (the horizon), and then the setup run on three of Suri's own
- * workstreams under one floating switch. The proof cards, the steps, what to
+ * it needs them (the horizon), the setup run end to end on one real piece of
+ * work (Prompt to Loop, whole: every step Claude took to make the Loop ad,
+ * ADR-148 U1), and then the setup run on three of Suri's own workstreams
+ * under one floating switch. The proof cards, the steps, what to
  * connect, the repository, the chats and the month left this page; their
  * records stay in `shared/suriWork.ts`, which the Armada companion reads.
  *
@@ -143,6 +145,18 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
 
     /* ── 05 · Why it needs them, by reference ────────────────────────────── */
     theHorizon("05 · Why it needs evals"),
+
+    /* ── The setup, run end to end: Prompt to Loop, whole (ADR-148 U1) ──────
+       Owner, 2026-10-06: the steps Claude took to make the Loop ad are "the
+       entire point" of this page. The owner's breakdown is one record, the
+       same the lunch and learn, v3 and the AP lecture mount; its slides
+       number themselves (the film, then 1 · The setup … 12 · Next time). */
+    {
+      id: "ptl-top",
+      kind: "prompt-to-loop",
+      menuLabel: "How Claude made it",
+      menuPrimary: true,
+    },
 
     /* ── 06 · In practice: three workstreams under one floating switch ──── */
     ...suriRuns({ eyebrow: "06 · In practice", menuLabel: "In practice", menuPrimary: true }),

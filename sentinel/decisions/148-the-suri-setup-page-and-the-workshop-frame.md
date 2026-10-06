@@ -78,6 +78,25 @@ panel filled the screen, on every page with a switch. The group is a flex column
 while any panel is in view and leaves with the group. The DOM order is untouched, so the tabs
 are still first for a keyboard.
 
+## Update 1 (2026-10-06, owner): the breakdown, whole
+
+The first cut carried Prompt to Loop's five-step STRUCTURE onto Suri's workstreams and left
+the breakdown itself off the page. Owner, the same day: the steps Claude took to make the Loop
+ad, "why are they not in our configuration page? that's the entire point". The page now mounts
+the breakdown WHOLE between the horizon and the workstreams: the film, then 1 · The setup to
+12 · Next time, the same record the lunch and learn, v3 and the AP lecture show.
+
+- **A thin `prompt-to-loop` kind**, because the configuration page is on the generic route and
+  the own routes mount `PromptToLoop` by hand. It authors nothing: `from` / `to` pick slides by
+  id (`promptToLoopRun`, which throws on an unknown id), omitted the whole record; the section's
+  `id` is the first slide's. `PromptToLoop`'s "not an arc section kind" note is amended: the
+  thirteen bodies are still not a grammar; the kind is a mount.
+- **The generic route imports `prompt-to-loop.css`** after `course.css`. Every rule in it is
+  scoped under `.ptl`, so it is inert on every other arc.
+- **The beats after it are numbered past its whole run** (`arcRuns` adds the run's length), so
+  the `ARC / BRIEF · NN` designations stay in sequence.
+- The breakdown numbers its own slides; the page's own beats keep 01 to 07 around it.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside

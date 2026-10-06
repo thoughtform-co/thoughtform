@@ -30,6 +30,8 @@ import { ArcQuestions } from "./ArcQuestions";
 import { ArcRepository } from "./ArcRepository";
 import { ArcResource } from "./ArcResource";
 import { ArcSkillRun } from "./ArcSkillRun";
+import { PromptToLoop } from "./prompt-to-loop/PromptToLoop";
+import { promptToLoopRun } from "./prompt-to-loop/promptToLoopRun";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcSignal } from "./ArcSignal";
 import { ArcSkillFile } from "./ArcSkillFile";
@@ -151,6 +153,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcRepository key={section.id} section={section} index={index} motion={motion} />;
     case "skill-run":
       return <ArcSkillRun key={section.id} section={section} index={index} motion={motion} />;
+    case "prompt-to-loop":
+      return <PromptToLoop key={section.id} startIndex={index} slides={promptToLoopRun(section)} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;
@@ -174,7 +178,12 @@ type ArcRun = {
  */
 function arcRuns(sections: readonly ArcSection[]): ArcRun[] {
   const runs: ArcRun[] = [];
-  sections.forEach((section, index) => {
+  /* A `prompt-to-loop` section draws one beat per slide (ADR-148 U1), so the
+     beats after it are numbered past its whole run, not past one section. */
+  let extra = 0;
+  sections.forEach((section, at) => {
+    const index = at + extra;
+    if (section.kind === "prompt-to-loop") extra += promptToLoopRun(section).length - 1;
     const group = section.worked?.group ?? null;
     const open = runs[runs.length - 1];
     if (group && open && open.group === group) {

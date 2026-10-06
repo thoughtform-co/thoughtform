@@ -27,10 +27,12 @@ import { PROMPT_TO_LOOP_SLIDES, type PromptToLoopSlide } from "./promptToLoopSli
  * (`promptToLoopSlides.ts`, generated), styled by its own rules scoped under `.ptl`
  * with Thoughtform's tokens (`prompt-to-loop.css`).
  *
- * ⚠ NOT AN ARC SECTION KIND. Thirteen bespoke bodies are one person's
- * breakdown, not a reusable grammar, so they render here rather than through
- * `ArcSectionRenderer`, and the lecture's sixteen-section law counts the arc's
- * own beats only.
+ * ⚠ NOT A GRAMMAR, AND ONE THIN KIND. Thirteen bespoke bodies are one
+ * person's breakdown, not a reusable grammar, so the own routes mount it here
+ * by hand and the lecture's sixteen-section law counts the arc's own beats
+ * only. A GENERIC-route page reaches the same record through the
+ * `prompt-to-loop` kind (ADR-148 U1), which authors nothing: it picks a run
+ * of slides by id and renders this component.
  *
  * The one behaviour the breakdown carried in a script is the sound toggle on
  * the opening film; it is wired here, on the slide's own nodes.

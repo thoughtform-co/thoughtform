@@ -91,6 +91,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   /* ADR-146. `plugin-board` already letters PLUGIN. */
   repository: "REPOSITORY",
   "skill-run": "RUN",
+  "prompt-to-loop": "BREAKDOWN",
 };
 
 /**
