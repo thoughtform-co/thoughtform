@@ -1,20 +1,31 @@
-/* The setup guide (ADR-151 U1): four views, each its own drawing.
+/* The setup guide (ADR-151, the system of U5).
    Scoped to `.arc-guide*`: an arc without a guide beat gets bytes and no
    matching rule. Reads the arcs' tokens only (`.arc-root` re-derives them for
-   light), so it carries no theme branch. Gold marks what is built; green is a
-   person and nothing else. Square corners, no shadows. */
+   light), so it carries no theme branch.
+
+   ONE SYSTEM, FOUR VIEWS. Every figure is a PANEL: a 1px hairline frame with
+   its label set into the top edge, the way Linear draws its enterprise
+   diagram. One panel per figure is LIT (gold ring, gold label). A diagram's
+   contents are mono; the words beside a diagram are sans. Green is a person
+   and nothing else. Square corners, no shadows, and air: the spacing scale is
+   --g-1 … --g-5 and nothing else is used. */
 
 .arc-guide {
   --g-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
   --g-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --g-person: var(--atreides-ink, #7a9e6a);
-  --g-person-soft: rgba(var(--atreides-rgb, 122, 158, 106), 0.14);
   --g-never: #c8644f;
   --g-never-soft: rgba(200, 100, 79, 0.06);
   --g-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
   /* Gold as TEXT: the light theme defines --gold-ink for it, dark does not. */
   --g-gold-text: var(--gold-ink, var(--gold));
-  margin-top: clamp(28px, 4vh, 48px);
+  --g-ground: var(--void, #0a0908);
+  --g-1: 8px;
+  --g-2: 16px;
+  --g-3: 24px;
+  --g-4: 40px;
+  --g-5: 64px;
+  margin-top: var(--g-3);
   font-family: var(--g-sans);
   color: var(--arc-ink);
 }
@@ -22,8 +33,6 @@
 .arc-guide p,
 .arc-guide ol,
 .arc-guide ul,
-.arc-guide dl,
-.arc-guide dd,
 .arc-guide figure {
   margin: 0;
   padding: 0;
@@ -32,442 +41,256 @@
 .arc-guide ul {
   list-style: none;
 }
-
-.arc-guide__state {
-  display: inline-block;
-  padding: 3px 8px;
-  border: 1px solid var(--g-gold-line);
-  color: var(--g-gold-text);
-  font: 11px/1.2 var(--g-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.arc-guide a {
+  color: inherit;
 }
 
-/* ── The overview (U3): one drawing, the words under it ─────────────
-   The spine runs left to right through the lit Claude node; the fan takes
-   it to the four surfaces; the loop comes back under it, dashed, through
-   the connector. Lines are DOM. The nodes are opaque, so the loop's legs
-   read as entering them. No frame around any of it. */
+/* ── The panel ────────────────────────────────────────────────────── */
 
-.arc-guide-ov {
-  --g-org: 232px;
-  --g-repo: clamp(300px, 27vw, 420px);
-  --g-surf: clamp(200px, 17vw, 250px);
-  --g-pad: clamp(8px, 1vw, 24px);
-  --g-spine: 104px;
-  display: grid;
-  gap: clamp(20px, 3vh, 32px);
-}
-.arc-guide-flow {
+.arc-guide-panel {
   position: relative;
-  display: grid;
-  /* The nodes hold their width; the lines take whatever the band gives. */
-  grid-template-columns: var(--g-repo) minmax(72px, 1fr) var(--g-org) minmax(72px, 1fr) var(--g-surf);
-  grid-template-rows: calc(var(--g-spine) * 2) auto;
-  margin: 0;
-  padding: 0 var(--g-pad);
+  padding: 32px var(--g-3) var(--g-2);
+  border: 1px solid var(--arc-seam);
 }
-.arc-guide-flow__label {
-  display: block;
-  font: 10.5px/1.2 var(--g-mono);
+.arc-guide-panel__label {
+  position: absolute;
+  top: 0;
+  left: var(--g-2);
+  transform: translateY(-50%);
+  padding: 0 var(--g-1);
+  background: var(--g-ground);
+  font: 11px/1.2 var(--g-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--arc-ink-70);
+}
+.arc-guide-panel__state {
+  position: absolute;
+  top: 0;
+  right: var(--g-2);
+  transform: translateY(-50%);
+  padding: 2px var(--g-1);
+  background: var(--g-ground);
+  border: 1px solid var(--g-gold-line);
+  font: 10px/1.4 var(--g-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--g-gold-text);
+}
+.arc-guide-panel[data-guide-pending] {
+  border-style: dashed;
+}
+.arc-guide-panel--lit {
+  border-color: var(--gold);
+}
+.arc-guide-panel--lit > .arc-guide-panel__label {
+  color: var(--g-gold-text);
+}
+.arc-guide-panel__name {
+  display: block;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--arc-ink);
+}
+.arc-guide-panel__line {
+  display: block;
+  margin-top: 6px;
+  font: 12.5px/1.5 var(--g-mono);
+  color: var(--arc-ink-70);
+}
+.arc-guide-panel__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--g-1) var(--g-3);
+  margin-top: 12px !important;
+  font: 12.5px/1.5 var(--g-mono);
+  color: var(--arc-ink-90);
+}
+.arc-guide-panel__items li::before {
+  content: "· ";
   color: var(--arc-ink-50);
 }
+/* A panel inside a panel. */
+.arc-guide-panel > .arc-guide-panel {
+  margin-top: var(--g-3);
+  padding: var(--g-3) var(--g-3) var(--g-2);
+}
+.arc-guide-panel > .arc-guide-panel > .arc-guide-panel {
+  margin-top: var(--g-2);
+}
+.arc-guide-panel > .arc-guide-panel > .arc-guide-panel__line:first-of-type {
+  margin-top: 0;
+}
 
-/* The spine's two segments live in the gap columns. */
-.arc-guide-flow__spine {
+/* ── The system: the words, and the flow down the page ───────────── */
+
+.arc-guide-sys {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: var(--g-5);
+  align-items: start;
+}
+.arc-guide-sys__text {
+  display: grid;
+  gap: var(--g-3);
+  max-width: 46ch;
+}
+.arc-guide-sys__text p {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--arc-ink-90);
+}
+.arc-guide-sys__fig {
   position: relative;
-  grid-row: 1;
-  align-self: start;
-  height: calc(var(--g-spine) * 2);
+  padding-left: 72px;
 }
-.arc-guide-flow__spine[data-guide-seg="in"] {
-  grid-column: 2;
+.arc-guide-sys__node {
+  display: grid;
 }
-.arc-guide-flow__spine[data-guide-seg="out"] {
-  grid-column: 4;
+.arc-guide-sys__arrow {
+  position: relative;
+  display: block;
+  height: 32px;
+  margin-left: var(--g-4);
 }
-.arc-guide-flow__spine::before {
+.arc-guide-sys__arrow::before {
   content: "";
   position: absolute;
   left: 0;
-  right: 0;
-  top: var(--g-spine);
-  height: 1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
   background: var(--g-gold-line);
 }
-.arc-guide-flow__spine::after {
+.arc-guide-sys__arrow::after {
   content: "";
   position: absolute;
-  right: 0;
-  top: calc(var(--g-spine) - 4px);
+  left: -4px;
+  bottom: 0;
   border: 4.5px solid transparent;
-  border-left: 7px solid var(--gold);
-  border-right: 0;
+  border-top: 7px solid var(--gold);
+  border-bottom: 0;
 }
-.arc-guide-flow__spine i {
+.arc-guide-sys__arrow i {
   position: absolute;
-  left: 2px;
-  top: calc(var(--g-spine) - 22px);
-  font: 10px/1.2 var(--g-mono);
+  left: var(--g-2);
+  top: 50%;
+  transform: translateY(-50%);
+  font: 11px/1.2 var(--g-mono);
   font-style: normal;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--g-gold-text);
 }
-
-/* The repository: three strata, the skill on top, the marketplace at the
-   base. Filled, never framed. */
-.arc-guide-flow__repo {
-  position: relative;
-  z-index: 1;
-  grid-column: 1;
-  grid-row: 1;
-  align-self: center;
-  justify-self: stretch;
-  display: grid;
-  gap: 8px;
-  padding: 8px 0;
-  background: var(--void, #0a0908);
-}
-.arc-guide-flow__strata {
-  display: grid;
-  gap: 3px;
-  justify-items: center;
-}
-.arc-guide-flow__strata li {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  height: 34px;
-  padding: 0 12px;
-  background: rgba(var(--dawn-rgb), 0.06);
-}
-.arc-guide-flow__strata li:nth-child(1) {
-  width: 78%;
-}
-.arc-guide-flow__strata li:nth-child(2) {
-  width: 90%;
-  background: rgba(var(--dawn-rgb), 0.09);
-}
-.arc-guide-flow__strata li:nth-child(3) {
-  width: 100%;
-  background: rgba(var(--dawn-rgb), 0.12);
-}
-.arc-guide-flow__tag {
-  font: 10px/1 var(--g-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--g-gold-text);
-}
-.arc-guide-flow__sname {
-  font-size: 13px;
-  line-height: 1.2;
-  color: var(--arc-ink-90);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.arc-guide-flow__name {
-  font: 11px/1.3 var(--g-mono);
-  color: var(--arc-ink-70);
-  text-align: center;
-}
-
-/* The one lit object. */
-.arc-guide-flow__org {
-  position: relative;
-  z-index: 1;
-  grid-column: 3;
-  grid-row: 1;
-  align-self: start;
-  margin-top: calc(var(--g-spine) - 44px);
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-  background: var(--void, #0a0908);
-}
-.arc-guide-flow__chip {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 64px;
-  border: 1px solid var(--gold);
-  background: var(--arc-gold-wash);
-  box-shadow: 0 0 0 6px rgba(var(--gold-rgb), 0.08);
-  font-size: 16px;
-  color: var(--arc-ink);
-  text-align: center;
-}
-
-/* The fan: a bus down the column's left edge, a stub into each surface. */
-.arc-guide-flow__surfaces {
-  position: relative;
-  z-index: 1;
-  grid-column: 5;
-  grid-row: 1;
-  align-self: center;
-  justify-self: stretch;
-  display: grid;
-  gap: 10px;
-  padding: 12px 0;
-  background: var(--void, #0a0908);
-}
-.arc-guide-flow__surfaces .arc-guide-flow__label {
-  padding-left: 28px;
-}
-.arc-guide-flow__surfaces ul {
-  position: relative;
-  display: grid;
-  gap: 6px;
-}
-.arc-guide-flow__surfaces ul::before {
-  content: "";
+/* The return path: up the left of the stack, from the last panel to the first. */
+.arc-guide-sys__back {
   position: absolute;
-  left: 0;
-  top: 16px;
-  bottom: 16px;
-  width: 1px;
-  background: var(--g-gold-line);
-}
-.arc-guide-flow__surfaces li {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 32px;
-  padding-left: 28px;
-  font-size: 15px;
-  color: var(--arc-ink-90);
-}
-.arc-guide-flow__stub {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 20px;
-  height: 1px;
-  background: var(--g-gold-line);
-}
-.arc-guide-flow__glyph {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  background: rgba(var(--dawn-rgb), 0.08);
-  font: 10.5px/1 var(--g-mono);
-  color: var(--arc-ink-70);
-}
-/* The bus joins the spine where it arrives, at the spine's height. */
-.arc-guide-flow__bus {
-  display: none;
-}
-
-/* The loop: a dashed U from under the surfaces, back under the repository. */
-.arc-guide-flow__loop {
-  position: absolute;
-  top: var(--g-spine);
-  bottom: 22px;
-  left: calc(var(--g-pad) + var(--g-repo) / 2);
-  right: calc(var(--g-pad) + var(--g-surf) / 2);
+  left: 24px;
+  top: 64px;
+  bottom: 48px;
+  width: 48px;
   border: 1px dashed var(--arc-seam);
-  border-top: 0;
+  border-right: 0;
 }
-.arc-guide-flow__loop::before {
+.arc-guide-sys__back::before {
   content: "";
+  position: absolute;
+  right: -4px;
+  top: -5px;
+  border: 4.5px solid transparent;
+  border-left: 7px solid var(--arc-ink-50);
+  border-right: 0;
+}
+.arc-guide-sys__back i {
   position: absolute;
   left: -4px;
-  top: 0;
-  border: 4.5px solid transparent;
-  border-bottom: 8px solid var(--arc-ink-50);
-  border-top: 0;
-}
-.arc-guide-flow__loop::after {
-  content: "";
-  position: absolute;
-  left: 30%;
-  bottom: -5px;
-  border: 4.5px solid transparent;
-  border-right: 8px solid var(--arc-ink-50);
-  border-left: 0;
-}
-
-/* The connector sits on the loop's floor. */
-.arc-guide-flow__service {
-  position: relative;
-  z-index: 1;
-  grid-column: 2 / 5;
-  grid-row: 2;
-  justify-self: center;
-  display: grid;
-  gap: 4px;
-  justify-items: center;
-  margin-top: 0;
-  padding: 6px 24px 0;
-  background: var(--void, #0a0908);
-  text-align: center;
-}
-.arc-guide-flow__sv {
-  font-size: 15px;
-  color: var(--arc-ink);
-}
-.arc-guide-flow__sline {
-  font: 11px/1.4 var(--g-mono);
-  color: var(--arc-ink-70);
-}
-.arc-guide-flow__service[data-guide-pending] .arc-guide-flow__sv {
-  color: var(--arc-ink-70);
-}
-.arc-guide-flow__service .arc-guide__state {
-  margin-top: 4px;
-}
-
-/* The words under the drawing. */
-.arc-guide-ov__cols {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(28px, 3.5vw, 56px);
-  border-top: 1px solid var(--arc-rule);
-}
-.arc-guide-ov__cols li {
-  display: grid;
-  gap: 6px;
-  padding-top: 14px;
-}
-.arc-guide-ov__tab {
+  top: 50%;
+  transform: translate(-100%, -50%) rotate(180deg);
+  writing-mode: vertical-rl;
   font: 10.5px/1.2 var(--g-mono);
-  letter-spacing: 0.14em;
+  font-style: normal;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--g-gold-text);
+  white-space: nowrap;
+  color: var(--arc-ink-50);
 }
-.arc-guide-ov__title {
-  font-size: clamp(18px, 1.4vw, 22px);
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--arc-ink);
+
+/* ── The tools: the setup, one panel per tool ────────────────────── */
+
+.arc-guide-tools {
+  display: grid;
+  grid-template-columns: repeat(var(--guide-n), minmax(0, 1fr));
+  gap: var(--g-3);
+  align-items: start;
 }
-.arc-guide-ov__line {
-  font-size: 14.5px;
-  line-height: 1.5;
-  color: var(--arc-ink-70);
-}
-.arc-guide-ov__foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin-top: -8px !important;
-}
-.arc-guide-ov__foot li {
-  font: 10.5px/1 var(--g-mono);
+.arc-guide-tool__role {
+  display: block;
+  font: 11px/1.2 var(--g-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
-.arc-guide-ov__foot li::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 10px;
-  vertical-align: 1px;
-  background: var(--gold);
-}
-
-/* ── The checklist (U2): the phases side by side, every step a link ─── */
-
-.arc-guide-list {
-  display: grid;
-  grid-template-columns: repeat(var(--guide-phases), minmax(0, 1fr));
-  border-top: 1px solid var(--arc-seam);
-  border-left: 1px solid var(--arc-rule);
-}
-.arc-guide-list__phase {
-  border-right: 1px solid var(--arc-rule);
+.arc-guide-tool__what {
+  margin-top: var(--g-1) !important;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--arc-rule);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--arc-ink-90);
 }
-.arc-guide-list__phead {
+.arc-guide-tool__steps {
   display: grid;
-  gap: 6px;
-  padding: 16px 20px 14px;
-  border-bottom: 1px solid var(--arc-rule);
 }
-.arc-guide-list__plabel {
-  font: 12px/1.2 var(--g-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--g-gold-text);
-}
-.arc-guide-list__pwhen {
-  font: 11px/1.3 var(--g-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--arc-ink-50);
-}
-.arc-guide-list__row {
+.arc-guide-step {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr);
+  grid-template-columns: 12px minmax(0, 1fr);
   gap: 14px;
-  padding: 10px 20px;
+  padding: 8px 0;
 }
-.arc-guide-list__row + .arc-guide-list__row {
+.arc-guide-step + .arc-guide-step {
   border-top: 1px solid var(--arc-edge);
 }
-.arc-guide-list__box {
+.arc-guide-step__box {
   width: 12px;
   height: 12px;
-  margin-top: 4px;
+  margin-top: 5px;
   border: 1px solid var(--arc-ink-50);
 }
-.arc-guide-list__row[data-guide-done] .arc-guide-list__box {
+.arc-guide-step[data-guide-done] .arc-guide-step__box {
   border-color: var(--g-person);
   background: var(--g-person);
 }
-.arc-guide-list__what {
-  display: grid;
-  gap: 4px;
-}
-.arc-guide-list__title {
+.arc-guide-step__title {
+  display: inline-block;
   font-size: 15.5px;
-  line-height: 1.3;
+  line-height: 1.35;
   color: var(--arc-ink);
-}
-a.arc-guide-list__title {
   text-decoration: none;
+}
+a.arc-guide-step__title span {
+  color: var(--g-gold-text);
+}
+a.arc-guide-step__title:hover,
+a.arc-guide-step__title:focus-visible {
+  text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-color: var(--g-gold-line);
 }
-a.arc-guide-list__title span {
-  color: var(--g-gold-text);
-}
-a.arc-guide-list__title:hover,
-a.arc-guide-list__title:focus-visible {
-  text-decoration-line: underline;
-}
-.arc-guide-list__who {
-  font: 10.5px/1 var(--g-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--arc-ink-70);
-}
-.arc-guide-list__done {
-  font: 10.5px/1 var(--g-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--g-person);
-}
-.arc-guide-list__line {
-  font-size: 12.5px;
-  line-height: 1.45;
+.arc-guide-step__line {
+  margin-top: 4px !important;
+  font: 12.5px/1.5 var(--g-mono);
   color: var(--arc-ink-60);
+}
+.arc-guide-step__done {
+  color: var(--g-person);
 }
 
 /* ── The matrix ───────────────────────────────────────────────────── */
 
-.arc-guide-mx {
-  --g-mx: minmax(240px, 1.6fr) repeat(var(--guide-cols), minmax(0, 1fr));
+.arc-guide-mx__grid {
+  --g-mx: minmax(240px, 1.5fr) repeat(var(--guide-cols), minmax(0, 1fr));
 }
 .arc-guide-mx__head,
 .arc-guide-mx__row {
@@ -480,9 +303,9 @@ a.arc-guide-list__title:focus-visible {
 }
 .arc-guide-mx__corner,
 .arc-guide-mx__place {
-  padding: 0 8px 12px;
+  padding: 0 var(--g-1) var(--g-2);
   font: 11px/1.3 var(--g-mono);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--arc-ink-70);
 }
@@ -500,25 +323,28 @@ a.arc-guide-list__title:focus-visible {
 .arc-guide-mx__row {
   border-bottom: 1px solid var(--arc-rule);
 }
+.arc-guide-mx__row:last-child {
+  border-bottom: 0;
+}
 .arc-guide-mx__key {
-  padding: 22px 32px 22px 0;
+  padding: 16px var(--g-4) 16px 0;
 }
 .arc-guide-mx__name {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 400;
-  line-height: 1.25;
+  line-height: 1.3;
   color: var(--arc-ink);
 }
 .arc-guide-mx__line {
   margin-top: 6px !important;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--arc-ink-70);
 }
 .arc-guide-mx__who {
-  margin-top: 10px !important;
-  font: 11px/1.3 var(--g-mono);
-  letter-spacing: 0.06em;
+  margin-top: var(--g-1) !important;
+  font: 11px/1.4 var(--g-mono);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
@@ -534,13 +360,13 @@ a.arc-guide-list__title:focus-visible {
   display: block;
 }
 [data-guide-cell="lives"] .arc-guide-mx__mark {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: var(--gold);
 }
 [data-guide-cell="never"] .arc-guide-mx__mark::before {
   content: "✕";
-  font: 14px/1 var(--g-mono);
+  font: 13px/1 var(--g-mono);
   color: var(--g-never);
 }
 [data-guide-cell="empty"] .arc-guide-mx__mark {
@@ -562,11 +388,10 @@ a.arc-guide-list__title:focus-visible {
 .arc-guide-pipe__key {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 44px;
+  gap: var(--g-3);
+  margin-bottom: var(--g-3);
   font: 11px/1.3 var(--g-mono);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--arc-ink-70);
 }
@@ -575,7 +400,7 @@ a.arc-guide-list__title:focus-visible {
   display: inline-block;
   width: 10px;
   height: 10px;
-  margin-right: 8px;
+  margin-right: var(--g-1);
   vertical-align: -1px;
 }
 .arc-guide-pipe__key [data-guide-by="person"]::before {
@@ -587,14 +412,14 @@ a.arc-guide-list__title:focus-visible {
 .arc-guide-pipe__rail {
   display: grid;
   grid-template-columns: repeat(var(--guide-n), minmax(0, 1fr));
-  column-gap: 24px;
+  column-gap: var(--g-3);
 }
 .arc-guide-pipe__stn {
   position: relative;
   display: grid;
   align-content: start;
-  gap: 12px;
-  padding-right: 24px;
+  gap: 10px;
+  padding-right: var(--g-3);
 }
 .arc-guide-pipe__stn:not(:last-child)::before {
   content: "";
@@ -619,20 +444,20 @@ a.arc-guide-list__title:focus-visible {
   place-items: center;
   width: 28px;
   height: 28px;
-  margin-bottom: 16px;
+  margin-bottom: var(--g-2);
   font: 600 12px/1 var(--g-mono);
 }
 [data-guide-by="person"] > .arc-guide-pipe__node {
   background: var(--g-person);
-  color: var(--void, #0a0908);
+  color: var(--g-ground);
 }
 [data-guide-by="machine"] > .arc-guide-pipe__node {
   border: 1px solid var(--gold);
   color: var(--g-gold-text);
 }
 .arc-guide-pipe__actor {
-  font: 10px/1.3 var(--g-mono);
-  letter-spacing: 0.1em;
+  font: 10.5px/1.3 var(--g-mono);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 [data-guide-by="person"] > .arc-guide-pipe__actor {
@@ -642,23 +467,21 @@ a.arc-guide-list__title:focus-visible {
   color: var(--g-gold-text);
 }
 .arc-guide-pipe__title {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 400;
-  line-height: 1.25;
+  line-height: 1.3;
   color: var(--arc-ink);
 }
 .arc-guide-pipe__line {
   max-width: 22ch;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--arc-ink-70);
+  font: 12.5px/1.5 var(--g-mono);
+  color: var(--arc-ink-60);
 }
 .arc-guide-pipe__close {
-  margin-top: 64px !important;
-  padding-top: 20px;
+  margin-top: var(--g-5) !important;
+  padding-top: var(--g-2);
   border-top: 1px dashed var(--arc-seam);
-  font: 12px/1.5 var(--g-mono);
-  letter-spacing: 0.04em;
+  font: 12px/1.6 var(--g-mono);
   color: var(--arc-ink-70);
 }
 .arc-guide-pipe__close span {
@@ -668,12 +491,12 @@ a.arc-guide-list__title:focus-visible {
 /* ── Narrow ───────────────────────────────────────────────────────── */
 
 @media (max-width: 1180px) {
-  .arc-guide-list {
+  .arc-guide-tools {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .arc-guide-pipe__rail {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 36px;
+    row-gap: var(--g-4);
   }
   .arc-guide-pipe__stn:nth-child(3n)::before,
   .arc-guide-pipe__stn:nth-child(3n)::after {
@@ -682,112 +505,27 @@ a.arc-guide-list__title:focus-visible {
 }
 
 @media (max-width: 900px) {
-  /* The drawing stands up: the spine runs down, the loop is said in words. */
-  .arc-guide-ov {
-    --g-spine: 0px;
-  }
-  .arc-guide-flow {
+  .arc-guide-sys {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-    row-gap: 0;
-    padding: 0;
+    gap: var(--g-4);
   }
-  .arc-guide-flow__repo,
-  .arc-guide-flow__org,
-  .arc-guide-flow__surfaces,
-  .arc-guide-flow__service,
-  .arc-guide-flow__spine[data-guide-seg] {
-    grid-column: 1;
-    grid-row: auto;
-    justify-self: stretch;
-    align-self: auto;
-    margin: 0;
+  .arc-guide-sys__text {
+    max-width: none;
   }
-  /* Reading order down the page: the DOM puts the lines first. */
-  .arc-guide-flow__repo {
-    order: 1;
-  }
-  .arc-guide-flow__spine[data-guide-seg="in"] {
-    order: 2;
-  }
-  .arc-guide-flow__org {
-    order: 3;
-  }
-  .arc-guide-flow__spine[data-guide-seg="out"] {
-    order: 4;
-  }
-  .arc-guide-flow__surfaces {
-    order: 5;
-  }
-  .arc-guide-flow__service {
-    order: 6;
-  }
-  .arc-guide-flow__repo {
-    width: 100%;
-  }
-  .arc-guide-flow__spine {
-    height: 56px;
-  }
-  .arc-guide-flow__spine::before {
-    left: 50%;
-    right: auto;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    height: auto;
-  }
-  .arc-guide-flow__spine::after {
-    left: calc(50% - 4px);
-    right: auto;
-    top: auto;
-    bottom: 0;
-    border: 4.5px solid transparent;
-    border-top: 7px solid var(--gold);
-    border-bottom: 0;
-  }
-  .arc-guide-flow__spine i {
-    left: calc(50% + 12px);
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  .arc-guide-flow__surfaces {
-    padding: 0;
-  }
-  .arc-guide-flow__surfaces .arc-guide-flow__label {
+  .arc-guide-sys__fig {
     padding-left: 0;
   }
-  .arc-guide-flow__surfaces ul::before,
-  .arc-guide-flow__stub,
-  .arc-guide-flow__loop {
+  .arc-guide-sys__back {
     display: none;
-  }
-  .arc-guide-flow__surfaces li {
-    padding-left: 0;
-  }
-  .arc-guide-flow__service {
-    justify-items: start;
-    margin-top: 28px;
-    padding: 20px 0 0;
-    border-top: 1px dashed var(--arc-seam);
-    text-align: left;
-  }
-  .arc-guide-flow__service .arc-guide-flow__label::before {
-    content: "↺ ";
-    color: var(--gold);
-  }
-  .arc-guide-ov__cols {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
-  .arc-guide-ov__cols li {
-    padding: 18px 0;
-    border-bottom: 1px solid var(--arc-rule);
   }
 }
 
 @media (max-width: 760px) {
-  .arc-guide-list {
+  .arc-guide-tools {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-guide-panel {
+    padding: var(--g-4) var(--g-2) var(--g-2);
   }
 
   .arc-guide-mx__head {
@@ -795,10 +533,10 @@ a.arc-guide-list__title:focus-visible {
   }
   .arc-guide-mx__row {
     grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 18px;
+    padding-bottom: var(--g-2);
   }
   .arc-guide-mx__key {
-    padding: 18px 0 10px;
+    padding: var(--g-2) 0 var(--g-1);
   }
   .arc-guide-mx__cell {
     display: none;
@@ -834,9 +572,9 @@ a.arc-guide-list__title:focus-visible {
   }
   .arc-guide-pipe__stn {
     grid-template-columns: 28px minmax(0, 1fr);
-    column-gap: 14px;
+    column-gap: var(--g-2);
     row-gap: 4px;
-    padding: 0 0 24px;
+    padding: 0 0 var(--g-3);
   }
   .arc-guide-pipe__node {
     grid-row: span 3;

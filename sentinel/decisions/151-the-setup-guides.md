@@ -131,6 +131,31 @@ overview's columns take more space. Where the air pushed a beat past one screen,
 cut, never the spacing: the connectors step moved into Before so Connect holds five, and the
 titles and lines that wrapped were shortened. Measured again: 830px on every beat, both pages.
 
+## Update 5 (2026-10-07, owner): one system
+
+"Let's further simplify it": no hero buttons, the why callout gone, one paragraph beside a
+vertical flow, the setup clustered per tool with what each part does, Linear's enterprise diagram
+as the drawing grammar, a uniform way of labelling panels, highlights, and one consistent system
+with air across every section.
+
+- **The panel** is the one frame every figure is drawn with: a 1px hairline with its label SET
+  INTO the top edge (mono, uppercase, on the page's ground), a state chip on the right edge for
+  what is not built yet (the frame goes dashed), and ONE lit panel per figure (gold ring, gold
+  label). A diagram's contents are mono; the words beside a diagram are sans. The spacing scale
+  is five steps (8 · 16 · 24 · 40 · 64) and nothing else.
+- **Four beats, four views on that system.** `system`: the paragraphs on the left, the flow down
+  the page on the right, panel inside panel (GitHub ⊃ plugin), labelled arrows between the
+  panels, the return path drawn dashed up the left. `tools`: one panel per tool (GitHub, Google
+  Cloud, Vercel, Claude) with who takes the steps, what the tool does in the setup, and every
+  step a link to its page; a line only where the title does not say it. `matrix` and `pipeline`
+  as before, inside a labelled panel.
+- **Titles in plain technical English**: "System overview.", "Setup per tool.", "Where each key
+  is stored.", "How feedback reaches the owner." No comma slogans. The hero is a title and one
+  line, no buttons.
+- The `overview`, `checklist`, map and card views are deleted with their types.
+- Measured at 1470×830: every beat one screen on both pages; at 375 wide the flow stands up,
+  the return path is dropped, no horizontal scroll.
+
 ## Left open
 
 - "Vercel to host API keys": on both pages Vercel holds the connector's own secrets only. The

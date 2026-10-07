@@ -10,10 +10,10 @@ import type { ArcDef } from "../types";
  * explains the vision behind it". The configuration page says how the setup
  * thinks; this page says who clicks what, in which order.
  *
- * ADR-151 U1 (owner, same day: "why does every section look the same"): one
- * callout for the why, then four beats that are each their own drawing, the
- * `guide` kind's map, checklist, matrix and pipeline. The term is the large
- * type and its meaning the small; no title is a slogan.
+ * ADR-151 U5 (owner, same day): four beats on one system, the `guide` kind's
+ * panels. The system in words beside the flow drawn down the page; the setup
+ * clustered per tool, every step a link; the keys; the feedback loop. Plain
+ * technical English, no slogan titles.
  *
  * ⚠ EVERY STEP IS THE REPOSITORY'S OWN, read from `suri-ai-studio` on
  * 7 October 2026 (`docs/SETUP.md`, `docs/FEEDBACK.md`, `docs/COWORK.md`,
@@ -39,12 +39,8 @@ export const SURI_GUIDE_ARC: ArcDef = {
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Suri · The setup, in practice",
-    title: { pre: "One repository,", em: "in everyone's Claude." },
-    lede: "The parts, the steps and who takes them, from the plugin to the service that keeps the keys and routes feedback.",
-    actions: [
-      { id: "start", label: "The steps", href: "#steps", primary: true },
-      { id: "feedback", label: "Feedback", href: "#feedback" },
-    ],
+    title: { pre: "The setup", em: "in practice." },
+    lede: "How Suri's skills reach the team, and how they get better.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",
@@ -60,213 +56,180 @@ export const SURI_GUIDE_ARC: ArcDef = {
       "How Suri's Claude plugin reaches the team: the skills, the marketplace, GitHub, the keys, and the path a remark takes to a skill's owner.",
   },
   sections: [
-    /* ── 01 · Why ─────────────────────────────────────────────────────── */
+    /* ── 01 · The system ───────────────────────────────────────────────── */
     {
-      id: "why",
-      kind: "interstitial",
-      variant: "callout",
-      eyebrow: "01 · Why it is built this way",
-      menuLabel: "Why",
-      line: { pre: "The tools change every month.", em: "The judgment stays in Suri's files." },
-      subline:
-        "So the setup runs on Suri's own accounts, is written down as plain files, and gets better from the people who use it.",
-    },
-
-    /* ── 02 · The map: the system, and what each word means ──────────── */
-    {
-      id: "map",
+      id: "system",
       kind: "guide",
-      menuLabel: "The parts",
+      menuLabel: "The system",
       menuPrimary: true,
       head: {
-        eyebrow: "02 · The parts",
-        title: { pre: "How the parts", em: "fit together." },
-        sub: "The skills live in GitHub. Claude brings them to the team. Feedback comes back through one small service on Vercel.",
+        eyebrow: "01 · The system",
+        title: { pre: "System", em: "overview." },
       },
       guide: {
-        view: "overview",
-        repo: {
-          label: "GitHub",
-          name: "suri-ai-studio, private, on Suri's account",
-          strata: [
-            { tag: "Skill", name: "One piece of work, written down" },
-            { tag: "Plugin", name: "ai-suri: 21 skills, the mother" },
-            { tag: "Marketplace", name: "The list Claude reads" },
-          ],
-        },
-        org: { label: "Claude", name: "Suri's organisation", sync: "Sync · 30 min" },
-        surfaces: {
-          label: "The team",
-          items: [
-            { glyph: "C", name: "Chat" },
-            { glyph: "D", name: "Desktop" },
-            { glyph: "W", name: "Cowork" },
-            { glyph: ">_", name: "Claude Code" },
-          ],
-        },
-        service: {
-          label: "Vercel",
-          name: "Feedback connector",
-          line: "/skill-feedback → an issue → the owner decides",
-        },
-        columns: [
+        view: "system",
+        paragraphs: [
+          "Suri's skills are text files in one private GitHub repository: the brand, the brief, the design review, the video edit, 21 in all, packed as one plugin. Every change is a pull request that a person merges.",
+          "Suri's Claude organisation syncs that repository. Within 30 minutes of a merge, everyone has the new version in chat, Desktop, Cowork and Claude Code, without installing anything.",
+          "When a skill gets something wrong, anyone types /skill-feedback. A small service on Vercel files the remark as a GitHub issue, the skill's owner decides, and the fix comes back through the same loop.",
+        ],
+        stack: [
           {
-            tab: "01 · GitHub",
-            title: "Where the skills live.",
-            line: "A private repository on Suri's own account. Every change is a pull request that a person merges.",
+            label: "GitHub",
+            name: "suri-ai-studio",
+            line: "Private. marketplace.json lists the plugin and its version",
+            child: {
+              label: "Plugin · ai-suri",
+              items: ["mother", "brand", "brief", "design-review", "+ 17 skills"],
+            },
           },
           {
-            tab: "02 · Claude",
-            title: "How it reaches the team.",
-            line: "Suri's Claude organisation syncs every merged change within 30 minutes and installs it for everyone.",
+            label: "Claude",
+            name: "Suri's organisation",
+            items: ["Chat", "Desktop", "Cowork", "Claude Code"],
+            lit: true,
           },
           {
-            tab: "03 · Vercel",
-            title: "How it gets better.",
-            line: "A small connector turns a remark in the chat into a GitHub issue for the skill's owner, and the fix comes back merged.",
+            label: "Vercel",
+            name: "Feedback connector",
+            line: "/skill-feedback → GitHub issue → the owner decides",
           },
         ],
-        foot: ["Owned by Suri", "Versioned in GitHub", "Synced within 30 minutes"],
-        alt: "One line runs from the GitHub repository, where the skills sit inside the ai-suri plugin inside the suri-ai-studio marketplace, into Suri's Claude organisation and fans out to the team in chat, Desktop, Cowork and Claude Code. A dashed loop runs back underneath through the feedback connector on Vercel into the repository.",
+        between: ["Sync · within 30 min", "/skill-feedback"],
+        back: "Issue",
+        alt: "Three panels down the page. GitHub holds the suri-ai-studio repository, with the marketplace inside it and the ai-suri plugin and its skills inside that. An arrow marked sync leads down to Suri's Claude organisation, which installs the plugin in chat, Desktop, Cowork and Claude Code. An arrow marked /skill-feedback leads down to the feedback connector on Vercel, and a dashed return path marked issue runs back up to GitHub.",
       },
     },
 
-    /* ── 03 · The checklist ────────────────────────────────────────────── */
+    /* ── 02 · Setup ─────────────────────────────────────────────────────── */
     {
-      id: "steps",
+      id: "setup",
       kind: "guide",
-      menuLabel: "The steps",
+      menuLabel: "Setup",
       menuPrimary: true,
       head: {
-        eyebrow: "03 · The steps",
-        title: { pre: "Setting it up,", em: "in order." },
-        sub: "Each step once, by the role named beside it. Until the sync is on, the team installs the plugin as a zip.",
+        eyebrow: "02 · Setup",
+        title: { pre: "Setup", em: "per tool." },
+        sub: "Each step once. The link opens the page where it is done.",
       },
       guide: {
-        view: "checklist",
-        labels: { done: "done" },
-        phases: [
+        view: "tools",
+        labels: { done: "· done" },
+        tools: [
           {
-            id: "before",
-            label: "Before",
-            when: "IT, once",
+            id: "github",
+            label: "GitHub",
+            role: "GitHub admin",
+            what: "Holds the repository. Every change is a pull request.",
             steps: [
               {
-                id: "github-org",
-                title: "A GitHub organisation for Suri",
-                line: "Private, with its whole history.",
+                id: "org",
+                title: "Create a GitHub organisation",
+                line: "",
                 href: "https://github.com/account/organizations/new",
                 done: "5 October",
               },
               {
-                id: "model-keys",
-                title: "Issue the model keys",
-                line: "One Gemini key per person.",
-                href: "https://aistudio.google.com/apikey",
+                id: "app",
+                title: "Install the Claude GitHub App",
+                line: "",
+                href: "https://github.com/apps/claude",
               },
               {
-                id: "vercel",
-                title: "Create a Vercel Pro team",
-                line: "Where the connector runs.",
-                href: "https://vercel.com/dashboard",
+                id: "triage",
+                title: "Add the triage token",
+                line: "A secret, then TRIAGE_ENABLED=true.",
+                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/settings/secrets/actions",
               },
               {
-                id: "google",
-                title: "Create a project for the sign-in",
-                line: "Audience Internal: only Suri accounts sign in.",
-                href: "https://console.cloud.google.com/projectcreate",
-              },
-              {
-                id: "connectors",
-                title: "Switch on Monday and Figma",
-                who: "Claude Owner",
-                line: "Each person signs in once.",
-                href: "https://claude.ai/settings/connectors",
+                id: "merge",
+                title: "Merge pull requests",
+                line: "A GitHub Action raises the version.",
+                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/pulls",
               },
             ],
           },
           {
-            id: "connect",
-            label: "Connect",
-            when: "A Claude Owner, once",
+            id: "google",
+            label: "Google Cloud",
+            role: "IT",
+            what: "Issues the model key and the sign-in.",
+            steps: [
+              {
+                id: "key",
+                title: "Create the Gemini API key",
+                line: "One per person, via the password manager.",
+                href: "https://aistudio.google.com/apikey",
+              },
+              {
+                id: "signin",
+                title: "Create the sign-in project",
+                line: "Audience Internal.",
+                href: "https://console.cloud.google.com/projectcreate",
+              },
+            ],
+          },
+          {
+            id: "vercel",
+            label: "Vercel",
+            role: "The maintainer",
+            what: "Runs the feedback connector.",
+            steps: [
+              {
+                id: "team",
+                title: "Create a Pro team",
+                line: "Hobby is for personal use only.",
+                href: "https://vercel.com/dashboard",
+              },
+              {
+                id: "deploy",
+                title: "Deploy the connector",
+                line: "connector/scripts/setup.sh.",
+                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/blob/main/docs/FEEDBACK.md",
+              },
+            ],
+          },
+          {
+            id: "claude",
+            label: "Claude",
+            role: "Claude Owner",
+            what: "Syncs and installs the plugin.",
             steps: [
               {
                 id: "policy",
                 title: "Switch skills on",
-                line: "Skills, user skills and code execution on.",
+                line: "Skills, user skills, code execution.",
                 href: "https://claude.ai/admin-settings/skills",
-              },
-              {
-                id: "app",
-                title: "Install the Claude GitHub App",
-                line: "On this repository only.",
-                who: "GitHub admin",
-                href: "https://github.com/apps/claude",
               },
               {
                 id: "sync",
                 title: "Sync the repository",
-                line: "Sync automatically on, access Not available.",
+                line: "Sync automatically on.",
                 href: "https://claude.ai/admin-settings/skills?tab=inventory",
               },
               {
                 id: "access",
-                title: "Give the plugin to the team",
-                line: "Pilot group first, then Installed by default.",
+                title: "Install for the team",
+                line: "Pilot first, then Installed by default.",
                 href: "https://claude.ai/admin-settings/skills?tab=inventory",
               },
               {
-                id: "uploads",
+                id: "zips",
                 title: "Remove the uploaded zips",
-                line: "Two copies of one skill fire unpredictably.",
+                line: "",
                 href: "https://claude.ai/admin-settings/skills",
               },
-            ],
-          },
-          {
-            id: "feedback-setup",
-            label: "Feedback",
-            when: "The maintainer, with IT",
-            steps: [
               {
-                id: "deploy",
-                title: "Deploy the connector",
-                line: "One script walks through it: connector/scripts/setup.sh.",
-                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/blob/main/docs/FEEDBACK.md",
-              },
-              {
-                id: "triage",
-                title: "Switch the triage on",
-                line: "Add its Claude token, then set TRIAGE_ENABLED to true.",
-                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/settings/secrets/actions",
+                id: "connectors",
+                title: "Connect Monday and Figma",
+                line: "",
+                href: "https://claude.ai/settings/connectors",
               },
               {
                 id: "connector",
-                title: "Add the connector for everyone",
-                line: "For the whole organisation, last, after the first test.",
-                who: "Claude Owner",
+                title: "Add the connector",
+                line: "Last, after the first test.",
                 href: "https://claude.ai/settings/connectors",
-              },
-            ],
-          },
-          {
-            id: "every-change",
-            label: "Then",
-            when: "Every change",
-            steps: [
-              {
-                id: "pr",
-                title: "Open a pull request",
-                line: "A GitHub Action raises the version.",
-                who: "Anyone",
-                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/pulls",
-              },
-              {
-                id: "merge",
-                title: "Merge it",
-                line: "Everyone has it within 30 minutes.",
-                who: "A person",
-                href: "https://github.com/suri-intelligence-architect/suri-ai-studio/pulls",
               },
             ],
           },
@@ -274,20 +237,21 @@ export const SURI_GUIDE_ARC: ArcDef = {
       },
     },
 
-    /* ── 04 · The keys, as a matrix ────────────────────────────────────── */
+    /* ── 03 · Keys ──────────────────────────────────────────────────────── */
     {
       id: "keys",
       kind: "guide",
-      menuLabel: "The keys",
+      menuLabel: "Keys",
       menuPrimary: true,
       head: {
-        eyebrow: "04 · The keys",
-        title: { pre: "Where each", em: "key lives." },
-        sub: "No key is ever in the repository or in a chat. The skills read a key by its name and never print it.",
+        eyebrow: "03 · Keys",
+        title: { pre: "Where each key", em: "is stored." },
+        sub: "The skills read a key by its name and never print it.",
       },
       guide: {
         view: "matrix",
-        labels: { key: "Key", lives: "lives here", never: "never" },
+        label: "Keys",
+        labels: { key: "Key", lives: "stored here", never: "never" },
         places: [
           { id: "env", name: ".env on the laptop" },
           { id: "vercel", name: "Vercel settings" },
@@ -298,7 +262,7 @@ export const SURI_GUIDE_ARC: ArcDef = {
         keys: [
           {
             id: "model",
-            name: "Model keys",
+            name: "Model key",
             line: "Gemini, for pictures, video and sound.",
             who: "IT issues one per person",
             at: 0,
@@ -306,7 +270,7 @@ export const SURI_GUIDE_ARC: ArcDef = {
           {
             id: "connector",
             name: "Connector keys",
-            line: "The Google sign-in, the GitHub App key, the signing secret.",
+            line: "Google sign-in, GitHub App key, signing secret.",
             who: "The maintainer sets them",
             at: 1,
           },
@@ -321,19 +285,20 @@ export const SURI_GUIDE_ARC: ArcDef = {
       },
     },
 
-    /* ── 05 · Feedback, as a pipeline ──────────────────────────────────── */
+    /* ── 04 · Feedback ──────────────────────────────────────────────────── */
     {
       id: "feedback",
       kind: "guide",
       menuLabel: "Feedback",
       menuPrimary: true,
       head: {
-        eyebrow: "05 · Feedback",
-        title: { pre: "How a remark reaches", em: "the skill's owner." },
-        sub: "No GitHub account is needed to give feedback. Nothing changes until the owner decides and a person merges.",
+        eyebrow: "04 · Feedback",
+        title: { pre: "How feedback", em: "reaches the owner." },
+        sub: "No GitHub account is needed. Nothing changes until the owner decides and a person merges.",
       },
       guide: {
         view: "pipeline",
+        label: "Feedback loop",
         labels: { person: "A person", machine: "Runs by itself" },
         stations: [
           {
@@ -384,14 +349,14 @@ export const SURI_GUIDE_ARC: ArcDef = {
       },
     },
 
-    /* ── 06 · Close ────────────────────────────────────────────────────── */
+    /* ── 05 · Close ─────────────────────────────────────────────────────── */
     {
       id: "more",
       kind: "close",
-      menuLabel: "The full steps",
+      menuLabel: "Docs",
       head: {
-        eyebrow: "06 · The full steps",
-        title: { pre: "Every step is also in", em: "the repository." },
+        eyebrow: "05 · Docs",
+        title: { pre: "The full steps are in", em: "the repository." },
         sub: "docs/SETUP.md for the plugin, docs/FEEDBACK.md for the feedback path, docs/COWORK.md for the zip.",
       },
       actions: [

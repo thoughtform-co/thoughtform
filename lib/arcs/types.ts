@@ -1373,9 +1373,9 @@ export type ArcSection = ArcSectionBase &
          * A SETUP GUIDE BEAT (ADR-151 U1): the practical page beside a
          * client's configuration, where every beat is its own drawing (owner,
          * 2026-10-07: "why does every section look the same"). Four views, one
-         * kind: the OVERVIEW (one drawing: the spine from the repository through
-         * Claude to the surfaces, the loop back under it, the words beneath, U3), the CHECKLIST (phases side by
-         * side, each step a link to where it is done, U2), the MATRIX
+         * kind (U5): the SYSTEM (the words beside the flow drawn down the page,
+         * panel into panel), the TOOLS (the setup clustered per tool, every
+         * step a link), the MATRIX
          * (each key against the places it could live), and the PIPELINE (the
          * stations a remark passes, a person's in green, a machine's in gold).
          *
@@ -1388,48 +1388,51 @@ export type ArcSection = ArcSectionBase &
       }
   );
 
-/* ── The setup guide (ADR-151 U1) ─────────────────────────────────── */
+/* ── The setup guide (ADR-151 U1, the system of U5) ────────────────
+   Every figure is a PANEL: a hairline frame with its label set into the top
+   edge, the way Linear draws its enterprise diagram. One panel per figure is
+   lit (gold). The contents of a diagram are mono; the words beside it are
+   sans. */
 
-/** The overview's drawing (U3): one spine, the loop under it, the words beneath. */
-export interface ArcGuideFlow {
-  /** The repository: three strata, outermost last. */
-  repo: { label: string; name: string; strata: readonly { tag: string; name: string }[] };
-  /** The lit node: the Claude organisation, and the word on the line into it. */
-  org: { label: string; name: string; sync: string };
-  /** Where the team meets it, fanned out of the org node. */
-  surfaces: { label: string; items: readonly { glyph: string; name: string }[] };
-  /** The return path's node, under the spine. */
-  service: { label: string; name: string; line: string; state?: string };
-  /** The words under the drawing, one column per node. */
-  columns: readonly [ArcGuideColumn, ArcGuideColumn, ArcGuideColumn];
-  foot?: readonly string[];
-  alt: string;
+/** A panel in a diagram, nested as the system nests. */
+export interface ArcGuidePanel {
+  /** The label set into the top edge, e.g. "GitHub". */
+  label: string;
+  /** The name under the label, e.g. "suri-ai-studio". */
+  name?: string;
+  /** One line, mono, under the name. */
+  line?: string;
+  /** Mono items, in a row. */
+  items?: readonly string[];
+  /** A panel inside this one. */
+  child?: ArcGuidePanel;
+  /** The one lit panel of the figure. */
+  lit?: boolean;
+  /** Not built yet: drawn dashed, and says so. */
+  state?: string;
 }
 
-export interface ArcGuideColumn {
-  tab: string;
-  title: string;
-  line: string;
-}
-
+/** One step of the setup, inside its tool's panel. */
 export interface ArcGuideStep {
   id: string;
   title: string;
   line: string;
-  /** The role that takes it, only when it is not the phase's own. */
-  who?: string;
-  /** Where the step is done: the page it opens, and the host it names. */
+  /** The page it is done on. */
   href?: string;
   /** Only what is on record as done. */
   done?: string;
 }
 
-export interface ArcGuidePhase {
+/** The steps of one tool. */
+export interface ArcGuideTool {
   id: string;
-  /** e.g. "Before" */
+  /** The tool's name, set into the panel's edge. */
   label: string;
-  /** e.g. "IT, once" */
-  when: string;
+  /** Who takes these steps. */
+  role: string;
+  /** What this tool does in the setup, one line. */
+  what: string;
+  state?: string;
   steps: readonly ArcGuideStep[];
 }
 
@@ -1451,20 +1454,35 @@ export interface ArcGuideStation {
 }
 
 export type ArcGuide =
-  | ({ view: "overview" } & ArcGuideFlow)
   | {
-      view: "checklist";
-      phases: readonly ArcGuidePhase[];
+      /** The system: the words on the left, the flow on the right, down the
+       *  page, panel into panel, with the return path drawn back up. */
+      view: "system";
+      paragraphs: readonly string[];
+      /** Top to bottom. */
+      stack: readonly ArcGuidePanel[];
+      /** The word on each arrow between two panels: one fewer than panels. */
+      between: readonly string[];
+      /** The return path's word, from the last panel back to the first. */
+      back?: string;
+      alt: string;
+    }
+  | {
+      /** The setup, one panel per tool, every step a link. */
+      view: "tools";
+      tools: readonly ArcGuideTool[];
       labels: { done: string };
     }
   | {
       view: "matrix";
+      label: string;
       places: readonly { id: string; name: string; never?: true }[];
       keys: readonly ArcGuideKey[];
       labels: { key: string; lives: string; never: string };
     }
   | {
       view: "pipeline";
+      label: string;
       stations: readonly ArcGuideStation[];
       /** The line under the rail: what closes the loop. */
       close: string;

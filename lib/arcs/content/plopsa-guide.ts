@@ -37,12 +37,8 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
   cardImage: { src: "/images/services/workshop.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Plopsa · De setup in de praktijk",
-    title: { pre: "Van de repository", em: "tot in ieders Claude." },
-    lede: "De onderdelen, de stappen en wie ze zet, van de plugin tot de dienst die de sleutels bewaart en feedback doorstuurt.",
-    actions: [
-      { id: "start", label: "De stappen", href: "#stappen", primary: true },
-      { id: "feedback", label: "Feedback", href: "#feedback" },
-    ],
+    title: { pre: "De setup", em: "in de praktijk." },
+    lede: "Hoe de skills van Plopsa bij het team komen, en hoe ze beter worden.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",
@@ -58,127 +54,145 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
       "Hoe Plopsa's Claude-plugins bij het team komen: de skills, de marketplace, GitHub, de sleutels, en de weg die een opmerking aflegt naar de eigenaar van een skill.",
   },
   sections: [
-    /* ── 01 · Waarom ──────────────────────────────────────────────────── */
+    /* ── 01 · Het systeem ──────────────────────────────────────────────── */
     {
-      id: "waarom",
-      kind: "interstitial",
-      variant: "callout",
-      eyebrow: "01 · Waarom het zo gebouwd is",
-      menuLabel: "Waarom",
-      line: {
-        pre: "De tools veranderen elke maand.",
-        em: "Het oordeel blijft in jullie bestanden.",
-      },
-      subline:
-        "Daarom draait de setup op Plopsa's eigen accounts, staat hij in gewone tekstbestanden, en wordt hij beter door wie hem gebruikt.",
-    },
-
-    /* ── 02 · De kaart: het systeem, en wat elk woord betekent ────────── */
-    {
-      id: "onderdelen",
+      id: "systeem",
       kind: "guide",
-      menuLabel: "Onderdelen",
+      menuLabel: "Het systeem",
       menuPrimary: true,
       head: {
-        eyebrow: "02 · De onderdelen",
-        title: { pre: "Hoe het", em: "samenhangt." },
-        sub: "De skills staan in GitHub. Claude brengt ze naar het team. Feedback komt terug via één kleine dienst op Vercel.",
+        eyebrow: "01 · Het systeem",
+        title: { pre: "Het", em: "systeem." },
       },
       guide: {
-        view: "overview",
-        repo: {
-          label: "GitHub",
-          name: "plopsa-ai-studio, privé",
-          strata: [
-            { tag: "Skill", name: "Een stuk werk, uitgeschreven" },
-            { tag: "Plugins", name: "plopsa en creative" },
-            { tag: "Marketplace", name: "De lijst die Claude leest" },
-          ],
-        },
-        org: { label: "Claude", name: "De organisatie van Plopsa", sync: "Sync · 30 min" },
-        surfaces: {
-          label: "Het team",
-          items: [
-            { glyph: "C", name: "Chat" },
-            { glyph: "D", name: "Desktop" },
-            { glyph: "W", name: "Cowork" },
-            { glyph: ">_", name: "Claude Code" },
-          ],
-        },
-        service: {
-          label: "Vercel",
-          name: "Feedbackconnector",
-          line: "/skill-feedback → issue → de eigenaar beslist",
-          state: "Volgt",
-        },
-        columns: [
+        view: "system",
+        paragraphs: [
+          "De skills van Plopsa zijn tekstbestanden in één privé-repository op GitHub: het merk, de copy, de menuprijzen, de visuals, en de mother die het werk van het team in volgorde draait. Elke wijziging is een pull request die een mens samenvoegt.",
+          "De Claude-organisatie van Plopsa haalt die repository op. Binnen 30 minuten na een merge heeft iedereen de nieuwe versie in de chat, Desktop, Cowork en Claude Code.",
+          "Als een skill het fout doet, typt iemand /skill-feedback. Een dienst op Vercel dient de opmerking in als GitHub-issue, de eigenaar beslist, en de fix komt via dezelfde weg terug.",
+        ],
+        stack: [
           {
-            tab: "01 · GitHub",
-            title: "Waar de skills staan.",
-            line: "Een privé-repository op Plopsa's eigen account. Elke wijziging is een pull request die een mens samenvoegt.",
+            label: "GitHub",
+            name: "plopsa-ai-studio",
+            line: "Privé, nu nog bij Thoughtform",
+            child: {
+              label: "Plugins",
+              items: ["plopsa: brand, copy, menuprijzen, visuals", "creative: mother"],
+            },
           },
           {
-            tab: "02 · Claude",
-            title: "Hoe het bij het team komt.",
-            line: "De Claude-organisatie haalt elke wijziging binnen 30 minuten op en installeert ze voor iedereen.",
+            label: "Claude",
+            name: "De organisatie van Plopsa",
+            items: ["Chat", "Desktop", "Cowork", "Claude Code"],
+            lit: true,
           },
           {
-            tab: "03 · Vercel",
-            title: "Hoe het beter wordt.",
-            line: "Een kleine connector maakt van een opmerking in de chat een GitHub-issue voor de eigenaar van de skill.",
+            label: "Vercel",
+            name: "Feedbackconnector",
+            line: "/skill-feedback → GitHub-issue → de eigenaar beslist",
+            state: "Volgt",
           },
         ],
-        foot: ["Van Plopsa", "Bijgehouden in GitHub", "Binnen 30 minuten bij iedereen"],
-        alt: "Eén lijn loopt van de GitHub-repository, waar de skills in de plugins plopsa en creative in de marketplace plopsa-plugins zitten, naar de Claude-organisatie van Plopsa en waaiert uit naar het team in de chat, Desktop, Cowork en Claude Code. Een stippellijn loopt onderlangs terug via de feedbackconnector op Vercel, die nog volgt, naar de repository.",
+        between: ["Sync · binnen 30 min", "/skill-feedback"],
+        back: "Issue",
+        alt: "Drie panelen onder elkaar. GitHub bevat de repository plopsa-ai-studio, met daarin de marketplace en daarin de plugins plopsa en creative. Een pijl met het woord sync leidt naar de Claude-organisatie van Plopsa, die de plugins installeert in de chat, Desktop, Cowork en Claude Code. Een pijl met /skill-feedback leidt naar de feedbackconnector op Vercel, die nog volgt, en een stippellijn met het woord issue loopt terug omhoog naar GitHub.",
       },
     },
 
-    /* ── 03 · De stappen ───────────────────────────────────────────────── */
+    /* ── 02 · Setup ─────────────────────────────────────────────────────── */
     {
-      id: "stappen",
+      id: "setup",
       kind: "guide",
-      menuLabel: "De stappen",
+      menuLabel: "Setup",
       menuPrimary: true,
       head: {
-        eyebrow: "03 · De stappen",
-        title: { pre: "De setup,", em: "in volgorde." },
-        sub: "Elke stap één keer, door de rol ernaast. Tot de koppeling er is, installeert het team de plugins als zip.",
+        eyebrow: "02 · Setup",
+        title: { pre: "Setup", em: "per tool." },
+        sub: "Elke stap één keer. De link opent de pagina waar het gebeurt.",
       },
       guide: {
-        view: "checklist",
-        labels: { done: "klaar" },
-        phases: [
+        view: "tools",
+        labels: { done: "· klaar" },
+        tools: [
           {
-            id: "vooraf",
-            label: "Vooraf",
-            when: "IT, eenmalig",
+            id: "github",
+            label: "GitHub",
+            role: "GitHub-beheerder",
+            what: "Bevat de repository. Elke wijziging is een pull request.",
             steps: [
               {
-                id: "github-account",
+                id: "account",
                 title: "Een GitHub-account voor Plopsa",
-                line: "De repository verhuist erheen, met zijn geschiedenis.",
+                line: "De repository verhuist erheen.",
                 href: "https://github.com/account/organizations/new",
               },
               {
-                id: "model-keys",
-                title: "De modelsleutels uitgeven",
-                line: "Gemini en OpenAI, via de wachtwoordmanager.",
-                href: "https://aistudio.google.com/apikey",
+                id: "app",
+                title: "De Claude GitHub App installeren",
+                line: "",
+                href: "https://github.com/apps/claude",
+              },
+              {
+                id: "merge",
+                title: "Pull requests samenvoegen",
+                line: "Een GitHub Action verhoogt de versie.",
+                href: "https://github.com/thoughtform-co/plopsa-ai-studio/pulls",
               },
             ],
           },
           {
-            id: "koppelen",
-            label: "Koppelen",
-            when: "Een Claude-eigenaar, eenmalig",
+            id: "keys",
+            label: "Google · OpenAI",
+            role: "IT",
+            what: "Geeft de modelsleutels en de aanmelding uit.",
             steps: [
               {
-                id: "app",
-                title: "De Claude GitHub App installeren",
-                line: "Alleen op deze repository.",
-                who: "GitHub-beheerder",
-                href: "https://github.com/apps/claude",
+                id: "gemini",
+                title: "De Gemini-sleutel aanmaken",
+                line: "Via de wachtwoordmanager.",
+                href: "https://aistudio.google.com/apikey",
               },
+              {
+                id: "openai",
+                title: "De OpenAI-sleutel aanmaken",
+                line: "Gefactureerd per aanroep.",
+                href: "https://platform.openai.com/api-keys",
+              },
+              {
+                id: "signin",
+                title: "Een project voor de aanmelding",
+                line: "Enkel Plopsa-accounts.",
+                href: "https://console.cloud.google.com/projectcreate",
+              },
+            ],
+          },
+          {
+            id: "vercel",
+            label: "Vercel",
+            role: "De beheerder",
+            what: "Draait straks de feedbackconnector.",
+            state: "Volgt",
+            steps: [
+              {
+                id: "team",
+                title: "Een Pro-team aanmaken",
+                line: "Hobby is enkel voor persoonlijk gebruik.",
+                href: "https://vercel.com/dashboard",
+              },
+              {
+                id: "deploy",
+                title: "De connector uitrollen",
+                line: "Met het script van de kit.",
+              },
+            ],
+          },
+          {
+            id: "claude",
+            label: "Claude",
+            role: "Claude-eigenaar",
+            what: "Haalt op en installeert de plugins.",
+            steps: [
               {
                 id: "sync",
                 title: "De repository koppelen",
@@ -187,7 +201,7 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
               },
               {
                 id: "default",
-                title: "De plugins aan het team geven",
+                title: "Installeren voor het team",
                 line: "plopsa voor iedereen, creative voor het team.",
                 href: "https://claude.ai/admin-settings/skills?tab=inventory",
               },
@@ -200,55 +214,14 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
               {
                 id: "zips",
                 title: "De zips weghalen",
-                line: "Twee kopieën van één skill botsen.",
+                line: "",
                 href: "https://claude.ai/admin-settings/skills",
-              },
-            ],
-          },
-          {
-            id: "feedback-setup",
-            label: "Feedback",
-            when: "Later, IT met de beheerder",
-            steps: [
-              {
-                id: "vercel",
-                title: "Een Vercel Pro-team",
-                line: "Daar draait de connector. Hobby is enkel persoonlijk.",
-                href: "https://vercel.com/dashboard",
-              },
-              {
-                id: "aanmelding",
-                title: "Een project voor de aanmelding",
-                line: "Zodat enkel Plopsa-accounts zich aanmelden.",
-                href: "https://console.cloud.google.com/projectcreate",
               },
               {
                 id: "connector",
-                title: "De connector voor iedereen toevoegen",
-                line: "Voor de hele organisatie, als laatste, na de test.",
-                who: "Claude-eigenaar",
+                title: "De connector toevoegen",
+                line: "Voor iedereen, als laatste.",
                 href: "https://claude.ai/settings/connectors",
-              },
-            ],
-          },
-          {
-            id: "daarna",
-            label: "Daarna",
-            when: "Bij elke wijziging",
-            steps: [
-              {
-                id: "pr",
-                title: "Een pull request openen",
-                line: "Een GitHub Action verhoogt de versie.",
-                who: "Iemand van het team",
-                href: "https://github.com/thoughtform-co/plopsa-ai-studio/pulls",
-              },
-              {
-                id: "merge",
-                title: "Samenvoegen",
-                line: "Binnen 30 minuten bij iedereen.",
-                who: "Een mens",
-                href: "https://github.com/thoughtform-co/plopsa-ai-studio/pulls",
               },
             ],
           },
@@ -256,19 +229,20 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
       },
     },
 
-    /* ── 04 · De sleutels ──────────────────────────────────────────────── */
+    /* ── 03 · Sleutels ─────────────────────────────────────────────────── */
     {
       id: "sleutels",
       kind: "guide",
-      menuLabel: "De sleutels",
+      menuLabel: "Sleutels",
       menuPrimary: true,
       head: {
-        eyebrow: "04 · De sleutels",
-        title: { pre: "Waar elke", em: "sleutel staat." },
-        sub: "Geen enkele sleutel staat ooit in de repository of in een chat. De skills lezen een sleutel bij naam en tonen hem nooit.",
+        eyebrow: "03 · Sleutels",
+        title: { pre: "Waar elke sleutel", em: "staat." },
+        sub: "De skills lezen een sleutel bij naam en tonen hem nooit.",
       },
       guide: {
         view: "matrix",
+        label: "Sleutels",
         labels: { key: "Sleutel", lives: "staat hier", never: "nooit" },
         places: [
           { id: "env", name: ".env op de laptop" },
@@ -281,41 +255,42 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
           {
             id: "model",
             name: "Modelsleutels",
-            line: "Gemini en OpenAI, voor de beelden. De leverancier factureert per aanroep.",
+            line: "Gemini en OpenAI, voor de beelden.",
             who: "IT geeft ze uit",
             at: 0,
           },
           {
             id: "connector",
             name: "Sleutels van de connector",
-            line: "De aanmelding, de sleutel van de GitHub App, het geheim waarmee hij tekent.",
-            who: "De beheerder, zodra hij draait",
+            line: "Aanmelding, GitHub App, handtekening.",
+            who: "De beheerder",
             at: 1,
           },
           {
             id: "token",
             name: "Token van de triage",
-            line: "Het Claude-token waarop de feedbacktriage draait.",
-            who: "Wie het bezit, vanuit een terminal",
+            line: "Het Claude-token van de triage.",
+            who: "De eigenaar, vanuit een terminal",
             at: 2,
           },
         ],
       },
     },
 
-    /* ── 05 · Feedback (volgt) ─────────────────────────────────────────── */
+    /* ── 04 · Feedback ──────────────────────────────────────────────────── */
     {
       id: "feedback",
       kind: "guide",
       menuLabel: "Feedback",
       menuPrimary: true,
       head: {
-        eyebrow: "05 · Feedback",
-        title: { pre: "Hoe een opmerking bij", em: "de eigenaar komt." },
-        sub: "Zo werkt het zodra de connector bij Plopsa draait. Niemand heeft er een GitHub-account voor nodig.",
+        eyebrow: "04 · Feedback",
+        title: { pre: "Hoe feedback bij", em: "de eigenaar komt." },
+        sub: "Zo werkt het zodra de connector draait. Niemand heeft er een GitHub-account voor nodig.",
       },
       guide: {
         view: "pipeline",
+        label: "Feedbacklus",
         labels: { person: "Een mens", machine: "Loopt vanzelf" },
         state: "Volgt",
         stations: [
@@ -367,14 +342,14 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
       },
     },
 
-    /* ── 06 · Close ────────────────────────────────────────────────────── */
+    /* ── 05 · Close ─────────────────────────────────────────────────────── */
     {
       id: "meer",
       kind: "close",
-      menuLabel: "Alle stappen",
+      menuLabel: "Docs",
       head: {
-        eyebrow: "06 · Alle stappen",
-        title: { pre: "Elke stap staat ook in", em: "de repository." },
+        eyebrow: "05 · Docs",
+        title: { pre: "Alle stappen staan in", em: "de repository." },
         sub: "docs/SETUP.md voor de plugins, docs/CHANGING-A-RULE.md voor een regel die anders moet.",
       },
       actions: [

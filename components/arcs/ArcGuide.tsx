@@ -1,4 +1,6 @@
-import type { ArcGuide as ArcGuideBody, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+import type { ReactNode } from "react";
+
+import type { ArcGuide as ArcGuideBody, ArcGuidePanel, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
@@ -12,18 +14,20 @@ interface ArcGuideProps {
 }
 
 /**
- * ArcGuide — one beat of a setup guide (ADR-151 U1), in one of four views,
- * each its own drawing so no two beats on the page read alike:
+ * ArcGuide — one beat of a setup guide (ADR-151), in one of four views on
+ * ONE system (U5): every figure is a PANEL, a hairline frame with its label
+ * set into the top edge, the way Linear's enterprise diagram is drawn; one
+ * panel per figure is lit; a diagram's contents are mono, the words beside
+ * it sans.
  *
- *   overview   one drawing (U3): the spine from the repository through the
- *              lit Claude node to the surfaces, the loop back under it
- *              through the connector, and the words under the drawing
- *   checklist  the phases side by side; every step a link to where it is done
- *   matrix     every key against every place it could live
- *   pipeline   the stations a remark passes, a person's green, a machine's gold
+ *   system    the words on the left, the flow down the page on the right,
+ *             panel inside panel, the return path drawn back up
+ *   tools     the setup clustered per tool, every step a link to its page
+ *   matrix    every key against every place it could live
+ *   pipeline  the stations a remark passes, a person's green, a machine's gold
  *
- * ⚠ SERVER, NO STATE, DOM ONLY. `data-guide-*`; the arrows are 1px DOM with
- * CSS heads (ADR-068 U6), and every view reads whole without JS.
+ * ⚠ SERVER, NO STATE, DOM ONLY. `data-guide-*`; every line is DOM (ADR-068
+ * U6), and every view reads whole without JS.
  */
 export function ArcGuide({ section, index, motion = "reveal" }: ArcGuideProps) {
   const { guide } = section;
@@ -43,11 +47,7 @@ export function ArcGuide({ section, index, motion = "reveal" }: ArcGuideProps) {
           sectionId={section.id}
           motion={motion}
         />
-        <div
-          className="arc-guide arc-reveal"
-          data-guide-view={guide.view}
-          {...rung(motion, 0.14)}
-        >
+        <div className="arc-guide arc-reveal" data-guide-view={guide.view} {...rung(motion, 0.14)}>
           <GuideBody guide={guide} />
         </div>
       </div>
@@ -57,10 +57,10 @@ export function ArcGuide({ section, index, motion = "reveal" }: ArcGuideProps) {
 
 function GuideBody({ guide }: { guide: ArcGuideBody }) {
   switch (guide.view) {
-    case "overview":
-      return <GuideOverview guide={guide} />;
-    case "checklist":
-      return <GuideChecklist guide={guide} />;
+    case "system":
+      return <GuideSystem guide={guide} />;
+    case "tools":
+      return <GuideTools guide={guide} />;
     case "matrix":
       return <GuideMatrix guide={guide} />;
     case "pipeline":
@@ -72,107 +72,103 @@ function GuideBody({ guide }: { guide: ArcGuideBody }) {
   }
 }
 
-/* ── The overview (U3): one drawing, the words under it ──────────── */
+/* ── The panel: the one frame every figure is drawn with ──────────── */
 
-function GuideOverview({ guide }: { guide: Extract<ArcGuideBody, { view: "overview" }> }) {
-  const { repo, org, surfaces, service, columns, foot, alt } = guide;
+function Panel({
+  label,
+  lit,
+  state,
+  className,
+  children,
+}: {
+  label: string;
+  lit?: boolean;
+  state?: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <div className="arc-guide-ov">
-      <figure className="arc-guide-flow" role="img" aria-label={alt}>
-        {/* The spine, its word, and the fan: lines are DOM (ADR-068 U6). */}
-        <span className="arc-guide-flow__spine" data-guide-seg="in" aria-hidden="true">
-          <i>{org.sync}</i>
-        </span>
-        <span className="arc-guide-flow__spine" data-guide-seg="out" aria-hidden="true" />
-        <span className="arc-guide-flow__bus" aria-hidden="true" />
-        <span className="arc-guide-flow__loop" aria-hidden="true" />
-
-        <div className="arc-guide-flow__repo">
-          <span className="arc-guide-flow__label">{repo.label}</span>
-          <ol className="arc-guide-flow__strata">
-            {repo.strata.map((st) => (
-              <li key={st.tag}>
-                <span className="arc-guide-flow__tag">{st.tag}</span>
-                <span className="arc-guide-flow__sname">{st.name}</span>
-              </li>
-            ))}
-          </ol>
-          <span className="arc-guide-flow__name">{repo.name}</span>
-        </div>
-
-        <div className="arc-guide-flow__org">
-          <span className="arc-guide-flow__label">{org.label}</span>
-          <span className="arc-guide-flow__chip">{org.name}</span>
-        </div>
-
-        <div className="arc-guide-flow__surfaces">
-          <span className="arc-guide-flow__label">{surfaces.label}</span>
-          <ul>
-            {surfaces.items.map((it) => (
-              <li key={it.name}>
-                <span className="arc-guide-flow__stub" aria-hidden="true" />
-                <span className="arc-guide-flow__glyph" aria-hidden="true">
-                  {it.glyph}
-                </span>
-                {it.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="arc-guide-flow__service" data-guide-pending={service.state ? "" : undefined}>
-          <span className="arc-guide-flow__label">{service.label}</span>
-          <span className="arc-guide-flow__sv">{service.name}</span>
-          <span className="arc-guide-flow__sline">{service.line}</span>
-          {service.state ? <span className="arc-guide__state">{service.state}</span> : null}
-        </div>
-      </figure>
-
-      <ol className="arc-guide-ov__cols">
-        {columns.map((c) => (
-          <li key={c.tab}>
-            <span className="arc-guide-ov__tab">{c.tab}</span>
-            <h3 className="arc-guide-ov__title">{c.title}</h3>
-            <p className="arc-guide-ov__line">{c.line}</p>
-          </li>
-        ))}
-      </ol>
-      {foot?.length ? (
-        <ul className="arc-guide-ov__foot">
-          {foot.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
-      ) : null}
+    <div
+      className={`arc-guide-panel${lit ? " arc-guide-panel--lit" : ""}${className ? ` ${className}` : ""}`}
+      data-guide-pending={state ? "" : undefined}
+    >
+      <span className="arc-guide-panel__label">{label}</span>
+      {state ? <span className="arc-guide-panel__state">{state}</span> : null}
+      {children}
     </div>
   );
 }
 
-/* ── The checklist ────────────────────────────────────────────────── */
+/* ── The system ───────────────────────────────────────────────────── */
 
-function GuideChecklist({ guide }: { guide: Extract<ArcGuideBody, { view: "checklist" }> }) {
+function SystemPanel({ panel }: { panel: ArcGuidePanel }) {
   return (
-    <div className="arc-guide-list" style={{ ["--guide-phases" as string]: guide.phases.length }}>
-      {guide.phases.map((phase, p) => (
-        <section key={phase.id} className="arc-guide-list__phase" data-guide-phase={phase.id}>
-          <header className="arc-guide-list__phead">
-            <span className="arc-guide-list__plabel">
-              {p + 1} · {phase.label}
-            </span>
-            <span className="arc-guide-list__pwhen">{phase.when}</span>
-          </header>
-          <ol className="arc-guide-list__rows">
-            {phase.steps.map((step) => (
+    <Panel label={panel.label} lit={panel.lit} state={panel.state}>
+      {panel.name ? <span className="arc-guide-panel__name">{panel.name}</span> : null}
+      {panel.line ? <span className="arc-guide-panel__line">{panel.line}</span> : null}
+      {panel.items?.length ? (
+        <ul className="arc-guide-panel__items">
+          {panel.items.map((it) => (
+            <li key={it}>{it}</li>
+          ))}
+        </ul>
+      ) : null}
+      {panel.child ? <SystemPanel panel={panel.child} /> : null}
+    </Panel>
+  );
+}
+
+function GuideSystem({ guide }: { guide: Extract<ArcGuideBody, { view: "system" }> }) {
+  const { paragraphs, stack, between, back, alt } = guide;
+  return (
+    <div className="arc-guide-sys">
+      <div className="arc-guide-sys__text">
+        {paragraphs.map((p) => (
+          <p key={p}>{p}</p>
+        ))}
+      </div>
+      <figure className="arc-guide-sys__fig" role="img" aria-label={alt}>
+        {back ? (
+          <span className="arc-guide-sys__back" aria-hidden="true">
+            <i>{back}</i>
+          </span>
+        ) : null}
+        {stack.map((panel, i) => (
+          <div key={panel.label} className="arc-guide-sys__node">
+            <SystemPanel panel={panel} />
+            {i < stack.length - 1 ? (
+              <span className="arc-guide-sys__arrow" aria-hidden="true">
+                <i>{between[i]}</i>
+              </span>
+            ) : null}
+          </div>
+        ))}
+      </figure>
+    </div>
+  );
+}
+
+/* ── The tools ────────────────────────────────────────────────────── */
+
+function GuideTools({ guide }: { guide: Extract<ArcGuideBody, { view: "tools" }> }) {
+  return (
+    <div className="arc-guide-tools" style={{ ["--guide-n" as string]: guide.tools.length }}>
+      {guide.tools.map((tool) => (
+        <Panel key={tool.id} label={tool.label} state={tool.state} className="arc-guide-tool">
+          <span className="arc-guide-tool__role">{tool.role}</span>
+          <p className="arc-guide-tool__what">{tool.what}</p>
+          <ol className="arc-guide-tool__steps">
+            {tool.steps.map((step) => (
               <li
                 key={step.id}
-                className="arc-guide-list__row"
+                className="arc-guide-step"
                 data-guide-done={step.done ? "" : undefined}
               >
-                <span className="arc-guide-list__box" aria-hidden="true" />
-                <div className="arc-guide-list__what">
+                <span className="arc-guide-step__box" aria-hidden="true" />
+                <div>
                   {step.href ? (
                     <a
-                      className="arc-guide-list__title"
+                      className="arc-guide-step__title"
                       href={step.href}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -181,23 +177,24 @@ function GuideChecklist({ guide }: { guide: Extract<ArcGuideBody, { view: "check
                       <span aria-hidden="true"> ↗</span>
                     </a>
                   ) : (
-                    <span className="arc-guide-list__title">{step.title}</span>
+                    <span className="arc-guide-step__title">{step.title}</span>
                   )}
-                  <p className="arc-guide-list__line">
-                    {step.who ? <span className="arc-guide-list__who">{step.who} · </span> : null}
-                    {step.line}
-                    {step.done ? (
-                      <span className="arc-guide-list__done">
-                        {" "}
-                        {guide.labels.done} {step.done}
-                      </span>
-                    ) : null}
-                  </p>
+                  {step.line || step.done ? (
+                    <p className="arc-guide-step__line">
+                      {step.line}
+                      {step.done ? (
+                        <span className="arc-guide-step__done">
+                          {step.line ? " " : ""}
+                          {guide.labels.done} {step.done}
+                        </span>
+                      ) : null}
+                    </p>
+                  ) : null}
                 </div>
               </li>
             ))}
           </ol>
-        </section>
+        </Panel>
       ))}
     </div>
   );
@@ -208,42 +205,48 @@ function GuideChecklist({ guide }: { guide: Extract<ArcGuideBody, { view: "check
 function GuideMatrix({ guide }: { guide: Extract<ArcGuideBody, { view: "matrix" }> }) {
   const { places, keys, labels } = guide;
   return (
-    <div className="arc-guide-mx" style={{ ["--guide-cols" as string]: places.length }}>
-      <div className="arc-guide-mx__head" aria-hidden="true">
-        <span className="arc-guide-mx__corner">{labels.key}</span>
-        {places.map((pl) => (
-          <span key={pl.id} className="arc-guide-mx__place" data-guide-never={pl.never ? "" : undefined}>
-            {pl.name}
-          </span>
-        ))}
-      </div>
-      <ul className="arc-guide-mx__rows">
-        {keys.map((k) => (
-          <li key={k.id} className="arc-guide-mx__row">
-            <div className="arc-guide-mx__key">
-              <h3 className="arc-guide-mx__name">{k.name}</h3>
-              <p className="arc-guide-mx__line">{k.line}</p>
-              <p className="arc-guide-mx__who">{k.who}</p>
-            </div>
-            {places.map((pl, i) => {
-              const lives = i === k.at;
-              return (
-                <span
-                  key={pl.id}
-                  className="arc-guide-mx__cell"
-                  data-guide-cell={lives ? "lives" : pl.never ? "never" : "empty"}
-                >
-                  <span className="arc-guide-mx__mark" aria-hidden="true" />
-                  <span className="arc-guide-mx__sr">
-                    {pl.name}: {lives ? labels.lives : pl.never ? labels.never : "–"}
+    <Panel label={guide.label} className="arc-guide-mx">
+      <div className="arc-guide-mx__grid" style={{ ["--guide-cols" as string]: places.length }}>
+        <div className="arc-guide-mx__head" aria-hidden="true">
+          <span className="arc-guide-mx__corner">{labels.key}</span>
+          {places.map((pl) => (
+            <span
+              key={pl.id}
+              className="arc-guide-mx__place"
+              data-guide-never={pl.never ? "" : undefined}
+            >
+              {pl.name}
+            </span>
+          ))}
+        </div>
+        <ul className="arc-guide-mx__rows">
+          {keys.map((k) => (
+            <li key={k.id} className="arc-guide-mx__row">
+              <div className="arc-guide-mx__key">
+                <h3 className="arc-guide-mx__name">{k.name}</h3>
+                <p className="arc-guide-mx__line">{k.line}</p>
+                <p className="arc-guide-mx__who">{k.who}</p>
+              </div>
+              {places.map((pl, i) => {
+                const lives = i === k.at;
+                return (
+                  <span
+                    key={pl.id}
+                    className="arc-guide-mx__cell"
+                    data-guide-cell={lives ? "lives" : pl.never ? "never" : "empty"}
+                  >
+                    <span className="arc-guide-mx__mark" aria-hidden="true" />
+                    <span className="arc-guide-mx__sr">
+                      {pl.name}: {lives ? labels.lives : pl.never ? labels.never : "–"}
+                    </span>
                   </span>
-                </span>
-              );
-            })}
-          </li>
-        ))}
-      </ul>
-    </div>
+                );
+              })}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Panel>
   );
 }
 
@@ -252,11 +255,10 @@ function GuideMatrix({ guide }: { guide: Extract<ArcGuideBody, { view: "matrix" 
 function GuidePipeline({ guide }: { guide: Extract<ArcGuideBody, { view: "pipeline" }> }) {
   const { stations, close, labels, state } = guide;
   return (
-    <div className="arc-guide-pipe">
+    <Panel label={guide.label} state={state} className="arc-guide-pipe">
       <div className="arc-guide-pipe__key">
         <span data-guide-by="person">{labels.person}</span>
         <span data-guide-by="machine">{labels.machine}</span>
-        {state ? <span className="arc-guide__state">{state}</span> : null}
       </div>
       <ol className="arc-guide-pipe__rail" style={{ ["--guide-n" as string]: stations.length }}>
         {stations.map((st, i) => (
@@ -273,6 +275,6 @@ function GuidePipeline({ guide }: { guide: Extract<ArcGuideBody, { view: "pipeli
       <p className="arc-guide-pipe__close">
         <span aria-hidden="true">↺</span> {close}
       </p>
-    </div>
+    </Panel>
   );
 }
