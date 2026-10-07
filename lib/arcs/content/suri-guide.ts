@@ -69,15 +69,13 @@ export const SURI_GUIDE_ARC: ArcDef = {
       guide: {
         view: "system",
         paragraphs: [
-          "Suri's skills are text files in one private GitHub repository: the brand, the brief, the design review, the video edit, 21 in all, packed as one plugin. Every change is a pull request that a person merges.",
-          "Suri's Claude organisation syncs that repository. Within 30 minutes of a merge, everyone has the new version in chat, Desktop, Cowork and Claude Code, without installing anything.",
-          "When a skill gets something wrong, anyone types /skill-feedback. A small service on Vercel files the remark as a GitHub issue, the skill's owner decides, and the fix comes back through the same loop.",
+          "Suri's skills are text files in one private GitHub repository. Claude syncs it into Suri's organisation, and every merged change reaches the whole team within 30 minutes. When a skill gets something wrong, anyone types /skill-feedback: a small service on Vercel files it as a GitHub issue, the skill's owner decides, and the fix comes back the same way.",
         ],
         stack: [
           {
             label: "GitHub",
             name: "suri-ai-studio",
-            line: "Private. marketplace.json lists the plugin and its version",
+            line: "Private repository on Suri's account",
             child: {
               label: "Plugin · ai-suri",
               items: ["mother", "brand", "brief", "design-review", "+ 17 skills"],

@@ -67,9 +67,7 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
       guide: {
         view: "system",
         paragraphs: [
-          "De skills van Plopsa zijn tekstbestanden in één privé-repository op GitHub: het merk, de copy, de menuprijzen, de visuals, en de mother die het werk van het team in volgorde draait. Elke wijziging is een pull request die een mens samenvoegt.",
-          "De Claude-organisatie van Plopsa haalt die repository op. Binnen 30 minuten na een merge heeft iedereen de nieuwe versie in de chat, Desktop, Cowork en Claude Code.",
-          "Als een skill het fout doet, typt iemand /skill-feedback. Een dienst op Vercel dient de opmerking in als GitHub-issue, de eigenaar beslist, en de fix komt via dezelfde weg terug.",
+          "De skills van Plopsa zijn tekstbestanden in één privé-repository op GitHub. Claude haalt die op, en elke samengevoegde wijziging is binnen 30 minuten bij het hele team. Doet een skill het fout, dan typt iemand /skill-feedback: een dienst op Vercel dient het in als GitHub-issue, de eigenaar beslist, en de fix komt langs dezelfde weg terug.",
         ],
         stack: [
           {
