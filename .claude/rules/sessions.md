@@ -66,6 +66,13 @@ polygon(`), every `font-size` a single `var()`, spacing on the 8px scale,
   WebP, the dark `<img>` lazy so light never fetches it. The route is in
   `HERO_ROUTES` (hand-written, pinned exact).
 
+- ⚠ **THE DATES AND THE TABLE ARE ONE VIEWPORT EACH** on a desktop at least
+  681px tall (ADR-150 U1): content between the rails' ends, everything inside
+  sized from the room left over (`container-type: size`, `cqh`), never from
+  its width. A new block in either section must fit that budget at 1280×720;
+  `sessions-smoke` fails a spill at five viewports. Measure after a walk: a
+  reveal rests 24px low until it has been seen.
+
 ## Verifying
 
 ```bash

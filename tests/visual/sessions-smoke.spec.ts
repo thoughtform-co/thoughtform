@@ -14,6 +14,8 @@ const URL = "/home-sessions";
 const VIEWPORTS: [number, number][] = [
   [1280, 720],
   [1440, 800],
+  [1470, 830],
+  [2000, 1000],
   [1920, 1247],
 ];
 
@@ -98,6 +100,8 @@ async function contrastOf(page: Page, selector: string) {
 }
 
 test.describe("the Home sessions page (ADR-150)", () => {
+  // two loads and two full walks in one case; a cold dev server needs the room
+  test.describe.configure({ timeout: 120_000 });
   test("one morning is lit, it is the readout's, and it mails its own morning", async ({
     page,
   }) => {
@@ -141,6 +145,55 @@ test.describe("the Home sessions page (ADR-150)", () => {
   for (const [w, h] of VIEWPORTS) {
     test.describe(`at ${w}x${h}`, () => {
       test.use({ viewport: { width: w, height: h } });
+      test("the dates and the table each fit one viewport, between the rails", async ({ page }) => {
+        /* owner, 2026-10-07: "make sure that all elements fit within the
+           section / viewport". On a desktop tall enough the two frames are one
+           viewport each, their content on the rails' ends, nothing spilling. */
+        await ready(page);
+        // a reveal rests 24px low until it has been seen; walk so every one lands
+        await walk(page);
+        await page.waitForTimeout(900);
+        const r = await page.evaluate(() => {
+          const rail = document.querySelector(".hud__rail")!.getBoundingClientRect();
+          return ["dates", "the-table"].map((id) => {
+            const s = document.querySelector(`[data-hs-section="${id}"]`)!;
+            const top = s.getBoundingClientRect().top;
+            let lo = Infinity,
+              hi = -Infinity;
+            s.querySelectorAll("*").forEach((el) => {
+              const b = el.getBoundingClientRect();
+              if (!b.width || !b.height) return;
+              lo = Math.min(lo, b.top - top);
+              hi = Math.max(hi, b.bottom - top);
+            });
+            const spills: string[] = [];
+            s.querySelectorAll(".hs-tile, .hs-readout__row, .hs-plan__stage").forEach((box) => {
+              const b = box.getBoundingClientRect();
+              box.querySelectorAll("*").forEach((c) => {
+                const k = c.getBoundingClientRect();
+                if (k.height && (k.bottom > b.bottom + 1 || k.top < b.top - 1))
+                  spills.push(String((c as HTMLElement).className));
+              });
+            });
+            return {
+              id,
+              height: s.getBoundingClientRect().height,
+              lo,
+              hi,
+              railTop: rail.top,
+              railBot: rail.bottom,
+              spills,
+            };
+          });
+        });
+        for (const s of r) {
+          expect(s.height, `${s.id}: one viewport`).toBeLessThanOrEqual(h + 1);
+          expect(s.lo, `${s.id}: content starts on the rail`).toBeGreaterThanOrEqual(s.railTop - 1);
+          expect(s.hi, `${s.id}: content ends on the rail`).toBeLessThanOrEqual(s.railBot + 1);
+          expect(s.spills, `${s.id}: spills`).toEqual([]);
+        }
+      });
+
       test("nothing scrolls sideways, and every block sits inside its band", async ({ page }) => {
         await ready(page);
         await walk(page);

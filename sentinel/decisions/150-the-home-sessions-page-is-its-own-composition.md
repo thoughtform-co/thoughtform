@@ -137,6 +137,26 @@ ADR-114; the fourth is the record's breakdown line.
   Design back: the reserve band is the plainest object on the page, and the steps column is
   sparse while the dial is pinned. MANUAL until the jury can run.
 
+## U1 — every section fits one viewport (2026-10-07, owner)
+
+"Can you make sure that all elements fit within the section / viewport?" On his window (about
+2000 × 1000) the table's 4:5 photograph, sized from its column's WIDTH, ran past the floor; the
+dates instrument did the same at 1280 × 720 and 1440 × 800. On a desktop at least 681px tall
+(`(min-width: 961px) and (min-height: 681px)`) the dates and the table are now ONE VIEWPORT
+each, their content seated between the rails' two ends (`--lat-rail-top` / `--lat-rail-bot`,
+the arcs instrument's rule), and everything inside sizes from the room LEFT OVER: the photograph
+is the body's height and 4:5 inside it (`container-type: size` on the body, `min(80cqh,
+50cqw)`), the plan sits in a well that keeps the drawing's aspect (`min(100cqw, 100cqh × 320 /
+224)`) so its labels' fractions stay true, and each tile sizes its day from its own height
+(`30cqh`). The morning's figure pins on the same rail end and the dial is never taller than the
+rail. On a short desktop (681–760) the axis gives its height to the tiles and a tile keeps one
+chip; below 681 the page flows. The tiles lost the language chip, which repeated the housing's
+head and the table's readout. ⚠ **A reveal rests 24px low until it is seen**, so any fit
+measurement walks the page first; the first cut of the guard reported a 23px overrun that was
+the animation, not the layout. Guarded in `sessions-smoke` at five viewports (1280 × 720,
+1440 × 800, 1470 × 830, 2000 × 1000, 1920 × 1247): each frame one viewport tall, its content
+inside the rails, nothing spilling out of a tile, a readout row or the plan.
+
 ## Left open
 
 - The movements' minutes and the four dates are the owner's to confirm.
