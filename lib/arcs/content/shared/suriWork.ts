@@ -1184,6 +1184,270 @@ export const SURI_RUNS: Record<SuriWorkstream, RunBody> = {
   },
 };
 
+const EWS = "/arcs/suri/every-word-stays";
+
+/**
+ * EVERY WORD STAYS (ADR-148 U6): Suri's second case, the email skill made in
+ * Cowork on 6 and 7 October, condensed from its own breakdown (the artifact
+ * the owner shared, 11 steps) to the page and nine slides. It has no film:
+ * its hero is the email itself, scrolling in the film's window. Every figure
+ * and quote is the breakdown's; people by role (the designer, a colleague who
+ * reviews, the creative lead), and the dentist is named only inside Suri's
+ * own email.
+ */
+export const EVERY_WORD_STAYS: ArcBreakdown = {
+  eyebrow: "How Claude made it · Suri email · 6–7 Oct 2026",
+  title: { pre: "From one dentist's tips", em: "to a skill for every Suri email." },
+  sub: "Over five rounds the designer showed what makes a lot of copy feel light without cutting a word, and her own edits to the frames became the brief.",
+  page: {
+    src: `${EWS}/final_desktop.webp`,
+    alt: "The Brush like a dentist pt I email at 600 wide: the SURI logo, an inset rounded photo of a dentist brushing a model of teeth under the headline Meet your oral microbiome, a serif standfirst, a short explainer, the line When that balance is disrupted in a pale panel, five tips as white cards on a light band, a Restore module with a moving close-up of the product, and the UK footer",
+    label: "As she left it · her desktop",
+    ratio: "scroll",
+  },
+  facts: [
+    { label: "Read", value: "About 110 emails, May–Sep 2026" },
+    { label: "Rounds", value: "5, then her own frame" },
+    { label: "Made", value: "1 skill · 9 references · 36 checks" },
+    { label: "Cases", value: "3 real requests, dated" },
+  ],
+  beats: [
+    {
+      id: "ews-ask",
+      key: "The ask",
+      title: { pre: "Set it up,", em: "same as usual." },
+      line: "The Monday item was part one of a series: a dentist explains the oral microbiome, in an editorial email for the UK and the US that ends on a refillable toothpaste module. A day later the designer asked for a skill just for emails.",
+      rows: [
+        {
+          label: "6 October",
+          value:
+            "“Can you set it up in this Figma board using the same layout and standards as usual.”",
+        },
+        {
+          label: "7 October",
+          value: "“Make sure it's evergreen and works for different types of emails.”",
+        },
+      ],
+    },
+    {
+      id: "ews-look",
+      key: "Look first",
+      title: { pre: "The file", em: "before the frame." },
+      line: "Before anything was drawn, Claude read the Email Projects file, May to September 2026: 26 campaigns measured layer by layer, nothing moved. Every round after was read against the references the designer pinned beside the brief, for inspiration, not to copy.",
+      figures: [
+        { value: "16 of 26", label: "Heroes centred; about 9 more set left" },
+        { value: "8 of 26", label: "With the card overlapping the hero, the house signature" },
+        { value: "3 grounds", label: "Sections change background instead of using dividers" },
+      ],
+    },
+    {
+      id: "ews-rounds",
+      key: "The rounds",
+      title: { pre: "Five rounds,", em: "each one lighter." },
+      line: "From v2 on, every round kept every word of her copy and changed only how heavy it felt. Her notes ran from “way off” and “big blocks of text” to “way too formal” and “the images don't necessarily match”, until she took the frame over herself.",
+      frames: [
+        {
+          src: `${EWS}/r1.webp`,
+          alt: "Round 1: a grey hero placeholder, two long paragraphs, five numbered tips as text, a subscription banner",
+          label: "v1 · way off, blocks of text",
+          ratio: "scroll",
+          verdict: "rejected",
+        },
+        {
+          src: `${EWS}/r2.webp`,
+          alt: "Round 2: a monospaced series masthead, a big 700 on blue, ruled rows of tips, a pasted Restore module",
+          label: "v2 · way too formal",
+          ratio: "scroll",
+          verdict: "rejected",
+        },
+        {
+          src: `${EWS}/r3.webp`,
+          alt: "Round 3: an inset rounded hero, split cards with library photos for each tip, a frosted Restore panel",
+          label: "v3 · photos that don't match",
+          ratio: "scroll",
+        },
+        {
+          src: `${EWS}/r4.webp`,
+          alt: "Round 4: the intro as one flowing block, tips as white cards on a peach band",
+          label: "v4 · tips without photos",
+          ratio: "scroll",
+        },
+        {
+          src: `${EWS}/r5.webp`,
+          alt: "Round 5, option D: the closing line set apart in a soft blue panel",
+          label: "v5 · the line in a panel",
+          ratio: "scroll",
+        },
+        {
+          src: `${EWS}/r6.webp`,
+          alt: "Her frame: the inset hero, the line in a pale panel, white tip cards, a split Restore module",
+          label: "Hers · as she left it",
+          ratio: "scroll",
+          verdict: "kept",
+        },
+      ],
+    },
+    {
+      id: "ews-weight",
+      key: "Text weight",
+      title: { pre: "Text weight,", em: "seen squinted." },
+      line: "Squinted, the first round is grey bars of text from top to bottom. Hers is a rhythm: a photo, a lead, a panel, cards, the product.",
+      frames: [
+        {
+          src: `${EWS}/sq_v1.webp`,
+          alt: "Round 1 blurred: long grey bars of text from top to bottom",
+          label: "v1, squinted · grey bars",
+          ratio: "page",
+        },
+        {
+          src: `${EWS}/sq_final.webp`,
+          alt: "Her frame blurred: a dark photo, a short lead, a pale panel, a band of light cards, the product, the footer",
+          label: "Hers, squinted · a rhythm",
+          ratio: "page",
+        },
+      ],
+    },
+    {
+      id: "ews-lead",
+      key: "One lead",
+      title: { pre: "One lead", em: "per section." },
+      line: "The intro was two blocks at a similar weight, with the sentence that matters most at the end of the body, so nothing led. Round five tried four ways to give one piece the lead, each on a copy of her frame. She took the panel.",
+      frames: [
+        {
+          src: `${EWS}/i_flat.webp`,
+          alt: "The intro as two blocks, a serif standfirst over one sans paragraph",
+          label: "Before · one flow",
+          ratio: "1:1",
+        },
+        {
+          src: `${EWS}/i_a.webp`,
+          alt: "Option A: a small sans deck, a rule, the body, the line as a large serif headline",
+          label: "A · the line as headline",
+          ratio: "1:1",
+        },
+        {
+          src: `${EWS}/i_b.webp`,
+          alt: "Option B: the line moved down to open the tips band, with a small deck under it",
+          label: "B · the line opens the tips",
+          ratio: "1:1",
+        },
+        {
+          src: `${EWS}/i_c.webp`,
+          alt: "Option C: a left-aligned grid with small labels, What it is and Why it matters",
+          label: "C · an editorial grid",
+          ratio: "1:1",
+        },
+        {
+          src: `${EWS}/i_d.webp`,
+          alt: "Option D: the line set apart in a soft blue panel",
+          label: "D · the line in a panel",
+          ratio: "1:1",
+          verdict: "kept",
+        },
+      ],
+    },
+    {
+      id: "ews-frame",
+      key: "Her frame",
+      title: { pre: "Her frame", em: "is the brief." },
+      line: "Between rounds the designer worked in the frames herself: “I have deleted from there what I think wasn't working.” So the skill reads her frame against what it last made, lists every change and carries them all into the next step.",
+      frames: [
+        {
+          src: `${EWS}/claude_mobile.webp`,
+          alt: "Claude's mobile, 390 wide: the hero with a chip, the standfirst, the explainer, the line in a blue panel, five stacked left-aligned cards, the Restore bottle beside a glass panel",
+          label: "Claude's mobile, from her desktop",
+          ratio: "scroll",
+        },
+        {
+          src: `${EWS}/final_mobile.webp`,
+          alt: "Her mobile now: the same order, a pale panel, five centred white cards, a split Restore module",
+          label: "Her mobile now",
+          ratio: "scroll",
+          verdict: "kept",
+        },
+      ],
+    },
+    {
+      id: "ews-seeing",
+      key: "Seeing",
+      title: { pre: "Four ways to look", em: "at one email." },
+      line: "In a desktop inbox the photo fills the first screen and the headline starts just below it, so a reader in a short preview pane meets the dentist before the words. Lift the headline or let the photo lead: that is the designer's call.",
+      frames: [
+        {
+          src: `${EWS}/see_inbox.webp`,
+          alt: "The email's first screen in a desktop inbox, 600 by 560: the photo fills it",
+          label: "Inbox · the first screen",
+          ratio: "page",
+        },
+        {
+          src: `${EWS}/see_phone.webp`,
+          alt: "The email's first screen on a phone",
+          label: "Phone",
+          ratio: "page",
+        },
+        {
+          src: `${EWS}/see_squint.webp`,
+          alt: "The whole email blurred, to read its weight",
+          label: "Squint",
+          ratio: "page",
+        },
+        {
+          src: `${EWS}/see_values.webp`,
+          alt: "The whole email in grey values, to read its contrast",
+          label: "Values",
+          ratio: "page",
+        },
+      ],
+    },
+    {
+      id: "ews-system",
+      key: "The system",
+      title: { pre: "What a Suri email does,", em: "as measured." },
+      line: "Every value comes from the file, dated 6 or 7 October 2026, and stays unconfirmed until the creative lead confirms it. Where the latest approved email of the same kind disagrees, the file wins and the skill says so.",
+      figures: [
+        {
+          value: "600 · 390",
+          label: "Desktop and mobile, every email both; the phone gets its own crop",
+        },
+        { value: "40 · 30", label: "Text margins and the rhythm between elements" },
+        {
+          value: "Ultralight",
+          label: "Plain Ultralight is the voice; Nantes Light for serif headlines",
+        },
+        {
+          value: "#252525",
+          label: "Off-black on #FAFAFA off-white, greiges and soft panels between",
+        },
+        { value: "≤ 5 lines", label: "A block of body text on desktop; seven on a phone" },
+        { value: "1 goal", label: "One main button, repeated lower in a long email" },
+      ],
+    },
+    {
+      id: "ews-skill",
+      key: "The skill",
+      title: { pre: "One skill,", em: "every kind of email." },
+      line: "Email moved out of the design skill into its own, between the brief and the people who decide; their words become its checks. It carries 36 checks, all advice for now, and three dated cases from this week, not run yet.",
+      rows: [
+        {
+          label: "Promo and sale",
+          value:
+            "One offer, read in the first screen: the offer, product and end date in live text",
+        },
+        {
+          label: "Editorial",
+          value:
+            "A lot of words, made light: one lead per section, pictures that match their words or none",
+        },
+        {
+          label: "Another kind",
+          value: "Read from the latest two or three of its kind in the file",
+        },
+        { label: "Next", value: "The next Black Friday request becomes its first promo case" },
+      ],
+    },
+  ],
+};
+
 /** The three `skill-run` panels of the `workstream` group, under one head. */
 export function suriRuns(frame: SuriFrame): ArcSectionOf<"skill-run">[] {
   const head = {

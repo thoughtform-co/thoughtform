@@ -1892,9 +1892,13 @@ describe("the workshop's shared beats (ADR-143)", () => {
         expect(job.facts.length, `${at}: facts`).toBeGreaterThanOrEqual(2);
         expect(job.facts.length, `${at}: facts`).toBeLessThanOrEqual(4);
         expect(job.beats.length, `${at}: beats`).toBeGreaterThanOrEqual(3);
-        expect(job.beats.length, `${at}: beats`).toBeLessThanOrEqual(8);
+        expect(job.beats.length, `${at}: beats`).toBeLessThanOrEqual(10);
         expect(new Set(job.beats.map((b) => b.id)).size, `${at}: beat ids`).toBe(job.beats.length);
-        const media = [job.film.src, job.film.poster];
+        /* Exactly one hero medium: the film, or the page scrolling in its
+           window (ADR-148 U6). */
+        expect(!!job.film !== !!job.page, `${at}: a film or a page`).toBe(true);
+        if (job.page) expect(job.page.ratio, `${at}: the page scrolls`).toBe("scroll");
+        const media = job.film ? [job.film.src, job.film.poster] : [job.page!.src];
         for (const b of job.beats) {
           const kinds = [b.frames, b.rows, b.figures].filter(Boolean).length;
           expect(kinds, `${at}/${b.id}: one kind of evidence`).toBe(1);
@@ -1903,7 +1907,7 @@ describe("the workshop's shared beats (ADR-143)", () => {
           expect(b.line.length, `${at}/${b.id}: line`).toBeLessThanOrEqual(260);
           if (b.frames) {
             expect(b.frames.length, `${at}/${b.id}: frames`).toBeGreaterThanOrEqual(2);
-            expect(b.frames.length, `${at}/${b.id}: frames`).toBeLessThanOrEqual(3);
+            expect(b.frames.length, `${at}/${b.id}: frames`).toBeLessThanOrEqual(6);
             expect(new Set(b.frames.map((f) => f.ratio)).size, `${at}/${b.id}: one shape`).toBe(1);
             for (const f of b.frames) {
               media.push(f.src);
@@ -1911,7 +1915,7 @@ describe("the workshop's shared beats (ADR-143)", () => {
             }
           }
           if (b.rows) expect(b.rows.length, `${at}/${b.id}: rows`).toBeLessThanOrEqual(7);
-          if (b.figures) expect(b.figures.length, `${at}/${b.id}: figures`).toBeLessThanOrEqual(4);
+          if (b.figures) expect(b.figures.length, `${at}/${b.id}: figures`).toBeLessThanOrEqual(6);
         }
         for (const src of media) {
           expect(src, `${at}: self-hosted`).toMatch(/^\/arcs\//);
@@ -1919,11 +1923,13 @@ describe("the workshop's shared beats (ADR-143)", () => {
         }
         const text = JSON.stringify(job);
         expect(text, `${at}: no em dash`).not.toMatch(/\u2014/);
-        expect(text, `${at}: people by role`).not.toMatch(/\b(Daryna|Kate|Caroline|Bea|Nick)\b/);
+        expect(text, `${at}: people by role`).not.toMatch(
+          /\b(Daryna|Kate|Caroline|Bea|Nick|Georgia|Lottie|Sampson)\b/
+        );
         expect(text, `${at}: no money`).not.toMatch(/£|\$|€/);
       }
     }
-    expect(seen, "Suri's own case is broken down").toBeGreaterThan(0);
+    expect(seen, "Suri's own cases are broken down").toBeGreaterThan(1);
   });
 });
 

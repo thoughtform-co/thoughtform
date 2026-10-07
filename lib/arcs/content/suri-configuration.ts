@@ -1,6 +1,11 @@
 import type { ArcDef } from "../types";
 
-import { SURI_STUDIO_CONFIGURATION, suriRuns, UNDER_THE_GLASS } from "./shared/suriWork";
+import {
+  SURI_STUDIO_CONFIGURATION,
+  suriRuns,
+  UNDER_THE_GLASS,
+  EVERY_WORD_STAYS,
+} from "./shared/suriWork";
 import { whatFollows } from "./shared/whatFollows";
 import { theCatch } from "./shared/workshopFraming";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
@@ -54,7 +59,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
   hero: {
     eyebrow: "Thoughtform · Suri · Creative Intelligence Configuration",
     title: { pre: "Creative intelligence,", em: "at Suri." },
-    lede: "How the setup works, two real jobs made on it, and the same setup on three of Suri's workstreams.",
+    lede: "How the setup works, three real jobs made on it, and the same setup on three of Suri's workstreams.",
     actions: [
       { id: "start", label: "How it works", href: "#tool-and-collaborator", primary: true },
       { id: "practice", label: "In practice", href: "#in-practice-briefing" },
@@ -178,11 +183,11 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       id: "real-jobs",
       kind: "interstitial",
       variant: "callout",
-      eyebrow: "07 · Two real jobs",
-      menuLabel: "Two real jobs",
-      line: { pre: "Before Suri's workstreams,", em: "the whole setup on two real jobs." },
+      eyebrow: "07 · Three real jobs",
+      menuLabel: "Three real jobs",
+      line: { pre: "Before Suri's workstreams,", em: "the whole setup on three real jobs." },
       subline:
-        "Loop's 10-second Halloween ad, made in one evening, and Suri's own Black Friday teaser, cut from 31 raw clips. Switch between them on the bar.",
+        "Loop's Halloween ad, made in one evening, and two of Suri's own: the Black Friday teaser and the email skill. Switch between them on the bar.",
     },
 
     /* ── The cases, under one floating switch (ADR-148 U1, U5) ─────────────
@@ -203,6 +208,12 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       kind: "breakdown",
       worked: { group: "case", id: "under-the-glass", label: "Suri · Black Friday" },
       breakdown: UNDER_THE_GLASS,
+    },
+    {
+      id: "ews-top",
+      kind: "breakdown",
+      worked: { group: "case", id: "every-word-stays", label: "Suri · Email skill" },
+      breakdown: EVERY_WORD_STAYS,
     },
 
     /* ── 08 · In practice: three workstreams under one floating switch ──── */

@@ -13,6 +13,7 @@ import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import {
   SURI_RUNS,
   UNDER_THE_GLASS,
+  EVERY_WORD_STAYS,
   SURI_WORKED,
   SURI_WORKS,
   SURI_WORKSTREAM_ORDER,
@@ -269,9 +270,14 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     expect(cases.map((s) => `${s.kind}:${s.worked?.id}`)).toEqual([
       "prompt-to-loop:loop",
       "breakdown:under-the-glass",
+      "breakdown:every-word-stays",
     ]);
     const utg = cases[1];
     expect(utg.kind === "breakdown" && utg.breakdown).toBe(UNDER_THE_GLASS);
+    const ews = cases[2];
+    expect(ews.kind === "breakdown" && ews.breakdown).toBe(EVERY_WORD_STAYS);
+    const bridge = CONFIG.sections.find((s) => s.id === "real-jobs");
+    expect(bridge?.kind === "interstitial" && arcTitleText(bridge.line)).toMatch(/three real jobs/);
     const runs = CONFIG.sections.filter((s) => s.kind === "skill-run");
     expect(JSON.stringify(runs), "the teaser left the video tab").not.toContain("teaser");
   });

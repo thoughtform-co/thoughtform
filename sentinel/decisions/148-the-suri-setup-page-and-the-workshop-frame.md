@@ -198,6 +198,26 @@ looking at." The breakdown is the switched beat, and the cases are its tabs.
 - **A chapter inside a switched beat is the whole group** for the corner readout and the drawer, so
   "How Claude made it" holds over either case and its link never lands on a hidden panel.
 
+## Update 6 (2026-10-07, owner): the third case, Every Word Stays
+
+"Please add this case as well": the email skill made in Cowork on 6 and 7 October (an 11-step
+breakdown: one dentist's tips to a skill for every Suri email, five rounds, 36 checks, 3 dated
+cases). It joins the case bar as `Suri · Email skill`, condensed to the page and nine slides (the
+ask, look first, the rounds, text weight, one lead, her frame, seeing, the system, the skill;
+Deliver and Next fold into the last slide).
+
+- **A breakdown's hero may be a PAGE, not a film.** An email has no film, so `ArcBreakdown.film` is
+  optional beside `page`, exactly one (registry-pinned); a page hero scrolls in the film's own 9:16
+  window (`role="region"`, keyboard-scrollable, server markup).
+- **Two more still shapes.** `page` holds a whole tall page to the slide's height at its own width,
+  so pages of different shapes sit side by side at one height (the squinted pair, the four ways of
+  seeing); `scroll` is a 9:16 window the page scrolls in (the six rounds, the two mobiles). A `1:1`
+  still is now contained rather than cropped (a 600 × 710 option lost its foot to `cover`).
+- **The caps widen** to ten beats, six frames and six figures a slide; every slide still measures
+  one screen at 1470 × 830, and on a phone the stills go two to a row.
+- **People by role,** as before: the designer, a colleague who reviews, the creative lead; the
+  dentist is named only inside Suri's own email images. The registry bans the first names.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside

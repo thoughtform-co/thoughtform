@@ -1493,8 +1493,8 @@ export type ArcGuide =
 /* ── The skill run (ADR-148) ──────────────────────────────────────── */
 
 /**
- * One case, broken down (ADR-148 U5): the film as delivered, a few facts,
- * and the method in three to eight beats, condensed from the case's own
+ * One case, broken down (ADR-148 U5): the film (or the page) as delivered,
+ * a few facts, and the method in three to ten beats, condensed from the case's own
  * breakdown. People by role, never by name: the page is the client's, and
  * the record is shared.
  */
@@ -1504,8 +1504,11 @@ export interface ArcBreakdown {
   title: ArcTitle;
   /** ≤ 220. */
   sub: string;
-  /** The delivered film as a silent loop (`ArcClipLoop`), 9:16. */
-  film: ArcClip;
+  /** The delivered film as a silent loop (`ArcClipLoop`), 9:16. A case
+   *  with no film (an email) shows its `page` instead; exactly one. */
+  film?: ArcClip;
+  /** The delivered page, scrolling in the film's 9:16 window (ADR-148 U6). */
+  page?: ArcBreakdownFrame;
   /** Two to four, e.g. { label: "Length", value: "16.16 s" }. */
   facts: readonly ArcMetaRow[];
   beats: readonly ArcBreakdownBeat[];
@@ -1520,11 +1523,11 @@ export interface ArcBreakdownBeat {
   title: ArcTitle;
   /** The head's paragraph. ≤ 260. */
   line: string;
-  /** Two or three stills, side by side. */
+  /** Two to six stills, side by side, of one shape. */
   frames?: readonly ArcBreakdownFrame[];
   /** Two to seven key and value rows. */
   rows?: readonly ArcMetaRow[];
-  /** Two to four measured numbers. */
+  /** Two to six measured numbers. */
   figures?: readonly ArcMetaRow[];
 }
 
@@ -1534,8 +1537,10 @@ export interface ArcBreakdownFrame {
   alt: string;
   /** ≤ 40. */
   label: string;
-  /** The still's shape, which sets its box. */
-  ratio: "9:16" | "1:1" | "3:2";
+  /** The still's shape, which sets its box. `page`: a whole tall page,
+   *  held to the slide's height at its own width. `scroll`: a tall page in
+   *  a 9:16 window that scrolls (ADR-148 U6). */
+  ratio: "9:16" | "1:1" | "3:2" | "page" | "scroll";
   /** A before/after verdict: kept or sent back. */
   verdict?: "kept" | "rejected";
 }

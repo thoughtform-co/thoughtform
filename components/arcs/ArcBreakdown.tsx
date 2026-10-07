@@ -16,7 +16,7 @@ export function breakdownLength(section: ArcSectionOf<"breakdown">): number {
 }
 
 /**
- * ArcBreakdown — how Claude made one real piece of work (ADR-148 U5), as
+ * ArcBreakdown — how Claude made one real piece of work (ADR-148 U5, U6), as
  * slides in Prompt to Loop's own format: the shell is the same (`ArcBeat`,
  * the arc's own head, the `.ptl-sec` rhythm), so under the page's case switch
  * the two breakdowns read as one grammar. The hero carries the film beside
@@ -55,9 +55,15 @@ export function ArcBreakdown({
             motion={motion}
           />
           <div className="arc-job__top arc-reveal" {...rung(motion, 0.22)}>
-            <figure className="arc-job__film">
-              <ArcClipLoop clip={b.film} />
-            </figure>
+            {b.film ? (
+              <figure className="arc-job__film">
+                <ArcClipLoop clip={b.film} />
+              </figure>
+            ) : b.page ? (
+              <figure className="arc-job__film arc-job__film--page">
+                <ScrollWindow src={b.page.src} alt={b.page.alt} label={b.page.label} />
+              </figure>
+            ) : null}
             <div className="arc-job__head">
               <dl className="arc-job__facts">
                 {b.facts.map((f) => (
@@ -114,8 +120,12 @@ function Evidence({ beat }: { beat: ArcBreakdownBeat }) {
       <div className="arc-job__frames" data-case-frames={beat.frames[0].ratio}>
         {beat.frames.map((f) => (
           <figure key={f.src} className="arc-job__frame" data-case-verdict={f.verdict}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- self-hosted stills at their own size, the arcs' idiom */}
-            <img src={f.src} alt={f.alt} loading="lazy" decoding="async" />
+            {f.ratio === "scroll" ? (
+              <ScrollWindow src={f.src} alt={f.alt} label={f.label} />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element -- self-hosted stills at their own size, the arcs' idiom */
+              <img src={f.src} alt={f.alt} loading="lazy" decoding="async" />
+            )}
             <figcaption>
               {f.verdict ? (
                 <b>{f.verdict === "kept" ? BREAKDOWN_KEPT : BREAKDOWN_REJECTED}</b>
@@ -148,5 +158,20 @@ function Evidence({ beat }: { beat: ArcBreakdownBeat }) {
         </div>
       ))}
     </dl>
+  );
+}
+
+/**
+ * A tall page (an email, a phone frame) in a fixed window that scrolls
+ * (ADR-148 U6): the page is read at its own width, top first, and the reader
+ * scrolls it the way the case did. Server markup; `tabIndex` lets the
+ * keyboard scroll it, and the region names what is inside.
+ */
+function ScrollWindow({ src, alt, label }: { src: string; alt: string; label: string }) {
+  return (
+    <div className="arc-job__scroll" role="region" aria-label={`${label}, scrolls`} tabIndex={0}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- self-hosted stills at their own size, the arcs' idiom */}
+      <img src={src} alt={alt} loading="lazy" decoding="async" />
+    </div>
   );
 }

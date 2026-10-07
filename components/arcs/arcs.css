@@ -11059,16 +11059,69 @@ html[data-theme="light"] .arc-root .arc-sf__n {
 }
 .arc-job__frames[data-case-frames="1:1"] img {
   aspect-ratio: 1;
+  /* A near-square crop (a 600 × 710 option) is shown whole, never cut. */
+  object-fit: contain;
 }
 .arc-job__frames[data-case-frames="3:2"] img {
   aspect-ratio: 3 / 2;
+}
+/* A tall page, two ways (ADR-148 U6). `page`: whole, held to the slide's
+   height at its own width, so pages of different shapes sit side by side
+   at one height. `scroll`: a 9:16 window the page scrolls in, top first. */
+.arc-job__frames[data-case-frames="page"] {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: auto;
+}
+.arc-job__frames[data-case-frames="page"] .arc-job__frame {
+  flex: 0 0 auto;
+}
+.arc-job__frames[data-case-frames="page"] img {
+  width: auto;
+  max-width: none;
+  height: calc(100svh - 480px);
+  min-height: 240px;
+}
+.arc-job__frames[data-case-frames="scroll"] {
+  grid-auto-columns: minmax(0, calc((100svh - 440px) * 9 / 16));
+  justify-content: center;
+}
+.arc-job__scroll {
+  aspect-ratio: 9 / 16;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+  scrollbar-width: thin;
+  scrollbar-color: var(--arc-ink-40) transparent;
+}
+.arc-job__scroll img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 0;
+  aspect-ratio: auto;
+}
+.arc-job__scroll:focus-visible {
+  outline: 1px solid var(--gold-line, rgba(202, 165, 84, 0.34));
+  outline-offset: 2px;
+}
+.arc-job__film--page {
+  overflow: visible;
+  border: 0;
+  background: none;
+}
+.arc-job__film--page .arc-job__scroll {
+  height: 100%;
 }
 .arc-job__frame figcaption b {
   margin-right: var(--space-sm);
   font-weight: var(--weight-text);
   color: var(--arc-ink-40);
 }
-.arc-job__frame[data-case-verdict="kept"] img {
+.arc-job__frame[data-case-verdict="kept"] img,
+.arc-job__frame[data-case-verdict="kept"] .arc-job__scroll {
   border-color: var(--gold-line, rgba(202, 165, 84, 0.34));
 }
 .arc-job__frame[data-case-verdict="kept"] figcaption b {
@@ -11127,9 +11180,18 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   .arc-job__figures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* On a phone the stills go two to a row rather than one thin row. */
   .arc-job__frames[data-case-frames="9:16"],
-  .arc-job__frames[data-case-frames="1:1"] {
-    grid-auto-columns: minmax(0, 1fr);
+  .arc-job__frames[data-case-frames="1:1"],
+  .arc-job__frames[data-case-frames="scroll"] {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .arc-job__frames[data-case-frames="page"] {
+    justify-content: flex-start;
+  }
+  .arc-job__frames[data-case-frames="page"] img {
+    height: 56svh;
   }
 }
 @media (max-width: 640px) {
