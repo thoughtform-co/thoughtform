@@ -1,7 +1,7 @@
 /**
  * generate-proof-mockups — image-model mockup slates for the proof pass.
  *
- * Runs a curated prompt manifest against Gemini (Nano Banana 2) and OpenAI
+ * Runs a curated prompt manifest against Gemini (Nano Banana 2 Lite) and OpenAI
  * (gpt-image-2) using plain `fetch` on Node 20+, so no npm deps land in the
  * lockfile (npm-supply-chain-defense). Reads GEMINI_API_KEY and OPENAI_API_KEY
  * from .env.local (falling back to .env). Writes PNGs into
@@ -10,7 +10,7 @@
  * Usage:
  *   node scripts/generate-proof-mockups.mjs                  # all directions, both models
  *   node scripts/generate-proof-mockups.mjs --only r01a      # single id
- *   node scripts/generate-proof-mockups.mjs --model gemini   # only NB2
+ *   node scripts/generate-proof-mockups.mjs --model gemini   # only NB2 Lite
  *   node scripts/generate-proof-mockups.mjs --model openai   # only gpt-image-2
  *
  * Prompts are grounded in the Thoughtform token set (void black, parchment
@@ -462,7 +462,9 @@ async function callGemini(env, item) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY missing from env");
 
-  const model = "gemini-2.5-flash-image";
+  // 2026-10-07: gemini-2.5-flash-image shuts down 2027-03-15; Google names
+  // gemini-3.1-flash-lite-image (Nano Banana 2 Lite) as its replacement.
+  const model = "gemini-3.1-flash-lite-image";
   const url =
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent` +
     `?key=${encodeURIComponent(key)}`;
