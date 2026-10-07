@@ -1,0 +1,957 @@
+/* ═══════════════════════════════════════════════════════════════════
+   /home-sessions — the page's own composition (ADR-150)
+
+   A fourth composition, not a fourth grammar: the lattice's TOKENS and its
+   frame MECHANISM (`.lat-frame`, components/lattice/lattice.css) are shared,
+   and this sheet is the page's SKIN, prefixed `hs-`, every length a
+   `--lat-*` / `--space-*` token and every colour a ramp step off
+   `--dawn-rgb` / `--void-deep-rgb` / `--gold-*`, which ADR-058 swaps, so one
+   declaration paints both themes. theme.css re-derives the few alphas that
+   recede (`html[data-theme="light"] .hs-root`).
+
+   ⚠ NO OPEN DIVIDERS (owner, 2026-10-07: "what are these dividers?"). A
+   line on this page closes a box or rules inside one; a section is divided
+   from the next by AIR, never a seam. The head carries no underline.
+
+   ⚠ FOUR RATCHETS PIN THIS SHEET AT ZERO from the hour it was written:
+   `lattice-ratchet` (no `clip-path: polygon(` — every cut is `.lat-frame`'s;
+   spacing on the 8px scale; every `font-size` a single `var()`; `@media`
+   only on the ladder), `type-material-tokens` (tracking by role, nothing
+   above `--weight-lit`, never PP Neue Montreal uppercased),
+   `theme-css-sweep` and `phone-viewport-units` (`svh`, never `dvh`).
+   ═══════════════════════════════════════════════════════════════════ */
+
+.hs-root {
+  /* the tile's day: a display figure, larger than the ladder's display rung */
+  --hs-date: clamp(64px, 6.4vw, 120px);
+  /* the dial's gold: a fill for the lit sector, a softer one for line work */
+  --hs-gold-fill: rgba(var(--gold-rgb), 0.2);
+  --hs-gold-soft: color-mix(in srgb, var(--gold-line) 45%, transparent);
+  --hs-line: rgba(var(--dawn-rgb), 0.32);
+  --hs-line-2: rgba(var(--dawn-rgb), 0.2);
+  --hs-tick: rgba(var(--dawn-rgb), 0.4);
+  --hs-well: rgba(var(--dawn-rgb), 0.07);
+  --hs-dots: rgba(var(--dawn-rgb), 0.055);
+  --hs-glyph: rgba(var(--dawn-rgb), 0.16);
+  --hs-glyph-ink: rgba(var(--dawn-rgb), 0.82);
+  --hs-bed: rgba(var(--void-deep-rgb), 0.72);
+  position: relative;
+  background: var(--void);
+  color: var(--lat-ink);
+  /* ⚠ DECLARED, NEVER INHERITED: the body's family is IBM Plex Mono
+     (`--font-mono`), and anything here that letters without declaring its
+     own face would get a third family (ADR-067) */
+  font-family: var(--font-pp-neue-montreal);
+  overflow-x: clip;
+}
+
+/* ── 1 · The hero — landing.css's `.hero__*`, with three `hs-` parts ── */
+.hs-hero__eyebrow {
+  margin: 0 0 var(--space-lg);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+/* the gold emphasis is TEXT, so it takes the ink rung (byte-equal to
+   `--gold` in dark; the raw gold reads 1.8:1 on parchment) */
+.hs-hero .hero__headline em {
+  font-style: normal;
+  color: var(--gold-ink);
+}
+/* landing.css letters the hero at literal trackings (.005em, .01em, .095em,
+   pinned in its own ratchet as the homepage's debt); this page takes the role
+   tokens, a difference of under a hundredth of an em */
+.hs-hero .hero__headline,
+.hs-hero .hero__type-cursor,
+.hs-hero .hero__cta__arrow {
+  letter-spacing: var(--track-copy);
+}
+/* gold that is READ takes the ink rung (byte-equal to `--gold` in dark):
+   the ghost button's arrow and the typing cursor read 1.83:1 on parchment */
+.hs-hero .hero__cta__btn--ghost .hero__cta__arrow,
+.hs-hero .hero__type-cursor {
+  color: var(--gold-ink);
+}
+.hs-hero__readout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0 0;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--lat-seam);
+  background: var(--hs-bed);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink);
+}
+.hs-hero__pip {
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+}
+
+/* ── 2 · The section — opaque, on a faint dot field, divided by air ── */
+.hs-sec,
+.hs-field {
+  position: relative;
+  z-index: 1;
+  background-color: var(--void);
+  background-image: radial-gradient(var(--hs-dots) 1px, transparent 1.5px);
+  background-size: var(--space-lg) var(--space-lg);
+}
+.hs-sec {
+  padding-block: var(--lat-sec-pad);
+}
+.hs-band {
+  position: relative;
+  padding-inline: var(--lat-margin);
+}
+.hs-band--wide {
+  padding-inline: var(--lat-wide-margin);
+}
+
+/* the head: an ordinal tab, the kicker, the title — no rule under it */
+.hs-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-lg);
+  row-gap: var(--space-sm);
+  align-items: start;
+  margin-bottom: var(--space-3xl);
+}
+.hs-head__ord {
+  grid-row: 1 / span 3;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink);
+}
+.hs-head__kicker {
+  grid-column: 2;
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.hs-head__title {
+  grid-column: 2;
+  margin: 0;
+  max-width: 24ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-title);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.08;
+  color: var(--lat-ink);
+}
+.hs-head__sub {
+  grid-column: 2;
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-lede);
+  line-height: 1.45;
+  color: var(--lat-ink-2);
+}
+
+/* a figure's caption: mono chrome, FIG. n on the left, its span on the right */
+.hs-fig__cap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.hs-fig__cap > span {
+  white-space: nowrap;
+}
+
+/* the one-shot reveal (useArcReveal on `.hs-reveal`): content is visible
+   by default and the script opts INTO the hidden state */
+.is-hs-js .hs-reveal {
+  opacity: 0;
+  transform: translateY(var(--space-lg));
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+}
+.is-hs-js .hs-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── 3 · 01 The morning — the pinned dial beside its four steps ─────── */
+.hs-morning__body {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+}
+.hs-morning__fig {
+  grid-column: 1 / span 6;
+  position: sticky;
+  top: var(--lat-rung-2);
+  margin: 0;
+}
+.hs-dial {
+  position: relative;
+  width: min(calc(100% - 2 * var(--space-2xl)), 66svh);
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
+.hs-dial__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hs-dial__svg path,
+.hs-dial__svg line {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1;
+}
+.hs-dial__disc {
+  fill: var(--void);
+}
+.hs-ink--line {
+  stroke: var(--hs-line);
+}
+.hs-ink--line2 {
+  stroke: var(--hs-line-2);
+}
+.hs-ink--gold {
+  stroke: var(--gold-line);
+}
+.hs-ink--gold-soft {
+  stroke: var(--hs-gold-soft);
+}
+.hs-dial__tick {
+  stroke: var(--hs-tick);
+}
+.hs-dial__svg .hs-dial__stub {
+  stroke: var(--lat-ink-2);
+  stroke-width: 1.5;
+}
+.hs-dial__svg .hs-dial__wedge {
+  fill: transparent;
+  transition: fill 0.45s var(--ease-out);
+}
+.hs-dial__svg .hs-dial__arc {
+  stroke: transparent;
+  stroke-width: 2;
+  transition: stroke 0.45s var(--ease-out);
+}
+.hs-dial__hand {
+  stroke: var(--hs-line-2);
+  transition: stroke 0.45s var(--ease-out);
+}
+.hs-dial__leader {
+  stroke: var(--hs-line-2);
+  transition: stroke 0.45s var(--ease-out);
+}
+.hs-dial__label {
+  position: absolute;
+  left: calc(var(--ax) * 100%);
+  top: calc(var(--at) * 100%);
+  transform: translate(var(--space-sm), -50%);
+  white-space: nowrap;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+  transition: color 0.45s var(--ease-out);
+}
+.hs-dial__label[data-side="left"] {
+  transform: translate(calc(-100% - var(--space-sm)), -50%);
+}
+.hs-dial__hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-title);
+  letter-spacing: var(--track-label);
+  color: var(--lat-ink);
+}
+.hs-dial__hub-n {
+  display: none;
+}
+
+/* the lit movement — the section's `data-step`, written by MorningDial; the
+   server renders the last one, so a still and a no-JS read show it whole */
+.hs-morning[data-step="0"] .hs-dial__sector[data-i="0"] .hs-dial__wedge,
+.hs-morning[data-step="1"] .hs-dial__sector[data-i="1"] .hs-dial__wedge,
+.hs-morning[data-step="2"] .hs-dial__sector[data-i="2"] .hs-dial__wedge,
+.hs-morning[data-step="3"] .hs-dial__sector[data-i="3"] .hs-dial__wedge {
+  fill: var(--hs-gold-fill);
+}
+.hs-morning[data-step="0"] .hs-dial__sector[data-i="0"] .hs-dial__arc,
+.hs-morning[data-step="1"] .hs-dial__sector[data-i="1"] .hs-dial__arc,
+.hs-morning[data-step="2"] .hs-dial__sector[data-i="2"] .hs-dial__arc,
+.hs-morning[data-step="3"] .hs-dial__sector[data-i="3"] .hs-dial__arc,
+.hs-morning[data-step="0"] .hs-dial__sector[data-i="0"] .hs-dial__hand,
+.hs-morning[data-step="1"] .hs-dial__sector[data-i="1"] .hs-dial__hand,
+.hs-morning[data-step="2"] .hs-dial__sector[data-i="2"] .hs-dial__hand,
+.hs-morning[data-step="3"] .hs-dial__sector[data-i="3"] .hs-dial__hand,
+.hs-morning[data-step="0"] .hs-dial__sector[data-i="0"] .hs-dial__leader,
+.hs-morning[data-step="1"] .hs-dial__sector[data-i="1"] .hs-dial__leader,
+.hs-morning[data-step="2"] .hs-dial__sector[data-i="2"] .hs-dial__leader,
+.hs-morning[data-step="3"] .hs-dial__sector[data-i="3"] .hs-dial__leader {
+  stroke: var(--gold-line);
+}
+.hs-morning[data-step="0"] .hs-dial__label[data-i="0"],
+.hs-morning[data-step="1"] .hs-dial__label[data-i="1"],
+.hs-morning[data-step="2"] .hs-dial__label[data-i="2"],
+.hs-morning[data-step="3"] .hs-dial__label[data-i="3"] {
+  color: var(--gold-ink);
+}
+.hs-morning[data-step="0"] .hs-dial__hub-n[data-i="0"],
+.hs-morning[data-step="1"] .hs-dial__hub-n[data-i="1"],
+.hs-morning[data-step="2"] .hs-dial__hub-n[data-i="2"],
+.hs-morning[data-step="3"] .hs-dial__hub-n[data-i="3"] {
+  display: block;
+}
+
+.hs-steps {
+  grid-column: 8 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hs-step {
+  display: grid;
+  align-content: center;
+  row-gap: var(--space-md);
+  min-height: 52svh;
+  transition: opacity 0.45s var(--ease-out);
+}
+.hs-step__n {
+  justify-self: start;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  color: var(--lat-ink-2);
+  transition:
+    color 0.45s var(--ease-out),
+    border-color 0.45s var(--ease-out);
+}
+.hs-step__name {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-title);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.1;
+}
+.hs-step__body {
+  margin: 0;
+  max-width: 40ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-lede);
+  line-height: 1.45;
+  color: var(--lat-ink-2);
+}
+/* the steps not being read recede — only once the script runs, so a
+   reader without it sees four equal steps */
+.is-hs-js .hs-morning .hs-step.is-in {
+  opacity: 0.38;
+}
+.is-hs-js .hs-morning[data-step="0"] .hs-step[data-i="0"],
+.is-hs-js .hs-morning[data-step="1"] .hs-step[data-i="1"],
+.is-hs-js .hs-morning[data-step="2"] .hs-step[data-i="2"],
+.is-hs-js .hs-morning[data-step="3"] .hs-step[data-i="3"] {
+  opacity: 1;
+}
+.hs-morning[data-step="0"] .hs-step[data-i="0"] .hs-step__n,
+.hs-morning[data-step="1"] .hs-step[data-i="1"] .hs-step__n,
+.hs-morning[data-step="2"] .hs-step[data-i="2"] .hs-step__n,
+.hs-morning[data-step="3"] .hs-step[data-i="3"] .hs-step__n {
+  color: var(--gold-ink);
+  border-color: var(--gold-line);
+}
+
+/* ── 4 · 02 The dates — one housing, an axis, four tall tiles ───────── */
+.hs-housing__meta {
+  color: var(--lat-ink-dim);
+}
+.hs-axis {
+  position: relative;
+  height: var(--space-4xl);
+  margin: var(--lat-pad-cell) var(--lat-pad-cell) 0;
+}
+.hs-axis__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 62%;
+  height: 1px;
+  background: var(--lat-seam);
+}
+.hs-axis__tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--x) * 100%);
+  border-left: 1px dotted var(--lat-rule);
+}
+.hs-axis__month {
+  position: absolute;
+  top: 0;
+  left: var(--space-xs);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  color: var(--lat-ink-dim);
+}
+.hs-axis__mark {
+  position: absolute;
+  left: calc(var(--x) * 100%);
+  top: 62%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1px solid var(--lat-ink-2);
+  background: var(--void);
+}
+.hs-axis__mark[data-lit] {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.hs-axis__mark[data-held] {
+  border-color: var(--lat-seam);
+}
+.hs-axis__now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--x) * 100%);
+  border-left: 1px dashed var(--lat-ink-2);
+}
+.hs-axis__now-label {
+  position: absolute;
+  bottom: 0;
+  left: var(--space-xs);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink-2);
+}
+
+.hs-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  padding: var(--lat-pad-cell);
+  list-style: none;
+}
+.hs-tiles__item {
+  display: flex;
+}
+.hs-tile {
+  --lat-frame-ground: var(--lat-plate-thin);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  min-height: clamp(280px, 38svh, 440px);
+  padding: var(--lat-pad-cell);
+  color: var(--lat-ink);
+  text-decoration: none;
+  transition: transform 0.25s var(--ease-out);
+}
+a.hs-tile:hover {
+  --lat-frame-line: var(--lat-lip-lit);
+  transform: translateY(-2px);
+}
+/* a clip cuts an outline drawn outside the box, so the ring sits inside it */
+a.hs-tile:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: -8px;
+}
+.hs-tile__top {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.hs-tile__status {
+  color: var(--lat-ink-2);
+}
+.hs-tile__date {
+  display: grid;
+  row-gap: var(--space-sm);
+  margin-top: auto;
+}
+.hs-tile__day {
+  font-family: var(--font-pt-mono);
+  font-size: var(--hs-date);
+  letter-spacing: var(--track-copy);
+  line-height: 0.9;
+  color: var(--lat-ink);
+}
+.hs-tile__when {
+  display: grid;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink-2);
+}
+.hs-tile__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.hs-chip {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink-2);
+}
+.hs-tile__cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink);
+  transition:
+    background 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
+}
+a.hs-tile:hover .hs-tile__cta {
+  border-color: var(--gold-line);
+}
+/* the next morning: the one lit tile — a gold wash, a gold day, the one
+   filled button on the housing */
+.hs-tiles__item[data-state="next"] .hs-tile {
+  background:
+    linear-gradient(rgba(var(--gold-rgb), 0.08), rgba(var(--gold-rgb), 0.08)), var(--lat-plate-thin);
+}
+.hs-tiles__item[data-state="next"] .hs-tile__status,
+.hs-tiles__item[data-state="next"] .hs-tile__day {
+  color: var(--gold-ink);
+}
+.hs-tiles__item[data-state="next"] .hs-tile__cta {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--gold-contrast);
+}
+/* a held morning: no ground, its ink receded, its button dashed and inert */
+.hs-tiles__item[data-state="held"] .hs-tile {
+  --lat-frame-ground: transparent;
+}
+.hs-tiles__item[data-state="held"] .hs-tile__day,
+.hs-tiles__item[data-state="held"] .hs-tile__status {
+  color: var(--lat-ink-dim);
+}
+.hs-tiles__item[data-state="held"] .hs-tile__cta {
+  border-style: dashed;
+  color: var(--lat-ink-dim);
+}
+.hs-housing__cta {
+  color: var(--lat-ink);
+  text-decoration: none;
+}
+.hs-housing__cta:hover,
+.hs-housing__cta:focus-visible {
+  color: var(--gold-ink);
+}
+
+/* ── 5 · The field — the mornings as ASCII numerals ─────────────────── */
+.hs-field {
+  padding-block: var(--space-2xl);
+}
+.hs-field__frame {
+  position: relative;
+  padding-bottom: var(--space-xl);
+}
+.hs-field__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.hs-field__row {
+  font-family: var(--font-pt-mono);
+  fill: var(--hs-glyph);
+  white-space: pre;
+}
+.hs-field__ink {
+  fill: var(--hs-glyph-ink);
+}
+.hs-field__lit {
+  fill: var(--gold-line);
+}
+.hs-field__label {
+  position: absolute;
+  left: calc(var(--ax) * 100%);
+  top: calc(var(--at) * 100%);
+  transform: translate(-50%, var(--space-sm));
+  white-space: nowrap;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.hs-field__label[data-lit] {
+  color: var(--gold-ink);
+}
+/* it arrives row by row, once — the frame itself does not move */
+.is-hs-js .hs-field__frame.hs-reveal {
+  transform: none;
+  opacity: 1;
+}
+.is-hs-js .hs-field__frame .hs-field__row {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out) calc(var(--i) * 40ms);
+}
+.is-hs-js .hs-field__frame.is-in .hs-field__row {
+  opacity: 1;
+}
+
+/* ── 6 · 03 The table — the photograph, the plan, the readout ───────── */
+.hs-table__body {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--lat-air);
+  align-items: start;
+}
+.hs-photo {
+  --lat-frame-ground: var(--void);
+  grid-column: 1 / span 6;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+.hs-photo picture {
+  display: contents;
+}
+.hs-photo__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 32%;
+  filter: grayscale(1) contrast(1.04);
+}
+.hs-photo__corner {
+  position: absolute;
+  z-index: 2;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--hs-bed);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink);
+}
+.hs-photo__corner[data-corner="tl"] {
+  top: var(--space-md);
+  left: var(--space-md);
+}
+.hs-photo__corner[data-corner="tr"] {
+  top: calc(var(--lat-ch-card) + var(--space-md));
+  right: var(--space-md);
+}
+.hs-photo__corner[data-corner="bl"] {
+  bottom: var(--space-md);
+  left: var(--space-md);
+}
+.hs-photo__corner[data-corner="br"] {
+  bottom: var(--space-md);
+  right: var(--space-md);
+}
+.hs-table__side {
+  grid-column: 7 / -1;
+  display: grid;
+  row-gap: var(--space-2xl);
+}
+.hs-plan {
+  margin: 0;
+}
+.hs-plan__stage {
+  position: relative;
+  aspect-ratio: 320 / 224;
+}
+.hs-plan__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hs-plan__svg rect,
+.hs-plan__svg line {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1;
+}
+.hs-plan__table {
+  fill: var(--hs-well);
+  stroke: var(--lat-ink-2);
+}
+.hs-plan__inset {
+  fill: none;
+  stroke: var(--lat-rule);
+  stroke-dasharray: 2 4;
+}
+.hs-plan__seat {
+  fill: none;
+  stroke: var(--lat-ink-dim);
+}
+.hs-plan__seat[data-role="host"] {
+  fill: var(--lat-ink-2);
+  stroke: var(--lat-ink-2);
+}
+.hs-plan__seat[data-role="you"] {
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+.hs-plan__dim {
+  stroke: var(--lat-seam);
+}
+.hs-plan__label {
+  position: absolute;
+  left: calc(var(--ax) * 100%);
+  top: calc(var(--at) * 100%);
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.hs-plan__label[data-id="table"] {
+  transform: translate(-50%, -50%);
+}
+.hs-plan__label[data-id="you"] {
+  color: var(--gold-ink);
+}
+
+/* the readout: each row a filled key framed beside its value, set right
+   (the travel-data readout, ADR-118 U3) */
+.hs-readout {
+  display: grid;
+  row-gap: var(--space-xs);
+  margin: 0;
+}
+.hs-readout__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+.hs-readout__key {
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--lat-seam);
+  background: var(--hs-well);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-2);
+}
+.hs-readout__value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--lat-seam);
+  border-left: 0;
+  text-align: right;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-copy);
+  color: var(--lat-ink);
+}
+
+/* ── 7 · 04 Reserve — the ask as one lit housing ────────────────────── */
+.hs-ask__body {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--lat-air);
+  align-items: end;
+  padding: var(--space-3xl) var(--lat-pad-cell);
+}
+.hs-ask__copy {
+  grid-column: 1 / span 7;
+  display: grid;
+  row-gap: var(--space-md);
+}
+.hs-ask__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-display);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.04;
+  color: var(--lat-ink);
+}
+.hs-ask__sub {
+  margin: 0;
+  max-width: 44ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-lede);
+  line-height: 1.45;
+  color: var(--lat-ink-2);
+}
+.hs-ask__act {
+  grid-column: 8 / -1;
+  display: grid;
+  justify-items: end;
+  row-gap: var(--space-md);
+}
+.hs-cta {
+  --lat-frame-ground: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-xl);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-lg);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold-contrast);
+  transition: transform 0.2s var(--ease-out);
+}
+.hs-cta:hover {
+  transform: translateY(-2px);
+}
+.hs-cta:focus-visible {
+  outline: 2px solid var(--gold-contrast);
+  outline-offset: -6px;
+}
+.hs-ask__mail {
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  color: var(--lat-ink-2);
+}
+.hs-ask__mail:hover,
+.hs-ask__mail:focus-visible {
+  color: var(--gold-ink);
+}
+
+/* ── 8 · The close — the site footer, as every page ends (ADR-127) ─────
+   The padding pair the footer's plate negates, declared here as the
+   sheet's close declares it. */
+.hs-close {
+  --station-pad-top: clamp(96px, 12svh, 168px);
+  --station-pad-bottom: 0px;
+  --ft-pad-top: max(var(--station-pad-top), var(--mobile-chrome-top, 0px));
+  --ft-pad-bottom: max(var(--station-pad-bottom), var(--mobile-chrome-bottom, 0px));
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: var(--ft-pad-top) var(--hud-content-inset, 48px) var(--ft-pad-bottom);
+  background: var(--void);
+}
+.hs-close > .ft-foot {
+  flex: 1 1 auto;
+  align-self: stretch;
+}
+
+/* ── 9 · Reduced motion: every final state, no transition ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  .is-hs-js .hs-reveal,
+  .is-hs-js .hs-field__frame .hs-field__row {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .hs-dial__svg .hs-dial__wedge,
+  .hs-dial__svg .hs-dial__arc,
+  .hs-dial__hand,
+  .hs-dial__leader,
+  .hs-dial__label,
+  .hs-step,
+  .hs-tile,
+  .hs-cta {
+    transition: none;
+  }
+}
+
+/* ── 10 · The phone — one column, the figures above their text ─────── */
+@media (max-width: 960px) {
+  .hs-morning__body,
+  .hs-table__body,
+  .hs-ask__body {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-2xl);
+  }
+  .hs-morning__fig,
+  .hs-steps,
+  .hs-photo,
+  .hs-table__side,
+  .hs-ask__copy,
+  .hs-ask__act {
+    grid-column: 1 / -1;
+  }
+  .hs-morning__fig {
+    position: static;
+  }
+  /* the labels hang outside the rim, so the dial leaves them a margin */
+  .hs-dial {
+    width: min(calc(100% - 2 * var(--space-3xl)), 320px);
+  }
+  .hs-step {
+    min-height: 0;
+    padding-block: var(--space-lg);
+  }
+  .is-hs-js .hs-morning .hs-step.is-in {
+    opacity: 1;
+  }
+  .hs-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hs-ask__act {
+    justify-items: start;
+  }
+}
+@media (max-width: 640px) {
+  .hs-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hs-tile {
+    min-height: 0;
+  }
+  .hs-field__label,
+  .hs-axis__month,
+  .hs-housing__meta {
+    display: none;
+  }
+}

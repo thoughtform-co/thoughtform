@@ -46,6 +46,16 @@ const SHEETS = [
   /* The arcs instrument (ADR-118): it fills the chosen row with gold and
      knocks its ink out, which is the pair this sweep exists to watch. */
   "components/sheet/instrument.css",
+  /* The lattice (ADR-149): the grid's tokens — a lip through `--gold-line`,
+     grounds off `--void-deep-rgb` — registered the hour it was written. */
+  "app/styles/lattice.css",
+  /* The lattice's recipes (ADR-149 Phase 1): the frame's gold lip and wash
+     over dawn-ramp grounds — registered the hour it was written. */
+  "components/lattice/lattice.css",
+  /* The Home sessions page (ADR-150): a gold-filled tile and button and a
+     lit dial sector over dawn-ramp grounds — registered the hour it was
+     written. */
+  "components/sessions/sessions.css",
   "components/landing/v7/theme.css",
 ];
 

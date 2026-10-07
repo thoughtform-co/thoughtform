@@ -21,7 +21,16 @@ import { describe, expect, it } from "vitest";
 const ROOT = join(__dirname, "..", "..");
 /* ADR-114 adds the sheet: it mounts the arcs' header and rail instruments
    and is served on three public routes, so it takes the same doctrine. */
-const GUARDED = ["components/arcs", "lib/arcs", "components/sheet", "lib/sheet"];
+/* ADR-150 adds the Home sessions page: it mounts the same header, corners
+   and scroll writer on a public route, so it takes the same doctrine. */
+const GUARDED = [
+  "components/arcs",
+  "lib/arcs",
+  "components/sheet",
+  "lib/sheet",
+  "components/sessions",
+  "lib/sessions",
+];
 
 /** Bare specifiers no file under the guarded trees may STATICALLY import. */
 const BANNED = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/, /^@supabase\//];
@@ -124,15 +133,18 @@ describe("the arcs' import doctrine", () => {
        that imported a registry would put every client's name and lede into
        a PUBLIC chunk the gate cannot see — the instrument's controller reads
        everything it knows off the DOM for exactly this reason. */
-    const REGISTRY =
-      /^@\/lib\/(arcs|cases|sessions|musings)(\/|$)|^@\/lib\/sheet\/(arcs|home-sessions|musings)$/;
+    const REGISTRY = /^@\/lib\/(arcs|cases|sessions|musings)(\/|$)|^@\/lib\/sheet\/(arcs|musings)$/;
     const clientFiles = files.filter((f) => /^\s*["']use client["']/.test(readFileSync(f, "utf8")));
     const rels = clientFiles.map((f) => relative(ROOT, f).split(sep).join("/"));
     // A guard that walks nothing is worse than none: the controller must be in it.
     expect(rels).toContain("components/sheet/SheetInstrumentController.tsx");
+    // …and so must the Home sessions page's two leaves (ADR-150): its copy is
+    // server HTML, and a client file importing the record would ship it twice.
+    expect(rels).toContain("components/sessions/SessionsShell.tsx");
+    expect(rels).toContain("components/sessions/MorningDial.tsx");
     const offenders: string[] = [];
     for (const [i, file] of clientFiles.entries()) {
-      if (!rels[i].startsWith("components/sheet/")) continue;
+      if (!/^components\/(sheet|sessions)\//.test(rels[i])) continue;
       for (const spec of staticSpecifiers(readFileSync(file, "utf8")))
         if (REGISTRY.test(spec)) offenders.push(`${rels[i]} → ${spec}`);
     }

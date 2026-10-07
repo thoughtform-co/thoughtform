@@ -21,7 +21,6 @@ import { arcsOf } from "@/lib/arcs/registry";
 import { MUSINGS_COORDS } from "@/lib/musings/mastheadData";
 import type { MusingPost } from "@/lib/musings/types";
 import { clientSheetSections } from "@/lib/sheet/arcs";
-import { homeSessionsSections } from "@/lib/sheet/home-sessions";
 import { MUSINGS_CORNER, musingPostSections, musingsIndexSections } from "@/lib/sheet/musings";
 import type { SheetSection } from "@/lib/sheet/types";
 
@@ -95,7 +94,6 @@ describe("the musings head is the masthead's (ADR-129)", () => {
       expect(s.survey!.state).toBe(s.survey!.state.toUpperCase());
     }
     const others: Record<string, SheetSection[]> = {
-      "home-sessions": homeSessionsSections(NOW),
       kit: kitSections(NOW),
       ...Object.fromEntries(
         CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0).map((c) => [
@@ -138,9 +136,7 @@ describe("the musings head is the masthead's (ADR-129)", () => {
       expect(tags.length, cls).toBeGreaterThan(0);
       for (const t of tags) expect(t, cls).toContain('aria-hidden="true"');
     }
-    const plain = renderToStaticMarkup(
-      <SheetSplit section={splitOf(homeSessionsSections(NOW))!} />
-    );
+    const plain = renderToStaticMarkup(<SheetSplit section={splitOf(kitSections(NOW))!} />);
     expect(plain).toContain("sh-split__name");
     expect(plain).not.toContain("data-sh-survey");
     expect(plain).not.toContain("sh-split__desig");
@@ -168,11 +164,7 @@ describe("the musings head is the masthead's (ADR-129)", () => {
       "app/(marketing)/musings/[slug]/page.tsx",
     ])
       expect(read(route), route).toContain("corner={MUSINGS_CORNER}");
-    for (const route of [
-      "app/(marketing)/home-sessions/page.tsx",
-      "app/(marketing)/arcs/[slug]/page.tsx",
-      "app/(marketing)/arcs/page.tsx",
-    ])
+    for (const route of ["app/(marketing)/arcs/[slug]/page.tsx", "app/(marketing)/arcs/page.tsx"])
       expect(read(route), route).not.toContain("corner=");
     const nav = read("components/arcs/ArcHudNav.tsx");
     expect(nav).toMatch(

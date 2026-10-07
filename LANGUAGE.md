@@ -116,6 +116,49 @@ frames, the stations, the buttons, the rows and the readouts, each drawn once at
 the size it ships at. A kit documents a grammar; a **lab** compares directions in
 it; a **wave** is one graded set of stills of them. _Avoid_: style guide.
 
+**Lattice** — The brand system GRID (ADR-149): twelve columns in the editorial
+band, thirteen rungs read off the HUD rail's tick ladder, one spacing scale named
+by role, one chamfer ladder, one line law, one frame recipe. The floor UNDER the
+site's three grammars (the corridor, the arcs decks, the sheet), not a fourth:
+tokens and mechanisms are shared, skins stay copied. `app/styles/lattice.css`,
+`components/lattice/**`. _Avoid_: grid system (there are two: this one for scroll
+documents, the 9×17 for fixed canvases), layout.
+
+**Rung** — A HEIGHT on the rail's thirteen-tick ladder (`--lat-rung-0 … 12`,
+majors at 4 and 8), never a type size. The casefile's `--fl-t0` is a type size
+and its `--fl-t6` a tick height under one prefix; that collision is why the
+lattice's type rungs carry role names. On the phone a rung is a spacing value,
+because there is no rail to seat on. _Avoid_: tick (the rail's DRAWN mark; a
+rung is the height it sits at), row.
+
+**Seam (lattice)** — The grid's divider between two REGIONS, drawn at
+`--lat-seam` (.28 dawn): the hairline between two sections, the line between a
+record and its field. Distinct from the Pocock **Seam** above (where a module's
+interface lives); say "the grid's seam" or "the Pocock seam" when the sentence
+could mean either. A seam is not a gutter: cells share their edges and the seam
+is that edge, drawn once. _Avoid_: divider, border.
+
+**Cell** — ONE region of a section that shares its edges with its neighbours,
+ruled at `--lat-rule` (.12 dawn), no gutter (`.lat-cell` inside
+`data-arrangement="cells"`). A cell is a child of its section and is square
+(the children of a chamfered box are square). Distinct from **Console**, which
+is a cell by that same rule but names a specific instrument. _Avoid_: tile,
+card, box.
+
+**Arrangement** — One of the six named layout SHAPES a section's body takes
+(`.lat-body[data-arrangement]`): `head-field` · `split` (1-1, 5-7, 7-5) · `bay`
+(eight and four, the right stacked) · `cells` (2, 3, 4) · `instrument` (the
+instrument band, rails-tall) · `ledger` (ruled rows). A shape only; content
+kinds stay in `lib/sheet/types.ts` and `lib/arcs/types.ts`. _Avoid_: layout,
+template, variant.
+
+**Head strip** — A section's numbered head (`.lat-head`): an ordinal TAB in the
+first column, then the kicker, the title and the sub stacked in the second, one
+`--lat-rule` hairline under the lot. Evangelion's numbered module head, which
+`SheetHead` already draws. A head with no ordinal closes its first column.
+_Avoid_: header, masthead (the services masthead is its own object, ADR-044),
+eyebrow (one line of the strip, not the strip).
+
 When writing ADRs, prefer these terms over ad-hoc names (“the floating thing”, “the middle part”).
 
 ---

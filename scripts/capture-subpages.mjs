@@ -613,7 +613,15 @@ async function newPage(browser, vp) {
 }
 
 async function shootWave(browser, ship, waveDir) {
-  const types = ship.types.filter((t) => !ONLY_TYPES.length || ONLY_TYPES.includes(t.id));
+  const types = ship.types
+    // ⚠ `[types.LT]` is the lattice lab (ADR-149): it shares this ship so its
+    // stills are graded here, but it has no `.sh-root` to wait on — its own
+    // capture is scripts/capture-lattice.mjs. Never shot as a sheet.
+    .filter((t) => !t.route.startsWith("/test/lattice"))
+    // ⚠ `[types.HS]` left the sheet for its own composition (ADR-150): it has
+    // no `.sh-root` either, and its stills come from scripts/capture-sessions.mjs.
+    .filter((t) => t.id !== "HS")
+    .filter((t) => !ONLY_TYPES.length || ONLY_TYPES.includes(t.id));
   const cells = [];
   for (const t of types)
     for (const theme of THEMES)

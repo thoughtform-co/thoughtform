@@ -193,7 +193,10 @@ export function ArcHudNav({ items, label }: ArcHudNavProps) {
   }, [open]);
 
   const navigate = (e: MouseEvent<HTMLAnchorElement>, id: string) => {
-    const target = document.getElementById(id);
+    const el = document.getElementById(id);
+    /* A chapter inside a switched beat may sit in the panel that is not
+       picked (ADR-148 U5); its group is the chapter either way. */
+    const target = el?.closest("[data-arc-worked-group]") ?? el;
     if (!target) return;
     e.preventDefault();
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

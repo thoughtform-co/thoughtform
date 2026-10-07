@@ -309,3 +309,34 @@ Each variant page file ends up ~30 lines — only `shell` config, `clientLogo` r
 **Search:** `search_design_system` — searches components, variables, and styles across the file.
 
 **Rule:** Read from Grid (New) as source of truth. Write to Brand System page only. Never modify Grid (New).
+
+---
+
+## The lattice (ADR-149, not yet in Figma)
+
+The brand system grid (`app/styles/lattice.css`, `components/lattice/**`) ships
+in code first; its Figma pass is ADR-149 Phase 4 and nothing below exists in the
+file yet. No node id here is a lattice node, because none has been made.
+
+**The plan:**
+
+- A `Lattice/Grid` layout style: twelve columns in the band, gutter 0, and the
+  thirteen rungs off the rail (the `type/*` rungs already in `Thoughtform/HUD`
+  show the shape).
+- `Frame/Housing` (`2387:5`, UI Exploration) grows variants for cut × line ×
+  ground, mirroring `.lat-frame`'s `data-cut` (`tr-bl | tr | bl | none`),
+  `data-line` (`seam | lip | lip-lit | rule`) and `data-ground`
+  (`plate | thin | none`). No `tl-br` variant.
+- `Section/*` components for the six arrangements: head-field, split, bay,
+  cells, instrument, ledger.
+- `grid/*`, `space/*` and `bp/*` variable groups in `Thoughtform/HUD`
+  (`VariableCollectionId:1770:2`), bound to the same values as `lattice.css`
+  and `lib/lattice/breakpoints.ts`, both modes.
+
+⚠ **Write to Brand System (`1767:3744`) or UI Exploration (`2382:2`) only. Never
+Grid (New) (`1610:584`).** Exploration first; a winner moves to Brand System
+with its own pass, and its ids become LOW-freedom rows above.
+
+⚠ **The Brandworld file `8eUA625Yelrk6KwVTTRD0x`, node `52:2`, is the owner's
+declinations board** (A1–A4 heroes, B1–B5 card archetypes, C1–C3 graphic
+realism). Read-only prior art: read it before the pass, write nothing to it.

@@ -1,0 +1,631 @@
+/* ════════════════════════════════════════════════════════════════════════
+   /test/lattice — the lab's own chrome (ADR-149, Phase 1).
+
+   ⚠ EVERYTHING IS SCOPED UNDER `.lat-lab`, AND NOTHING HERE IS A RECIPE. The
+   frame, the section, the grid and the overlay are `components/lattice/
+   lattice.css`'s; this sheet is the stage, the console, the legend, the
+   machine mirror, the focus ring, and the SPECIMEN COMPOSITION the boards
+   need to be read (a frame's height on the matrix, the ledger row's columns,
+   the instrument's ruled field, the type ladder's rows). A rule in here that
+   a production surface would want is a rule in the wrong file.
+
+   TOKEN-ONLY: every colour is a ramp step off `--dawn-rgb` /
+   `--void-deep-rgb` / the gold ramp, every size a `--lat-*` rung, every
+   tracking a `--track-*` role, nothing above `--weight-lit`. A LAB sheet: not
+   in any ratchet, held to the ratchets' law by hand.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.lat-lab {
+  min-height: 100svh;
+  color: rgba(var(--dawn-rgb), 0.92);
+  font-family: var(--font-pp-neue-montreal);
+}
+
+/* ⚠ THE GATEWAY IS HIDDEN. `hudHtml` ships the fixed gold radial the landing
+   paints behind everything; on a lab route it is a wash over the composition
+   being judged (the interface kit's own rule). */
+.lat-lab .gateway {
+  display: none !important;
+}
+
+/* ── The focus ring — the usability gate's visible ring, on every control ── */
+.lat-lab :focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 2px;
+}
+
+/* ── The stage (grid · frames · type) and the document (sections · page) ──
+   ⚠ THE ROOT IS NOT FIXED. `HudNav` prints its corner readout only past
+   `innerHeight / 2`, so the document has to scroll: on a staged board a
+   sticky stage over a runway, and the shell scrolls past the collapse on
+   mount; on a flowing board the content is a document under the fixed frame
+   and scrolls by itself. */
+.lat-stage {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100svh;
+  overflow: clip;
+}
+.lat-runway {
+  height: 80svh;
+  pointer-events: none;
+}
+.lat-doc {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  padding-top: var(--hud-rail-y-start);
+}
+/* the frames and type boards are taller than one viewport: they scroll
+   INSIDE the stage (the kit's `.ik-sheet`), so the rail stays put */
+.lat-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--hud-rail-y-start) var(--hud-content-inset, 0px) var(--lat-sec-pad);
+}
+
+.lat-board__head {
+  display: grid;
+  row-gap: var(--space-xs);
+  margin: var(--lat-gap-block) 0 var(--lat-head-gap);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-h3);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.1;
+}
+.lat-board__head:first-child {
+  margin-top: 0;
+}
+.lat-board__kicker {
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.52);
+}
+
+/* ── The grid board — an empty band under the overlay, and the legend ─── */
+.lat-grid-board {
+  position: absolute;
+  inset: 0;
+}
+.lat-legend {
+  position: absolute;
+  top: var(--lat-rung-0);
+  right: var(--lat-margin);
+  z-index: 51;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: var(--lat-pad-chrome) var(--lat-pad-cell);
+  max-height: var(--lat-rail-h);
+  overflow-y: auto;
+  background: rgba(var(--void-deep-rgb), 0.86);
+  border: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+.lat-legend__head,
+.lat-legend__row {
+  display: grid;
+  grid-template-columns: 5ch 1fr;
+  column-gap: var(--space-sm);
+}
+.lat-legend__head {
+  margin-top: var(--space-xs);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.lat-legend__head:first-child {
+  margin-top: 0;
+}
+.lat-legend dt,
+.lat-legend dd {
+  margin: 0;
+}
+.lat-legend__row[data-off] dd {
+  color: var(--gold);
+}
+
+/* ── The frames board — the matrix, two rungs tall a cell ─────────────── */
+.lat-frames__matrix,
+.lat-frames__ladder,
+.lat-frames__overflow {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  row-gap: var(--lat-gap-block);
+  margin-bottom: var(--lat-gap-block);
+}
+.lat-frames__ladder {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.lat-frames__overflow {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: calc(var(--lat-gap-block) * 2);
+}
+.lat-frames__cell {
+  min-height: calc(var(--lat-pitch) * 2);
+}
+/* a specimen's chrome WRAPS: a clipped ellipsis still reports its raw text
+   range to the overlap gate, and a matrix cell at 1280 is ~270px wide */
+.lat-frames__kicker,
+.lat-frames__foot {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+}
+.lat-frames__body {
+  margin: 0;
+}
+/* the chevron: a small mark seated OUTSIDE the box's bottom edge — what
+   `overflow="visible"` exists for */
+.lat-frames__cell--overflow {
+  margin-bottom: var(--space-lg);
+}
+.lat-frames__chevron {
+  position: absolute;
+  left: 50%;
+  bottom: calc(-1 * var(--space-sm));
+  width: var(--space-sm);
+  height: var(--space-sm);
+  translate: -50% 0;
+  rotate: 45deg;
+  /* dawn, not gold: a chevron is a mark on the box, and gold draws no
+     structure off a lip (the LEDGER gate counted it) */
+  border-right: 1px solid var(--lat-seam);
+  border-bottom: 1px solid var(--lat-seam);
+  background: rgb(var(--void-deep-rgb));
+}
+
+/* ── The sections and the page — specimen composition ─────────────────── */
+.lat-copy {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-copy);
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.88);
+}
+.lat-copy--sm {
+  font-size: var(--lat-chrome-lg);
+}
+.lat-copy + .lat-copy {
+  margin-top: var(--lat-gap-stack);
+}
+
+.lat-col {
+  min-width: 0;
+}
+.lat-col + .lat-col {
+  margin-top: 0;
+}
+.lat-col__name {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.lat-col__title {
+  margin: 0 0 var(--lat-gap-stack);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-h3);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.15;
+}
+.lat-page__formats {
+  display: grid;
+  row-gap: var(--lat-gap-block);
+}
+
+.lat-cell__title {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-lede);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.2;
+}
+.lat-cell__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-copy);
+  line-height: 1.45;
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+
+/* the bay's stack: three chrome-rung cells sharing edges */
+.lat-stack__cell + .lat-stack__cell {
+  margin-top: -1px;
+}
+
+/* the instrument's field: ruled on the pitch, stops lettered along it */
+.lat-instrument {
+  display: flex;
+  flex-direction: column;
+}
+.lat-instrument > .lat-frame__body {
+  flex: 1 1 auto;
+  display: flex;
+  padding: 0;
+}
+.lat-field {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: calc(var(--lat-pitch) * 4);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--lat-rule) 0 1px,
+    transparent 1px var(--lat-pitch)
+  );
+}
+.lat-field__stop {
+  position: relative;
+  padding: var(--lat-pad-chrome) var(--lat-pad-cell);
+  border-left: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+.lat-field__stop::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: calc(-1 * var(--space-xs));
+  width: 7px;
+  height: 7px;
+  rotate: 45deg;
+  /* a stop's tick is a mark on the axis in the seam rung; gold is spent on
+     the ONE lit plot mark above it (round 1) */
+  background: var(--lat-seam);
+}
+
+/* the ledger row's three cells on the twelve columns (the recipe's subgrid) */
+.lat-row__key {
+  grid-column: 1 / span 2;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+.lat-row__value {
+  grid-column: 3 / span 8;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-copy);
+  line-height: 1.4;
+}
+.lat-row__tag {
+  grid-column: 11 / span 2;
+  justify-self: end;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+/* the page's masthead */
+.lat-page__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-display);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.02;
+}
+.lat-page__title-em {
+  color: var(--gold);
+}
+.lat-page__lede-col {
+  display: grid;
+  align-content: end;
+  row-gap: var(--lat-gap-block);
+}
+.lat-page__lede {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-lede);
+  font-weight: var(--weight-light);
+  line-height: 1.45;
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+
+/* the CTA: ≥ 44px by construction (the usability gate), a bordered plate,
+   the quiet variant a bare link at the same height */
+.lat-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--lat-pad-cell);
+  border: 1px solid var(--gold-line);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  text-decoration: none;
+  justify-self: start;
+}
+.lat-cta:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.lat-cta--quiet {
+  padding-inline: 0;
+  border: 0;
+}
+
+/* the close: `SheetClose`'s seat, copied — the two station padding tokens
+   the footer's plate negates to reach the viewport's edge */
+.lat-page__close {
+  --station-pad-top: clamp(96px, 12svh, 168px);
+  --station-pad-bottom: 0px;
+  --ft-pad-top: max(var(--station-pad-top), var(--mobile-chrome-top, 0px));
+  --ft-pad-bottom: max(var(--station-pad-bottom), var(--mobile-chrome-bottom, 0px));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: var(--ft-pad-top) var(--hud-content-inset, 48px) var(--ft-pad-bottom);
+}
+.lat-page__close > .ft-foot {
+  flex: 1 1 auto;
+  align-self: stretch;
+}
+
+/* ── The type board ────────────────────────────────────────────────────── */
+.lat-type__ladder,
+.lat-type__spaces,
+.lat-type__media {
+  margin: 0 0 var(--lat-gap-block);
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--lat-rule);
+}
+.lat-type__rung,
+.lat-type__space,
+.lat-type__bp {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+  column-gap: var(--lat-air);
+  align-items: baseline;
+  padding-block: var(--lat-pad-chrome);
+  border-bottom: 1px solid var(--lat-rule);
+}
+.lat-type__bp {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 2fr) minmax(0, 6fr);
+}
+.lat-type__meta {
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.52);
+}
+.lat-type__specimen {
+  display: block;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lat-type__specimen--mono {
+  font-family: var(--font-pt-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+.lat-type__specimen--sans {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+}
+.lat-type__swatch {
+  display: block;
+  height: var(--space-sm);
+  background: rgba(var(--gold-rgb), 0.3);
+  border-right: 1px solid var(--gold-line);
+}
+.lat-type__chamfers {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  column-gap: var(--lat-air);
+  margin-bottom: var(--lat-gap-block);
+}
+.lat-type__chamfer {
+  min-height: calc(var(--lat-pitch) * 2);
+}
+.lat-type__ch-probe {
+  display: block;
+  height: 0;
+}
+.lat-type__bp-state {
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+.lat-type__bp[data-on] .lat-type__bp-state {
+  color: var(--gold-ink);
+}
+.lat-type__bp-role {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-copy);
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+
+/* ── The console ───────────────────────────────────────────────────────── */
+.lat-console {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-sm);
+  translate: -50% 0;
+  z-index: 60;
+  display: grid;
+  gap: var(--space-xs);
+  max-width: min(1180px, calc(100vw - var(--space-2xl)));
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid rgba(var(--dawn-rgb), 0.16);
+  background: rgba(var(--void-deep-rgb), 0.92);
+  backdrop-filter: blur(8px);
+}
+.lat-console:not([data-open]) > *:not(:first-child) {
+  display: none;
+}
+.lat-console__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.lat-console__title {
+  margin-right: var(--space-xs);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+.lat-console__rule {
+  width: 1px;
+  height: var(--space-md);
+  margin: 0 var(--space-xs);
+  background: rgba(var(--dawn-rgb), 0.16);
+}
+.lat-console__readout {
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.lat-btn {
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  border: 1px solid rgba(var(--dawn-rgb), 0.16);
+  background: transparent;
+  color: rgba(var(--dawn-rgb), 0.62);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.lat-btn:hover {
+  color: rgba(var(--dawn-rgb), 0.92);
+  border-color: rgba(var(--dawn-rgb), 0.3);
+}
+.lat-btn[data-on] {
+  border-color: var(--gold-line);
+  color: var(--gold-ink);
+}
+.lat-btn--fold {
+  margin-left: auto;
+}
+.lat-thesis {
+  margin: 0;
+  max-width: 92ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-chrome-lg);
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+.lat-thesis b {
+  margin-right: var(--space-sm);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+/* ── The machine mirror — never `display: none`: every wait in the capture
+   hangs on its `data-stamp` ───────────────────────────────────────────── */
+.lat-read {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ── Light — re-derived, never inherited (ADR-058) ─────────────────────── */
+html[data-theme="light"] .lat-console {
+  background: rgba(var(--void-deep-rgb), 0.94);
+  border-color: rgba(var(--dawn-rgb), 0.2);
+}
+html[data-theme="light"] .lat-legend {
+  background: rgba(var(--void-deep-rgb), 0.92);
+}
+html[data-theme="light"] .lat-page__title-em {
+  color: var(--gold-ink);
+}
+
+/* ── the instrument's plot (round 1) — an axis, four marks, a cursor ──
+   The field was an empty ruled box; a device that says nothing reads as a
+   fault. One axis at two fifths of the field, a mark per stop on it (the
+   next morning filled in gold, the rest outlined in the seam rung — gold
+   is state), a dashed cursor for now. All marks; no structure in gold. */
+.lat-field {
+  position: relative;
+}
+.lat-field__axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 1px;
+  background: var(--lat-seam);
+}
+.lat-field__now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 9%;
+  width: 0;
+  border-left: 1px dashed var(--lat-seam);
+}
+.lat-field__mark {
+  position: absolute;
+  top: 40%;
+  left: calc((var(--i) + 0.5) * 25%);
+  width: 9px;
+  height: 9px;
+  translate: -50% -50%;
+  rotate: 45deg;
+  border: 1px solid var(--lat-seam);
+  background: rgb(var(--void-deep-rgb));
+}
+.lat-field__mark[data-lit] {
+  border-color: var(--gold-line);
+  background: var(--gold);
+}
+
+/* ⚠ UNDER `.lat-doc` A BOARD FLOWS: `.lat-scroll` is the staged boards' inner
+   scroller, and inside a flowing document it froze the matrix at one viewport
+   so the corner and ring gates could not reach the second row. */
+.lat-doc .lat-scroll {
+  position: static;
+  inset: auto;
+  overflow: visible;
+  height: auto;
+}

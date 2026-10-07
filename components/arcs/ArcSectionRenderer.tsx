@@ -30,6 +30,7 @@ import { ArcQuestions } from "./ArcQuestions";
 import { ArcRepository } from "./ArcRepository";
 import { ArcResource } from "./ArcResource";
 import { ArcSkillRun } from "./ArcSkillRun";
+import { ArcBreakdown, breakdownLength } from "./ArcBreakdown";
 import { PromptToLoop } from "./prompt-to-loop/PromptToLoop";
 import { promptToLoopRun } from "./prompt-to-loop/promptToLoopRun";
 import { ArcSectionHead } from "./ArcSectionHead";
@@ -44,7 +45,7 @@ import { ArcSyllabus } from "./ArcSyllabus";
 import { ArcToolIndex } from "./ArcToolIndex";
 import { ArcWorkedBar } from "./ArcWorkedBar";
 import { arcTitleText } from "./chrome";
-import { WORKED_CHROME } from "./workedChrome";
+import { workedLabel } from "./workedChrome";
 
 /**
  * ArcSectionRenderer — exhaustive dispatch over the section union
@@ -155,6 +156,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcSkillRun key={section.id} section={section} index={index} motion={motion} />;
     case "prompt-to-loop":
       return <PromptToLoop key={section.id} startIndex={index} slides={promptToLoopRun(section)} />;
+    case "breakdown":
+      return <ArcBreakdown key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;
@@ -184,6 +187,7 @@ function arcRuns(sections: readonly ArcSection[]): ArcRun[] {
   sections.forEach((section, at) => {
     const index = at + extra;
     if (section.kind === "prompt-to-loop") extra += promptToLoopRun(section).length - 1;
+    if (section.kind === "breakdown") extra += breakdownLength(section) - 1;
     const group = section.worked?.group ?? null;
     const open = runs[runs.length - 1];
     if (group && open && open.group === group) {
@@ -220,7 +224,7 @@ export function ArcSectionRenderer({
         }));
         return (
           <div key={run.key} className="arc-worked-group" data-arc-worked-group={run.group}>
-            <ArcWorkedBar group={run.group} choices={choices} label={WORKED_CHROME.label} />
+            <ArcWorkedBar group={run.group} choices={choices} label={workedLabel(run.group)} />
             {run.items.map(({ section, index }, i) => (
               <div
                 key={section.id}

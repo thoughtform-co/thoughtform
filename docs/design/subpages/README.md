@@ -15,7 +15,6 @@ overview and its kit take `?k=SB|SG|SL`, and every page takes
 ```
 http://localhost:3003/arcs
 http://localhost:3003/test/arcs-instrument-kit
-http://localhost:3003/home-sessions
 http://localhost:3003/arcs/loop
 http://localhost:3003/musings
 http://localhost:3003/musings/navigate-the-intelligence

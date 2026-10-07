@@ -1,0 +1,10 @@
+---
+description: The Home sessions page (ADR-150) — its own composition on the lattice: the hero on the key visual, the morning dial, the dates instrument, the ASCII field, the table plan, the ask
+globs:
+  - "app/(marketing)/home-sessions/**"
+  - "components/sessions/**"
+  - "lib/sessions/**"
+  - "scripts/capture-sessions.mjs"
+---
+
+See `.claude/rules/sessions.md` and ADR-150. One record by reference (`lib/sessions/page.ts`), two client leaves that import no record, `sessions.css` token-only and at zero in four ratchets, no open dividers, the face declared on `.hs-root`, gold only on state.

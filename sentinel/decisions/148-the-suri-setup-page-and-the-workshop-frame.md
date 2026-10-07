@@ -175,6 +175,29 @@ clips to 16 seconds, edit only). Owner's calls: inside the Video retouch + edit 
   preview; the ProRes master stays in Suri's shoot folder). The block's type and spacing read the
   lattice tokens, so `arcs.css` holds its ratchet pins.
 
+## Update 5 (2026-10-07, owner): the cases switch on their own bar
+
+U4 misread the ask. Owner, the same day: "I built this page to show the different configurations,
+and so the moment you enter the flow, in the sections where we break down each case, there should
+be a floating bar … When you click on it, the sections change to correspond with the case that we're
+looking at." The breakdown is the switched beat, and the cases are its tabs.
+
+- **The breakdown is a worked group, `case`:** Prompt to Loop (`Loop · Halloween ad`, the owner's
+  record, unchanged) and Under the Glass (`Suri · Black Friday`). The teaser left the video tab; U4's
+  `job` field on `skill-run` is deleted.
+- **The `breakdown` kind, ADR-052's twenty-sixth exception** (`ArcBreakdown`): a case as data in
+  Prompt to Loop's slide format, the same shell (`ArcBeat`, the arc's own head, `.ptl-sec`): a hero
+  with the film, its facts and the beats' index, then one slide per beat, its evidence under the
+  head. Seven slides here, the last "Next", as Prompt to Loop ends on "Next time".
+- **The pick reaches every group that offers it.** It was page-wide, with every group pinned to the
+  same ids, so a page could hold only one set of tabs. Groups that share an example still follow one
+  choice together (the lunch and learn's three groups do); a group with its own ids keeps its own
+  pick. `arcs-registry` now pins that groups sharing an id share the whole set, in order.
+- **Each bar names its group** (`workedLabel`): "The case" and "Workstream" here, "One piece of work"
+  everywhere else (U2's open item, closed).
+- **A chapter inside a switched beat is the whole group** for the corner readout and the drawer, so
+  "How Claude made it" holds over either case and its link never lands on a hidden panel.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside
@@ -191,8 +214,6 @@ clips to 16 seconds, edit only). Owner's calls: inside the Video retouch + edit 
 
 ## Left open
 
-- The worked bar's label is still the shared "One piece of work"; "Workstream" would read
-  better on this page and would need a per-group label.
 - Two unit tests fail on the clean tree and are not this change: `thoughtform-armada` and
   `skill-file-fidelity` read `../suri-ai-studio`, whose 0.3.0 folded `ai-studio-strategy` into
   `ai-suri`.

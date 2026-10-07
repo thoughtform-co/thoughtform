@@ -41,7 +41,23 @@ const ENTRIES = [
   "app/(marketing)/page.tsx",
   "app/(marketing)/arcs/thoughtform/claude-workshop-corridor/page.tsx",
   "app/(marketing)/arcs/trinny-london/proposal/page.tsx",
+  /* ADR-150: the Home sessions page mounts the hero, the corners and the
+     footer on its own route, so its First Load JS is walked too. */
+  "app/(marketing)/home-sessions/page.tsx",
 ] as const;
+
+/**
+ * What each entry's graph is known to be. The three landing entries mount the
+ * corridor (~200 modules) and read Supabase on the server through
+ * lib/supabase.ts; the Home sessions page (ADR-150) is a DOM page with no
+ * corridor and no database, so its floor is lower and its server read set is
+ * EMPTY — growing either list is a decision, not a drift.
+ */
+const KNOWN: Record<string, { minModules: number; supabaseServer: string[] }> = {
+  "app/(marketing)/home-sessions/page.tsx": { minModules: 40, supabaseServer: [] },
+};
+const knownFor = (entry: string) =>
+  KNOWN[entry] ?? { minModules: 100, supabaseServer: ["lib/supabase.ts"] };
 
 const BANNED_EVERYWHERE = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/];
 const BANNED_IN_CLIENT = [/^@supabase\//];
@@ -128,7 +144,7 @@ describe.each(ENTRIES.map((entry) => [entry] as const))(
     it("walks a real graph (a guard over nothing is worse than no guard)", () => {
       // The audited static graph from the marketing page was ~200 modules; a
       // collapse below half of that means the walker broke, not the page.
-      expect(graph.seen.size).toBeGreaterThan(100);
+      expect(graph.seen.size).toBeGreaterThan(knownFor(entry).minModules);
     });
 
     it("keeps three/R3F/postprocessing statically unreachable from the landing", () => {
@@ -140,7 +156,7 @@ describe.each(ENTRIES.map((entry) => [entry] as const))(
       // …and the server-side read path stays exactly where it is known to be:
       // lib/supabase.ts, reached from the Server Component. Growing this list
       // is a decision, not a drift.
-      expect([...new Set(graph.supabaseServerFiles)]).toEqual(["lib/supabase.ts"]);
+      expect([...new Set(graph.supabaseServerFiles)]).toEqual(knownFor(entry).supabaseServer);
     });
   }
 );

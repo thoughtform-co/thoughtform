@@ -1,4 +1,4 @@
-import type { ArcChatAside, ArcSectionOf, ArcTitle } from "../../types";
+import type { ArcBreakdown, ArcChatAside, ArcSectionOf, ArcTitle } from "../../types";
 
 /**
  * SURI'S THREE PIECES OF WORK, AS ONE RECORD (ADR-147): the brief, the Monday
@@ -919,24 +919,23 @@ export const SURI_RUN_SUB =
 
 type RunBody = Pick<
   ArcSectionOf<"skill-run">,
-  "ask" | "skill" | "steps" | "checks" | "decide" | "evals" | "job"
+  "ask" | "skill" | "steps" | "checks" | "decide" | "evals"
 >;
 
 const UTG = "/arcs/suri/under-the-glass";
 
 /**
- * UNDER THE GLASS (ADR-148 U4): the video workstream's first real job, the
+ * UNDER THE GLASS (ADR-148 U4, a breakdown since U5): Suri's own case, the
  * Black Friday teaser made in Cowork on 6 October, condensed from its own
- * breakdown (the artifact the owner shared, 11 steps) to the film and six
- * beats. Every figure is the breakdown's. It was made before a teaser skill
- * existed, so it sits under the run as the job, never as the run's own ask:
- * writing the method down as a skill is what the breakdown leaves for next.
- * The video editor is named by role.
+ * breakdown (the artifact the owner shared, 11 steps) to the film and seven
+ * slides. Every figure is the breakdown's. It sits beside Prompt to Loop
+ * under the page's case switch, in the same format. The video editor is
+ * named by role.
  */
-export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
-  eyebrow: "A real job · Black Friday teaser · 6 Oct 2026",
-  title: { pre: "Under the glass.", em: "An edit, with no generated footage." },
-  sub: "Made in Cowork from the shoot's own footage: a real hand, a real magnifying glass and a real card on brushed steel. Code added the words on the card and what the glass shows over them.",
+export const UNDER_THE_GLASS: ArcBreakdown = {
+  eyebrow: "How Claude made it · Suri Black Friday · 6 Oct 2026",
+  title: { pre: "From 31 raw clips", em: "to a 16‑second teaser." },
+  sub: "Edit only, no generated footage: a real hand, a real magnifying glass and a real card on brushed steel. Code added the words on the card and what the glass shows over them.",
   film: {
     src: `${UTG}/teaser.mp4`,
     poster: `${UTG}/teaser-poster.webp`,
@@ -950,9 +949,9 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
   ],
   beats: [
     {
-      id: "idea",
+      id: "utg-idea",
       key: "The idea",
-      title: "The glass is the reader.",
+      title: { pre: "The glass is the reader.", em: "The message waits on the card." },
       line: "Every card take was shot with green paper inside the glass, which left room for the message. It is printed on the card the whole time, shows enlarged inside the lens, and stays wherever the glass has passed, so the reveal follows the real hand.",
       frames: [
         {
@@ -970,9 +969,9 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
       ],
     },
     {
-      id: "cut",
+      id: "utg-cut",
       key: "The cut",
-      title: "Two shots, one moment.",
+      title: { pre: "Two shots,", em: "one continuous moment." },
       line: "The first version followed the brief whole: seven shots, 27 seconds. The video editor cut it down to the card. Two locked-off shots, aligned so the cut does not jump, the second at half speed on real 50p frames, so nothing is interpolated.",
       frames: [
         {
@@ -996,9 +995,9 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
       ],
     },
     {
-      id: "reveal",
+      id: "utg-reveal",
       key: "The reveal",
-      title: "Measured from the hand, frame by frame.",
+      title: { pre: "Measured from the hand,", em: "frame by frame." },
       line: "No video or image model, no generative fill and no interpolated frames. Code finds the glass in every frame and prints the message under it.",
       rows: [
         {
@@ -1024,9 +1023,9 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
       ],
     },
     {
-      id: "clean",
+      id: "utg-clean",
       key: "Clean-up",
-      title: "Remove the marks, keep the metal.",
+      title: { pre: "Remove the marks,", em: "keep the metal." },
       line: "The first pass smoothed the whole surface. Every scratch went, and the brushed grain with it, and the video editor said it looked AI. The second pass only touches the specks, the short scratches and three smudges.",
       frames: [
         {
@@ -1052,9 +1051,9 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
       ],
     },
     {
-      id: "rounds",
+      id: "utg-rounds",
       key: "Rounds",
-      title: "Seven versions, each one a note.",
+      title: { pre: "Seven versions,", em: "each one a note." },
       line: "Each version answered one note, most of them the video editor's.",
       rows: [
         { label: "v1", value: "The full brief, brush details to card, 27 s, placeholder copy" },
@@ -1067,9 +1066,9 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
       ],
     },
     {
-      id: "check",
+      id: "utg-check",
       key: "Check",
-      title: "Look, measure, look again.",
+      title: { pre: "Look, measure,", em: "look again." },
       line: "Every render was checked frame by frame, and measured where the eye could miss something.",
       figures: [
         { label: "Offset left at the cut between the two shots", value: "0.1 px" },
@@ -1078,8 +1077,24 @@ export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
         { label: "The ProRes master against the lossless render", value: "52–55 dB" },
       ],
     },
+    {
+      id: "utg-next",
+      key: "Next",
+      title: { pre: "What's left,", em: "and how to reuse it." },
+      line: "The master goes on to the grade and the sound. Then the method could be written down as a Suri skill, so the next teaser starts from a request instead of a blank page.",
+      rows: [
+        {
+          label: "Sound",
+          value: "Music, plus a few quiet room sounds: the card set down, the glass passing",
+        },
+        {
+          label: "Grade and export",
+          value: "Grade the ProRes master, then export an H.264 file for posting",
+        },
+        { label: "Make it a skill", value: "Survey, track, reveal, clean, check, deliver" },
+      ],
+    },
   ],
-  foot: "Left to do: music and room sound, the grade, and writing the method down as a Suri skill, so the next teaser starts from a request.",
 };
 
 export const SURI_RUNS: Record<SuriWorkstream, RunBody> = {
@@ -1166,7 +1181,6 @@ export const SURI_RUNS: Record<SuriWorkstream, RunBody> = {
       ],
       note: "Run on 6 October: the video skills scored 0.73 above Claude without them, on average.",
     },
-    job: UNDER_THE_GLASS,
   },
 };
 

@@ -36,7 +36,8 @@
   --mon-name-w: clamp(150px, 10.4vw, 200px);
   --mon-read-w: clamp(140px, 10.4vw, 200px);
   --mon-mark: clamp(9px, 0.6vw, 12px);
-  --mon-h: calc(100svh - var(--hud-rail-y-start) - var(--hud-rail-y-end));
+  /* = --lat-rail-h (ADR-149 Phase 2): the rail box, by reference. */
+  --mon-h: var(--lat-rail-h);
   /* The log (ADR-118 U1, U2): the air between the list and the dossier,
      between one block and the next, and before each kind's section.
      `--log-block-h` is NOT here — it needs `--log-n` and `--log-heads`,
@@ -51,7 +52,7 @@
   --log-ch: clamp(9px, 0.8vw, 13px);
   /* ⚠ NOT `ch − 1px`: insetting a 45° cut by d shortens its leg by
      d(2 − √2) ≈ 0.586d. */
-  --log-ch-in: calc(var(--log-ch) - 0.586px);
+  --log-ch-in: calc(var(--log-ch) - var(--lat-ch-leg));
   /* The kind-of-page mark: 7 cells, so only a multiple of 7 (4px cells). */
   --log-icon: 28px;
   --log-icon-gap: clamp(10px, 0.9vw, 16px);
@@ -74,7 +75,7 @@
 .sh-sec--monitor,
 .sh-sec--log {
   box-sizing: border-box;
-  padding: var(--hud-rail-y-start) var(--instrument-margin) var(--hud-rail-y-end);
+  padding: var(--lat-rail-top) var(--lat-wide-margin) var(--lat-rail-bot);
 }
 .sh-sec--monitor {
   height: 100svh;

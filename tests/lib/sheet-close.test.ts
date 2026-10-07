@@ -34,7 +34,6 @@ const THEME_IMPORT = 'import "@/components/landing/v7/theme.css";';
 const CLOSE_ROUTES: Record<string, boolean> = {
   "app/(marketing)/musings/page.tsx": true,
   "app/(marketing)/musings/[slug]/page.tsx": true,
-  "app/(marketing)/home-sessions/page.tsx": true,
   "app/(marketing)/arcs/[slug]/page.tsx": false,
   "app/(internal)/test/subpage-kit/page.tsx": false,
 };

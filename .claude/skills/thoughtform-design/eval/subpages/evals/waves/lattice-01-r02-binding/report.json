@@ -1,0 +1,3490 @@
+{
+ "wave": "lattice-01-r02",
+ "setting": "binding",
+ "viewport": "1280x720",
+ "type": "LT",
+ "registryLane": "lat",
+ "scope": ".lat-doc, .lat-stage",
+ "exclude": ".hpl__hud, .hud-nav-overlay, .rin-host, .lat-overlay",
+ "when": "2026-10-06T14:44:18.698Z",
+ "cells": [
+  {
+   "id": "LA",
+   "lane": "la",
+   "board": "page",
+   "theme": "dark",
+   "subject": "void",
+   "viewport": "1280x720",
+   "setting": "binding",
+   "href": "http://localhost:3003/test/lattice?board=page&k=LA&theme=dark&console=0",
+   "files": [
+    {
+     "file": "LT-la__void_01.png",
+     "draw": 1,
+     "what": "the first screen"
+    },
+    {
+     "file": "LT-la__void_02.png",
+     "draw": 2,
+     "what": "the whole page"
+    }
+   ],
+   "gates": {
+    "RUNG MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "COLUMN MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "SEAT-Y": {
+     "ok": true,
+     "detail": "no instrument frame on the page"
+    },
+    "SEAT-X": {
+     "ok": true,
+     "detail": "2/2 frames on column edges"
+    },
+    "CHAMFER": {
+     "ok": true,
+     "detail": "2 frames on the ladder"
+    },
+    "CORNERS": {
+     "ok": true,
+     "detail": "2 frames hit-tested both ends"
+    },
+    "LEDGER": {
+     "ok": false,
+     "detail": "gold on 4 structure element(s): i.lat-field__mark rgb(202, 165, 84); i.lat-field__mark rgb(202, 165, 84); i.lat-field__mark rgb(202, 165, 84); i.lat-field__mark rgb(202, 165, 84)"
+    },
+    "OVERLAP": {
+     "ok": true,
+     "detail": "0"
+    },
+    "TYPE FLOOR": {
+     "ok": true,
+     "detail": "10px"
+    },
+    "FAMILIES": {
+     "ok": true,
+     "detail": "PT Mono, PP Neue Montreal"
+    },
+    "RADIUS": {
+     "ok": true,
+     "detail": "0 rounded corner(s)"
+    },
+    "COPY": {
+     "ok": true,
+     "detail": "--lat-copy 15px / --band-copy 15px"
+    },
+    "RING": {
+     "ok": true,
+     "detail": "measured on the frames board"
+    },
+    "USABILITY": {
+     "ok": true,
+     "detail": "hit boxes ok · focus ring on a.lat-cta · contrast ok",
+     "hits": [],
+     "contrast": [],
+     "keyboard": {
+      "ok": true,
+      "detail": [
+       "focus ring on a.lat-cta"
+      ]
+     }
+    },
+    "PAGE ERRORS": {
+     "ok": true,
+     "detail": "0"
+    }
+   },
+   "errors": [],
+   "stamp": "page|cut=tr-bl,line=lip,head=strip|dark|0|—|541|13|89",
+   "measure": {
+    "columns": [
+     {
+      "n": 0,
+      "x": 129.05,
+      "expected": 129.06,
+      "delta": 0.01
+     },
+     {
+      "n": 1,
+      "x": 213.7,
+      "expected": 213.71,
+      "delta": 0.01
+     },
+     {
+      "n": 2,
+      "x": 298.36,
+      "expected": 298.37,
+      "delta": 0.01
+     },
+     {
+      "n": 3,
+      "x": 383.02,
+      "expected": 383.03,
+      "delta": 0.01
+     },
+     {
+      "n": 4,
+      "x": 467.67,
+      "expected": 467.69,
+      "delta": 0.01
+     },
+     {
+      "n": 5,
+      "x": 552.33,
+      "expected": 552.34,
+      "delta": 0.01
+     },
+     {
+      "n": 6,
+      "x": 637,
+      "expected": 637,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "x": 721.66,
+      "expected": 721.66,
+      "delta": 0
+     },
+     {
+      "n": 8,
+      "x": 806.31,
+      "expected": 806.31,
+      "delta": 0
+     },
+     {
+      "n": 9,
+      "x": 890.97,
+      "expected": 890.97,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "x": 975.63,
+      "expected": 975.63,
+      "delta": 0
+     },
+     {
+      "n": 11,
+      "x": 1060.28,
+      "expected": 1060.29,
+      "delta": 0.01
+     },
+     {
+      "n": 12,
+      "x": 1144.94,
+      "expected": 1144.94,
+      "delta": 0.01
+     }
+    ],
+    "rungs": [
+     {
+      "n": 0,
+      "y": 89.06,
+      "tick": 90.06,
+      "delta": 1
+     },
+     {
+      "n": 1,
+      "y": 134.13,
+      "tick": 134.11,
+      "delta": 0.02
+     },
+     {
+      "n": 2,
+      "y": 179.2,
+      "tick": 179.22,
+      "delta": 0.02
+     },
+     {
+      "n": 3,
+      "y": 224.27,
+      "tick": 224.27,
+      "delta": 0
+     },
+     {
+      "n": 4,
+      "y": 269.34,
+      "tick": 269.33,
+      "delta": 0.02
+     },
+     {
+      "n": 5,
+      "y": 314.41,
+      "tick": 314.44,
+      "delta": 0.03
+     },
+     {
+      "n": 6,
+      "y": 359.48,
+      "tick": 359.48,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "y": 404.56,
+      "tick": 404.53,
+      "delta": 0.03
+     },
+     {
+      "n": 8,
+      "y": 449.63,
+      "tick": 449.64,
+      "delta": 0.02
+     },
+     {
+      "n": 9,
+      "y": 494.7,
+      "tick": 494.7,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "y": 539.77,
+      "tick": 539.75,
+      "delta": 0.02
+     },
+     {
+      "n": 11,
+      "y": 584.84,
+      "tick": 584.86,
+      "delta": 0.02
+     },
+     {
+      "n": 12,
+      "y": 629.91,
+      "tick": 628.92,
+      "delta": 0.98
+     }
+    ],
+    "frames": [
+     {
+      "id": "lat-frame-page-embedded",
+      "spec": "page-embedded",
+      "top": 1080.13,
+      "bottom": 1409.78,
+      "left": 721.66,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 450.22,
+      "bottomRung": 12,
+      "bottomDelta": 779.87,
+      "leftCol": 7,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-page-instrument",
+      "spec": "page-instrument",
+      "top": 1671.47,
+      "bottom": 2212.31,
+      "left": 129.05,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1041.56,
+      "bottomRung": 12,
+      "bottomDelta": 1582.4,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0.01
+     }
+    ],
+    "ticks": 13,
+    "rail": 541,
+    "seated": {
+     "columns": 13,
+     "rungs": 13,
+     "framesOff": [
+      "lat-frame-page-embedded",
+      "lat-frame-page-instrument"
+     ]
+    }
+   },
+   "probe": {
+    "accent": 28,
+    "bold": 0,
+    "text": 107,
+    "boldShare": 0,
+    "rungs": 8,
+    "topRungShare": 0.252,
+    "families": [
+     "PT Mono",
+     "PP Neue Montreal"
+    ],
+    "minPx": 8,
+    "radii": 0,
+    "structureHues": 8,
+    "t0": {
+     "fl": "16px",
+     "ik": "16px",
+     "match": true
+    },
+    "seat": null,
+    "boxes": {
+     "brief": null,
+     "reg": null,
+     "dir": null,
+     "viz": null
+    }
+   },
+   "mechanical": {
+    "ok": true,
+    "code": 0,
+    "seconds": 1.7,
+    "violations": [],
+    "notes": {
+     "palette": 1,
+     "trackingLegacy": 1,
+     "accentMarks": 24,
+     "spacing": 36,
+     "typeLadder": 9
+    }
+   }
+  },
+  {
+   "id": "LA",
+   "lane": "la",
+   "board": "sections",
+   "theme": "dark",
+   "subject": "void",
+   "viewport": "1280x720",
+   "setting": "binding",
+   "href": "http://localhost:3003/test/lattice?board=sections&k=LA&theme=dark&console=0",
+   "files": [
+    {
+     "file": "LT-la__void_03.png",
+     "draw": 3,
+     "what": "the sections board"
+    }
+   ],
+   "gates": {
+    "RUNG MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "COLUMN MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "SEAT-Y": {
+     "ok": true,
+     "detail": "skipped: a flowing board does not seat on viewport rungs"
+    },
+    "SEAT-X": {
+     "ok": true,
+     "detail": "6/6 frames on column edges"
+    },
+    "CHAMFER": {
+     "ok": true,
+     "detail": "6 frames on the ladder"
+    },
+    "CORNERS": {
+     "ok": true,
+     "detail": "3 frames hit-tested both ends"
+    },
+    "LEDGER": {
+     "ok": true,
+     "detail": "1 hue family(ies): neutral; gold structure 0"
+    },
+    "OVERLAP": {
+     "ok": true,
+     "detail": "0"
+    },
+    "TYPE FLOOR": {
+     "ok": true,
+     "detail": "10px"
+    },
+    "FAMILIES": {
+     "ok": true,
+     "detail": "PT Mono, PP Neue Montreal"
+    },
+    "RADIUS": {
+     "ok": true,
+     "detail": "0 rounded corner(s)"
+    },
+    "COPY": {
+     "ok": true,
+     "detail": "--lat-copy 15px / --band-copy 15px"
+    },
+    "RING": {
+     "ok": true,
+     "detail": "measured on the frames board"
+    },
+    "PAGE ERRORS": {
+     "ok": true,
+     "detail": "0"
+    }
+   },
+   "errors": [],
+   "stamp": "sections|cut=tr-bl,line=lip,head=strip|dark|0|—|541|13|89",
+   "measure": {
+    "columns": [
+     {
+      "n": 0,
+      "x": 129.05,
+      "expected": 129.06,
+      "delta": 0.01
+     },
+     {
+      "n": 1,
+      "x": 213.7,
+      "expected": 213.71,
+      "delta": 0.01
+     },
+     {
+      "n": 2,
+      "x": 298.36,
+      "expected": 298.37,
+      "delta": 0.01
+     },
+     {
+      "n": 3,
+      "x": 383.02,
+      "expected": 383.03,
+      "delta": 0.01
+     },
+     {
+      "n": 4,
+      "x": 467.67,
+      "expected": 467.69,
+      "delta": 0.01
+     },
+     {
+      "n": 5,
+      "x": 552.33,
+      "expected": 552.34,
+      "delta": 0.01
+     },
+     {
+      "n": 6,
+      "x": 637,
+      "expected": 637,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "x": 721.66,
+      "expected": 721.66,
+      "delta": 0
+     },
+     {
+      "n": 8,
+      "x": 806.31,
+      "expected": 806.31,
+      "delta": 0
+     },
+     {
+      "n": 9,
+      "x": 890.97,
+      "expected": 890.97,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "x": 975.63,
+      "expected": 975.63,
+      "delta": 0
+     },
+     {
+      "n": 11,
+      "x": 1060.28,
+      "expected": 1060.29,
+      "delta": 0.01
+     },
+     {
+      "n": 12,
+      "x": 1144.94,
+      "expected": 1144.94,
+      "delta": 0.01
+     }
+    ],
+    "rungs": [
+     {
+      "n": 0,
+      "y": 89.06,
+      "tick": 90.06,
+      "delta": 1
+     },
+     {
+      "n": 1,
+      "y": 134.13,
+      "tick": 134.11,
+      "delta": 0.02
+     },
+     {
+      "n": 2,
+      "y": 179.2,
+      "tick": 179.22,
+      "delta": 0.02
+     },
+     {
+      "n": 3,
+      "y": 224.27,
+      "tick": 224.27,
+      "delta": 0
+     },
+     {
+      "n": 4,
+      "y": 269.34,
+      "tick": 269.33,
+      "delta": 0.02
+     },
+     {
+      "n": 5,
+      "y": 314.41,
+      "tick": 314.44,
+      "delta": 0.03
+     },
+     {
+      "n": 6,
+      "y": 359.48,
+      "tick": 359.48,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "y": 404.56,
+      "tick": 404.53,
+      "delta": 0.03
+     },
+     {
+      "n": 8,
+      "y": 449.63,
+      "tick": 449.64,
+      "delta": 0.02
+     },
+     {
+      "n": 9,
+      "y": 494.7,
+      "tick": 494.7,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "y": 539.77,
+      "tick": 539.75,
+      "delta": 0.02
+     },
+     {
+      "n": 11,
+      "y": 584.84,
+      "tick": 584.86,
+      "delta": 0.02
+     },
+     {
+      "n": 12,
+      "y": 629.91,
+      "tick": 628.92,
+      "delta": 0.98
+     }
+    ],
+    "frames": [
+     {
+      "id": "lat-frame-sec-head-field",
+      "spec": "sec-head-field",
+      "top": 266.16,
+      "bottom": 383.84,
+      "left": 129.05,
+      "right": 1144.95,
+      "topRung": 4,
+      "topDelta": 3.18,
+      "bottomRung": 7,
+      "bottomDelta": 20.72,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0.01
+     },
+     {
+      "id": "lat-frame-sec-bay",
+      "spec": "sec-bay",
+      "top": 1006.05,
+      "bottom": 1345.86,
+      "left": 129.05,
+      "right": 806.31,
+      "topRung": 12,
+      "topDelta": 376.14,
+      "bottomRung": 12,
+      "bottomDelta": 715.95,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 8,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-bay-runs",
+      "spec": "sec-bay-runs",
+      "top": 1006.05,
+      "bottom": 1119.98,
+      "left": 806.31,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 376.14,
+      "bottomRung": 12,
+      "bottomDelta": 490.07,
+      "leftCol": 8,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-bay-format",
+      "spec": "sec-bay-format",
+      "top": 1118.98,
+      "bottom": 1232.92,
+      "left": 806.31,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 489.07,
+      "bottomRung": 12,
+      "bottomDelta": 603.01,
+      "leftCol": 8,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-bay-leaves",
+      "spec": "sec-bay-leaves",
+      "top": 1231.92,
+      "bottom": 1345.86,
+      "left": 806.31,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 602.01,
+      "bottomRung": 12,
+      "bottomDelta": 715.95,
+      "leftCol": 8,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-instrument",
+      "spec": "sec-instrument",
+      "top": 2128.55,
+      "bottom": 2669.39,
+      "left": 129.05,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1498.64,
+      "bottomRung": 12,
+      "bottomDelta": 2039.48,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0.01
+     }
+    ],
+    "ticks": 13,
+    "rail": 541,
+    "seated": {
+     "columns": 13,
+     "rungs": 13,
+     "framesOff": [
+      "lat-frame-sec-head-field",
+      "lat-frame-sec-bay",
+      "lat-frame-sec-bay-runs",
+      "lat-frame-sec-bay-format",
+      "lat-frame-sec-bay-leaves",
+      "lat-frame-sec-instrument"
+     ]
+    }
+   },
+   "probe": {
+    "accent": 19,
+    "bold": 0,
+    "text": 109,
+    "boldShare": 0,
+    "rungs": 7,
+    "topRungShare": 0.312,
+    "families": [
+     "PT Mono",
+     "PP Neue Montreal"
+    ],
+    "minPx": 8,
+    "radii": 0,
+    "structureHues": 5,
+    "t0": {
+     "fl": "16px",
+     "ik": "16px",
+     "match": true
+    },
+    "seat": null,
+    "boxes": {
+     "brief": null,
+     "reg": null,
+     "dir": null,
+     "viz": null
+    }
+   },
+   "mechanical": {
+    "ok": true,
+    "code": 0,
+    "seconds": 1.1,
+    "violations": [],
+    "notes": {
+     "palette": 1,
+     "accentMarks": 12,
+     "spacing": 21
+    }
+   }
+  },
+  {
+   "id": "LA",
+   "lane": "la",
+   "board": "frames",
+   "theme": "dark",
+   "subject": "void",
+   "viewport": "1280x720",
+   "setting": "binding",
+   "href": "http://localhost:3003/test/lattice?board=frames&k=LA&theme=dark&console=0",
+   "files": [
+    {
+     "file": "LT-la__void_04.png",
+     "draw": 4,
+     "what": "the frames board"
+    }
+   ],
+   "gates": {
+    "RUNG MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "COLUMN MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "SEAT-Y": {
+     "ok": true,
+     "detail": "skipped: a flowing board does not seat on viewport rungs"
+    },
+    "SEAT-X": {
+     "ok": true,
+     "detail": "skipped on this board"
+    },
+    "CHAMFER": {
+     "ok": true,
+     "detail": "42 frames on the ladder"
+    },
+    "CORNERS": {
+     "ok": false,
+     "detail": "div#lat-frame-tr-bl-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-bl-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-bl-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-lip-plate.lat-frame: top edge could not be brought into view; div#lat-frame-tr-lip-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-lip-thin.lat-frame: top edge could not be brought into view; div#lat-frame-tr-lip-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-lip-none.lat-frame: top edge could not be brought into view; div#lat-frame-tr-lip-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-seam-plate.lat-frame: top edge could not be brought into view; div#lat-frame-tr-seam-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-seam-thin.lat-frame: top edge could not be brought into view; div#lat-frame-tr-seam-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-seam-none.lat-frame: top edge could not be brought into view; div#lat-frame-tr-seam-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-rule-plate.lat-frame: top edge could not be brought into view; div#lat-frame-tr-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-rule-thin.lat-frame: top edge could not be brought into view; div#lat-frame-tr-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-rule-none.lat-frame: top edge could not be brought into view; div#lat-frame-tr-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-lip-plate.lat-frame: top edge could not be brought into view; div#lat-frame-bl-lip-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-lip-thin.lat-frame: top edge could not be brought into view; div#lat-frame-bl-lip-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-lip-none.lat-frame: top edge could not be brought into view; div#lat-frame-bl-lip-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-seam-plate.lat-frame: top edge could not be brought into view; div#lat-frame-bl-seam-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-seam-thin.lat-frame: top edge could not be brought into view; div#lat-frame-bl-seam-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-seam-none.lat-frame: top edge could not be brought into view; div#lat-frame-bl-seam-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-rule-plate.lat-frame: top edge could not be brought into view; div#lat-frame-bl-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-rule-thin.lat-frame: top edge could not be brought into view; div#lat-frame-bl-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-rule-none.lat-frame: top edge could not be brought into view; div#lat-frame-bl-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-lip-plate.lat-frame: top edge could not be brought into view; div#lat-frame-none-lip-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-lip-thin.lat-frame: top edge could not be brought into view; div#lat-frame-none-lip-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-lip-none.lat-frame: top edge could not be brought into view; div#lat-frame-none-lip-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-seam-plate.lat-frame: top edge could not be brought into view; div#lat-frame-none-seam-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-seam-thin.lat-frame: top edge could not be brought into view; div#lat-frame-none-seam-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-seam-none.lat-frame: top edge could not be brought into view; div#lat-frame-none-seam-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-rule-plate.lat-frame: top edge could not be brought into view; div#lat-frame-none-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-rule-thin.lat-frame: top edge could not be brought into view; div#lat-frame-none-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-rule-none.lat-frame: top edge could not be brought into view; div#lat-frame-none-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-seed.lat-frame: top edge could not be brought into view; div#lat-frame-ch-seed.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-card.lat-frame: top edge could not be brought into view; div#lat-frame-ch-card.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-plate.lat-frame: top edge could not be brought into view; div#lat-frame-ch-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-plate-fluid.lat-frame: top edge could not be brought into view; div#lat-frame-ch-plate-fluid.lat-frame: bottom edge could not be brought into view"
+    },
+    "LEDGER": {
+     "ok": true,
+     "detail": "1 hue family(ies): neutral; gold structure 0"
+    },
+    "OVERLAP": {
+     "ok": false,
+     "detail": "5 pair(s): span.lat-frames__foot × span.lat-frames__foot (27×11px); span.lat-frames__foot × span.lat-frames__foot (34×11px); span.lat-frames__foot × span.lat-frames__foot (41×11px); span.lat-frames__foot × span.lat-frames__foot (1×11px); span.lat-frames__foot × span.lat-frames__foot (1×11px)"
+    },
+    "TYPE FLOOR": {
+     "ok": true,
+     "detail": "10px"
+    },
+    "FAMILIES": {
+     "ok": true,
+     "detail": "PP Neue Montreal, PT Mono"
+    },
+    "RADIUS": {
+     "ok": true,
+     "detail": "0 rounded corner(s)"
+    },
+    "COPY": {
+     "ok": true,
+     "detail": "--lat-copy 15px / --band-copy 15px"
+    },
+    "RING": {
+     "ok": false,
+     "detail": [
+      "tr: only 0 % of the diagonal carries a line",
+      "bl: only 0 % of the diagonal carries a line"
+     ],
+     "readings": [
+      "tr-bl: 24/24 samples differ from the ground (100 %) at the TR cut, c=23.0",
+      "tr: 0/0 samples differ from the ground (0 %) at the TR cut, c=23.0",
+      "bl: 0/0 samples differ from the ground (0 %) at the BL cut, c=23.0"
+     ]
+    },
+    "PAGE ERRORS": {
+     "ok": true,
+     "detail": "0"
+    }
+   },
+   "errors": [],
+   "stamp": "frames|cut=tr-bl,line=lip,head=strip|dark|0|—|541|13|89",
+   "measure": {
+    "columns": [
+     {
+      "n": 0,
+      "x": 129.05,
+      "expected": 129.05,
+      "delta": 0
+     },
+     {
+      "n": 1,
+      "x": 214.2,
+      "expected": 214.21,
+      "delta": 0
+     },
+     {
+      "n": 2,
+      "x": 299.36,
+      "expected": 299.36,
+      "delta": 0.01
+     },
+     {
+      "n": 3,
+      "x": 384.52,
+      "expected": 384.52,
+      "delta": 0.01
+     },
+     {
+      "n": 4,
+      "x": 469.67,
+      "expected": 469.68,
+      "delta": 0.01
+     },
+     {
+      "n": 5,
+      "x": 554.83,
+      "expected": 554.84,
+      "delta": 0.01
+     },
+     {
+      "n": 6,
+      "x": 640,
+      "expected": 640,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "x": 725.16,
+      "expected": 725.16,
+      "delta": 0
+     },
+     {
+      "n": 8,
+      "x": 810.31,
+      "expected": 810.32,
+      "delta": 0.01
+     },
+     {
+      "n": 9,
+      "x": 895.47,
+      "expected": 895.48,
+      "delta": 0.01
+     },
+     {
+      "n": 10,
+      "x": 980.63,
+      "expected": 980.64,
+      "delta": 0.01
+     },
+     {
+      "n": 11,
+      "x": 1065.78,
+      "expected": 1065.79,
+      "delta": 0.01
+     },
+     {
+      "n": 12,
+      "x": 1150.94,
+      "expected": 1150.95,
+      "delta": 0.02
+     }
+    ],
+    "rungs": [
+     {
+      "n": 0,
+      "y": 89.06,
+      "tick": 90.06,
+      "delta": 1
+     },
+     {
+      "n": 1,
+      "y": 134.13,
+      "tick": 134.11,
+      "delta": 0.02
+     },
+     {
+      "n": 2,
+      "y": 179.2,
+      "tick": 179.22,
+      "delta": 0.02
+     },
+     {
+      "n": 3,
+      "y": 224.27,
+      "tick": 224.27,
+      "delta": 0
+     },
+     {
+      "n": 4,
+      "y": 269.34,
+      "tick": 269.33,
+      "delta": 0.02
+     },
+     {
+      "n": 5,
+      "y": 314.41,
+      "tick": 314.44,
+      "delta": 0.03
+     },
+     {
+      "n": 6,
+      "y": 359.48,
+      "tick": 359.48,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "y": 404.56,
+      "tick": 404.53,
+      "delta": 0.03
+     },
+     {
+      "n": 8,
+      "y": 449.63,
+      "tick": 449.64,
+      "delta": 0.02
+     },
+     {
+      "n": 9,
+      "y": 494.7,
+      "tick": 494.7,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "y": 539.77,
+      "tick": 539.75,
+      "delta": 0.02
+     },
+     {
+      "n": 11,
+      "y": 584.84,
+      "tick": 584.86,
+      "delta": 0.02
+     },
+     {
+      "n": 12,
+      "y": 629.91,
+      "tick": 628.92,
+      "delta": 0.98
+     }
+    ],
+    "frames": [
+     {
+      "id": "lat-frame-tr-bl-lip-plate",
+      "spec": "tr-bl-lip-plate",
+      "top": 151.81,
+      "bottom": 346.5,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 1,
+      "topDelta": 17.68,
+      "bottomRung": 6,
+      "bottomDelta": 12.98,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-bl-lip-thin",
+      "spec": "tr-bl-lip-thin",
+      "top": 151.81,
+      "bottom": 346.5,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 1,
+      "topDelta": 17.68,
+      "bottomRung": 6,
+      "bottomDelta": 12.98,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-bl-lip-none",
+      "spec": "tr-bl-lip-none",
+      "top": 151.81,
+      "bottom": 346.5,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 1,
+      "topDelta": 17.68,
+      "bottomRung": 6,
+      "bottomDelta": 12.98,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-bl-seam-plate",
+      "spec": "tr-bl-seam-plate",
+      "top": 378.5,
+      "bottom": 573.19,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 6,
+      "topDelta": 19.02,
+      "bottomRung": 11,
+      "bottomDelta": 11.65,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-bl-seam-thin",
+      "spec": "tr-bl-seam-thin",
+      "top": 378.5,
+      "bottom": 573.19,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 6,
+      "topDelta": 19.02,
+      "bottomRung": 11,
+      "bottomDelta": 11.65,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-bl-seam-none",
+      "spec": "tr-bl-seam-none",
+      "top": 378.5,
+      "bottom": 573.19,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 6,
+      "topDelta": 19.02,
+      "bottomRung": 11,
+      "bottomDelta": 11.65,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-bl-rule-plate",
+      "spec": "tr-bl-rule-plate",
+      "top": 605.19,
+      "bottom": 799.88,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 11,
+      "topDelta": 20.35,
+      "bottomRung": 12,
+      "bottomDelta": 169.97,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-bl-rule-thin",
+      "spec": "tr-bl-rule-thin",
+      "top": 605.19,
+      "bottom": 799.88,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 11,
+      "topDelta": 20.35,
+      "bottomRung": 12,
+      "bottomDelta": 169.97,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-bl-rule-none",
+      "spec": "tr-bl-rule-none",
+      "top": 605.19,
+      "bottom": 799.88,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 11,
+      "topDelta": 20.35,
+      "bottomRung": 12,
+      "bottomDelta": 169.97,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-lip-plate",
+      "spec": "tr-lip-plate",
+      "top": 831.88,
+      "bottom": 1026.56,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 201.97,
+      "bottomRung": 12,
+      "bottomDelta": 396.65,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-lip-thin",
+      "spec": "tr-lip-thin",
+      "top": 831.88,
+      "bottom": 1026.56,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 201.97,
+      "bottomRung": 12,
+      "bottomDelta": 396.65,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-lip-none",
+      "spec": "tr-lip-none",
+      "top": 831.88,
+      "bottom": 1026.56,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 201.97,
+      "bottomRung": 12,
+      "bottomDelta": 396.65,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-seam-plate",
+      "spec": "tr-seam-plate",
+      "top": 1058.56,
+      "bottom": 1253.25,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 428.65,
+      "bottomRung": 12,
+      "bottomDelta": 623.34,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-seam-thin",
+      "spec": "tr-seam-thin",
+      "top": 1058.56,
+      "bottom": 1253.25,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 428.65,
+      "bottomRung": 12,
+      "bottomDelta": 623.34,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-seam-none",
+      "spec": "tr-seam-none",
+      "top": 1058.56,
+      "bottom": 1253.25,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 428.65,
+      "bottomRung": 12,
+      "bottomDelta": 623.34,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-rule-plate",
+      "spec": "tr-rule-plate",
+      "top": 1285.25,
+      "bottom": 1479.94,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 655.34,
+      "bottomRung": 12,
+      "bottomDelta": 850.03,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-rule-thin",
+      "spec": "tr-rule-thin",
+      "top": 1285.25,
+      "bottom": 1479.94,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 655.34,
+      "bottomRung": 12,
+      "bottomDelta": 850.03,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-rule-none",
+      "spec": "tr-rule-none",
+      "top": 1285.25,
+      "bottom": 1479.94,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 655.34,
+      "bottomRung": 12,
+      "bottomDelta": 850.03,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-bl-lip-plate",
+      "spec": "bl-lip-plate",
+      "top": 1511.94,
+      "bottom": 1706.63,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 882.03,
+      "bottomRung": 12,
+      "bottomDelta": 1076.72,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-bl-lip-thin",
+      "spec": "bl-lip-thin",
+      "top": 1511.94,
+      "bottom": 1706.63,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 882.03,
+      "bottomRung": 12,
+      "bottomDelta": 1076.72,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-bl-lip-none",
+      "spec": "bl-lip-none",
+      "top": 1511.94,
+      "bottom": 1706.63,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 882.03,
+      "bottomRung": 12,
+      "bottomDelta": 1076.72,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-bl-seam-plate",
+      "spec": "bl-seam-plate",
+      "top": 1738.63,
+      "bottom": 1933.31,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1108.72,
+      "bottomRung": 12,
+      "bottomDelta": 1303.4,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-bl-seam-thin",
+      "spec": "bl-seam-thin",
+      "top": 1738.63,
+      "bottom": 1933.31,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1108.72,
+      "bottomRung": 12,
+      "bottomDelta": 1303.4,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-bl-seam-none",
+      "spec": "bl-seam-none",
+      "top": 1738.63,
+      "bottom": 1933.31,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1108.72,
+      "bottomRung": 12,
+      "bottomDelta": 1303.4,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-bl-rule-plate",
+      "spec": "bl-rule-plate",
+      "top": 1965.31,
+      "bottom": 2160,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1335.4,
+      "bottomRung": 12,
+      "bottomDelta": 1530.09,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-bl-rule-thin",
+      "spec": "bl-rule-thin",
+      "top": 1965.31,
+      "bottom": 2160,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1335.4,
+      "bottomRung": 12,
+      "bottomDelta": 1530.09,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-bl-rule-none",
+      "spec": "bl-rule-none",
+      "top": 1965.31,
+      "bottom": 2160,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1335.4,
+      "bottomRung": 12,
+      "bottomDelta": 1530.09,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-none-lip-plate",
+      "spec": "none-lip-plate",
+      "top": 2192,
+      "bottom": 2386.69,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1562.09,
+      "bottomRung": 12,
+      "bottomDelta": 1756.78,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-none-lip-thin",
+      "spec": "none-lip-thin",
+      "top": 2192,
+      "bottom": 2386.69,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1562.09,
+      "bottomRung": 12,
+      "bottomDelta": 1756.78,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-none-lip-none",
+      "spec": "none-lip-none",
+      "top": 2192,
+      "bottom": 2386.69,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1562.09,
+      "bottomRung": 12,
+      "bottomDelta": 1756.78,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-none-seam-plate",
+      "spec": "none-seam-plate",
+      "top": 2418.69,
+      "bottom": 2613.38,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1788.78,
+      "bottomRung": 12,
+      "bottomDelta": 1983.47,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-none-seam-thin",
+      "spec": "none-seam-thin",
+      "top": 2418.69,
+      "bottom": 2613.38,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1788.78,
+      "bottomRung": 12,
+      "bottomDelta": 1983.47,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-none-seam-none",
+      "spec": "none-seam-none",
+      "top": 2418.69,
+      "bottom": 2613.38,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1788.78,
+      "bottomRung": 12,
+      "bottomDelta": 1983.47,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-none-rule-plate",
+      "spec": "none-rule-plate",
+      "top": 2645.38,
+      "bottom": 2840.06,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 2015.47,
+      "bottomRung": 12,
+      "bottomDelta": 2210.15,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-none-rule-thin",
+      "spec": "none-rule-thin",
+      "top": 2645.38,
+      "bottom": 2840.06,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 2015.47,
+      "bottomRung": 12,
+      "bottomDelta": 2210.15,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-none-rule-none",
+      "spec": "none-rule-none",
+      "top": 2645.38,
+      "bottom": 2840.06,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 2015.47,
+      "bottomRung": 12,
+      "bottomDelta": 2210.15,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-ch-chrome",
+      "spec": "ch-chrome",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 129.05,
+      "right": 307.64,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 2,
+      "rightDelta": 8.28
+     },
+     {
+      "id": "lat-frame-ch-seed",
+      "spec": "ch-seed",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 338.36,
+      "right": 516.97,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 2,
+      "leftDelta": 39,
+      "rightCol": 5,
+      "rightDelta": 37.86
+     },
+     {
+      "id": "lat-frame-ch-card",
+      "spec": "ch-card",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 547.69,
+      "right": 726.3,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 5,
+      "leftDelta": 7.14,
+      "rightCol": 7,
+      "rightDelta": 1.14
+     },
+     {
+      "id": "lat-frame-ch-plate",
+      "spec": "ch-plate",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 757.02,
+      "right": 935.63,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 7,
+      "leftDelta": 31.86,
+      "rightCol": 9,
+      "rightDelta": 40.15
+     },
+     {
+      "id": "lat-frame-ch-plate-fluid",
+      "spec": "ch-plate-fluid",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 966.34,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 10,
+      "leftDelta": 14.29,
+      "rightCol": 12,
+      "rightDelta": 6
+     },
+     {
+      "id": "lat-frame-overflow",
+      "spec": "overflow",
+      "top": 3381.75,
+      "bottom": 3621.44,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 2751.84,
+      "bottomRung": 12,
+      "bottomDelta": 2991.53,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     }
+    ],
+    "ticks": 13,
+    "rail": 541,
+    "seated": {
+     "columns": 13,
+     "rungs": 13,
+     "framesOff": [
+      "lat-frame-tr-bl-lip-plate",
+      "lat-frame-tr-bl-lip-thin",
+      "lat-frame-tr-bl-lip-none",
+      "lat-frame-tr-bl-seam-plate",
+      "lat-frame-tr-bl-seam-thin",
+      "lat-frame-tr-bl-seam-none",
+      "lat-frame-tr-bl-rule-plate",
+      "lat-frame-tr-bl-rule-thin",
+      "lat-frame-tr-bl-rule-none",
+      "lat-frame-tr-lip-plate",
+      "lat-frame-tr-lip-thin",
+      "lat-frame-tr-lip-none",
+      "lat-frame-tr-seam-plate",
+      "lat-frame-tr-seam-thin",
+      "lat-frame-tr-seam-none",
+      "lat-frame-tr-rule-plate",
+      "lat-frame-tr-rule-thin",
+      "lat-frame-tr-rule-none",
+      "lat-frame-bl-lip-plate",
+      "lat-frame-bl-lip-thin",
+      "lat-frame-bl-lip-none",
+      "lat-frame-bl-seam-plate",
+      "lat-frame-bl-seam-thin",
+      "lat-frame-bl-seam-none",
+      "lat-frame-bl-rule-plate",
+      "lat-frame-bl-rule-thin",
+      "lat-frame-bl-rule-none",
+      "lat-frame-none-lip-plate",
+      "lat-frame-none-lip-thin",
+      "lat-frame-none-lip-none",
+      "lat-frame-none-seam-plate",
+      "lat-frame-none-seam-thin",
+      "lat-frame-none-seam-none",
+      "lat-frame-none-rule-plate",
+      "lat-frame-none-rule-thin",
+      "lat-frame-none-rule-none",
+      "lat-frame-ch-chrome",
+      "lat-frame-ch-seed",
+      "lat-frame-ch-card",
+      "lat-frame-ch-plate",
+      "lat-frame-ch-plate-fluid",
+      "lat-frame-overflow"
+     ]
+    }
+   },
+   "probe": {
+    "accent": 7,
+    "bold": 0,
+    "text": 152,
+    "boldShare": 0,
+    "rungs": 7,
+    "topRungShare": 0.579,
+    "families": [
+     "PT Mono",
+     "PP Neue Montreal"
+    ],
+    "minPx": 8,
+    "radii": 0,
+    "structureHues": 4,
+    "t0": {
+     "fl": "16px",
+     "ik": "16px",
+     "match": true
+    },
+    "seat": null,
+    "boxes": {
+     "brief": null,
+     "reg": null,
+     "dir": null,
+     "viz": null
+    }
+   },
+   "mechanical": {
+    "ok": true,
+    "code": 0,
+    "seconds": 1.2,
+    "violations": [],
+    "notes": {
+     "palette": 1,
+     "spacing": 7
+    }
+   }
+  },
+  {
+   "id": "LA",
+   "lane": "la",
+   "board": "page",
+   "theme": "light",
+   "subject": "parchment",
+   "viewport": "1280x720",
+   "setting": "binding",
+   "href": "http://localhost:3003/test/lattice?board=page&k=LA&theme=light&console=0",
+   "files": [
+    {
+     "file": "LT-la__parchment_01.png",
+     "draw": 1,
+     "what": "the first screen"
+    },
+    {
+     "file": "LT-la__parchment_02.png",
+     "draw": 2,
+     "what": "the whole page"
+    }
+   ],
+   "gates": {
+    "RUNG MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "COLUMN MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "SEAT-Y": {
+     "ok": true,
+     "detail": "no instrument frame on the page"
+    },
+    "SEAT-X": {
+     "ok": true,
+     "detail": "2/2 frames on column edges"
+    },
+    "CHAMFER": {
+     "ok": true,
+     "detail": "2 frames on the ladder"
+    },
+    "CORNERS": {
+     "ok": true,
+     "detail": "2 frames hit-tested both ends"
+    },
+    "LEDGER": {
+     "ok": false,
+     "detail": "gold on 4 structure element(s): i.lat-field__mark rgb(138, 107, 32); i.lat-field__mark rgb(138, 107, 32); i.lat-field__mark rgb(138, 107, 32); i.lat-field__mark rgb(138, 107, 32)"
+    },
+    "OVERLAP": {
+     "ok": true,
+     "detail": "0"
+    },
+    "TYPE FLOOR": {
+     "ok": true,
+     "detail": "10px"
+    },
+    "FAMILIES": {
+     "ok": true,
+     "detail": "PT Mono, PP Neue Montreal"
+    },
+    "RADIUS": {
+     "ok": true,
+     "detail": "0 rounded corner(s)"
+    },
+    "COPY": {
+     "ok": true,
+     "detail": "--lat-copy 15px / --band-copy 15px"
+    },
+    "RING": {
+     "ok": true,
+     "detail": "measured on the frames board"
+    },
+    "USABILITY": {
+     "ok": true,
+     "detail": "hit boxes ok · focus ring on a.lat-cta · contrast ok",
+     "hits": [],
+     "contrast": [],
+     "keyboard": {
+      "ok": true,
+      "detail": [
+       "focus ring on a.lat-cta"
+      ]
+     }
+    },
+    "PAGE ERRORS": {
+     "ok": true,
+     "detail": "0"
+    }
+   },
+   "errors": [],
+   "stamp": "page|cut=tr-bl,line=lip,head=strip|light|0|—|541|13|89",
+   "measure": {
+    "columns": [
+     {
+      "n": 0,
+      "x": 129.05,
+      "expected": 129.06,
+      "delta": 0.01
+     },
+     {
+      "n": 1,
+      "x": 213.7,
+      "expected": 213.71,
+      "delta": 0.01
+     },
+     {
+      "n": 2,
+      "x": 298.36,
+      "expected": 298.37,
+      "delta": 0.01
+     },
+     {
+      "n": 3,
+      "x": 383.02,
+      "expected": 383.03,
+      "delta": 0.01
+     },
+     {
+      "n": 4,
+      "x": 467.67,
+      "expected": 467.69,
+      "delta": 0.01
+     },
+     {
+      "n": 5,
+      "x": 552.33,
+      "expected": 552.34,
+      "delta": 0.01
+     },
+     {
+      "n": 6,
+      "x": 637,
+      "expected": 637,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "x": 721.66,
+      "expected": 721.66,
+      "delta": 0
+     },
+     {
+      "n": 8,
+      "x": 806.31,
+      "expected": 806.31,
+      "delta": 0
+     },
+     {
+      "n": 9,
+      "x": 890.97,
+      "expected": 890.97,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "x": 975.63,
+      "expected": 975.63,
+      "delta": 0
+     },
+     {
+      "n": 11,
+      "x": 1060.28,
+      "expected": 1060.29,
+      "delta": 0.01
+     },
+     {
+      "n": 12,
+      "x": 1144.94,
+      "expected": 1144.94,
+      "delta": 0.01
+     }
+    ],
+    "rungs": [
+     {
+      "n": 0,
+      "y": 89.06,
+      "tick": 90.06,
+      "delta": 1
+     },
+     {
+      "n": 1,
+      "y": 134.13,
+      "tick": 134.11,
+      "delta": 0.02
+     },
+     {
+      "n": 2,
+      "y": 179.2,
+      "tick": 179.22,
+      "delta": 0.02
+     },
+     {
+      "n": 3,
+      "y": 224.27,
+      "tick": 224.27,
+      "delta": 0
+     },
+     {
+      "n": 4,
+      "y": 269.34,
+      "tick": 269.33,
+      "delta": 0.02
+     },
+     {
+      "n": 5,
+      "y": 314.41,
+      "tick": 314.44,
+      "delta": 0.03
+     },
+     {
+      "n": 6,
+      "y": 359.48,
+      "tick": 359.48,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "y": 404.56,
+      "tick": 404.53,
+      "delta": 0.03
+     },
+     {
+      "n": 8,
+      "y": 449.63,
+      "tick": 449.64,
+      "delta": 0.02
+     },
+     {
+      "n": 9,
+      "y": 494.7,
+      "tick": 494.7,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "y": 539.77,
+      "tick": 539.75,
+      "delta": 0.02
+     },
+     {
+      "n": 11,
+      "y": 584.84,
+      "tick": 584.86,
+      "delta": 0.02
+     },
+     {
+      "n": 12,
+      "y": 629.91,
+      "tick": 628.92,
+      "delta": 0.98
+     }
+    ],
+    "frames": [
+     {
+      "id": "lat-frame-page-embedded",
+      "spec": "page-embedded",
+      "top": 1080.13,
+      "bottom": 1409.78,
+      "left": 721.66,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 450.22,
+      "bottomRung": 12,
+      "bottomDelta": 779.87,
+      "leftCol": 7,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-page-instrument",
+      "spec": "page-instrument",
+      "top": 1671.47,
+      "bottom": 2212.31,
+      "left": 129.05,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1041.56,
+      "bottomRung": 12,
+      "bottomDelta": 1582.4,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0.01
+     }
+    ],
+    "ticks": 13,
+    "rail": 541,
+    "seated": {
+     "columns": 13,
+     "rungs": 13,
+     "framesOff": [
+      "lat-frame-page-embedded",
+      "lat-frame-page-instrument"
+     ]
+    }
+   },
+   "probe": {
+    "accent": 28,
+    "bold": 0,
+    "text": 107,
+    "boldShare": 0,
+    "rungs": 8,
+    "topRungShare": 0.252,
+    "families": [
+     "PT Mono",
+     "PP Neue Montreal"
+    ],
+    "minPx": 8,
+    "radii": 0,
+    "structureHues": 9,
+    "t0": {
+     "fl": "16px",
+     "ik": "16px",
+     "match": true
+    },
+    "seat": null,
+    "boxes": {
+     "brief": null,
+     "reg": null,
+     "dir": null,
+     "viz": null
+    }
+   },
+   "mechanical": {
+    "ok": true,
+    "code": 0,
+    "seconds": 1.3,
+    "violations": [],
+    "notes": {
+     "palette": 9,
+     "trackingLegacy": 1,
+     "accentMarks": 24,
+     "spacing": 36,
+     "typeLadder": 9
+    }
+   }
+  },
+  {
+   "id": "LA",
+   "lane": "la",
+   "board": "sections",
+   "theme": "light",
+   "subject": "parchment",
+   "viewport": "1280x720",
+   "setting": "binding",
+   "href": "http://localhost:3003/test/lattice?board=sections&k=LA&theme=light&console=0",
+   "files": [
+    {
+     "file": "LT-la__parchment_03.png",
+     "draw": 3,
+     "what": "the sections board"
+    }
+   ],
+   "gates": {
+    "RUNG MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "COLUMN MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "SEAT-Y": {
+     "ok": true,
+     "detail": "skipped: a flowing board does not seat on viewport rungs"
+    },
+    "SEAT-X": {
+     "ok": true,
+     "detail": "6/6 frames on column edges"
+    },
+    "CHAMFER": {
+     "ok": true,
+     "detail": "6 frames on the ladder"
+    },
+    "CORNERS": {
+     "ok": true,
+     "detail": "3 frames hit-tested both ends"
+    },
+    "LEDGER": {
+     "ok": true,
+     "detail": "1 hue family(ies): neutral; gold structure 0"
+    },
+    "OVERLAP": {
+     "ok": true,
+     "detail": "0"
+    },
+    "TYPE FLOOR": {
+     "ok": true,
+     "detail": "10px"
+    },
+    "FAMILIES": {
+     "ok": true,
+     "detail": "PT Mono, PP Neue Montreal"
+    },
+    "RADIUS": {
+     "ok": true,
+     "detail": "0 rounded corner(s)"
+    },
+    "COPY": {
+     "ok": true,
+     "detail": "--lat-copy 15px / --band-copy 15px"
+    },
+    "RING": {
+     "ok": true,
+     "detail": "measured on the frames board"
+    },
+    "PAGE ERRORS": {
+     "ok": true,
+     "detail": "0"
+    }
+   },
+   "errors": [],
+   "stamp": "sections|cut=tr-bl,line=lip,head=strip|light|0|—|541|13|89",
+   "measure": {
+    "columns": [
+     {
+      "n": 0,
+      "x": 129.05,
+      "expected": 129.06,
+      "delta": 0.01
+     },
+     {
+      "n": 1,
+      "x": 213.7,
+      "expected": 213.71,
+      "delta": 0.01
+     },
+     {
+      "n": 2,
+      "x": 298.36,
+      "expected": 298.37,
+      "delta": 0.01
+     },
+     {
+      "n": 3,
+      "x": 383.02,
+      "expected": 383.03,
+      "delta": 0.01
+     },
+     {
+      "n": 4,
+      "x": 467.67,
+      "expected": 467.69,
+      "delta": 0.01
+     },
+     {
+      "n": 5,
+      "x": 552.33,
+      "expected": 552.34,
+      "delta": 0.01
+     },
+     {
+      "n": 6,
+      "x": 637,
+      "expected": 637,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "x": 721.66,
+      "expected": 721.66,
+      "delta": 0
+     },
+     {
+      "n": 8,
+      "x": 806.31,
+      "expected": 806.31,
+      "delta": 0
+     },
+     {
+      "n": 9,
+      "x": 890.97,
+      "expected": 890.97,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "x": 975.63,
+      "expected": 975.63,
+      "delta": 0
+     },
+     {
+      "n": 11,
+      "x": 1060.28,
+      "expected": 1060.29,
+      "delta": 0.01
+     },
+     {
+      "n": 12,
+      "x": 1144.94,
+      "expected": 1144.94,
+      "delta": 0.01
+     }
+    ],
+    "rungs": [
+     {
+      "n": 0,
+      "y": 89.06,
+      "tick": 90.06,
+      "delta": 1
+     },
+     {
+      "n": 1,
+      "y": 134.13,
+      "tick": 134.11,
+      "delta": 0.02
+     },
+     {
+      "n": 2,
+      "y": 179.2,
+      "tick": 179.22,
+      "delta": 0.02
+     },
+     {
+      "n": 3,
+      "y": 224.27,
+      "tick": 224.27,
+      "delta": 0
+     },
+     {
+      "n": 4,
+      "y": 269.34,
+      "tick": 269.33,
+      "delta": 0.02
+     },
+     {
+      "n": 5,
+      "y": 314.41,
+      "tick": 314.44,
+      "delta": 0.03
+     },
+     {
+      "n": 6,
+      "y": 359.48,
+      "tick": 359.48,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "y": 404.56,
+      "tick": 404.53,
+      "delta": 0.03
+     },
+     {
+      "n": 8,
+      "y": 449.63,
+      "tick": 449.64,
+      "delta": 0.02
+     },
+     {
+      "n": 9,
+      "y": 494.7,
+      "tick": 494.7,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "y": 539.77,
+      "tick": 539.75,
+      "delta": 0.02
+     },
+     {
+      "n": 11,
+      "y": 584.84,
+      "tick": 584.86,
+      "delta": 0.02
+     },
+     {
+      "n": 12,
+      "y": 629.91,
+      "tick": 628.92,
+      "delta": 0.98
+     }
+    ],
+    "frames": [
+     {
+      "id": "lat-frame-sec-head-field",
+      "spec": "sec-head-field",
+      "top": 266.16,
+      "bottom": 383.84,
+      "left": 129.05,
+      "right": 1144.95,
+      "topRung": 4,
+      "topDelta": 3.18,
+      "bottomRung": 7,
+      "bottomDelta": 20.72,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0.01
+     },
+     {
+      "id": "lat-frame-sec-bay",
+      "spec": "sec-bay",
+      "top": 1006.05,
+      "bottom": 1345.86,
+      "left": 129.05,
+      "right": 806.31,
+      "topRung": 12,
+      "topDelta": 376.14,
+      "bottomRung": 12,
+      "bottomDelta": 715.95,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 8,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-bay-runs",
+      "spec": "sec-bay-runs",
+      "top": 1006.05,
+      "bottom": 1119.98,
+      "left": 806.31,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 376.14,
+      "bottomRung": 12,
+      "bottomDelta": 490.07,
+      "leftCol": 8,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-bay-format",
+      "spec": "sec-bay-format",
+      "top": 1118.98,
+      "bottom": 1232.92,
+      "left": 806.31,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 489.07,
+      "bottomRung": 12,
+      "bottomDelta": 603.01,
+      "leftCol": 8,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-bay-leaves",
+      "spec": "sec-bay-leaves",
+      "top": 1231.92,
+      "bottom": 1345.86,
+      "left": 806.31,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 602.01,
+      "bottomRung": 12,
+      "bottomDelta": 715.95,
+      "leftCol": 8,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0
+     },
+     {
+      "id": "lat-frame-sec-instrument",
+      "spec": "sec-instrument",
+      "top": 2128.55,
+      "bottom": 2669.39,
+      "left": 129.05,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1498.64,
+      "bottomRung": 12,
+      "bottomDelta": 2039.48,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 12,
+      "rightDelta": 0.01
+     }
+    ],
+    "ticks": 13,
+    "rail": 541,
+    "seated": {
+     "columns": 13,
+     "rungs": 13,
+     "framesOff": [
+      "lat-frame-sec-head-field",
+      "lat-frame-sec-bay",
+      "lat-frame-sec-bay-runs",
+      "lat-frame-sec-bay-format",
+      "lat-frame-sec-bay-leaves",
+      "lat-frame-sec-instrument"
+     ]
+    }
+   },
+   "probe": {
+    "accent": 19,
+    "bold": 0,
+    "text": 109,
+    "boldShare": 0,
+    "rungs": 7,
+    "topRungShare": 0.312,
+    "families": [
+     "PT Mono",
+     "PP Neue Montreal"
+    ],
+    "minPx": 8,
+    "radii": 0,
+    "structureHues": 5,
+    "t0": {
+     "fl": "16px",
+     "ik": "16px",
+     "match": true
+    },
+    "seat": null,
+    "boxes": {
+     "brief": null,
+     "reg": null,
+     "dir": null,
+     "viz": null
+    }
+   },
+   "mechanical": {
+    "ok": true,
+    "code": 0,
+    "seconds": 1.1,
+    "violations": [],
+    "notes": {
+     "palette": 5,
+     "accentMarks": 12,
+     "spacing": 21
+    }
+   }
+  },
+  {
+   "id": "LA",
+   "lane": "la",
+   "board": "frames",
+   "theme": "light",
+   "subject": "parchment",
+   "viewport": "1280x720",
+   "setting": "binding",
+   "href": "http://localhost:3003/test/lattice?board=frames&k=LA&theme=light&console=0",
+   "files": [
+    {
+     "file": "LT-la__parchment_04.png",
+     "draw": 4,
+     "what": "the frames board"
+    }
+   ],
+   "gates": {
+    "RUNG MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "COLUMN MIRROR": {
+     "ok": true,
+     "detail": "13/13"
+    },
+    "SEAT-Y": {
+     "ok": true,
+     "detail": "skipped: a flowing board does not seat on viewport rungs"
+    },
+    "SEAT-X": {
+     "ok": true,
+     "detail": "skipped on this board"
+    },
+    "CHAMFER": {
+     "ok": true,
+     "detail": "42 frames on the ladder"
+    },
+    "CORNERS": {
+     "ok": false,
+     "detail": "div#lat-frame-tr-bl-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-bl-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-bl-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-lip-plate.lat-frame: top edge could not be brought into view; div#lat-frame-tr-lip-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-lip-thin.lat-frame: top edge could not be brought into view; div#lat-frame-tr-lip-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-lip-none.lat-frame: top edge could not be brought into view; div#lat-frame-tr-lip-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-seam-plate.lat-frame: top edge could not be brought into view; div#lat-frame-tr-seam-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-seam-thin.lat-frame: top edge could not be brought into view; div#lat-frame-tr-seam-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-seam-none.lat-frame: top edge could not be brought into view; div#lat-frame-tr-seam-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-rule-plate.lat-frame: top edge could not be brought into view; div#lat-frame-tr-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-rule-thin.lat-frame: top edge could not be brought into view; div#lat-frame-tr-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-tr-rule-none.lat-frame: top edge could not be brought into view; div#lat-frame-tr-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-lip-plate.lat-frame: top edge could not be brought into view; div#lat-frame-bl-lip-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-lip-thin.lat-frame: top edge could not be brought into view; div#lat-frame-bl-lip-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-lip-none.lat-frame: top edge could not be brought into view; div#lat-frame-bl-lip-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-seam-plate.lat-frame: top edge could not be brought into view; div#lat-frame-bl-seam-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-seam-thin.lat-frame: top edge could not be brought into view; div#lat-frame-bl-seam-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-seam-none.lat-frame: top edge could not be brought into view; div#lat-frame-bl-seam-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-rule-plate.lat-frame: top edge could not be brought into view; div#lat-frame-bl-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-rule-thin.lat-frame: top edge could not be brought into view; div#lat-frame-bl-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-bl-rule-none.lat-frame: top edge could not be brought into view; div#lat-frame-bl-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-lip-plate.lat-frame: top edge could not be brought into view; div#lat-frame-none-lip-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-lip-thin.lat-frame: top edge could not be brought into view; div#lat-frame-none-lip-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-lip-none.lat-frame: top edge could not be brought into view; div#lat-frame-none-lip-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-seam-plate.lat-frame: top edge could not be brought into view; div#lat-frame-none-seam-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-seam-thin.lat-frame: top edge could not be brought into view; div#lat-frame-none-seam-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-seam-none.lat-frame: top edge could not be brought into view; div#lat-frame-none-seam-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-rule-plate.lat-frame: top edge could not be brought into view; div#lat-frame-none-rule-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-rule-thin.lat-frame: top edge could not be brought into view; div#lat-frame-none-rule-thin.lat-frame: bottom edge could not be brought into view; div#lat-frame-none-rule-none.lat-frame: top edge could not be brought into view; div#lat-frame-none-rule-none.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-seed.lat-frame: top edge could not be brought into view; div#lat-frame-ch-seed.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-card.lat-frame: top edge could not be brought into view; div#lat-frame-ch-card.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-plate.lat-frame: top edge could not be brought into view; div#lat-frame-ch-plate.lat-frame: bottom edge could not be brought into view; div#lat-frame-ch-plate-fluid.lat-frame: top edge could not be brought into view; div#lat-frame-ch-plate-fluid.lat-frame: bottom edge could not be brought into view"
+    },
+    "LEDGER": {
+     "ok": true,
+     "detail": "1 hue family(ies): neutral; gold structure 0"
+    },
+    "OVERLAP": {
+     "ok": false,
+     "detail": "5 pair(s): span.lat-frames__foot × span.lat-frames__foot (27×11px); span.lat-frames__foot × span.lat-frames__foot (34×11px); span.lat-frames__foot × span.lat-frames__foot (41×11px); span.lat-frames__foot × span.lat-frames__foot (1×11px); span.lat-frames__foot × span.lat-frames__foot (1×11px)"
+    },
+    "TYPE FLOOR": {
+     "ok": true,
+     "detail": "10px"
+    },
+    "FAMILIES": {
+     "ok": true,
+     "detail": "PP Neue Montreal, PT Mono"
+    },
+    "RADIUS": {
+     "ok": true,
+     "detail": "0 rounded corner(s)"
+    },
+    "COPY": {
+     "ok": true,
+     "detail": "--lat-copy 15px / --band-copy 15px"
+    },
+    "RING": {
+     "ok": false,
+     "detail": [
+      "tr: only 0 % of the diagonal carries a line",
+      "bl: only 0 % of the diagonal carries a line"
+     ],
+     "readings": [
+      "tr-bl: 24/24 samples differ from the ground (100 %) at the TR cut, c=23.0",
+      "tr: 0/0 samples differ from the ground (0 %) at the TR cut, c=23.0",
+      "bl: 0/0 samples differ from the ground (0 %) at the BL cut, c=23.0"
+     ]
+    },
+    "PAGE ERRORS": {
+     "ok": true,
+     "detail": "0"
+    }
+   },
+   "errors": [],
+   "stamp": "frames|cut=tr-bl,line=lip,head=strip|light|0|—|541|13|89",
+   "measure": {
+    "columns": [
+     {
+      "n": 0,
+      "x": 129.05,
+      "expected": 129.05,
+      "delta": 0
+     },
+     {
+      "n": 1,
+      "x": 214.2,
+      "expected": 214.21,
+      "delta": 0
+     },
+     {
+      "n": 2,
+      "x": 299.36,
+      "expected": 299.36,
+      "delta": 0.01
+     },
+     {
+      "n": 3,
+      "x": 384.52,
+      "expected": 384.52,
+      "delta": 0.01
+     },
+     {
+      "n": 4,
+      "x": 469.67,
+      "expected": 469.68,
+      "delta": 0.01
+     },
+     {
+      "n": 5,
+      "x": 554.83,
+      "expected": 554.84,
+      "delta": 0.01
+     },
+     {
+      "n": 6,
+      "x": 640,
+      "expected": 640,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "x": 725.16,
+      "expected": 725.16,
+      "delta": 0
+     },
+     {
+      "n": 8,
+      "x": 810.31,
+      "expected": 810.32,
+      "delta": 0.01
+     },
+     {
+      "n": 9,
+      "x": 895.47,
+      "expected": 895.48,
+      "delta": 0.01
+     },
+     {
+      "n": 10,
+      "x": 980.63,
+      "expected": 980.64,
+      "delta": 0.01
+     },
+     {
+      "n": 11,
+      "x": 1065.78,
+      "expected": 1065.79,
+      "delta": 0.01
+     },
+     {
+      "n": 12,
+      "x": 1150.94,
+      "expected": 1150.95,
+      "delta": 0.02
+     }
+    ],
+    "rungs": [
+     {
+      "n": 0,
+      "y": 89.06,
+      "tick": 90.06,
+      "delta": 1
+     },
+     {
+      "n": 1,
+      "y": 134.13,
+      "tick": 134.11,
+      "delta": 0.02
+     },
+     {
+      "n": 2,
+      "y": 179.2,
+      "tick": 179.22,
+      "delta": 0.02
+     },
+     {
+      "n": 3,
+      "y": 224.27,
+      "tick": 224.27,
+      "delta": 0
+     },
+     {
+      "n": 4,
+      "y": 269.34,
+      "tick": 269.33,
+      "delta": 0.02
+     },
+     {
+      "n": 5,
+      "y": 314.41,
+      "tick": 314.44,
+      "delta": 0.03
+     },
+     {
+      "n": 6,
+      "y": 359.48,
+      "tick": 359.48,
+      "delta": 0
+     },
+     {
+      "n": 7,
+      "y": 404.56,
+      "tick": 404.53,
+      "delta": 0.03
+     },
+     {
+      "n": 8,
+      "y": 449.63,
+      "tick": 449.64,
+      "delta": 0.02
+     },
+     {
+      "n": 9,
+      "y": 494.7,
+      "tick": 494.7,
+      "delta": 0
+     },
+     {
+      "n": 10,
+      "y": 539.77,
+      "tick": 539.75,
+      "delta": 0.02
+     },
+     {
+      "n": 11,
+      "y": 584.84,
+      "tick": 584.86,
+      "delta": 0.02
+     },
+     {
+      "n": 12,
+      "y": 629.91,
+      "tick": 628.92,
+      "delta": 0.98
+     }
+    ],
+    "frames": [
+     {
+      "id": "lat-frame-tr-bl-lip-plate",
+      "spec": "tr-bl-lip-plate",
+      "top": 151.81,
+      "bottom": 346.5,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 1,
+      "topDelta": 17.68,
+      "bottomRung": 6,
+      "bottomDelta": 12.98,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-bl-lip-thin",
+      "spec": "tr-bl-lip-thin",
+      "top": 151.81,
+      "bottom": 346.5,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 1,
+      "topDelta": 17.68,
+      "bottomRung": 6,
+      "bottomDelta": 12.98,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-bl-lip-none",
+      "spec": "tr-bl-lip-none",
+      "top": 151.81,
+      "bottom": 346.5,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 1,
+      "topDelta": 17.68,
+      "bottomRung": 6,
+      "bottomDelta": 12.98,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-bl-seam-plate",
+      "spec": "tr-bl-seam-plate",
+      "top": 378.5,
+      "bottom": 573.19,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 6,
+      "topDelta": 19.02,
+      "bottomRung": 11,
+      "bottomDelta": 11.65,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-bl-seam-thin",
+      "spec": "tr-bl-seam-thin",
+      "top": 378.5,
+      "bottom": 573.19,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 6,
+      "topDelta": 19.02,
+      "bottomRung": 11,
+      "bottomDelta": 11.65,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-bl-seam-none",
+      "spec": "tr-bl-seam-none",
+      "top": 378.5,
+      "bottom": 573.19,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 6,
+      "topDelta": 19.02,
+      "bottomRung": 11,
+      "bottomDelta": 11.65,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-bl-rule-plate",
+      "spec": "tr-bl-rule-plate",
+      "top": 605.19,
+      "bottom": 799.88,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 11,
+      "topDelta": 20.35,
+      "bottomRung": 12,
+      "bottomDelta": 169.97,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-bl-rule-thin",
+      "spec": "tr-bl-rule-thin",
+      "top": 605.19,
+      "bottom": 799.88,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 11,
+      "topDelta": 20.35,
+      "bottomRung": 12,
+      "bottomDelta": 169.97,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-bl-rule-none",
+      "spec": "tr-bl-rule-none",
+      "top": 605.19,
+      "bottom": 799.88,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 11,
+      "topDelta": 20.35,
+      "bottomRung": 12,
+      "bottomDelta": 169.97,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-lip-plate",
+      "spec": "tr-lip-plate",
+      "top": 831.88,
+      "bottom": 1026.56,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 201.97,
+      "bottomRung": 12,
+      "bottomDelta": 396.65,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-lip-thin",
+      "spec": "tr-lip-thin",
+      "top": 831.88,
+      "bottom": 1026.56,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 201.97,
+      "bottomRung": 12,
+      "bottomDelta": 396.65,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-lip-none",
+      "spec": "tr-lip-none",
+      "top": 831.88,
+      "bottom": 1026.56,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 201.97,
+      "bottomRung": 12,
+      "bottomDelta": 396.65,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-seam-plate",
+      "spec": "tr-seam-plate",
+      "top": 1058.56,
+      "bottom": 1253.25,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 428.65,
+      "bottomRung": 12,
+      "bottomDelta": 623.34,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-seam-thin",
+      "spec": "tr-seam-thin",
+      "top": 1058.56,
+      "bottom": 1253.25,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 428.65,
+      "bottomRung": 12,
+      "bottomDelta": 623.34,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-seam-none",
+      "spec": "tr-seam-none",
+      "top": 1058.56,
+      "bottom": 1253.25,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 428.65,
+      "bottomRung": 12,
+      "bottomDelta": 623.34,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-tr-rule-plate",
+      "spec": "tr-rule-plate",
+      "top": 1285.25,
+      "bottom": 1479.94,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 655.34,
+      "bottomRung": 12,
+      "bottomDelta": 850.03,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-tr-rule-thin",
+      "spec": "tr-rule-thin",
+      "top": 1285.25,
+      "bottom": 1479.94,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 655.34,
+      "bottomRung": 12,
+      "bottomDelta": 850.03,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-tr-rule-none",
+      "spec": "tr-rule-none",
+      "top": 1285.25,
+      "bottom": 1479.94,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 655.34,
+      "bottomRung": 12,
+      "bottomDelta": 850.03,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-bl-lip-plate",
+      "spec": "bl-lip-plate",
+      "top": 1511.94,
+      "bottom": 1706.63,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 882.03,
+      "bottomRung": 12,
+      "bottomDelta": 1076.72,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-bl-lip-thin",
+      "spec": "bl-lip-thin",
+      "top": 1511.94,
+      "bottom": 1706.63,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 882.03,
+      "bottomRung": 12,
+      "bottomDelta": 1076.72,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-bl-lip-none",
+      "spec": "bl-lip-none",
+      "top": 1511.94,
+      "bottom": 1706.63,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 882.03,
+      "bottomRung": 12,
+      "bottomDelta": 1076.72,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-bl-seam-plate",
+      "spec": "bl-seam-plate",
+      "top": 1738.63,
+      "bottom": 1933.31,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1108.72,
+      "bottomRung": 12,
+      "bottomDelta": 1303.4,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-bl-seam-thin",
+      "spec": "bl-seam-thin",
+      "top": 1738.63,
+      "bottom": 1933.31,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1108.72,
+      "bottomRung": 12,
+      "bottomDelta": 1303.4,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-bl-seam-none",
+      "spec": "bl-seam-none",
+      "top": 1738.63,
+      "bottom": 1933.31,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1108.72,
+      "bottomRung": 12,
+      "bottomDelta": 1303.4,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-bl-rule-plate",
+      "spec": "bl-rule-plate",
+      "top": 1965.31,
+      "bottom": 2160,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1335.4,
+      "bottomRung": 12,
+      "bottomDelta": 1530.09,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-bl-rule-thin",
+      "spec": "bl-rule-thin",
+      "top": 1965.31,
+      "bottom": 2160,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1335.4,
+      "bottomRung": 12,
+      "bottomDelta": 1530.09,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-bl-rule-none",
+      "spec": "bl-rule-none",
+      "top": 1965.31,
+      "bottom": 2160,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1335.4,
+      "bottomRung": 12,
+      "bottomDelta": 1530.09,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-none-lip-plate",
+      "spec": "none-lip-plate",
+      "top": 2192,
+      "bottom": 2386.69,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1562.09,
+      "bottomRung": 12,
+      "bottomDelta": 1756.78,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-none-lip-thin",
+      "spec": "none-lip-thin",
+      "top": 2192,
+      "bottom": 2386.69,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1562.09,
+      "bottomRung": 12,
+      "bottomDelta": 1756.78,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-none-lip-none",
+      "spec": "none-lip-none",
+      "top": 2192,
+      "bottom": 2386.69,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1562.09,
+      "bottomRung": 12,
+      "bottomDelta": 1756.78,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-none-seam-plate",
+      "spec": "none-seam-plate",
+      "top": 2418.69,
+      "bottom": 2613.38,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 1788.78,
+      "bottomRung": 12,
+      "bottomDelta": 1983.47,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-none-seam-thin",
+      "spec": "none-seam-thin",
+      "top": 2418.69,
+      "bottom": 2613.38,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 1788.78,
+      "bottomRung": 12,
+      "bottomDelta": 1983.47,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-none-seam-none",
+      "spec": "none-seam-none",
+      "top": 2418.69,
+      "bottom": 2613.38,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 1788.78,
+      "bottomRung": 12,
+      "bottomDelta": 1983.47,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-none-rule-plate",
+      "spec": "none-rule-plate",
+      "top": 2645.38,
+      "bottom": 2840.06,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 2015.47,
+      "bottomRung": 12,
+      "bottomDelta": 2210.15,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     },
+     {
+      "id": "lat-frame-none-rule-thin",
+      "spec": "none-rule-thin",
+      "top": 2645.38,
+      "bottom": 2840.06,
+      "left": 477.92,
+      "right": 796.08,
+      "topRung": 12,
+      "topDelta": 2015.47,
+      "bottomRung": 12,
+      "bottomDelta": 2210.15,
+      "leftCol": 4,
+      "leftDelta": 8.25,
+      "rightCol": 8,
+      "rightDelta": 14.23
+     },
+     {
+      "id": "lat-frame-none-rule-none",
+      "spec": "none-rule-none",
+      "top": 2645.38,
+      "bottom": 2840.06,
+      "left": 826.8,
+      "right": 1144.95,
+      "topRung": 12,
+      "topDelta": 2015.47,
+      "bottomRung": 12,
+      "bottomDelta": 2210.15,
+      "leftCol": 8,
+      "leftDelta": 16.49,
+      "rightCol": 12,
+      "rightDelta": 5.99
+     },
+     {
+      "id": "lat-frame-ch-chrome",
+      "spec": "ch-chrome",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 129.05,
+      "right": 307.64,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 2,
+      "rightDelta": 8.28
+     },
+     {
+      "id": "lat-frame-ch-seed",
+      "spec": "ch-seed",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 338.36,
+      "right": 516.97,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 2,
+      "leftDelta": 39,
+      "rightCol": 5,
+      "rightDelta": 37.86
+     },
+     {
+      "id": "lat-frame-ch-card",
+      "spec": "ch-card",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 547.69,
+      "right": 726.3,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 5,
+      "leftDelta": 7.14,
+      "rightCol": 7,
+      "rightDelta": 1.14
+     },
+     {
+      "id": "lat-frame-ch-plate",
+      "spec": "ch-plate",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 757.02,
+      "right": 935.63,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 7,
+      "leftDelta": 31.86,
+      "rightCol": 9,
+      "rightDelta": 40.15
+     },
+     {
+      "id": "lat-frame-ch-plate-fluid",
+      "spec": "ch-plate-fluid",
+      "top": 2934.81,
+      "bottom": 3287,
+      "left": 966.34,
+      "right": 1144.94,
+      "topRung": 12,
+      "topDelta": 2304.9,
+      "bottomRung": 12,
+      "bottomDelta": 2657.09,
+      "leftCol": 10,
+      "leftDelta": 14.29,
+      "rightCol": 12,
+      "rightDelta": 6
+     },
+     {
+      "id": "lat-frame-overflow",
+      "spec": "overflow",
+      "top": 3381.75,
+      "bottom": 3621.44,
+      "left": 129.05,
+      "right": 447.2,
+      "topRung": 12,
+      "topDelta": 2751.84,
+      "bottomRung": 12,
+      "bottomDelta": 2991.53,
+      "leftCol": 0,
+      "leftDelta": 0,
+      "rightCol": 4,
+      "rightDelta": 22.47
+     }
+    ],
+    "ticks": 13,
+    "rail": 541,
+    "seated": {
+     "columns": 13,
+     "rungs": 13,
+     "framesOff": [
+      "lat-frame-tr-bl-lip-plate",
+      "lat-frame-tr-bl-lip-thin",
+      "lat-frame-tr-bl-lip-none",
+      "lat-frame-tr-bl-seam-plate",
+      "lat-frame-tr-bl-seam-thin",
+      "lat-frame-tr-bl-seam-none",
+      "lat-frame-tr-bl-rule-plate",
+      "lat-frame-tr-bl-rule-thin",
+      "lat-frame-tr-bl-rule-none",
+      "lat-frame-tr-lip-plate",
+      "lat-frame-tr-lip-thin",
+      "lat-frame-tr-lip-none",
+      "lat-frame-tr-seam-plate",
+      "lat-frame-tr-seam-thin",
+      "lat-frame-tr-seam-none",
+      "lat-frame-tr-rule-plate",
+      "lat-frame-tr-rule-thin",
+      "lat-frame-tr-rule-none",
+      "lat-frame-bl-lip-plate",
+      "lat-frame-bl-lip-thin",
+      "lat-frame-bl-lip-none",
+      "lat-frame-bl-seam-plate",
+      "lat-frame-bl-seam-thin",
+      "lat-frame-bl-seam-none",
+      "lat-frame-bl-rule-plate",
+      "lat-frame-bl-rule-thin",
+      "lat-frame-bl-rule-none",
+      "lat-frame-none-lip-plate",
+      "lat-frame-none-lip-thin",
+      "lat-frame-none-lip-none",
+      "lat-frame-none-seam-plate",
+      "lat-frame-none-seam-thin",
+      "lat-frame-none-seam-none",
+      "lat-frame-none-rule-plate",
+      "lat-frame-none-rule-thin",
+      "lat-frame-none-rule-none",
+      "lat-frame-ch-chrome",
+      "lat-frame-ch-seed",
+      "lat-frame-ch-card",
+      "lat-frame-ch-plate",
+      "lat-frame-ch-plate-fluid",
+      "lat-frame-overflow"
+     ]
+    }
+   },
+   "probe": {
+    "accent": 7,
+    "bold": 0,
+    "text": 152,
+    "boldShare": 0,
+    "rungs": 7,
+    "topRungShare": 0.579,
+    "families": [
+     "PT Mono",
+     "PP Neue Montreal"
+    ],
+    "minPx": 8,
+    "radii": 0,
+    "structureHues": 4,
+    "t0": {
+     "fl": "16px",
+     "ik": "16px",
+     "match": true
+    },
+    "seat": null,
+    "boxes": {
+     "brief": null,
+     "reg": null,
+     "dir": null,
+     "viz": null
+    }
+   },
+   "mechanical": {
+    "ok": false,
+    "code": 1,
+    "seconds": 1.1,
+    "violations": [
+     "contrast: span.lat-board__kicker 3.61:1 at 10px (needs 4.5)",
+     "contrast: span.lat-board__kicker 3.61:1 at 10px (needs 4.5)",
+     "contrast: span.lat-board__kicker 3.61:1 at 10px (needs 4.5)"
+    ],
+    "notes": {
+     "palette": 4,
+     "spacing": 7
+    }
+   }
+  }
+ ]
+}

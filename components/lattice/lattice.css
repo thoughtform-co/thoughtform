@@ -1,0 +1,586 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE LATTICE — the recipes (ADR-149, Phase 1)
+
+   The MECHANISMS under the site's three grammars (the corridor, the arcs
+   decks, the sheet): one chamfered housing, one section with a head strip
+   and a status row, one twelve-column grid with six named arrangements,
+   and the ruled underlay the lab draws from the tokens. TOKENS AND
+   MECHANISMS ARE SHARED; SKINS STAY COPIED — the amendment ADR-149 makes
+   to `sheet.css`'s "grammars are copied, never imported". Nothing here is
+   a skin: a surface's colour, its type clamps and its motion stay its own,
+   restated on its own prefix. What is here is the ring, the seam, the
+   cells' shared edges and the seats.
+
+   ⚠ THIS SHEET READS `--lat-*`; IT NEVER DECLARES ONE. The tokens live on
+   `:root` in `app/styles/lattice.css` (`lattice-tokens` asserts it) — a
+   lattice token declared on a child resolves to nothing on its parent and
+   silently zeroes every `calc()` that reads it. The only `--lat-*` names
+   written here are the frame recipe's own LOCALS, on `.lat-frame`
+   (`--lat-ch`, `--lat-ch-in`, `--lat-cut`, `--lat-ring`,
+   `--lat-frame-line`, `--lat-frame-ground`), and the test lists them.
+
+   ⚠ THE POLYGON TEXT IS `lib/lattice/geometry.ts`'S. `cutPolygon` /
+   `ringPolygon` build the strings and `lattice-tokens` compares this
+   sheet's text to them after whitespace normalisation. A polygon
+   hand-edited here fails the hour it is written.
+
+   ⚠ FOUR TRAPS, EACH PAID FOR ONCE ON THIS SITE:
+     · a clip CUTS a border and never strokes one (ADR-089), so the lip is
+       a two-contour evenodd RING on `::before`, never a `border`;
+     · BOTH ring contours CLOSE back on their first point (ADR-148 U2) — an
+       open ring's connecting edges cross along the left side and fade the
+       1px edge toward mid-height;
+     · a clipped host is a containing block for `position: fixed`, so
+       anything that must escape a frame PORTALS out (the lightbox's law);
+     · no `contain: paint` — it clips the reticle overhang (ADR-056 U2) and
+       buys nothing a clip does not already do.
+
+   ⚠ FOUR RATCHETS PIN THIS SHEET: `lattice-ratchet` (P polygons — zero:
+   every corner is a custom property the host and the ring READ; S spacing
+   off the 8px scale; F literal font sizes; M off-ladder media),
+   `type-material-tokens`, `theme-css-sweep` and `phone-viewport-units`.
+   Every colour is a ramp step off `--dawn-rgb` / `--void-deep-rgb` /
+   `--gold-line`, which ADR-058 SWAPS, so one declaration paints both
+   themes. PT Mono is chrome and PP Neue Montreal is prose (`--font-mono`
+   is IBM Plex and is wrong here); every tracking is a `--track-*` role;
+   nothing weighs above `--weight-lit`; every `font-size` is a ladder rung;
+   every `@media` is the phone's 960.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · The frame — ONE chamfered housing ───────────────────────────
+   Host: `border: 0`, the ground, the cut. Ring: `::before`, the lip.
+   Every knob is an attribute so a still is traceable; the absence is the
+   house default — the TR + BL pair (ADR-065's housing diagonal; owner,
+   2026-10-06), plate-fluid depth, the lip, the plate ground. There is NO
+   `tl-br`: the console's diagonal was an owner override ADR-089 retired. */
+.lat-frame {
+  --lat-ch: var(--lat-ch-plate-fluid);
+  /* the inner leg: insetting a 45° cut by 1px moves its diagonal by √2 */
+  --lat-ch-in: calc(var(--lat-ch) - var(--lat-ch-leg));
+  --lat-frame-line: var(--lat-lip);
+  --lat-frame-ground: var(--lat-plate);
+  --lat-cut: polygon(
+    0 0,
+    calc(100% - var(--lat-ch)) 0,
+    100% var(--lat-ch),
+    100% 100%,
+    var(--lat-ch) 100%,
+    0 calc(100% - var(--lat-ch))
+  );
+  --lat-ring: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--lat-ch)) 0,
+    100% var(--lat-ch),
+    100% 100%,
+    var(--lat-ch) 100%,
+    0 calc(100% - var(--lat-ch)),
+    0 0,
+    1px 1px,
+    calc(100% - 1px - var(--lat-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--lat-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--lat-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--lat-ch-in)),
+    1px 1px
+  );
+  position: relative;
+  border: 0;
+  background: var(--lat-frame-ground);
+  clip-path: var(--lat-cut);
+}
+
+/* the lip: the outer outline clockwise and closed, the inner 1px inside
+   and closed, evenodd making the middle a hole */
+.lat-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: var(--lat-frame-line);
+  clip-path: var(--lat-ring);
+}
+
+/* `tr`: an oriented or connected set (ADR-065 — a single notch MEANS
+   oriented; the lawful diagonal's top end) */
+.lat-frame[data-cut="tr"] {
+  --lat-cut: polygon(0 0, calc(100% - var(--lat-ch)) 0, 100% var(--lat-ch), 100% 100%, 0 100%);
+  --lat-ring: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--lat-ch)) 0,
+    100% var(--lat-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    calc(100% - 1px - var(--lat-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--lat-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px 1px
+  );
+}
+
+/* `bl`: the lawful diagonal's lower end alone — the mirrored back of a
+   flipped object */
+.lat-frame[data-cut="bl"] {
+  --lat-cut: polygon(0 0, 100% 0, 100% 100%, var(--lat-ch) 100%, 0 calc(100% - var(--lat-ch)));
+  --lat-ring: polygon(
+    evenodd,
+    0 0,
+    100% 0,
+    100% 100%,
+    var(--lat-ch) 100%,
+    0 calc(100% - var(--lat-ch)),
+    0 0,
+    1px 1px,
+    calc(100% - 1px) 1px,
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--lat-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--lat-ch-in)),
+    1px 1px
+  );
+}
+
+/* `none`: a square housing — the children of a chamfered box (rule 4),
+   or a chrome-rung object. The ring still closes both contours. */
+.lat-frame[data-cut="none"] {
+  --lat-cut: none;
+  --lat-ring: polygon(
+    evenodd,
+    0 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    calc(100% - 1px) 1px,
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px 1px
+  );
+}
+
+/* the depth ladder (ADR-065): chrome 0 degenerates the polygon to a
+   rectangle, which is the law stated as arithmetic */
+.lat-frame[data-ch="plate"] {
+  --lat-ch: var(--lat-ch-plate);
+}
+.lat-frame[data-ch="seed"] {
+  --lat-ch: var(--lat-ch-seed);
+}
+.lat-frame[data-ch="card"] {
+  --lat-ch: var(--lat-ch-card);
+}
+.lat-frame[data-ch="plate-fluid"] {
+  --lat-ch: var(--lat-ch-plate-fluid);
+}
+.lat-frame[data-ch="chrome"] {
+  --lat-ch: var(--lat-ch-chrome);
+}
+
+/* the line law: a lip is gold (the one sanctioned gold line), a seam or a
+   rule is dawn at its role's alpha */
+.lat-frame[data-line="seam"] {
+  --lat-frame-line: var(--lat-seam);
+}
+.lat-frame[data-line="lip"] {
+  --lat-frame-line: var(--lat-lip);
+}
+.lat-frame[data-line="lip-lit"] {
+  --lat-frame-line: var(--lat-lip-lit);
+}
+.lat-frame[data-line="rule"] {
+  --lat-frame-line: var(--lat-rule);
+}
+
+/* the ground: a plate, the thinner plate over a live bed, or none */
+.lat-frame[data-ground="plate"] {
+  --lat-frame-ground: var(--lat-plate);
+}
+.lat-frame[data-ground="thin"] {
+  --lat-frame-ground: var(--lat-plate-thin);
+}
+.lat-frame[data-ground="none"] {
+  --lat-frame-ground: transparent;
+}
+
+/* a box with something hanging OUTSIDE it (ADR-148's chevrons): a host clip
+   would cut it off, so the host unclips, the ring sits 1px proud and the
+   ground moves to `::after` under the content, cut on its own */
+.lat-frame[data-overflow="visible"] {
+  clip-path: none;
+  background: transparent;
+}
+.lat-frame[data-overflow="visible"]::before {
+  inset: -1px;
+}
+.lat-frame[data-overflow="visible"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--lat-frame-ground);
+  clip-path: var(--lat-cut);
+}
+
+/* the parts: PT Mono chrome over a hairline, the body, a status row over a
+   rule. Children of a chamfered box are SQUARE — no part takes a cut. */
+.lat-frame__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lat-gap-stack);
+  min-height: 44px;
+  padding: 0 var(--lat-pad-cell);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink-2);
+  border-bottom: 1px solid var(--lat-rule);
+}
+
+/* the wash: `.arc-plate__head`'s grammar — a flat gold wash and a 2px rule
+   in `--gold-line` that STOPS at the cut (the one gradient this sheet
+   paints, and it is flat on purpose: a ramp is the ADR-089 U2 defect) */
+.lat-frame__head[data-head="wash"] {
+  background: linear-gradient(rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.14));
+}
+.lat-frame__head[data-head="wash"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: var(--lat-ch);
+  height: 2px;
+  background: var(--gold-line);
+}
+
+.lat-frame__body {
+  padding: var(--lat-pad-cell);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-copy);
+  line-height: 1.5;
+  color: var(--lat-ink);
+}
+
+.lat-frame__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--lat-gap-stack);
+  padding: var(--lat-pad-chrome) var(--lat-pad-cell);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+  border-top: 1px solid var(--lat-rule);
+}
+
+/* ── 2 · The section — `.lat-sec > .lat-band > (head | body | foot)` ──
+   The sheet's structural rules generalised (ADR-114): a section seats
+   `flow` (content height), `centre` (one viewport, centred) or `datum`
+   (one viewport, the head on ADR-099 U2's datum); its band is the text
+   band, the instrument band or the bleed. */
+.lat-sec {
+  position: relative;
+  padding-block: var(--lat-sec-pad);
+}
+.lat-sec[data-seat="centre"] {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+}
+.lat-sec[data-seat="datum"] {
+  min-height: 100svh;
+  display: grid;
+  align-content: start;
+  padding-block-start: var(--lat-head-datum);
+}
+
+.lat-band {
+  position: relative;
+  padding-inline: var(--lat-margin);
+}
+.lat-band[data-band="instrument"] {
+  padding-inline: var(--lat-wide-margin);
+}
+.lat-band[data-band="bleed"] {
+  padding-inline: 0;
+}
+
+/* the seam: ONE hairline across the band between two sections, seated on
+   the band's own edges so it never runs under the rails */
+.lat-sec + .lat-sec > .lat-band::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--lat-margin);
+  right: var(--lat-margin);
+  height: 1px;
+  background: var(--lat-seam);
+}
+.lat-sec + .lat-sec > .lat-band[data-band="instrument"]::before {
+  left: var(--lat-wide-margin);
+  right: var(--lat-wide-margin);
+}
+.lat-sec + .lat-sec > .lat-band[data-band="bleed"]::before {
+  left: 0;
+  right: 0;
+}
+
+/* the head strip: Evangelion's numbered module head — an ordinal TAB in
+   the first column, the kicker, the title and the sub stacked in the
+   second, one hairline under the lot */
+.lat-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--lat-gap-block);
+  align-items: baseline;
+  padding-bottom: var(--lat-head-gap);
+  margin-bottom: var(--lat-head-gap);
+  border-bottom: 1px solid var(--lat-rule);
+}
+.lat-head__ord {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: start;
+  padding: 2px var(--lat-pad-chrome);
+  border: 1px solid var(--lat-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-md);
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink);
+}
+.lat-head__kicker {
+  grid-column: 2;
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+}
+.lat-head__title {
+  grid-column: 2;
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-h2);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-display);
+  line-height: 1.1;
+}
+.lat-head__sub {
+  grid-column: 2;
+  margin: 0;
+  max-width: 56ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--lat-lede);
+  color: var(--lat-ink-2);
+}
+/* `bare` (the lab's knob) hides the tab; a head with no ordinal closes
+   the empty first column, or the gap would indent the title by itself */
+.lat-sec[data-head="bare"] .lat-head__ord {
+  display: none;
+}
+.lat-sec[data-head="bare"] .lat-head,
+.lat-head:not(:has(> .lat-head__ord)) {
+  grid-template-columns: 1fr;
+  column-gap: 0;
+}
+.lat-sec[data-head="bare"] .lat-head > :not(.lat-head__ord),
+.lat-head:not(:has(> .lat-head__ord)) > * {
+  grid-column: 1;
+}
+
+/* the status row: Cyberpunk's terminus — mono chrome over a rule */
+.lat-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--lat-gap-stack);
+  padding-top: var(--lat-pad-chrome);
+  font-family: var(--font-pt-mono);
+  font-size: var(--lat-chrome-sm);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--lat-ink-dim);
+  border-top: 1px solid var(--lat-rule);
+}
+
+/* ── 3 · The grid and the six arrangements ───────────────────────────
+   Twelve columns, gutter ZERO (seams, not gutters); `--lat-air` is the air
+   between two TEXT columns only. An arrangement is a layout SHAPE on
+   `.lat-body`; content kinds stay in their own types. */
+.lat-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--lat-cols), minmax(0, 1fr));
+  column-gap: var(--lat-gutter);
+}
+.lat-grid[data-air] {
+  column-gap: var(--lat-air);
+}
+
+/* head-field: the head over a full-width field */
+.lat-body[data-arrangement="head-field"] > * {
+  grid-column: 1 / -1;
+}
+
+/* split: two columns, 1-1 the default, 5-7 and 7-5 the proposals' and
+   the arcs' heads. ⚠ THE AIR IS PADDING ON THE TEXT, NEVER A COLUMN GAP: a
+   gap shifts every column edge after it, so a frame in the second column
+   landed 14px off its column on the first capture. A frame sits ON the
+   edge and brings its own body padding; a text column pads inward. */
+.lat-body[data-arrangement="split"] > :first-child:not(.lat-frame) {
+  padding-inline-end: var(--lat-air);
+}
+.lat-body[data-arrangement="split"] > :nth-child(2):not(.lat-frame) {
+  padding-inline-start: var(--lat-air);
+}
+.lat-body[data-arrangement="split"] > * {
+  grid-column: span 6;
+}
+.lat-body[data-arrangement="split"][data-ratio="5-7"] > :first-child {
+  grid-column: span 5;
+}
+.lat-body[data-arrangement="split"][data-ratio="5-7"] > :nth-child(2) {
+  grid-column: span 7;
+}
+.lat-body[data-arrangement="split"][data-ratio="7-5"] > :first-child {
+  grid-column: span 7;
+}
+.lat-body[data-arrangement="split"][data-ratio="7-5"] > :nth-child(2) {
+  grid-column: span 5;
+}
+
+/* bay: Evangelion's wide-left / stacked-right — eight and four, the right
+   column a `.lat-stack` the consumer wraps (a grid cannot stack a third
+   child into the second column by itself: it would start a new row) */
+.lat-body[data-arrangement="bay"] > :first-child {
+  grid-column: 1 / span 8;
+}
+.lat-body[data-arrangement="bay"] > :nth-child(2) {
+  grid-column: 9 / -1;
+}
+.lat-stack {
+  display: grid;
+  row-gap: 0;
+  align-content: start;
+}
+
+/* cells: regions sharing edges, ruled — the body draws the top and left
+   edge once, every cell its right and bottom, the row's last cell gives
+   its right edge back to the body's */
+.lat-body[data-arrangement="cells"] {
+  border-top: 1px solid var(--lat-rule);
+  border-left: 1px solid var(--lat-rule);
+  border-right: 1px solid var(--lat-rule);
+}
+.lat-cell {
+  padding: var(--lat-pad-cell);
+  border-right: 1px solid var(--lat-rule);
+  border-bottom: 1px solid var(--lat-rule);
+}
+.lat-body[data-arrangement="cells"][data-n="2"] > * {
+  grid-column: span 6;
+}
+.lat-body[data-arrangement="cells"][data-n="3"] > * {
+  grid-column: span 4;
+}
+.lat-body[data-arrangement="cells"][data-n="4"] > * {
+  grid-column: span 3;
+}
+.lat-body[data-arrangement="cells"][data-n="2"] > :nth-child(2n),
+.lat-body[data-arrangement="cells"][data-n="3"] > :nth-child(3n),
+.lat-body[data-arrangement="cells"][data-n="4"] > :nth-child(4n) {
+  border-right: 0;
+}
+
+/* instrument: one child across the instrument band, rails-tall — on a
+   route without the rail `--lat-rail-h` is invalid and the floor is
+   `initial` (documented in the tokens sheet) */
+.lat-body[data-arrangement="instrument"] > * {
+  grid-column: 1 / -1;
+  min-height: var(--lat-rail-h);
+}
+
+/* ledger: ruled rows on a subgrid, so a row's cells land on the columns */
+.lat-body[data-arrangement="ledger"] > .lat-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  padding-block: var(--lat-pad-chrome);
+  border-top: 1px solid var(--lat-rule);
+}
+.lat-body[data-arrangement="ledger"] > .lat-row:last-child {
+  border-bottom: 1px solid var(--lat-rule);
+}
+
+/* ── 4 · The overlay — the ruled underlay the lab draws FROM the tokens
+   (`?grid=1`): a token that drifts from the live tick shows as a doubled
+   line. Lab-only in use, in the shared sheet so the capture measures the
+   same thing the lab shows. Thirteen column EDGES and thirteen rungs,
+   each one absolute element on its own token, never a grid (a grid's
+   last edge would be a border on a cell, not an edge of its own). */
+.lat-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+/* the columns are a % of the BAND's own box (`.lat-overlay__cols` spans it),
+   never `--lat-col` × N: that token is `100vw`-based and overshoots by the
+   scrollbar (6px at the last edge on the first capture) */
+.lat-overlay__cols {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--lat-margin);
+  right: var(--lat-margin);
+}
+.lat-overlay__colline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(var(--gold-rgb), 0.18);
+}
+.lat-overlay__rung {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(var(--gold-rgb), 0.22);
+}
+.lat-overlay__rung[data-rung="4"],
+.lat-overlay__rung[data-rung="8"] {
+  background: rgba(var(--gold-rgb), 0.4);
+}
+.lat-overlay__edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(var(--gold-rgb), 0.3);
+}
+
+/* ── 5 · The phone — the rail stands down at ≤960 (mobile-sections.md):
+   four columns, every arrangement one column, the cells' shared edges
+   reduced to their bottom rule */
+@media (max-width: 960px) {
+  .lat-body[data-arrangement="split"] > *,
+  .lat-body[data-arrangement="bay"] > *,
+  .lat-body[data-arrangement="cells"] > * {
+    grid-column: 1 / -1;
+  }
+  .lat-body[data-arrangement="cells"] {
+    border-left: 0;
+    border-right: 0;
+  }
+  .lat-cell {
+    border-right: 0;
+  }
+}

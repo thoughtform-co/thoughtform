@@ -2,6 +2,16 @@
 
 Dated entries: how the work changed, not what was edited.
 
+## 2026-10-06
+
+- The lattice (ADR-149) borrows this ship: `[types.LT]` is its specimen page
+  (`/test/lattice`, shot by `scripts/capture-lattice.mjs`, never by
+  capture-subpages), lanes `la…ld` mirror `lib/lattice/directions.json`, and
+  `[settings.binding]` names the 1280x720 cell the jury reads first. Rubric
+  0.3.0 adds block G — the grid — five checks graded on LT and on any page that
+  declares the lattice, passed everywhere else; the capture runs the mechanical
+  half of each before a grader sees a still.
+
 ## 2026-09-20
 
 - The ship is scaffolded from the harness's `new_engagement.py` (0.8.3),

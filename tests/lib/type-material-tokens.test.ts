@@ -54,6 +54,14 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* The lattice (ADR-149) — the brand system grid as tokens, loaded from
+     globals.css on every route. Tokens tier like variables.css: no tracking,
+     no weight, no case. Pinned the hour it was written. */
+  "app/styles/lattice.css": {
+    tier: "tokens",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
   "app/styles/base.css": {
     tier: "content",
     content: { A: 0, B: 0, C: 0 },
@@ -223,6 +231,20 @@ const PINS: Record<string, Pin> = {
      log on the sheet's ramp. Token-only from line one and pinned the hour it
      was written, the same way sheet.css entered. */
   "components/sheet/instrument.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
+  /* The Home sessions page (ADR-150) — its own composition on the lattice's
+     tokens. Token-only from line one, pinned the hour it was written. */
+  "components/sessions/sessions.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
+  /* The lattice's recipes (ADR-149 Phase 1) — the frame, the section, the
+     arrangements. Token-only from line one, pinned the hour it was written. */
+  "components/lattice/lattice.css": {
     tier: "content",
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },

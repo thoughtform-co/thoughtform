@@ -643,31 +643,62 @@ Four absolute-positioned L-brackets that appear on card hover. Derived from the 
 
 ## 14. ChamferedPanel
 
-Container with `clip-path` polygon corners creating angled chamfer cuts. Zero border-radius alternative that feels machined and instrument-like.
+The ONE chamfered housing: `.lat-frame` (`components/lattice/lattice.css`, ADR-149 §2, on
+ADR-065's corner law). The eight-point four-corner polygon and the sm/md/lg 8/12/16 sizes
+this section used to carry are retired: a housing cuts TWO corners on the lawful diagonal
+and its depth is a rung on the ladder.
 
 **Grammar**: Viewport Frame + Depth Layers
 
-**Tokens**:
+**Recipe**: the host takes `position: relative; border: 0; background:
+var(--lat-frame-ground); clip-path: var(--lat-cut)`. The edge is `::before`, a two-contour
+`evenodd` ring, both outlines closed, the inner one 1px inside with its leg
+`var(--lat-ch) − var(--lat-ch-leg)` (0.586px). Every knob is a `data-*` attribute so a
+still is traceable; a knob left off IS the house default.
 
-```css
-.chamfered-panel {
-  clip-path: polygon(
-    var(--chamfer, 12px) 0,
-    calc(100% - var(--chamfer, 12px)) 0,
-    100% var(--chamfer, 12px),
-    100% calc(100% - var(--chamfer, 12px)),
-    calc(100% - var(--chamfer, 12px)) 100%,
-    var(--chamfer, 12px) 100%,
-    0 calc(100% - var(--chamfer, 12px)),
-    0 var(--chamfer, 12px)
-  );
-  background: var(--surface-0);
-}
+| Attribute       | Values                                               | Default (absent)  |
+| --------------- | ---------------------------------------------------- | ----------------- |
+| `data-cut`      | `tr-bl` · `tr` · `bl` · `none`                       | `tr-bl`, the pair |
+| `data-ch`       | `plate` · `seed` · `card` · `plate-fluid` · `chrome` | `plate-fluid`     |
+| `data-line`     | `seam` · `lip` · `lip-lit` · `rule`                  | `lip`             |
+| `data-ground`   | `plate` · `thin` · `none`                            | `plate`           |
+| `data-overflow` | `visible`                                            | clipped           |
+
+Parts: `.lat-frame__head` (PT Mono chrome over a `--lat-rule` hairline; `data-head="wash"`
+adds the flat gold wash and a 2px `--gold-line` rule that STOPS at the cut, as
+`.arc-plate__head`), `.lat-frame__body` (`--lat-pad-cell`, PP Neue Montreal at
+`--lat-copy`), `.lat-frame__foot` (a status row over a rule). The children of a chamfered
+box are square: no part takes a cut.
+
+**React** (`components/lattice`, a server component that paints nothing; the classes are
+the contract):
+
+```tsx
+import { Frame } from "@/components/lattice";
+
+<Frame ch="plate" line="lip" head="01 · THE RECORD" foot={<span>ON RECORD</span>}>
+  <p>Body copy.</p>
+</Frame>;
 ```
 
-**Figma**: Frame with clip-path applied. Variants: chamfer size (sm=8px, md=12px, lg=16px).
+- ⚠ **A clipped host is a containing block for `position: fixed`.** Anything that must
+  escape a frame (a lightbox, a dialog) portals to `document.body`.
+- ⚠ **No `contain: paint`.** It clips the reticle overhang and buys nothing a clip does not
+  already do.
+- ⚠ **Both ring contours close** back on their first point (ADR-148 U2). An open ring's
+  connecting edges cross along the left side and fade the edge toward mid-height.
+- ⚠ **A box with something hanging outside it takes `data-overflow="visible"`**: the host
+  unclips, the ring sits at `inset: -1px`, the ground moves to `::after`. A host clip would
+  cut the overhang off (ADR-148's chevrons).
+- ⚠ **No `tl-br`.** The console's diagonal was an owner override ADR-089 retired. The
+  polygon text is `lib/lattice/geometry.ts`'s and `lattice-tokens` pins the sheet to it; a
+  polygon hand-written anywhere else fails the ratchet.
 
-**Products**: Sigil = RouteCard, ImageDiskStack.
+**Figma**: `Frame/Housing` (`2387:5`, UI Exploration), chamfer TR+BL at the plate rung;
+variants for cut × line × ground are Phase 4 (figma-codex-map.md).
+
+**Products**: thoughtform.co (the sheet first, ADR-149 §5); Sigil = RouteCard,
+ImageDiskStack on migration.
 
 ---
 

@@ -26,6 +26,11 @@
       "label": "Span",
       "note": "The arcs monitor's time axis. active = whole weeks from the first filed engagement to now; a relationship older than the axis enters open from the left edge. full = the whole record since the oldest relationship, linear — honest, and it buries nine marks in its last twentieth."
     },
+    "lattice": {
+      "values": ["sheet", "lattice"],
+      "label": "Lattice",
+      "note": "sheet = the sheet's own ladders (the house). lattice = the sheet on the grid's ladders (ADR-149 Phase 3): the seven type clamps on one modular scale, the cell pad and head gap on the lattice roles, the ordinal as a bordered tab (the head strip), the masthead seated on ADR-099 U2's head datum. The frames do not move: Phase 2 already put them on the recipe. The document pages only."
+    },
     "frame": {
       "values": ["housing", "rails"],
       "label": "Frame",
@@ -76,7 +81,7 @@
       "name": "Editorial",
       "question": "does the head read better stacked on the right with no ordinals, or does the page lose its wayfinding?",
       "shape": "kicker left, title and paragraphs stacked right, no section numerals",
-      "types": ["HS", "AC", "MU", "MP", "SK"],
+      "types": ["AC", "MU", "MP", "SK"],
       "knobs": {
         "head": "stack",
         "ordinal": "off"
@@ -87,7 +92,7 @@
       "name": "Grid",
       "question": "does a static grid of flashcards and a vertical date rail say the same thing as the pile and the axis, with less motion?",
       "shape": "cards in two columns, the sessions on a rail",
-      "types": ["HS", "AC", "MU", "MP", "SK"],
+      "types": ["AC", "MU", "MP", "SK"],
       "knobs": {
         "card": "grid",
         "timeline": "rail"
@@ -111,6 +116,16 @@
       "types": ["AR", "AK"],
       "knobs": {
         "frame": "rails"
+      }
+    },
+    {
+      "id": "SM",
+      "name": "Lattice",
+      "question": "does the sheet read as one instrument with the rest of the site once its type, its rhythm, its head strip and its masthead seat come off the lattice's ladders, or does the owner want the sheet's own values back?",
+      "shape": "the same pages on the grid: the ordinal as a tab, the heads on one datum, the type on one scale",
+      "types": ["AC", "MU", "MP", "SK"],
+      "knobs": {
+        "lattice": "lattice"
       }
     }
   ],

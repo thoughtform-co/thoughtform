@@ -76,6 +76,16 @@ sg = "render-3003"        # Full record: span=full (AR, AK)
 # the dossier's picture became the client's configuration, drawn, and there
 # was no image plate left to split from a text plate (ADR-118 U2).
 sl = "render-3003"        # Rails: frame=rails (AR, AK)
+sm = "render-3003"        # Lattice: lattice=lattice (the document pages) — ADR-149 Phase 3
+# ⚠ MIRRORED FROM `lib/lattice/directions.json` (ADR-149): the lattice's four
+# directions, shot by `scripts/capture-lattice.mjs` onto type LT; one lane per
+# direction, the id lowercased. `tests/lib/lattice-directions.test.ts` and the
+# capture both assert this mirror; the sheet's own test only asserts that its
+# directions HAVE a lane, so the two registries share this table.
+la = "render-3003"        # House: every lattice knob at its first value — the control
+lb = "render-3003"        # Notch: cut=tr
+lc = "render-3003"        # Dawn: line=seam
+ld = "render-3003"        # Bare: head=bare
 lawful = "render-3003"    # /test/design-eval-fixture .fixture-good (wave 00)
 broken = "render-3003"    # /test/design-eval-fixture .fixture-bad  (wave 00)
 
@@ -164,15 +174,15 @@ identity = "parchment.png"
 
 [types.HS]
 name = "Home sessions"
-question = "does an event page read as one sheet: the offer, the calendar plotted, one seat to reserve?"
+question = "does the event page read as its own instrument in the house register: the offer on the key visual, the morning as a dial, the mornings as tiles, one seat to reserve?"
 channel = "public event page"
 ar = "16:9"
-camera = "split, timeline, steps, cells, row, close"
-position = "the offer's title left and its paragraphs right, a spec readout under them"
-shape = "a dated axis with four mornings seated on it and the next one lit"
+camera = "hero, the morning's dial, the dates housing, the ASCII field, the table, the ask, the footer"
+position = "the offer's title on the Thought + Form plate, a live readout of the next morning and two calls to action under it"
+shape = "one notched housing: a dated axis with the next morning lit and a NOW cursor, then four tall tiles, the next one gold"
 shot = "ROUTE: /home-sessions"
 subject = "The fourth service's own page: six to eight people at the owner's table in Antwerp, one morning. Its copy is the services card's record; its dates are the sessions registry; the seat is reserved by mail."
-camera_line = "One still per section, the section's head band at the pin; the first still is the first screen."
+camera_line = "One still per section, the section's head at the top of the frame; the first still is the first screen. Not a sheet since ADR-150: shot by scripts/capture-sessions.mjs."
 
 #  ⚠ AR IS NOT A DOCUMENT SINCE 2026-09-21 (ADR-118). The owner's brief made
 #  the overview his private INSTRUMENT: a full-screen monitor plotting every
@@ -253,6 +263,26 @@ shot = "ROUTE: /test/subpage-kit"
 subject = "The specimen sheet: every arrangement and every state the sheet has, on fixtures, graded on block K and the register alone."
 camera_line = "One still per section; the four-card console fixture is driven to its second slot's pin."
 
+#  ⚠ LT IS THE LATTICE'S SPECIMEN PAGE (ADR-149), NOT A SHEET. It is shot by
+#  `scripts/capture-lattice.mjs` (never by capture-subpages: its readiness is
+#  `.lat-read[data-stamp]`, not `data-sh-ready`) onto the lattice's own lanes
+#  la…ld, and graded on block G and the register. Its draws are BOARDS, not
+#  sections: 01 the first screen, 02 the whole page, 03 the sections board,
+#  04 the frames board (05 grid, 06 type when asked for). Its setting
+#  `binding` writes a `-binding` folder suffix; `laptop` is 1440x800 for this
+#  type (the lattice registry's middle viewport), where the sheet's is 1280x720.
+[types.LT]
+name = "Lattice page"
+question = "does one grid, one frame and one head strip read as one instrument across five boards at the house values?"
+channel = "internal specimen page"
+ar = "16:9"
+camera = "split, cells, split, instrument, ledger, close"
+position = "a synthetic subpage on the lattice: a masthead split on the datum, three cells, a split with a frame, an instrument rails-tall, a ledger, the close"
+shape = "every arrangement once, every frame on the house cut, graded on block G and the register"
+shot = "ROUTE: /test/lattice?board=page&console=0"
+subject = "The lattice's specimen page: every arrangement of the section grammar once, on real copy from one shared record, every frame on the house cut, inside the real HUD frame - graded on block G and the register, with the frames, sections, grid and type boards as its further draws."
+camera_line = "Draw 01 the first screen, 02 the whole page, 03 the sections board, 04 the frames board."
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  SETTINGS - a viewport. The theme is carried by the SUBJECT, because a light
 #  still and a dark still of one page are two candidates a reader compares
@@ -269,6 +299,17 @@ anchors = false
 surface = "1280x720"
 anchors = false
 [settings.laptop.places]
+void = "the site's own HUD frame at 1280x720, the binding viewport"
+parchment = "the site's own HUD frame at 1280x720, the binding viewport"
+
+# The lattice's binding cell (ADR-149): `capture-lattice.mjs --setting binding`
+# writes a `-binding` wave folder suffix. The surface is the sheet's laptop
+# one; the name is the lattice registry's (`wave.binding`), and the jury's
+# threshold is read on this cell first.
+[settings.binding]
+surface = "1280x720"
+anchors = false
+[settings.binding.places]
 void = "the site's own HUD frame at 1280x720, the binding viewport"
 parchment = "the site's own HUD frame at 1280x720, the binding viewport"
 

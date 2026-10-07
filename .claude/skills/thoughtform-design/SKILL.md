@@ -129,12 +129,24 @@ Precise, not cold. Technical but accessible. Instrument language, not marketing.
 
 ### Layout grid
 
+**Fixed canvases** (slides, A4, 1:1) keep the 9×17:
+
 1. **Margin** = 5% of the shortest canvas edge, all four sides.
 2. **Content grid** = the margin-inset rectangle divided **9 rows × 17 columns**, gap 0.
 3. **Scale factor** = `min(canvasW, canvasH) / 1080`. Every proportional value derives from it.
 
-An A4 portrait, a 16:9 slide and a 1:1 square share the same margin logic, subdivision and
-scale factor. The grid is the skeleton; placement is archetype-specific (Layer 3).
+One margin logic, subdivision and scale factor for A4, 16:9 and 1:1; placement is archetype-specific (Layer 3).
+
+**Scroll documents** (the site, the sheets, the arcs) take **THE LATTICE** (ADR-149):
+
+- Twelve columns in the editorial band, gutter zero; `--lat-air` between two text columns only.
+- Thirteen rungs off the HUD rail's tick ladder (`--lat-rung-0…12`, majors 4 and 8); a rung is a height, never a type size.
+- The chamfer ladder: chrome 0 · seed 16 · card · plate 26 · plate-fluid; inner leg `--lat-ch-leg` 0.586px; the diagonal is TR + BL.
+- The line law: datum .55 · seam .28 · rule .12, dawn; gold draws no structure but a lip.
+- One frame recipe, `.lat-frame`, every knob a `data-*` attribute.
+- Six section arrangements: head-field · split · bay · cells · instrument · ledger.
+
+Tokens `app/styles/lattice.css` (`:root` only) · rule `.claude/rules/lattice.md` · spec `references/spatial-system.md`.
 
 Tokens: `references/tokens.md`. Philosophy: `references/brand-philosophy.md`.
 

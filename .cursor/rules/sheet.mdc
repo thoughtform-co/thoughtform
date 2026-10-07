@@ -1,12 +1,10 @@
 ---
-description: The sheet (ADR-114) — the ruled-document grammar for subpages (/home-sessions, /musings, the client pages), the arcs overview's instrument (ADR-118), and the turnstone ship that grades both
+description: The sheet (ADR-114) — the ruled-document grammar for subpages (/musings, the client pages; /home-sessions left it in ADR-150), the arcs overview's instrument (ADR-118), and the turnstone ship that grades both
 globs:
   - "components/sheet/**"
   - "lib/sheet/**"
-  - "lib/sessions/**"
   - "lib/musings/**"
   - "content/musings/**"
-  - "app/(marketing)/home-sessions/**"
   - "app/(marketing)/musings/**"
   - "app/(marketing)/arcs/page.tsx"
   - "app/(marketing)/arcs/[slug]/page.tsx"

@@ -7,7 +7,7 @@ lives in `armada.toml [types.*]`; this file says why.
 
 |        | Type          | The question                                                                          | Route                                | Ladder                                                     |
 | ------ | ------------- | ------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
-| **HS** | Home sessions | _does an event page read as one sheet: the offer, the calendar plotted, one seat?_    | `/home-sessions`                     | split · timeline · steps · cells · row · close             |
+| **HS** | Home sessions | _does the event page read as its own instrument: the offer, the dial, the tiles, one seat?_ | `/home-sessions` | hero · dial · dates housing · field · table · ask (ADR-150, not a sheet) |
 | **AR** | Arcs overview | _does the client console read as an instrument, and the set of five as one?_          | `/arcs`                              | split · console set · cells · close                        |
 | **AC** | Arcs client   | _does one client's page stand on its console alone?_                                  | `/arcs/loop`                         | split · console · close                                    |
 | **MU** | Musings index | _does a blog index read as a ruled table under two framed features, not a card grid?_ | `/musings`                           | split · figure · table · close                             |
@@ -23,7 +23,7 @@ one page shot twice.
 
 | Type | Ladder (camera)                           | First screen (position)                                           | Instrument (shape)                                            |
 | ---- | ----------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
-| HS   | split, timeline, steps, cells, row, close | the offer's title left, paragraphs right, a spec readout under    | a dated axis with four mornings seated, the next one lit      |
+| HS   | hero, dial, dates, field, table, ask       | the title on the key visual, a next-morning readout, two CTAs     | one notched housing: an axis, four tall tiles, the next one gold |
 | AR   | split, console set, cells, close          | the practice's claim left, a kind filter right, then the consoles | a sticky terminal panel with a five-row readout beside a pile |
 | AC   | split, one console, close                 | the client's name left, its lede right, the console under         | one console: the panel, the readout, the client's cards       |
 | MU   | split, figure two-up, table, close        | the note left, two framed features, every post a ruled row        | a FIG-barred pair and a hairline table with a tree glyph      |

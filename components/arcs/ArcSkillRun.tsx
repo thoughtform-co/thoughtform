@@ -1,7 +1,6 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
-import { ArcRunJob } from "./ArcRunJob";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -135,7 +134,6 @@ export function ArcSkillRun({ section, index, motion = "reveal" }: ArcSkillRunPr
             <p className="arc-run__note">{evals.note}</p>
           </div>
         </div>
-        {section.job ? <ArcRunJob job={section.job} motion={motion} /> : null}
       </div>
     </ArcBeat>
   );

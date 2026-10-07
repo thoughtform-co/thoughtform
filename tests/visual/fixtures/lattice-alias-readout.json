@@ -1,0 +1,110 @@
+{
+  "/arcs/loop 1280x720 dark": {
+    "bandPaddingLeft": 129.056,
+    "secPaddingTop": 108,
+    "seam": "rgba(235, 227, 214, 0.28)",
+    "rule": "rgba(235, 227, 214, 0.12)",
+    "cardCh": 16.625,
+    "copy": 15,
+    "plate": "rgba(5, 4, 3, 0.62)"
+  },
+  "/arcs/loop 1280x720 light": {
+    "bandPaddingLeft": 129.056,
+    "secPaddingTop": 108,
+    "seam": "rgba(17, 15, 9, 0.42)",
+    "rule": "rgba(17, 15, 9, 0.22)",
+    "cardCh": 16.625,
+    "copy": 15,
+    "plate": "rgb(228, 218, 201)"
+  },
+  "/arcs/loop 1920x1247 dark": {
+    "bandPaddingLeft": 360,
+    "secPaddingTop": 187.05,
+    "seam": "rgba(235, 227, 214, 0.28)",
+    "rule": "rgba(235, 227, 214, 0.12)",
+    "cardCh": 22,
+    "copy": 18,
+    "plate": "rgba(5, 4, 3, 0.62)"
+  },
+  "/arcs/loop 1920x1247 light": {
+    "bandPaddingLeft": 360,
+    "secPaddingTop": 187.05,
+    "seam": "rgba(17, 15, 9, 0.42)",
+    "rule": "rgba(17, 15, 9, 0.22)",
+    "cardCh": 22,
+    "copy": 18,
+    "plate": "rgb(228, 218, 201)"
+  },
+  "/musings 1280x720 dark": {
+    "bandPaddingLeft": 129.056,
+    "secPaddingTop": 108,
+    "seam": "rgba(235, 227, 214, 0.28)",
+    "rule": "rgba(235, 227, 214, 0.12)",
+    "cardCh": 16.625,
+    "copy": 15,
+    "plate": "rgba(5, 4, 3, 0.62)"
+  },
+  "/musings 1280x720 light": {
+    "bandPaddingLeft": 129.056,
+    "secPaddingTop": 108,
+    "seam": "rgba(17, 15, 9, 0.42)",
+    "rule": "rgba(17, 15, 9, 0.22)",
+    "cardCh": 16.625,
+    "copy": 15,
+    "plate": "rgb(228, 218, 201)"
+  },
+  "/musings 1920x1247 dark": {
+    "bandPaddingLeft": 360,
+    "secPaddingTop": 187.05,
+    "seam": "rgba(235, 227, 214, 0.28)",
+    "rule": "rgba(235, 227, 214, 0.12)",
+    "cardCh": 22,
+    "copy": 18,
+    "plate": "rgba(5, 4, 3, 0.62)"
+  },
+  "/musings 1920x1247 light": {
+    "bandPaddingLeft": 360,
+    "secPaddingTop": 187.05,
+    "seam": "rgba(17, 15, 9, 0.42)",
+    "rule": "rgba(17, 15, 9, 0.22)",
+    "cardCh": 22,
+    "copy": 18,
+    "plate": "rgb(228, 218, 201)"
+  },
+  "/musings/navigate-the-intelligence 1280x720 dark": {
+    "bandPaddingLeft": 129.056,
+    "secPaddingTop": 108,
+    "seam": "rgba(235, 227, 214, 0.28)",
+    "rule": "rgba(235, 227, 214, 0.12)",
+    "cardCh": 16.625,
+    "copy": 15,
+    "plate": "rgba(5, 4, 3, 0.62)"
+  },
+  "/musings/navigate-the-intelligence 1280x720 light": {
+    "bandPaddingLeft": 129.056,
+    "secPaddingTop": 108,
+    "seam": "rgba(17, 15, 9, 0.42)",
+    "rule": "rgba(17, 15, 9, 0.22)",
+    "cardCh": 16.625,
+    "copy": 15,
+    "plate": "rgb(228, 218, 201)"
+  },
+  "/musings/navigate-the-intelligence 1920x1247 dark": {
+    "bandPaddingLeft": 360,
+    "secPaddingTop": 187.05,
+    "seam": "rgba(235, 227, 214, 0.28)",
+    "rule": "rgba(235, 227, 214, 0.12)",
+    "cardCh": 22,
+    "copy": 18,
+    "plate": "rgba(5, 4, 3, 0.62)"
+  },
+  "/musings/navigate-the-intelligence 1920x1247 light": {
+    "bandPaddingLeft": 360,
+    "secPaddingTop": 187.05,
+    "seam": "rgba(17, 15, 9, 0.42)",
+    "rule": "rgba(17, 15, 9, 0.22)",
+    "cardCh": 22,
+    "copy": 18,
+    "plate": "rgb(228, 218, 201)"
+  }
+}

@@ -15,6 +15,10 @@
 /* 1. Design Tokens & CSS Variables */
 @import "./styles/variables.css";
 
+/* 1b. The lattice — the brand system grid, as tokens (ADR-149). After the
+   variables it names, before anything that could read it. */
+@import "./styles/lattice.css";
+
 /* 2. Base Styles (reset, scrollbar, animations) */
 @import "./styles/base.css";
 

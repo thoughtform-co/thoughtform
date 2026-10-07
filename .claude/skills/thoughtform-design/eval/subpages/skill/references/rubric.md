@@ -4,11 +4,12 @@ Grade every candidate before a human sees it, against the register of its own
 theme. Read each still **as someone who has never seen the brief**, with the
 three reference first screens on the desk beside them.
 
-**Version 0.2.1, 2026-09-21, uncalibrated. Reporting only.** Written from the
+**Version 0.3.0, 2026-10-06, uncalibrated. Reporting only.** Written from the
 reference decode in `DRIVE.md`, from the house's own laws (DESIGN.md, ADR-065,
 ADR-077, ADR-092) and from the owner's sentences in `brief/VOCABULARY.md`,
 before any owner verdict exists. Since 0.2.0 the Arcs overview is judged as an
-INSTRUMENT (blocks M and L), not as a document. Nothing here gates. Every check reports,
+INSTRUMENT (blocks M and L), not as a document; since 0.3.0 the lattice page
+(type LT) and any page that declares the lattice are judged on block G. Nothing here gates. Every check reports,
 `tools/qa.py` prints and refuses to decide, and the ladder below is the shape
 the instrument will take once the first wave has said where it disagrees with
 the person running it.
@@ -56,6 +57,13 @@ Repair history:
   and C5 as if it were a section, so the grading rules now exclude it. And the
   grader was RIGHT about the flashcard's head: the kicker ran into the title on
   one line, which is a page defect and is fixed in the sheet, not here.
+- **0.3.0, 2026-10-06, before the lattice's first wave (ADR-149).** Block G,
+  the grid: five checks for the lattice's specimen page (type LT, shot by
+  `scripts/capture-lattice.mjs` onto lanes la…ld) and for any page that
+  declares the lattice. Every check is a prediction until the first wave; the
+  mechanical half of each (rung and column mirrors, chamfer sizes, the corners
+  hit-tested, the line ledger) runs in the capture, so a G failure the capture
+  did not report is the grader's to explain. No existing check moved.
 - **Pending 0.1.4 — written down, not applied, so wave 01's grades stay on
   the text that produced them.** (1) **A2 / E3 on the timeline:** the lit
   node's box carries a gold outline BY DESIGN (the one lit thing on the axis,
@@ -191,6 +199,15 @@ The grader reads this section into its prompt verbatim.
 - **On an AR or AK still a panel's own edges are its extremes** (D4): lane
   names at the plot's left, readings at its right, dates along its foot,
   labels inside its corners.
+- **The lattice page (type LT) is a specimen of the GRID, not a page about
+  anything** (ADR-149). Its draws are boards, not sections: draw 01 the first
+  screen and 02 the whole page board, 03 the sections board, 04 the frames
+  board. Block G judges every LT still and every still of a page whose
+  caption says it declares the lattice; on every other still block G is
+  passed. On an LT still C3, C4, E1, E2, E3, E4 and D5 are passed (it mounts
+  no timeline, no steps and no console), blocks M and L are passed, and F1
+  reads the page board's sequence (a split, cells, a split, an instrument, a
+  ledger, the close). The grid overlay (`?grid=1`) is never in a graded still.
 
 ## Stranger's read
 
@@ -317,6 +334,16 @@ On the Arcs overview and its kit the reading is the other way round (0.2.0):
 | K1  | **Every arrangement and every state once, captioned, and the fixtures labelled as fixtures.** On the two specimen pages only: the subpage kit shows every document arrangement and its states; the arcs instrument kit shows every instrument state, a proposed, a running and a delivered mark, the lit mark, a client group, the chosen row, a filtered-out row, and the dossier with and without a picture. | an arrangement is missing, a state (lit, open, picked, draft, chosen, filtered out) is missing, or a fixture reads as a claim | critical |
 | K2  | **The specimens share one grammar.** On the two specimen pages only: each kit's sections read as one sheet or one instrument, not a collection of components.                                                                                                                                                                                                                                                  | two specimens contradict each other on a rule the other sections share                                                        | critical |
 
+## G. The grid. The lattice page (LT) and any page that declares it.
+
+| ID  | Check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Fails when                                                                                                                                                                                      | Severity |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| G1  | **Every panel edge lands on a column edge or a rung.** Judged on an LT still and on a page that declares the lattice; on every other still this check is passed. Read the rails' ticks as the ladder and the band's twelfths as the columns: every frame's left and right edges sit on a column edge or on the band's edge, and on the page board the instrument's top and bottom sit on a tick. Pick the three largest panels and check each of their four edges.                                | a frame's side edge sits between two column edges, the instrument's top or bottom floats between ticks, or two frames meant to share an edge are a few pixels apart                             | critical |
+| G2  | **One line hue, three alphas, and gold only on a housing's lip.** Judged on an LT still and on a page that declares the lattice; on every other still this check is passed. Every structural line is one neutral hue at one of three weights by role (the rails' datum, a seam between regions, a rule within one); the only gold line is the flat lip of a housing, and where the caption says line=seam there is none. Count the hues on lines: one. Count the gold lines: the lips.            | a second hue on any line, a fourth alpha, a gold rule or a gold seam, a glow or a ramp doing a line's work, or a gold lip on a frame the caption says is line=seam                              | critical |
+| G3  | **Every cut is on the TR + BL diagonal at one ladder rung, or a single TR notch on a uniform connected set.** Judged on an LT still and on a page that declares the lattice; on every other still this check is passed. A frame's cut corners are its top-right and bottom-left, every cut on the still is one of a few sizes (a card, a plate), and a one-corner notch appears only where the caption says cut=tr or the frames are a uniform connected set. No corner is rounded.               | a cut at the top-left or bottom-right, cut sizes that vary frame to frame with no rung, a single notch on a lone frame under cut=tr-bl, a rounded corner, or a ring whose diagonal is unstroked | critical |
+| G4  | **Every section carries its head strip and the strips share one datum.** Judged on an LT still and on a page that declares the lattice; on every other still this check is passed. Where the caption says head=strip every section opens on a numbered strip (an ordinal tab, a kicker, the title, one rule under) and the strips sit on one line across the page; where it says head=bare every section opens on a kicker and a title alone, on one datum. Count the sections, count the strips. | a section with no head, two strips at different heights or depths, an ordinal missing from one strip under head=strip, an ordinal present under head=bare, or a head centred                    | critical |
+| G5  | **Seams, not gutters — cells share edges.** Judged on an LT still and on a page that declares the lattice; on every other still this check is passed. Neighbouring cells meet on one hairline and the hairline runs the band's width; the only air between two columns is the air between two TEXT columns of a split. Look at a row of cells: there is no strip of empty ground between them.                                                                                                    | a gutter of empty ground between two cells, a doubled hairline where two cells meet, a cell outlined on all four sides inside a ruled row, or a seam that stops short of the band's edge        | critical |
+
 ## Scoring
 
 Mirrored by `tools/config.py`'s verdict map. Change both together or not at all.
@@ -375,6 +402,11 @@ can judge without the rubric open.
 | F3  | a direction moved an axis it did not claim                      |
 | K1  | the kit is missing an arrangement or a state                    |
 | K2  | the specimens contradict each other                             |
+| G1  | a panel edge floats off the columns or the rungs                |
+| G2  | a second line hue, a fourth alpha, or gold off the lip          |
+| G3  | a cut off the diagonal or off the ladder, or a rounded corner   |
+| G4  | a section with no head strip, or strips on two datums           |
+| G5  | a gutter between cells, or a doubled seam                       |
 
 ## Calibration anchors
 

@@ -156,10 +156,13 @@ describe("the sheet's directions (ADR-114)", () => {
     }
     for (const lane of ["lawful", "broken"]) expect(lanes[lane], lane).toMatch(/^render-\d{2,5}$/);
     const types = [...toml.matchAll(/^\[types\.([A-Z]+)\]/gm)].map((m) => m[1]);
-    expect(types.sort()).toEqual(["AC", "AK", "AR", "HS", "MP", "MU", "SK"]);
+    // LT is the lattice's specimen page (ADR-149): it shares this ship's
+    // [types] and lanes but is shot by capture-lattice.mjs, and its route
+    // carries the page board's query.
+    expect(types.sort()).toEqual(["AC", "AK", "AR", "HS", "LT", "MP", "MU", "SK"]);
     for (const t of types) {
       const block = toml.split(`[types.${t}]`)[1].split(/\n\[/)[0];
-      expect(block, `${t}: no ROUTE`).toMatch(/^shot = "ROUTE: \/[a-z0-9/-]*"/m);
+      expect(block, `${t}: no ROUTE`).toMatch(/^shot = "ROUTE: \/[a-z0-9/-]*(\?[a-z0-9=&]+)?"/m);
     }
     for (const pole of SH_DIRECTIONS.filter((d) => d.pole === "negative"))
       for (const t of Object.keys(pole.routes ?? {})) expect(types, pole.id).toContain(t);

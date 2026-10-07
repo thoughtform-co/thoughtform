@@ -30,7 +30,10 @@ export function useArcActiveSection(items: readonly ArcMenuItem[]): number {
     items.forEach((item, idx) => {
       const section = document.getElementById(item.id);
       if (!section) return;
-      watched.set(section.querySelector(".arc-stage") ?? section, idx);
+      /* A chapter inside a switched beat is the whole group (ADR-148 U5):
+         its own section is hidden while another panel is picked. */
+      const group = section.closest("[data-arc-worked-group]");
+      watched.set(group ?? section.querySelector(".arc-stage") ?? section, idx);
     });
     if (watched.size === 0) return;
     const io = new IntersectionObserver(

@@ -1,0 +1,57 @@
+{
+  "$comment": "THE ONE REGISTRY for the lattice's knobs (ADR-149). Read by /test/lattice (TS import through lib/lattice/variants.ts) and by scripts/capture-lattice.mjs (readFileSync); mirrored into the turnstone ship's armada.toml as [types.LT]. TYPE IDS ARE LETTERS ONLY. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: LA is every knob at its first value and the control; every other direction is one argument against it.",
+  "knobs": {
+    "cut": {
+      "values": ["tr-bl", "tr"],
+      "label": "Cut",
+      "note": "tr-bl = ADR-065's housing diagonal, the owner's ruling of 2026-10-06. tr = ADR-148's single top-right notch, house-wide."
+    },
+    "line": {
+      "values": ["lip", "seam"],
+      "label": "Line",
+      "note": "lip = a housing's one sanctioned gold line (ADR-089). seam = every frame in dawn, gold spent on marks alone."
+    },
+    "head": {
+      "values": ["strip", "bare"],
+      "label": "Head",
+      "note": "strip = the numbered head strip (an ordinal tab, a kicker, the title, the sub, one rule under — Evangelion's module head). bare = kicker and title alone, the sheet's own head today."
+    }
+  },
+  "directions": [
+    {
+      "id": "LA",
+      "name": "House",
+      "question": "does one grid, one frame and one head strip read as one instrument across five boards at the house values?",
+      "shape": "the TR+BL pair on a gold lip, every section headed by its ordinal tab",
+      "knobs": {}
+    },
+    {
+      "id": "LB",
+      "name": "Notch",
+      "question": "does a single top-right notch on every frame read more minimal, or does a page of one-corner boxes lose its machined read?",
+      "shape": "the same page cut once per frame",
+      "knobs": { "cut": "tr" }
+    },
+    {
+      "id": "LC",
+      "name": "Dawn",
+      "question": "with every frame line in dawn, is gold left for the marks alone, and does the page still read as a device?",
+      "shape": "the same page with no gold on any edge",
+      "knobs": { "line": "seam" }
+    },
+    {
+      "id": "LD",
+      "name": "Bare",
+      "question": "without the ordinal tab, does a section still know where it is on the page?",
+      "shape": "the same page headed by kicker and title alone",
+      "knobs": { "head": "bare" }
+    }
+  ],
+  "wave": {
+    "lane": "lat",
+    "viewports": ["1280x720", "1440x800", "1920x1247"],
+    "binding": "1280x720",
+    "themes": ["dark", "light"],
+    "note": "1280x720 is the binding cell; 1920x1247 is the owner's window. The jury scores the page board per cell."
+  }
+}

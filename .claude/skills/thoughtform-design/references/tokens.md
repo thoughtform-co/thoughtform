@@ -90,6 +90,22 @@ Historical monorepo path (when present): `packages/ui/src/tokens/`. All values m
 | authored    | atreides-mid, atreides-light (borders, labels) |
 | provenance  | atreides-mid, atreides-light                   |
 
+### The line law (ADR-091, as tokens by ADR-149)
+
+One weight (1px), one hue (dawn), three alphas by ROLE. Read off `app/styles/lattice.css`;
+light re-derives the alphas in `theme.css`, never inherits them.
+
+| Role    | Dark  | Light | CSS Variable    | Draws                                                    |
+| ------- | ----- | ----- | --------------- | -------------------------------------------------------- |
+| datum   | `.55` | `.55` | `--lat-datum`   | The rail's own track                                     |
+| seam    | `.28` | `.42` | `--lat-seam`    | A divider between regions; the hairline between sections |
+| rule    | `.12` | `.22` | `--lat-rule`    | A rule within a region: rows, cells                      |
+| lip     | 30 %  | 30 %  | `--lat-lip`     | A housing's edge, `color-mix` of `--gold-line`           |
+| lip-lit | 70 %  | 70 %  | `--lat-lip-lit` | The lit housing                                          |
+
+⚠ Gold draws no structure except a housing's lip. `--dawn-08` / `--dawn-15` as dividers are
+the pre-lattice spelling; a new rule reads `--lat-rule` or `--lat-seam`.
+
 ---
 
 ## Typography
@@ -171,6 +187,24 @@ aliases and retire in stage 4.
 | 3xl   | 64px  | `--space-3xl` |
 | 4xl   | 96px  | `--space-4xl` |
 
+### Spacing roles (the lattice, ADR-149)
+
+`--space-*` is the magnitude; these are the ROLES on it, read off `app/styles/lattice.css`.
+Pick a role in a sheet, never a magnitude.
+
+| Role            | Value                       | CSS Variable       |
+| --------------- | --------------------------- | ------------------ |
+| unit            | 8px                         | `--lat-u`          |
+| chrome padding  | `var(--space-sm)`           | `--lat-pad-chrome` |
+| cell padding    | `clamp(16px, 2vw, 32px)`    | `--lat-pad-cell`   |
+| stack gap       | `var(--space-md)`           | `--lat-gap-stack`  |
+| block gap       | `var(--space-xl)`           | `--lat-gap-block`  |
+| section padding | `clamp(56px, 8svh, 120px)`  | `--lat-sec-pad`    |
+| head gap        | `clamp(24px, 2.4svh, 40px)` | `--lat-head-gap`   |
+
+⚠ On the phone (≤960) `--lat-sec-pad` is `clamp(40px, 6svh, 64px)` and `--lat-head-gap` is
+`var(--space-lg)`. The full grid, rungs and line law: `spatial-system.md`.
+
 ### Layout Tokens (HUD)
 
 **For exact HUD geometry (rail y bounds, tick grid, chrome anchors), see `hud-frame-implementation.md` — these values take precedence over anything below.** This table summarizes the CSS variables that HUD primitives read; the specimen values and clamp expressions are in `hud-frame-implementation.md` §6.
@@ -219,15 +253,30 @@ Note: `--hud-corner-zone` is used ONLY for anchor-group vertical clearance, **no
 
 ## Chamfers
 
-### Presets
+### The ladder (ADR-065, as tokens by ADR-149)
 
-| Preset                 | Kind        | Config                              |
-| ---------------------- | ----------- | ----------------------------------- |
-| inspectorTicket        | ticketNotch | tr corner, 220px width, 32px height |
-| inspectorTicketCompact | ticketNotch | tr corner, 160px width, 24px height |
-| cutCornersSm           | cutCorners  | all 4 corners, 8px                  |
-| cutCornersMd           | cutCorners  | all 4 corners, 16px                 |
-| cutCornersTopRight     | cutCorners  | tr only, 24px                       |
+Read off `app/styles/lattice.css`; `lib/lattice/geometry.ts` is the source and
+`lattice-tokens` pins the CSS to it.
+
+| Rung        | Value                      | CSS Variable           | Object                                                                      |
+| ----------- | -------------------------- | ---------------------- | --------------------------------------------------------------------------- |
+| chrome      | `0px`                      | `--lat-ch-chrome`      | A chrome-rung object is square (the children of a chamfered box are square) |
+| seed        | `16px`                     | `--lat-ch-seed`        | A card at rest                                                              |
+| card        | `clamp(14px, 1.3vw, 22px)` | `--lat-ch-card`        | The sheet consoles and the proof card (= `--sh-card-ch` = `--pf-card-ch`)   |
+| plate       | `26px`                     | `--lat-ch-plate`       | A housing                                                                   |
+| plate-fluid | `clamp(16px, 1.8vw, 26px)` | `--lat-ch-plate-fluid` | The arcs' plates; the frame recipe's default                                |
+| leg         | `0.586px`                  | `--lat-ch-leg`         | The inner ring's leg: `ch − 0.586px`, never `ch − 1px`                      |
+
+- ⚠ **Two corners, never four.** The lawful diagonal is **TR + BL**, the house default.
+  `tr` alone for an oriented or connected set; `bl` alone is the mirrored back of a flipped
+  object; **never TL + BR** (an owner override ADR-089 retired). The old `cutCorners`
+  presets cut all four corners and are deleted.
+- ⚠ **A clip cuts a border and never strokes one.** The edge is a two-contour `evenodd`
+  ring, both contours closed, inner leg `ch − 0.586px` (insetting a 45° cut by 1px moves
+  its diagonal by √2).
+- **Use `.lat-frame`** (`components/lattice/lattice.css`, components.md §14): the corner
+  is `data-cut="tr-bl | tr | bl | none"`, the depth `data-ch="plate | seed | card |
+plate-fluid | chrome"`. No polygon is written by hand outside that sheet.
 
 ### Chamfer Colors
 

@@ -28,6 +28,21 @@
    traceable to the exact set that drew it (`lib/sheet/directions.json`).
    The first value of every knob is the house.
 
+   ⚠ THE LINE LAW, THE GROUNDS, THE LIP, THE RHYTHM, THE CHAMFER AND THE BAND
+   ARE THE LATTICE'S SINCE ADR-149 (Phase 2, 2026-10-06): `--sh-datum / seam /
+   rule / plate / lip / lip-lit / copy / sec-pad / gutter / card-ch` alias
+   `--lat-*` (app/styles/lattice.css) and `.sh-band` pads with `--lat-margin`
+   — byte-identical, proven by `tests/visual/lattice-parity.spec.ts` at zero
+   pixels and `lattice-alias-readout.spec.ts` on the computed values. ⚠ NO
+   `var(--lat-x, <old value>)` FALLBACKS: a fallback that masks a missing
+   token is the ADR-085 U2 alias trap. The light rows in theme.css re-declare
+   `--sh-seam / rule / plate` directly and are untouched. `--sh-cell-pad`,
+   `--sh-head-gap` and the seven type clamps are NOT aliased: their values are
+   not the lattice's, and moving them is a visible change that belongs to the
+   `lattice` knob (Phase 3). Tokens and MECHANISMS are shared; the SKIN below
+   stays this sheet's own, which is the amendment ADR-149 makes to the law
+   stated next.
+
    ⚠ GRAMMARS ARE COPIED, NEVER IMPORTED (the house law). The chamfer, the
    evenodd lip ring and the stack geometry are `proof-stack.css`'s, restated
    here as `--sh-*`; the duotone is `arcs.css`'s `.arc-card__photo` recipe on
@@ -52,12 +67,12 @@
   /* the line ladder — ONE weight, ONE hue, three alphas by role (ADR-091):
      the datum is the rail's own .55, the seam divides REGIONS, the rule
      rules WITHIN one */
-  --sh-datum: rgba(var(--dawn-rgb), 0.55);
-  --sh-seam: rgba(var(--dawn-rgb), 0.28);
-  --sh-rule: rgba(var(--dawn-rgb), 0.12);
+  --sh-datum: var(--lat-datum);
+  --sh-seam: var(--lat-seam);
+  --sh-rule: var(--lat-rule);
   /* grounds */
   --sh-ground: var(--void);
-  --sh-plate: rgba(var(--void-deep-rgb), 0.62);
+  --sh-plate: var(--lat-plate);
   --sh-recess: rgba(var(--dawn-rgb), 0.035);
   /* The readout's KEY cell (ADR-118 U3): Starfield's filled label, a step
      above the recess because it has to read as a frame. A fill on EVERY key
@@ -82,10 +97,10 @@
   --sh-band-from: rgba(var(--gold-rgb), 0.28);
   --sh-band-to: rgba(var(--gold-rgb), 0.07);
   /* the lip: the housing's one sanctioned gold line, FLAT (ADR-092 U1) */
-  --sh-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
-  --sh-lip-lit: color-mix(in srgb, var(--gold-line) 70%, transparent);
+  --sh-lip: var(--lat-lip);
+  --sh-lip-lit: var(--lat-lip-lit);
   /* type */
-  --sh-copy: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  --sh-copy: var(--lat-copy);
   --sh-lede: clamp(17px, 1.3vw, 21px);
   --sh-display: clamp(34px, 3.2vw, 56px);
   --sh-h2: clamp(24px, 1.9vw, 32px);
@@ -93,15 +108,15 @@
   --sh-chrome: clamp(10.5px, 0.62vw, 12px);
   --sh-chrome-lg: clamp(12px, 0.72vw, 13.5px);
   /* rhythm */
-  --sh-sec-pad: clamp(56px, 8svh, 120px);
+  --sh-sec-pad: var(--lat-sec-pad);
   --sh-head-gap: clamp(20px, 2.4svh, 36px);
   --sh-cell-pad: clamp(20px, 2vw, 32px);
-  --sh-gutter: clamp(20px, 2.4vw, 40px);
+  --sh-gutter: var(--lat-air);
   /* the console */
-  --sh-card-ch: clamp(14px, 1.3vw, 22px);
+  --sh-card-ch: var(--lat-ch-card);
   /* ⚠ NOT `ch − 1px`: insetting a 45° cut by d shortens its leg by
      d(2 − √2) ≈ 0.586d (proof-stack.css's own arithmetic). */
-  --sh-card-ch-in: calc(var(--sh-card-ch) - 0.586px);
+  --sh-card-ch-in: calc(var(--sh-card-ch) - var(--lat-ch-leg));
   --sh-pin-top: clamp(64px, 7svh, 88px);
   --sh-peek: clamp(56px, 6.5svh, 72px);
   --sh-bottom-safe: 24px;
@@ -222,7 +237,7 @@
    editorial block on the site lands on. Never re-inset per section. */
 .sh-band {
   position: relative;
-  padding-inline: var(--band-margin, var(--hud-content-inset, 48px));
+  padding-inline: var(--lat-margin);
 }
 /* THE SEAM between sections spans the band — the region divider. */
 .sh-sec + .sh-sec .sh-band::before,
@@ -234,8 +249,8 @@
   content: "";
   position: absolute;
   top: calc(-1 * var(--sh-sec-pad));
-  left: var(--band-margin, var(--hud-content-inset, 48px));
-  right: var(--band-margin, var(--hud-content-inset, 48px));
+  left: var(--lat-margin);
+  right: var(--lat-margin);
   height: 1px;
   background: var(--sh-seam);
 }
@@ -1814,7 +1829,7 @@ a.sh-figs__item:focus-visible {
 
 @media (max-width: 960px) {
   .sh-root {
-    --sh-sec-pad: clamp(40px, 6svh, 64px);
+    --sh-sec-pad: var(--lat-sec-pad);
   }
   .sh-sec--split {
     padding-block-start: calc(var(--sh-sec-pad) + var(--mobile-chrome-top, 64px));
@@ -1937,4 +1952,73 @@ a.sh-figs__item:focus-visible {
 /* The row's own ordinal follows the knob too. */
 .sh-root[data-sh-ordinal="off"] .sh-row__ord {
   visibility: hidden;
+}
+
+/* ── 15. the lattice knob — the sheet on the grid's own ladders (ADR-149) ──
+   `data-sh-lattice="lattice"` is the FIRST VISIBLE READ of the lattice on a
+   public surface, behind a knob whose first value (`sheet`) is the house:
+   direction SM in lib/sheet/directions.json, read on /home-sessions?k=SM
+   first. Phase 2 above aliased what was byte-equal; this scope moves what
+   was not, so the owner reads both side by side (ADR-070 U35: the losing
+   value, its CSS, its direction, its lane and the parity spec go in one
+   commit at the ruling). Five moves, each one principle of the grid:
+
+     1 · THE TYPE LADDER — the seven clamps onto `--lat-*` (one modular
+         scale, base × 1.2). The display rung is byte-equal; the chrome
+         rungs grow ~0.5–1.5px, the lede and the heads sit on the ratio.
+     2 · THE RHYTHM — the cell pad and the head gap take the lattice roles
+         (endpoints on the 8px scale).
+     3 · THE HEAD STRIP — a section's ordinal becomes a TAB (a bordered mono
+         chip, Evangelion's numbered module head) and the `ordinal` knob is
+         INERT under this one: the strip IS the ordinal. One of the two
+         retires at the ruling.
+     4 · THE MASTHEAD ON THE DATUM — the split's top padding is ADR-099 U2's
+         head datum, solved from the frame's centre, not the masthead's
+         `sec-pad + lift`. At 1247h the head seats ~100px lower; at 720h
+         ~60px higher.
+     5 · THE FRAMES — already on the recipe (the ring, the pair, the lip);
+         nothing moves here, which is the point of Phase 2.
+
+   ⚠ CSS ONLY. The markup is the same under both values (a knob is an
+   attribute `SheetQueryKnobs` flips after mount), so every markup pin and
+   every DOM reader holds. ⚠ No new colour: the light rows above cover every
+   rung this scope reads. ⚠ The specificity is (0,2,0) on the root plus the
+   leaf, which outranks every `.sh-root[data-sh-ordinal="off"]` rule at the
+   same count by SOURCE ORDER — this section is last on purpose. */
+.sh-root[data-sh-lattice="lattice"] {
+  /* 1 · the type ladder */
+  --sh-lede: var(--lat-lede);
+  --sh-h2: var(--lat-h2);
+  --sh-h3: var(--lat-h3);
+  --sh-display: var(--lat-display);
+  --sh-chrome: var(--lat-chrome-sm);
+  --sh-chrome-lg: var(--lat-chrome-md);
+  /* 2 · the rhythm */
+  --sh-cell-pad: var(--lat-pad-cell);
+  --sh-head-gap: var(--lat-head-gap);
+}
+/* 3 · the head strip: the ordinal as a tab, the kicker beside it, the rule
+   under both. The tab's border is the SEAM rung (it is an object, not a
+   divider); its ink the gold TEXT rung. */
+.sh-root[data-sh-lattice="lattice"] .sh-head {
+  gap: var(--lat-gap-stack);
+  padding-block-end: var(--lat-pad-chrome);
+}
+.sh-root[data-sh-lattice="lattice"] .sh-head__ord {
+  display: inline-block;
+  padding: 2px var(--lat-pad-chrome);
+  border: 1px solid var(--lat-seam);
+  color: var(--gold-ink);
+  letter-spacing: var(--track-eyebrow);
+  line-height: 1.4;
+}
+.sh-root[data-sh-lattice="lattice"][data-sh-ordinal="off"] .sh-head__ord {
+  display: inline-block;
+}
+/* 4 · the masthead on the datum (ADR-099 U2, generalised as --lat-head-datum).
+   `max()` with the pinned head's seat keeps ADR-129's sticky offset ≤ 0. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .sh-root[data-sh-lattice="lattice"] .sh-sec--split {
+    --sh-split-pad: max(var(--lat-head-datum), var(--sh-pin-head));
+  }
 }

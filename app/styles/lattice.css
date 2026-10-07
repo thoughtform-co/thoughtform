@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE LATTICE — the brand system grid, as tokens (ADR-149)
+
+   The floor under the site's three grammars (the corridor, the arcs, the
+   sheet): a twelve-column band, thirteen rungs read off the HUD rail's own
+   tick ladder, one spacing scale named by role, one chamfer ladder, one
+   line law, one type ladder. TOKENS AND MECHANISMS ARE SHARED; SKINS STAY
+   COPIED (the amendment ADR-149 makes to `sheet.css`'s "grammars are
+   copied, never imported"). Nothing here paints. Nothing here is a skin.
+
+   ⚠ `:root` ONLY. A lattice token declared on a child resolves to nothing
+   on its parent and silently zeroes every `calc()` that reads it
+   (`sheet.css`'s own `--nav-link-size` lesson). `tests/lib/lattice-tokens`
+   asserts every `--lat-*` lives in `:root` or the light root.
+
+   ⚠ LOADED FROM `app/globals.css`, NEVER FROM `landing.css`. The HUD guard
+   (`hud-brand-tokens.test.ts`) slices landing.css's first `:root` block as
+   the frame's datum (ADR-092: the frame is never swept); the lattice stays
+   out of it by living here. globals.css loads on every route, so no route
+   has to import this sheet and no import index can drift.
+
+   ⚠ THREE RATCHETS PIN THIS SHEET AT ZERO from the hour it was written
+   (`type-material-tokens` tier tokens, `theme-css-sweep`,
+   `phone-viewport-units`), the only way a sheet enters them — see
+   proof-stack.css's week in neither. No `letter-spacing`, no weight, no
+   `dvh`, no colour literal: every colour is a ramp step off `--dawn-rgb`
+   / `--void-deep-rgb` / `--gold-line`, which ADR-058 SWAPS, so one
+   declaration paints both themes and `theme.css` re-derives only the
+   alphas that recede (an alpha inverts its meaning across the flip).
+
+   ⚠ THE RUNGS RESOLVE ONLY AGAINST THE REAL RAIL. `--hud-rail-y-start` /
+   `-end` are declared in landing.css, so on a route without it every rung
+   is invalid at computed-value time and a `top: var(--lat-rung-6)` falls
+   to `initial`. Documented, accepted: the admin tools have no rail to
+   seat on.
+
+   ⚠ A RUNG IS A HEIGHT ON THE LADDER, NEVER A TYPE SIZE. casefile.css's
+   `--fl-t0` is a TYPE size and `--fl-t6` a tick height — one prefix, two
+   measures. Here type rungs carry ROLE names (`--lat-copy`, `--lat-h2`)
+   and the ladder's rungs carry the ladder's index.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── 1 · The columns — the sheet's own grid, promoted (ADR-114) ──────
+     Twelve, because a scroll document divides into the halves, thirds and
+     quarters the ruled references use (Kindled + Kindred, Evangelion's
+     wide-left / stacked-right); the skill's 9×17 stays for FIXED canvases
+     (slides, A4), where rows mean something. Gutter ZERO: cells share
+     edges and divide themselves with seams; `--lat-air` is the air between
+     two TEXT columns only, never a gutter between objects. */
+  --lat-cols: 12;
+  --lat-gutter: 0px;
+  --lat-air: clamp(20px, 2.4vw, 40px);
+  /* the band the columns sit in — the ADR-048 tiers, by reference */
+  --lat-margin: var(--band-margin);
+  --lat-max: var(--band-max);
+  --lat-wide-margin: var(--instrument-margin);
+  --lat-wide-max: var(--instrument-max);
+  /* one column's width inside the text band — ⚠ WRITTEN AGAINST `100vw`,
+     WHICH INCLUDES THE SCROLLBAR: on a page with one, column 12 lands a
+     scrollbar's width past the band's edge (6px on the first capture).
+     Nothing SEATS on this token: the grid seats on `repeat(--lat-cols, 1fr)`
+     and the overlay and the measurement use the band's own box (a `%` of
+     the band). It stays for a rule that needs a column's width as a length
+     in a box that is not a grid, with that error named. */
+  --lat-col: calc((100vw - 2 * var(--lat-margin)) / var(--lat-cols));
+
+  /* ── 2 · The rungs — the live 13-tick rail ladder ────────────────────
+     casefile.css:184–197's formula, COPIED (the casefile keeps its own
+     `--fl-t6` / `--fl-t11`: the rail-mirror smoke reads them). Thirteen
+     positions at N/12 of the rail box, majors at 4 and 8 — the bearings
+     lettered "2" and "5" (lib/v7-parse/hudTicks.ts, which the tokens test
+     pins these to). `--lat-pitch` is the flowing-section unit; the rungs
+     are viewport-absolute heights for a pinned stage or an instrument. */
+  --lat-rail-top: var(--hud-rail-y-start);
+  --lat-rail-bot: var(--hud-rail-y-end);
+  --lat-rail-h: calc(100svh - var(--lat-rail-top) - var(--lat-rail-bot));
+  --lat-pitch: calc(var(--lat-rail-h) / 12);
+  --lat-rung-0: var(--lat-rail-top);
+  --lat-rung-1: calc(var(--lat-rail-top) + var(--lat-rail-h) * 1 / 12);
+  --lat-rung-2: calc(var(--lat-rail-top) + var(--lat-rail-h) * 2 / 12);
+  --lat-rung-3: calc(var(--lat-rail-top) + var(--lat-rail-h) * 3 / 12);
+  --lat-rung-4: calc(var(--lat-rail-top) + var(--lat-rail-h) * 4 / 12);
+  --lat-rung-5: calc(var(--lat-rail-top) + var(--lat-rail-h) * 5 / 12);
+  --lat-rung-6: calc(var(--lat-rail-top) + var(--lat-rail-h) * 6 / 12);
+  --lat-rung-7: calc(var(--lat-rail-top) + var(--lat-rail-h) * 7 / 12);
+  --lat-rung-8: calc(var(--lat-rail-top) + var(--lat-rail-h) * 8 / 12);
+  --lat-rung-9: calc(var(--lat-rail-top) + var(--lat-rail-h) * 9 / 12);
+  --lat-rung-10: calc(var(--lat-rail-top) + var(--lat-rail-h) * 10 / 12);
+  --lat-rung-11: calc(var(--lat-rail-top) + var(--lat-rail-h) * 11 / 12);
+  --lat-rung-12: calc(var(--lat-rail-top) + var(--lat-rail-h));
+  --lat-major-a: var(--lat-rung-4);
+  --lat-major-b: var(--lat-rung-8);
+
+  /* ── 3 · The head datum — ADR-099 U2, generalised ────────────────────
+     Where a section's head sits when the section is a frame: solved from
+     the frame's centre against the page's mean composition height, never
+     from a masthead's `svh` (the proposals' 323px at 1247h, 60 at 720h).
+     A format overrides `--lat-composition`; the arcs keep their own alias
+     until Phase 4. */
+  --lat-composition: 600px;
+  --lat-head-datum: clamp(48px, calc((100svh - var(--lat-composition)) / 2), 360px);
+
+  /* ── 4 · Spacing — variables.css's 8px ladder is the MAGNITUDE; these
+     are the ROLES (ADR-092's magnitude → role move, one level over). A
+     clamp's endpoints sit on the scale. The sheet's own rhythm tokens are
+     the values; they alias here in Phase 2 with no pixel moving. */
+  --lat-u: 8px;
+  --lat-pad-chrome: var(--space-sm);
+  --lat-pad-cell: clamp(16px, 2vw, 32px);
+  --lat-gap-stack: var(--space-md);
+  --lat-gap-block: var(--space-xl);
+  --lat-sec-pad: clamp(56px, 8svh, 120px);
+  --lat-head-gap: clamp(24px, 2.4svh, 40px);
+
+  /* ── 5 · The chamfer ladder — ADR-065, with the two LIVE responsive
+     rungs named rather than re-solved (lib/lattice/geometry.ts is the
+     source; the tokens test pins these to it).
+       chrome 0   a chrome-rung object is SQUARE (the children of a
+                  chamfered box are square, rule 4)
+       seed 16    a card at rest (the services plate, the dock)
+       card       clamp(14, 1.3vw, 22) — the sheet consoles and the proof
+                  card, byte-equal to --sh-card-ch / --pf-card-ch
+       plate 26   a housing (the casefile slab, the open services plate)
+       plate-fluid clamp(16, 1.8vw, 26) — the arcs' plates
+     ⚠ THE INNER LEG IS ONE CONSTANT. A clip CUTS a border and never
+     strokes one (ADR-089), so an edge is a two-contour evenodd ring with
+     its inner outline 1px inside — and insetting a 45° cut by 1px moves
+     its diagonal by √2, so the inner leg is `ch − 0.586px`, never
+     `ch − 1px`. Four sheets wrote this (as 0.6, 0.586 and 0.414); they read
+     it from here now. */
+  --lat-ch-chrome: 0px;
+  --lat-ch-seed: 16px;
+  --lat-ch-card: clamp(14px, 1.3vw, 22px);
+  --lat-ch-plate: 26px;
+  --lat-ch-plate-fluid: clamp(16px, 1.8vw, 26px);
+  --lat-ch-leg: 0.586px;
+
+  /* ── 6 · The line law — ADR-091's, live in three sheets, promoted ────
+     ONE weight, ONE hue, three alphas by role: the DATUM is the rail's
+     own track, a SEAM divides regions, a RULE rules within one. Gold draws
+     no structure; the one sanctioned gold line is a housing's LIP, flat,
+     through `--gold-line` so light re-derives it (ADR-063 U2). */
+  --lat-datum: var(--hud-rail-line);
+  --lat-seam: var(--hud-rail-line-soft);
+  --lat-rule: rgba(var(--dawn-rgb), 0.12);
+  --lat-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
+  --lat-lip-lit: color-mix(in srgb, var(--gold-line) 70%, transparent);
+  /* grounds: the page, a plate (the sheet's and the proof card's .62), the
+     thinner plate a housing takes over a live WebGL bed (the casefile's .42) */
+  --lat-plate: rgba(var(--void-deep-rgb), 0.62);
+  --lat-plate-thin: rgba(var(--void-deep-rgb), 0.42);
+  --lat-recess: rgba(var(--dawn-rgb), 0.035);
+  /* ink — three rungs by role, the sheet's own (sheet.css: .4 is LINE WORK,
+     dim TEXT sits at .58 ≈ 5.5:1 on the void; light lifts each rung). The
+     first capture measured a .52 kicker at 3.61:1 on parchment at 10px. */
+  --lat-ink: rgba(var(--dawn-rgb), 0.92);
+  --lat-ink-2: rgba(var(--dawn-rgb), 0.7);
+  --lat-ink-dim: rgba(var(--dawn-rgb), 0.58);
+
+  /* ── 7 · The type ladder — ONE modular scale, base × 1.2 ──────────────
+     The base is the editorial band's copy size (landing.css), the ratio
+     the casefile's and the proof card's. Two display rungs are kept
+     deliberately: display is tuned by eye, not by ratio. Nothing reads
+     these until Phase 3's knob; the sheet's seven clamps alias where
+     value-identical and are read side by side where not. */
+  --lat-ratio: 1.2;
+  --lat-copy: var(--band-copy);
+  --lat-lede: calc(var(--lat-copy) * 1.2);
+  --lat-h3: calc(var(--lat-copy) * 1.44);
+  --lat-h2: calc(var(--lat-copy) * 1.728);
+  --lat-title: clamp(26px, 3vw, 44px);
+  --lat-display: clamp(34px, 3.2vw, 56px);
+  --lat-chrome-lg: calc(var(--lat-copy) / 1.2);
+  --lat-chrome-md: max(11px, calc(var(--lat-copy) / 1.44));
+  --lat-chrome-sm: max(10px, calc(var(--lat-copy) / 1.728));
+}
+
+/* ── 8 · The breakpoint ladder (lib/lattice/breakpoints.ts is the record;
+   the ratchet counts every `@media` outside it) ────────────────────────
+     narrow   max-width 1100 / min-width 1101   the rail labels hide
+     phone    max-width  960 / min-width  961   the rails stand down
+     stack    max-width  900 / min-width  901   the arcs' heads stack
+     tight    max-width  700 / min-width  701   connector overrides
+     mini     max-width  640 / min-width  641   the title scale steps down
+     short    max-height 680 / min-height 681   the frame's motion stops
+     compact  max-height 760 / min-height 761   the casefile compacts
+   LAW: the max side is the even number, the min side is max + 1. */
+
+/* ── 9 · The phone — the rail stands down at ≤960 (mobile-sections.md), so
+   every rung is re-declared as a spacing value. ⚠ NEVER LEFT UNSET: an
+   unset custom property makes every `calc()` that reads it invalid at
+   computed-value time, silently. The grid becomes four columns; the band
+   margin still resolves (landing.css sets --hud-content-inset on the
+   phone). The section rhythm is the sheet's own phone value. */
+@media (max-width: 960px) {
+  :root {
+    --lat-cols: 4;
+    --lat-rail-top: 0px;
+    --lat-rail-bot: 0px;
+    --lat-rail-h: 100svh;
+    --lat-pitch: var(--space-2xl);
+    --lat-sec-pad: clamp(40px, 6svh, 64px);
+    --lat-head-gap: var(--space-lg);
+  }
+}

@@ -23,10 +23,10 @@
  *
  * Exit 0 = passes its surface thresholds, 1 = fails, 2 = could not run.
  */
-import Anthropic from "@anthropic-ai/sdk";
 import { chromium } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { loadEnv, makeClient, MODEL_DEFAULT_JUDGE } from "./_client.mjs";
 
 const args = process.argv.slice(2);
 const argOf = (f, d) => {
@@ -35,20 +35,8 @@ const argOf = (f, d) => {
 };
 const has = (f) => args.includes(f);
 
-/** Load .env.local / .env without a dependency — the key lives there, not in the shell. */
-for (const f of [".env.local", ".env"]) {
-  const p = path.resolve(process.cwd(), f);
-  if (!fs.existsSync(p)) continue;
-  for (const line of fs.readFileSync(p, "utf8").split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/i);
-    if (!m || process.env[m[1]] !== undefined) continue;
-    let v = m[2].trim();
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-      v = v.slice(1, -1);
-    }
-    process.env[m[1]] = v;
-  }
-}
+/** Load .env.local / .env without a dependency — the key lives there, not in the shell (shared: _client.mjs). */
+loadEnv();
 
 const PORT = argOf("--port", "3003");
 const URL_PATH = argOf("--url", "");
@@ -58,7 +46,7 @@ const SURFACE = argOf("--surface", "panel");
 const THEME = argOf("--theme", "dark");
 const [VW, VH] = argOf("--vp", "1440x900").split("x").map(Number);
 const LABEL = argOf("--label", SHOT ? path.basename(SHOT) : `${URL_PATH} ${SCOPE}`);
-const MODEL = argOf("--model", "claude-haiku-4-5-20251001");
+const MODEL = argOf("--model", MODEL_DEFAULT_JUDGE);
 
 const SKILL = path.resolve(process.cwd(), ".claude/skills/thoughtform-design/eval");
 const RUBRIC_PATH = path.join(SKILL, "rubric.md");
@@ -185,7 +173,7 @@ rounded-corners, purple-blue-gradient, cool-tinted-ground, background-fill-activ
 --- RUBRIC ---
 ${rubric}`;
 
-const client = new Anthropic({ apiKey: key });
+const client = makeClient({ apiKey: key });
 let verdict;
 try {
   const res = await client.messages.create({

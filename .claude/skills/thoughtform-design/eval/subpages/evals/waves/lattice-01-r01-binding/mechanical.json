@@ -1,0 +1,109 @@
+{
+ "LT-la__void_01.png": {
+  "ok": true,
+  "code": 0,
+  "seconds": 1.4,
+  "violations": [],
+  "notes": {
+   "palette": 1,
+   "trackingLegacy": 1,
+   "accentMarks": 22,
+   "spacing": 37,
+   "typeLadder": 9
+  }
+ },
+ "LT-la__void_02.png": {
+  "ok": true,
+  "code": 0,
+  "seconds": 1.4,
+  "violations": [],
+  "notes": {
+   "palette": 1,
+   "trackingLegacy": 1,
+   "accentMarks": 22,
+   "spacing": 37,
+   "typeLadder": 9
+  }
+ },
+ "LT-la__void_03.png": {
+  "ok": true,
+  "code": 0,
+  "seconds": 1.1,
+  "violations": [],
+  "notes": {
+   "palette": 1,
+   "accentMarks": 12,
+   "spacing": 21
+  }
+ },
+ "LT-la__void_04.png": {
+  "ok": true,
+  "code": 0,
+  "seconds": 1.2,
+  "violations": [],
+  "notes": {
+   "palette": 1,
+   "spacing": 7
+  }
+ },
+ "LT-la__parchment_01.png": {
+  "ok": false,
+  "code": 1,
+  "seconds": 1.1,
+  "violations": [
+   "contrast: h3.lat-col__name 3.61:1 at 10px (needs 4.5)",
+   "contrast: h3.lat-col__name 3.61:1 at 10px (needs 4.5)"
+  ],
+  "notes": {
+   "palette": 8,
+   "trackingLegacy": 1,
+   "accentMarks": 22,
+   "spacing": 37,
+   "typeLadder": 9
+  }
+ },
+ "LT-la__parchment_02.png": {
+  "ok": false,
+  "code": 1,
+  "seconds": 1.1,
+  "violations": [
+   "contrast: h3.lat-col__name 3.61:1 at 10px (needs 4.5)",
+   "contrast: h3.lat-col__name 3.61:1 at 10px (needs 4.5)"
+  ],
+  "notes": {
+   "palette": 8,
+   "trackingLegacy": 1,
+   "accentMarks": 22,
+   "spacing": 37,
+   "typeLadder": 9
+  }
+ },
+ "LT-la__parchment_03.png": {
+  "ok": false,
+  "code": 1,
+  "seconds": 1.1,
+  "violations": [
+   "contrast: h3.lat-col__name 3.61:1 at 10px (needs 4.5)",
+   "contrast: h3.lat-col__name 3.61:1 at 10px (needs 4.5)"
+  ],
+  "notes": {
+   "palette": 5,
+   "accentMarks": 12,
+   "spacing": 21
+  }
+ },
+ "LT-la__parchment_04.png": {
+  "ok": false,
+  "code": 1,
+  "seconds": 1.2,
+  "violations": [
+   "contrast: span.lat-board__kicker 3.61:1 at 10px (needs 4.5)",
+   "contrast: span.lat-board__kicker 3.61:1 at 10px (needs 4.5)",
+   "contrast: span.lat-board__kicker 3.61:1 at 10px (needs 4.5)"
+  ],
+  "notes": {
+   "palette": 4,
+   "spacing": 7
+  }
+ }
+}

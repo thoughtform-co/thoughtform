@@ -1288,7 +1288,7 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
      both cut at, because two housings on one surface are one object at two
      sizes, not two styles. */
   --arc-plate-ch: clamp(16px, 1.8vw, 26px);
-  --arc-plate-ch-in: calc(var(--arc-plate-ch) - 0.586px);
+  --arc-plate-ch-in: calc(var(--arc-plate-ch) - var(--lat-ch-leg));
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2491,6 +2491,10 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
     position: static;
     display: inline-block;
     margin-bottom: 12px;
+    /* A long designation wraps rather than widening the beat past the
+       phone (Prompt to Loop's and Under the Glass's heroes, ADR-148 U5). */
+    max-width: 100%;
+    white-space: normal;
   }
   .arc-portrait {
     grid-template-columns: 1fr;
@@ -10928,36 +10932,29 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   }
 }
 
-/* ══ A real job under the run (ADR-148 U4) ════════════════════════════
-   The video workstream's first real job (Under the Glass): the film beside
-   its facts, then the method in a few beats, a line left and its evidence
-   right. Layout and type only, on the arcs' ramp; the stills are square
-   children with a 1px edge, never a second notched frame.
+/* ══ A case breakdown (ADR-148 U4, U5) ════════════════════════════════
+   A client's own case in Prompt to Loop's slide format (`ArcBreakdown`):
+   the hero's film beside its facts and the beats' index, then each beat's
+   evidence under its head. Layout and type only, on the arcs' ramp; the
+   stills are square children with a 1px edge, never a notched frame.
    ⚠ The block's type is its own ladder, on the band copy at the house ratio
    1.2 (the lattice's values, ADR-149, restated on this prefix so the block
    does not wait on the lattice to land). */
-.arc-job {
-  --arc-job-copy: var(--band-copy);
+.arc-breakdown {
   --arc-job-small: calc(var(--band-copy) / 1.2);
   --arc-job-chrome: max(10px, calc(var(--band-copy) / 1.728));
-  --arc-job-h3: calc(var(--band-copy) * 1.44);
   --arc-job-h2: calc(var(--band-copy) * 1.728);
-  --arc-job-title: clamp(26px, 3vw, 44px);
-  display: grid;
-  gap: clamp(24px, 5vh, 56px);
-  margin-top: clamp(40px, 7vh, 88px);
-  padding-top: clamp(32px, 5vh, 56px);
-  border-top: 1px solid var(--arc-rule);
 }
 .arc-job__top {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
-  gap: clamp(24px, 4vw, 64px);
+  grid-template-columns: auto minmax(0, 520px);
+  justify-content: center;
+  align-items: center;
+  gap: clamp(32px, 4vw, 72px);
 }
 .arc-job__film {
   margin: 0;
-  width: min(42vw, calc(58svh * 9 / 16), 340px);
+  width: min(300px, calc((100svh - 420px) * 9 / 16));
   aspect-ratio: 9 / 16;
   border: 1px solid var(--arc-edge);
   background: var(--arc-plate);
@@ -10965,11 +10962,8 @@ html[data-theme="light"] .arc-root .arc-sf__n {
 }
 .arc-job__head {
   display: grid;
-  gap: var(--space-md);
-  max-width: 62ch;
+  gap: var(--space-lg);
 }
-.arc-job__eyebrow,
-.arc-job__key,
 .arc-job__facts dt,
 .arc-job__rows dt,
 .arc-job__frame figcaption {
@@ -10982,39 +10976,14 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
-.arc-job__eyebrow {
-  letter-spacing: var(--track-eyebrow);
-}
-.arc-job__title {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: var(--weight-text);
-  font-size: var(--arc-job-title);
-  line-height: 1.08;
-  letter-spacing: var(--track-display);
-  color: var(--arc-ink-90);
-}
-.arc-job__title em {
-  font-style: normal;
-  color: var(--gold-ink, #caa554);
-}
-.arc-job__sub,
-.arc-job__line {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: var(--weight-text);
-  letter-spacing: var(--track-copy);
-  color: var(--arc-ink-70);
-}
-.arc-job__sub {
-  font-size: var(--arc-job-copy);
-  line-height: 1.45;
-}
-.arc-job__facts {
+.arc-job__facts,
+.arc-job__index {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 clamp(16px, 2vw, 32px);
-  margin: var(--space-sm) 0 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .arc-job__facts > div,
 .arc-job__rows > div {
@@ -11033,52 +11002,43 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   letter-spacing: var(--track-copy);
   color: var(--arc-ink-90);
 }
-.arc-job__beats {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.arc-job__beat {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
-  align-items: start;
-  gap: clamp(24px, 3.6vw, 56px);
-  padding-block: clamp(24px, 4vh, 40px);
-  border-top: 1px solid var(--arc-rule);
-}
-.arc-job__text {
-  display: grid;
+/* The beats' index: Prompt to Loop's step list, in this block's type. */
+.arc-job__index a {
+  display: flex;
+  align-items: baseline;
   gap: var(--space-sm);
-}
-.arc-job__beat-title {
-  margin: 0;
+  padding-block: var(--space-sm);
+  border-top: 1px solid var(--arc-rule);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: var(--weight-lit);
-  font-size: var(--arc-job-h3);
-  line-height: 1.15;
-  letter-spacing: var(--track-display);
+  font-size: var(--arc-job-small);
+  line-height: 1.35;
+  color: var(--arc-ink-80);
+  text-decoration: none;
+}
+.arc-job__index a:hover,
+.arc-job__index a:focus-visible {
   color: var(--arc-ink-90);
 }
-.arc-job__line {
-  max-width: 46ch;
-  font-size: var(--arc-job-small);
-  line-height: 1.5;
+.arc-job__index span {
+  min-width: 1.6em;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--arc-job-chrome);
+  color: var(--gold-ink, #caa554);
 }
-/* The stills: side by side, one shape per beat, held to the frame height. */
+/* The stills: side by side, one shape per beat, held to the slide's frame. */
 .arc-job__frames {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
   gap: clamp(8px, 1.2vw, 16px);
 }
-.arc-job__frames[data-run-frames="9:16"] {
-  grid-auto-columns: minmax(0, calc(44svh * 9 / 16));
-  justify-content: start;
+.arc-job__frames[data-case-frames="9:16"] {
+  grid-auto-columns: minmax(0, calc((100svh - 440px) * 9 / 16));
+  justify-content: center;
 }
-.arc-job__frames[data-run-frames="1:1"] {
-  grid-auto-columns: minmax(0, 44svh);
-  justify-content: start;
+.arc-job__frames[data-case-frames="1:1"] {
+  grid-auto-columns: minmax(0, calc(100svh - 460px));
+  justify-content: center;
 }
 .arc-job__frame {
   display: grid;
@@ -11090,44 +11050,42 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   display: block;
   width: 100%;
   height: auto;
+  object-fit: cover;
   border: 1px solid var(--arc-edge);
   background: var(--arc-plate);
 }
-.arc-job__frames[data-run-frames="9:16"] img {
+.arc-job__frames[data-case-frames="9:16"] img {
   aspect-ratio: 9 / 16;
-  object-fit: cover;
 }
-.arc-job__frames[data-run-frames="1:1"] img {
+.arc-job__frames[data-case-frames="1:1"] img {
   aspect-ratio: 1;
-  object-fit: cover;
 }
-.arc-job__frames[data-run-frames="3:2"] img {
+.arc-job__frames[data-case-frames="3:2"] img {
   aspect-ratio: 3 / 2;
-  object-fit: cover;
 }
 .arc-job__frame figcaption b {
-  margin-right: 8px;
+  margin-right: var(--space-sm);
   font-weight: var(--weight-text);
   color: var(--arc-ink-40);
 }
-.arc-job__frame[data-run-verdict="kept"] img {
+.arc-job__frame[data-case-verdict="kept"] img {
   border-color: var(--gold-line, rgba(202, 165, 84, 0.34));
 }
-.arc-job__frame[data-run-verdict="kept"] figcaption b {
+.arc-job__frame[data-case-verdict="kept"] figcaption b {
   color: var(--gold-ink, #caa554);
 }
 .arc-job__rows {
   display: grid;
+  max-width: 960px;
   margin: 0;
 }
 .arc-job__rows > div {
-  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
   align-items: baseline;
-  gap: 16px;
+  gap: var(--space-md);
 }
 .arc-job__rows > div:first-child {
   border-top: 0;
-  padding-top: 0;
 }
 .arc-job__figures {
   display: grid;
@@ -11138,7 +11096,9 @@ html[data-theme="light"] .arc-root .arc-sf__n {
 .arc-job__figures > div {
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--arc-rule);
 }
 .arc-job__figures dt {
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
@@ -11156,30 +11116,24 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   line-height: 1.4;
   color: var(--arc-ink-62);
 }
-.arc-job__foot {
-  margin: 0;
-  padding-top: clamp(16px, 3vh, 32px);
-  border-top: 1px solid var(--arc-rule);
-  max-width: 70ch;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: var(--arc-job-small);
-  line-height: 1.5;
-  color: var(--arc-ink-62);
-}
 @media (max-width: 960px) {
-  .arc-job__top,
-  .arc-job__beat {
+  .arc-job__top {
     grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
   }
   .arc-job__film {
-    width: min(64vw, 300px);
+    width: min(64vw, 280px);
   }
   .arc-job__figures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .arc-job__frames[data-case-frames="9:16"],
+  .arc-job__frames[data-case-frames="1:1"] {
+    grid-auto-columns: minmax(0, 1fr);
+  }
 }
 @media (max-width: 640px) {
-  .arc-job__frames[data-run-frames="3:2"] {
+  .arc-job__frames[data-case-frames="3:2"] {
     grid-auto-flow: row;
   }
   .arc-job__rows > div {
@@ -11206,7 +11160,7 @@ html[data-theme="light"] .arc-root .arc-sf__n {
    ring is a two-contour `evenodd` polygon, inner leg `ch - 0.586px`. */
 .arc-root[data-arc-format="workshop"] {
   --arc-frame-ch: clamp(10px, 1vw, 14px);
-  --arc-frame-ch-in: calc(var(--arc-frame-ch) - 0.586px);
+  --arc-frame-ch-in: calc(var(--arc-frame-ch) - var(--lat-ch-leg));
   --arc-frame-line: var(--arc-edge);
   --arc-frame-clip: polygon(
     0 0,

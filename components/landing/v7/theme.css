@@ -1168,6 +1168,30 @@ html[data-theme="light"] .rin-session__panel {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   THE LATTICE's light rows (ADR-149). `app/styles/lattice.css` declares the
+   grid's line law and grounds as ramp steps off `--dawn-rgb` /
+   `--void-deep-rgb`, which this theme SWAPS — so the hue flips for free and
+   only the ALPHAS are re-derived here, never inherited: a seam that recedes
+   toward black on void recedes toward parchment in light, and quiet becomes
+   invisible if the number is carried across. The values are the sheet's own
+   (`.sh-root` below): seam .28 → .42, rule .12 → .22, the plate opaque, the
+   datum following the rail's own light track. The lip is a `color-mix` of
+   `--gold-line`, which re-derives itself. Colours only — no type, no
+   geometry, no rung moves across the flip.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] {
+  --lat-seam: rgba(var(--dawn-rgb), 0.42);
+  --lat-rule: rgba(var(--dawn-rgb), 0.22);
+  --lat-plate: rgb(var(--void-deep-rgb));
+  --lat-plate-thin: rgba(var(--void-deep-rgb), 0.72);
+  --lat-recess: rgba(var(--dawn-rgb), 0.05);
+  /* the ink rungs, lifted as the sheet's are (.9 → .92, .7 → .78, .58 → .64) */
+  --lat-ink: rgba(var(--dawn-rgb), 0.92);
+  --lat-ink-2: rgba(var(--dawn-rgb), 0.78);
+  --lat-ink-dim: rgba(var(--dawn-rgb), 0.64);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    THE SHEET (ADR-114) - the subpage grammar's ramp, re-derived.
    An alpha that recedes toward black on void recedes toward parchment
    here, so every rung is lifted rather than inherited (the `.arc-root`
@@ -1200,4 +1224,24 @@ html[data-theme="light"] .sh-root {
   --sh-survey-faint: rgba(var(--dawn-rgb), 0.26);
   --sh-survey-mark: rgba(var(--dawn-rgb), 0.62);
   --sh-survey-grid: rgba(var(--dawn-rgb), 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4i — the Home sessions page (ADR-150). Its skin reads the
+   lattice's ink and line rungs, which re-derive themselves above; these are
+   the page's OWN alphas, lifted as the sheet's are (dark-on-parchment reads
+   weaker at equal alpha, ADR-063 U2): the dial's line work .32 → .42, its
+   faint ring .2 → .3, the graduation .4 → .5, the field's glyphs .22 → .3,
+   the corner bed opaque enough to letter on over a photograph.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .hs-root {
+  --hs-gold-fill: rgba(var(--gold-rgb), 0.24);
+  --hs-line: rgba(var(--dawn-rgb), 0.42);
+  --hs-line-2: rgba(var(--dawn-rgb), 0.3);
+  --hs-tick: rgba(var(--dawn-rgb), 0.5);
+  --hs-well: rgba(var(--dawn-rgb), 0.08);
+  --hs-dots: rgba(var(--dawn-rgb), 0.07);
+  --hs-glyph: rgba(var(--dawn-rgb), 0.24);
+  --hs-glyph-ink: rgba(var(--dawn-rgb), 0.86);
+  --hs-bed: rgba(var(--void-deep-rgb), 0.86);
 }

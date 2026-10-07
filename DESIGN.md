@@ -51,9 +51,10 @@ spacing:
   sm: 8px
   md: 16px
   lg: 24px
-  xl: 48px
-  2xl: 72px
-  3xl: 120px
+  xl: 32px
+  2xl: 48px
+  3xl: 64px
+  4xl: 96px
 components:
   button-ghost:
     backgroundColor: transparent

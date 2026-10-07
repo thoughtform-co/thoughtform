@@ -1,0 +1,31 @@
+---
+description: The lattice (ADR-149) — the brand system grid as tokens, one frame recipe, section arrangements, a lab with a ratchet and an Awwwards jury; the sheet adopts first
+globs:
+  - "app/styles/lattice.css"
+  - "components/lattice/**"
+  - "lib/lattice/**"
+  - "app/(internal)/test/lattice/**"
+  - "scripts/capture-lattice.mjs"
+  - "scripts/lattice-round.mjs"
+  - "scripts/design-eval/awwwards.mjs"
+  - "tests/lib/lattice-*.test.ts"
+  - "tests/visual/lattice-*.spec.ts"
+  - "components/sheet/**"
+alwaysApply: false
+---
+
+# Rule: the lattice (ADR-149)
+
+Full rule: `.claude/rules/lattice.md`. The short form:
+
+- Tokens and MECHANISMS are shared; SKINS stay copied. `--lat-*` lives on
+  `:root` in `app/styles/lattice.css` (loaded from globals.css) and nowhere else.
+- A rung is a height on the rail's 13-tick ladder, never a type size. Type rungs
+  carry role names.
+- One frame recipe, `.lat-frame`: a two-contour evenodd ring on `::before`, inner
+  leg `ch − var(--lat-ch-leg)`, corners as `data-cut="tr-bl|tr|bl|none"`. Never
+  `tl-br`. A clip cuts a border and never strokes one.
+- The ratchet (`tests/lib/lattice-ratchet.test.ts`) counts polygons, off-scale
+  spacing, literal font sizes and off-ladder breakpoints per sheet. Only down.
+- The lab is `/test/lattice` inside the REAL HUD frame; the capture asserts, the
+  jury scores, usability is capped by measurement; one wave is one CSS state.

@@ -32,13 +32,9 @@ import type { SheetSection } from "@/lib/sheet/types";
  * in the query (`?theme=`), which the pre-paint bootstrap reads.
  */
 
-const ROUTES = [
-  "/home-sessions",
-  "/arcs",
-  "/arcs/loop",
-  "/musings",
-  "/musings/navigate-the-intelligence",
-];
+/* `/home-sessions` left the sheet for its own composition (ADR-150); its
+   smoke is tests/visual/sessions-smoke.spec.ts. */
+const ROUTES = ["/arcs", "/arcs/loop", "/musings", "/musings/navigate-the-intelligence"];
 const VIEWPORTS: [number, number][] = [
   [1280, 720],
   [1440, 800],
@@ -298,7 +294,7 @@ test.describe("subpages (ADR-114)", () => {
   test.describe("on the phone", () => {
     test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     test("the phone reads as one column and nothing sticks", async ({ page }) => {
-      await ready(page, "/home-sessions");
+      await ready(page, "/musings");
       const lead = await page.locator(".sh-split__lead").boundingBox();
       const copy = await page.locator(".sh-split__copy").boundingBox();
       expect(
@@ -377,26 +373,8 @@ test.describe("subpages (ADR-114)", () => {
     }
   });
 
-  test("/home-sessions: one lit morning, and it is the one open with a mailto seat", async ({
-    page,
-  }) => {
-    await ready(page, "/home-sessions");
-    const lit = page.locator(".sh-tl__item.is-lit");
-    await expect(lit).toHaveCount(1);
-    const litId = await lit.getAttribute("data-id");
-    const open = page.locator(".sh-steps__item.is-open");
-    await expect(open).toHaveCount(1);
-    expect(await open.getAttribute("data-id")).toBe(litId);
-    const href = (await open.locator(".sh-cta").getAttribute("href")) ?? "";
-    expect(href).toMatch(/^mailto:[^?]+\?subject=/);
-    expect(decodeURIComponent(href)).toMatch(/Reserve a seat/);
-    // The axis carries month ticks and every item sits inside it.
-    const ticks = await page.locator(".sh-tl__tick").count();
-    expect(ticks).toBeGreaterThanOrEqual(3);
-  });
-
   test("?k=SD writes its knobs on the root and drops the ordinals", async ({ page }) => {
-    await page.goto("/home-sessions?k=SD");
+    await page.goto("/arcs/loop?k=SD");
     await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 45_000 });
     const root = page.locator(".sh-root");
     await expect(root).toHaveAttribute("data-sh-k", "SD");
@@ -482,11 +460,7 @@ test.describe("subpages (ADR-114)", () => {
       contextOptions: { reducedMotion: "no-preference" },
     });
     const CLOSE_ROUTES = ROUTES.filter((r) => r !== "/arcs");
-    const RISE_ROUTES = new Set([
-      "/home-sessions",
-      "/musings",
-      "/musings/navigate-the-intelligence",
-    ]);
+    const RISE_ROUTES = new Set(["/musings", "/musings/navigate-the-intelligence"]);
 
     test("the wordmark sits docked in the corner from the first frame, on every sheet route", async ({
       page,
@@ -863,7 +837,7 @@ test.describe("subpages (ADR-114)", () => {
       test("a sheet without a survey keeps its name kicker and its first seam", async ({
         page,
       }) => {
-        await ready(page, "/home-sessions");
+        await ready(page, "/arcs/loop");
         const r = await page.evaluate(() => {
           const first = document.querySelector(".sh-body .sh-sec .sh-band");
           const seam = first ? getComputedStyle(first, "::before") : null;
@@ -884,7 +858,7 @@ test.describe("subpages (ADR-114)", () => {
   test("both themes paint their own ground and hold contrast", async ({ page }) => {
     const grounds: string[] = [];
     for (const theme of ["dark", "light"]) {
-      await page.goto(`/home-sessions?theme=${theme}`);
+      await page.goto(`/arcs/loop?theme=${theme}`);
       await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 45_000 });
       /* ⚠ DARK IS THE ABSENCE OF THE ATTRIBUTE (ADR-058): the bootstrap only
          ever writes `data-theme="light"`, so asserting "dark" waited on a

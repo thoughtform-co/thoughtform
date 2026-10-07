@@ -5,7 +5,7 @@
  * Antwerp for one morning, the argument in full and then the skill by hand.
  * This module holds WHEN — the mornings on the calendar — and nothing else;
  * the copy is the services record's own (`serviceData.ts` /
- * `servicePlateData.ts`, id `guided-build`), read by `lib/sheet/home-sessions`.
+ * `servicePlateData.ts`, id `guided-build`), read by `lib/sessions/page` (ADR-150).
  *
  * ⚠ OWNER-TO-CONFIRM (2026-09-20). No session had a date when this page was
  * built, so the four mornings below are a FIRST DRAFT — monthly, a Thursday,

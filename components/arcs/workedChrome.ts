@@ -10,4 +10,12 @@
 export const WORKED_CHROME = {
   /** Read before the choices, by a screen reader and on the bar. */
   label: "One piece of work",
+  /** A group's own name where "one piece of work" says the wrong thing
+   *  (ADR-148 U5): the Suri page switches CASES and WORKSTREAMS. */
+  groups: { case: "The case", workstream: "Workstream" } as Record<string, string>,
 } as const;
+
+/** The bar's name for one group. */
+export function workedLabel(group: string): string {
+  return WORKED_CHROME.groups[group] ?? WORKED_CHROME.label;
+}

@@ -26,6 +26,11 @@
  *                       ≤960/PRM restore block has no other guard.
  *   --budget <n>        accent MARKS allowed in the scope; absent = report only
  *   --json <file>       write the report
+ *   --ready <selector>  wait for this selector instead of the fixed 2500ms (a page
+ *                       that stamps its own readiness — the lattice lab's
+ *                       `.lat-read[data-stamp^="page|"]`, ADR-149); 300ms settle after
+ *   --lattice           make the three lattice checks (spacing, typeLadder, chamfer)
+ *                       HARD gates; without it they are advisory and only reported
  *   --headed
  *
  * Exit 0 = clean, 1 = violations, 2 = could not run.
@@ -52,6 +57,44 @@ const PRM = has("--prm");
 const BUDGET = argOf("--budget", "") === "" ? null : Number(argOf("--budget", ""));
 const [VW, VH] = argOf("--vp", "1440x900").split("x").map(Number);
 const JSON_OUT = argOf("--json", "");
+const READY = argOf("--ready", "");
+const LATTICE = has("--lattice");
+
+/**
+ * The lattice's three advisory checks (ADR-149), hard under `--lattice`. Each
+ * compares a computed value against a token RESOLVED THROUGH A PROBE ELEMENT
+ * in the page — a custom property is a string until something lays it out —
+ * and a token that does not resolve (a route without lattice.css) is simply
+ * not on the ladder, so the check reports against the scale alone.
+ */
+const LATTICE_CHECKS = new Set(["spacing", "typeLadder", "chamfer"]);
+const LATTICE_SPACING_TOKENS = [
+  "--lat-pad-chrome",
+  "--lat-pad-cell",
+  "--lat-gap-stack",
+  "--lat-gap-block",
+  "--lat-sec-pad",
+  "--lat-head-gap",
+  "--lat-air",
+];
+const LATTICE_TYPE_TOKENS = [
+  "--lat-chrome-sm",
+  "--lat-chrome-md",
+  "--lat-chrome-lg",
+  "--lat-copy",
+  "--lat-lede",
+  "--lat-h3",
+  "--lat-h2",
+  "--lat-title",
+  "--lat-display",
+];
+const LATTICE_CHAMFER_TOKENS = [
+  "--lat-ch-chrome",
+  "--lat-ch-seed",
+  "--lat-ch-card",
+  "--lat-ch-plate",
+  "--lat-ch-plate-fluid",
+];
 
 /**
  * Sanctioned shadow sites. The shape law bans shadow AS DEPTH; these are the
@@ -79,6 +122,9 @@ const SHADOW_ALLOW = [
  * count compositions, so the budget does).
  */
 const ACCENT_ALLOW = [
+  // The lattice lab's CTA (ADR-149): the sheet's own outlined control, one
+  // object per section, the composition's one lit thing.
+  /\.lat-cta/,
   /\.fl-hz::before/,
   // The proof card's lip (ADR-097) — the housing's own device one object over.
   // ⚠ DECLARATIVE: this stage judges `border*Color` and `outline` and never a
@@ -246,7 +292,14 @@ const url = `http://localhost:${PORT}${URL_PATH}${THEME === "light" ? (URL_PATH.
 let report;
 try {
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.waitForTimeout(2500); // let fonts settle and the first paint land
+  if (READY) {
+    // A readiness the PAGE computed (ADR-149): the fixed wait is a bet on a
+    // paint that may not have landed; a stamp is the page saying it has.
+    await page.waitForSelector(READY, { timeout: 60000 });
+    await page.waitForTimeout(300);
+  } else {
+    await page.waitForTimeout(2500); // let fonts settle and the first paint land
+  }
 
   report = await page.evaluate(
     ({
@@ -261,6 +314,9 @@ try {
       legacyRungs,
       weightCeiling,
       trackEps,
+      spacingTokens,
+      typeTokens,
+      chamferTokens,
     }) => {
       const root = document.querySelector(scope);
       if (!root) return { error: `scope "${scope}" not found` };
@@ -295,6 +351,76 @@ try {
         trackingLegacy: [],
         textShadowScrim: [],
         accentMarks: [],
+        // the lattice's three (ADR-149), advisory unless --lattice
+        spacing: [],
+        typeLadder: [],
+        chamfer: [],
+      };
+
+      /* ── The lattice's ladders, resolved ONCE through a probe ──────────
+         `width: var(--x)` on an absolutely positioned empty element lays the
+         token out as a length; an unresolved token leaves width at 0, which
+         is read as "not on this page" rather than as a rung of 0 — except
+         `--lat-ch-chrome`, whose 0 is the law (a chrome object is square)
+         and which the chamfer check never needs, since a square corner has
+         no cut to compare. */
+      const resolveTokens = (names) => {
+        const probeEl = document.createElement("i");
+        probeEl.style.cssText = "position:absolute;visibility:hidden;height:0;padding:0;border:0";
+        root.appendChild(probeEl);
+        const out = [];
+        for (const name of names) {
+          probeEl.style.width = `var(${name})`;
+          const w = parseFloat(getComputedStyle(probeEl).width);
+          if (Number.isFinite(w) && w > 0) out.push(w);
+        }
+        probeEl.remove();
+        return out;
+      };
+      const spacingLadder = resolveTokens(spacingTokens);
+      const typeLadder = resolveTokens(typeTokens);
+      const chamferLadder = resolveTokens(chamferTokens);
+      const near = (v, ladder, eps) => ladder.some((l) => Math.abs(v - l) <= eps);
+      const onScale = (v) => {
+        const a = Math.abs(v);
+        if (a === 0 || a === 1 || a === 2) return true;
+        const m = a % 8;
+        return m < 0.5 || 8 - m < 0.5;
+      };
+      /* The cut a polygon makes at its top-right: the gap between the box's
+         right edge and the second point's x. Computed values keep the
+         percentage (`calc(100% - 26px)`), so the px terms are summed from
+         the calc; a plain px value is subtracted from the box's width. A
+         second point at 100% is a square corner and is not a cut. */
+      const trCutOf = (clip, width) => {
+        const m = String(clip).match(/^polygon\((?:evenodd\s*,\s*|nonzero\s*,\s*)?(.*)\)$/s);
+        if (!m) return null;
+        // Split on top-level commas only: a `calc()` carries its own.
+        const pts = [];
+        let depth = 0;
+        let cur = "";
+        for (const ch of m[1]) {
+          if (ch === "(") depth++;
+          if (ch === ")") depth--;
+          if (ch === "," && depth === 0) {
+            pts.push(cur.trim());
+            cur = "";
+          } else cur += ch;
+        }
+        if (cur.trim()) pts.push(cur.trim());
+        if (pts.length < 2) return null;
+        // The point is "<x> <y>"; the y is the last whitespace-separated term
+        // (a plain length or percentage — a calc() y never appears second).
+        const x2 = pts[1].replace(/\s+(?:-?[\d.]+(?:px|%)|calc\([^)]*\))$/, "").trim();
+        if (x2 === "100%") return null;
+        if (/^calc\(100%/.test(x2)) {
+          let cut = 0;
+          for (const t of x2.matchAll(/-\s*([\d.]+)px/g)) cut += parseFloat(t[1]);
+          return cut;
+        }
+        const px = x2.match(/^([\d.]+)px$/);
+        if (px && Number.isFinite(width)) return width - parseFloat(px[1]);
+        return null;
       };
       const seenColor = new Set();
       const textNodes = [];
@@ -413,6 +539,33 @@ try {
           }
         }
 
+        // spacing — every padding, margin and gap on the scale or on a role
+        // token (ADR-149; advisory unless --lattice)
+        for (const prop of [
+          "paddingTop",
+          "paddingRight",
+          "paddingBottom",
+          "paddingLeft",
+          "marginTop",
+          "marginRight",
+          "marginBottom",
+          "marginLeft",
+          "rowGap",
+          "columnGap",
+        ]) {
+          const v = parseFloat(cs[prop]);
+          if (!Number.isFinite(v) || onScale(v) || near(Math.abs(v), spacingLadder, 0.5)) continue;
+          findings.spacing.push(`${pathName} ${prop}=${Math.round(v * 100) / 100}px`);
+        }
+
+        // chamfer — a polygon clip's top-right cut sits on the ladder
+        if (cs.clipPath && cs.clipPath.startsWith("polygon(") && chamferLadder.length) {
+          const cut = trCutOf(cs.clipPath, box.width);
+          if (cut !== null && cut > 0.5 && !near(cut, chamferLadder, 0.5)) {
+            findings.chamfer.push(`${pathName} cut=${Math.round(cut * 100) / 100}px`);
+          }
+        }
+
         // font family — the FIRST declared face is what renders
         const fam = (cs.fontFamily || "").split(",")[0].replace(/["']/g, "").trim();
         if (fam && el.textContent && el.textContent.trim()) {
@@ -495,6 +648,12 @@ try {
           const weight = parseFloat(cs.fontWeight);
           if (isGold(cs.color)) findings.accentMarks.push(`${pathName} text`);
 
+          // type ladder — every size a rung of the lattice's scale (ADR-149;
+          // advisory unless --lattice; silent on a page without the tokens)
+          if (typeLadder.length && !near(size, typeLadder, 0.5)) {
+            findings.typeLadder.push(`${pathName} font-size=${Math.round(size * 100) / 100}px`);
+          }
+
           // weight — the ceiling
           if (weight > weightCeiling && !weightOk.some((re) => re.test(pathName))) {
             findings.weight.push(`${pathName} font-weight=${cs.fontWeight} at ${size}px`);
@@ -559,6 +718,9 @@ try {
       legacyRungs: type.legacy,
       weightCeiling: type.weightCeiling,
       trackEps: TRACK_EPS,
+      spacingTokens: LATTICE_SPACING_TOKENS,
+      typeTokens: LATTICE_TYPE_TOKENS,
+      chamferTokens: LATTICE_CHAMFER_TOKENS,
     }
   );
 } catch (err) {
@@ -613,6 +775,9 @@ const order = [
   "trackingSvg",
   "textShadowScrim",
   "accentMarks",
+  "spacing",
+  "typeLadder",
+  "chamfer",
 ];
 // `palette` is advisory: computed colours legitimately include composited and
 // interpolated values that are not literal token entries. The four buckets
@@ -625,10 +790,12 @@ const ADVISORY = new Set([
   "trackingSvg",
   "textShadowScrim",
   "accentMarks",
+  // the lattice's three are advisory by default and HARD under --lattice
+  ...(LATTICE ? [] : [...LATTICE_CHECKS]),
 ]);
 let total = 0;
 console.log(
-  `\nMECHANICAL — ${url}  scope=${SCOPE}${EXCLUDE ? `  exclude=${EXCLUDE}` : ""}  ${VW}x${VH}  ${THEME}${PRM ? "  prm" : ""}\n`
+  `\nMECHANICAL — ${url}  scope=${SCOPE}${EXCLUDE ? `  exclude=${EXCLUDE}` : ""}  ${VW}x${VH}  ${THEME}${PRM ? "  prm" : ""}${LATTICE ? "  lattice" : ""}\n`
 );
 for (const k of order) {
   const list = f[k] ?? [];

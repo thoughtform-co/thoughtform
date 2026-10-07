@@ -12,6 +12,7 @@ import { getArcAt } from "@/lib/arcs/registry";
 import { HAND_IT_TO_AN_AGENT } from "@/lib/arcs/content/shared/handItToAnAgent";
 import {
   SURI_RUNS,
+  UNDER_THE_GLASS,
   SURI_WORKED,
   SURI_WORKS,
   SURI_WORKSTREAM_ORDER,
@@ -212,8 +213,8 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
       "questions:configuration",
       "cards:skills-and-evals",
       "horizon:the-horizon",
-      "interstitial:one-real-job",
-      "prompt-to-loop:ptl-top",
+      "interstitial:real-jobs",
+      "prompt-to-loop:case",
       "skill-run:workstream",
       "close:close",
     ]);
@@ -259,6 +260,20 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     expect(routeFile("[slug]", "[leaf]", "page.tsx")).toContain(
       "prompt-to-loop/prompt-to-loop.css"
     );
+  });
+
+  /* ADR-148 U5 (owner): the cases are switched on their own bar, the
+     owner's breakdown beside Suri's own, each one record. */
+  it("switches the two cases on their own bar, each from its record (U5)", () => {
+    const cases = CONFIG.sections.filter((s) => s.worked?.group === "case");
+    expect(cases.map((s) => `${s.kind}:${s.worked?.id}`)).toEqual([
+      "prompt-to-loop:loop",
+      "breakdown:under-the-glass",
+    ]);
+    const utg = cases[1];
+    expect(utg.kind === "breakdown" && utg.breakdown).toBe(UNDER_THE_GLASS);
+    const runs = CONFIG.sections.filter((s) => s.kind === "skill-run");
+    expect(JSON.stringify(runs), "the teaser left the video tab").not.toContain("teaser");
   });
 
   it("numbers its beats in order and closes on the shared close", () => {

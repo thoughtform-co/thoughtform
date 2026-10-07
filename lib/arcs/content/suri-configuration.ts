@@ -1,6 +1,6 @@
 import type { ArcDef } from "../types";
 
-import { SURI_STUDIO_CONFIGURATION, suriRuns } from "./shared/suriWork";
+import { SURI_STUDIO_CONFIGURATION, suriRuns, UNDER_THE_GLASS } from "./shared/suriWork";
 import { whatFollows } from "./shared/whatFollows";
 import { theCatch } from "./shared/workshopFraming";
 import { WORKSHOP_INTRO } from "./shared/workshopIntro";
@@ -26,7 +26,7 @@ const CLOSE_SUB =
  * ADR-148 U2), the two things the team writes (the skill and its evals), why
  * it needs them (the horizon), the setup run end to end on one real piece of
  * work (Prompt to Loop, whole: every step Claude took to make the Loop ad,
- * ADR-148 U1, opened by one line on why it is here, U3), and then the setup run on three of Suri's own workstreams
+ * ADR-148 U1, opened by one line on why it is here, U3, beside Suri's own Black Friday teaser under one case switch, U5), and then the setup run on three of Suri's own workstreams
  * under one floating switch. The proof cards, the steps, what to
  * connect, the repository, the chats and the month left this page; their
  * records stay in `shared/suriWork.ts`, which the Armada companion reads.
@@ -54,7 +54,7 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
   hero: {
     eyebrow: "Thoughtform · Suri · Creative Intelligence Configuration",
     title: { pre: "Creative intelligence,", em: "at Suri." },
-    lede: "How the setup works, one real ad made on it, and the same setup on three of Suri's workstreams.",
+    lede: "How the setup works, two real jobs made on it, and the same setup on three of Suri's workstreams.",
     actions: [
       { id: "start", label: "How it works", href: "#tool-and-collaborator", primary: true },
       { id: "practice", label: "In practice", href: "#in-practice-briefing" },
@@ -171,29 +171,38 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       };
     })(),
 
-    /* ── 07 · The bridge into the breakdown (ADR-148 U3) ───────────────────
-       The breakdown is another client's ad, so the page says why it is
-       here before it starts: the same parts, on one real job. */
+    /* ── 07 · The bridge into the breakdowns (ADR-148 U3, two cases since U5)
+       Says why another client's ad is on Suri's page, and that Suri's own
+       case sits beside it under the switch. */
     {
-      id: "one-real-job",
+      id: "real-jobs",
       kind: "interstitial",
       variant: "callout",
-      eyebrow: "07 · One real job",
-      menuLabel: "One real job",
-      line: { pre: "Before Suri's own work,", em: "the whole setup on one real job." },
-      subline: "A 10-second Halloween ad for Loop, the earplug brand, made in one evening.",
+      eyebrow: "07 · Two real jobs",
+      menuLabel: "Two real jobs",
+      line: { pre: "Before Suri's workstreams,", em: "the whole setup on two real jobs." },
+      subline:
+        "Loop's 10-second Halloween ad, made in one evening, and Suri's own Black Friday teaser, cut from 31 raw clips. Switch between them on the bar.",
     },
 
-    /* ── The setup, run end to end: Prompt to Loop, whole (ADR-148 U1) ──────
-       Owner, 2026-10-06: the steps Claude took to make the Loop ad are "the
-       entire point" of this page. The owner's breakdown is one record, the
-       same the lunch and learn, v3 and the AP lecture mount; its slides
-       number themselves (the film, then 1 · The setup … 12 · Next time). */
+    /* ── The cases, under one floating switch (ADR-148 U1, U5) ─────────────
+       Owner, 2026-10-07: "in the sections where we break down each case,
+       there should be a floating bar … when you click on it, the sections
+       change to correspond with the case." Prompt to Loop is the owner's
+       breakdown, one record (the lunch and learn, v3 and the AP lecture mount
+       it too); Under the Glass is Suri's own, in the same format. */
     {
       id: "ptl-top",
       kind: "prompt-to-loop",
       menuLabel: "How Claude made it",
       menuPrimary: true,
+      worked: { group: "case", id: "loop", label: "Loop · Halloween ad" },
+    },
+    {
+      id: "utg-top",
+      kind: "breakdown",
+      worked: { group: "case", id: "under-the-glass", label: "Suri · Black Friday" },
+      breakdown: UNDER_THE_GLASS,
     },
 
     /* ── 08 · In practice: three workstreams under one floating switch ──── */

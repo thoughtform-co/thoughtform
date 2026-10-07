@@ -7,6 +7,7 @@ const JS_CLASS = "is-arc-worked-js";
 const PICK_ATTR = "data-arc-worked";
 const PANEL = "[data-arc-worked-panel]";
 const TAB = "[data-arc-worked-tab]";
+const GROUP = "[data-arc-worked-group]";
 
 /**
  * ArcWorkedSwitch — the one island the switched chapter needs (ADR-139).
@@ -15,10 +16,12 @@ const TAB = "[data-arc-worked-tab]";
  * is listening, the `hidden` flag on every panel, and the checked state of
  * every tab. Nothing else on the page knows it exists.
  *
- * ⚠ THE PICK IS PAGE-WIDE. Every group carries the same ordered ids (pinned
- * in `arcs-registry`), so one choice is valid for all of them and the room
- * follows one piece of work from the plugin board to the last conversation
- * without touching the control again.
+ * ⚠ THE PICK REACHES EVERY GROUP THAT OFFERS IT (ADR-148 U5). Groups that
+ * carry the same ids follow one choice together, so the room follows one
+ * piece of work from the plugin board to the last conversation without
+ * touching the control again; a group with its own ids (the Suri page's
+ * cases beside its workstreams) keeps its own pick. `arcs-registry` pins
+ * that groups sharing an id share the whole set, in the same order.
  *
  * ⚠ IT NEVER RENDERS THE PANELS. They are server markup, already correct at
  * rest; this only hides the ones that are not picked. That is what keeps
@@ -34,27 +37,25 @@ export function ArcWorkedSwitch() {
     const root = document.querySelector<HTMLElement>(ROOT);
     if (!root) return;
 
-    const panels = Array.from(root.querySelectorAll<HTMLElement>(PANEL));
+    const groups = Array.from(root.querySelectorAll<HTMLElement>(GROUP)).map((el) => ({
+      el,
+      panels: Array.from(el.querySelectorAll<HTMLElement>(PANEL)),
+      tabs: Array.from(el.querySelectorAll<HTMLButtonElement>(TAB)),
+    }));
+    const panels = groups.flatMap((g) => g.panels);
     if (panels.length === 0) return;
-    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>(TAB));
 
-    /* The resting pick is the markup's own: whichever panel the server
-       marked default. Never a literal here — the record decides the order,
-       and a hard-coded first id would drift the day it changes. */
-    const resting =
-      panels.find((p) => p.hasAttribute("data-arc-worked-default"))?.dataset.arcWorkedPanel ??
-      panels[0]?.dataset.arcWorkedPanel;
-    if (!resting) return;
-
+    /* Pick `pick` in every group that offers it; the rest keep theirs. */
     const apply = (pick: string) => {
       root.setAttribute(PICK_ATTR, pick);
-      for (const panel of panels) {
-        panel.hidden = panel.dataset.arcWorkedPanel !== pick;
-      }
-      for (const tab of tabs) {
-        const on = tab.dataset.arcWorkedTab === pick;
-        tab.setAttribute("aria-checked", on ? "true" : "false");
-        tab.tabIndex = on ? 0 : -1;
+      for (const g of groups) {
+        if (!g.panels.some((p) => p.dataset.arcWorkedPanel === pick)) continue;
+        for (const panel of g.panels) panel.hidden = panel.dataset.arcWorkedPanel !== pick;
+        for (const tab of g.tabs) {
+          const on = tab.dataset.arcWorkedTab === pick;
+          tab.setAttribute("aria-checked", on ? "true" : "false");
+          tab.tabIndex = on ? 0 : -1;
+        }
       }
     };
 
@@ -65,7 +66,7 @@ export function ArcWorkedSwitch() {
     };
 
     /* Arrow keys move the pick inside the group the focus is in, the radio
-       pattern's own behaviour; the pick that results is still page-wide. */
+       pattern's own behaviour; the pick then reaches every group offering it. */
     const onKeyDown = (event: KeyboardEvent) => {
       const tab = (event.target as HTMLElement | null)?.closest<HTMLElement>(TAB);
       if (!tab) return;
@@ -88,7 +89,15 @@ export function ArcWorkedSwitch() {
     };
 
     root.classList.add(JS_CLASS);
-    apply(resting);
+    /* The resting pick is each group's own: whichever panel the server
+       marked default. Never a literal here — the record decides the order,
+       and a hard-coded first id would drift the day it changes. */
+    for (const g of groups) {
+      const resting =
+        g.panels.find((p) => p.hasAttribute("data-arc-worked-default"))?.dataset.arcWorkedPanel ??
+        g.panels[0]?.dataset.arcWorkedPanel;
+      if (resting) apply(resting);
+    }
     root.addEventListener("click", onClick);
     root.addEventListener("keydown", onKeyDown);
 

@@ -2,17 +2,15 @@
 paths:
   - "components/sheet/**"
   - "lib/sheet/**"
-  - "lib/sessions/**"
   - "lib/musings/**"
   - "content/musings/**"
-  - "app/(marketing)/home-sessions/**"
   - "app/(marketing)/musings/**"
   - "app/(marketing)/arcs/page.tsx"
   - "app/(marketing)/arcs/[slug]/page.tsx"
   - "app/(internal)/test/subpage-kit/**"
   - "scripts/capture-subpages.mjs"
   - ".claude/skills/thoughtform-design/eval/subpages/**"
-description: The sheet — the ruled-document grammar for overview subpages (the arcs index and client pages, Home sessions, the musings) and the turnstone ship that grades it
+description: The sheet — the ruled-document grammar for overview subpages (the arcs index and client pages, the musings; Home sessions left in ADR-150) and the turnstone ship that grades it
 ---
 
 # Rule: the sheet
@@ -157,6 +155,9 @@ and the first for a page that lists things.
   only after the three faces have loaded, two frames have painted and the
   rail has a height, and it carries values the page computed. A script that
   waits on a number it set itself has no wait.
+- ⚠ **`/home-sessions` LEFT THE SHEET (ADR-150, 2026-10-07).** It is its own
+  composition now (`components/sessions/**`, `.claude/rules/sessions.md`);
+  the paragraph below describes the record it still reads, not a sheet page.
 - **The sessions record derives its status.** `lib/sessions/registry.ts`
   authors four mornings (owner-to-confirm, digits allowed for dates and
   nothing else); `sessionStatus` / `nextSession` read the date at request
@@ -298,7 +299,7 @@ U2, U3).
   `SheetInstrumentController` reads everything off the DOM; a client chunk is
   public and the page is not (ADR-117). `arcs-import-doctrine` fails any
   client file under `components/sheet` that imports `lib/arcs`, `lib/cases`,
-  `lib/sessions`, `lib/musings` or `lib/sheet/{arcs,home-sessions,musings}`.
+  `lib/sessions`, `lib/musings` or `lib/sheet/{arcs,musings}`.
 - **The server chooses** — the newest engagement is filled, lit and shown
   before a line of script runs; every dossier is rendered and all but one are
   `hidden`. A plain click selects, a modified click and a KEYBOARD click

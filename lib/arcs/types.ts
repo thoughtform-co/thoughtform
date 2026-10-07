@@ -1352,23 +1352,34 @@ export type ArcSection = ArcSectionBase &
         /** The skill's evals: its cases with and without the skill, as the
          *  eval log records them, and one line on what they show. */
         evals: { cases: readonly ArcRunCase[]; note: string };
-        /** A real job done on this workstream (ADR-148 U4): the delivered
-         *  film and its method in a few beats, under the run. Optional; a
-         *  workstream with no job yet draws the run alone. */
-        job?: ArcRunJob;
+      }
+    | {
+        /**
+         * A CASE BREAKDOWN (ADR-148 U5): how Claude made one real piece of
+         * work, as slides in Prompt to Loop's own format: a hero with the
+         * film and its facts, then one slide per beat, each a head and its
+         * evidence. Prompt to Loop is generated HTML for one case; this is
+         * the same breakdown as data, so a client's own cases can sit beside
+         * it under one switch.
+         *
+         * ⚠ THE TWENTY-SIXTH ENUMERATED EXCEPTION. Server, no state,
+         * `data-case-*` only; the film is the house's one silent loop.
+         */
+        kind: "breakdown";
+        breakdown: ArcBreakdown;
       }
   );
 
 /* ── The skill run (ADR-148) ──────────────────────────────────────── */
 
 /**
- * A real job on a skill run's workstream (ADR-148 U4): the film as delivered,
- * a few facts, and the method in three to seven beats, condensed from the
- * job's own breakdown. People by role, never by name: the page is the
- * client's, and the record is shared.
+ * One case, broken down (ADR-148 U5): the film as delivered, a few facts,
+ * and the method in three to eight beats, condensed from the case's own
+ * breakdown. People by role, never by name: the page is the client's, and
+ * the record is shared.
  */
-export interface ArcRunJob {
-  /** Mono, e.g. "A real job · Black Friday teaser · 6 Oct 2026". ≤ 64. */
+export interface ArcBreakdown {
+  /** Mono, e.g. "How Claude made it · Suri · Black Friday teaser · 6 Oct 2026". ≤ 72. */
   eyebrow: string;
   title: ArcTitle;
   /** ≤ 220. */
@@ -1377,29 +1388,27 @@ export interface ArcRunJob {
   film: ArcClip;
   /** Two to four, e.g. { label: "Length", value: "16.16 s" }. */
   facts: readonly ArcMetaRow[];
-  beats: readonly ArcRunJobBeat[];
-  /** One closing line, e.g. what is left. ≤ 160. */
-  foot?: string;
+  beats: readonly ArcBreakdownBeat[];
 }
 
-/** One beat of a real job. Exactly one of `frames`, `rows` or `figures`. */
-export interface ArcRunJobBeat {
+/** One slide of a breakdown. Exactly one of `frames`, `rows` or `figures`. */
+export interface ArcBreakdownBeat {
+  /** The slide's DOM id, e.g. "utg-idea". */
   id: string;
   /** Mono, e.g. "The idea". ≤ 20. */
   key: string;
-  /** ≤ 48. */
-  title: string;
-  /** ≤ 260. */
+  title: ArcTitle;
+  /** The head's paragraph. ≤ 260. */
   line: string;
   /** Two or three stills, side by side. */
-  frames?: readonly ArcRunJobFrame[];
+  frames?: readonly ArcBreakdownFrame[];
   /** Two to seven key and value rows. */
   rows?: readonly ArcMetaRow[];
   /** Two to four measured numbers. */
   figures?: readonly ArcMetaRow[];
 }
 
-export interface ArcRunJobFrame {
+export interface ArcBreakdownFrame {
   /** Under `/arcs/`, self-hosted. */
   src: string;
   alt: string;

@@ -37,6 +37,8 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
  *  and the workshop routes have their own compositions and are not swept). */
 const SHEETS = [
   "app/styles/variables.css",
+  "app/styles/lattice.css",
+  "components/lattice/lattice.css",
   "app/styles/base.css",
   "components/landing/v7/landing.css",
   "components/landing/v7/theme.css",
@@ -47,6 +49,8 @@ const SHEETS = [
   "components/landing/home-v2/services/proof-stack/proof-stack.css",
   "components/sheet/sheet.css",
   "components/sheet/instrument.css",
+  /* the Home sessions page (ADR-150), entered at zero the hour it was written */
+  "components/sessions/sessions.css",
   "components/landing/home-v2/services/casefile/casefile.css",
   "components/landing/home-v2/services/casefile/console/console.css",
   "components/landing/home-v2/services/casefile/map/pda/pda.css",
@@ -125,6 +129,8 @@ const ALLOW: Allow[] = [
 /** Today's counts. Lower a pin when a term goes; raising one is an ADR line. */
 const PINS: Record<(typeof SHEETS)[number], number> = {
   "app/styles/variables.css": 0,
+  "app/styles/lattice.css": 0,
+  "components/lattice/lattice.css": 0,
   "app/styles/base.css": 0,
   "components/landing/v7/landing.css": 8,
   "components/landing/v7/theme.css": 0,
@@ -135,6 +141,7 @@ const PINS: Record<(typeof SHEETS)[number], number> = {
   "components/landing/home-v2/services/proof-stack/proof-stack.css": 0,
   "components/sheet/sheet.css": 0,
   "components/sheet/instrument.css": 0,
+  "components/sessions/sessions.css": 0,
   "components/landing/home-v2/services/casefile/casefile.css": 0,
   "components/landing/home-v2/services/casefile/console/console.css": 0,
   "components/landing/home-v2/services/casefile/map/pda/pda.css": 0,

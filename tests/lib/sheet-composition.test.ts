@@ -12,7 +12,6 @@ import {
   compositionViolations,
   ordinalOf,
 } from "@/lib/sheet/composition";
-import { homeSessionsSections } from "@/lib/sheet/home-sessions";
 import { musingPostSections, musingsIndexSections } from "@/lib/sheet/musings";
 import { SHEET_ARRANGEMENTS } from "@/lib/sheet/types";
 import type { SheetSection } from "@/lib/sheet/types";
@@ -62,7 +61,6 @@ const LADDERS: Record<string, SheetSection[]> = {
       clientSheetSections(c),
     ])
   ),
-  "home-sessions": homeSessionsSections(NOW),
   musings: musingsIndexSections(POSTS, POSTS.slice(0, 2)),
   "musings/post": musingPostSections(POSTS[0], POSTS.slice(1)),
   kit: kitSections(NOW),
@@ -263,14 +261,14 @@ describe("the sheet's variety law (ADR-114)", () => {
   });
 
   it("ordinals count the sections after the split, two digits, and the split has none", () => {
-    const ladder = LADDERS["home-sessions"];
+    const ladder = LADDERS.kit;
     expect(ordinalOf(ladder, 0)).toBeNull();
     const ords = ladder.slice(1, -1).map((_, i) => ordinalOf(ladder, i + 1));
     expect(ords.every((o) => o !== null && /^\d\d$/.test(o))).toBe(true);
     expect(ords).toEqual([...ords].sort());
   });
 
-  it("composed strings hold the copy law, and the sessions page prints no money", () => {
+  it("composed strings hold the copy law", () => {
     /* A readout value, a kicker or a caption is built by a renderer or a
        projection, outside every content scanner (ADR-070 U15) — so the
        ladders themselves are walked here, every string, against the bans a
@@ -286,10 +284,7 @@ describe("the sheet's variety law (ADR-114)", () => {
           expect(value, `${path}: ${why}`).not.toMatch(re);
       });
     }
-    scanStrings(LADDERS["home-sessions"], "home-sessions", (value, path) => {
-      expect(value, `${path}: a price`).not.toMatch(
-        /[€$£]|\b(EUR|USD|GBP)\b|\d{1,3}(?:[.,]\d{3})+/
-      );
-    });
+    /* The Home sessions page left the sheet (ADR-150); its no-money walk
+       moved with it to `sessions-page.test.ts`. */
   });
 });

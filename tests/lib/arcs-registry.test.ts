@@ -1876,29 +1876,30 @@ describe("the workshop's shared beats (ADR-143)", () => {
     }
   });
 
-  /* ADR-148 U4: a real job under a run. Its beats each carry ONE kind of
+  /* ADR-148 U5: a case breakdown. Its beats each carry ONE kind of
      evidence, its media are self-hosted files that exist, and it names
      people by role (the record is shared, the page the client's). */
-  it("every job under a skill run holds its shape", () => {
+  it("every case breakdown holds its shape", () => {
     let seen = 0;
     for (const arc of ARCS) {
       for (const s of arc.sections) {
-        if (s.kind !== "skill-run" || !s.job) continue;
+        if (s.kind !== "breakdown") continue;
         seen += 1;
-        const job = s.job;
-        const at = `${arc.slug}#${s.id}/job`;
-        expect(job.eyebrow.length, `${at}: eyebrow`).toBeLessThanOrEqual(64);
+        const job = s.breakdown;
+        const at = `${arc.slug}#${s.id}`;
+        expect(job.eyebrow.length, `${at}: eyebrow`).toBeLessThanOrEqual(72);
         expect(job.sub.length, `${at}: sub`).toBeLessThanOrEqual(220);
         expect(job.facts.length, `${at}: facts`).toBeGreaterThanOrEqual(2);
         expect(job.facts.length, `${at}: facts`).toBeLessThanOrEqual(4);
         expect(job.beats.length, `${at}: beats`).toBeGreaterThanOrEqual(3);
-        expect(job.beats.length, `${at}: beats`).toBeLessThanOrEqual(7);
+        expect(job.beats.length, `${at}: beats`).toBeLessThanOrEqual(8);
+        expect(new Set(job.beats.map((b) => b.id)).size, `${at}: beat ids`).toBe(job.beats.length);
         const media = [job.film.src, job.film.poster];
         for (const b of job.beats) {
           const kinds = [b.frames, b.rows, b.figures].filter(Boolean).length;
           expect(kinds, `${at}/${b.id}: one kind of evidence`).toBe(1);
           expect(b.key.length, `${at}/${b.id}: key`).toBeLessThanOrEqual(20);
-          expect(b.title.length, `${at}/${b.id}: title`).toBeLessThanOrEqual(48);
+          expect(arcTitleText(b.title).length, `${at}/${b.id}: title`).toBeLessThanOrEqual(64);
           expect(b.line.length, `${at}/${b.id}: line`).toBeLessThanOrEqual(260);
           if (b.frames) {
             expect(b.frames.length, `${at}/${b.id}: frames`).toBeGreaterThanOrEqual(2);
@@ -1922,12 +1923,12 @@ describe("the workshop's shared beats (ADR-143)", () => {
         expect(text, `${at}: no money`).not.toMatch(/£|\$|€/);
       }
     }
-    expect(seen, "the video workstream carries its first real job").toBeGreaterThan(0);
+    expect(seen, "Suri's own case is broken down").toBeGreaterThan(0);
   });
 });
 
 describe("the worked-example switch (ADR-139)", () => {
-  it("every group is contiguous, and every group offers the same choices in the same order", () => {
+  it("every group is contiguous, and groups that share an example share the set", () => {
     /* The pick is PAGE-WIDE: the island writes one id on the arc root and
        every group reads it. So a group that offered a different set, or the
        same set in a different order, would leave a beat blank the moment a
@@ -1946,7 +1947,7 @@ describe("the worked-example switch (ADR-139)", () => {
       });
       if (groups.size === 0) continue;
 
-      let shape: string | null = null;
+      const shapes: { ids: string[]; here: string }[] = [];
       for (const [name, g] of groups) {
         const at = `${arc.slug}#${name}`;
         expect(new Set(g.ids).size, `${at}: an example appears twice in one group`).toBe(
@@ -1960,10 +1961,19 @@ describe("the worked-example switch (ADR-139)", () => {
         for (let i = 1; i < g.at.length; i++) {
           expect(g.at[i], `${at}: the group is interrupted at ${g.at[i]}`).toBe(g.at[i - 1] + 1);
         }
-        /* Every group, the same choices, in the same order. */
+        /* Groups that share an example share the whole set, in the same
+           order (ADR-148 U5): one pick reaches every group offering it, so
+           a group that offered part of another's set would leave a beat
+           blank. Groups with their own ids switch on their own. */
         const here = g.ids.map((id, i) => `${id}|${g.labels[i]}`).join(" · ");
-        if (shape === null) shape = here;
-        else expect(here, `${at}: a different set of examples from the first group`).toBe(shape);
+        for (const other of shapes) {
+          const overlaps = g.ids.some((id) => other.ids.includes(id));
+          if (overlaps)
+            expect(here, `${at}: a different set from a group it shares an example with`).toBe(
+              other.here
+            );
+        }
+        shapes.push({ ids: g.ids, here });
 
         /* Only the FIRST panel is the page's: the drawer would otherwise
            carry the beat three times, and the chapter row is capped at five. */
