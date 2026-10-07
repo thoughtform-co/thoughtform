@@ -15,9 +15,10 @@ interface ArcGuideProps {
  * ArcGuide — one beat of a setup guide (ADR-151 U1), in one of four views,
  * each its own drawing so no two beats on the page read alike:
  *
- *   map        the system as nested frames, numbered pins, and a legend where
- *              the TERM is the large type and its meaning the small
- *   checklist  phases of ruled rows: number, step, who, the menu path
+ *   overview   one drawing (U3): the spine from the repository through the
+ *              lit Claude node to the surfaces, the loop back under it
+ *              through the connector, and the words under the drawing
+ *   checklist  the phases side by side; every step a link to where it is done
  *   matrix     every key against every place it could live
  *   pipeline   the stations a remark passes, a person's green, a machine's gold
  *
@@ -56,8 +57,8 @@ export function ArcGuide({ section, index, motion = "reveal" }: ArcGuideProps) {
 
 function GuideBody({ guide }: { guide: ArcGuideBody }) {
   switch (guide.view) {
-    case "map":
-      return <GuideMap guide={guide} />;
+    case "overview":
+      return <GuideOverview guide={guide} />;
     case "checklist":
       return <GuideChecklist guide={guide} />;
     case "matrix":
@@ -71,111 +72,78 @@ function GuideBody({ guide }: { guide: ArcGuideBody }) {
   }
 }
 
-const Pin = ({ n }: { n: number }) => (
-  <span className="arc-guide__pin" aria-hidden="true">
-    {n}
-  </span>
-);
+/* ── The overview (U3): one drawing, the words under it ──────────── */
 
-/* ── The map ──────────────────────────────────────────────────────── */
-
-function GuideMap({ guide }: { guide: Extract<ArcGuideBody, { view: "map" }> }) {
-  const { repo, org, team, service, arrows, terms, alt } = guide;
-  const mk = repo.marketplace;
+function GuideOverview({ guide }: { guide: Extract<ArcGuideBody, { view: "overview" }> }) {
+  const { repo, org, surfaces, service, columns, foot, alt } = guide;
   return (
-    <div className="arc-guide-map">
-      <figure className="arc-guide-map__fig" role="img" aria-label={alt}>
-        <div className="arc-guide-map__row">
-          <div className="arc-guide-map__frame" data-guide-frame="repo">
-            <FrameHead frame={repo} />
-            <div className="arc-guide-map__frame" data-guide-frame="marketplace">
-              <FrameHead frame={mk} />
-              {mk.plugins.map((p) => (
-                <div key={p.name} className="arc-guide-map__frame" data-guide-frame="plugin">
-                  <FrameHead frame={p} />
-                  <div className="arc-guide-map__skills">
-                    <Pin n={p.skills.pin} />
-                    <ul>
-                      {p.skills.names.map((s) => (
-                        <li key={s}>
-                          <code>{s}</code>
-                        </li>
-                      ))}
-                      {p.skills.more ? <li className="arc-guide-map__more">{p.skills.more}</li> : null}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="arc-guide-ov">
+      <figure className="arc-guide-flow" role="img" aria-label={alt}>
+        {/* The spine, its word, and the fan: lines are DOM (ADR-068 U6). */}
+        <span className="arc-guide-flow__spine" data-guide-seg="in" aria-hidden="true">
+          <i>{org.sync}</i>
+        </span>
+        <span className="arc-guide-flow__spine" data-guide-seg="out" aria-hidden="true" />
+        <span className="arc-guide-flow__bus" aria-hidden="true" />
+        <span className="arc-guide-flow__loop" aria-hidden="true" />
 
-          <Arrow word={arrows.sync} />
-
-          <div className="arc-guide-map__frame" data-guide-frame="org">
-            <FrameHead frame={org} />
-            <p className="arc-guide-map__line">{org.line}</p>
-          </div>
-
-          <Arrow word={arrows.reach} />
-
-          <div className="arc-guide-map__frame" data-guide-frame="team">
-            <div className="arc-guide-map__fhead">
-              <span className="arc-guide-map__label">{team.label}</span>
-              <span className="arc-guide-map__name">{team.name}</span>
-            </div>
-            <ul className="arc-guide-map__surfaces">
-              {team.surfaces.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          </div>
+        <div className="arc-guide-flow__repo">
+          <span className="arc-guide-flow__label">{repo.label}</span>
+          <ol className="arc-guide-flow__strata">
+            {repo.strata.map((st) => (
+              <li key={st.tag}>
+                <span className="arc-guide-flow__tag">{st.tag}</span>
+                <span className="arc-guide-flow__sname">{st.name}</span>
+              </li>
+            ))}
+          </ol>
+          <span className="arc-guide-flow__name">{repo.name}</span>
         </div>
 
-        <div className="arc-guide-map__return">
-          <span className="arc-guide-map__rword" data-guide-arrow="issue">
-            {arrows.issue}
-          </span>
-          <div className="arc-guide-map__frame" data-guide-frame="service">
-            <FrameHead frame={service} />
-            <p className="arc-guide-map__line">{service.line}</p>
-            {service.state ? <span className="arc-guide__state">{service.state}</span> : null}
-          </div>
-          <span className="arc-guide-map__rword" data-guide-arrow="remark">
-            {arrows.remark}
-          </span>
+        <div className="arc-guide-flow__org">
+          <span className="arc-guide-flow__label">{org.label}</span>
+          <span className="arc-guide-flow__chip">{org.name}</span>
+        </div>
+
+        <div className="arc-guide-flow__surfaces">
+          <span className="arc-guide-flow__label">{surfaces.label}</span>
+          <ul>
+            {surfaces.items.map((it) => (
+              <li key={it.name}>
+                <span className="arc-guide-flow__stub" aria-hidden="true" />
+                <span className="arc-guide-flow__glyph" aria-hidden="true">
+                  {it.glyph}
+                </span>
+                {it.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="arc-guide-flow__service" data-guide-pending={service.state ? "" : undefined}>
+          <span className="arc-guide-flow__label">{service.label}</span>
+          <span className="arc-guide-flow__sv">{service.name}</span>
+          <span className="arc-guide-flow__sline">{service.line}</span>
+          {service.state ? <span className="arc-guide__state">{service.state}</span> : null}
         </div>
       </figure>
 
-      <ol className="arc-guide-map__legend">
-        {terms.map((t) => (
-          <li key={t.n}>
-            <Pin n={t.n} />
-            <div>
-              <h3 className="arc-guide-map__term">{t.term}</h3>
-              <p className="arc-guide-map__def">{t.line}</p>
-            </div>
+      <ol className="arc-guide-ov__cols">
+        {columns.map((c) => (
+          <li key={c.tab}>
+            <span className="arc-guide-ov__tab">{c.tab}</span>
+            <h3 className="arc-guide-ov__title">{c.title}</h3>
+            <p className="arc-guide-ov__line">{c.line}</p>
           </li>
         ))}
       </ol>
-    </div>
-  );
-}
-
-function FrameHead({ frame }: { frame: { pin: number; label: string; name: string } }) {
-  return (
-    <div className="arc-guide-map__fhead">
-      <Pin n={frame.pin} />
-      <span className="arc-guide-map__label">{frame.label}</span>
-      <span className="arc-guide-map__name">{frame.name}</span>
-    </div>
-  );
-}
-
-function Arrow({ word }: { word: string }) {
-  return (
-    <div className="arc-guide-map__arrow" aria-hidden="true">
-      <span>{word}</span>
-      <i />
+      {foot?.length ? (
+        <ul className="arc-guide-ov__foot">
+          {foot.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
@@ -184,47 +152,48 @@ function Arrow({ word }: { word: string }) {
 
 function GuideChecklist({ guide }: { guide: Extract<ArcGuideBody, { view: "checklist" }> }) {
   return (
-    <div className="arc-guide-list">
+    <div className="arc-guide-list" style={{ ["--guide-phases" as string]: guide.phases.length }}>
       {guide.phases.map((phase, p) => (
         <section key={phase.id} className="arc-guide-list__phase" data-guide-phase={phase.id}>
           <header className="arc-guide-list__phead">
-            <span className="arc-guide-list__plabel">{phase.label}</span>
+            <span className="arc-guide-list__plabel">
+              {p + 1} · {phase.label}
+            </span>
             <span className="arc-guide-list__pwhen">{phase.when}</span>
           </header>
           <ol className="arc-guide-list__rows">
-            {phase.steps.map((step, s) => (
-              <li key={step.id} className="arc-guide-list__row" data-guide-done={step.done ? "" : undefined}>
-                <span className="arc-guide-list__n">
-                  {p + 1}.{s + 1}
-                </span>
+            {phase.steps.map((step) => (
+              <li
+                key={step.id}
+                className="arc-guide-list__row"
+                data-guide-done={step.done ? "" : undefined}
+              >
+                <span className="arc-guide-list__box" aria-hidden="true" />
                 <div className="arc-guide-list__what">
-                  <h3 className="arc-guide-list__title">{step.title}</h3>
-                  <p className="arc-guide-list__line">{step.line}</p>
+                  {step.href ? (
+                    <a
+                      className="arc-guide-list__title"
+                      href={step.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {step.title}
+                      <span aria-hidden="true"> ↗</span>
+                    </a>
+                  ) : (
+                    <span className="arc-guide-list__title">{step.title}</span>
+                  )}
+                  <p className="arc-guide-list__line">
+                    {step.who ? <span className="arc-guide-list__who">{step.who} · </span> : null}
+                    {step.line}
+                    {step.done ? (
+                      <span className="arc-guide-list__done">
+                        {" "}
+                        {guide.labels.done} {step.done}
+                      </span>
+                    ) : null}
+                  </p>
                 </div>
-                <dl className="arc-guide-list__meta">
-                  <div>
-                    <dt>{guide.labels.who}</dt>
-                    <dd className="arc-guide-list__who">{step.who}</dd>
-                  </div>
-                  {step.where ? (
-                    <div>
-                      <dt>{guide.labels.where}</dt>
-                      <dd>
-                        <span className="arc-guide-list__path">
-                          {step.where.map((crumb, c) => (
-                            <span key={crumb + c}>{crumb}</span>
-                          ))}
-                        </span>
-                      </dd>
-                    </div>
-                  ) : null}
-                  {step.done ? (
-                    <div>
-                      <dt>{guide.labels.done}</dt>
-                      <dd className="arc-guide-list__done">{step.done}</dd>
-                    </div>
-                  ) : null}
-                </dl>
               </li>
             ))}
           </ol>

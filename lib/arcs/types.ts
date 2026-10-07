@@ -1373,9 +1373,9 @@ export type ArcSection = ArcSectionBase &
          * A SETUP GUIDE BEAT (ADR-151 U1): the practical page beside a
          * client's configuration, where every beat is its own drawing (owner,
          * 2026-10-07: "why does every section look the same"). Four views, one
-         * kind: the MAP (the system as nested frames with numbered pins, and a
-         * legend where the term is the big type), the CHECKLIST (phases of
-         * steps as ruled rows: number, step, who, the menu path), the MATRIX
+         * kind: the OVERVIEW (one drawing: the spine from the repository through
+         * Claude to the surfaces, the loop back under it, the words beneath, U3), the CHECKLIST (phases side by
+         * side, each step a link to where it is done, U2), the MATRIX
          * (each key against the places it could live), and the PIPELINE (the
          * stations a remark passes, a person's in green, a machine's in gold).
          *
@@ -1390,28 +1390,36 @@ export type ArcSection = ArcSectionBase &
 
 /* ── The setup guide (ADR-151 U1) ─────────────────────────────────── */
 
-/** One term in the map's legend; `n` is the pin that marks it on the drawing. */
-export interface ArcGuideTerm {
-  n: number;
-  term: string;
-  line: string;
+/** The overview's drawing (U3): one spine, the loop under it, the words beneath. */
+export interface ArcGuideFlow {
+  /** The repository: three strata, outermost last. */
+  repo: { label: string; name: string; strata: readonly { tag: string; name: string }[] };
+  /** The lit node: the Claude organisation, and the word on the line into it. */
+  org: { label: string; name: string; sync: string };
+  /** Where the team meets it, fanned out of the org node. */
+  surfaces: { label: string; items: readonly { glyph: string; name: string }[] };
+  /** The return path's node, under the spine. */
+  service: { label: string; name: string; line: string; state?: string };
+  /** The words under the drawing, one column per node. */
+  columns: readonly [ArcGuideColumn, ArcGuideColumn, ArcGuideColumn];
+  foot?: readonly string[];
+  alt: string;
 }
 
-/** A frame on the map: its kind word, its name, and the pin it carries. */
-export interface ArcGuideFrame {
-  pin: number;
-  label: string;
-  name: string;
+export interface ArcGuideColumn {
+  tab: string;
+  title: string;
+  line: string;
 }
 
 export interface ArcGuideStep {
   id: string;
   title: string;
   line: string;
-  /** The role that takes it, e.g. "Claude Owner". */
-  who: string;
-  /** The menu path, one segment per crumb. */
-  where?: readonly string[];
+  /** The role that takes it, only when it is not the phase's own. */
+  who?: string;
+  /** Where the step is done: the page it opens, and the host it names. */
+  href?: string;
   /** Only what is on record as done. */
   done?: string;
 }
@@ -1443,29 +1451,11 @@ export interface ArcGuideStation {
 }
 
 export type ArcGuide =
-  | {
-      view: "map";
-      /** The repository, the marketplace inside it, the plugins inside that. */
-      repo: ArcGuideFrame & {
-        marketplace: ArcGuideFrame & {
-          plugins: readonly (ArcGuideFrame & {
-            skills: { pin: number; names: readonly string[]; more?: string };
-          })[];
-        };
-      };
-      org: ArcGuideFrame & { line: string };
-      team: { label: string; name: string; surfaces: readonly string[] };
-      service: ArcGuideFrame & { line: string; state?: string };
-      /** The arrows' words: repo to org, org to team, team to service, service to repo. */
-      arrows: { sync: string; reach: string; remark: string; issue: string };
-      terms: readonly ArcGuideTerm[];
-      alt: string;
-    }
+  | ({ view: "overview" } & ArcGuideFlow)
   | {
       view: "checklist";
       phases: readonly ArcGuidePhase[];
-      /** The column words: who, where. */
-      labels: { who: string; where: string; done: string };
+      labels: { done: string };
     }
   | {
       view: "matrix";

@@ -79,6 +79,48 @@ slide (a drawing with numbered pins beside a numbered legend).
   horizontal scroll; the map stacks, the matrix becomes each key with where it lives and where
   never, the pipeline runs down).
 
+## Update 2 (2026-10-07, owner): one screen per beat, the overview, links
+
+The owner on U1: make every beat fit one section; the overview should read like Aether's layer
+panel (`tensalir/aether`, `components/landing/substrate.tsx`); remove the glossary blocks; the
+steps must link to where they are done. References: the Tensor Lake reel (a drawing on top, words
+under it, one accent, hairline cells, air) and Lighthouse.
+
+- **The map is replaced by the OVERVIEW**: one panel, three cards (GitHub, Claude, Vercel), each
+  a tab on its top edge, a title, one line and one simple drawing: the terms as a table, the
+  four places the team meets it as tiles, the feedback as a four-step rail; three tags under the
+  panel. The glossary blocks and the numbered pins are deleted; the terms live in the GitHub
+  card's table. A card for a part not built yet is dashed and says so.
+- **The checklist is four columns, every step a link**: the phases side by side in one ruled
+  sheet, each step a checkbox, its title a link (↗, a new tab) and one short line. The role
+  lives in the phase head; a step names its role only when it differs. Links go to Anthropic's
+  documented settings pages (`claude.ai/admin-settings/skills?tab=inventory`,
+  `?tab=marketplaces`), `github.com/apps/claude`, the client's repository pages, AI Studio,
+  Google Cloud and Vercel.
+- **Measured at 1470×830**: the overview, the steps, the keys and the feedback beats are each
+  830px, one screen. At 375 wide there is no horizontal scroll.
+
+## Update 3 (2026-10-07, owner): no frames, one drawing
+
+The owner on U2's overview: "no boring frames; i want a nice visual flow. this is a glorified
+word document". The three framed cards are deleted. The overview is ONE DRAWING, with the words
+under it the way Tensor Lake sets a figure over its caption:
+
+- **The spine**: a gold line from the repository through the one lit object, the Claude
+  organisation (a gold ring over the wash), with the sync word on the line; past it a bus and
+  four stubs fan into the surfaces (Chat, Desktop, Cowork, Claude Code).
+- **The repository** is three strata, the skill on top, the marketplace at the base, filled and
+  never framed. **The loop** is a dashed U under the spine, from under the surfaces back under
+  the repository, with the connector sitting on its floor; a pending connector is marked and dimmed.
+- **The lines are DOM** (the spine segments live in the grid's gap columns; the fan's bus and stubs
+  are pseudo-elements; the loop is a bordered box), so every collapse guard measures them. The
+  nodes are opaque, so the loop's legs read as entering them.
+- **Under the drawing**, three columns of words aligned to the three nodes, and the three tags.
+- On a phone the drawing stands up: the spine runs down the page in reading order (the DOM puts
+  the lines first, so the phone layout orders the nodes), the fan and the loop are dropped, and the
+  connector is said with ↺.
+- Measured at 1470×830: 830px on both pages; at 375 wide no horizontal scroll.
+
 ## Left open
 
 - "Vercel to host API keys": on both pages Vercel holds the connector's own secrets only. The

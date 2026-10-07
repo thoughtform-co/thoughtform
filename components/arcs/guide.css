@@ -33,17 +33,6 @@
   list-style: none;
 }
 
-.arc-guide__pin {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 20px;
-  height: 20px;
-  background: var(--gold);
-  color: var(--gold-contrast, #110f09);
-  font: 600 11px/1 var(--g-mono);
-  font-variant-numeric: tabular-nums;
-}
 .arc-guide__state {
   display: inline-block;
   padding: 3px 8px;
@@ -54,308 +43,423 @@
   text-transform: uppercase;
 }
 
-/* ── The map ──────────────────────────────────────────────────────── */
+/* ── The overview (U3): one drawing, the words under it ─────────────
+   The spine runs left to right through the lit Claude node; the fan takes
+   it to the four surfaces; the loop comes back under it, dashed, through
+   the connector. Lines are DOM. The nodes are opaque, so the loop's legs
+   read as entering them. No frame around any of it. */
 
-.arc-guide-map {
+.arc-guide-ov {
+  --g-org: 232px;
+  --g-gap: 88px;
+  --g-spine: 104px;
   display: grid;
-  gap: clamp(40px, 6vh, 64px);
+  gap: clamp(20px, 3vh, 32px);
 }
-.arc-guide-map__fig {
+.arc-guide-flow {
+  position: relative;
   display: grid;
-  gap: 56px;
+  grid-template-columns: minmax(0, 1fr) var(--g-gap) var(--g-org) var(--g-gap) minmax(0, 1fr);
+  grid-template-rows: calc(var(--g-spine) * 2) auto;
+  margin: 0;
+  padding: 0 clamp(8px, 1vw, 24px);
 }
-.arc-guide-map__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) 104px minmax(0, 1fr) 104px minmax(0, 1fr);
-  align-items: center;
-}
-.arc-guide-map__frame {
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--arc-rule);
-  background: var(--arc-plate);
-}
-.arc-guide-map__frame .arc-guide-map__frame {
-  background: transparent;
-}
-.arc-guide-map__frame[data-guide-frame="marketplace"] {
-  border-color: var(--arc-seam);
-}
-.arc-guide-map__frame[data-guide-frame="plugin"] {
-  border-color: var(--g-gold-line);
-  background: var(--arc-gold-wash);
-}
-.arc-guide-map__fhead {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 10px;
-  row-gap: 2px;
-  align-items: center;
-}
-.arc-guide-map__fhead .arc-guide__pin {
-  grid-row: span 2;
-}
-.arc-guide-map__label {
-  font: 10px/1.3 var(--g-mono);
-  letter-spacing: 0.1em;
+.arc-guide-flow__label {
+  display: block;
+  font: 10.5px/1.2 var(--g-mono);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
-.arc-guide-map__name {
-  font-size: 15px;
-  line-height: 1.25;
-  color: var(--arc-ink);
-  overflow-wrap: anywhere;
-}
-.arc-guide-map__frame[data-guide-frame="team"] .arc-guide-map__fhead {
-  grid-template-columns: minmax(0, 1fr);
-}
-.arc-guide-map__line {
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--arc-ink-70);
-}
-.arc-guide-map__skills {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-}
-.arc-guide-map__skills ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.arc-guide-map__skills code {
-  display: inline-block;
-  padding: 3px 7px;
-  border: 1px solid var(--arc-chip-edge);
-  font: 11px/1.3 var(--g-mono);
-  color: var(--arc-ink-90);
-}
-.arc-guide-map__more {
-  align-self: center;
-  font: 11px/1.3 var(--g-mono);
-  color: var(--arc-ink-50);
-}
-.arc-guide-map__surfaces {
-  display: grid;
-  gap: 4px;
-}
-.arc-guide-map__surfaces li {
-  font: 12px/1.4 var(--g-mono);
-  color: var(--arc-ink-70);
-}
-.arc-guide-map__surfaces li::before {
-  content: "· ";
-  color: var(--arc-ink-50);
-}
 
-.arc-guide-map__arrow {
+/* The spine's two segments live in the gap columns. */
+.arc-guide-flow__spine {
   position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  padding: 0 6px;
+  grid-row: 1;
+  align-self: start;
+  height: calc(var(--g-spine) * 2);
 }
-.arc-guide-map__arrow span {
-  font: 10px/1.2 var(--g-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--arc-ink-50);
-  text-align: center;
+.arc-guide-flow__spine[data-guide-seg="in"] {
+  grid-column: 2;
 }
-.arc-guide-map__arrow i {
-  position: relative;
-  width: 100%;
-  height: 1px;
-  background: var(--arc-seam);
+.arc-guide-flow__spine[data-guide-seg="out"] {
+  grid-column: 4;
 }
-.arc-guide-map__arrow i::after {
+.arc-guide-flow__spine::before {
   content: "";
   position: absolute;
-  right: -1px;
-  top: -4px;
+  left: 0;
+  right: 0;
+  top: var(--g-spine);
+  height: 1px;
+  background: var(--g-gold-line);
+}
+.arc-guide-flow__spine::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: calc(var(--g-spine) - 4px);
   border: 4.5px solid transparent;
-  border-left: 7px solid var(--arc-seam);
+  border-left: 7px solid var(--gold);
   border-right: 0;
 }
+.arc-guide-flow__spine i {
+  position: absolute;
+  left: 2px;
+  top: calc(var(--g-spine) - 22px);
+  font: 10px/1.2 var(--g-mono);
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--g-gold-text);
+}
 
-/* The return lane: a U under the row, from the team back into the repository. */
-.arc-guide-map__return {
+/* The repository: three strata, the skill on top, the marketplace at the
+   base. Filled, never framed. */
+.arc-guide-flow__repo {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  display: grid;
+  gap: 8px;
+  width: min(100%, 330px);
+  padding: 8px 0;
+  background: var(--void, #0a0908);
+}
+.arc-guide-flow__strata {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+}
+.arc-guide-flow__strata li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  background: rgba(var(--dawn-rgb), 0.06);
+}
+.arc-guide-flow__strata li:nth-child(1) {
+  width: 78%;
+}
+.arc-guide-flow__strata li:nth-child(2) {
+  width: 90%;
+  background: rgba(var(--dawn-rgb), 0.09);
+}
+.arc-guide-flow__strata li:nth-child(3) {
+  width: 100%;
+  background: rgba(var(--dawn-rgb), 0.12);
+}
+.arc-guide-flow__tag {
+  font: 10px/1 var(--g-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--g-gold-text);
+}
+.arc-guide-flow__sname {
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--arc-ink-90);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.arc-guide-flow__name {
+  font: 11px/1.3 var(--g-mono);
+  color: var(--arc-ink-70);
+  text-align: center;
+}
+
+/* The one lit object. */
+.arc-guide-flow__org {
+  position: relative;
+  z-index: 1;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: start;
+  margin-top: calc(var(--g-spine) - 44px);
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  background: var(--void, #0a0908);
+}
+.arc-guide-flow__chip {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 64px;
+  border: 1px solid var(--gold);
+  background: var(--arc-gold-wash);
+  box-shadow: 0 0 0 6px rgba(var(--gold-rgb), 0.08);
+  font-size: 16px;
+  color: var(--arc-ink);
+  text-align: center;
+}
+
+/* The fan: a bus down the column's left edge, a stub into each surface. */
+.arc-guide-flow__surfaces {
+  position: relative;
+  z-index: 1;
+  grid-column: 5;
+  grid-row: 1;
+  align-self: center;
+  justify-self: start;
+  display: grid;
+  gap: 10px;
+  padding: 12px 0;
+  background: var(--void, #0a0908);
+}
+.arc-guide-flow__surfaces .arc-guide-flow__label {
+  padding-left: 28px;
+}
+.arc-guide-flow__surfaces ul {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
+  gap: 6px;
 }
-.arc-guide-map__return::before {
+.arc-guide-flow__surfaces ul::before {
   content: "";
   position: absolute;
-  left: 12%;
-  right: 12%;
-  top: -56px;
-  bottom: 50%;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 1px;
+  background: var(--g-gold-line);
+}
+.arc-guide-flow__surfaces li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding-left: 28px;
+  font-size: 15px;
+  color: var(--arc-ink-90);
+}
+.arc-guide-flow__stub {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 20px;
+  height: 1px;
+  background: var(--g-gold-line);
+}
+.arc-guide-flow__glyph {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(var(--dawn-rgb), 0.08);
+  font: 10.5px/1 var(--g-mono);
+  color: var(--arc-ink-70);
+}
+/* The bus joins the spine where it arrives, at the spine's height. */
+.arc-guide-flow__bus {
+  display: none;
+}
+
+/* The loop: a dashed U from under the surfaces, back under the repository. */
+.arc-guide-flow__loop {
+  position: absolute;
+  top: var(--g-spine);
+  bottom: 22px;
+  left: calc((100% - var(--g-org) - 2 * var(--g-gap)) / 4 + clamp(8px, 1vw, 24px) / 2);
+  right: calc((100% - var(--g-org) - 2 * var(--g-gap)) / 4 + clamp(8px, 1vw, 24px) / 2);
   border: 1px dashed var(--arc-seam);
   border-top: 0;
-  pointer-events: none;
 }
-.arc-guide-map__return::after {
+.arc-guide-flow__loop::before {
   content: "";
   position: absolute;
-  left: calc(12% - 4px);
-  top: -58px;
+  left: -4px;
+  top: 0;
   border: 4.5px solid transparent;
-  border-bottom: 7px solid var(--arc-seam);
+  border-bottom: 8px solid var(--arc-ink-50);
   border-top: 0;
 }
-.arc-guide-map__return .arc-guide-map__frame {
-  position: relative;
-  background: var(--arc-plate);
-  border-color: var(--arc-seam);
-}
-/* Not built yet: the frame is drawn dashed, and says so. */
-.arc-guide-map__return .arc-guide-map__frame:has(.arc-guide__state) {
-  border-style: dashed;
-}
-.arc-guide-map__return .arc-guide__state {
-  justify-self: start;
-}
-.arc-guide-map__rword {
-  position: relative;
-  justify-self: center;
-  padding: 2px 8px;
-  background: var(--void, #0a0908);
-  font: 10px/1.2 var(--g-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--arc-ink-50);
+.arc-guide-flow__loop::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  bottom: -5px;
+  border: 4.5px solid transparent;
+  border-right: 8px solid var(--arc-ink-50);
+  border-left: 0;
 }
 
-.arc-guide-map__legend {
+/* The connector sits on the loop's floor. */
+.arc-guide-flow__service {
+  position: relative;
+  z-index: 1;
+  grid-column: 2 / 5;
+  grid-row: 2;
+  justify-self: center;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: clamp(24px, 3vw, 48px);
+  gap: 4px;
+  justify-items: center;
+  margin-top: 0;
+  padding: 6px 24px 0;
+  background: var(--void, #0a0908);
+  text-align: center;
 }
-.arc-guide-map__legend li {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 14px;
-  padding: 18px 0 22px;
-  border-top: 1px solid var(--arc-rule);
+.arc-guide-flow__sv {
+  font-size: 15px;
+  color: var(--arc-ink);
 }
-.arc-guide-map__legend .arc-guide__pin {
+.arc-guide-flow__sline {
+  font: 11px/1.4 var(--g-mono);
+  color: var(--arc-ink-70);
+}
+.arc-guide-flow__service[data-guide-pending] .arc-guide-flow__sv {
+  color: var(--arc-ink-70);
+}
+.arc-guide-flow__service .arc-guide__state {
   margin-top: 4px;
 }
-.arc-guide-map__term {
-  font-size: 22px;
+
+/* The words under the drawing. */
+.arc-guide-ov__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 3vw, 56px);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-guide-ov__cols li {
+  display: grid;
+  gap: 6px;
+  padding-top: 14px;
+}
+.arc-guide-ov__tab {
+  font: 10.5px/1.2 var(--g-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--g-gold-text);
+}
+.arc-guide-ov__title {
+  font-size: clamp(18px, 1.4vw, 22px);
   font-weight: 400;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--arc-ink);
 }
-.arc-guide-map__def {
-  margin-top: 6px !important;
-  font-size: 15px;
-  line-height: 1.45;
+.arc-guide-ov__line {
+  font-size: 14.5px;
+  line-height: 1.5;
   color: var(--arc-ink-70);
 }
+.arc-guide-ov__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: -8px !important;
+}
+.arc-guide-ov__foot li {
+  font: 10.5px/1 var(--g-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-guide-ov__foot li::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 10px;
+  vertical-align: 1px;
+  background: var(--gold);
+}
 
-/* ── The checklist ────────────────────────────────────────────────── */
+/* ── The checklist (U2): the phases side by side, every step a link ─── */
 
 .arc-guide-list {
   display: grid;
-  gap: 40px;
+  grid-template-columns: repeat(var(--guide-phases), minmax(0, 1fr));
+  border-top: 1px solid var(--arc-seam);
+  border-left: 1px solid var(--arc-rule);
+}
+.arc-guide-list__phase {
+  border-right: 1px solid var(--arc-rule);
+  border-bottom: 1px solid var(--arc-rule);
 }
 .arc-guide-list__phead {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--g-gold-line);
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--arc-rule);
 }
 .arc-guide-list__plabel {
   font: 12px/1.2 var(--g-mono);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--g-gold-text);
 }
 .arc-guide-list__pwhen {
-  font: 12px/1.2 var(--g-mono);
+  font: 11px/1.3 var(--g-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
 .arc-guide-list__row {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: 24px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--arc-rule);
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 12px;
+  padding: 11px 16px;
 }
-.arc-guide-list__n {
-  padding-top: 4px;
-  font: 13px/1.2 var(--g-mono);
-  font-variant-numeric: tabular-nums;
-  color: var(--arc-ink-50);
+.arc-guide-list__row + .arc-guide-list__row {
+  border-top: 1px solid var(--arc-edge);
+}
+.arc-guide-list__box {
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border: 1px solid var(--arc-ink-50);
+}
+.arc-guide-list__row[data-guide-done] .arc-guide-list__box {
+  border-color: var(--g-person);
+  background: var(--g-person);
+}
+.arc-guide-list__what {
+  display: grid;
+  gap: 2px;
 }
 .arc-guide-list__title {
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 1.25;
-  letter-spacing: -0.005em;
+  font-size: 15.5px;
+  line-height: 1.3;
   color: var(--arc-ink);
 }
-.arc-guide-list__line {
-  margin-top: 6px !important;
-  font-size: 15px;
-  line-height: 1.45;
-  color: var(--arc-ink-70);
+a.arc-guide-list__title {
+  text-decoration: none;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--g-gold-line);
 }
-.arc-guide-list__meta {
-  display: grid;
-  gap: 10px;
-  align-content: start;
-}
-.arc-guide-list__meta > div {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 12px;
-  align-items: baseline;
-}
-.arc-guide-list__meta dt {
-  font: 10px/1.4 var(--g-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--arc-ink-50);
-}
-.arc-guide-list__who {
-  justify-self: start;
-  padding: 3px 8px;
-  border: 1px solid var(--arc-chip-edge);
-  font: 11px/1.3 var(--g-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--arc-ink-90);
-}
-.arc-guide-list__path {
-  font: 12px/1.6 var(--g-mono);
-  color: var(--arc-ink-90);
-}
-.arc-guide-list__path span + span::before {
-  content: " › ";
+a.arc-guide-list__title span {
   color: var(--g-gold-text);
 }
+a.arc-guide-list__title:hover,
+a.arc-guide-list__title:focus-visible {
+  text-decoration-line: underline;
+}
+.arc-guide-list__who {
+  font: 10.5px/1 var(--g-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--arc-ink-70);
+}
 .arc-guide-list__done {
-  font: 12px/1.4 var(--g-mono);
+  font: 10.5px/1 var(--g-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--g-person);
 }
-.arc-guide-list__done::before {
-  content: "✓ ";
-}
-.arc-guide-list__row[data-guide-done] .arc-guide-list__n {
-  color: var(--g-person);
+.arc-guide-list__line {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--arc-ink-60);
 }
 
 /* ── The matrix ───────────────────────────────────────────────────── */
@@ -560,7 +664,7 @@
 /* ── Narrow ───────────────────────────────────────────────────────── */
 
 @media (max-width: 1180px) {
-  .arc-guide-map__legend {
+  .arc-guide-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .arc-guide-pipe__rail {
@@ -573,65 +677,113 @@
   }
 }
 
-@media (max-width: 760px) {
-  .arc-guide-map__legend {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 900px) {
+  /* The drawing stands up: the spine runs down, the loop is said in words. */
+  .arc-guide-ov {
+    --g-spine: 0px;
   }
-  .arc-guide-map__row {
+  .arc-guide-flow {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 0;
+    padding: 0;
+  }
+  .arc-guide-flow__repo,
+  .arc-guide-flow__org,
+  .arc-guide-flow__surfaces,
+  .arc-guide-flow__service,
+  .arc-guide-flow__spine[data-guide-seg] {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: stretch;
+    align-self: auto;
+    margin: 0;
+  }
+  /* Reading order down the page: the DOM puts the lines first. */
+  .arc-guide-flow__repo {
+    order: 1;
+  }
+  .arc-guide-flow__spine[data-guide-seg="in"] {
+    order: 2;
+  }
+  .arc-guide-flow__org {
+    order: 3;
+  }
+  .arc-guide-flow__spine[data-guide-seg="out"] {
+    order: 4;
+  }
+  .arc-guide-flow__surfaces {
+    order: 5;
+  }
+  .arc-guide-flow__service {
+    order: 6;
+  }
+  .arc-guide-flow__repo {
+    width: 100%;
+  }
+  .arc-guide-flow__spine {
+    height: 56px;
+  }
+  .arc-guide-flow__spine::before {
+    left: 50%;
+    right: auto;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    height: auto;
+  }
+  .arc-guide-flow__spine::after {
+    left: calc(50% - 4px);
+    right: auto;
+    top: auto;
+    bottom: 0;
+    border: 4.5px solid transparent;
+    border-top: 7px solid var(--gold);
+    border-bottom: 0;
+  }
+  .arc-guide-flow__spine i {
+    left: calc(50% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .arc-guide-flow__surfaces {
+    padding: 0;
+  }
+  .arc-guide-flow__surfaces .arc-guide-flow__label {
+    padding-left: 0;
+  }
+  .arc-guide-flow__surfaces ul::before,
+  .arc-guide-flow__stub,
+  .arc-guide-flow__loop {
+    display: none;
+  }
+  .arc-guide-flow__surfaces li {
+    padding-left: 0;
+  }
+  .arc-guide-flow__service {
+    justify-items: start;
+    margin-top: 28px;
+    padding: 20px 0 0;
+    border-top: 1px dashed var(--arc-seam);
+    text-align: left;
+  }
+  .arc-guide-flow__service .arc-guide-flow__label::before {
+    content: "↺ ";
+    color: var(--gold);
+  }
+  .arc-guide-ov__cols {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
   }
-  .arc-guide-map__arrow {
-    height: 48px;
-    grid-template-columns: auto 1px;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
+  .arc-guide-ov__cols li {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--arc-rule);
   }
-  .arc-guide-map__arrow i {
-    width: 1px;
-    height: 100%;
-    order: 2;
-  }
-  .arc-guide-map__arrow i::after {
-    right: -4px;
-    top: auto;
-    bottom: -1px;
-    border: 4.5px solid transparent;
-    border-top: 7px solid var(--arc-seam);
-    border-bottom: 0;
-  }
-  .arc-guide-map__fig {
-    gap: 24px;
-  }
-  .arc-guide-map__return {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: stretch;
-  }
-  .arc-guide-map__return::before,
-  .arc-guide-map__return::after {
-    display: none;
-  }
-  .arc-guide-map__rword {
-    justify-self: start;
-    padding: 0;
-  }
-  .arc-guide-map__rword[data-guide-arrow="remark"] {
-    order: -1;
-  }
-  .arc-guide-map__rword[data-guide-arrow="remark"]::before {
-    content: "↓ ";
-  }
-  .arc-guide-map__rword[data-guide-arrow="issue"]::before {
-    content: "↓ ";
-  }
+}
 
-  .arc-guide-list__row {
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 12px 14px;
-  }
-  .arc-guide-list__meta {
-    grid-column: 2;
+@media (max-width: 760px) {
+  .arc-guide-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .arc-guide-mx__head {
