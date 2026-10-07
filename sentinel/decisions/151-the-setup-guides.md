@@ -121,6 +121,16 @@ under it the way Tensor Lake sets a figure over its caption:
   connector is said with ↺.
 - Measured at 1470×830: 830px on both pages; at 375 wide no horizontal scroll.
 
+## Update 4 (2026-10-07, owner): breathing room
+
+"Give items more breathing room … you have this annoying tendency of adding text blocks,
+cramming shit together." Every station on the pipeline carries one short line (≤ 22ch) instead
+of a paragraph; the rail takes a 24px gutter and the node 16px of air before its words; the
+close sits 64px under the rail. The checklist's rows and heads, the matrix's rows and the
+overview's columns take more space. Where the air pushed a beat past one screen, the words were
+cut, never the spacing: the connectors step moved into Before so Connect holds five, and the
+titles and lines that wrapped were shortened. Measured again: 830px on every beat, both pages.
+
 ## Left open
 
 - "Vercel to host API keys": on both pages Vercel holds the connector's own secrets only. The

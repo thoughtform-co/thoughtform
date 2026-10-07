@@ -153,7 +153,7 @@ export const SURI_GUIDE_ARC: ArcDef = {
             steps: [
               {
                 id: "github-org",
-                title: "Give Suri its own GitHub organisation",
+                title: "A GitHub organisation for Suri",
                 line: "Private, with its whole history.",
                 href: "https://github.com/account/organizations/new",
                 done: "5 October",
@@ -161,13 +161,13 @@ export const SURI_GUIDE_ARC: ArcDef = {
               {
                 id: "model-keys",
                 title: "Issue the model keys",
-                line: "One Gemini key per person, via the password manager.",
+                line: "One Gemini key per person.",
                 href: "https://aistudio.google.com/apikey",
               },
               {
                 id: "vercel",
                 title: "Create a Vercel Pro team",
-                line: "Where the connector runs. Hobby is personal use only.",
+                line: "Where the connector runs.",
                 href: "https://vercel.com/dashboard",
               },
               {
@@ -175,6 +175,13 @@ export const SURI_GUIDE_ARC: ArcDef = {
                 title: "Create a project for the sign-in",
                 line: "Audience Internal: only Suri accounts sign in.",
                 href: "https://console.cloud.google.com/projectcreate",
+              },
+              {
+                id: "connectors",
+                title: "Switch on Monday and Figma",
+                who: "Claude Owner",
+                line: "Each person signs in once.",
+                href: "https://claude.ai/settings/connectors",
               },
             ],
           },
@@ -213,12 +220,6 @@ export const SURI_GUIDE_ARC: ArcDef = {
                 title: "Remove the uploaded zips",
                 line: "Two copies of one skill fire unpredictably.",
                 href: "https://claude.ai/admin-settings/skills",
-              },
-              {
-                id: "connectors",
-                title: "Switch on Monday and Figma",
-                line: "For the creative team. Each person signs in once.",
-                href: "https://claude.ai/settings/connectors",
               },
             ],
           },
@@ -340,35 +341,35 @@ export const SURI_GUIDE_ARC: ArcDef = {
             actor: "Anyone at Suri",
             by: "person",
             title: "Types /skill-feedback",
-            line: "Says what went wrong, reads the exact text, and says yes. Signs in once with Google.",
+            line: "Says what went wrong, and says yes.",
           },
           {
             id: "filed",
             actor: "Connector · Vercel",
             by: "machine",
             title: "Files an issue",
-            line: "Shows similar remarks first, so a repeat counts as one more voice.",
+            line: "Similar remarks are shown first.",
           },
           {
             id: "labelled",
             actor: "Triage · GitHub",
             by: "machine",
             title: "Labels it",
-            line: "Reads the remark against the skill's files and comments. Changes no file.",
+            line: "Reads it against the skill. Changes nothing.",
           },
           {
             id: "decides",
             actor: "The skill's owner",
             by: "person",
             title: "Decides",
-            line: "Fix it, later, close it, or send it to a developer.",
+            line: "Fix it, later, close it, or hand it on.",
           },
           {
             id: "drafts",
             actor: "Triage · GitHub",
             by: "machine",
             title: "Drafts the fix",
-            line: "The smallest change, with the test that would have caught it.",
+            line: "The smallest change, with its test.",
           },
           {
             id: "merges",
@@ -379,7 +380,7 @@ export const SURI_GUIDE_ARC: ArcDef = {
           },
         ],
         close:
-          "Claude syncs the fix to everyone within 30 minutes. Heard once, a remark is noted beside the skill; heard twice, on other work, it becomes a rule.",
+          "Everyone has the fix within 30 minutes. Heard twice, a remark becomes a rule.",
       },
     },
 

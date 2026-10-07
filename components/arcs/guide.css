@@ -326,7 +326,7 @@
 .arc-guide-ov__cols {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(24px, 3vw, 56px);
+  gap: clamp(28px, 3.5vw, 56px);
   border-top: 1px solid var(--arc-rule);
 }
 .arc-guide-ov__cols li {
@@ -388,8 +388,8 @@
 }
 .arc-guide-list__phead {
   display: grid;
-  gap: 5px;
-  padding: 14px 16px 12px;
+  gap: 6px;
+  padding: 16px 20px 14px;
   border-bottom: 1px solid var(--arc-rule);
 }
 .arc-guide-list__plabel {
@@ -407,8 +407,8 @@
 .arc-guide-list__row {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr);
-  gap: 12px;
-  padding: 11px 16px;
+  gap: 14px;
+  padding: 10px 20px;
 }
 .arc-guide-list__row + .arc-guide-list__row {
   border-top: 1px solid var(--arc-edge);
@@ -425,7 +425,7 @@
 }
 .arc-guide-list__what {
   display: grid;
-  gap: 2px;
+  gap: 4px;
 }
 .arc-guide-list__title {
   font-size: 15.5px;
@@ -499,7 +499,7 @@ a.arc-guide-list__title:focus-visible {
   border-bottom: 1px solid var(--arc-rule);
 }
 .arc-guide-mx__key {
-  padding: 20px 24px 20px 0;
+  padding: 22px 32px 22px 0;
 }
 .arc-guide-mx__name {
   font-size: 20px;
@@ -561,8 +561,8 @@ a.arc-guide-list__title:focus-visible {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 28px;
+  gap: 24px;
+  margin-bottom: 44px;
   font: 11px/1.3 var(--g-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -585,19 +585,20 @@ a.arc-guide-list__title:focus-visible {
 .arc-guide-pipe__rail {
   display: grid;
   grid-template-columns: repeat(var(--guide-n), minmax(0, 1fr));
+  column-gap: 24px;
 }
 .arc-guide-pipe__stn {
   position: relative;
   display: grid;
   align-content: start;
-  gap: 8px;
-  padding-right: 20px;
+  gap: 12px;
+  padding-right: 24px;
 }
 .arc-guide-pipe__stn:not(:last-child)::before {
   content: "";
   position: absolute;
-  left: 38px;
-  right: 10px;
+  left: 40px;
+  right: -14px;
   top: 14px;
   height: 1px;
   background: var(--arc-seam);
@@ -605,7 +606,7 @@ a.arc-guide-list__title:focus-visible {
 .arc-guide-pipe__stn:not(:last-child)::after {
   content: "";
   position: absolute;
-  right: 6px;
+  right: -18px;
   top: 10px;
   border: 4.5px solid transparent;
   border-left: 7px solid var(--arc-seam);
@@ -616,7 +617,7 @@ a.arc-guide-list__title:focus-visible {
   place-items: center;
   width: 28px;
   height: 28px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   font: 600 12px/1 var(--g-mono);
 }
 [data-guide-by="person"] > .arc-guide-pipe__node {
@@ -639,19 +640,20 @@ a.arc-guide-list__title:focus-visible {
   color: var(--g-gold-text);
 }
 .arc-guide-pipe__title {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 400;
   line-height: 1.25;
   color: var(--arc-ink);
 }
 .arc-guide-pipe__line {
+  max-width: 22ch;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--arc-ink-70);
 }
 .arc-guide-pipe__close {
-  margin-top: 36px !important;
-  padding-top: 16px;
+  margin-top: 64px !important;
+  padding-top: 20px;
   border-top: 1px dashed var(--arc-seam);
   font: 12px/1.5 var(--g-mono);
   letter-spacing: 0.04em;

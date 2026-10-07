@@ -115,12 +115,12 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
           {
             tab: "01 · GitHub",
             title: "Waar de skills staan.",
-            line: "Een privé-repository, straks op Plopsa's eigen account. Elke wijziging is een pull request die een mens samenvoegt.",
+            line: "Een privé-repository op Plopsa's eigen account. Elke wijziging is een pull request die een mens samenvoegt.",
           },
           {
             tab: "02 · Claude",
             title: "Hoe het bij het team komt.",
-            line: "De Claude-organisatie haalt elke samengevoegde wijziging binnen 30 minuten op en installeert ze voor iedereen.",
+            line: "De Claude-organisatie haalt elke wijziging binnen 30 minuten op en installeert ze voor iedereen.",
           },
           {
             tab: "03 · Vercel",
@@ -324,35 +324,35 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
             actor: "Iedereen bij Plopsa",
             by: "person",
             title: "Typt /skill-feedback",
-            line: "Zegt wat er misging, leest de exacte tekst, en zegt ja. Meldt zich één keer aan.",
+            line: "Zegt wat er misging, en zegt ja.",
           },
           {
             id: "issue",
             actor: "Connector · Vercel",
             by: "machine",
             title: "Dient een issue in",
-            line: "Toont eerst gelijkaardige opmerkingen, zodat een herhaling als extra stem telt.",
+            line: "Gelijkaardige opmerkingen komen eerst.",
           },
           {
             id: "label",
             actor: "Triage · GitHub",
             by: "machine",
             title: "Labelt het",
-            line: "Leest de opmerking naast de bestanden van de skill en reageert. Wijzigt geen bestand.",
+            line: "Leest ze naast de skill. Wijzigt niets.",
           },
           {
             id: "beslist",
             actor: "De eigenaar",
             by: "person",
             title: "Beslist",
-            line: "Fixen, later, sluiten, of doorsturen naar een developer.",
+            line: "Fixen, later, sluiten, of doorgeven.",
           },
           {
             id: "voorstel",
             actor: "Triage · GitHub",
             by: "machine",
             title: "Stelt de fix voor",
-            line: "De kleinste wijziging, met de test die de fout had gevangen.",
+            line: "De kleinste wijziging, met zijn test.",
           },
           {
             id: "samen",
@@ -363,7 +363,7 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
           },
         ],
         close:
-          "Claude zet de fix binnen 30 minuten bij iedereen. Tot de connector draait: zeg het tegen ons, of pas de regel aan via een pull request (docs/CHANGING-A-RULE.md).",
+          "Binnen 30 minuten bij iedereen. Tot de connector draait: zeg het ons, of open een pull request.",
       },
     },
 
