@@ -31,58 +31,62 @@ export function TablePlan({ caption }: { caption: string }) {
       <figcaption className="hs-fig__cap">
         <span>{caption}</span>
       </figcaption>
-      <div className="hs-plan__stage">
-        <svg
-          className="hs-plan__svg"
-          viewBox={`0 0 ${PLAN_VB.w} ${PLAN_VB.h}`}
-          aria-hidden="true"
-          focusable="false"
-        >
-          <rect className="hs-plan__table" x={t.x} y={t.y} width={t.w} height={t.h} />
-          <rect
-            className="hs-plan__inset"
-            x={t.x + 6}
-            y={t.y + 6}
-            width={t.w - 12}
-            height={t.h - 12}
-          />
-          {seats.map((s) => (
-            <rect
-              key={s.id}
-              className="hs-plan__seat"
-              data-role={s.role}
-              x={s.x}
-              y={s.y}
-              width={PLAN_SEAT}
-              height={PLAN_SEAT}
-            />
-          ))}
-          <line className="hs-plan__dim" x1={dim.x1} y1={dim.y} x2={dim.x2} y2={dim.y} />
-          <line
-            className="hs-plan__dim"
-            x1={dim.x1}
-            y1={dim.y - dim.tick}
-            x2={dim.x1}
-            y2={dim.y + dim.tick}
-          />
-          <line
-            className="hs-plan__dim"
-            x1={dim.x2}
-            y1={dim.y - dim.tick}
-            x2={dim.x2}
-            y2={dim.y + dim.tick}
-          />
-        </svg>
-        {labels.map((l) => (
-          <span
-            key={l.id}
-            className="hs-plan__label"
-            data-id={l.id}
-            style={{ "--ax": l.ax, "--at": l.at } as CSSProperties}
+      {/* the well takes whatever height the column leaves; the stage keeps the
+          drawing's aspect inside it, so the labels' fractions stay true */}
+      <div className="hs-plan__well">
+        <div className="hs-plan__stage">
+          <svg
+            className="hs-plan__svg"
+            viewBox={`0 0 ${PLAN_VB.w} ${PLAN_VB.h}`}
+            aria-hidden="true"
+            focusable="false"
           >
-            {l.text}
-          </span>
-        ))}
+            <rect className="hs-plan__table" x={t.x} y={t.y} width={t.w} height={t.h} />
+            <rect
+              className="hs-plan__inset"
+              x={t.x + 6}
+              y={t.y + 6}
+              width={t.w - 12}
+              height={t.h - 12}
+            />
+            {seats.map((s) => (
+              <rect
+                key={s.id}
+                className="hs-plan__seat"
+                data-role={s.role}
+                x={s.x}
+                y={s.y}
+                width={PLAN_SEAT}
+                height={PLAN_SEAT}
+              />
+            ))}
+            <line className="hs-plan__dim" x1={dim.x1} y1={dim.y} x2={dim.x2} y2={dim.y} />
+            <line
+              className="hs-plan__dim"
+              x1={dim.x1}
+              y1={dim.y - dim.tick}
+              x2={dim.x1}
+              y2={dim.y + dim.tick}
+            />
+            <line
+              className="hs-plan__dim"
+              x1={dim.x2}
+              y1={dim.y - dim.tick}
+              x2={dim.x2}
+              y2={dim.y + dim.tick}
+            />
+          </svg>
+          {labels.map((l) => (
+            <span
+              key={l.id}
+              className="hs-plan__label"
+              data-id={l.id}
+              style={{ "--ax": l.ax, "--at": l.at } as CSSProperties}
+            >
+              {l.text}
+            </span>
+          ))}
+        </div>
       </div>
     </figure>
   );

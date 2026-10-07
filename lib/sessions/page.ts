@@ -217,7 +217,9 @@ export function sessionsPageModel(now: Date): SessionsPageModel {
       weekday,
       month: MONTHS[m - 1],
       year: String(y),
-      chips: [`${weekday.slice(0, 3)} ${d} ${MONTHS[m - 1].slice(0, 3)}`, "Antwerp", spec.language],
+      /* two chips, one row at the narrowest desktop tile; the language is on
+         the housing's head and in the table's readout */
+      chips: [`${weekday.slice(0, 3)} ${d} ${MONTHS[m - 1].slice(0, 3)}`, "Antwerp"],
       state,
       status: state === "held" ? "Held" : state === "next" ? "Next morning" : "Seats open",
       href: past ? null : reserveHref(s),

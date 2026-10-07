@@ -51,7 +51,9 @@
 
 .arc-guide-ov {
   --g-org: 232px;
-  --g-gap: 88px;
+  --g-repo: clamp(300px, 27vw, 420px);
+  --g-surf: clamp(200px, 17vw, 250px);
+  --g-pad: clamp(8px, 1vw, 24px);
   --g-spine: 104px;
   display: grid;
   gap: clamp(20px, 3vh, 32px);
@@ -59,10 +61,11 @@
 .arc-guide-flow {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--g-gap) var(--g-org) var(--g-gap) minmax(0, 1fr);
+  /* The nodes hold their width; the lines take whatever the band gives. */
+  grid-template-columns: var(--g-repo) minmax(72px, 1fr) var(--g-org) minmax(72px, 1fr) var(--g-surf);
   grid-template-rows: calc(var(--g-spine) * 2) auto;
   margin: 0;
-  padding: 0 clamp(8px, 1vw, 24px);
+  padding: 0 var(--g-pad);
 }
 .arc-guide-flow__label {
   display: block;
@@ -123,10 +126,9 @@
   grid-column: 1;
   grid-row: 1;
   align-self: center;
-  justify-self: center;
+  justify-self: stretch;
   display: grid;
   gap: 8px;
-  width: min(100%, 330px);
   padding: 8px 0;
   background: var(--void, #0a0908);
 }
@@ -208,7 +210,7 @@
   grid-column: 5;
   grid-row: 1;
   align-self: center;
-  justify-self: start;
+  justify-self: stretch;
   display: grid;
   gap: 10px;
   padding: 12px 0;
@@ -268,8 +270,8 @@
   position: absolute;
   top: var(--g-spine);
   bottom: 22px;
-  left: calc((100% - var(--g-org) - 2 * var(--g-gap)) / 4 + clamp(8px, 1vw, 24px) / 2);
-  right: calc((100% - var(--g-org) - 2 * var(--g-gap)) / 4 + clamp(8px, 1vw, 24px) / 2);
+  left: calc(var(--g-pad) + var(--g-repo) / 2);
+  right: calc(var(--g-pad) + var(--g-surf) / 2);
   border: 1px dashed var(--arc-seam);
   border-top: 0;
 }

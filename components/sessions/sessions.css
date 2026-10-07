@@ -885,6 +885,125 @@ a.hs-tile:hover .hs-tile__cta {
   align-self: stretch;
 }
 
+/* ── 8b · One frame per section (owner, 2026-10-07: "make sure all elements
+   fit within the section / viewport") ─────────────────────────────────────
+   On a desktop tall enough to hold them, the dates and the table are each ONE
+   VIEWPORT, their content seated between the rails' two ends (the arcs
+   instrument's rule, ADR-118), and what is inside sizes itself from the room
+   left over — never from its own width, which is how a 4:5 photograph ran
+   past the floor of a wide, short window. The morning's figure is pinned on
+   the same two ends. Below 681px tall the page flows, as the sheet does. */
+@media (min-width: 961px) and (min-height: 681px) {
+  .hs-dates,
+  .hs-table {
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+    padding-block: var(--lat-rail-top) var(--lat-rail-bot);
+  }
+  .hs-dates .hs-head,
+  .hs-table .hs-head {
+    margin-bottom: var(--space-xl);
+  }
+  .hs-dates > .hs-band:first-child {
+    flex: none;
+  }
+  .hs-dates > .hs-band--wide,
+  .hs-table > .hs-band {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* the dates: the housing takes the band's height, the tiles its remainder;
+     the axis gives a third of its height to them */
+  .hs-axis {
+    height: var(--space-3xl);
+  }
+  .hs-housing {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .hs-tiles {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .hs-tile {
+    container-type: size;
+    min-height: 0;
+    gap: var(--space-sm);
+    /* the day is sized by the tile's own height as well as the window's */
+    --hs-date: clamp(40px, min(6.4vw, 30cqh), 120px);
+  }
+
+  /* the table: the photograph is as tall as the room and 4:5 inside it; the
+     side column splits the same height between the plan and the readout */
+  .hs-table__body {
+    container-type: size;
+    display: flex;
+    gap: var(--lat-air);
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .hs-photo {
+    flex: none;
+    width: min(80cqh, 50cqw);
+    height: 100cqh;
+    aspect-ratio: auto;
+  }
+  .hs-table__side {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100cqh;
+    row-gap: var(--space-lg);
+  }
+  .hs-plan {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .hs-plan__well {
+    container-type: size;
+    display: grid;
+    place-items: center;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .hs-plan__well .hs-plan__stage {
+    width: min(100cqw, calc(100cqh * 320 / 224));
+  }
+  .hs-readout {
+    flex: none;
+  }
+
+  /* the morning's figure is pinned on the rails' two ends, so the dial is
+     never taller than the rail */
+  .hs-morning__fig {
+    top: var(--lat-rail-top);
+  }
+  .hs-dial {
+    width: min(calc(100% - 2 * var(--space-2xl)), calc(var(--lat-rail-h) - var(--space-3xl)));
+  }
+}
+
+/* a short desktop (681–760 tall): the axis gives its height to the tiles,
+   and a tile keeps one chip */
+@media (min-width: 961px) and (min-height: 681px) and (max-height: 760px) {
+  .hs-axis {
+    display: none;
+  }
+  .hs-chip + .hs-chip {
+    display: none;
+  }
+}
+
 /* ── 9 · Reduced motion: every final state, no transition ───────────── */
 @media (prefers-reduced-motion: reduce) {
   .is-hs-js .hs-reveal,
