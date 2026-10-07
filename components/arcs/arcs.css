@@ -10928,6 +10928,266 @@ html[data-theme="light"] .arc-root .arc-sf__n {
   }
 }
 
+/* ══ A real job under the run (ADR-148 U4) ════════════════════════════
+   The video workstream's first real job (Under the Glass): the film beside
+   its facts, then the method in a few beats, a line left and its evidence
+   right. Layout and type only, on the arcs' ramp; the stills are square
+   children with a 1px edge, never a second notched frame.
+   ⚠ The block's type is its own ladder, on the band copy at the house ratio
+   1.2 (the lattice's values, ADR-149, restated on this prefix so the block
+   does not wait on the lattice to land). */
+.arc-job {
+  --arc-job-copy: var(--band-copy);
+  --arc-job-small: calc(var(--band-copy) / 1.2);
+  --arc-job-chrome: max(10px, calc(var(--band-copy) / 1.728));
+  --arc-job-h3: calc(var(--band-copy) * 1.44);
+  --arc-job-h2: calc(var(--band-copy) * 1.728);
+  --arc-job-title: clamp(26px, 3vw, 44px);
+  display: grid;
+  gap: clamp(24px, 5vh, 56px);
+  margin-top: clamp(40px, 7vh, 88px);
+  padding-top: clamp(32px, 5vh, 56px);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-job__top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(24px, 4vw, 64px);
+}
+.arc-job__film {
+  margin: 0;
+  width: min(42vw, calc(58svh * 9 / 16), 340px);
+  aspect-ratio: 9 / 16;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+  overflow: hidden;
+}
+.arc-job__head {
+  display: grid;
+  gap: var(--space-md);
+  max-width: 62ch;
+}
+.arc-job__eyebrow,
+.arc-job__key,
+.arc-job__facts dt,
+.arc-job__rows dt,
+.arc-job__frame figcaption {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: var(--arc-job-chrome);
+  line-height: 1.35;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-job__eyebrow {
+  letter-spacing: var(--track-eyebrow);
+}
+.arc-job__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: var(--arc-job-title);
+  line-height: 1.08;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-job__title em {
+  font-style: normal;
+  color: var(--gold-ink, #caa554);
+}
+.arc-job__sub,
+.arc-job__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-70);
+}
+.arc-job__sub {
+  font-size: var(--arc-job-copy);
+  line-height: 1.45;
+}
+.arc-job__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 clamp(16px, 2vw, 32px);
+  margin: var(--space-sm) 0 0;
+}
+.arc-job__facts > div,
+.arc-job__rows > div {
+  display: grid;
+  gap: var(--space-xs);
+  padding-block: var(--space-sm);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-job__facts dd,
+.arc-job__rows dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: var(--arc-job-small);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-90);
+}
+.arc-job__beats {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-job__beat {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+  align-items: start;
+  gap: clamp(24px, 3.6vw, 56px);
+  padding-block: clamp(24px, 4vh, 40px);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-job__text {
+  display: grid;
+  gap: var(--space-sm);
+}
+.arc-job__beat-title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: var(--arc-job-h3);
+  line-height: 1.15;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-job__line {
+  max-width: 46ch;
+  font-size: var(--arc-job-small);
+  line-height: 1.5;
+}
+/* The stills: side by side, one shape per beat, held to the frame height. */
+.arc-job__frames {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: clamp(8px, 1.2vw, 16px);
+}
+.arc-job__frames[data-run-frames="9:16"] {
+  grid-auto-columns: minmax(0, calc(44svh * 9 / 16));
+  justify-content: start;
+}
+.arc-job__frames[data-run-frames="1:1"] {
+  grid-auto-columns: minmax(0, 44svh);
+  justify-content: start;
+}
+.arc-job__frame {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  min-width: 0;
+}
+.arc-job__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+}
+.arc-job__frames[data-run-frames="9:16"] img {
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+}
+.arc-job__frames[data-run-frames="1:1"] img {
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.arc-job__frames[data-run-frames="3:2"] img {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.arc-job__frame figcaption b {
+  margin-right: 8px;
+  font-weight: var(--weight-text);
+  color: var(--arc-ink-40);
+}
+.arc-job__frame[data-run-verdict="kept"] img {
+  border-color: var(--gold-line, rgba(202, 165, 84, 0.34));
+}
+.arc-job__frame[data-run-verdict="kept"] figcaption b {
+  color: var(--gold-ink, #caa554);
+}
+.arc-job__rows {
+  display: grid;
+  margin: 0;
+}
+.arc-job__rows > div {
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 16px;
+}
+.arc-job__rows > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.arc-job__figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 1.6vw, 32px);
+  margin: 0;
+}
+.arc-job__figures > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.arc-job__figures dt {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: var(--arc-job-h2);
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--arc-ink-90);
+}
+.arc-job__figures dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--arc-job-small);
+  line-height: 1.4;
+  color: var(--arc-ink-62);
+}
+.arc-job__foot {
+  margin: 0;
+  padding-top: clamp(16px, 3vh, 32px);
+  border-top: 1px solid var(--arc-rule);
+  max-width: 70ch;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--arc-job-small);
+  line-height: 1.5;
+  color: var(--arc-ink-62);
+}
+@media (max-width: 960px) {
+  .arc-job__top,
+  .arc-job__beat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-job__film {
+    width: min(64vw, 300px);
+  }
+  .arc-job__figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .arc-job__frames[data-run-frames="3:2"] {
+    grid-auto-flow: row;
+  }
+  .arc-job__rows > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xs);
+  }
+}
+
 /* ══ The workshop frame (ADR-148) ══════════════════════════════════════
    Owner, 2026-10-06: "the general frames we use … harmonize them and really
    make them more minimalistic while respecting our brand." ONE frame for

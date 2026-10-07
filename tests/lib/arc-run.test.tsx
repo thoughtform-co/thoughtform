@@ -54,4 +54,28 @@ describe("ArcSkillRun (ADR-148)", () => {
       expect(host.querySelector("svg")).toBeNull();
     }
   });
+
+  /* ADR-148 U4: the video workstream carries its first real job under the
+     run: the film, then one beat per record entry, each with its evidence. */
+  it("draws a run's real job under it, and only where the record has one", () => {
+    for (let i = 0; i < runs.length; i += 1) {
+      const { s, host } = mount(i);
+      const job = host.querySelector("[data-run-job]");
+      if (!s.job) {
+        expect(job).toBeNull();
+        continue;
+      }
+      expect(job?.querySelector("video")?.getAttribute("src")).toBe(s.job.film.src);
+      const beats = [...host.querySelectorAll<HTMLElement>("[data-run-beat]")];
+      expect(beats.map((b) => b.dataset.runBeat)).toEqual(s.job.beats.map((b) => b.id));
+      s.job.beats.forEach((b, n) => {
+        const el = beats[n];
+        if (b.frames) expect(el.querySelectorAll("img")).toHaveLength(b.frames.length);
+        if (b.rows) expect(el.querySelectorAll(".arc-job__rows > div")).toHaveLength(b.rows.length);
+        if (b.figures)
+          expect(el.querySelectorAll(".arc-job__figures > div")).toHaveLength(b.figures.length);
+      });
+    }
+    expect(runs.some((s) => s.kind === "skill-run" && s.job)).toBe(true);
+  });
 });

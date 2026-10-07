@@ -154,6 +154,27 @@ are untouched, so v3, the AP lecture and the lunch and learn read as before):
 Prompt to Loop's own slides were not swept: they are generated from the owner's artifact and read
 by four pages.
 
+## Update 4 (2026-10-07, owner): the video workstream's first real job
+
+"We got a new case which we can integrate in the examples where we have the floating tabs bar":
+Under the Glass, the Black Friday teaser made in Cowork on 6 October (an 11-step breakdown, 31 raw
+clips to 16 seconds, edit only). Owner's calls: inside the Video retouch + edit tab, condensed.
+
+- **`skill-run` takes an optional `job`** (`ArcRunJob`): the film as the house's silent loop, two to
+  four facts, three to seven beats, each beat ONE kind of evidence (stills, rows or figures), an
+  optional foot. Rendered by `ArcRunJob` under the run, inside the same section, so the worked
+  switch still holds one section per panel and nothing in the renderer moved.
+- **The job sits under the run, never as its ask.** The teaser was made before a teaser skill
+  existed (the breakdown's own "Next" is to write the method down as one), so the run keeps the
+  plugin's `video-retouch` ask and the job is what the workstream has done for real.
+- **Condensed to six beats:** the idea, the cut, the reveal, clean-up, rounds, check. The ask,
+  look-first, ingredients, deliver and next fold into the sub, the facts and the foot.
+- **People by role:** the record is shared and the page the client's, so the editor is "the video
+  editor"; `arcs-registry` fails a colleague's first name, money, a missing file or an em dash.
+- Media are self-hosted under `public/arcs/suri/under-the-glass/` (WebP stills, the 1.6 MB H.264
+  preview; the ProRes master stays in Suri's shoot folder). The block's type and spacing read the
+  lattice tokens, so `arcs.css` holds its ratchet pins.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside

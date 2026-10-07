@@ -1352,10 +1352,64 @@ export type ArcSection = ArcSectionBase &
         /** The skill's evals: its cases with and without the skill, as the
          *  eval log records them, and one line on what they show. */
         evals: { cases: readonly ArcRunCase[]; note: string };
+        /** A real job done on this workstream (ADR-148 U4): the delivered
+         *  film and its method in a few beats, under the run. Optional; a
+         *  workstream with no job yet draws the run alone. */
+        job?: ArcRunJob;
       }
   );
 
 /* ── The skill run (ADR-148) ──────────────────────────────────────── */
+
+/**
+ * A real job on a skill run's workstream (ADR-148 U4): the film as delivered,
+ * a few facts, and the method in three to seven beats, condensed from the
+ * job's own breakdown. People by role, never by name: the page is the
+ * client's, and the record is shared.
+ */
+export interface ArcRunJob {
+  /** Mono, e.g. "A real job · Black Friday teaser · 6 Oct 2026". ≤ 64. */
+  eyebrow: string;
+  title: ArcTitle;
+  /** ≤ 220. */
+  sub: string;
+  /** The delivered film as a silent loop (`ArcClipLoop`), 9:16. */
+  film: ArcClip;
+  /** Two to four, e.g. { label: "Length", value: "16.16 s" }. */
+  facts: readonly ArcMetaRow[];
+  beats: readonly ArcRunJobBeat[];
+  /** One closing line, e.g. what is left. ≤ 160. */
+  foot?: string;
+}
+
+/** One beat of a real job. Exactly one of `frames`, `rows` or `figures`. */
+export interface ArcRunJobBeat {
+  id: string;
+  /** Mono, e.g. "The idea". ≤ 20. */
+  key: string;
+  /** ≤ 48. */
+  title: string;
+  /** ≤ 260. */
+  line: string;
+  /** Two or three stills, side by side. */
+  frames?: readonly ArcRunJobFrame[];
+  /** Two to seven key and value rows. */
+  rows?: readonly ArcMetaRow[];
+  /** Two to four measured numbers. */
+  figures?: readonly ArcMetaRow[];
+}
+
+export interface ArcRunJobFrame {
+  /** Under `/arcs/`, self-hosted. */
+  src: string;
+  alt: string;
+  /** ≤ 40. */
+  label: string;
+  /** The still's shape, which sets its box. */
+  ratio: "9:16" | "1:1" | "3:2";
+  /** A before/after verdict: kept or sent back. */
+  verdict?: "kept" | "rejected";
+}
 
 /** A check from the skill's rubric. `gate` = the work fails on it. */
 export interface ArcRunCheck {

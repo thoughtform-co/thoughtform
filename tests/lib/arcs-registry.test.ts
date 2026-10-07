@@ -1875,6 +1875,55 @@ describe("the workshop's shared beats (ADR-143)", () => {
       }
     }
   });
+
+  /* ADR-148 U4: a real job under a run. Its beats each carry ONE kind of
+     evidence, its media are self-hosted files that exist, and it names
+     people by role (the record is shared, the page the client's). */
+  it("every job under a skill run holds its shape", () => {
+    let seen = 0;
+    for (const arc of ARCS) {
+      for (const s of arc.sections) {
+        if (s.kind !== "skill-run" || !s.job) continue;
+        seen += 1;
+        const job = s.job;
+        const at = `${arc.slug}#${s.id}/job`;
+        expect(job.eyebrow.length, `${at}: eyebrow`).toBeLessThanOrEqual(64);
+        expect(job.sub.length, `${at}: sub`).toBeLessThanOrEqual(220);
+        expect(job.facts.length, `${at}: facts`).toBeGreaterThanOrEqual(2);
+        expect(job.facts.length, `${at}: facts`).toBeLessThanOrEqual(4);
+        expect(job.beats.length, `${at}: beats`).toBeGreaterThanOrEqual(3);
+        expect(job.beats.length, `${at}: beats`).toBeLessThanOrEqual(7);
+        const media = [job.film.src, job.film.poster];
+        for (const b of job.beats) {
+          const kinds = [b.frames, b.rows, b.figures].filter(Boolean).length;
+          expect(kinds, `${at}/${b.id}: one kind of evidence`).toBe(1);
+          expect(b.key.length, `${at}/${b.id}: key`).toBeLessThanOrEqual(20);
+          expect(b.title.length, `${at}/${b.id}: title`).toBeLessThanOrEqual(48);
+          expect(b.line.length, `${at}/${b.id}: line`).toBeLessThanOrEqual(260);
+          if (b.frames) {
+            expect(b.frames.length, `${at}/${b.id}: frames`).toBeGreaterThanOrEqual(2);
+            expect(b.frames.length, `${at}/${b.id}: frames`).toBeLessThanOrEqual(3);
+            expect(new Set(b.frames.map((f) => f.ratio)).size, `${at}/${b.id}: one shape`).toBe(1);
+            for (const f of b.frames) {
+              media.push(f.src);
+              expect(f.label.length, `${at}/${b.id}: ${f.label}`).toBeLessThanOrEqual(40);
+            }
+          }
+          if (b.rows) expect(b.rows.length, `${at}/${b.id}: rows`).toBeLessThanOrEqual(7);
+          if (b.figures) expect(b.figures.length, `${at}/${b.id}: figures`).toBeLessThanOrEqual(4);
+        }
+        for (const src of media) {
+          expect(src, `${at}: self-hosted`).toMatch(/^\/arcs\//);
+          expect(existsSync(join(process.cwd(), "public", src)), `${at}: ${src} exists`).toBe(true);
+        }
+        const text = JSON.stringify(job);
+        expect(text, `${at}: no em dash`).not.toMatch(/\u2014/);
+        expect(text, `${at}: people by role`).not.toMatch(/\b(Daryna|Kate|Caroline|Bea|Nick)\b/);
+        expect(text, `${at}: no money`).not.toMatch(/£|\$|€/);
+      }
+    }
+    expect(seen, "the video workstream carries its first real job").toBeGreaterThan(0);
+  });
 });
 
 describe("the worked-example switch (ADR-139)", () => {

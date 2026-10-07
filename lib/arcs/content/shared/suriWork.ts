@@ -919,8 +919,168 @@ export const SURI_RUN_SUB =
 
 type RunBody = Pick<
   ArcSectionOf<"skill-run">,
-  "ask" | "skill" | "steps" | "checks" | "decide" | "evals"
+  "ask" | "skill" | "steps" | "checks" | "decide" | "evals" | "job"
 >;
+
+const UTG = "/arcs/suri/under-the-glass";
+
+/**
+ * UNDER THE GLASS (ADR-148 U4): the video workstream's first real job, the
+ * Black Friday teaser made in Cowork on 6 October, condensed from its own
+ * breakdown (the artifact the owner shared, 11 steps) to the film and six
+ * beats. Every figure is the breakdown's. It was made before a teaser skill
+ * existed, so it sits under the run as the job, never as the run's own ask:
+ * writing the method down as a skill is what the breakdown leaves for next.
+ * The video editor is named by role.
+ */
+export const UNDER_THE_GLASS: NonNullable<ArcSectionOf<"skill-run">["job"]> = {
+  eyebrow: "A real job · Black Friday teaser · 6 Oct 2026",
+  title: { pre: "Under the glass.", em: "An edit, with no generated footage." },
+  sub: "Made in Cowork from the shoot's own footage: a real hand, a real magnifying glass and a real card on brushed steel. Code added the words on the card and what the glass shows over them.",
+  film: {
+    src: `${UTG}/teaser.mp4`,
+    poster: `${UTG}/teaser-poster.webp`,
+    alt: "The teaser: a hand moves a magnifying glass over a white card on brushed steel, and the glass reveals BLACK FRIDAY, EARLY ACCESS IS COMING.",
+  },
+  facts: [
+    { label: "From", value: "31 raw clips, about 39 minutes" },
+    { label: "Length", value: "16.16 s, 1080 × 1920" },
+    { label: "Master", value: "ProRes 422 HQ" },
+    { label: "Rounds", value: "7 versions" },
+  ],
+  beats: [
+    {
+      id: "idea",
+      key: "The idea",
+      title: "The glass is the reader.",
+      line: "Every card take was shot with green paper inside the glass, which left room for the message. It is printed on the card the whole time, shows enlarged inside the lens, and stays wherever the glass has passed, so the reveal follows the real hand.",
+      frames: [
+        {
+          src: `${UTG}/lens_raw.webp`,
+          alt: "The glass over the card, green paper inside the lens",
+          label: "As shot · C6125",
+          ratio: "1:1",
+        },
+        {
+          src: `${UTG}/lens_comp.webp`,
+          alt: "The same frame, the message enlarged inside the lens",
+          label: "In the teaser · same frame",
+          ratio: "1:1",
+        },
+      ],
+    },
+    {
+      id: "cut",
+      key: "The cut",
+      title: "Two shots, one moment.",
+      line: "The first version followed the brief whole: seven shots, 27 seconds. The video editor cut it down to the card. Two locked-off shots, aligned so the cut does not jump, the second at half speed on real 50p frames, so nothing is interpolated.",
+      frames: [
+        {
+          src: `${UTG}/cut_a.webp`,
+          alt: "The last frame of the first shot: the blank card on steel",
+          label: "Last frame · C6119",
+          ratio: "9:16",
+        },
+        {
+          src: `${UTG}/cut_b.webp`,
+          alt: "The first frame of the second shot, aligned to the first",
+          label: "First frame · C6125",
+          ratio: "9:16",
+        },
+        {
+          src: `${UTG}/end_logo.webp`,
+          alt: "The last frame: the SURI logo printed on the card",
+          label: "The logo, in the same ink",
+          ratio: "9:16",
+        },
+      ],
+    },
+    {
+      id: "reveal",
+      key: "The reveal",
+      title: "Measured from the hand, frame by frame.",
+      line: "No video or image model, no generative fill and no interpolated frames. Code finds the glass in every frame and prints the message under it.",
+      rows: [
+        {
+          label: "Find the glass",
+          value: "The green paper is keyed and a circle fitted to its edge",
+        },
+        {
+          label: "Remember the path",
+          value: "Wherever the lens has been, the message stays printed",
+        },
+        {
+          label: "Print it",
+          value: "On the card's real tilt, multiplied in like ink, so the grain shows through",
+        },
+        {
+          label: "Hands in front",
+          value: "Fingers, handle and rim are held out, so the print never lands on them",
+        },
+        {
+          label: "Follow the camera",
+          value: "The print moves with the drift and softens when the focus does",
+        },
+      ],
+    },
+    {
+      id: "clean",
+      key: "Clean-up",
+      title: "Remove the marks, keep the metal.",
+      line: "The first pass smoothed the whole surface. Every scratch went, and the brushed grain with it, and the video editor said it looked AI. The second pass only touches the specks, the short scratches and three smudges.",
+      frames: [
+        {
+          src: `${UTG}/clean_orig.webp`,
+          alt: "The steel as shot, with specks and scratches",
+          label: "As shot",
+          ratio: "3:2",
+        },
+        {
+          src: `${UTG}/clean_smooth.webp`,
+          alt: "The steel smoothed flat, the grain gone",
+          label: "Too smooth · v2",
+          ratio: "3:2",
+          verdict: "rejected",
+        },
+        {
+          src: `${UTG}/clean_real.webp`,
+          alt: "The steel with the marks gone and the grain kept",
+          label: "Final",
+          ratio: "3:2",
+          verdict: "kept",
+        },
+      ],
+    },
+    {
+      id: "rounds",
+      key: "Rounds",
+      title: "Seven versions, each one a note.",
+      line: "Each version answered one note, most of them the video editor's.",
+      rows: [
+        { label: "v1", value: "The full brief, brush details to card, 27 s, placeholder copy" },
+        { label: "v2", value: "Cut to the card, in Plain Regular; the steel too smooth" },
+        { label: "v3", value: "Texture kept, marks removed" },
+        { label: "v4", value: "The last smudge gone, and a ProRes master" },
+        { label: "v5", value: "New copy, and an ending on the logo" },
+        { label: "v6", value: "The copy in two tiers, all caps, as in the reference" },
+        { label: "v7", value: "Take C6125, so the message sits centred in the glass" },
+      ],
+    },
+    {
+      id: "check",
+      key: "Check",
+      title: "Look, measure, look again.",
+      line: "Every render was checked frame by frame, and measured where the eye could miss something.",
+      figures: [
+        { label: "Offset left at the cut between the two shots", value: "0.1 px" },
+        { label: "Of the message passed over by the real glass", value: "100%" },
+        { label: "Largest brightness step on a cleaned smudge, out of 255", value: "< 0.4" },
+        { label: "The ProRes master against the lossless render", value: "52–55 dB" },
+      ],
+    },
+  ],
+  foot: "Left to do: music and room sound, the grade, and writing the method down as a Suri skill, so the next teaser starts from a request.",
+};
 
 export const SURI_RUNS: Record<SuriWorkstream, RunBody> = {
   briefing: {
@@ -1006,6 +1166,7 @@ export const SURI_RUNS: Record<SuriWorkstream, RunBody> = {
       ],
       note: "Run on 6 October: the video skills scored 0.73 above Claude without them, on average.",
     },
+    job: UNDER_THE_GLASS,
   },
 };
 
