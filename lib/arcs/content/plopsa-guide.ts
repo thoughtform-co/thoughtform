@@ -74,8 +74,8 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
             label: "GitHub",
             name: "plopsa-ai-studio",
             child: {
-              label: "Plugins",
-              items: ["plopsa · brand, copy, menuprijzen, visuals", "creative · mother"],
+              label: "Plugins · plopsa, creative",
+              items: ["brand", "copy", "menuprijzen", "visuals", "mother"],
             },
           },
           {
