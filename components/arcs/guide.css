@@ -1,0 +1,705 @@
+/* The setup guide (ADR-151 U1): four views, each its own drawing.
+   Scoped to `.arc-guide*`: an arc without a guide beat gets bytes and no
+   matching rule. Reads the arcs' tokens only (`.arc-root` re-derives them for
+   light), so it carries no theme branch. Gold marks what is built; green is a
+   person and nothing else. Square corners, no shadows. */
+
+.arc-guide {
+  --g-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --g-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --g-person: var(--atreides-ink, #7a9e6a);
+  --g-person-soft: rgba(var(--atreides-rgb, 122, 158, 106), 0.14);
+  --g-never: #c8644f;
+  --g-never-soft: rgba(200, 100, 79, 0.06);
+  --g-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  /* Gold as TEXT: the light theme defines --gold-ink for it, dark does not. */
+  --g-gold-text: var(--gold-ink, var(--gold));
+  margin-top: clamp(28px, 4vh, 48px);
+  font-family: var(--g-sans);
+  color: var(--arc-ink);
+}
+.arc-guide h3,
+.arc-guide p,
+.arc-guide ol,
+.arc-guide ul,
+.arc-guide dl,
+.arc-guide dd,
+.arc-guide figure {
+  margin: 0;
+  padding: 0;
+}
+.arc-guide ol,
+.arc-guide ul {
+  list-style: none;
+}
+
+.arc-guide__pin {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--gold);
+  color: var(--gold-contrast, #110f09);
+  font: 600 11px/1 var(--g-mono);
+  font-variant-numeric: tabular-nums;
+}
+.arc-guide__state {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--g-gold-line);
+  color: var(--g-gold-text);
+  font: 11px/1.2 var(--g-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── The map ──────────────────────────────────────────────────────── */
+
+.arc-guide-map {
+  display: grid;
+  gap: clamp(40px, 6vh, 64px);
+}
+.arc-guide-map__fig {
+  display: grid;
+  gap: 56px;
+}
+.arc-guide-map__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) 104px minmax(0, 1fr) 104px minmax(0, 1fr);
+  align-items: center;
+}
+.arc-guide-map__frame {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-plate);
+}
+.arc-guide-map__frame .arc-guide-map__frame {
+  background: transparent;
+}
+.arc-guide-map__frame[data-guide-frame="marketplace"] {
+  border-color: var(--arc-seam);
+}
+.arc-guide-map__frame[data-guide-frame="plugin"] {
+  border-color: var(--g-gold-line);
+  background: var(--arc-gold-wash);
+}
+.arc-guide-map__fhead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: center;
+}
+.arc-guide-map__fhead .arc-guide__pin {
+  grid-row: span 2;
+}
+.arc-guide-map__label {
+  font: 10px/1.3 var(--g-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-guide-map__name {
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--arc-ink);
+  overflow-wrap: anywhere;
+}
+.arc-guide-map__frame[data-guide-frame="team"] .arc-guide-map__fhead {
+  grid-template-columns: minmax(0, 1fr);
+}
+.arc-guide-map__line {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--arc-ink-70);
+}
+.arc-guide-map__skills {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.arc-guide-map__skills ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.arc-guide-map__skills code {
+  display: inline-block;
+  padding: 3px 7px;
+  border: 1px solid var(--arc-chip-edge);
+  font: 11px/1.3 var(--g-mono);
+  color: var(--arc-ink-90);
+}
+.arc-guide-map__more {
+  align-self: center;
+  font: 11px/1.3 var(--g-mono);
+  color: var(--arc-ink-50);
+}
+.arc-guide-map__surfaces {
+  display: grid;
+  gap: 4px;
+}
+.arc-guide-map__surfaces li {
+  font: 12px/1.4 var(--g-mono);
+  color: var(--arc-ink-70);
+}
+.arc-guide-map__surfaces li::before {
+  content: "· ";
+  color: var(--arc-ink-50);
+}
+
+.arc-guide-map__arrow {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 0 6px;
+}
+.arc-guide-map__arrow span {
+  font: 10px/1.2 var(--g-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+  text-align: center;
+}
+.arc-guide-map__arrow i {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--arc-seam);
+}
+.arc-guide-map__arrow i::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 4.5px solid transparent;
+  border-left: 7px solid var(--arc-seam);
+  border-right: 0;
+}
+
+/* The return lane: a U under the row, from the team back into the repository. */
+.arc-guide-map__return {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+.arc-guide-map__return::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: -56px;
+  bottom: 50%;
+  border: 1px dashed var(--arc-seam);
+  border-top: 0;
+  pointer-events: none;
+}
+.arc-guide-map__return::after {
+  content: "";
+  position: absolute;
+  left: calc(12% - 4px);
+  top: -58px;
+  border: 4.5px solid transparent;
+  border-bottom: 7px solid var(--arc-seam);
+  border-top: 0;
+}
+.arc-guide-map__return .arc-guide-map__frame {
+  position: relative;
+  background: var(--arc-plate);
+  border-color: var(--arc-seam);
+}
+/* Not built yet: the frame is drawn dashed, and says so. */
+.arc-guide-map__return .arc-guide-map__frame:has(.arc-guide__state) {
+  border-style: dashed;
+}
+.arc-guide-map__return .arc-guide__state {
+  justify-self: start;
+}
+.arc-guide-map__rword {
+  position: relative;
+  justify-self: center;
+  padding: 2px 8px;
+  background: var(--void, #0a0908);
+  font: 10px/1.2 var(--g-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+
+.arc-guide-map__legend {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(24px, 3vw, 48px);
+}
+.arc-guide-map__legend li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 0 22px;
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-guide-map__legend .arc-guide__pin {
+  margin-top: 4px;
+}
+.arc-guide-map__term {
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--arc-ink);
+}
+.arc-guide-map__def {
+  margin-top: 6px !important;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+
+/* ── The checklist ────────────────────────────────────────────────── */
+
+.arc-guide-list {
+  display: grid;
+  gap: 40px;
+}
+.arc-guide-list__phead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--g-gold-line);
+}
+.arc-guide-list__plabel {
+  font: 12px/1.2 var(--g-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--g-gold-text);
+}
+.arc-guide-list__pwhen {
+  font: 12px/1.2 var(--g-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-guide-list__row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-guide-list__n {
+  padding-top: 4px;
+  font: 13px/1.2 var(--g-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--arc-ink-50);
+}
+.arc-guide-list__title {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--arc-ink);
+}
+.arc-guide-list__line {
+  margin-top: 6px !important;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+.arc-guide-list__meta {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.arc-guide-list__meta > div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+.arc-guide-list__meta dt {
+  font: 10px/1.4 var(--g-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-guide-list__who {
+  justify-self: start;
+  padding: 3px 8px;
+  border: 1px solid var(--arc-chip-edge);
+  font: 11px/1.3 var(--g-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+}
+.arc-guide-list__path {
+  font: 12px/1.6 var(--g-mono);
+  color: var(--arc-ink-90);
+}
+.arc-guide-list__path span + span::before {
+  content: " › ";
+  color: var(--g-gold-text);
+}
+.arc-guide-list__done {
+  font: 12px/1.4 var(--g-mono);
+  color: var(--g-person);
+}
+.arc-guide-list__done::before {
+  content: "✓ ";
+}
+.arc-guide-list__row[data-guide-done] .arc-guide-list__n {
+  color: var(--g-person);
+}
+
+/* ── The matrix ───────────────────────────────────────────────────── */
+
+.arc-guide-mx {
+  --g-mx: minmax(240px, 1.6fr) repeat(var(--guide-cols), minmax(0, 1fr));
+}
+.arc-guide-mx__head,
+.arc-guide-mx__row {
+  display: grid;
+  grid-template-columns: var(--g-mx);
+  align-items: stretch;
+}
+.arc-guide-mx__head {
+  border-bottom: 1px solid var(--arc-seam);
+}
+.arc-guide-mx__corner,
+.arc-guide-mx__place {
+  padding: 0 8px 12px;
+  font: 11px/1.3 var(--g-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--arc-ink-70);
+}
+.arc-guide-mx__corner {
+  padding-left: 0;
+  color: var(--arc-ink-50);
+}
+.arc-guide-mx__place {
+  text-align: center;
+  align-self: end;
+}
+.arc-guide-mx__place[data-guide-never] {
+  color: var(--g-never);
+}
+.arc-guide-mx__row {
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-guide-mx__key {
+  padding: 20px 24px 20px 0;
+}
+.arc-guide-mx__name {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--arc-ink);
+}
+.arc-guide-mx__line {
+  margin-top: 6px !important;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+.arc-guide-mx__who {
+  margin-top: 10px !important;
+  font: 11px/1.3 var(--g-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-guide-mx__cell {
+  display: grid;
+  place-items: center;
+  border-left: 1px solid var(--arc-edge);
+}
+.arc-guide-mx__cell[data-guide-cell="never"] {
+  background: var(--g-never-soft);
+}
+.arc-guide-mx__mark {
+  display: block;
+}
+[data-guide-cell="lives"] .arc-guide-mx__mark {
+  width: 16px;
+  height: 16px;
+  background: var(--gold);
+}
+[data-guide-cell="never"] .arc-guide-mx__mark::before {
+  content: "✕";
+  font: 14px/1 var(--g-mono);
+  color: var(--g-never);
+}
+[data-guide-cell="empty"] .arc-guide-mx__mark {
+  width: 4px;
+  height: 4px;
+  background: var(--arc-ink-22);
+}
+.arc-guide-mx__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── The pipeline ─────────────────────────────────────────────────── */
+
+.arc-guide-pipe__key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+  font: 11px/1.3 var(--g-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--arc-ink-70);
+}
+.arc-guide-pipe__key [data-guide-by]::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  vertical-align: -1px;
+}
+.arc-guide-pipe__key [data-guide-by="person"]::before {
+  background: var(--g-person);
+}
+.arc-guide-pipe__key [data-guide-by="machine"]::before {
+  border: 1px solid var(--gold);
+}
+.arc-guide-pipe__rail {
+  display: grid;
+  grid-template-columns: repeat(var(--guide-n), minmax(0, 1fr));
+}
+.arc-guide-pipe__stn {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding-right: 20px;
+}
+.arc-guide-pipe__stn:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 38px;
+  right: 10px;
+  top: 14px;
+  height: 1px;
+  background: var(--arc-seam);
+}
+.arc-guide-pipe__stn:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 10px;
+  border: 4.5px solid transparent;
+  border-left: 7px solid var(--arc-seam);
+  border-right: 0;
+}
+.arc-guide-pipe__node {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  font: 600 12px/1 var(--g-mono);
+}
+[data-guide-by="person"] > .arc-guide-pipe__node {
+  background: var(--g-person);
+  color: var(--void, #0a0908);
+}
+[data-guide-by="machine"] > .arc-guide-pipe__node {
+  border: 1px solid var(--gold);
+  color: var(--g-gold-text);
+}
+.arc-guide-pipe__actor {
+  font: 10px/1.3 var(--g-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+[data-guide-by="person"] > .arc-guide-pipe__actor {
+  color: var(--g-person);
+}
+[data-guide-by="machine"] > .arc-guide-pipe__actor {
+  color: var(--g-gold-text);
+}
+.arc-guide-pipe__title {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--arc-ink);
+}
+.arc-guide-pipe__line {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+.arc-guide-pipe__close {
+  margin-top: 36px !important;
+  padding-top: 16px;
+  border-top: 1px dashed var(--arc-seam);
+  font: 12px/1.5 var(--g-mono);
+  letter-spacing: 0.04em;
+  color: var(--arc-ink-70);
+}
+.arc-guide-pipe__close span {
+  color: var(--g-gold-text);
+}
+
+/* ── Narrow ───────────────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+  .arc-guide-map__legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .arc-guide-pipe__rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 36px;
+  }
+  .arc-guide-pipe__stn:nth-child(3n)::before,
+  .arc-guide-pipe__stn:nth-child(3n)::after {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .arc-guide-map__legend {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-guide-map__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .arc-guide-map__arrow {
+    height: 48px;
+    grid-template-columns: auto 1px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  .arc-guide-map__arrow i {
+    width: 1px;
+    height: 100%;
+    order: 2;
+  }
+  .arc-guide-map__arrow i::after {
+    right: -4px;
+    top: auto;
+    bottom: -1px;
+    border: 4.5px solid transparent;
+    border-top: 7px solid var(--arc-seam);
+    border-bottom: 0;
+  }
+  .arc-guide-map__fig {
+    gap: 24px;
+  }
+  .arc-guide-map__return {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+  .arc-guide-map__return::before,
+  .arc-guide-map__return::after {
+    display: none;
+  }
+  .arc-guide-map__rword {
+    justify-self: start;
+    padding: 0;
+  }
+  .arc-guide-map__rword[data-guide-arrow="remark"] {
+    order: -1;
+  }
+  .arc-guide-map__rword[data-guide-arrow="remark"]::before {
+    content: "↓ ";
+  }
+  .arc-guide-map__rword[data-guide-arrow="issue"]::before {
+    content: "↓ ";
+  }
+
+  .arc-guide-list__row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px 14px;
+  }
+  .arc-guide-list__meta {
+    grid-column: 2;
+  }
+
+  .arc-guide-mx__head {
+    display: none;
+  }
+  .arc-guide-mx__row {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 18px;
+  }
+  .arc-guide-mx__key {
+    padding: 18px 0 10px;
+  }
+  .arc-guide-mx__cell {
+    display: none;
+  }
+  .arc-guide-mx__cell[data-guide-cell="lives"],
+  .arc-guide-mx__cell[data-guide-cell="never"] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    border-left: 0;
+    background: none;
+  }
+  .arc-guide-mx__cell .arc-guide-mx__sr {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    font: 12px/1.3 var(--g-mono);
+    color: var(--arc-ink-70);
+  }
+  [data-guide-cell="lives"] .arc-guide-mx__mark {
+    width: 10px;
+    height: 10px;
+  }
+
+  .arc-guide-pipe__rail {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+  }
+  .arc-guide-pipe__stn {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 4px;
+    padding: 0 0 24px;
+  }
+  .arc-guide-pipe__node {
+    grid-row: span 3;
+    margin: 0;
+  }
+  .arc-guide-pipe__stn:not(:last-child)::before {
+    display: block;
+    left: 14px;
+    right: auto;
+    top: 32px;
+    bottom: 4px;
+    width: 1px;
+    height: auto;
+  }
+  .arc-guide-pipe__stn:not(:last-child)::after,
+  .arc-guide-pipe__stn:nth-child(3n)::after {
+    display: none;
+  }
+  .arc-guide-pipe__stn:nth-child(3n):not(:last-child)::before {
+    display: block;
+  }
+}

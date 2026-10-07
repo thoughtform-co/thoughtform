@@ -54,7 +54,7 @@ const LADDERS: Record<string, SheetSection[]> = {
      to `instrumentViolations` for it (sheet-instrument.test.ts). */
   /* ⚠ AT OR AFTER THE NEWEST FILING — `sheet-instrument`'s `REAL_TODAY`
      carries the reason; the two move together. */
-  arcs: arcsInstrumentSections("2026-10-04"),
+  arcs: arcsInstrumentSections("2026-10-07"),
   ...Object.fromEntries(
     CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0).map((c) => [
       `arcs/${c.slug}`,

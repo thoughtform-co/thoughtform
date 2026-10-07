@@ -259,8 +259,11 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
   });
 
   it("chooses the newest engagement on the server, lit on the monitor and filled in the log", () => {
-    expect(log.selected).toBe(newest.id);
-    expect(monitor.lit).toBe(newest.id);
+    /* Two engagements can be filed the same day (the Suri and Plopsa guides,
+       2026-10-07), and the record's order is not the instrument's: the pick
+       is one of the newest date, and the monitor lights the one the log fills. */
+    expect(record.find((r) => r.id === log.selected)?.date).toBe(newest.date);
+    expect(monitor.lit).toBe(log.selected);
   });
 
   it("sections the log by kind, each newest first, the sections by their newest filing", () => {

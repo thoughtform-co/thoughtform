@@ -33,6 +33,9 @@ import "@/components/arcs/arcs.css";
 // gets bytes and no matching rule. After arcs.css, whose tokens
 // it reads, before theme.css.
 import "@/components/arcs/course.css";
+// The setup guide (ADR-151 U1), `.arc-guide*`-scoped: an arc without a guide
+// beat gets bytes and no matching rule. After arcs.css, before theme.css.
+import "@/components/arcs/guide.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

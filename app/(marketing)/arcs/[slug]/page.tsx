@@ -32,6 +32,9 @@ import "@/components/arcs/arcs.css";
 // gets bytes and no matching rule. After arcs.css, whose tokens
 // it reads, before theme.css.
 import "@/components/arcs/course.css";
+// The setup guide (ADR-151 U1), `.arc-guide*`-scoped: an arc without a guide
+// beat gets bytes and no matching rule. After arcs.css, before theme.css.
+import "@/components/arcs/guide.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
 import "@/components/sheet/sheet.css";

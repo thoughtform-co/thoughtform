@@ -94,6 +94,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   "prompt-to-loop": "BREAKDOWN",
   /* ADR-148 U5: a client's own case, in the same format. */
   breakdown: "BREAKDOWN",
+  guide: "GUIDE",
 };
 
 /**

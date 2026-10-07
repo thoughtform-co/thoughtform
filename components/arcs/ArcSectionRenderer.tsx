@@ -13,6 +13,7 @@ import { ArcCrew } from "./ArcCrew";
 import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
+import { ArcGuide } from "./ArcGuide";
 import { ArcGround } from "./ArcGround";
 import { ArcHull } from "./ArcHull";
 import { ArcHeroBoard } from "./ArcHeroBoard";
@@ -158,6 +159,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <PromptToLoop key={section.id} startIndex={index} slides={promptToLoopRun(section)} />;
     case "breakdown":
       return <ArcBreakdown key={section.id} section={section} index={index} motion={motion} />;
+    case "guide":
+      return <ArcGuide key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;

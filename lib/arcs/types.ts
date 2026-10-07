@@ -1368,7 +1368,119 @@ export type ArcSection = ArcSectionBase &
         kind: "breakdown";
         breakdown: ArcBreakdown;
       }
+    | {
+        /**
+         * A SETUP GUIDE BEAT (ADR-151 U1): the practical page beside a
+         * client's configuration, where every beat is its own drawing (owner,
+         * 2026-10-07: "why does every section look the same"). Four views, one
+         * kind: the MAP (the system as nested frames with numbered pins, and a
+         * legend where the term is the big type), the CHECKLIST (phases of
+         * steps as ruled rows: number, step, who, the menu path), the MATRIX
+         * (each key against the places it could live), and the PIPELINE (the
+         * stations a remark passes, a person's in green, a machine's in gold).
+         *
+         * ⚠ THE TWENTY-SEVENTH ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-guide-*`; every view reads whole without JS.
+         */
+        kind: "guide";
+        head: ArcHead;
+        guide: ArcGuide;
+      }
   );
+
+/* ── The setup guide (ADR-151 U1) ─────────────────────────────────── */
+
+/** One term in the map's legend; `n` is the pin that marks it on the drawing. */
+export interface ArcGuideTerm {
+  n: number;
+  term: string;
+  line: string;
+}
+
+/** A frame on the map: its kind word, its name, and the pin it carries. */
+export interface ArcGuideFrame {
+  pin: number;
+  label: string;
+  name: string;
+}
+
+export interface ArcGuideStep {
+  id: string;
+  title: string;
+  line: string;
+  /** The role that takes it, e.g. "Claude Owner". */
+  who: string;
+  /** The menu path, one segment per crumb. */
+  where?: readonly string[];
+  /** Only what is on record as done. */
+  done?: string;
+}
+
+export interface ArcGuidePhase {
+  id: string;
+  /** e.g. "Before" */
+  label: string;
+  /** e.g. "IT, once" */
+  when: string;
+  steps: readonly ArcGuideStep[];
+}
+
+export interface ArcGuideKey {
+  id: string;
+  name: string;
+  line: string;
+  who: string;
+  /** Index into `places`: where this key lives. */
+  at: number;
+}
+
+export interface ArcGuideStation {
+  id: string;
+  actor: string;
+  by: "person" | "machine";
+  title: string;
+  line: string;
+}
+
+export type ArcGuide =
+  | {
+      view: "map";
+      /** The repository, the marketplace inside it, the plugins inside that. */
+      repo: ArcGuideFrame & {
+        marketplace: ArcGuideFrame & {
+          plugins: readonly (ArcGuideFrame & {
+            skills: { pin: number; names: readonly string[]; more?: string };
+          })[];
+        };
+      };
+      org: ArcGuideFrame & { line: string };
+      team: { label: string; name: string; surfaces: readonly string[] };
+      service: ArcGuideFrame & { line: string; state?: string };
+      /** The arrows' words: repo to org, org to team, team to service, service to repo. */
+      arrows: { sync: string; reach: string; remark: string; issue: string };
+      terms: readonly ArcGuideTerm[];
+      alt: string;
+    }
+  | {
+      view: "checklist";
+      phases: readonly ArcGuidePhase[];
+      /** The column words: who, where. */
+      labels: { who: string; where: string; done: string };
+    }
+  | {
+      view: "matrix";
+      places: readonly { id: string; name: string; never?: true }[];
+      keys: readonly ArcGuideKey[];
+      labels: { key: string; lives: string; never: string };
+    }
+  | {
+      view: "pipeline";
+      stations: readonly ArcGuideStation[];
+      /** The line under the rail: what closes the loop. */
+      close: string;
+      labels: { person: string; machine: string };
+      state?: string;
+    };
 
 /* ── The skill run (ADR-148) ──────────────────────────────────────── */
 
