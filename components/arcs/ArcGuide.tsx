@@ -92,9 +92,11 @@ function Panel({
       className={`arc-guide-panel${lit ? " arc-guide-panel--lit" : ""}${className ? ` ${className}` : ""}`}
       data-guide-pending={state ? "" : undefined}
     >
-      <span className="arc-guide-panel__label">{label}</span>
-      {state ? <span className="arc-guide-panel__state">{state}</span> : null}
-      {children}
+      <div className="arc-guide-panel__head">
+        <span className="arc-guide-panel__label">{label}</span>
+        {state ? <span className="arc-guide-panel__state">{state}</span> : null}
+      </div>
+      <div className="arc-guide-panel__body">{children}</div>
     </div>
   );
 }
@@ -174,7 +176,6 @@ function GuideTools({ guide }: { guide: Extract<ArcGuideBody, { view: "tools" }>
                       rel="noopener noreferrer"
                     >
                       {step.title}
-                      <span aria-hidden="true"> ↗</span>
                     </a>
                   ) : (
                     <span className="arc-guide-step__title">{step.title}</span>

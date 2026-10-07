@@ -75,10 +75,9 @@ export const SURI_GUIDE_ARC: ArcDef = {
           {
             label: "GitHub",
             name: "suri-ai-studio",
-            line: "Private repository on Suri's account",
             child: {
               label: "Plugin · ai-suri",
-              items: ["mother", "brand", "brief", "design-review", "+ 17 skills"],
+              items: ["mother", "brand", "brief", "+ 18 skills"],
             },
           },
           {

@@ -49,16 +49,18 @@
 
 .arc-guide-panel {
   position: relative;
-  padding: 32px var(--g-3) var(--g-2);
   border: 1px solid var(--arc-seam);
 }
+.arc-guide-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--g-2);
+  padding: 8px var(--g-2);
+  background: rgba(var(--dawn-rgb), 0.05);
+  border-bottom: 1px solid var(--arc-rule);
+}
 .arc-guide-panel__label {
-  position: absolute;
-  top: 0;
-  left: var(--g-2);
-  transform: translateY(-50%);
-  padding: 0 var(--g-1);
-  background: var(--g-ground);
   font: 11px/1.2 var(--g-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -66,17 +68,15 @@
   color: var(--arc-ink-70);
 }
 .arc-guide-panel__state {
-  position: absolute;
-  top: 0;
-  right: var(--g-2);
-  transform: translateY(-50%);
   padding: 2px var(--g-1);
-  background: var(--g-ground);
   border: 1px solid var(--g-gold-line);
   font: 10px/1.4 var(--g-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--g-gold-text);
+}
+.arc-guide-panel__body {
+  padding: 18px var(--g-3);
 }
 .arc-guide-panel[data-guide-pending] {
   border-style: dashed;
@@ -84,7 +84,11 @@
 .arc-guide-panel--lit {
   border-color: var(--gold);
 }
-.arc-guide-panel--lit > .arc-guide-panel__label {
+.arc-guide-panel--lit > .arc-guide-panel__head {
+  background: var(--arc-gold-wash);
+  border-bottom-color: var(--g-gold-line);
+}
+.arc-guide-panel--lit > .arc-guide-panel__head > .arc-guide-panel__label {
   color: var(--g-gold-text);
 }
 .arc-guide-panel__name {
@@ -107,20 +111,23 @@
   font: 12.5px/1.5 var(--g-mono);
   color: var(--arc-ink-90);
 }
+.arc-guide-panel__name + .arc-guide-panel__items,
+.arc-guide-panel__line + .arc-guide-panel__items {
+  margin-top: 12px !important;
+}
+.arc-guide-panel__body > .arc-guide-panel__items:first-child {
+  margin-top: 0 !important;
+}
 .arc-guide-panel__items li::before {
   content: "· ";
   color: var(--arc-ink-50);
 }
 /* A panel inside a panel. */
-.arc-guide-panel > .arc-guide-panel {
-  margin-top: var(--g-3);
-  padding: var(--g-3) var(--g-3) var(--g-2);
-}
-.arc-guide-panel > .arc-guide-panel > .arc-guide-panel {
+.arc-guide-panel__body > .arc-guide-panel {
   margin-top: var(--g-2);
 }
-.arc-guide-panel > .arc-guide-panel > .arc-guide-panel__line:first-of-type {
-  margin-top: 0;
+.arc-guide-panel__body > .arc-guide-panel > .arc-guide-panel__body {
+  padding: 10px var(--g-3);
 }
 
 /* ── The system: the words, and the flow down the page ───────────── */
@@ -152,7 +159,7 @@
 .arc-guide-sys__arrow {
   position: relative;
   display: block;
-  height: 32px;
+  height: 20px;
   margin-left: var(--g-4);
 }
 .arc-guide-sys__arrow::before {
@@ -218,13 +225,28 @@
   color: var(--arc-ink-50);
 }
 
-/* ── The tools: the setup, one panel per tool ────────────────────── */
+/* ── The tools: the setup, one ruled sheet, a column per tool ───── */
 
 .arc-guide-tools {
   display: grid;
   grid-template-columns: repeat(var(--guide-n), minmax(0, 1fr));
-  gap: var(--g-3);
-  align-items: start;
+  border: 1px solid var(--arc-seam);
+}
+.arc-guide-tool.arc-guide-panel {
+  border: 0;
+  border-right: 1px solid var(--arc-seam);
+}
+.arc-guide-tool.arc-guide-panel:last-child {
+  border-right: 0;
+}
+.arc-guide-tool.arc-guide-panel[data-guide-pending] {
+  border-style: solid;
+}
+.arc-guide-tool.arc-guide-panel[data-guide-pending] > .arc-guide-panel__head {
+  border-bottom-style: dashed;
+}
+.arc-guide-tool > .arc-guide-panel__body {
+  padding: 20px var(--g-3) 12px;
 }
 .arc-guide-tool__role {
   display: block;
@@ -264,13 +286,15 @@
   background: var(--g-person);
 }
 .arc-guide-step__title {
-  display: inline-block;
-  font-size: 15.5px;
-  line-height: 1.35;
+  display: inline;
+  font-size: 15px;
+  line-height: 1.4;
   color: var(--arc-ink);
   text-decoration: none;
 }
-a.arc-guide-step__title span {
+/* The arrow is glued to the last word, so it never wraps alone. */
+a.arc-guide-step__title::after {
+  content: "\00a0↗";
   color: var(--g-gold-text);
 }
 a.arc-guide-step__title:hover,
@@ -495,6 +519,12 @@ a.arc-guide-step__title:focus-visible {
   .arc-guide-tools {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .arc-guide-tool.arc-guide-panel:nth-child(2n) {
+    border-right: 0;
+  }
+  .arc-guide-tool.arc-guide-panel:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--arc-seam);
+  }
   .arc-guide-pipe__rail {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: var(--g-4);
@@ -525,8 +555,15 @@ a.arc-guide-step__title:focus-visible {
   .arc-guide-tools {
     grid-template-columns: minmax(0, 1fr);
   }
-  .arc-guide-panel {
-    padding: var(--g-4) var(--g-2) var(--g-2);
+  .arc-guide-tool.arc-guide-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-seam);
+  }
+  .arc-guide-tool.arc-guide-panel:last-child {
+    border-bottom: 0;
+  }
+  .arc-guide-panel__body {
+    padding: var(--g-2);
   }
 
   .arc-guide-mx__head {

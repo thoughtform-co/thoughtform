@@ -138,16 +138,19 @@ vertical flow, the setup clustered per tool with what each part does, Linear's e
 as the drawing grammar, a uniform way of labelling panels, highlights, and one consistent system
 with air across every section.
 
-- **The panel** is the one frame every figure is drawn with: a 1px hairline with its label SET
-  INTO the top edge (mono, uppercase, on the page's ground), a state chip on the right edge for
-  what is not built yet (the frame goes dashed), and ONE lit panel per figure (gold ring, gold
-  label). A diagram's contents are mono; the words beside a diagram are sans. The spacing scale
+- **The panel** is the one frame every figure is drawn with: a 1px hairline frame, whole, with
+  a HEADER STRIP inside its top (a filled band, the label in mono uppercase, a state chip at its
+  right for what is not built yet, when the frame goes dashed), and ONE lit panel per figure
+  (gold ring, gold strip). The first cut set the label into the edge, Linear's way; the owner:
+  "I do not like labels cutting the frame", so the strip is Tensor Lake's. A diagram's contents are mono; the words beside a diagram are sans. The spacing scale
   is five steps (8 · 16 · 24 · 40 · 64) and nothing else.
 - **Four beats, four views on that system.** `system`: the paragraphs on the left, the flow down
   the page on the right, panel inside panel (GitHub ⊃ plugin), labelled arrows between the
-  panels, the return path drawn dashed up the left. `tools`: one panel per tool (GitHub, Google
-  Cloud, Vercel, Claude) with who takes the steps, what the tool does in the setup, and every
-  step a link to its page; a line only where the title does not say it. `matrix` and `pipeline`
+  panels, the return path drawn dashed up the left. `tools`: ONE ruled sheet, a column per tool (GitHub,
+  Google Cloud, Vercel, Claude), equal heights, each with who takes the steps, what the tool does
+  in the setup, and every step a link to its page (the arrow glued to the last word, so it never
+  wraps alone); a line only where the title does not say it. Four free-standing panels of four
+  heights read as unbalanced; one sheet does not. `matrix` and `pipeline`
   as before, inside a labelled panel.
 - **Titles in plain technical English**: "System overview.", "Setup per tool.", "Where each key
   is stored.", "How feedback reaches the owner." No comma slogans. The hero is a title and one

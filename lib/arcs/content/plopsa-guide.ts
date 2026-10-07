@@ -73,10 +73,9 @@ export const PLOPSA_GUIDE_ARC: ArcDef = {
           {
             label: "GitHub",
             name: "plopsa-ai-studio",
-            line: "Privé, nu nog bij Thoughtform",
             child: {
               label: "Plugins",
-              items: ["plopsa: brand, copy, menuprijzen, visuals", "creative: mother"],
+              items: ["plopsa · brand, copy, menuprijzen, visuals", "creative · mother"],
             },
           },
           {
