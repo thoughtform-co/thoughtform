@@ -133,6 +133,12 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         label: "Where the leverage is",
         line: "The models keep improving for everyone. Your layer is what makes them work like X-Bionic.",
       },
+      console: { name: "Intelligence configuration", status: "X-Bionic" },
+      readout: [
+        { label: "Models", value: "Shared" },
+        { label: "Claude", value: "Installed" },
+        { label: "Layer", value: "Owned" },
+      ],
       uses: {
         label: "One layer, four disciplines",
         items: [
@@ -175,12 +181,14 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       steps: [
         {
           id: "adopt",
+          when: "Week 1",
           label: "Adopt",
           title: "Your team learns on its own work",
           who: "Your team",
         },
         {
           id: "encode",
+          when: "Weeks 1–2",
           label: "Write it down",
           title: "How the work is done, and what good looks like",
           who: "Your team, with me",
@@ -188,6 +196,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         },
         {
           id: "automate",
+          when: "From week 2",
           label: "Automate",
           title: "Claude runs it, and asks when unsure",
           who: "Claude, checked by your team",

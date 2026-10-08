@@ -39,3 +39,20 @@ sentences, gold on the lit thing and nowhere else.
 
 **3. New kinds, not a re-skin.** `configuration` and `horizon` stay as they are on the pages that
 use them; this page proves the new pair first.
+
+## Amendment, same day: an instrument, not a slide
+
+The owner, on the first cut: "too simple … it doesn't really feel like a modern, cool interface, nor
+like it comes from a retro-futuristic, clean design." The information architecture stays (one idea
+per beat, one lit thing); the housing changes, read against Mobbin (Overmind's three cards with one
+filled and its siblings faded; Linear's and Beside's mono index over a sans title; Retool's thin
+labelled bars) and the Hex and Cyberpunk references:
+
+- The leverage is ONE console in the arcs' own chamfered plate (`.arc-plate`, no new polygon): a
+  head strip (`SYS · Intelligence configuration`, a pulsing status), a readout foot (models shared,
+  Claude installed, layer owned). The stack is three isometric slabs on a dashed spine, the owned
+  one gold and hatched, the shared one dashed. The 2×2 sits on a dot ground with data glyphs (a
+  brief's lines, a bar-code, a stepped run, a check).
+- The handoff's three steps are chamfered plates with a head strip and a timing readout, joined by
+  chevron runs; the hinge takes `.arc-plate__head`'s gold band and its siblings fade back. The time
+  is a plate of bar-code tracks, gold stripes where the time goes to ideas.

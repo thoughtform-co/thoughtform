@@ -1395,6 +1395,10 @@ export type ArcSection = ArcSectionBase &
         stack: readonly [ArcLeveragePlate, ArcLeveragePlate, ArcLeveragePlate];
         /** Under the stack: a mono label and one sentence. */
         note: { label: string; line: string };
+        /** The instrument's head strip: its name, and a status on the right. */
+        console: { name: string; status: string };
+        /** The readout foot: up to four short mono pairs. */
+        readout: readonly { label: string; value: string }[];
         /** The 2×2, under one mono label. */
         uses: {
           label: string;
@@ -1449,6 +1453,8 @@ export interface ArcLeverageUse {
 
 export interface ArcHandoffStep {
   id: string;
+  /** The plate's readout, top right, e.g. "Week 1". ≤ 16. */
+  when: string;
   /** Mono verb, e.g. "Adopt". ≤ 16. */
   label: string;
   /** The step as a short sentence. ≤ 48. */
