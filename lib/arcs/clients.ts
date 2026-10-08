@@ -201,9 +201,18 @@ export const THOUGHTFORM_HOUSE: ClientDef = {
   since: "2025",
 };
 
+export const X_BIONIC_CLIENT: ClientDef = {
+  slug: "x-bionic",
+  name: "X-Bionic",
+  lede: "Swiss performance wear: socks, base layers and trail shoes, and a creative engine for paid social.",
+  // The year the relationship began (ADR-114) — the filing year until you say otherwise.
+  since: "2026",
+};
+
 /** Every client with an engagement on the site, in the order the overview
  *  reads them. */
 export const CLIENTS: readonly ClientDef[] = [
+  X_BIONIC_CLIENT,
   AP_HOGESCHOOL_CLIENT,
   PLOPSA_CLIENT,
   PANDORA_CLIENT,

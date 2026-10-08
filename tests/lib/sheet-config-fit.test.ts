@@ -94,6 +94,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
       "trinny-london-pitch",
+      "x-bionic-proposal",
     ]);
   });
 
@@ -223,6 +224,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
           "Creative operations and scaling|M3|",
         ],
         links: ["Claude×3", "Figma×3", "Monday×3", "Slack×3"],
+      },
+      /* X-Bionic (2026-10-08): the picker's tiles are the four disciplines,
+         not phases, so no row carries a month. */
+      "x-bionic-proposal": {
+        rows: ["Strategy||", "Production||", "Ops||", "Review||"],
+        links: ["Claude×4", "Image generation×1", "Figma×2"],
       },
     });
   });

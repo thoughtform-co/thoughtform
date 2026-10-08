@@ -152,6 +152,7 @@ export const HERO_ROUTES = [
   "/arcs/thoughtform/ai-storytelling",
   "/arcs/thoughtform/ai-storytelling-class-1",
   "/arcs/ap-hogeschool/lecture",
+  "/arcs/x-bionic/proposal",
   /* ADR-150: the Home sessions page opens on the house key visual. */
   "/home-sessions",
 ] as const;

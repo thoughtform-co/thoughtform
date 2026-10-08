@@ -21,6 +21,7 @@ import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
 import { arcHref, groupOf } from "./routes";
+import { X_BIONIC_PROPOSAL_ARC } from "./content/x-bionic-proposal";
 import type { ArcDef } from "./types";
 
 /**
@@ -39,6 +40,7 @@ import type { ArcDef } from "./types";
  * dates, so the order and the dates cannot tell two stories.
  */
 export const ARCS: readonly ArcDef[] = [
+  X_BIONIC_PROPOSAL_ARC,
   /* The AP Hogeschool guest lecture (ADR-141): the workshop's third cut,
      for a room of students. A client's since ADR-142, the school's. */
   AP_HOGESCHOOL_ARC,
