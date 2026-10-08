@@ -14,6 +14,7 @@ import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
 import { ArcGuide } from "./ArcGuide";
+import { ArcInstrument } from "./ArcInstrument";
 import { ArcGround } from "./ArcGround";
 import { ArcHull } from "./ArcHull";
 import { ArcHeroBoard } from "./ArcHeroBoard";
@@ -161,6 +162,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcBreakdown key={section.id} section={section} index={index} motion={motion} />;
     case "guide":
       return <ArcGuide key={section.id} section={section} index={index} motion={motion} />;
+    case "instrument":
+      return <ArcInstrument key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;

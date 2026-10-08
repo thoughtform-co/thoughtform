@@ -1566,3 +1566,26 @@ harness, or the drive lands short. The drive helpers live in
 
 **Process:** [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) —
 Cycle B when adding a section kind or surface; Cycle A after fixes.
+
+
+## The instrument (ADR-154)
+
+- **One record, five altitudes.** The intelligence configuration is `InstrumentRecord`
+  (`lib/instrument/types.ts`): the six in the owner's order (model, context, evaluations, data,
+  interface, owner), the work, and optionally the run, the checks, the plugin, the organisation.
+  `recordFaults` is the law: lit ⊆ {context, evals}; the owner is the one human; one skill reads
+  the others. `altitudesOf` offers only what the record carries. The three old shapes
+  (`questions`, `configuration`, `board`) read in through `lib/instrument/adapt.ts`.
+- **One DOM, placed by `[data-altitude]`.** `components/instrument/Instrument.tsx` renders the
+  six panels, the chip, the nodes and the frames once; `instrument.css` seats them per altitude.
+  The picker (`InstrumentPicker`, the one island) writes one attribute; the engine (css · flip ·
+  anime) loads by `import()` on the first pick. Static `gsap`/`animejs` are banned under
+  `components/instrument` and `lib/instrument` (`arcs-import-doctrine`).
+- **The grammar** is `.claude/skills/thoughtform-design/references/instrument-grammar.md`: the
+  housing is `.lat-frame`; its children are square; the panel's label is a header strip INSIDE
+  the frame, never on its edge; the chip is the one filled object (a lattice `tr` notch); gold is
+  what the team writes, green the owner. Nothing idles (`no-idle-motion.test.ts`).
+- **The lab** is `/test/instrument-lab` (`lib/instrument/directions.json` is its registry;
+  `scripts/capture-instrument.mjs` its capture; `window.__instrument.measure()` its gate).
+- **Retires, as its pages move** (ADR-070 U35: delete with the guard): `questions`,
+  `plugin-board`, `repository`, `skill-run`, `guide.system`, `circuit`.

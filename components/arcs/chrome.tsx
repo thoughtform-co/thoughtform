@@ -95,6 +95,8 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   /* ADR-148 U5: a client's own case, in the same format. */
   breakdown: "BREAKDOWN",
   guide: "GUIDE",
+  /* ADR-154: one record at five altitudes. */
+  instrument: "INS",
 };
 
 /**

@@ -1,3 +1,5 @@
+import type { Altitude, InstrumentRecord, PartId } from "@/lib/instrument/types";
+
 /**
  * lib/arcs — client arc pages (ADR-052).
  *
@@ -1385,6 +1387,27 @@ export type ArcSection = ArcSectionBase &
         kind: "guide";
         head: ArcHead;
         guide: ArcGuide;
+      }
+    | {
+        /**
+         * THE INSTRUMENT (ADR-154): one record of the intelligence
+         * configuration, drawn at one altitude (the organisation, the plugin,
+         * the work, the run, the check), with every altitude's chrome in the
+         * one DOM so a pick moves the same six parts between their seats.
+         * `focus` is the proposal law: one lit thing. `picker` offers only
+         * altitudes the record carries.
+         *
+         * ⚠ THE THIRTIETH ENUMERATED EXCEPTION, and the one that retires
+         * `questions`, `plugin-board`, `repository`, `skill-run`,
+         * `guide.system` and `circuit` as their pages move (ADR-070 U35:
+         * delete, never flag). Server, no state; the picker is one island.
+         */
+        kind: "instrument";
+        head: ArcHead;
+        record: InstrumentRecord;
+        altitude: Altitude;
+        focus?: PartId;
+        picker?: readonly Altitude[];
       }
   );
 
