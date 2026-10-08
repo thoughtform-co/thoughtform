@@ -218,6 +218,31 @@ Deliver and Next fold into the last slide).
 - **People by role,** as before: the designer, a colleague who reviews, the creative lead; the
   dentist is named only inside Suri's own email images. The registry bans the first names.
 
+## Update 7 (2026-10-08, owner): the switch docks in the frame
+
+"Isn't there a better way of placing it? I feel like it's a bit in the way." Measured at
+1470 × 830, the bar was a glass box across x 75–1395 at y 771–802: clear of the slides (they end at
+725–737) but in the frame's bottom band, beside the mark and the theme switch, and over the content
+on a phone. The free row is the frame's TOP band, where the corner readout sits (y 29–73) and no
+head reaches (heads start at 92 or lower at 1280 × 720). The owner left the call to us.
+
+- **From 1101px up, the switch is fixed in the top band** on the readout's own line
+  (`--hud-margin` − 12px, the readout's 44px box), centred between the corners, z 55 (over the
+  frame's 50, under the drawer's 60). No ground, no ring, no blur: mono labels on the frame, the
+  picked one lit, the same treatment as the readout beside it. A strip of void was tried first and
+  clipped the heads' survey stamp.
+- **It shows only while its group is read.** `ArcWorkedSwitch` marks the group crossing the
+  viewport's midline (the readout's own band) `data-arc-worked-live`; the bar fades in over 180ms
+  (none under reduced motion) and takes no flow.
+- **Below 1101px it keeps the bottom:** a thumb is there, and between 961 and about 1090px the
+  centred bar would run into the readout.
+- **Prompt to Loop's slides clear the band inside a switched group.** Their tighter beat put two
+  survey stamps (Idea, Make) at y 49–71, under the labels when a slide sat flush with the top;
+  `.arc-worked-group .ptl-sec` pads at least `--hud-margin + 64px` from 1101px up, so the
+  breakdown's other pages are untouched. Walked: 67 switched slide views at 1101, 1280, 1470 and
+  1920, zero label-on-text overlap.
+- Left open, not this change: two workstream panels run 6px over one screen at 1280 × 720.
+
 ## Mechanics worth keeping
 
 - **The ring is a pseudo, never a clip on the host, for a box with something hanging outside

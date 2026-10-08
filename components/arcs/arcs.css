@@ -9301,6 +9301,83 @@ html[data-theme="light"] .arc-root .arc-hb__frame {
     display: none;
   }
 }
+/* ⚠ ON A DESKTOP THE SWITCH DOCKS IN THE FRAME (ADR-148 U7, owner: the
+   floating bar "is a bit in the way"). It sat in the bottom band beside
+   the mark and the theme switch, a glass box over the beat. It belongs to
+   the frame's TOP band instead, on the corner readout's own line
+   (`--hud-margin` − 12px, 44px tall, the readout's box): the readout says
+   where the reader is, and the switch is which case they are reading. No
+   head reaches that band (heads start at y 102 or lower at 1280 × 720, the
+   band ends at 68), so it covers nothing at rest. It shows only while its
+   group crosses the viewport's midline (the switch's `data-arc-worked-live`,
+   the readout's own band) and takes no flow. No ground, no ring, no blur
+   and no box, like the readout beside it: mono labels, the picked one lit. Below 1101px it keeps the bottom: a
+   thumb is there, and between 961 and about 1090px the centred bar would
+   run into the readout. Z 55: over the frame (50), under the
+   drawer (60). */
+@media (min-width: 1101px) {
+  .arc-worked-group > .arc-worked__bar {
+    position: fixed;
+    top: calc(var(--hud-margin, 24px) - 12px);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    z-index: 55;
+    height: 44px;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 180ms ease,
+      visibility 0s linear 180ms;
+  }
+  .arc-worked-group[data-arc-worked-live] > .arc-worked__bar {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 180ms ease,
+      visibility 0s;
+  }
+  .is-arc-worked-js .arc-worked-group > .arc-worked__bar {
+    display: flex;
+    align-items: center;
+  }
+  /* No ground, as the readout has none: a strip of void clipped the heads'
+     survey stamp (y 54-68 at 1280 x 720) on the Loop slides, whose beat
+     padding is tighter. Labels on the frame, centred on the readout's line. */
+  .arc-worked-group > .arc-worked__bar .arc-worked__inner {
+    width: max-content;
+    margin-inline: auto;
+    padding: 0;
+    transform: none;
+  }
+  .arc-root[data-arc-format] .arc-worked-group > .arc-worked__bar .arc-worked__tabs {
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    clip-path: none;
+    backdrop-filter: none;
+  }
+  .arc-root[data-arc-format] .arc-worked-group > .arc-worked__bar .arc-worked__tabs::before {
+    display: none;
+  }
+}
+/* A switched beat's slide clears the band the switch docks in: Prompt to
+   Loop's slides pad by its tighter beat (28-72px), which put two of their
+   heads' survey stamps at y 49-71 under the switch's labels when a slide
+   sat flush with the top (from the drawer or an index link). Only inside a
+   switched group, so the breakdown's other pages are untouched. */
+@media (min-width: 1101px) {
+  .arc-root .arc-worked-group .ptl-sec {
+    padding-top: max(var(--arc-sec-pad, 32px), calc(var(--hud-margin, 24px) + 64px));
+  }
+}
+@media (min-width: 1101px) and (prefers-reduced-motion: reduce) {
+  .arc-worked-group > .arc-worked__bar,
+  .arc-worked-group[data-arc-worked-live] > .arc-worked__bar {
+    transition: none;
+  }
+}
 
 /* ── 10 · The ground (ADR-139) ───────────────────────────────────────
    Why the work is built here. The shelf on the left is dim and its plates

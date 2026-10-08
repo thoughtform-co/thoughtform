@@ -8,13 +8,16 @@ const PICK_ATTR = "data-arc-worked";
 const PANEL = "[data-arc-worked-panel]";
 const TAB = "[data-arc-worked-tab]";
 const GROUP = "[data-arc-worked-group]";
+const LIVE_ATTR = "data-arc-worked-live";
 
 /**
  * ArcWorkedSwitch — the one island the switched chapter needs (ADR-139).
  *
- * It owns exactly three things: the class that tells the stylesheet a hand
- * is listening, the `hidden` flag on every panel, and the checked state of
- * every tab. Nothing else on the page knows it exists.
+ * It owns exactly four things: the class that tells the stylesheet a hand
+ * is listening, the `hidden` flag on every panel, the checked state of
+ * every tab, and which group is being read (`data-arc-worked-live`, so the
+ * bar can dock in the frame's top band only then). Nothing else on the page
+ * knows it exists.
  *
  * ⚠ THE PICK REACHES EVERY GROUP THAT OFFERS IT (ADR-148 U5). Groups that
  * carry the same ids follow one choice together, so the room follows one
@@ -88,6 +91,19 @@ export function ArcWorkedSwitch() {
       next.focus();
     };
 
+    /* The bar docks in the frame's top band only while its group is the
+       one being read (ADR-148 U7): the group crossing the viewport's
+       midline, the corner readout's own band. Off, it takes no room. */
+    const live = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          entry.target.toggleAttribute(LIVE_ATTR, entry.isIntersecting);
+        }
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
+    );
+    for (const g of groups) live.observe(g.el);
+
     root.classList.add(JS_CLASS);
     /* The resting pick is each group's own: whichever panel the server
        marked default. Never a literal here — the record decides the order,
@@ -102,6 +118,8 @@ export function ArcWorkedSwitch() {
     root.addEventListener("keydown", onKeyDown);
 
     return () => {
+      live.disconnect();
+      for (const g of groups) g.el.removeAttribute(LIVE_ATTR);
       root.removeEventListener("click", onClick);
       root.removeEventListener("keydown", onKeyDown);
       root.classList.remove(JS_CLASS);
