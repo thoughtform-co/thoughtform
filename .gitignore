@@ -161,3 +161,7 @@ scripts/voidwalker-avatar/__pycache__/
 
 # Standalone page exports (scripts/arcs/export-*.mjs); the script is the record
 /exports/
+
+# The services-workstreams lab's stills — ~48 regenerable renders (~42 MB) via
+# `node scripts/capture-services-workstreams.mjs`.
+docs/design/services-workstreams/stills/

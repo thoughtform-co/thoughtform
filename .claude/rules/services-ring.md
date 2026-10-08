@@ -477,6 +477,41 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   three VISIBLE cards must also keep sharing one window end — the unit test
   fails if they stop.
 
+## The workstreams lab (look-dev, `/test/services-workstreams`, 2026-10-08)
+
+The ring re-cut as the three creative workstreams a marketing team runs
+(production · operations · review). ⚠ **THE INTELLIGENCE CONFIGURATION IS THE
+WHOLE SECTION, NEVER A CARD** (owner, 2026-10-08: a fourth "configuration" card
+beside the three read as one more peer, and a floating configuration panel was
+clutter — "minimalism"): the masthead names it ("One configuration, three
+workstreams."), the three cards are its workstreams, a card click opens its
+detail. Three cards on the four-slot ring: the fourth slot is hidden
+(`ServicesCardRing.hiddenSlots`) and the scroll stops on the third. Nothing on
+the landing changed; no ADR until a face direction wins.
+
+- **Three additive lab seams, all byte-identical when omitted:**
+  `ServicesCardRing.faceBaker` (a lab's own face bake; given, the ring fetches
+  no photograph and bakes no reveal twin — pass a module constant or a memo,
+  the bake re-runs on its identity), `ServicesCardRing.hiddenSlots` (a slot's
+  master opacity 0, so no group and no anchor) and `ServicesMasthead.copy`. ⚠ The ring's
+  per-slot reads (`openPlateRef` matching, the anchors' `serviceId`) now key on
+  `plates[i].id`, not `SERVICES[i].id` — identical for production, whose two
+  records share one order, and what lets a lab order its plates freely.
+- **The lab writes no `openPlateRef`** — its open state is a DOM evidence deck,
+  so the single-writer contract above still has two writers.
+- **The record is `lib/services-workstreams/`, built BY REFERENCE** from
+  `LOOP_INTELLIGENCE_MAP.works` (by `stream`, through `runModeOf`), `SURI_RUNS`
+  / `SURI_ITERATIONS` and `SAMAKO_PRODUCT_SHOTS` / `SAMAKO_AUTUMN_FILM`;
+  `tests/lib/services-workstreams.test.ts` pins every reference `toBe`.
+  ⚠ "Creative" is ON these faces, which ADR-111 bans on the production bake —
+  promotion is the decision that lifts or keeps it.
+- **Three faces differ in WHAT IS DRAWN** (`lib/services-workstreams/bake.ts`):
+  the run-mode LADDER, one worked RUN, the SPECIMEN (real output with its
+  verdicts).
+- **Verifying:** `node scripts/capture-services-workstreams.mjs` (headed; waits
+  on `data-stamp="face|theme|park"`, written only once a whole set of faces has
+  baked and the scroll has parked the card).
+
 ## The ring on phones (ADR-108, proposed)
 
 - **THREE READERS OF ONE STRING, AND THE FLAG IS THE OFF SWITCH.**

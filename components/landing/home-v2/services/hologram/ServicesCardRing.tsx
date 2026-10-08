@@ -94,7 +94,6 @@ import {
 } from "./ringCtaBox";
 
 import { SERVICE_PLATES, type LedeSegment, type ServicePlate } from "../servicePlateData";
-import { SERVICES } from "../serviceData";
 import { ABOUT_DECK_STAGE } from "../../unifiedServicesInstrument";
 import { rigPointerPitchRef, rigPointerYawRef } from "../../rigPointerYawRef";
 import { readThemeMode, type ThemeMode } from "@/lib/theme/themeModeRef";
@@ -2233,7 +2232,30 @@ export interface ServicesCardRingProps {
   figure?: CardFigure;
   /** The figure's ink — the face's, or Tensor Gold. Lab-only today. */
   figureInk?: CardFigureInk;
+  /**
+   * A lab's own FACE BAKE (2026-10-08, `/test/services-workstreams`): given,
+   * it replaces `bakeCardFace` for each card's face texture and the ring
+   * fetches no photograph and bakes no reveal twin. The canvas is
+   * `bakeSize(scale)` and draws in the 840×1360 bake space under
+   * `ctx.scale`, the same contract as every face. Pass a MODULE CONSTANT —
+   * the bake re-runs on its identity. Omitted, the bake is source-identical.
+   */
+  faceBaker?: CardFaceBaker;
+  /**
+   * Slots that carry NO card (2026-10-08, the workstreams lab: three cards on
+   * the four-slot ring). A hidden slot's master opacity is 0, so its group is
+   * invisible and it publishes no anchor; the ring math is untouched. Omitted,
+   * every slot shows — byte-identical.
+   */
+  hiddenSlots?: readonly number[];
 }
+
+/** A lab's face bake — see `ServicesCardRingProps.faceBaker`. */
+export type CardFaceBaker = (
+  plate: ServicePlate,
+  index: number,
+  opts: { pal: FacePalette; scale: number; theme: ThemeMode }
+) => Promise<HTMLCanvasElement>;
 
 /** One 1×1 canvas a released phone texture points at (ADR-123 C). */
 let blank: HTMLCanvasElement | null = null;
@@ -2286,6 +2308,8 @@ export function ServicesCardRing({
   plates = SERVICE_PLATES,
   figure = "off",
   figureInk = "ink",
+  faceBaker,
+  hiddenSlots,
 }: ServicesCardRingProps) {
   const mobileProfile = profile === "mobile";
   const bakeScale = mobileProfile ? BAKE_SCALE_MOBILE : 1;
@@ -2305,7 +2329,7 @@ export function ServicesCardRing({
      and keeps its rest bake. Every path below keys on this one const: the
      reveal bake, the material swap, the frame loop's write. Off, each is the
      shipped code verbatim. */
-  const revealOn = faceVariant === "raster-photo" && !mobileProfile;
+  const revealOn = faceVariant === "raster-photo" && !mobileProfile && !faceBaker;
   const anisotropyCap = mobileProfile ? 4 : 8;
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
@@ -3050,7 +3074,17 @@ export function ServicesCardRing({
     (async () => {
       await waitForCardFonts();
       const baked = await Promise.all(
-        plates.map(async (plate) => {
+        plates.map(async (plate, plateIdx) => {
+          if (faceBaker) {
+            return {
+              face: await faceBaker(plate, plateIdx, {
+                pal: facePal,
+                scale: bakeScale,
+                theme: ringTheme,
+              }),
+              reveal: null,
+            };
+          }
           let img: HTMLImageElement | null = null;
           // A drawn face never reaches the image, so it must never FETCH one —
           // the same discipline as the portrait back below ("flag-off never
@@ -3143,6 +3177,8 @@ export function ServicesCardRing({
     volumeOn,
     revealOn,
     bakeWanted,
+    faceBaker,
+    ringTheme,
   ]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
@@ -3679,7 +3715,7 @@ export function ServicesCardRing({
       const wantId = openPlateRef.current.serviceId;
       const lv = flipLevelRef.current;
       for (let i = 0; i < RING_COUNT; i++) {
-        const wanted = wantId === SERVICES[i].id;
+        const wanted = wantId === plates[i].id;
         if (wanted) flipWantIdx = i;
         /* ADR-115: the deck's engage SNAPS a turned card shut. `ServicesStage`
            closes it on the exit's first frame, but the damped level takes
@@ -3805,7 +3841,7 @@ export function ServicesCardRing({
          reaching for the drawer's CTA. Forcing it here fixes both channels at
          once, since both read `hovered`. */
       if (openDrawer && openPlateRef.current.serviceId) {
-        const openIdx = SERVICES.findIndex((s) => s.id === openPlateRef.current.serviceId);
+        const openIdx = plates.findIndex((s) => s.id === openPlateRef.current.serviceId);
         if (openIdx >= 0) hovered = openIdx;
       }
     }
@@ -3938,7 +3974,7 @@ export function ServicesCardRing({
         const wantOpen =
           !deckEngaged &&
           drawerTextures !== null &&
-          openPlateRef.current.serviceId === SERVICES[i].id;
+          openPlateRef.current.serviceId === plates[i].id;
         if (deckEngaged) drawerLevelRef.current[i] = 0;
         else {
           drawerLevelRef.current[i] +=
@@ -4122,8 +4158,13 @@ export function ServicesCardRing({
          desktop (`flipOpenIdx` stays −1 off `flipBack`). */
       const sideDim =
         flipOpenIdx >= 0 && i !== flipOpenIdx ? 1 - RING_MOBILE_OPEN_SIDE_DIM * flipOpenT : 1;
+      const slotOn = hiddenSlots?.includes(i) ? 0 : 1;
       const master =
-        (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0 * sideDim;
+        (env ? env.opacity : 1) *
+        (stack ? deckBgKill : exit.opacity) *
+        master0 *
+        sideDim *
+        slotOn;
       const opacity = depthO * master;
       /* ADR-050 rev 3 — ANTI-GHOST GUARD 2 of 2. The card's face never
          reaches alpha 1 (RING_OPACITY_RANGE tops out at 0.9), so a drawer
@@ -4383,7 +4424,7 @@ export function ServicesCardRing({
             }
           }
           anchors.push({
-            serviceId: SERVICES[i].id,
+            serviceId: plates[i].id,
             x: minX,
             y: minY,
             w: maxX - minX,

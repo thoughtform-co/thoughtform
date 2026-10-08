@@ -212,7 +212,28 @@ function phoneUntype(root: HTMLElement, stage: HTMLElement, typed: HTMLElement):
   };
 }
 
-export function ServicesMasthead() {
+/** The masthead's copy — production's `SERVICES_MASTHEAD` by default. */
+export interface ServicesMastheadCopy {
+  titleLines: readonly { readonly text: string; readonly em: boolean }[];
+  intro: string;
+  survey: {
+    titleDesig: string;
+    briefDesig: string;
+    state: string;
+    titleCoord: string;
+    briefCoord: string;
+  };
+}
+
+/**
+ * `copy` is a lab seam (2026-10-08, `/test/services-workstreams`): a lab can
+ * re-cut the section's title and intro on the real masthead. Omitted, the
+ * render is byte-identical. ⚠ Pass a MODULE CONSTANT — the decode effect
+ * re-arms on its identity.
+ */
+export function ServicesMasthead({
+  copy = SERVICES_MASTHEAD,
+}: { copy?: ServicesMastheadCopy } = {}) {
   const rootRef = useRef<HTMLElement | null>(null);
   const lineRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const typedRef = useRef<HTMLSpanElement | null>(null);
@@ -239,7 +260,7 @@ export function ServicesMasthead() {
     if (!enhanced) return;
 
     const targetSources: Array<{ el: HTMLSpanElement | null; text: string }> =
-      SERVICES_MASTHEAD.titleLines.map((line, i) => ({
+      copy.titleLines.map((line, i) => ({
         el: lineRefs.current[i] ?? null,
         text: line.text as string,
       }));
@@ -248,7 +269,7 @@ export function ServicesMasthead() {
     );
     if (targets.length === 0) return;
 
-    const paraText: string = SERVICES_MASTHEAD.intro;
+    const paraText: string = copy.intro;
     const jobs: ScrambleJob[] = [];
     let raf = 0;
     let state: "armed" | "typing" | "done" = "armed";
@@ -450,9 +471,9 @@ export function ServicesMasthead() {
       typed.textContent = paraText;
       root.removeAttribute("data-reveal");
     };
-  }, []);
+  }, [copy]);
 
-  const { survey } = SERVICES_MASTHEAD;
+  const { survey } = copy;
 
   return (
     <header className="services-masthead" ref={rootRef}>
@@ -473,9 +494,9 @@ export function ServicesMasthead() {
             visual characters decode. */}
         <h2
           className="services-masthead__title"
-          aria-label={SERVICES_MASTHEAD.titleLines.map((line) => line.text).join(" ")}
+          aria-label={copy.titleLines.map((line) => line.text).join(" ")}
         >
-          {SERVICES_MASTHEAD.titleLines.map((line, i) => (
+          {copy.titleLines.map((line, i) => (
             <span
               key={line.text}
               aria-hidden="true"
@@ -522,10 +543,10 @@ export function ServicesMasthead() {
         <span className="services-masthead__intro-cross is-br" aria-hidden="true" />
         <p className="services-masthead__intro-copy">
           <span className="services-masthead__intro-ghost" aria-hidden="true">
-            {SERVICES_MASTHEAD.intro}
+            {copy.intro}
           </span>
           <span className="services-masthead__intro-typed" ref={typedRef}>
-            {SERVICES_MASTHEAD.intro}
+            {copy.intro}
           </span>
         </p>
         <span className="services-masthead__coord services-masthead__coord--r" aria-hidden="true">

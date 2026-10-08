@@ -1468,3 +1468,100 @@ export function suriRuns(frame: SuriFrame): ArcSectionOf<"skill-run">[] {
     ...SURI_RUNS[which],
   }));
 }
+
+/**
+ * THE SEPT/OCT STATICS, ITERATED (2026-10-08, for the X-Bionic proposal):
+ * the review workstream, in the case grammar. From
+ * `suri-ai-studio/work/figma-variants/2026-10-07_sept-oct-core-iterations.md`
+ * and the route-two commit of 8 October: the design rubric read a set the
+ * head of design had sent back and named her three faults as its own
+ * checks; then the set was iterated on two routes.
+ *
+ * ⚠ THE SET THAT WAS SENT BACK IS NOT SHOWN. A freelancer's frame, returned,
+ * has no place on another brand's page; the shoot photo and the iterations
+ * stand for it. By role, never by name.
+ */
+const ITR = "/arcs/suri/iterations";
+
+export const SURI_ITERATIONS: ArcBreakdown = {
+  eyebrow: "Review · Suri · paid social iterations · 8 Oct 2026",
+  title: { pre: "The review", em: "before the review." },
+  sub: "Suri's approved and rejected ads were written down as a design rubric. Read on a set of statics the head of design had sent back, it named the same three faults she did, each with a measurement.",
+  page: {
+    src: `${ITR}/route-2-sheet.webp`,
+    alt: "Four Suri ads for the Core 1.0 toothbrush, each drawn whole by the model in its own layout, with the Good Housekeeping quote and the offer.",
+    label: "Route two · four layouts",
+    ratio: "scroll",
+  },
+  facts: [
+    { label: "The set", value: "26 concepts, 3 ratios" },
+    { label: "Routes", value: "Layered in Figma, or drawn whole" },
+    { label: "Wordmark exact", value: "6 of 8 draws" },
+    { label: "Words spelled right", value: "8 of 8 draws" },
+  ],
+  beats: [
+    {
+      id: "suri-it-read",
+      key: "The read",
+      title: { pre: "Her three notes,", em: "in the rubric's own words." },
+      line: "Each fault the head of design named was already a check, with a measurement behind it. So the fix for every concept follows from the reading, not from taste in the moment.",
+      rows: [
+        {
+          label: "Too much going on",
+          value: "Six groups and two frosted devices; the fix keeps five or fewer",
+        },
+        {
+          label: "No clear hierarchy",
+          value: "Four left edges within 52 px; the fix puts the copy on one",
+        },
+        {
+          label: "The product too low",
+          value: "The handle in the bottom band; the photo re-cropped 300 px up",
+        },
+      ],
+    },
+    {
+      id: "suri-it-routes",
+      key: "Two routes",
+      title: { pre: "Edit the photo,", em: "or draw the whole ad." },
+      line: "Route one keeps the shoot and edits only the ground, with the hand and the brush measured unchanged. Route two draws the whole ad from the photo and the wordmark, and is read against the same rubric.",
+      frames: [
+        {
+          src: `${ITR}/photo.webp`,
+          alt: "The shoot photo: a hand with a pink scrunchie holding the Core 1.0 on a green checked quilt.",
+          label: "The shoot, as delivered",
+          ratio: "9:16",
+        },
+        {
+          src: `${ITR}/route-1-ground.webp`,
+          alt: "The same photo with only the quilt behind the hand edited to a calm green.",
+          label: "Route one · only the ground edited",
+          ratio: "9:16",
+        },
+        {
+          src: `${ITR}/route-2-i2.webp`,
+          alt: "A whole ad drawn by the model: the toothbrush on its stand on green linen, the quote above it.",
+          label: "Route two · drawn whole",
+          ratio: "9:16",
+        },
+        {
+          src: `${ITR}/route-2-i4.webp`,
+          alt: "Another whole ad drawn by the model: the toothbrush lying on dark green linen in a shaft of light.",
+          label: "Route two · another layout",
+          ratio: "9:16",
+        },
+      ],
+    },
+    {
+      id: "suri-it-gate",
+      key: "The gate",
+      title: { pre: "Claude reads first.", em: "A person decides." },
+      line: "The rubric flags, the designer fixes, and nothing goes live without the head of design. The model's opinion is never the last one.",
+      rows: [
+        { label: "Reads first", value: "The design rubric, on every frame" },
+        { label: "Decides", value: "The head of design" },
+        { label: "Ships", value: "Only what a person approved, retyped in the brand font" },
+      ],
+    },
+  ],
+};

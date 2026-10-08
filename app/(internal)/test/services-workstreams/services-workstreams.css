@@ -1,0 +1,389 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/services-workstreams — the ring as workstreams, and its deck
+
+   A fork of the card-face lab's sheet, on a SCROLL RUNWAY instead of a fixed
+   frame: the stage pins for the runway's travel and the scroll turns the
+   ring, the way the homepage's own runway does.
+
+   Every colour is a ramp step off `--dawn-rgb` / `--void-deep-rgb` /
+   `--gold-line`, which ADR-058 SWAPS, so one rule paints both themes. PT Mono
+   is chrome, PP Neue Montreal is prose; tracking is a `--track-*` role.
+   Nothing here restyles a production class outside the `.svw` scope.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.svw {
+  position: relative;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  --svw-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --svw-green: var(--atreides-ink, #7a9e6a);
+
+  /* The rails are clip-uncovered by the hero's lift (ADR-031); we are parked
+     at #services, past the curtain, so the honest value is saturated. */
+  --hero-lift: 1;
+}
+
+.svw .gateway {
+  display: none;
+}
+
+/* ── The runway and its pinned stage ───────────────────────────────── */
+
+.svw-runway {
+  position: relative;
+  height: 520svh;
+}
+
+.svw-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.svw-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 100% at 42% 45%,
+    rgba(var(--void-deep-rgb), 0.6) 0%,
+    rgba(var(--void-deep-rgb), 1) 72%
+  );
+}
+
+.svw__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.svw__hud .hud {
+  pointer-events: none;
+}
+.svw__hud a {
+  pointer-events: auto;
+}
+
+/* `.stations`' content box (load-bearing: the masthead's columns resolve
+   `--rail-inset` against it — the card-face lab's own note). */
+.svw-stationbox {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 0 var(--hud-content-inset);
+  pointer-events: none;
+}
+
+/* ── The evidence deck ─────────────────────────────────────────────── */
+
+.svw-deck {
+  position: absolute;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 8px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  pointer-events: auto;
+}
+.svw-deck::-webkit-scrollbar {
+  display: none;
+}
+
+.svw-deck__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-xs, 4px);
+  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.14);
+}
+
+.svw-deck__kicker {
+  font-family: var(--svw-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.svw-deck__close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--gold-line) 45%, transparent);
+  background: transparent;
+  color: var(--gold-ink);
+  font-family: var(--svw-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.svw-deck__close:hover,
+.svw-deck__close:focus-visible {
+  border-color: var(--gold-line);
+}
+
+/* A FOLDER — the proof card's grammar (ADR-097): glass under a flat gold lip
+   on the lattice's clipped ring, the head a BAND, the children square. */
+.svw-folder {
+  --lat-ch: var(--lat-ch-card);
+  /* Denser than the proof card's .62: the deck sits over the side card, and
+     at .62 its type printed through the rows. */
+  --lat-frame-ground: rgba(var(--void-deep-rgb), 0.88);
+  flex: 0 0 auto;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: svw-aperture 560ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation-delay: calc(var(--svw-i, 0) * 90ms);
+}
+
+/* The aperture opens from a centre slit — pure motion, no opacity curve
+   (ADR-097 U12's photosensitivity ruling). */
+@keyframes svw-aperture {
+  from {
+    clip-path: polygon(50% 0, 50% 0, 50% 100%, 50% 100%);
+  }
+  to {
+    clip-path: var(--lat-cut);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svw-folder {
+    animation: none;
+  }
+}
+
+.svw-folder__band {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm, 8px);
+  padding: 10px var(--space-md, 16px) 9px;
+  padding-right: calc(var(--space-md, 16px) + var(--lat-ch-card));
+  background: color-mix(in srgb, var(--gold-line) 12%, transparent);
+}
+.svw-folder__band[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--gold-line) 20%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold-line) 28%, transparent);
+}
+.svw-folder__band:hover,
+.svw-folder__band:focus-visible {
+  background: color-mix(in srgb, var(--gold-line) 24%, transparent);
+  outline: none;
+}
+
+.svw-folder__client {
+  font-family: var(--svw-mono);
+  font-size: 12px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.svw-folder__count {
+  font-family: var(--svw-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.55);
+}
+
+.svw-folder__rows {
+  list-style: none;
+  margin: 0;
+  padding: 2px var(--space-md, 16px);
+}
+
+.svw-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-sm, 8px);
+  row-gap: 2px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.1);
+}
+.svw-row:first-child {
+  border-top: 0;
+}
+
+.svw-row__title {
+  font-size: 15px;
+  line-height: 1.3;
+  color: rgba(var(--dawn-rgb), 0.95);
+}
+
+.svw-row__mode {
+  align-self: start;
+  padding: 2px 6px;
+  font-family: var(--svw-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.7);
+  border: 1px solid rgba(var(--dawn-rgb), 0.2);
+}
+.svw-row[data-mode="agent"] .svw-row__mode {
+  color: var(--gold-ink);
+  border-color: color-mix(in srgb, var(--gold-line) 55%, transparent);
+}
+.svw-row[data-mode="hand"] .svw-row__mode {
+  color: var(--svw-green);
+  border-color: color-mix(in srgb, var(--svw-green) 55%, transparent);
+}
+
+.svw-row__meta,
+.svw-row__proof {
+  grid-column: 1 / -1;
+  font-family: var(--svw-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.55);
+}
+.svw-row__proof {
+  color: rgba(var(--dawn-rgb), 0.75);
+}
+
+.svw-folder__more {
+  margin: 0;
+  padding: 0 var(--space-md, 16px) 8px;
+  font-family: var(--svw-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+
+.svw-folder__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 var(--space-md, 16px);
+  border-top: 1px solid color-mix(in srgb, var(--gold-line) 28%, transparent);
+  font-family: var(--svw-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  text-decoration: none;
+}
+.svw-folder__link:hover,
+.svw-folder__link:focus-visible {
+  background: color-mix(in srgb, var(--gold-line) 10%, transparent);
+}
+
+/* The configuration's answers: key left, value right, one ruled readout. */
+.svw-answers {
+  margin: 0;
+  padding: 2px var(--space-md, 16px) 6px;
+}
+.svw-answer {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: var(--space-sm, 8px);
+  padding: 7px 0;
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.1);
+}
+.svw-answer:first-child {
+  border-top: 0;
+}
+.svw-answer dt {
+  font-family: var(--svw-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.55);
+  padding-top: 2px;
+}
+.svw-answer dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: right;
+  color: rgba(var(--dawn-rgb), 0.92);
+}
+.svw-answer[data-lit] dd {
+  color: var(--gold-ink);
+}
+.svw-answer[data-human] dd,
+.svw-answer[data-human] dt {
+  color: var(--svw-green);
+}
+
+/* ── Lab console ───────────────────────────────────────────────────── */
+
+.svw-console {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 8px);
+  width: min(460px, calc(100vw - 32px));
+  padding: 12px;
+  background: rgba(var(--void-deep-rgb), 0.82);
+  border: 1px solid rgba(var(--dawn-rgb), 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.svw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.svw-chip {
+  min-height: 32px;
+  padding: 0 10px;
+  font-family: var(--svw-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.75);
+  background: transparent;
+  border: 1px solid rgba(var(--dawn-rgb), 0.22);
+  cursor: pointer;
+}
+.svw-chip--sm {
+  min-height: 28px;
+  font-size: 10px;
+}
+.svw-chip[data-on] {
+  color: var(--gold-contrast, #110f09);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.svw-chip:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+
+.svw-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+
+.svw-console[hidden] {
+  display: none;
+}
+.svw-console-pin {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 40;
+  background: rgba(var(--void-deep-rgb), 0.82);
+}
