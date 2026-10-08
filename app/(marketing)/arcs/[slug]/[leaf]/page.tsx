@@ -41,6 +41,8 @@ import "@/components/arcs/guide.css";
 // matching rule. After arcs.css, before theme.css.
 import "@/components/lattice/lattice.css";
 import "@/components/instrument/instrument.css";
+// The leverage and the handoff (ADR-153), `.arc-lev*` / `.arc-hand*`-scoped.
+import "@/components/arcs/leverage.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

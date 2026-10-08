@@ -1376,7 +1376,96 @@ export type ArcSection = ArcSectionBase &
         focus?: PartId;
         picker?: readonly Altitude[];
       }
+    | {
+        /**
+         * THE LEVERAGE (ADR-153): how intelligence should take part in the
+         * work, for a reader with ten seconds (owner, 2026-10-08, of the
+         * configuration on a board's page: "I don't know what people should
+         * be looking at"). Tensorlake's split: ONE wide cell holds the idea
+         * (three plates, two shared and dimmed, one owned and lit), a 2×2
+         * holds where it applies (one glyph, one label, one line each).
+         *
+         * ⚠ THE TWENTY-EIGHTH ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-lev-*`. Exactly three plates and four uses: the tuples
+         * say so, because a fifth tile is the clutter this kind replaces.
+         */
+        kind: "leverage";
+        head: ArcHead;
+        /** Top to bottom: the owned plate first, then what everyone shares. */
+        stack: readonly [ArcLeveragePlate, ArcLeveragePlate, ArcLeveragePlate];
+        /** Under the stack: a mono label and one sentence. */
+        note: { label: string; line: string };
+        /** The 2×2, under one mono label. */
+        uses: {
+          label: string;
+          items: readonly [ArcLeverageUse, ArcLeverageUse, ArcLeverageUse, ArcLeverageUse];
+        };
+      }
+    | {
+        /**
+         * THE HANDOFF (ADR-153): automation runs through adoption, as three
+         * panels in a row with the hinge lit (Cyberpunk's chooser: one object
+         * in focus, its siblings quiet), then where the team's time goes,
+         * today and configured, as two bars that letter no figure.
+         *
+         * ⚠ THE TWENTY-NINTH ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-hand-*`. Exactly three steps and two rows.
+         */
+        kind: "handoff";
+        head: ArcHead;
+        steps: readonly [ArcHandoffStep, ArcHandoffStep, ArcHandoffStep];
+        time: {
+          label: string;
+          /** A mono aside on the bars, e.g. "Illustrative". */
+          note: string;
+          rows: readonly [ArcHandoffRow, ArcHandoffRow];
+        };
+      }
   );
+
+/* ── The leverage and the handoff (ADR-153) ─────────────────────── */
+
+export interface ArcLeveragePlate {
+  id: string;
+  /** Mono, e.g. "Your layer". ≤ 24. */
+  label: string;
+  /** What it is, one line. ≤ 48. */
+  line: string;
+  /** The chip at the plate's right edge, e.g. "Only yours". ≤ 20. */
+  chip: string;
+  /** The one plate that is lit: the team's own. */
+  own?: true;
+}
+
+export interface ArcLeverageUse {
+  id: string;
+  /** The drawing above the label. */
+  glyph: "brief" | "frame" | "flow" | "check";
+  /** Mono, e.g. "Strategy". ≤ 16. */
+  label: string;
+  /** One line. ≤ 60. */
+  line: string;
+}
+
+export interface ArcHandoffStep {
+  id: string;
+  /** Mono verb, e.g. "Adopt". ≤ 16. */
+  label: string;
+  /** The step as a short sentence. ≤ 48. */
+  title: string;
+  /** Who does it. ≤ 28. */
+  who: string;
+  /** The hinge: the one panel in focus. */
+  lit?: true;
+}
+
+export interface ArcHandoffRow {
+  /** Mono, e.g. "Today". */
+  label: string;
+  /** Left to right; each `share` is a fraction of the bar, summing to 1. The
+   *  bar letters the names, never the fractions. */
+  segments: readonly { label: string; share: number; lit?: true }[];
+}
 
 /* ── The setup guide (ADR-151 U1, the system of U5) ────────────────
    Every figure is a PANEL: a hairline frame with its label set into the top

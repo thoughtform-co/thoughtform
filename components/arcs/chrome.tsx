@@ -96,6 +96,9 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   guide: "GUIDE",
   /* ADR-154: one record at five altitudes. */
   instrument: "INS",
+  /* ADR-153. */
+  leverage: "LEVERAGE",
+  handoff: "HANDOFF",
 };
 
 /**

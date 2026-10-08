@@ -1,0 +1,349 @@
+/* The leverage and the handoff (ADR-153).
+   Scoped to `.arc-lev*` and `.arc-hand*`: an arc without either beat gets
+   bytes and no matching rule. Reads the arcs' and the lattice's tokens only
+   (`.arc-root` re-derives them for light), so it carries no theme branch.
+
+   THE BRIEF (owner, 2026-10-08): a board reads it in ten seconds. So: one
+   idea per beat, every element in its own cell with air around it, hairline
+   frames and no shadows, mono for labels and sans for sentences, gold on the
+   one thing that matters and nowhere else. Spacing is the lattice's roles and
+   the --space ladder; type is the --type ladder. */
+
+.arc-lev,
+.arc-hand {
+  --lv-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --lv-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --lv-gold-text: var(--gold-ink, var(--gold));
+  --lv-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  margin-top: var(--lat-gap-block);
+  font-family: var(--lv-sans);
+  color: var(--arc-ink);
+}
+:where(.arc-lev, .arc-hand) :where(p, ol, ul) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Shared: a mono label and a sentence. */
+.arc-lev__label,
+.arc-lev__uses-label,
+.arc-lev__plate-label,
+.arc-lev__chip,
+.arc-hand__step-label,
+.arc-hand__step-who,
+.arc-hand__time-label,
+.arc-hand__time-note,
+.arc-hand__row-label,
+.arc-hand__seg-name {
+  font-family: var(--lv-mono);
+  font-size: var(--type-sm);
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.arc-lev__line {
+  margin-top: var(--space-sm);
+  font-size: var(--type-md);
+  line-height: 1.5;
+  color: var(--arc-ink-60);
+  max-width: 36ch;
+}
+
+/* ── The leverage: one wide cell, one 2×2 ──────────────────────────── */
+
+.arc-lev {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  border: 1px solid var(--arc-rule);
+}
+.arc-lev__idea {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3xl);
+  padding: var(--space-3xl) var(--lat-pad-cell);
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-lev__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.arc-lev__plate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label chip"
+    "line  chip";
+  align-items: center;
+  column-gap: var(--space-md);
+  row-gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--arc-rule);
+  color: var(--arc-ink-50);
+}
+.arc-lev__plate-label {
+  grid-area: label;
+}
+.arc-lev__plate-line {
+  grid-area: line;
+  font-size: var(--type-base);
+  line-height: 1.4;
+}
+.arc-lev__chip {
+  grid-area: chip;
+  font-size: var(--type-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--arc-rule);
+}
+/* The owned plate: the one lit thing on the beat. */
+.arc-lev__plate[data-lev-own] {
+  padding-block: var(--space-lg);
+  border-color: var(--lv-gold-line);
+  background: var(--arc-gold-wash);
+  color: var(--arc-ink);
+}
+.arc-lev__plate[data-lev-own] .arc-lev__plate-label,
+.arc-lev__plate[data-lev-own] .arc-lev__chip {
+  color: var(--lv-gold-text);
+  border-color: var(--lv-gold-line);
+}
+.arc-lev__plate[data-lev-own] .arc-lev__plate-line {
+  font-size: var(--type-lg);
+}
+.arc-lev__note .arc-lev__label {
+  color: var(--lv-gold-text);
+}
+.arc-lev__note .arc-lev__line {
+  color: var(--arc-ink-80);
+  font-size: var(--type-lg);
+}
+
+.arc-lev__uses {
+  display: flex;
+  flex-direction: column;
+}
+.arc-lev__uses-label {
+  padding: var(--space-md) var(--lat-pad-cell);
+  border-bottom: 1px solid var(--arc-rule);
+  color: var(--arc-ink-60);
+}
+.arc-lev__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.arc-lev__cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+  padding: var(--space-2xl) var(--lat-pad-cell);
+}
+.arc-lev__cell:nth-child(odd) {
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-lev__cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-lev__cell .arc-lev__label {
+  margin-top: var(--space-xl);
+}
+.arc-lev__glyph {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  overflow: visible;
+}
+.arc-lev__glyph-grid line {
+  stroke: var(--arc-rule);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-lev__glyph-ink {
+  fill: none;
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-lev__glyph-act {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-lev__glyph-dash {
+  stroke-dasharray: 3 3;
+}
+.arc-lev__glyph-dot {
+  fill: var(--gold);
+}
+
+/* ── The handoff: three panels, then the time ─────────────────────── */
+
+.arc-hand__steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--lat-pad-cell);
+  align-items: center;
+}
+.arc-hand__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: 240px;
+  padding: var(--space-xl) var(--lat-pad-cell);
+  border: 1px solid var(--arc-rule);
+  color: var(--arc-ink-60);
+}
+/* The rule between two panels: a dash across the gap, never under a panel. */
+.arc-hand__step + .arc-hand__step::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: var(--lat-pad-cell);
+  border-top: 1px dashed var(--arc-seam);
+}
+.arc-hand__step-label {
+  display: flex;
+  gap: var(--space-md);
+  color: var(--arc-ink-50);
+}
+.arc-hand__step-n {
+  color: var(--arc-ink-40);
+}
+.arc-hand__step-title {
+  font-size: var(--type-xl);
+  line-height: 1.3;
+  color: var(--arc-ink-80);
+}
+.arc-hand__step-who {
+  margin-top: auto;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--arc-rule);
+  color: var(--arc-ink-50);
+}
+/* The hinge: in focus, its siblings quiet. */
+.arc-hand__step[data-hand-lit] {
+  min-height: 300px;
+  border-color: var(--lv-gold-line);
+  background: var(--arc-gold-wash);
+}
+.arc-hand__step[data-hand-lit] .arc-hand__step-label,
+.arc-hand__step[data-hand-lit] .arc-hand__step-n {
+  color: var(--lv-gold-text);
+}
+.arc-hand__step[data-hand-lit] .arc-hand__step-title {
+  font-size: var(--type-2xl);
+  color: var(--arc-ink);
+}
+.arc-hand__step[data-hand-lit] .arc-hand__step-who {
+  color: var(--arc-ink-80);
+  border-color: var(--lv-gold-line);
+}
+
+.arc-hand__time {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-top: var(--space-4xl);
+}
+.arc-hand__time-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+.arc-hand__time-label {
+  color: var(--arc-ink-80);
+}
+.arc-hand__time-note {
+  font-size: var(--type-xs);
+  color: var(--arc-ink-40);
+}
+.arc-hand__row {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-lg);
+}
+.arc-hand__row-label {
+  color: var(--arc-ink-60);
+}
+.arc-hand__bar {
+  display: flex;
+  min-height: 64px;
+  border: 1px solid var(--arc-rule);
+}
+.arc-hand__seg {
+  flex-basis: 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-inline: var(--space-md);
+  background: var(--lat-recess, rgba(235, 227, 214, 0.035));
+  color: var(--arc-ink-50);
+}
+.arc-hand__seg + .arc-hand__seg {
+  border-left: 1px solid var(--arc-rule);
+}
+.arc-hand__seg[data-hand-lit] {
+  background: var(--arc-gold-wash);
+  color: var(--lv-gold-text);
+}
+.arc-hand__seg-name {
+  font-size: var(--type-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── The phone ─────────────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .arc-lev {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-lev__idea {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+    padding-block: var(--space-2xl);
+  }
+  .arc-hand__steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-md);
+  }
+  .arc-hand__step + .arc-hand__step::before {
+    top: auto;
+    right: auto;
+    bottom: 100%;
+    left: var(--space-xl);
+    width: 0;
+    height: var(--space-md);
+    border-top: 0;
+    border-left: 1px dashed var(--arc-seam);
+  }
+  .arc-hand__step,
+  .arc-hand__step[data-hand-lit] {
+    min-height: 0;
+  }
+  .arc-hand__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
+}
+@media (max-width: 640px) {
+  .arc-lev__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-lev__cell:nth-child(odd) {
+    border-right: 0;
+  }
+  .arc-lev__cell:not(:last-child) {
+    border-bottom: 1px solid var(--arc-rule);
+  }
+}

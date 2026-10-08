@@ -40,6 +40,8 @@ import "@/components/arcs/guide.css";
 // matching rule. After arcs.css, before theme.css.
 import "@/components/lattice/lattice.css";
 import "@/components/instrument/instrument.css";
+// The leverage and the handoff (ADR-153), `.arc-lev*` / `.arc-hand*`-scoped.
+import "@/components/arcs/leverage.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
 import "@/components/sheet/sheet.css";

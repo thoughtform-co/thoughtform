@@ -93,121 +93,126 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: { ...VINCE_ABOUT.head, eyebrow: "Thoughtform · who I am" },
     },
 
-    /* ── How I see it ────────────────────────────────────────────────────
-       THE VISION WITHOUT THE CORRIDOR, as one instrument (owner,
-       2026-10-08: merge the configuration and the four disciplines). The
-       layer is the same for every tile; picking a discipline lights the rows
-       it reads. No digit belongs in it (the kind's own law). */
+    /* ── How I see it (ADR-153) ────────────────────────────────────────
+       Rebuilt for a board (owner, 2026-10-08: "I don't know what people
+       should be looking at"). One idea per beat: first where the leverage is
+       (the layer only X-Bionic can write) and the four places it applies,
+       then how it gets written (adoption) and what it frees (the time). */
     {
       id: "vision",
-      kind: "configuration",
+      kind: "leverage",
       menuLabel: "How I see it",
       menuPrimary: true,
-      ariaLabel: "How intelligence takes part in X-Bionic's creative work",
       head: {
         eyebrow: "Thoughtform · how I see it",
         title: { pre: "How intelligence should", em: "take part in the work." },
-        sub: "Everyone has the same models, the same Claude and the same data. What differs is the layer your team writes: how the work is done and what good looks like. Creative technology is more than ads, so pick a discipline.",
+        sub: "Every company can buy the same models. The difference is the layer your team writes down: how the work is done, and what good looks like.",
       },
-      owner: "Owned by X-Bionic",
-      layer: [
-        { id: "skills", tag: "Skills", name: "how your team does the work" },
-        { id: "evals", tag: "Evals", name: "what good looks like, written down" },
-        { id: "context", tag: "Context", name: "the products, the brand, the voice" },
-        { id: "data", tag: "Data", name: "what it can read: the shop, the ads, analytics" },
+      stack: [
+        {
+          id: "layer",
+          label: "Your layer",
+          line: "Skills and evals your team writes",
+          chip: "Only yours",
+          own: true,
+        },
+        {
+          id: "claude",
+          label: "Claude Enterprise",
+          line: "Already running at X-Bionic",
+          chip: "Already there",
+        },
+        {
+          id: "models",
+          label: "The models",
+          line: "The same for every company",
+          chip: "Everyone",
+        },
       ],
-      seam: {
-        adoption: "Your team learns on its own work and writes down how it is done.",
-        automation: "Claude runs on what they wrote, in the tools you already use.",
+      note: {
+        label: "Where the leverage is",
+        line: "The models keep improving for everyone. Your layer is what makes them work like X-Bionic.",
       },
-      teams: [
-        {
-          id: "strategy",
-          name: "Strategy",
-          work: "the brief, the angle, the variants",
-          layers: ["skills", "context", "data"],
-          owner: "The paid social lead",
-          runs: "The briefing skill",
-          bar: "Every ad has an audience, a reason and a declared variant",
-          reach: "The campaigns, the product facts, the ad results",
-          where: "Claude, where the brief is written",
-        },
-        {
-          id: "production",
-          name: "Production",
-          work: "product imagery, motion and copy",
-          layers: ["skills", "evals", "context"],
-          owner: "The creative lead, the last gate",
-          runs: "The imagery and product voice skills",
-          bar: "The product shown right: its form, its fit, its materials",
-          reach: "The packshots, the yarns, the copywriter's own work",
-          where: "Claude, with image generation and Figma",
-        },
-        {
-          id: "ops",
-          name: "Ops",
-          work: "intake, naming and the launch",
-          layers: ["skills", "data"],
-          owner: "The digital team",
-          runs: "The intake and naming skills",
-          bar: "Every ad briefed, named and filed before it goes live",
-          reach: "The brief, the ad accounts, the shop",
-          where: "Claude, connected to your board and the ad accounts",
-        },
-        {
-          id: "review",
-          name: "Review",
-          work: "the read before a person looks",
-          layers: ["evals", "context"],
-          owner: "The product designer",
-          runs: "The review skill and its evals",
-          bar: "Proportions, colour and claims checked against the real product",
-          reach: "Approved work, and work that was sent back",
-          where: "Claude, beside Figma",
-        },
-      ],
-      next: { name: "[Next team]", work: "the next discipline" },
-      kickers: [
-        "The same models as everyone",
-        "Your layer is the difference",
-        "Owned by your team",
-      ],
+      uses: {
+        label: "One layer, four disciplines",
+        items: [
+          {
+            id: "strategy",
+            glyph: "brief",
+            label: "Strategy",
+            line: "Briefs with an audience, a reason and variants",
+          },
+          {
+            id: "production",
+            glyph: "frame",
+            label: "Production",
+            line: "Product imagery, motion and copy, at volume",
+          },
+          {
+            id: "ops",
+            glyph: "flow",
+            label: "Ops",
+            line: "Every ad briefed, named and filed before launch",
+          },
+          {
+            id: "review",
+            glyph: "check",
+            label: "Review",
+            line: "Checked against the real product first",
+          },
+        ],
+      },
     },
     {
-      /* AUTOMATION RUNS THROUGH ADOPTION: Pandora's horizon, re-lettered.
-         The owner of the top track is the creative and digital team; what
-         it keeps upstream is the idea, the brief and the campaign. */
       id: "adoption",
-      kind: "horizon",
+      kind: "handoff",
       menuLabel: "The approach",
       head: {
         eyebrow: "Thoughtform · the approach",
         title: { pre: "Automation runs", em: "through adoption." },
-        sub: "Your team learns to work with the Claude it already has and writes down how the work is done. Claude takes the repetitive part from there and checks in when it needs a person, so the team's time goes to the idea and the campaign.",
+        sub: "Claude can only run what your team has written down. So the team learns first, and the time it gets back goes to the ideas.",
       },
-      owner: {
-        key: "The owner",
-        name: "Your creative and digital team",
+      steps: [
+        {
+          id: "adopt",
+          label: "Adopt",
+          title: "Your team learns on its own work",
+          who: "Your team",
+        },
+        {
+          id: "encode",
+          label: "Write it down",
+          title: "How the work is done, and what good looks like",
+          who: "Your team, with me",
+          lit: true,
+        },
+        {
+          id: "automate",
+          label: "Automate",
+          title: "Claude runs it, and asks when unsure",
+          who: "Claude, checked by your team",
+        },
+      ],
+      time: {
+        label: "Where your team's time goes",
+        note: "Illustrative",
         rows: [
-          { tag: "Writes", line: "How the work is done" },
-          { tag: "Sets", line: "What a good ad looks like" },
-          { tag: "Decides", line: "What goes live" },
+          {
+            label: "Today",
+            segments: [
+              { label: "Making and resizing", share: 0.55 },
+              { label: "Admin", share: 0.25 },
+              { label: "Ideas", share: 0.2, lit: true },
+            ],
+          },
+          {
+            label: "Configured",
+            segments: [
+              { label: "Checking", share: 0.2 },
+              { label: "Ideas, briefs and campaigns", share: 0.8, lit: true },
+            ],
+          },
         ],
-      },
-      upstream: {
-        label: "Your team, upstream",
-        spans: ["The idea", "The brief", "The campaign"],
-        line: "The idea, the brief and the campaign, with Claude checking in once.",
-      },
-      agent: {
-        label: "Claude, on the rest",
-        start: "You set the goal and the checks",
-        gates: [
-          { kind: "check", at: 0.18, label: "Checks its own work" },
-          { kind: "retry", at: 0.5, label: "Steps back and retries" },
-          { kind: "ask", at: 0.72, label: "Checks in with you" },
-        ],
-        end: "You judge the result",
       },
     },
 
