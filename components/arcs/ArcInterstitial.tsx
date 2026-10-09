@@ -13,7 +13,8 @@ import { arcTitleText } from "./chrome";
  * is upright gold (`em`) — the Shards italics never port.
  *
  * `chapter` (ADR-153) is the same beat for a board's page: a band the
- * height of its content, set left, a part ruler above the line.
+ * height of its content, set left, a part ruler above the line and, when
+ * the part has one, its index under it (U1).
  *
  * Terminal: a pure decode beat — one panel, no travel. The QUOTE variant
  * TYPES rather than scrambles: the glyph pool is mono caps, so sentence
@@ -76,6 +77,25 @@ export function ArcInterstitial({
         />
         {section.subline ? (
           <ArcTypeCopy text={section.subline} motion={motion} className="arc-inter__subline" />
+        ) : null}
+        {/* The part's index (ADR-153 U1): its beats as Linear's
+            mono-numbered columns, each a link down the page. */}
+        {section.index ? (
+          <nav
+            className="arc-inter__index"
+            aria-label={`In this part: ${arcTitleText(section.line)}`}
+          >
+            <ol>
+              {section.index.map((row) => (
+                <li key={row.href}>
+                  <a href={row.href}>
+                    <span className="arc-inter__index-n">{row.n}</span>
+                    {row.label}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
         ) : null}
         {section.attribution ? (
           <p className="arc-inter__attribution">

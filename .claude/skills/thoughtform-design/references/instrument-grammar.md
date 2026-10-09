@@ -67,7 +67,7 @@ One instrument, five altitudes. What is the housing at one altitude is the chip 
 
 | altitude | the chip | lit (gold) | green | what the six are |
 |---|---|---|---|---|
-| **org** | the OS (the plugin, as the organisation sees it), its workstreams listed | the parts the workstream writes | the owner | the model, the data, the interface shared along the top; the context, the evaluations, the owner per workstream below |
+| **org** | the OS (the plugin, as the organisation sees it), its name and line only | the workstream the work starts with, and the layer slab, owned, when the context or the evaluations is lit | the owner | an exploded stack (ADR-154 U4): the workstreams as tiles on top, one per discipline, the owner by role on each; the layer the team writes as one slab (the context, the evaluations); the organisation's slab under it (the model, the data, the interface); the six as callouts either side, no frame |
 | **plugin** | the skill that reads the others — the **mother** | the skills, the evals (the **father** sorts every remark beside them) | the owner plate | folders: the skills, the evals, the connectors, the owner; the account above (sets the model), the interfaces on the bar |
 | **work** | the piece of work | the context, the evaluations | the owner | six plates, three a side, ribbons to the card |
 | **run** | the ask | station 5, you decide | the decider | 1 you ask (interface) · 2 Claude picks the skill (model) · 3 it follows the steps (context) · 4 it checks itself (evals) · 5 you decide (owner); the tools (data) under 3 |

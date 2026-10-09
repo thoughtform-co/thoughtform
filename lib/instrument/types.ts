@@ -116,7 +116,11 @@ export interface InstrumentPlugin {
 
 export interface InstrumentWorkstream {
   id: string;
+  /** The discipline it belongs to, a mono label ≤ 12 (ADR-154 U4), e.g.
+   *  "Production". Absent, the tile draws its name alone. */
+  bucket?: string;
   name: string;
+  /** Who runs it, by role. */
   line?: string;
   /** Which parts this workstream writes itself; absent, it reads the plugin's. */
   lit?: readonly PartId[];

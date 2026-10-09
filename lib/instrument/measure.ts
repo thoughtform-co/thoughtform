@@ -42,7 +42,8 @@ export interface InsReport {
   ok: boolean;
 }
 
-const BOX_SELECTOR = ".ins-panel, .ins-chip, .ins-pin, .ins-station, .ins-node, .ins-label";
+const BOX_SELECTOR =
+  ".ins-panel, .ins-chip, .ins-pin, .ins-station, .ins-node, .ins-label, .ins-tile";
 
 function rectOf(el: Element) {
   const r = el.getBoundingClientRect();

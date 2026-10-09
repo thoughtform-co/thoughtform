@@ -86,3 +86,48 @@ index rides a cell's corner; the fixed `min-height`s go. Every beat is whole at 
 1470 × 800, 1470 × 830 and 1710 × 980, with no horizontal scroll and no text of these beats under
 10px (`--type-xs` raised to `--type-sm`).
 
+
+## Update 1 (2026-10-09, owner): the page as one argument, read top to bottom
+
+The owner's brief of 9 October, on the whole page: it read as a run of unrelated sections ("The
+team today, and configured" and "One plugin, in the Claude you run" felt random, the second a
+regression from the vision), the other brands' cases looked chaotic, the titles read as slogans,
+and the screen was not used to its height. The order he asked for: who I am, my approach, the
+proof, then what X-Bionic actually gets. Not a copy of the vision's console ("every section looks
+the same" is the gripe), but consistent and modular.
+
+1. **One argument in three parts.** About, then my approach (the vision, then how adoption and
+   automation connect), then proof from Loop, proof from two other brands, and the offer (the
+   engine, the two weeks, who takes part, the fee), then the close. Three chapter bands carry it,
+   each with an `index` of its beats: three to five rows, Linear's mono-numbered columns, each a
+   link down its own part (registry-guarded: the link lands after the band and before the next
+   chapter).
+2. **One template for every client job: `kind: "job"`**, the thirty-second enumerated exception
+   (`ArcJob`; its classes are `.arc-case__*` because `.arc-job__*` is the breakdown's, its
+   attributes `data-job-*`). One job a screen, in the leverage's console: a strip (`JOB 0N`, the
+   job's name, and the bucket as the one lit object, with the glyph the vision's 2×2 gives it),
+   Tensorlake's sandwich under it (the spec: the ask, what Claude did, the gate, a person by role
+   with the person's green diamond; the figure on the dot ground with corner ticks and "Fig. 0N":
+   a silent loop, a kept and a sent-back still, or a ledger; three measured cells), and a readout
+   foot (the client, where it ran, the date). Four jobs, one per bucket and two per client
+   (Samako: strategy and review; Suri: production and ops), so the vision's four disciplines, the
+   jobs' buckets and the engine's four workstreams (ADR-154 U4) are one vocabulary drawn three
+   times. The media are sized from their frame, a size container, never from their own pixels.
+3. **The switch and the board leave this page.** The worked switch hid three of four cases behind
+   a bar; `today` set the team as it runs against a column with nothing to show. The `board`,
+   `breakdown` and `circuit` kinds stay for the pages that draw them.
+4. **Plain titles and less text.** "A creative engine for X-Bionic.", "How adoption and
+   automation connect.", "The two weeks.", "Who takes part.", "The fee."; the vision's note says
+   what my approach adds; the About is two paragraphs, a page override of the homepage's record.
+5. **Every number as filed**, read 9 October from the client repositories and the briefing
+   skill's handover. Two planned figures had no filing and were dropped: a with-and-without result
+   for the briefing skill, and the blind read's fixture, which the record still lists as open. The
+   reviewer's 14 of 15 on Samako's wave 11 is filed since 8 October, so ADR-152 §3's "the record
+   never totals it" is superseded.
+6. **The screen used to its height**: the page takes `rhythm: "fill"` (ADR-128 U3), and the job
+   opts in to the remainder.
+
+⚠ **A did-line is one line (≤ 44).** At two-line wraps the spec column ran the jobs 40 to 63px past
+the fold at 1470 × 830. Measured headless after the cut: each job 830 tall at 1470 × 830, its
+figure 490, its content ending at 780; at 1440 × 790 the content ends at 760; no horizontal scroll
+at 375 wide, where the job reads as one column and its cells stack.

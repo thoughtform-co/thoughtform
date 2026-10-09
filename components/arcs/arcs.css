@@ -4844,6 +4844,67 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   }
 }
 
+/* ── THE FILL RHYTHM: LINEAR'S DATUM, ONE SCREEN (ADR-128 U3) ─────────────
+   Owner, 2026-10-09, on the X-Bionic page: "move items a bit up and down so
+   we use the full space". Flow seats the head where Linear does but leaves
+   the beat as tall as its content, so a beat whose figure is shorter than
+   the screen shows the next beat's head under it, and one that is taller
+   runs past the fold. Fill keeps the 128px datum and makes the beat one
+   screen: the band is ADR-080 U3's remainder recipe (the head's row, then
+   `minmax(0, 1fr)`), and the figure takes that remainder. A figure that
+   opts in (the consoles, the job, the instrument at the organisation)
+   fills it up to `--arc-fill-cap`, so a tall display centres rather than
+   bloats; every other figure is centred in it, so no beat pools its slack
+   at the floor.
+   ⚠ `min-height`, never `height`: the figure must still grow past one
+   screen if its content demands it (a phone, a long list) rather than clip.
+   ⚠ (0,5,0) with the curtain's `align-content: center` at (0,4,0): the
+   stretch wins on the first beat after the hero too.
+   ⚠ TWO BANDS (the portrait): its figure is a second `.arc-band`, so the
+   section's rows are the head band, content-sized, then the second band,
+   which takes the slack and centres. `stretch` only grows `auto` tracks.
+   ⚠ Gated like flow: below 961px or under PRM the format releases
+   `min-height` and the page reads as a document. */
+.arc-root[data-arc-rhythm="fill"] {
+  --arc-head-datum: 128px;
+  --arc-fill-cap: 880px;
+}
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .arc-root[data-arc-rhythm="fill"] .arc-sec:has(> .arc-band > .arc-head) {
+    align-content: stretch;
+    padding-block: var(--arc-head-datum) var(--lat-sec-pad);
+  }
+  .arc-root[data-arc-rhythm="fill"] .arc-sec > .arc-band:has(> .arc-head + *) {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+    min-height: 0;
+  }
+  .arc-root[data-arc-rhythm="fill"] .arc-sec > .arc-band > .arc-head + * {
+    align-self: center;
+    min-height: 0;
+  }
+  .arc-root[data-arc-rhythm="fill"]
+    .arc-sec:has(> .arc-band > .arc-head):has(> .arc-band + .arc-band) {
+    grid-template-rows: max-content auto;
+  }
+  .arc-root[data-arc-rhythm="fill"] .arc-sec:has(> .arc-band > .arc-head) > .arc-band + .arc-band {
+    align-self: center;
+  }
+  .arc-root[data-arc-rhythm="fill"]
+    :is(.arc-sec--leverage, .arc-sec--handoff, .arc-sec--terms, .arc-sec--job)
+    > .arc-band
+    > .arc-head
+    + *,
+  .arc-root[data-arc-rhythm="fill"]
+    .arc-sec--instrument
+    > .arc-band
+    > .arc-head
+    + .arc-instrument:has(> .ins[data-altitude="org"]) {
+    min-height: min(100%, var(--arc-fill-cap));
+  }
+}
+
 /* ── THE PROPOSAL HEAD IS TWO EQUAL COLUMNS (ADR-099 U2) ────────────────
    Linear's header grammar, measured off its own sheet: `1fr 1fr`, the
    paragraph LEFT-ANCHORED at its column's start and the column filling its
@@ -6699,6 +6760,13 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 .arc-sec--instrument .arc-instrument .ins[data-altitude="work"] {
   width: min(100%, calc((100svh - 290px) * 2));
   margin-inline: auto;
+}
+/* ADR-154 U4: at the organisation altitude the housing is a column whose
+   rows take the beat's remainder under the fill rhythm (ADR-128 U3); the
+   wrapper is a one-row grid so the housing stretches to it. */
+.arc-sec--instrument .arc-instrument:has(> .ins[data-altitude="org"]) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
 }
 /* ⚠ THE READOUT IS THE FIRST BEAT, AND THE CURTAIN SEATS THE FIRST BEAT ON
    `--arc-stage-pad`, not on the beat token (ADR-076: the held band and the

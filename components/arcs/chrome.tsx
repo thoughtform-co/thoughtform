@@ -100,6 +100,8 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   leverage: "LEVERAGE",
   handoff: "HANDOFF",
   terms: "TERMS",
+  /* ADR-153 U1: one client job on one screen. */
+  job: "JOB",
 };
 
 /**

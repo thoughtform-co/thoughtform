@@ -1472,12 +1472,12 @@ export const EVERY_WORD_STAYS: ArcBreakdown = {
 };
 
 /**
- * THE SEPT/OCT STATICS, ITERATED (2026-10-08, for the X-Bionic proposal):
- * the review workstream, in the case grammar. From
+ * THE SEPT/OCT STATICS, ITERATED (2026-10-08, read by the services
+ * workstreams): the review workstream, in the case grammar. From
  * `suri-ai-studio/work/figma-variants/2026-10-07_sept-oct-core-iterations.md`
  * and the route-two commit of 8 October: the design rubric read a set the
- * head of design had sent back and named her three faults as its own
- * checks; then the set was iterated on two routes.
+ * head of design had sent back and named the three faults it was sent back
+ * for as its own checks; then the set was iterated on two routes.
  *
  * ⚠ THE SET THAT WAS SENT BACK IS NOT SHOWN. A freelancer's frame, returned,
  * has no place on another brand's page; the shoot photo and the iterations

@@ -8,8 +8,10 @@ import type { InstrumentRecord } from "../types";
  * ⚠ IT IS A PROPOSAL, NOT A BUILD. Every answer is what phase one sets up,
  * from the 8 October call: Claude Enterprise is already X-Bionic's, wired to
  * Shopify and analytics; the AI champion owns that setup; the copywriter's
- * product voice is written down first. The lit workstream is the one phase
- * one starts with. No plugin altitude: the plugin has no name yet.
+ * product voice is written down first. The workstreams are the page's four
+ * disciplines (ADR-154 U4: strategy, production, ops, review), each run by a
+ * role; the lit one, production, is the one phase one starts with. No plugin
+ * altitude: the plugin has no name yet.
  *
  * ⚠ PEOPLE BY ROLE.
  */
@@ -71,17 +73,29 @@ export const X_BIONIC_INSTRUMENT: InstrumentRecord = {
   org: {
     label: "X-Bionic",
     name: "Creative and digital",
-    os: { name: "Creative engine", line: "One plugin, every workstream" },
+    os: { name: "Creative engine", line: "One plugin, a skill per discipline" },
     workstreams: [
-      { id: "voice", name: "Product voice + copy", lit: ["context", "evals"] },
-      { id: "brief", name: "Brief + variants" },
-      { id: "imagery", name: "Imagery + review" },
+      {
+        id: "strategy",
+        bucket: "Strategy",
+        name: "Brief + variants",
+        line: "The paid social lead",
+      },
+      {
+        id: "production",
+        bucket: "Production",
+        name: "Product voice + imagery",
+        line: "The copy editor and the creative lead",
+        lit: ["context", "evals"],
+      },
+      { id: "ops", bucket: "Ops", name: "Intake + naming", line: "The digital team" },
+      { id: "review", bucket: "Review", name: "Pre-review", line: "The product designer" },
     ],
     socket: { label: "Enterprise", name: "X-Bionic's Claude Enterprise" },
   },
   tag: "You write this",
   alt: {
     work: "X-Bionic's paid social as one configuration: Claude in X-Bionic's own Enterprise organisation runs it; the product voice, the product facts and the brief are the context the team writes; the copy editor's and the product designer's checks are the evaluations; Shopify, analytics and the ad accounts are the data; the team meets it in Claude; one owner per workstream answers for it",
-    org: "X-Bionic's creative and digital team as one frame: the model, the data and the interface shared along its top edge, the creative engine at the centre as one plugin, three workstreams (the product voice and copy, lit as the first, the brief and variants, and the imagery and review), and the context, the evaluations and the owner per workstream below, plugged into X-Bionic's Claude Enterprise",
+    org: "X-Bionic's creative engine as a stack: four workstreams on top, one per discipline (strategy, the brief and variants, run by the paid social lead; production, the product voice and imagery, lit as the first, run by the copy editor and the creative lead; ops, intake and naming, run by the digital team; review, the pre-review, run by the product designer); under them the layer the team writes, the context and the evaluations; under that X-Bionic's Claude Enterprise, with the model, the data and the interface; one owner per workstream",
   },
 };

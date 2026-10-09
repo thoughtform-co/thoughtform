@@ -1,16 +1,19 @@
 import type { ArcBreakdown } from "../../types";
 
 /**
- * SAMAKO'S WORK, AS BREAKDOWNS (2026-10-08, for the X-Bionic proposal): two
- * jobs from the Samako engagement, in the case grammar `UNDER_THE_GLASS`
- * set (ADR-148 U5), cut to two or three beats so a proposal shows what was
- * made and how it was judged, not the recipe.
+ * SAMAKO'S WORK, AS BREAKDOWNS (2026-10-08): two jobs from the Samako
+ * engagement, in the case grammar `UNDER_THE_GLASS` set (ADR-148 U5), cut
+ * to two or three beats so a reader sees what was made and how it was
+ * judged, not the recipe. The services workstreams read them whole; the
+ * X-Bionic proposal's jobs (`jobs.ts`, ADR-153 U1) take their film and
+ * stills.
  *
  * ⚠ EVERY NUMBER IS SAMAKO'S RECORD: `samako-ai-studio/records/eval-log.md`
  * (wave 11 and its race, 7 October; Autumn Deals 02, 6 October) and the
- * `autumn-02` README on the production Drive. The reviewer's Figma comments
- * on wave 11 are not counted here: they are notes on the logo's size, not a
- * second grade, and the record never totals them.
+ * `autumn-02` README on the production Drive. The reviewer's own read of
+ * wave 11 is filed since 8 October (14 of the 15 frames the reviewer
+ * pinned agree with the blind grade): the review job carries it, these
+ * beats do not.
  *
  * ⚠ PEOPLE BY ROLE, NEVER BY NAME, and no figure from an offer the client
  * has not approved: the film is the clean cut, "Tijdelijke actie", no

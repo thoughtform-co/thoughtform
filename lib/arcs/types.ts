@@ -309,6 +309,10 @@ export type ArcSection = ArcSectionBase &
         variant: "question" | "callout" | "quote" | "chapter";
         /** The part ruler, `chapter` only: which part of how many. */
         chapter?: { n: number; of: number };
+        /** The part's index, `chapter` only (ADR-153 U1): its beats as
+         *  Linear's mono-numbered columns, each a link to its section. 3–5
+         *  rows, `n` two digits from "01", labels ≤ 18, `href` "#<id>". */
+        index?: readonly { n: string; label: string; href: string }[];
         eyebrow?: string;
         line: ArcTitle;
         subline?: string;
@@ -1454,6 +1458,75 @@ export type ArcSection = ArcSectionBase &
         /** The readout foot. */
         readout: readonly { label: string; value: string }[];
       }
+    | {
+        /**
+         * A JOB (ADR-153 U1): one real piece of client work on one screen, in
+         * one template for every client and every bucket (owner, 2026-10-09:
+         * "uniformize it; right now it looks chaotic"). The leverage's
+         * console: a strip naming the job and its bucket, Tensorlake's
+         * sandwich under it (the spec · the figure · three measured cells),
+         * a readout foot. The bucket is the vision's 2×2 and the engine's
+         * workstream tiles, so one vocabulary runs down the page.
+         *
+         * ⚠ THE THIRTY-SECOND ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-job-*`; its classes are `.arc-case__*` because
+         * `.arc-job__*` is the breakdown's. Every figure as filed in the
+         * client's repository, dated, people by role, no money.
+         */
+        kind: "job";
+        head: ArcHead;
+        /** 1–9, its place among the page's jobs: "JOB 0N" and "Fig. 0N". */
+        n: number;
+        /** The job's working name on the strip, e.g. "Under the glass". ≤ 28. */
+        name: string;
+        bucket: ArcJobBucket;
+        /** ≤ 20. */
+        client: string;
+        /** As the record dates it, e.g. "6 Oct 2026". ≤ 16. */
+        date: string;
+        /** Where it ran, e.g. "Cowork". ≤ 20. */
+        madeIn: string;
+        /** What was asked, one line. ≤ 110. */
+        ask: string;
+        /** What Claude did, three lines, one line each. ≤ 44 each. */
+        did: readonly [string, string, string];
+        /** The person who decided, by role (≤ 32), and on what (≤ 110). */
+        gate: { who: string; line: string };
+        figure: ArcJobFigure;
+        /** Three measured numbers, as filed. */
+        cells: readonly [ArcJobCell, ArcJobCell, ArcJobCell];
+      }
+  );
+
+/* ── The job (ADR-153 U1) ───────────────────────────────────────────── */
+
+/** The four buckets of the work: the vision's 2×2, the engine's tiles. */
+export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
+
+/** A measured number: the value large (≤ 10), what it counts small (≤ 44). */
+export interface ArcJobCell {
+  value: string;
+  key: string;
+}
+
+/** A still beside its sibling, with the verdict it was given. */
+export interface ArcJobFrame {
+  /** Under `/arcs/`, self-hosted. */
+  src: string;
+  alt: string;
+  /** Why it was kept or sent back. ≤ 28. */
+  label: string;
+  verdict: "kept" | "rejected";
+}
+
+/** The job's one figure, captioned "Fig. 0N · caption" (caption ≤ 40). */
+export type ArcJobFigure = { caption: string } &
+  /** A silent 9:16 loop, the house's one autoplaying picture (ADR-143 U7). */
+  (| { kind: "clip"; clip: ArcClip }
+    /** Two stills of one shape, kept beside sent back. */
+    | { kind: "pair"; ratio: "9:16" | "1:1" | "3:2"; a: ArcJobFrame; b: ArcJobFrame }
+    /** What was written, as two to five mono rows. */
+    | { kind: "ledger"; rows: readonly ArcMetaRow[] }
   );
 
 /* ── The leverage and the handoff (ADR-153) ─────────────────────── */
@@ -2371,8 +2444,15 @@ export interface ArcDef {
    * ⚠ OPT-IN, NOT FORMAT-WIDE, AND THAT IS THE TRINNY PAGE. Its pinned scene
    * (ADR-102) is measured against the centre-solved datum; a format-wide
    * change moves it. Another proposal adopts the rule with this one line.
+   *
+   * `"fill"` (ADR-128 U3, owner 2026-10-09: "move items a bit up and down so
+   * we use the full space"): the head on the same 128px datum, but the beat
+   * is one screen and its figure takes the rest of it, ADR-080 U3's
+   * remainder recipe (`auto 1fr`). A figure that opts in fills the
+   * remainder to `--arc-fill-cap`; every other figure is centred in it, so
+   * no beat pools its slack at the floor.
    */
-  rhythm?: "flow";
+  rhythm?: "flow" | "fill";
   /** Choreography system — see ArcMotion. Default "reveal". */
   motion?: ArcMotion;
   /**

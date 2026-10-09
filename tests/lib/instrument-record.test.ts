@@ -9,6 +9,7 @@ import { SURI_PROPOSAL_ARC } from "@/lib/arcs/content/suri-proposal";
 import { PANDORA_PROPOSAL_ARC } from "@/lib/arcs/content/pandora-proposal";
 import { fromBoard, fromConfiguration, fromQuestions } from "@/lib/instrument/adapt";
 import { SURI_INSTRUMENT, suriWorkstreamInstrument } from "@/lib/instrument/records/suri";
+import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 import {
   ALTITUDES,
   PART_ORDER,
@@ -140,5 +141,29 @@ describe("the instrument record (ADR-154)", () => {
       expect(text, name).not.toMatch(new RegExp(`\\b${name}\\b`));
     }
     expect(text).not.toMatch(/—/);
+  });
+
+  /* ADR-154 U4: X-Bionic's organisation is the page's four disciplines, one
+     workstream each, each run by a role; the lit one is the one phase one
+     starts with. */
+  it("the X-Bionic record is lawful and its organisation is the four disciplines", () => {
+    expect(recordFaults(X_BIONIC_INSTRUMENT)).toEqual([]);
+    expect(altitudesOf(X_BIONIC_INSTRUMENT)).toEqual(["org", "work"]);
+    const streams = X_BIONIC_INSTRUMENT.org?.workstreams ?? [];
+    expect(streams.map((w) => w.id)).toEqual(["strategy", "production", "ops", "review"]);
+    expect(streams.map((w) => w.bucket)).toEqual(["Strategy", "Production", "Ops", "Review"]);
+    const lit = streams.filter((w) => w.lit?.length);
+    expect(lit.map((w) => w.id)).toEqual(["production"]);
+    expect(lit[0].lit).toEqual(["context", "evals"]);
+    for (const w of streams) {
+      expect(w.line?.length, w.id).toBeGreaterThan(0);
+      expect(w.line, w.id).not.toMatch(/\d/);
+      expect((w.bucket ?? "").length, w.id).toBeLessThanOrEqual(12);
+    }
+    const text = JSON.stringify(X_BIONIC_INSTRUMENT);
+    expect(text).not.toMatch(/—/);
+    expect(text).not.toMatch(
+      /\b(Daryna|Kate|Caroline|Bea|Nick|Georgia|Lottie|Sampson|Rita|Katia)\b/
+    );
   });
 });

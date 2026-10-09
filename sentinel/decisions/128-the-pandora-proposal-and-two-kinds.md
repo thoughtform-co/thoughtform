@@ -435,3 +435,31 @@ attribute is absent everywhere else, so every other root is byte-identical.
 ⚠ **The handout's paging is not carried.** The first cut also paged each head
 beat as a whole 16:9 page in `pdf-arc.mjs`; that never reached main, so the
 PDF prints the flowing page as it is.
+
+## Update 3 (2026-10-09, owner): one screen per beat, the figure takes the rest
+
+### `rhythm: "fill"`, the second opt-in rhythm
+
+The owner, on the X-Bionic page at a MacBook Air (1470×830): "move items a bit
+up and down so we use the full space", Linear still the reference, the type
+sizes unchanged. `flow` is right for a page read as a document, every beat as
+tall as its content. A proposal read one screen at a time pools the screen's
+slack under a short figure: the dead floor he saw.
+
+`ArcDef.rhythm: "fill"` keeps the head on the same 128px datum and makes the
+beat one screen (the base `100svh` stays), its band `auto minmax(0, 1fr)`:
+ADR-080 U3's remainder recipe from `program live`. A figure that opts in (the
+leverage, the handoff, the terms, the job, the instrument at the organisation
+altitude) fills the remainder up to `--arc-fill-cap` (880px) and is centred
+beyond it; every other figure is centred in the remainder; the portrait's
+second band takes the slack and centres. `min-height`, never `height`, so a
+figure taller than the remainder grows its beat and never clips. Measured
+headless at 1470×830: the leverage's figure 522px, the handoff's 490, the
+terms' 522, the engine's 530, each beat 830.
+
+⚠ **Opt-in, as `flow` is.** X-Bionic adopts it; Pandora stays on `flow`; every
+other root is byte-identical. At ≤960px and under reduced motion a `fill` page
+falls to the proposal's existing release, identical to `flow`.
+
+⚠ **The token keeps its name, `--arc-head-datum`**: the proof card, the bench
+and the sheets budget by it.
