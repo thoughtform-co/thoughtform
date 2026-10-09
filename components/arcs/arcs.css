@@ -4892,7 +4892,7 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     align-self: center;
   }
   .arc-root[data-arc-rhythm="fill"]
-    :is(.arc-sec--leverage, .arc-sec--handoff, .arc-sec--terms, .arc-sec--job)
+    :is(.arc-sec--leverage, .arc-sec--handoff, .arc-sec--terms)
     > .arc-band
     > .arc-head
     + *,
@@ -4901,6 +4901,21 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     > .arc-band
     > .arc-head
     + .arc-instrument:has(> .ins[data-altitude="org"]) {
+    min-height: min(100%, var(--arc-fill-cap));
+  }
+  /* A job has no head: its frame carries its own title (ADR-153 U2), so
+     the frame itself sits on the datum and takes the screen to the floor. */
+  .arc-root[data-arc-rhythm="fill"] .arc-sec--job {
+    align-content: stretch;
+    padding-block: var(--arc-head-datum) var(--lat-sec-pad);
+  }
+  .arc-root[data-arc-rhythm="fill"] .arc-sec--job > .arc-band {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .arc-root[data-arc-rhythm="fill"] .arc-sec--job > .arc-band > .arc-case {
+    align-self: center;
     min-height: min(100%, var(--arc-fill-cap));
   }
 }

@@ -1460,13 +1460,16 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * A JOB (ADR-153 U1): one real piece of client work on one screen, in
-         * one template for every client and every bucket (owner, 2026-10-09:
-         * "uniformize it; right now it looks chaotic"). The leverage's
-         * console: a strip naming the job and its bucket, Tensorlake's
-         * sandwich under it (the spec · the figure · three measured cells),
-         * a readout foot. The bucket is the vision's 2×2 and the engine's
-         * workstream tiles, so one vocabulary runs down the page.
+         * A JOB (ADR-153 U1, U2): one real piece of client work on one
+         * screen, in one template for every client and every bucket (owner,
+         * 2026-10-09: "uniformize it; right now it looks chaotic"). No head:
+         * the frame carries everything, as Tensorlake's does. Its top row is
+         * the four buckets with this one marked, the title, and the client,
+         * where it ran and the date; under it Tensorlake's sandwich (the
+         * spec · the figure · three measured cells, each drawn as a tally);
+         * the person who decided is the frame's foot. The bucket is the
+         * vision's 2×2 and the engine's workstream tiles, so one vocabulary
+         * runs down the page.
          *
          * ⚠ THE THIRTY-SECOND ENUMERATED EXCEPTION. Server, no state, DOM
          * only, `data-job-*`; its classes are `.arc-case__*` because
@@ -1474,11 +1477,12 @@ export type ArcSection = ArcSectionBase &
          * client's repository, dated, people by role, no money.
          */
         kind: "job";
-        head: ArcHead;
-        /** 1–9, its place among the page's jobs: "JOB 0N" and "Fig. 0N". */
+        /** The job's concrete title, sentence case, set in the frame's top
+         *  row (U2: the job carries its own title; no head above it), e.g.
+         *  "A Black Friday teaser, cut from raw footage". ≤ 56. */
+        title: string;
+        /** 1–9, its place among the page's jobs: "Fig. 0N". */
         n: number;
-        /** The job's working name on the strip, e.g. "Under the glass". ≤ 28. */
-        name: string;
         bucket: ArcJobBucket;
         /** ≤ 20. */
         client: string;
@@ -1503,10 +1507,25 @@ export type ArcSection = ArcSectionBase &
 /** The four buckets of the work: the vision's 2×2, the engine's tiles. */
 export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
 
-/** A measured number: the value large (≤ 10), what it counts small (≤ 44). */
+/** A measured number: the value large (≤ 10), what it counts small (≤ 44),
+ *  and, when it counts something, the count drawn as a tally. */
 export interface ArcJobCell {
   value: string;
   key: string;
+  tally?: readonly ArcJobTally[];
+}
+
+/**
+ * One group of a cell's tally, Tensorlake's bar code (U2): `of` segments,
+ * the first `lit` of them gold. A second group is a second state (before and
+ * after) or a sibling (the other models); `dim` sets its lit segments in the
+ * gold's quiet tint, so the group that is the claim reads first. At most 60
+ * segments a cell, every count as filed.
+ */
+export interface ArcJobTally {
+  of: number;
+  lit: number;
+  dim?: true;
 }
 
 /** A still beside its sibling, with the verdict it was given. */

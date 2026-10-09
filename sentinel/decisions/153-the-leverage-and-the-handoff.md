@@ -131,3 +131,35 @@ the same" is the gripe), but consistent and modular.
 the fold at 1470 × 830. Measured headless after the cut: each job 830 tall at 1470 × 830, its
 figure 490, its content ending at 780; at 1440 × 790 the content ends at 760; no horizontal scroll
 at 375 wide, where the job reads as one column and its cells stack.
+
+## Update 2 (2026-10-09, owner): the job carries its own title, and the gold is the data
+
+The owner, on the first read of the four jobs: a working name like "Under the glass" says nothing;
+the head and its paragraph above the frame are not needed ("can't we just put all the
+information in the frame and maybe make it a bit higher"); and the jobs used none of the gold
+accents the references use ("don't just apply stuff, but really look at our references on how
+they would do it"). Read against the moodboard (Tensorlake's two Hex sections, Hex's Detail
+board, Vorflux, the two Cyberpunk panels):
+
+1. **No head; the frame carries everything** (Tensorlake: "■ METRICS" and the headline are the
+   frame's own top row). The job's top row is the four buckets with this one marked, a
+   concrete title (`title`, ≤ 56, sentence case like the Loop proof cards: "A Black Friday
+   teaser, cut from raw footage"), and the client, where it ran and the date as a key-value
+   block (Cyberpunk's customer block). The working `name` and the strip go. Under the fill
+   rhythm the frame sits on the 128px datum and takes the screen to the floor: 641px at
+   1470 × 830, where the plate and its head together were 490.
+2. **The gold is the data.** Every reference keeps text and numerals neutral and puts its
+   accent in three places, so the job does the same: the bucket's square (Tensorlake's and
+   Vorflux's ■ marker); a tally under each counted number (Tensorlake's bar codes, in the gold's
+   tints: `{ of, lit, dim? }` groups, so 15 of 18 reads beside the other models' 5 and 4, dimmed,
+   and 6 of 6 beside the 1 of 9 it replaced); and the values of a logged record (Cyberpunk's
+   breach log, Tensorlake's highlighted code: dot leaders, values in gold). The kept still's
+   verdict takes the gold ring. A count the record does not give is not drawn (504 is too many
+   to draw, 0.1 px is not a count).
+3. **The gate is the foot**: the person who decided, by role, with the person's green diamond,
+   then what they decided; the spec keeps the ask and what Claude did, as two cells of one
+   height. The cells lose the corner brackets and the arrows: Tensorlake's stat cells have
+   neither.
+
+Measured headless: nothing overflows at 1440 × 790, 1470 × 830, 1710 × 980 or 1920 × 1200 (the
+880px cap engages there); both themes; no horizontal scroll at 375 wide.

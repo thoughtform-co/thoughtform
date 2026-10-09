@@ -1969,10 +1969,9 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.n, `${at}: one digit`).toBeLessThanOrEqual(9);
         expect(buckets.has(s.bucket), `${at}: ${s.bucket} once a page`).toBe(false);
         buckets.add(s.bucket);
-        expect(s.head.eyebrow?.length ?? 0, `${at}: eyebrow`).toBeLessThanOrEqual(40);
-        expect(arcTitleText(s.head.title).length, `${at}: title`).toBeLessThanOrEqual(64);
-        expect(s.head.sub?.length ?? 0, `${at}: sub`).toBeLessThanOrEqual(160);
-        expect(s.name.length, `${at}: name`).toBeLessThanOrEqual(28);
+        /* U2: the title is in the frame and says what the job was. */
+        expect(s.title.length, `${at}: title`).toBeLessThanOrEqual(56);
+        expect(s.title, `${at}: a title is a sentence, not a slogan`).toMatch(/^[A-Z]/);
         expect(s.client.length, `${at}: client`).toBeLessThanOrEqual(20);
         expect(s.date.length, `${at}: date`).toBeLessThanOrEqual(16);
         expect(s.madeIn.length, `${at}: made in`).toBeLessThanOrEqual(20);
@@ -1987,6 +1986,17 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         for (const c of s.cells) {
           expect(c.value.length, `${at}: "${c.value}"`).toBeLessThanOrEqual(10);
           expect(c.key.length, `${at}: "${c.key}"`).toBeLessThanOrEqual(44);
+          /* A tally draws a count: whole numbers, lit within the group, at
+             most 60 segments a cell so a segment stays a segment. */
+          if (c.tally) {
+            const segments = c.tally.reduce((sum, g) => sum + g.of, 0);
+            expect(segments, `${at}: "${c.value}" tally`).toBeLessThanOrEqual(60);
+            for (const g of c.tally) {
+              expect(Number.isInteger(g.of) && g.of >= 1, `${at}: "${c.value}" of`).toBe(true);
+              expect(Number.isInteger(g.lit), `${at}: "${c.value}" lit`).toBe(true);
+              expect(g.lit >= 0 && g.lit <= g.of, `${at}: "${c.value}" lit ≤ of`).toBe(true);
+            }
+          }
         }
         const media: string[] = [];
         if (s.figure.kind === "clip") {
