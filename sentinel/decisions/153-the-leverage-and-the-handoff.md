@@ -75,3 +75,14 @@ places and walls of text in two:
   paragraph; the repeated `X-Bionic` chip under a column already titled "From X-Bionic" goes.
 - "What plugs in" moves to ADR-154's instrument (its U2).
 
+## Amendment, 2026-10-09: one screen on a MacBook Air
+
+The owner: "make sure all the elements fit within the viewport … this is for my MacBook Air".
+Measured at 1470 × 830 by content bottom (the section's own bottom padding may sit below the
+fold), the leverage ran 1178px, the terms 1164px and the handoff 956px. The fix is the frontend
+one, not a crop: one fluid unit, `--lv-v: clamp(8px, 1.6svh, 24px)`, drives every block padding
+and gap; the glyphs take a height (`clamp(32px, 5.5svh, 64px)`), never the column's width; the
+index rides a cell's corner; the fixed `min-height`s go. Every beat is whole at 1440 × 790,
+1470 × 800, 1470 × 830 and 1710 × 980, with no horizontal scroll and no text of these beats under
+10px (`--type-xs` raised to `--type-sm`).
+

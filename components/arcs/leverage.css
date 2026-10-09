@@ -18,6 +18,11 @@
   --lv-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
   --lv-dots: radial-gradient(rgba(var(--dawn-rgb), 0.1) 1px, transparent 1px) 0 0 / var(--space-md)
     var(--space-md);
+  /* THE VERTICAL RHYTHM FOLLOWS THE VIEWPORT'S HEIGHT (owner, 2026-10-09:
+     every beat whole in one screen on a MacBook Air, 1470 × 830). One
+     fluid unit, `--lv-v`, drives every block padding and gap below: 8px on
+     a short screen, 24px on a tall one; widths stay on the lattice. */
+  --lv-v: clamp(8px, 1.6svh, 24px);
   margin-top: var(--lat-gap-block);
   font-family: var(--lv-sans);
   color: var(--arc-ink);
@@ -67,7 +72,7 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md) var(--lat-pad-cell);
+  padding: var(--lv-v) var(--lat-pad-cell);
   padding-right: calc(var(--lat-pad-cell) + var(--arc-plate-ch));
   border-bottom: 1px solid var(--arc-rule);
 }
@@ -103,8 +108,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-3xl);
-  padding: var(--space-2xl) var(--lat-pad-cell);
+  gap: calc(var(--lv-v) * 2);
+  padding: calc(var(--lv-v) * 1.5) var(--lat-pad-cell);
   border-right: 1px solid var(--arc-rule);
 }
 
@@ -119,16 +124,16 @@
   position: absolute;
   top: var(--space-xl);
   bottom: var(--space-xl);
-  left: calc(var(--space-3xl) - 1px);
+  left: calc(var(--space-2xl) - 1px);
   border-left: 1px dashed var(--arc-seam);
 }
 .arc-lev__plate {
   position: relative;
   display: grid;
-  grid-template-columns: calc(var(--space-3xl) * 2) minmax(0, 1fr);
+  grid-template-columns: var(--space-4xl) minmax(0, 1fr);
   align-items: center;
   column-gap: var(--space-xl);
-  padding-block: var(--space-lg);
+  padding-block: calc(var(--lv-v) * 0.75);
   color: var(--arc-ink-50);
 }
 .arc-lev__slab {
@@ -164,7 +169,7 @@
 .arc-lev__plate-copy {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 }
 .arc-lev__plate-label {
   display: flex;
@@ -178,7 +183,7 @@
 }
 .arc-lev__chip {
   flex-shrink: 0;
-  font-size: var(--type-xs);
+  font-size: var(--type-sm);
   padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--arc-rule);
   white-space: nowrap;
@@ -195,7 +200,7 @@
   background: var(--arc-gold-wash);
 }
 .arc-lev__plate[data-lev-own] .arc-lev__plate-line {
-  font-size: var(--type-lg);
+  font-size: var(--type-md);
 }
 .arc-lev__note {
   padding-left: var(--space-md);
@@ -206,7 +211,7 @@
 }
 .arc-lev__note .arc-lev__line {
   color: var(--arc-ink-80);
-  font-size: var(--type-lg);
+  font-size: var(--type-md);
 }
 
 /* The 2×2, on the dot ground. */
@@ -216,7 +221,7 @@
   background: var(--lv-dots);
 }
 .arc-lev__uses-label {
-  padding: var(--space-md) var(--lat-pad-cell);
+  padding: var(--lv-v) var(--lat-pad-cell);
   border-bottom: 1px solid var(--arc-rule);
   color: var(--arc-ink-60);
   background: var(--arc-plate, rgba(10, 9, 8, 0.9));
@@ -227,10 +232,11 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .arc-lev__cell {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  padding: var(--space-xl) var(--lat-pad-cell) var(--space-2xl);
+  gap: calc(var(--lv-v) * 0.75);
+  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell);
 }
 .arc-lev__cell:nth-child(odd) {
   border-right: 1px solid var(--arc-rule);
@@ -238,22 +244,28 @@
 .arc-lev__cell:nth-child(-n + 2) {
   border-bottom: 1px solid var(--arc-rule);
 }
+/* The index rides the cell's top right, so it costs no row. */
 .arc-lev__index {
+  position: absolute;
+  top: calc(var(--lv-v) * 1.25);
+  right: var(--lat-pad-cell);
   color: var(--arc-ink-40);
 }
 .arc-lev__title {
-  margin-top: var(--space-md);
-  font-size: var(--type-xl);
+  margin-top: calc(var(--lv-v) * 0.5);
+  font-size: var(--type-lg);
   line-height: 1.25;
   color: var(--arc-ink);
 }
 .arc-lev__cell .arc-lev__line {
   margin-top: 0;
 }
+/* A fixed height, never the column's width: the drawing cannot push the
+   cell taller than the screen allows. */
 .arc-lev__glyph {
-  width: 100%;
-  max-width: 200px;
-  height: auto;
+  width: auto;
+  height: clamp(32px, 5.5svh, 64px);
+  align-self: flex-start;
   overflow: visible;
 }
 .arc-lev__glyph-grid,
@@ -288,7 +300,7 @@
 .arc-lev__read {
   display: flex;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--lat-pad-cell);
+  padding: var(--lv-v) var(--lat-pad-cell);
   color: var(--arc-ink-50);
 }
 .arc-lev__read + .arc-lev__read {
@@ -324,7 +336,7 @@
   color: var(--arc-ink-40);
 }
 .arc-hand__when {
-  font-size: var(--type-xs);
+  font-size: var(--type-sm);
   color: var(--arc-ink-50);
   white-space: nowrap;
 }
@@ -332,12 +344,11 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
-  padding: var(--space-xl) var(--lat-pad-cell) var(--space-lg);
+  gap: calc(var(--lv-v) * 1.25);
+  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell) var(--lv-v);
   background: var(--lv-dots);
 }
 .arc-hand__step-title {
-  min-height: calc(var(--space-4xl) + var(--space-md));
   font-size: var(--type-xl);
   line-height: 1.3;
   color: var(--arc-ink-80);
@@ -347,7 +358,7 @@
   flex-direction: column;
   gap: var(--space-xs);
   margin-top: auto;
-  padding-top: var(--space-md);
+  padding-top: var(--lv-v);
   border-top: 1px dashed var(--arc-rule);
   color: var(--arc-ink-70);
 }
@@ -373,20 +384,20 @@
 }
 
 .arc-hand__time {
-  margin-top: var(--space-3xl);
+  margin-top: calc(var(--lv-v) * 2);
 }
 .arc-hand__time-label {
   color: var(--arc-ink-80);
 }
 .arc-hand__time-note {
-  font-size: var(--type-xs);
+  font-size: var(--type-sm);
   color: var(--arc-ink-40);
 }
 .arc-hand__rows {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xl);
-  padding: var(--space-2xl) var(--lat-pad-cell);
+  gap: calc(var(--lv-v) * 1.25);
+  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell);
 }
 .arc-hand__row {
   display: grid;
@@ -405,14 +416,14 @@
   flex-basis: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: calc(var(--lv-v) * 0.5);
   min-width: 0;
   color: var(--arc-ink-50);
 }
 /* Tensorlake's bar-code: stripes, not a fill. */
 .arc-hand__seg-track {
   display: block;
-  height: var(--space-xl);
+  height: clamp(16px, 2.8svh, 32px);
   background: repeating-linear-gradient(
     90deg,
     var(--arc-ink-22) 0 2px,
@@ -426,7 +437,7 @@
   background: repeating-linear-gradient(90deg, var(--gold) 0 2px, transparent 2px var(--space-xs));
 }
 .arc-hand__seg-name {
-  font-size: var(--type-xs);
+  font-size: var(--type-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -466,7 +477,7 @@
   display: flex;
   justify-content: space-between;
   gap: var(--space-md);
-  padding-block: var(--space-md);
+  padding-block: calc(var(--lv-v) * 0.75);
   border-bottom: 1px dashed var(--arc-rule);
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
