@@ -659,7 +659,16 @@ button.ins__crumb-at {
 }
 
 /* org: the shared three along the top edge, the OS at the centre with its
-   workstreams, the three the team writes per workstream below, the socket. */
+   workstreams, the three the team writes per workstream below, the socket.
+   ⚠ ITS STEPS FOLLOW THE VIEWPORT'S HEIGHT (ADR-154 U3, owner 2026-10-09:
+   every beat whole in one screen on a MacBook Air, 1440 × 790 up): the
+   stage's gaps and the frame's inset are fluid, the full 16, 24 and 40 from
+   about 1100px tall. */
+.ins[data-altitude="org"] {
+  --ins-2: clamp(8px, 1.4svh, 16px);
+  --ins-3: clamp(12px, 2.2svh, 24px);
+  --ins-4: clamp(16px, 3svh, 40px);
+}
 .ins[data-altitude="org"] .ins__stage {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-areas:
@@ -681,7 +690,15 @@ button.ins__crumb-at {
   grid-area: chip;
   z-index: 1;
   justify-self: center;
-  width: min(100%, 420px);
+  width: min(100%, 640px);
+}
+/* The workstreams read as one row under the OS's name: the chip stays one
+   band tall, so the org frame fits one screen (U3). They wrap on the phone. */
+.ins[data-altitude="org"] .ins-chip__list {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--ins-3);
+  row-gap: var(--space-xs);
 }
 .ins[data-altitude="org"] .ins-panel {
   z-index: 1;

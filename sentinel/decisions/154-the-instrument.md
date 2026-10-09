@@ -139,4 +139,10 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
   8 October call; no plugin altitude until the plugin has a name. The `circuit` kind has no other
   page left on X-Bionic; Pandora still draws it. The overview reads the instrument as the page's
   configuration (`sheet-config-fit` pins it).
+- **U3 (2026-10-09): the organisation altitude fits one screen.** The owner: every beat whole in
+  one screen on a MacBook Air. At 1470 × 830 the org frame ran 46px past the fold. Its three
+  steps follow the viewport's height at that altitude only (`--ins-2` 8→16px, `--ins-3` 12→24px,
+  `--ins-4` 16→40px, full from about 1100px tall), and the chip's workstreams read as one row
+  (the chip 640px wide, wrapping on the phone). Measured: whole at 1440 × 790, 1470 × 800,
+  1470 × 830 and 1710 × 980; the work and run altitudes are untouched.
 
