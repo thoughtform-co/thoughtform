@@ -1969,10 +1969,9 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.n, `${at}: one digit`).toBeLessThanOrEqual(9);
         expect(buckets.has(s.bucket), `${at}: ${s.bucket} once a page`).toBe(false);
         buckets.add(s.bucket);
-        expect(s.head.eyebrow?.length ?? 0, `${at}: eyebrow`).toBeLessThanOrEqual(40);
-        expect(arcTitleText(s.head.title).length, `${at}: title`).toBeLessThanOrEqual(64);
-        expect(s.head.sub?.length ?? 0, `${at}: sub`).toBeLessThanOrEqual(160);
-        expect(s.name.length, `${at}: name`).toBeLessThanOrEqual(28);
+        /* U2: the title is in the frame and says what the job was. */
+        expect(s.title.length, `${at}: title`).toBeLessThanOrEqual(56);
+        expect(s.title, `${at}: a title is a sentence, not a slogan`).toMatch(/^[A-Z]/);
         expect(s.client.length, `${at}: client`).toBeLessThanOrEqual(20);
         expect(s.date.length, `${at}: date`).toBeLessThanOrEqual(16);
         expect(s.madeIn.length, `${at}: made in`).toBeLessThanOrEqual(20);
@@ -1984,9 +1983,19 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
         expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
         expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(40);
-        for (const c of s.cells) {
-          expect(c.value.length, `${at}: "${c.value}"`).toBeLessThanOrEqual(10);
-          expect(c.key.length, `${at}: "${c.key}"`).toBeLessThanOrEqual(44);
+        /* U3: ONE return, a number a decision maker reads and a plain
+           line; a tally draws it only when it is a count: whole numbers,
+           lit within the group, at most 60 segments. */
+        expect(s.result.value.length, `${at}: "${s.result.value}"`).toBeLessThanOrEqual(10);
+        expect(s.result.line.length, `${at}: the return's line`).toBeLessThanOrEqual(110);
+        if (s.result.tally) {
+          const segments = s.result.tally.reduce((sum, g) => sum + g.of, 0);
+          expect(segments, `${at}: tally`).toBeLessThanOrEqual(60);
+          for (const g of s.result.tally) {
+            expect(Number.isInteger(g.of) && g.of >= 1, `${at}: tally of`).toBe(true);
+            expect(Number.isInteger(g.lit), `${at}: tally lit`).toBe(true);
+            expect(g.lit >= 0 && g.lit <= g.of, `${at}: tally lit ≤ of`).toBe(true);
+          }
         }
         const media: string[] = [];
         if (s.figure.kind === "clip") {

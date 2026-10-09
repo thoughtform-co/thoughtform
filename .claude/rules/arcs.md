@@ -1583,11 +1583,16 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   `job` (32nd, U1) are the arcs' chamfered plate with a head strip and a readout foot, styled in
   `components/arcs/leverage.css` (pinned at zero in `lattice-ratchet` and `type-material-tokens`:
   every spacing a token or `--lv-v`, every tracking a role). One idea and one lit thing a beat.
-- **A `job` is one client job on one screen** (U1): strip (`JOB 0N`, name, the bucket chip with
-  the 2×2's glyph), the spec (ask · Claude did 01–03 · the gate, by role, green diamond), the
-  figure (`clip` · `pair` kept beside sent back · `ledger`), three measured cells, a foot
-  (client · made in · date). Classes `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes
-  `data-job-*`. ⚠ A did-line is ONE line (≤ 44): two-line wraps ran the jobs past the fold at
+- **A `job` is one client job on one screen** (U1, U2): NO HEAD, the frame carries everything
+  (Tensorlake): the top row is the four buckets with this one marked by the gold square, the
+  concrete `title` (≤ 56, sentence case, never a working name) and client · made in · date; then
+  the spec (ask · Claude did 01–03), the figure (`clip` · `pair` kept beside sent back · `ledger`
+  as a log with dot leaders), and ONE return (U3: `result`, a number and a line a decision maker
+  reads, never three small cells); the gate (by role, green diamond) is the foot. ⚠ THE GOLD IS
+  THE DATA: the bucket's square, a `tally` under the return when it is a count (groups of
+  `{ of, lit, dim? }`, ≤ 60 segments, every count as filed), a logged record's values. Text and
+  numerals stay neutral. No money figure unless one is filed. Classes `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes
+  `data-job-*`; under the fill rhythm the headless frame sits on the datum. ⚠ A did-line is ONE line (≤ 44): two-line wraps ran the jobs past the fold at
   1470 × 830. ⚠ The frame is a SIZE CONTAINER and the media are sized in `cq` units: a loop or a
   still never sizes itself from its file (a 1080 × 1920 poster would). Within a page the jobs
   number 1, 2, 3 … and no two share a bucket; every figure as filed, people by role and no

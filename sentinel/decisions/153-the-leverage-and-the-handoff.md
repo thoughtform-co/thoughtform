@@ -131,3 +131,60 @@ the same" is the gripe), but consistent and modular.
 the fold at 1470 × 830. Measured headless after the cut: each job 830 tall at 1470 × 830, its
 figure 490, its content ending at 780; at 1440 × 790 the content ends at 760; no horizontal scroll
 at 375 wide, where the job reads as one column and its cells stack.
+
+## Update 2 (2026-10-09, owner): the job carries its own title, and the gold is the data
+
+The owner, on the first read of the four jobs: a working name like "Under the glass" says nothing;
+the head and its paragraph above the frame are not needed ("can't we just put all the
+information in the frame and maybe make it a bit higher"); and the jobs used none of the gold
+accents the references use ("don't just apply stuff, but really look at our references on how
+they would do it"). Read against the moodboard (Tensorlake's two Hex sections, Hex's Detail
+board, Vorflux, the two Cyberpunk panels):
+
+1. **No head; the frame carries everything** (Tensorlake: "■ METRICS" and the headline are the
+   frame's own top row). The job's top row is the four buckets with this one marked, a
+   concrete title (`title`, ≤ 56, sentence case like the Loop proof cards: "A Black Friday
+   teaser, cut from raw footage"), and the client, where it ran and the date as a key-value
+   block (Cyberpunk's customer block). The working `name` and the strip go. Under the fill
+   rhythm the frame sits on the 128px datum and takes the screen to the floor: 641px at
+   1470 × 830, where the plate and its head together were 490.
+2. **The gold is the data.** Every reference keeps text and numerals neutral and puts its
+   accent in three places, so the job does the same: the bucket's square (Tensorlake's and
+   Vorflux's ■ marker); a tally under each counted number (Tensorlake's bar codes, in the gold's
+   tints: `{ of, lit, dim? }` groups, so 15 of 18 reads beside the other models' 5 and 4, dimmed,
+   and 6 of 6 beside the 1 of 9 it replaced); and the values of a logged record (Cyberpunk's
+   breach log, Tensorlake's highlighted code: dot leaders, values in gold). The kept still's
+   verdict takes the gold ring. A count the record does not give is not drawn (504 is too many
+   to draw, 0.1 px is not a count).
+3. **The gate is the foot**: the person who decided, by role, with the person's green diamond,
+   then what they decided; the spec keeps the ask and what Claude did, as two cells of one
+   height. The cells lose the corner brackets and the arrows: Tensorlake's stat cells have
+   neither.
+
+Measured headless: nothing overflows at 1440 × 790, 1470 × 830, 1710 × 980 or 1920 × 1200 (the
+880px cap engages there); both themes; no horizontal scroll at 375 wide.
+
+## Update 3 (2026-10-09, owner): one return a job, in a decision maker's words
+
+The owner, on Update 2: the titles need not be so big; the right column's "2 + 4" with small text
+under it is not what a reader wants, "one number, the actual return, concise"; and a line like
+"Cold reads that got the joke, was 0 of 3" makes no sense to an executive. The practice's adviser,
+the same day: "put actual £ against those activities … if we can quantify the changes it becomes
+super powerful."
+
+1. **One return a job** (`result: { value, line, tally? }`, replacing the three cells): the number
+   large, the line at reading size (`--type-lg`) saying what it means for the business, under the
+   label "The return". Samako's ads: 6 ads from one open brief. Suri's teaser: retouching and
+   masking in 2 to 3 hours a video, not a full manual session (the video editor's account in the
+   team's week-one debrief). Suri's brief: 5 problems caught before any editing began. Samako's
+   test: 15 of 18 product shots right first time on the model now in use, up from 4 of 18. A tally
+   draws the number only where it is a count.
+2. **No money yet.** No job has a filed money figure; a pound figure needs a rate the records do
+   not hold, so the returns are in hours, assets and first-time-right, the adviser's own examples.
+   The X-Bionic terms already measure what each ad costs to make.
+3. **Executive wording throughout**: the did-lines lose the craft words ("locked-off",
+   "composited", "house set"); the gate says what was decided in plain terms.
+4. **The title is `--type-2xl`**, one line on desktop (measure 44ch).
+
+Measured headless: each job exactly one screen at 1440 × 790 and 1470 × 830, nothing overflowing
+at 1710 × 980 or 1920 × 1200; both themes; no horizontal scroll at 375 wide.

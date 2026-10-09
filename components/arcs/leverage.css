@@ -50,13 +50,15 @@
 .arc-hand__time-note,
 .arc-hand__row-label,
 .arc-hand__seg-name,
-.arc-case__bucket,
+.arc-case__buckets li,
+.arc-case__meta,
 .arc-case__row dt,
 .arc-case__did-n,
 .arc-case__caption,
-.arc-case__cell dt,
+.arc-case__result-label,
 .arc-case__verdict b,
 .arc-case__ledger,
+.arc-case__gate-key,
 .arc-inter__index-n {
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
@@ -514,39 +516,93 @@
   text-align: right;
 }
 
-/* ── The job: one client job on one screen (ADR-153 U1) ────────────
-   The console's strip and foot; under the strip Tensorlake's sandwich: the
-   spec · the figure · three measured cells. One lit object, the bucket. */
+/* ── The job: one client job on one screen (ADR-153 U1, U2) ───────
+   No head: the frame carries everything, as Tensorlake's do. Its top row
+   is the four buckets (this one marked with the gold square, Tensorlake's
+   "■ METRICS"), the title and a key-value block; under it the sandwich
+   (the spec · the figure · three measured cells); the gate is the foot.
+   THE GOLD IS THE DATA, as the references use their accent: the bucket's
+   square, the tallies under the numbers, the values of a logged record.
+   Text and numerals stay neutral. */
 
 .arc-case {
   --case-person: var(--atreides-light, #5b7a4e);
   --case-person-text: var(--atreides-ink, #7a9e6a);
   --case-mark: var(--space-sm);
+  margin-top: 0;
 }
-.arc-case__bucket {
+
+/* The top row: the buckets, the title, and who, where and when. */
+.arc-case__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-xl);
+  padding: calc(var(--lv-v) * 1.5) var(--lat-pad-cell);
+  padding-right: calc(var(--lat-pad-cell) + var(--arc-plate-ch));
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-case__lead {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--lv-v) * 1.25);
+}
+.arc-case__buckets {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-lg);
+  row-gap: var(--space-xs);
+}
+.arc-case__buckets li {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid var(--lv-gold-line);
-  background: var(--arc-gold-wash);
-  color: var(--lv-gold-text);
-  white-space: nowrap;
+  color: var(--arc-ink-40);
 }
-.arc-case__bucket .arc-lev__glyph {
-  height: var(--space-lg);
-  align-self: center;
-}
-.arc-case .arc-lev__read:last-child dd {
-  color: var(--arc-ink-80);
-}
-.arc-case .arc-lev__sys-key,
-.arc-case__fig-n {
+.arc-case__buckets li::before {
+  content: "";
   flex: none;
-  white-space: nowrap;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  border: 1px solid var(--arc-ink-22);
 }
-/* Under the fill rhythm the split takes what the strip and the foot leave
-   (ADR-128 U3). */
+.arc-case__buckets li[data-job-on] {
+  color: var(--arc-ink);
+}
+.arc-case__buckets li[data-job-on]::before {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.arc-case__title {
+  margin: 0;
+  max-width: 44ch;
+  font-family: var(--lv-sans);
+  font-weight: 400;
+  font-size: var(--type-2xl);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+  text-wrap: balance;
+}
+.arc-case__meta {
+  display: grid;
+  gap: var(--space-xs);
+}
+.arc-case__meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xl);
+}
+.arc-case__meta dt {
+  color: var(--arc-ink-40);
+}
+.arc-case__meta dd {
+  color: var(--arc-ink-80);
+  text-align: right;
+}
+
+/* Under the fill rhythm the split takes what the top row and the foot
+   leave (ADR-128 U3). */
 .arc-case__split {
   flex: 1;
   min-height: 0;
@@ -554,10 +610,11 @@
   grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 3fr);
 }
 
-/* The spec: the ask at the top, the gate at the foot, the work between. */
+/* The spec: two cells of one height, the ask and what Claude did, each
+   read from its top (Tensorlake's paired stat cells). */
 .arc-case__spec {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   padding: calc(var(--lv-v) * 0.5) var(--lat-pad-cell);
   border-right: 1px solid var(--arc-rule);
 }
@@ -569,9 +626,6 @@
 }
 .arc-case__row + .arc-case__row {
   border-top: 1px dashed var(--arc-rule);
-}
-.arc-case__row:nth-child(2) {
-  justify-content: center;
 }
 .arc-case__row dt {
   color: var(--arc-ink-50);
@@ -594,26 +648,6 @@
 .arc-case__did-n {
   color: var(--arc-ink-40);
 }
-/* The gate is a person: the person's green diamond (ADR-100), the role in
-   ink, then what they decided. */
-.arc-case__row[data-job-gate] dt {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  color: var(--case-person-text);
-}
-.arc-case__row[data-job-gate] dt::before {
-  content: "";
-  flex: none;
-  width: var(--space-sm);
-  height: var(--space-sm);
-  background: var(--case-person);
-  transform: rotate(45deg);
-}
-.arc-case__who {
-  display: block;
-  color: var(--arc-ink);
-}
 
 /* The figure on the dot ground, its frame marked at the corners
    (Arrakis's step frame: ticks, never a filled card). The frame is a size
@@ -629,14 +663,14 @@
   background: var(--lv-dots);
 }
 .arc-case__frame {
+  --case-tick: var(--arc-ink-40);
   position: relative;
   display: grid;
   place-items: center;
   min-height: 0;
   container-type: size;
 }
-.arc-case__frame::before,
-.arc-case__cell::after {
+.arc-case__frame::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -651,9 +685,6 @@
     linear-gradient(var(--case-tick), var(--case-tick)) right bottom / var(--case-mark) 1px,
     linear-gradient(var(--case-tick), var(--case-tick)) right bottom / 1px var(--case-mark);
   background-repeat: no-repeat;
-}
-.arc-case__frame::before {
-  --case-tick: var(--arc-ink-40);
 }
 .arc-case__clip {
   height: 100cqh;
@@ -703,31 +734,50 @@
 }
 .arc-case__verdict b {
   flex: none;
+  padding-inline: var(--space-xs);
+  border: 1px solid var(--arc-rule);
   font-weight: 400;
-  color: var(--arc-ink);
+  color: var(--arc-ink-70);
+}
+/* The kept still is the lit one: its verdict takes the gold. */
+.arc-case__still[data-job-verdict="kept"] .arc-case__verdict b {
+  border-color: var(--lv-gold-line);
+  background: var(--arc-gold-wash);
+  color: var(--lv-gold-text);
 }
 .arc-case__still[data-job-verdict="rejected"] img {
   opacity: 0.7;
 }
+/* A logged record (Cyberpunk's breach log, Tensorlake's highlighted
+   code): the keys quiet, dot leaders, the values in gold. */
 .arc-case__ledger {
   width: min(100%, 60ch);
-  border-top: 1px solid var(--arc-rule);
+  padding: var(--lv-v) var(--space-md);
   font-size: var(--type-sm);
   background: var(--arc-plate);
 }
 .arc-case__ledger div {
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  padding: var(--lv-v) var(--space-md);
-  border-bottom: 1px dashed var(--arc-rule);
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding-block: calc(var(--lv-v) * 0.6);
 }
 .arc-case__ledger dt {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
   color: var(--arc-ink-50);
   white-space: nowrap;
 }
+.arc-case__ledger dt::after {
+  content: "";
+  flex: 1;
+  min-width: var(--space-md);
+  border-bottom: 1px dotted var(--arc-ink-40);
+}
 .arc-case__ledger dd {
-  color: var(--arc-ink-80);
+  color: var(--lv-gold-text);
   text-align: right;
 }
 .arc-case__caption {
@@ -738,44 +788,35 @@
   color: var(--arc-ink-60);
 }
 .arc-case__fig-n {
+  flex: none;
+  white-space: nowrap;
   color: var(--arc-ink-40);
 }
 
-/* Three measured cells: Spade's stat cell, a keyed label over the numeral,
-   the corners marked. */
-.arc-case__cells {
+/* What it returned (U3): one number, large and neutral, one line a
+   decision maker reads at reading size, and the count drawn under it in
+   the gold's tints when it is a count. Never three small cells. */
+.arc-case__result {
   display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr);
   border-left: 1px solid var(--arc-rule);
   container-type: inline-size;
 }
-.arc-case__cell {
-  --case-tick: var(--arc-ink-22);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-sm);
+.arc-case__result-label {
   padding: var(--lv-v) var(--lat-pad-cell);
-}
-.arc-case__cell + .arc-case__cell {
-  border-top: 1px solid var(--arc-rule);
-}
-.arc-case__cell dt {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  border-bottom: 1px solid var(--arc-rule);
   color: var(--arc-ink-60);
 }
-.arc-case__cell dt::before {
-  content: "";
-  flex: none;
-  border-left: var(--space-sm) solid var(--arc-ink-40);
-  border-block: calc(var(--space-sm) * 0.5) solid transparent;
+.arc-case__result-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell);
 }
 /* The display size, or less: a mono glyph is 0.6em, so a value of
    `--case-len` characters is held to the column it sits in. */
-.arc-case__cell dd {
+.arc-case__num {
   --case-num: min(
     var(--lat-display),
     (100cqi - 2 * var(--lat-pad-cell)) / (var(--case-len, 6) * 0.6)
@@ -786,6 +827,65 @@
   letter-spacing: var(--track-display);
   color: var(--arc-ink);
   white-space: nowrap;
+}
+.arc-case__result-line {
+  font-size: var(--type-lg);
+  line-height: 1.4;
+  color: var(--arc-ink-80);
+}
+.arc-case__tally {
+  display: flex;
+  gap: var(--space-sm);
+  height: calc(var(--lv-v) * 1.25);
+}
+.arc-case__tally-group {
+  flex: var(--case-of) 1 0;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+}
+.arc-case__tally i {
+  flex: 1;
+  min-width: 1px;
+  background: rgba(var(--dawn-rgb), 0.14);
+}
+.arc-case__tally i[data-job-lit] {
+  background: var(--gold);
+}
+.arc-case__tally-group[data-job-dim] i[data-job-lit] {
+  background: rgba(var(--gold-rgb), 0.42);
+}
+
+/* The foot: the person who decided, the person's green diamond (ADR-100),
+   the role in ink, then what they decided. */
+.arc-case__gate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-lg);
+  row-gap: var(--space-xs);
+  padding: var(--lv-v) var(--lat-pad-cell);
+  border-top: 1px solid var(--arc-rule);
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+.arc-case__gate-key {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--case-person-text);
+}
+.arc-case__gate-key::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--case-person);
+  transform: rotate(45deg);
+}
+.arc-case__who {
+  color: var(--arc-ink);
 }
 
 /* ── The chapter band (an interstitial for a board) ─────────────────
@@ -875,7 +975,14 @@
   .arc-case__split {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* The top row stacks: the buckets and the title, then who, where, when. */
+  .arc-case__top {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-md);
+  }
   .arc-case__spec {
+    grid-template-rows: none;
     border-right: 0;
     border-bottom: 1px solid var(--arc-rule);
   }
@@ -894,18 +1001,9 @@
     --case-still: calc((100% - var(--space-md)) / 2);
     width: 100%;
   }
-  .arc-case__cells {
-    grid-template-rows: none;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .arc-case__result {
     border-left: 0;
     border-top: 1px solid var(--arc-rule);
-  }
-  .arc-case__cell + .arc-case__cell {
-    border-top: 0;
-    border-left: 1px solid var(--arc-rule);
-  }
-  .arc-case__cell dd {
-    font-size: var(--type-xl);
   }
   .arc-lev__idea {
     border-right: 0;
@@ -947,11 +1045,10 @@
   .arc-lev__read + .arc-lev__read {
     border-left: 0;
   }
-  .arc-case__cells {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .arc-case__cell + .arc-case__cell {
-    border-left: 0;
-    border-top: 1px solid var(--arc-rule);
+  /* Two stills share the width: the verdict sits over its reason. */
+  .arc-case__verdict {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
   }
 }

@@ -21,6 +21,16 @@ import { UNDER_THE_GLASS } from "./suriWork";
  *  - Review: the same log, wave 11's race (7 October), its review (8
  *    October, the reviewer's 14 of 15) and wave 12 (8 October, 6 of 6).
  *
+ * ⚠ THE TITLE SAYS WHAT THE JOB WAS (owner, 2026-10-09: a working name
+ * like "Under the glass" says nothing). Concrete and practical, in the
+ * frame's top row; there is no head above it (U2).
+ *
+ * ⚠ ONE RETURN A JOB, IN A DECISION MAKER'S WORDS (U3, owner 2026-10-09,
+ * after the practice's adviser: put a number against each activity). The
+ * production job's 2 to 3 hours is the video editor's own account in the
+ * team's week-one debrief; no job has a filed money figure, so none is
+ * drawn. A tally draws the count only where the number is one.
+ *
  * ⚠ PEOPLE BY ROLE, NEVER BY NAME OR PRONOUN; no money; the films and
  * stills are the shared records' own objects, so a fix lands once.
  */
@@ -43,22 +53,17 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     id: "job-strategy",
     kind: "job",
     menuLabel: "Strategy · Samako",
-    head: {
-      eyebrow: "Samako · Strategy",
-      title: { pre: "Four statics and two films", em: "from one sale brief." },
-      sub: "The first round answered the brief and said nothing. The second gave every frame a story, with the product never drawn.",
-    },
+    title: "Autumn sale ads, reworked from a flat first round",
     n: 1,
-    name: "Autumn Deals, round two",
     bucket: "strategy",
     client: "Samako",
     date: "6 Oct 2026",
     madeIn: "Claude Code",
     ask: "Sale statics for the autumn offer, with complete creative freedom.",
     did: [
-      "Restarted from a story per frame",
-      "Drew one house set, attached to every shot",
-      "Composited the real product in code",
+      "Rewrote round one around a story per frame",
+      "Kept one cast and set across every shot",
+      "Placed the real product photo in every frame",
     ],
     gate: {
       who: "The client's visual lead",
@@ -69,31 +74,29 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
       clip: film(SAMAKO_AUTUMN_FILM.film),
       caption: "Film A · 15 s, 9:16, in Dutch",
     },
-    cells: [
-      { value: "2 + 4", key: "Films and statics from one brief" },
-      { value: "3 of 3", key: "Cold reads of the punchline after the fix" },
-      { value: "0", key: "Frames where a model drew the product" },
-    ],
+    result: {
+      value: "6 ads",
+      line: "Two 15-second films and four statics, from one open brief.",
+      tally: [
+        { of: 2, lit: 2 },
+        { of: 4, lit: 4 },
+      ],
+    },
   },
   {
     id: "job-production",
     kind: "job",
     menuLabel: "Production · Suri",
-    head: {
-      eyebrow: "Suri · Production",
-      title: { pre: "A 16-second teaser", em: "from 31 raw clips." },
-      sub: "Real footage only. Code found the glass in every frame and printed the message under it; the brushed grain stayed.",
-    },
+    title: "A Black Friday teaser, cut from raw footage",
     n: 2,
-    name: "Under the glass",
     bucket: "production",
     client: "Suri",
     date: "6 Oct 2026",
     madeIn: "Cowork",
     ask: "A Black Friday teaser from the shoot: edit only, no generated footage.",
     did: [
-      "Cut 31 clips to two locked-off shots",
-      "Printed the message under the moving glass",
+      "Cut 31 raw clips down to two shots",
+      "Revealed the message under the moving glass",
       "Cleaned the steel, kept its brushed grain",
     ],
     gate: {
@@ -105,23 +108,17 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
       clip: film(UNDER_THE_GLASS.film),
       caption: "The teaser · 16.16 s, 9:16",
     },
-    cells: [
-      { value: "31 clips", key: "About 39 minutes, cut to 16.16 seconds" },
-      { value: "7", key: "Versions, each one answering a note" },
-      { value: "0.1 px", key: "Offset at the cut between the two shots" },
-    ],
+    result: {
+      value: "2–3 hrs",
+      line: "Retouching and masking now take 2 to 3 hours a video in Claude, not a full manual session.",
+    },
   },
   {
     id: "job-ops",
     kind: "job",
     menuLabel: "Ops · Suri",
-    head: {
-      eyebrow: "Suri · Ops",
-      title: { pre: "A six-slide deck,", em: "filed on the board as one item." },
-      sub: "Briefs reached the studio with information missing. The briefing skill reads a request the way the studio does, and asks before it writes.",
-    },
+    title: "A six-slide brief, filed on the studio's board",
     n: 3,
-    name: "The briefing run",
     bucket: "ops",
     client: "Suri",
     date: "8 Oct 2026",
@@ -129,8 +126,8 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ask: "The week's iterations deck, briefed onto the studio's Monday board.",
     did: [
       "Read the deck and its four resolved comments",
-      "Filled the briefer's placeholder card",
-      "Sent the gaps as one reply in the thread",
+      "Filled the card already on the board",
+      "Sent the open questions as one reply",
     ],
     gate: {
       who: "The creative lead",
@@ -138,7 +135,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     figure: {
       kind: "ledger",
-      caption: "The item as written",
+      caption: "The board item as filed",
       rows: [
         { label: "Item", value: "1, no new card" },
         { label: "Sub-items", value: "3, all video" },
@@ -147,23 +144,18 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
         { label: "Next day", value: "Editor assigned, deadline moved" },
       ],
     },
-    cells: [
-      { value: "504", key: "Briefs read to build the skill, Jan to Oct" },
-      { value: "12", key: "Briefing evals, six of them new this week" },
-      { value: "5", key: "Flags raised before the editor started" },
-    ],
+    result: {
+      value: "5",
+      line: "Problems caught in the brief before any editing began, from clashing copy to a deadline with no editor.",
+      tally: [{ of: 5, lit: 5 }],
+    },
   },
   {
     id: "job-review",
     kind: "job",
     menuLabel: "Review · Samako",
-    head: {
-      eyebrow: "Samako · Review",
-      title: { pre: "The product drawn right,", em: "15 times out of 18." },
-      sub: "Three models, one recipe, read blind against the real product. Then the client's visual lead read the same frames.",
-    },
+    title: "Three image models, tested blind on the real product",
     n: 4,
-    name: "The blind read",
     bucket: "review",
     client: "Samako",
     date: "7 to 8 Oct 2026",
@@ -171,17 +163,17 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ask: "Which model draws the CleanDetect Pro exactly, in hero, in-use and room shots?",
     did: [
       "Drew the same 18 shots on three models",
-      "Shuffled the frames; six readers, blind",
-      "Read the reviewer's 16 pins back from Figma",
+      "Hid which model made each shot, then graded",
+      "Matched the grades to the client's reviewer",
     ],
     gate: {
       who: "The client's visual lead",
-      line: "Sent back the one frame the read had passed. The model changed only by pull request.",
+      line: "Rejected the one shot the AI grading had passed.",
     },
     figure: {
       kind: "pair",
       ratio: "1:1",
-      caption: "Kept and sent back, read blind",
+      caption: "Kept and rejected, graded blind",
       a: { src: shotKept.src, alt: shotKept.alt, label: shotKept.label, verdict: "kept" },
       b: {
         src: shotSentBack.src,
@@ -190,10 +182,13 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
         verdict: "rejected",
       },
     },
-    cells: [
-      { value: "54", key: "Frames on three models, read blind" },
-      { value: "14 of 15", key: "Reviewer's pins that match the blind read" },
-      { value: "6 of 6", key: "In-use shots from the side, was 1 of 9" },
-    ],
+    result: {
+      value: "15 of 18",
+      line: "Product shots right first time on the model now in use, up from 4 of 18 on the one before.",
+      tally: [
+        { of: 18, lit: 4, dim: true },
+        { of: 18, lit: 15 },
+      ],
+    },
   },
 ];

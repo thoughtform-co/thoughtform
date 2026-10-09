@@ -1460,13 +1460,17 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * A JOB (ADR-153 U1): one real piece of client work on one screen, in
-         * one template for every client and every bucket (owner, 2026-10-09:
-         * "uniformize it; right now it looks chaotic"). The leverage's
-         * console: a strip naming the job and its bucket, Tensorlake's
-         * sandwich under it (the spec · the figure · three measured cells),
-         * a readout foot. The bucket is the vision's 2×2 and the engine's
-         * workstream tiles, so one vocabulary runs down the page.
+         * A JOB (ADR-153 U1, U2): one real piece of client work on one
+         * screen, in one template for every client and every bucket (owner,
+         * 2026-10-09: "uniformize it; right now it looks chaotic"). No head:
+         * the frame carries everything, as Tensorlake's does. Its top row is
+         * the four buckets with this one marked, the title, and the client,
+         * where it ran and the date; under it Tensorlake's sandwich (the
+         * spec · the figure · what it returned); the person who decided is
+         * the frame's foot. The bucket is the vision's 2×2 and the engine's
+         * workstream tiles, so one vocabulary runs down the page. U3: the
+         * return is ONE number in a decision maker's words, never three
+         * small cells.
          *
          * ⚠ THE THIRTY-SECOND ENUMERATED EXCEPTION. Server, no state, DOM
          * only, `data-job-*`; its classes are `.arc-case__*` because
@@ -1474,11 +1478,12 @@ export type ArcSection = ArcSectionBase &
          * client's repository, dated, people by role, no money.
          */
         kind: "job";
-        head: ArcHead;
-        /** 1–9, its place among the page's jobs: "JOB 0N" and "Fig. 0N". */
+        /** The job's concrete title, sentence case, set in the frame's top
+         *  row (U2: the job carries its own title; no head above it), e.g.
+         *  "A Black Friday teaser, cut from raw footage". ≤ 56. */
+        title: string;
+        /** 1–9, its place among the page's jobs: "Fig. 0N". */
         n: number;
-        /** The job's working name on the strip, e.g. "Under the glass". ≤ 28. */
-        name: string;
         bucket: ArcJobBucket;
         /** ≤ 20. */
         client: string;
@@ -1493,8 +1498,8 @@ export type ArcSection = ArcSectionBase &
         /** The person who decided, by role (≤ 32), and on what (≤ 110). */
         gate: { who: string; line: string };
         figure: ArcJobFigure;
-        /** Three measured numbers, as filed. */
-        cells: readonly [ArcJobCell, ArcJobCell, ArcJobCell];
+        /** What it returned, one number or one plain statement (U3). */
+        result: ArcJobResult;
       }
   );
 
@@ -1503,10 +1508,33 @@ export type ArcSection = ArcSectionBase &
 /** The four buckets of the work: the vision's 2×2, the engine's tiles. */
 export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
 
-/** A measured number: the value large (≤ 10), what it counts small (≤ 44). */
-export interface ArcJobCell {
+/**
+ * What the job returned (U3, owner 2026-10-09, after the practice's adviser:
+ * "if we can quantify the changes it becomes super powerful"): one number
+ * where the record gives one, hours saved, assets made, right first time,
+ * and the line says it in a decision maker's words. Not every job has a
+ * number; the line then carries it plainly. Every figure as filed.
+ */
+export interface ArcJobResult {
+  /** The one number, large, e.g. "15 of 18" or "2–3 hrs". ≤ 10. */
   value: string;
-  key: string;
+  /** What it means for the business, one or two sentences. ≤ 110. */
+  line: string;
+  /** The count drawn, when the number is a count. */
+  tally?: readonly ArcJobTally[];
+}
+
+/**
+ * One group of a result's tally, Tensorlake's bar code (U2): `of` segments,
+ * the first `lit` of them gold. A second group is a second state (before and
+ * after) or a sibling (the other models); `dim` sets its lit segments in the
+ * gold's quiet tint, so the group that is the claim reads first. At most 60
+ * segments a tally, every count as filed.
+ */
+export interface ArcJobTally {
+  of: number;
+  lit: number;
+  dim?: true;
 }
 
 /** A still beside its sibling, with the verdict it was given. */

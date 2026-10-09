@@ -1,41 +1,46 @@
 import type { CSSProperties } from "react";
 
-import type { ArcJobBucket, ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+import type { ArcJobBucket, ArcJobTally, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { BREAKDOWN_KEPT, BREAKDOWN_REJECTED } from "./ArcBreakdown";
 import { ArcClipLoop } from "./ArcClipLoop";
-import { Glyph } from "./ArcLeverage";
-import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
-import { arcTitleText } from "./chrome";
 
-/** Chrome, never content: the bucket's word and the leverage glyph it shares
- *  with the vision's 2×2, so a bucket reads the same everywhere it is drawn. */
-export const JOB_BUCKETS: Record<ArcJobBucket, { word: string; glyph: ArcLeverageUse["glyph"] }> = {
-  strategy: { word: "Strategy", glyph: "brief" },
-  production: { word: "Production", glyph: "frame" },
-  ops: { word: "Ops", glyph: "flow" },
-  review: { word: "Review", glyph: "check" },
-};
+/** Chrome, never content: the four buckets in the order the page runs them,
+ *  the vision's 2×2 and the engine's workstreams in the same words. */
+export const JOB_BUCKETS: readonly { id: ArcJobBucket; word: string }[] = [
+  { id: "strategy", word: "Strategy" },
+  { id: "production", word: "Production" },
+  { id: "ops", word: "Ops" },
+  { id: "review", word: "Review" },
+];
 
 const two = (n: number) => String(n).padStart(2, "0");
 
+/** Chrome, never content: the result column's label. */
+export const RESULT_LABEL = "The return";
+
 /**
- * ArcJob — one real piece of client work on one screen (ADR-153 U1), in the
- * leverage's console so every case reads as one grammar.
+ * ArcJob — one real piece of client work on one screen (ADR-153 U1, U2), in
+ * the leverage's housing. No head above it: the frame carries everything, as
+ * Tensorlake's frames do (owner, 2026-10-09: "can't we just put all the
+ * information in the frame").
  *
- *   strip   "JOB 0N" and the job's name; the bucket on the right, the one lit
- *           object (gold ring and wash), with the glyph the vision's 2×2 gave
- *           it.
- *   spec    ruled rows: the ask, what Claude did (01 · 02 · 03), the gate:
- *           the person who decided, by role, with the person's green diamond.
+ *   top     the four buckets, this one marked with the gold square
+ *           (Tensorlake's "■ METRICS"); the concrete title; the client, where
+ *           it ran and the date as a key-value block on the right.
+ *   spec    the ask, then what Claude did (01 · 02 · 03).
  *   fig     the evidence on a dot ground with corner ticks, "Fig. 0N" under
- *           it: a silent loop, a kept and a sent-back still, or a ledger.
- *   cells   three measured numbers, large, each under its mono key; the
- *           longest value's length rides the column (`--case-len`), so the
- *           three are set at one size, as large as the column allows.
- *   foot    client · made in · date.
+ *           it: a silent loop, a kept and a sent-back still, or the record as
+ *           a log with dot leaders.
+ *   result  what it returned (U3): ONE number, large and neutral, and one
+ *           line a decision maker reads, with the count drawn as a tally in
+ *           the gold's tints when it is a count (Tensorlake's bar codes: the
+ *           gold is the data). The value's length rides the column
+ *           (`--case-len`), so the number is as large as the column allows.
+ *   foot    the gate: the person who decided, by role, with the person's
+ *           green diamond, and what they decided.
  *
  * ⚠ SERVER, NO STATE, DOM ONLY; the loop is the house's one autoplaying
  * picture (`ArcClipLoop`: muted, plays only in view, never under reduced
@@ -44,47 +49,61 @@ const two = (n: number) => String(n).padStart(2, "0");
  */
 export function ArcJob({
   section,
-  index,
   motion = "reveal",
 }: {
   section: ArcSectionOf<"job">;
   index: number;
   motion?: ArcMotion;
 }) {
-  const { n, name, bucket, ask, did, gate, figure, cells } = section;
-  const b = JOB_BUCKETS[bucket];
-  const longest = Math.max(...cells.map((c) => c.value.length));
+  const { n, title, bucket, ask, did, gate, figure, result } = section;
+  const titleId = `${section.id}-title`;
   return (
     <ArcBeat
       id={section.id}
       kind="job"
       className="arc-section arc-sec arc-sec--job"
-      ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
+      ariaLabel={section.ariaLabel ?? title}
       motion={motion}
     >
       <div className="arc-band">
-        <ArcSectionHead
-          head={section.head}
-          kind="job"
-          index={index}
-          sectionId={section.id}
-          motion={motion}
-        />
         <article
           className="arc-lev arc-case arc-plate arc-reveal"
           data-job-bucket={bucket}
-          {...rung(motion, 0.14)}
+          aria-labelledby={titleId}
+          {...rung(motion, 0.1)}
         >
-          <div className="arc-lev__bar">
-            <p className="arc-lev__sys">
-              <span className="arc-lev__sys-key">Job {two(n)}</span>
-              {name}
-            </p>
-            <p className="arc-case__bucket">
-              <Glyph kind={b.glyph} />
-              {b.word}
-            </p>
-          </div>
+          <header className="arc-case__top">
+            <div className="arc-case__lead">
+              <ol className="arc-case__buckets">
+                {JOB_BUCKETS.map((b) => (
+                  <li
+                    key={b.id}
+                    data-job-on={b.id === bucket ? "" : undefined}
+                    aria-current={b.id === bucket ? "true" : undefined}
+                  >
+                    {b.word}
+                  </li>
+                ))}
+              </ol>
+              <h2 className="arc-case__title" id={titleId}>
+                {title}
+              </h2>
+            </div>
+            <dl className="arc-case__meta">
+              <div>
+                <dt>Client</dt>
+                <dd>{section.client}</dd>
+              </div>
+              <div>
+                <dt>Made in</dt>
+                <dd>{section.madeIn}</dd>
+              </div>
+              <div>
+                <dt>Date</dt>
+                <dd>{section.date}</dd>
+              </div>
+            </dl>
+          </header>
           <div className="arc-case__split">
             <dl className="arc-case__spec">
               <div className="arc-case__row">
@@ -104,13 +123,6 @@ export function ArcJob({
                   </ol>
                 </dd>
               </div>
-              <div className="arc-case__row" data-job-gate="">
-                <dt>The gate</dt>
-                <dd>
-                  <span className="arc-case__who">{gate.who}</span>
-                  {gate.line}
-                </dd>
-              </div>
             </dl>
             <figure className="arc-case__fig" data-job-figure={figure.kind}>
               <div className="arc-case__frame">
@@ -121,32 +133,48 @@ export function ArcJob({
                 {figure.caption}
               </figcaption>
             </figure>
-            <dl className="arc-case__cells" style={{ "--case-len": longest } as CSSProperties}>
-              {cells.map((c) => (
-                <div key={c.key} className="arc-case__cell">
-                  <dt>{c.key}</dt>
-                  <dd>{c.value}</dd>
-                </div>
-              ))}
-            </dl>
+            <section
+              className="arc-case__result"
+              aria-label={RESULT_LABEL}
+              style={{ "--case-len": result.value.length } as CSSProperties}
+            >
+              <p className="arc-case__result-label">{RESULT_LABEL}</p>
+              <div className="arc-case__result-body">
+                <p className="arc-case__num">{result.value}</p>
+                <p className="arc-case__result-line">{result.line}</p>
+                {result.tally ? <Tally groups={result.tally} /> : null}
+              </div>
+            </section>
           </div>
-          <dl className="arc-lev__readout">
-            <div className="arc-lev__read">
-              <dt>Client</dt>
-              <dd>{section.client}</dd>
-            </div>
-            <div className="arc-lev__read">
-              <dt>Made in</dt>
-              <dd>{section.madeIn}</dd>
-            </div>
-            <div className="arc-lev__read">
-              <dt>Date</dt>
-              <dd>{section.date}</dd>
-            </div>
-          </dl>
+          <p className="arc-case__gate">
+            <span className="arc-case__gate-key">The gate</span>
+            <span className="arc-case__who">{gate.who}</span>
+            <span className="arc-case__gate-line">{gate.line}</span>
+          </p>
         </article>
       </div>
     </ArcBeat>
+  );
+}
+
+/** A count as Tensorlake draws one: segments, the counted ones in gold. Each
+ *  group's width follows its count, so a segment is one width across groups. */
+function Tally({ groups }: { groups: readonly ArcJobTally[] }) {
+  return (
+    <span className="arc-case__tally" aria-hidden="true">
+      {groups.map((g, gi) => (
+        <span
+          key={gi}
+          className="arc-case__tally-group"
+          data-job-dim={g.dim ? "" : undefined}
+          style={{ "--case-of": g.of } as CSSProperties}
+        >
+          {Array.from({ length: g.of }, (_, i) => (
+            <i key={i} data-job-lit={i < g.lit ? "" : undefined} />
+          ))}
+        </span>
+      ))}
+    </span>
   );
 }
 
