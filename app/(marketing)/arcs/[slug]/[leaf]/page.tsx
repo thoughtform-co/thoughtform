@@ -36,6 +36,13 @@ import "@/components/arcs/course.css";
 // The setup guide (ADR-151 U1), `.arc-guide*`-scoped: an arc without a guide
 // beat gets bytes and no matching rule. After arcs.css, before theme.css.
 import "@/components/arcs/guide.css";
+// The instrument (ADR-154) on the lattice housing (ADR-149), `.lat-*` and
+// `.ins*`-scoped: an arc without an instrument beat gets bytes and no
+// matching rule. After arcs.css, before theme.css.
+import "@/components/lattice/lattice.css";
+import "@/components/instrument/instrument.css";
+// The leverage and the handoff (ADR-153), `.arc-lev*` / `.arc-hand*`-scoped.
+import "@/components/arcs/leverage.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

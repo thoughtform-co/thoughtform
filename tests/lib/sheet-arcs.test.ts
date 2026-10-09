@@ -24,6 +24,7 @@ import {
 import { letterDateShort } from "@/lib/sheet/dates";
 import { LOG_GLYPHS } from "@/lib/sheet/logGlyphs";
 import type { SheetSection } from "@/lib/sheet/types";
+import { instrumentIsConfiguration } from "@/lib/sheet/configuration";
 
 /**
  * The client console's record, recomputed (ADR-114).
@@ -187,7 +188,12 @@ function registryRecord() {
       chip: a.format,
       sections: a.sections.length,
       // A proposal's picker, or a workshop's six-question board (ADR-130).
-      configured: a.sections.some((s) => s.kind === "configuration" || s.kind === "questions"),
+      configured: a.sections.some(
+        (s) =>
+          s.kind === "configuration" ||
+          s.kind === "questions" ||
+          (s.kind === "instrument" && instrumentIsConfiguration(s))
+      ),
     });
   return out;
 }

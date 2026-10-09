@@ -1,4 +1,11 @@
-import type { ArcBreakdown, ArcChatAside, ArcSectionOf, ArcTitle } from "../../types";
+import type {
+  ArcBreakdown,
+  ArcChatAside,
+  ArcRunCase,
+  ArcRunCheck,
+  ArcSectionOf,
+  ArcTitle,
+} from "../../types";
 
 /**
  * SURI'S THREE PIECES OF WORK, AS ONE RECORD (ADR-147): the brief, the Monday
@@ -897,7 +904,7 @@ export const SURI_STUDIO_CONFIGURATION: ConfigurationBody = {
 /* ── The workstreams, run (ADR-148) ─────────────────────────────────────
    Three of the eight workstreams in `suri-ai-studio/workstreams.toml`, the
    ones the 5 October sessions put first: the brief and its ad names, the
-   Black Friday iterations, the video retouch. Each is one `skill-run`: the
+   Black Friday iterations, the video retouch. Each is one run (`RunBody`): the
    ask is the plugin's own starting prompt, the steps and checks its
    SKILL.md and rubric, the figures `records/eval-log.md` (4 and 6 October).
    What has not run says so. */
@@ -917,10 +924,26 @@ export const SURI_RUN_TITLE = { pre: "How it runs", em: "on Suri's own work." } 
 export const SURI_RUN_SUB =
   "The same five steps as the Loop ad, on three of Suri's workstreams, taken from the studio's own plugin.";
 
-type RunBody = Pick<
-  ArcSectionOf<"skill-run">,
-  "ask" | "skill" | "steps" | "checks" | "decide" | "evals"
->;
+/** One workstream's run, as Prompt to Loop's "How it runs" slide holds it
+ *  (ADR-148): the ask, the skill, the steps, the rubric's checks, who decides,
+ *  and the eval log. The instrument reads it at the run and check altitudes
+ *  (ADR-154 U1); the services ring cuts it to a card. */
+export interface RunBody {
+  /** What someone types, in their own words. ≤ 110. */
+  ask: string;
+  /** The skill Claude picks, as the plugin names it, and the ones it hands on to. */
+  skill: { name: string; also?: readonly string[] };
+  /** What it does, in order. Three to five, ≤ 64 each. */
+  steps: readonly string[];
+  /** The rubric's checks it runs on its own work, gates first. Two to four,
+   *  ≤ 48 each; at least one gate. */
+  checks: readonly ArcRunCheck[];
+  /** Who decides, by role, and where the work lands. */
+  decide: { who: string; line: string };
+  /** The skill's evals: its cases with and without the skill, as the eval
+   *  log records them, and one line on what they show. */
+  evals: { cases: readonly ArcRunCase[]; note: string };
+}
 
 const UTG = "/arcs/suri/under-the-glass";
 
@@ -1447,27 +1470,6 @@ export const EVERY_WORD_STAYS: ArcBreakdown = {
     },
   ],
 };
-
-/** The three `skill-run` panels of the `workstream` group, under one head. */
-export function suriRuns(frame: SuriFrame): ArcSectionOf<"skill-run">[] {
-  const head = {
-    eyebrow: frame.eyebrow,
-    title: frame.title ?? SURI_RUN_TITLE,
-    sub: SURI_RUN_SUB,
-  };
-  return SURI_WORKSTREAM_ORDER.map((which, i) => ({
-    id: `in-practice-${SURI_WORKSTREAMS[which].id}`,
-    kind: "skill-run" as const,
-    ...menu(frame, "In practice", i === 0),
-    worked: {
-      group: "workstream",
-      id: SURI_WORKSTREAMS[which].id,
-      label: SURI_WORKSTREAMS[which].label,
-    },
-    head,
-    ...SURI_RUNS[which],
-  }));
-}
 
 /**
  * THE SEPT/OCT STATICS, ITERATED (2026-10-08, for the X-Bionic proposal):

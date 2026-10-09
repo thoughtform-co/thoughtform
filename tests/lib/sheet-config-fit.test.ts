@@ -23,6 +23,7 @@ import { STACK } from "@/lib/arcs/stack";
 import { arcsInstrumentSections } from "@/lib/sheet/arcs";
 import { configurationViolations } from "@/lib/sheet/composition";
 import type { SheetConfiguration, SheetSection } from "@/lib/sheet/types";
+import { instrumentIsConfiguration } from "@/lib/sheet/configuration";
 
 /**
  * The `/arcs` dossier's configuration board, measured before it is drawn
@@ -64,7 +65,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
     expect(withBoard.sort()).toEqual(
       [
         ...ARCS.filter((a) =>
-          a.sections.some((s) => s.kind === "configuration" || s.kind === "questions")
+          a.sections.some(
+            (s) =>
+              s.kind === "configuration" ||
+              s.kind === "questions" ||
+              (s.kind === "instrument" && instrumentIsConfiguration(s))
+          )
         ).map((a) => a.slug),
         "trinny-london-pitch",
       ].sort()
@@ -104,7 +110,11 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
     for (const a of ARCS) {
       firstPanels.clear();
       const n = a.sections.filter(
-        (s) => (s.kind === "configuration" || s.kind === "questions") && counted(s)
+        (s) =>
+          (s.kind === "configuration" ||
+            s.kind === "questions" ||
+            (s.kind === "instrument" && instrumentIsConfiguration(s))) &&
+          counted(s)
       );
       expect(n.length, `${a.slug}: two configuration instruments on one page`).toBeLessThan(2);
     }
@@ -184,9 +194,10 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
         rows: ["A brief for the studio||"],
         links: ["Claude×1", "Monday×1"],
       },
-      /* Suri's setup page (ADR-148) draws the studio's board once: the
-         work is the studio's whole creative work, and its data answer names
-         Monday and Figma, its interface Claude. */
+      /* Suri's setup page (ADR-148) draws the studio's board once, as the
+         instrument at the work altitude since ADR-154 U1: the work is the
+         studio's whole creative work, and its data answer names Monday and
+         Figma, its interface Claude. */
       "suri-configuration": {
         rows: ["Suri's creative work||"],
         links: ["Claude×1", "Figma×1", "Monday×1"],

@@ -1,3 +1,5 @@
+import type { Altitude, InstrumentRecord, PartId } from "@/lib/instrument/types";
+
 /**
  * lib/arcs — client arc pages (ADR-052).
  *
@@ -1322,39 +1324,6 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * A SKILL RUN (ADR-148): one workstream, run once, in the five steps
-         * Prompt to Loop's "How it runs" slide draws — you ask, Claude picks
-         * the skill, it follows the steps, it checks itself, you decide —
-         * with the skill's evals under the rail. Prompt to Loop's slide is
-         * injected HTML for one example; this is the same breakdown as data,
-         * so a client's workstreams can each carry their own.
-         *
-         * ⚠ THE TWENTY-FIFTH ENUMERATED EXCEPTION. One leaf, server, no state,
-         * `data-run-*` only; the stations are DOM on the workshop frame, the
-         * connectors 1px DOM, never an SVG line (ADR-068 U6).
-         * ⚠ The station NAMES are chrome (`ArcSkillRun`'s constants), never
-         * content, so every run reads the same five steps in the same words.
-         */
-        kind: "skill-run";
-        head: ArcHead;
-        /** What someone types, in their own words. ≤ 110. */
-        ask: string;
-        /** The skill Claude picks, as the plugin names it, and the ones it
-         *  hands on to. */
-        skill: { name: string; also?: readonly string[] };
-        /** What it does, in order. Three to five, ≤ 64 each. */
-        steps: readonly string[];
-        /** The rubric's checks it runs on its own work, gates first. Two to
-         *  four, ≤ 48 each; at least one gate. */
-        checks: readonly ArcRunCheck[];
-        /** Who decides, by role, and where the work lands. */
-        decide: { who: string; line: string };
-        /** The skill's evals: its cases with and without the skill, as the
-         *  eval log records them, and one line on what they show. */
-        evals: { cases: readonly ArcRunCase[]; note: string };
-      }
-    | {
-        /**
          * A CASE BREAKDOWN (ADR-148 U5): how Claude made one real piece of
          * work, as slides in Prompt to Loop's own format: a hero with the
          * film and its facts, then one slide per beat, each a head and its
@@ -1386,7 +1355,123 @@ export type ArcSection = ArcSectionBase &
         head: ArcHead;
         guide: ArcGuide;
       }
+    | {
+        /**
+         * THE INSTRUMENT (ADR-154): one record of the intelligence
+         * configuration, drawn at one altitude (the organisation, the plugin,
+         * the work, the run, the check), with every altitude's chrome in the
+         * one DOM so a pick moves the same six parts between their seats.
+         * `focus` is the proposal law: one lit thing. `picker` offers only
+         * altitudes the record carries.
+         *
+         * ⚠ THE THIRTIETH ENUMERATED EXCEPTION, and the one that retires
+         * `questions`, `plugin-board`, `repository`, `skill-run`,
+         * `guide.system` and `circuit` as their pages move (ADR-070 U35:
+         * delete, never flag). Server, no state; the picker is one island.
+         */
+        kind: "instrument";
+        head: ArcHead;
+        record: InstrumentRecord;
+        altitude: Altitude;
+        focus?: PartId;
+        picker?: readonly Altitude[];
+      }
+    | {
+        /**
+         * THE LEVERAGE (ADR-153): how intelligence should take part in the
+         * work, for a reader with ten seconds (owner, 2026-10-08, of the
+         * configuration on a board's page: "I don't know what people should
+         * be looking at"). Tensorlake's split: ONE wide cell holds the idea
+         * (three plates, two shared and dimmed, one owned and lit), a 2×2
+         * holds where it applies (one glyph, one label, one line each).
+         *
+         * ⚠ THE TWENTY-EIGHTH ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-lev-*`. Exactly three plates and four uses: the tuples
+         * say so, because a fifth tile is the clutter this kind replaces.
+         */
+        kind: "leverage";
+        head: ArcHead;
+        /** Top to bottom: the owned plate first, then what everyone shares. */
+        stack: readonly [ArcLeveragePlate, ArcLeveragePlate, ArcLeveragePlate];
+        /** Under the stack: a mono label and one sentence. */
+        note: { label: string; line: string };
+        /** The instrument's head strip: its name, and a status on the right. */
+        console: { name: string; status: string };
+        /** The readout foot: up to four short mono pairs. */
+        readout: readonly { label: string; value: string }[];
+        /** The 2×2, under one mono label. */
+        uses: {
+          label: string;
+          items: readonly [ArcLeverageUse, ArcLeverageUse, ArcLeverageUse, ArcLeverageUse];
+        };
+      }
+    | {
+        /**
+         * THE HANDOFF (ADR-153): automation runs through adoption, as three
+         * panels in a row with the hinge lit (Cyberpunk's chooser: one object
+         * in focus, its siblings quiet), then where the team's time goes,
+         * today and configured, as two bars that letter no figure.
+         *
+         * ⚠ THE TWENTY-NINTH ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-hand-*`. Exactly three steps and two rows.
+         */
+        kind: "handoff";
+        head: ArcHead;
+        steps: readonly [ArcHandoffStep, ArcHandoffStep, ArcHandoffStep];
+        time: {
+          label: string;
+          /** A mono aside on the bars, e.g. "Illustrative". */
+          note: string;
+          rows: readonly [ArcHandoffRow, ArcHandoffRow];
+        };
+      }
   );
+
+/* ── The leverage and the handoff (ADR-153) ─────────────────────── */
+
+export interface ArcLeveragePlate {
+  id: string;
+  /** Mono, e.g. "Your layer". ≤ 24. */
+  label: string;
+  /** What it is, one line. ≤ 48. */
+  line: string;
+  /** The chip at the plate's right edge, e.g. "Only yours". ≤ 20. */
+  chip: string;
+  /** The one plate that is lit: the team's own. */
+  own?: true;
+}
+
+export interface ArcLeverageUse {
+  id: string;
+  /** The drawing above the label. */
+  glyph: "brief" | "frame" | "flow" | "check";
+  /** Mono, e.g. "Strategy". ≤ 16. */
+  label: string;
+  /** One line. ≤ 60. */
+  line: string;
+}
+
+export interface ArcHandoffStep {
+  id: string;
+  /** The plate's readout, top right, e.g. "Week 1". ≤ 16. */
+  when: string;
+  /** Mono verb, e.g. "Adopt". ≤ 16. */
+  label: string;
+  /** The step as a short sentence. ≤ 48. */
+  title: string;
+  /** Who does it. ≤ 28. */
+  who: string;
+  /** The hinge: the one panel in focus. */
+  lit?: true;
+}
+
+export interface ArcHandoffRow {
+  /** Mono, e.g. "Today". */
+  label: string;
+  /** Left to right; each `share` is a fraction of the bar, summing to 1. The
+   *  bar letters the names, never the fractions. */
+  segments: readonly { label: string; share: number; lit?: true }[];
+}
 
 /* ── The setup guide (ADR-151 U1, the system of U5) ────────────────
    Every figure is a PANEL: a hairline frame with its label set into the top

@@ -1,0 +1,876 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE INSTRUMENT — one record, five altitudes (ADR-154)
+
+   Scoped to `.ins*`. The housing is the lattice's `.lat-frame` (loaded
+   before this sheet); its children are square (ADR-065 rule 4). Every
+   colour is a ramp step off the arcs' tokens, which `.arc-root` re-derives
+   for light, so this sheet carries no theme branch.
+
+   ⚠ ONE DOM, PLACED BY `[data-altitude]`. The six panels, the chip, the
+   nodes and the frames exist once; each altitude is a grid (or, at `work`,
+   the crop) that seats them. `[data-at]` shows a span at the altitudes it
+   names and hides it elsewhere. A pick changes the attribute and nothing
+   else; the engines move the same nodes between seats.
+
+   ⚠ GOLD IS THE LIT PLATES AND THE CHIP; GREEN IS THE OWNER. Nothing idles.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ins {
+  --ins-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --ins-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --ins-ink: var(--arc-ink, rgb(var(--dawn-rgb)));
+  --ins-ink-90: var(--arc-ink-90, rgba(var(--dawn-rgb), 0.9));
+  --ins-ink-70: var(--arc-ink-70, rgba(var(--dawn-rgb), 0.7));
+  --ins-ink-60: var(--arc-ink-60, rgba(var(--dawn-rgb), 0.6));
+  --ins-ink-50: var(--arc-ink-50, rgba(var(--dawn-rgb), 0.5));
+  --ins-edge: var(--arc-edge, rgba(var(--dawn-rgb), 0.08));
+  --ins-rule: var(--arc-rule, rgba(var(--dawn-rgb), 0.12));
+  --ins-seam: var(--arc-seam, rgba(var(--dawn-rgb), 0.28));
+  --ins-grid: var(--arc-grid, rgba(var(--dawn-rgb), 0.06));
+  --ins-plate: var(--arc-plate, rgba(var(--void-deep-rgb), 0.55));
+  --ins-strip: rgba(var(--dawn-rgb), 0.05);
+  --ins-gold: var(--gold);
+  --ins-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  --ins-gold-text: var(--gold-ink, var(--gold));
+  --ins-gold-wash: var(--arc-gold-wash, rgba(var(--gold-rgb), 0.12));
+  --ins-person: var(--atreides-light, #5b7a4e);
+  --ins-person-text: var(--atreides-ink, #7a9e6a);
+  --ins-person-wash: rgba(var(--atreides-rgb, 91, 122, 78), 0.14);
+  --ins-ground: var(--void, #0a0908);
+  --ins-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ins-cut: 360ms;
+  --ins-1: 8px;
+  --ins-2: 16px;
+  --ins-3: 24px;
+  --ins-4: 40px;
+  display: block;
+  margin: 0;
+  font-family: var(--ins-sans);
+  color: var(--ins-ink);
+}
+.ins *,
+.ins *::before,
+.ins *::after {
+  box-sizing: border-box;
+}
+.ins ul,
+.ins ol,
+.ins p,
+.ins figure {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── The head strip and the foot (the housing's own parts) ──────────── */
+
+.ins__head {
+  gap: var(--ins-3);
+}
+.ins__desig {
+  flex: none;
+  font: 11px/1.2 var(--ins-mono);
+  letter-spacing: var(--track-eyebrow, 0.15em);
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+}
+.ins__crumb {
+  display: flex;
+  flex: 1;
+  gap: var(--ins-2);
+  justify-content: center;
+}
+.ins__crumb-at {
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  font: 11px/1.2 var(--ins-mono);
+  letter-spacing: var(--track-eyebrow, 0.15em);
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+  cursor: default;
+}
+button.ins__crumb-at {
+  cursor: pointer;
+}
+.ins__crumb-at[data-on] {
+  color: var(--ins-gold-text);
+  box-shadow: 0 1px 0 var(--ins-gold-line);
+}
+.ins__crumb-at + .ins__crumb-at::before {
+  content: "/";
+  margin-right: var(--ins-2);
+  color: var(--ins-ink-50);
+}
+.ins__tag {
+  flex: none;
+  padding: 3px var(--ins-1);
+  border: 1px solid var(--ins-gold-line);
+  font: 10px/1.4 var(--ins-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ins-gold-text);
+}
+.ins__foot {
+  align-items: center;
+}
+.ins__legend {
+  display: flex;
+  gap: var(--ins-2);
+  align-items: center;
+}
+.ins__legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  vertical-align: 0;
+  transform: rotate(45deg);
+}
+.ins__legend i[data-ins-state="lit"] {
+  border: 1px solid var(--ins-gold);
+}
+.ins__legend i[data-ins-state="human"] {
+  background: var(--ins-person);
+}
+
+/* ── The stage ───────────────────────────────────────────────────────── */
+
+.ins__body {
+  padding: var(--ins-3);
+}
+.ins__stage {
+  position: relative;
+  display: grid;
+  gap: var(--ins-2);
+}
+
+/* [data-at] shows a span at the altitudes it names (a space-separated
+   list), and hides it elsewhere. The rules are generated per altitude. */
+.ins [data-at] {
+  display: none;
+}
+.ins[data-altitude="org"] [data-at~="org"],
+.ins[data-altitude="plugin"] [data-at~="plugin"],
+.ins[data-altitude="work"] [data-at~="work"],
+.ins[data-altitude="run"] [data-at~="run"],
+.ins[data-altitude="check"] [data-at~="check"] {
+  display: block;
+}
+.ins[data-altitude="org"] .ins-node[data-at~="org"],
+.ins[data-altitude="plugin"] .ins-node[data-at~="plugin"] {
+  display: grid;
+}
+.ins[data-altitude="plugin"] .ins-frame[data-at~="plugin"],
+.ins[data-altitude="org"] .ins-frame[data-at~="org"] {
+  display: block;
+}
+
+/* ── The ground and the wires: the work altitude's ──────────────────── */
+
+.ins-ground {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--ins-grid) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 40%, transparent 78%);
+}
+.ins[data-altitude="work"][data-ins-ground="dots"] .ins-ground {
+  display: block;
+}
+.ins-wires {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.ins[data-altitude="work"] .ins-wires {
+  display: block;
+}
+.ins-wire path {
+  fill: none;
+  stroke: var(--ins-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.85;
+}
+.ins-wire[data-ins-state="lit"] path {
+  stroke: var(--ins-gold-line);
+}
+.ins-wire[data-ins-state="human"] path {
+  stroke: var(--ins-person);
+}
+
+/* ── The panel: a square module with its header strip inside ────────── */
+
+.ins-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ins-seam);
+  background: var(--ins-plate);
+  transition:
+    opacity var(--ins-cut) var(--ins-ease),
+    border-color var(--ins-cut) var(--ins-ease);
+}
+.ins-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ins-1);
+  padding: 6px 12px;
+  background: var(--ins-strip);
+  border-bottom: 1px solid var(--ins-rule);
+}
+.ins[data-ins-panel="bare"] .ins-panel__head {
+  background: none;
+}
+.ins-panel__label {
+  font: 10.5px/1.2 var(--ins-mono);
+  letter-spacing: var(--track-eyebrow, 0.15em);
+  text-transform: uppercase;
+  color: var(--ins-ink-70);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ins-panel__label > span {
+  display: none;
+}
+.ins[data-altitude="org"] .ins-panel__label > [data-at~="org"],
+.ins[data-altitude="plugin"] .ins-panel__label > [data-at~="plugin"],
+.ins[data-altitude="work"] .ins-panel__label > [data-at~="work"],
+.ins[data-altitude="run"] .ins-panel__label > [data-at~="run"],
+.ins[data-altitude="check"] .ins-panel__label > [data-at~="check"] {
+  display: inline;
+}
+.ins-panel__chip {
+  flex: none;
+  padding: 2px 6px;
+  border: 1px solid var(--ins-gold-line);
+  font: 10px/1.4 var(--ins-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ins-gold-text);
+}
+.ins-panel__body {
+  flex: 1;
+  padding: 10px 12px 12px;
+}
+.ins-panel__at {
+  display: none;
+}
+.ins-panel__at > * {
+  display: block;
+}
+.ins-panel__name {
+  display: block;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--ins-ink);
+}
+.ins-panel__line {
+  display: block;
+  margin-top: 4px;
+  font: 12px/1.45 var(--ins-mono);
+  color: var(--ins-ink-70);
+}
+.ins-panel__line code {
+  font: inherit;
+  color: var(--ins-gold-text);
+}
+.ins-panel__line b {
+  font-weight: inherit;
+  color: var(--ins-ink);
+}
+.ins-panel__list {
+  display: grid;
+  gap: 3px;
+  font: 12px/1.45 var(--ins-mono);
+  color: var(--ins-ink-90);
+}
+.ins-panel__list[data-numbered] {
+  counter-reset: ins-step;
+}
+.ins-panel__list[data-numbered] li::before {
+  counter-increment: ins-step;
+  content: counter(ins-step) " ";
+  color: var(--ins-gold-text);
+}
+.ins-panel__list li[data-lit] {
+  color: var(--ins-gold-text);
+}
+.ins-panel__tie {
+  display: block;
+  margin-top: var(--ins-1);
+  font: 10px/1.4 var(--ins-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+}
+
+/* the states */
+.ins-panel[data-ins-state="lit"] {
+  border-color: var(--ins-gold);
+}
+.ins-panel[data-ins-state="lit"] > .ins-panel__head {
+  background: var(--ins-gold-wash);
+  border-bottom-color: var(--ins-gold-line);
+}
+.ins-panel[data-ins-state="lit"] .ins-panel__label {
+  color: var(--ins-gold-text);
+}
+.ins-panel[data-ins-state="human"] {
+  border-color: var(--ins-person);
+}
+.ins-panel[data-ins-state="human"] > .ins-panel__head {
+  background: var(--ins-person-wash);
+  border-bottom-color: var(--ins-person);
+}
+.ins-panel[data-ins-state="human"] .ins-panel__label {
+  color: var(--ins-person-text);
+}
+.ins-panel[data-ins-state="pending"] {
+  border-style: dashed;
+}
+.ins-panel[data-ins-state="ghost"] {
+  opacity: 0.45;
+}
+
+/* ── The chip: the one filled object ─────────────────────────────────── */
+
+/* The chip is a lattice frame (`data-cut="tr"`, the single notch that means
+   connected): its ring and its cut are the recipe's. This sheet adds the
+   wash and the 2px rule that stops at the cut, on `::after`. */
+.ins-chip.lat-frame {
+  --lat-frame-line: var(--ins-gold);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 16px;
+  background: var(--ins-gold-wash);
+  transition: opacity var(--ins-cut) var(--ins-ease);
+}
+.ins-chip.lat-frame::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: var(--lat-ch);
+  height: 2px;
+  background: var(--ins-gold-line);
+}
+.ins-chip__at {
+  flex-direction: column;
+  gap: 6px;
+}
+.ins-chip__label,
+.ins-chip__name,
+.ins-chip__line,
+.ins-chip__bar {
+  display: block;
+}
+.ins-chip__name + .ins-chip__line {
+  margin-top: 4px;
+}
+.ins-chip__label {
+  font: 10.5px/1.2 var(--ins-mono);
+  letter-spacing: var(--track-eyebrow, 0.15em);
+  text-transform: uppercase;
+  color: var(--ins-gold-text);
+}
+.ins-chip__name {
+  font-size: 18px;
+  line-height: 1.25;
+  color: var(--ins-ink);
+}
+.ins-chip__line {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ins-ink-70);
+}
+.ins-chip__bar {
+  margin-top: auto;
+  padding-top: var(--ins-2);
+  border-top: 1px solid var(--ins-gold-line);
+  font: 12px/1.45 var(--ins-mono);
+  color: var(--ins-ink-70);
+}
+.ins-chip__bar b {
+  font-weight: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ins-gold-text);
+}
+.ins-chip__list {
+  display: grid;
+  gap: 4px;
+  margin-top: var(--ins-1);
+  font: 12px/1.45 var(--ins-mono);
+  color: var(--ins-ink-90);
+}
+.ins-chip__list li[data-lit] {
+  color: var(--ins-gold-text);
+}
+.ins-chip__list li::before {
+  content: "◆ ";
+  font-size: 8px;
+  vertical-align: 2px;
+  color: var(--ins-ink-50);
+}
+.ins-chip__list li[data-lit]::before {
+  color: var(--ins-gold);
+}
+
+/* ── The nodes outside, the frames behind ────────────────────────────── */
+
+.ins-node {
+  display: none;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--ins-rule);
+  transition: opacity var(--ins-cut) var(--ins-ease);
+}
+.ins-node__label {
+  font: 10px/1.3 var(--ins-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+}
+.ins-node__name {
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--ins-ink);
+}
+.ins-node__line {
+  font: 11.5px/1.4 var(--ins-mono);
+  color: var(--ins-ink-60);
+}
+.ins-frame {
+  display: none;
+  position: relative;
+  border: 1px dashed var(--ins-seam);
+  pointer-events: none;
+}
+.ins-frame__label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 6px 12px;
+  background: var(--ins-strip);
+  border-right: 1px solid var(--ins-rule);
+  border-bottom: 1px solid var(--ins-rule);
+  font: 10px/1.3 var(--ins-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+}
+
+/* ── The checks and the return path ──────────────────────────────────── */
+
+.ins-panel__checks {
+  display: grid;
+}
+.ins-panel__checks li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 5px 0;
+  border-top: 1px solid var(--ins-edge);
+  font: 12px/1.4 var(--ins-mono);
+  color: var(--ins-ink-90);
+}
+.ins-panel__checks li:first-child {
+  border-top: 0;
+}
+.ins-check__mark {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--ins-ink-50);
+  transform: rotate(45deg);
+}
+/* A passed check is ink, filled: green stays the human's (ADR-100). */
+[data-check="pass"] .ins-check__mark {
+  background: var(--ins-ink-70);
+  border-color: var(--ins-ink-70);
+}
+[data-check="block"] .ins-check__mark {
+  background: #c8644f;
+  border-color: #c8644f;
+}
+[data-check="review"] .ins-check__mark {
+  border-color: var(--ins-gold);
+}
+.ins-check__state {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+}
+[data-check="pass"] .ins-check__state {
+  color: var(--ins-ink-90);
+}
+.ins-check__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ins-check__label code {
+  font: inherit;
+  color: var(--ins-ink);
+}
+/* One line on what the log shows, under the rows. */
+.ins-panel__note {
+  display: block;
+  margin-top: var(--ins-1);
+  padding-top: 2px;
+  border-top: 1px solid var(--ins-edge);
+  font: 11px/1.5 var(--ins-mono);
+  color: var(--ins-ink-60);
+}
+.ins-return {
+  display: none;
+  position: relative;
+  height: 28px;
+  border: 1px dashed var(--ins-seam);
+  border-top: 0;
+}
+.ins-return::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -8px;
+  border: 4.5px solid transparent;
+  border-bottom: 8px solid var(--ins-ink-50);
+  border-top: 0;
+}
+.ins-return b {
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  padding: 0 var(--ins-1);
+  background: var(--ins-ground);
+  font: 10px/1.4 var(--ins-mono);
+  font-weight: inherit;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ins-ink-50);
+}
+
+/* ═══ The altitudes: where the same parts sit ═══════════════════════════ */
+
+/* work: the crop. Plates by percentage on a 2:1 stage, the chip at its
+   centre, the wires under them. */
+.ins[data-altitude="work"] .ins__stage {
+  display: block;
+  aspect-ratio: 2 / 1;
+}
+.ins[data-altitude="work"] .ins-panel,
+.ins[data-altitude="work"] .ins-chip {
+  position: absolute;
+  left: var(--ix);
+  top: var(--iy);
+  width: var(--iw);
+  height: var(--ih);
+}
+
+/* plugin: the account and the marketplace above, the plugin frame holding
+   the folders with the mother at its centre, the interfaces on a bar. */
+.ins[data-altitude="plugin"] .ins__stage {
+  padding-top: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-areas:
+    "above1 above1 above2 above2"
+    "context evals chip chip"
+    "data owner chip chip"
+    "interface interface interface interface";
+}
+.ins[data-altitude="plugin"] .ins-frame[data-at="plugin"] {
+  grid-column: 1 / -1;
+  grid-row: 2 / 4;
+  margin: calc(-1 * var(--ins-4)) calc(-1 * var(--ins-1)) calc(-1 * var(--ins-1));
+  z-index: 0;
+}
+.ins[data-altitude="plugin"] .ins__stage {
+  row-gap: var(--ins-2);
+}
+.ins[data-altitude="plugin"] .ins-node[data-ins-id="above-1"],
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="model"] {
+  margin-bottom: var(--ins-3);
+}
+.ins[data-altitude="plugin"] .ins-node[data-ins-id="above-1"] {
+  grid-area: above1;
+}
+.ins[data-altitude="plugin"] .ins-node[data-ins-id="above-2"] {
+  grid-area: above2;
+}
+.ins[data-altitude="plugin"] .ins-chip {
+  grid-area: chip;
+  z-index: 1;
+}
+.ins[data-altitude="plugin"] .ins-panel {
+  z-index: 1;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="model"] {
+  grid-area: above2;
+  z-index: 2;
+}
+.ins[data-altitude="plugin"] .ins-node[data-ins-id="above-2"] {
+  display: none;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="context"] {
+  grid-area: context;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="evals"] {
+  grid-area: evals;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="data"] {
+  grid-area: data;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="owner"] {
+  grid-area: owner;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] {
+  grid-area: interface;
+  flex-direction: row;
+  align-items: center;
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] .ins-panel__head {
+  border-bottom: 0;
+  border-right: 1px solid var(--ins-rule);
+}
+.ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] .ins-panel__tie {
+  display: none;
+}
+/* run: a station is a fifth of the band, and its words are chrome that must
+   read whole (ADR-148): the label wraps and the lit strip is the mark, so
+   the "you write this" chip stands down here. */
+.ins[data-altitude="run"] .ins-panel__label {
+  white-space: normal;
+}
+.ins[data-altitude="run"] .ins-panel__chip {
+  display: none;
+}
+
+/* org: the shared three along the top edge, the OS at the centre with its
+   workstreams, the three the team writes per workstream below, the socket. */
+.ins[data-altitude="org"] .ins__stage {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "model data interface"
+    "chip chip chip"
+    "context evals owner"
+    "socket socket socket";
+}
+.ins[data-altitude="org"] .ins-frame[data-at="org"] {
+  grid-column: 1 / -1;
+  grid-row: 1 / 4;
+  margin: calc(-1 * var(--ins-4)) calc(-1 * var(--ins-1)) calc(-1 * var(--ins-1));
+  z-index: 0;
+}
+.ins[data-altitude="org"] .ins__stage {
+  padding-top: var(--ins-4);
+}
+.ins[data-altitude="org"] .ins-chip {
+  grid-area: chip;
+  z-index: 1;
+  justify-self: center;
+  width: min(100%, 420px);
+}
+.ins[data-altitude="org"] .ins-panel {
+  z-index: 1;
+}
+.ins[data-altitude="org"] .ins-panel[data-ins-part="model"] {
+  grid-area: model;
+}
+.ins[data-altitude="org"] .ins-panel[data-ins-part="data"] {
+  grid-area: data;
+}
+.ins[data-altitude="org"] .ins-panel[data-ins-part="interface"] {
+  grid-area: interface;
+}
+.ins[data-altitude="org"] .ins-panel[data-ins-part="context"] {
+  grid-area: context;
+}
+.ins[data-altitude="org"] .ins-panel[data-ins-part="evals"] {
+  grid-area: evals;
+}
+.ins[data-altitude="org"] .ins-panel[data-ins-part="owner"] {
+  grid-area: owner;
+}
+.ins[data-altitude="org"] .ins-node[data-ins-id="socket"] {
+  grid-area: socket;
+  justify-self: center;
+  border-style: dashed;
+  text-align: center;
+}
+
+/* run: the ask on the chip, the five stations on one rail in the record's
+   order, the tools under the steps. */
+.ins[data-altitude="run"] .ins__stage {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-areas:
+    "chip chip chip chip chip"
+    "interface model context evals owner"
+    ". . data . .";
+}
+.ins[data-altitude="run"] .ins-chip {
+  grid-area: chip;
+}
+.ins[data-altitude="run"] .ins-panel[data-ins-part="interface"] {
+  grid-area: interface;
+}
+.ins[data-altitude="run"] .ins-panel[data-ins-part="model"] {
+  grid-area: model;
+}
+.ins[data-altitude="run"] .ins-panel[data-ins-part="context"] {
+  grid-area: context;
+}
+.ins[data-altitude="run"] .ins-panel[data-ins-part="evals"] {
+  grid-area: evals;
+}
+.ins[data-altitude="run"] .ins-panel[data-ins-part="owner"] {
+  grid-area: owner;
+}
+.ins[data-altitude="run"] .ins-panel[data-ins-part="data"] {
+  grid-area: data;
+  opacity: 0.7;
+}
+/* the rail: a chevron between stations */
+.ins[data-altitude="run"]
+  .ins-panel:not([data-ins-part="owner"]):not([data-ins-part="data"])::after {
+  content: "";
+  position: absolute;
+  right: -11px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--ins-gold-line);
+  border-right: 1px solid var(--ins-gold-line);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* check: station 4 opened. The checks wide, the decision beside them, the
+   rest a dim row, the return path under. */
+.ins[data-altitude="check"] .ins__stage {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "chip chip chip"
+    "evals evals owner"
+    "context model data"
+    "return return return";
+}
+.ins[data-altitude="check"] .ins-chip {
+  grid-area: chip;
+}
+.ins[data-altitude="check"] .ins-panel[data-ins-part="evals"] {
+  grid-area: evals;
+}
+.ins[data-altitude="check"] .ins-panel[data-ins-part="owner"] {
+  grid-area: owner;
+}
+.ins[data-altitude="check"] .ins-panel[data-ins-part="context"] {
+  grid-area: context;
+  opacity: 0.55;
+}
+.ins[data-altitude="check"] .ins-panel[data-ins-part="model"] {
+  grid-area: model;
+  opacity: 0.55;
+}
+.ins[data-altitude="check"] .ins-panel[data-ins-part="data"] {
+  grid-area: data;
+  opacity: 0.55;
+}
+.ins[data-altitude="check"] .ins-panel[data-ins-part="interface"] {
+  display: none;
+}
+.ins[data-altitude="check"] .ins-return {
+  display: block;
+  grid-area: return;
+  margin: 0 15%;
+}
+
+/* ── Reduced motion: every transition is a cut ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ins {
+    --ins-cut: 0ms;
+  }
+}
+
+/* ── Phone: every altitude stands up in its reading order ────────────── */
+@media (max-width: 900px) {
+  .ins__head {
+    flex-wrap: wrap;
+  }
+  .ins__crumb {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .ins[data-altitude] .ins__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+    aspect-ratio: auto;
+  }
+  /* ⚠ An altitude seats a part by name, `.ins[data-altitude="x"]
+     .ins-panel[data-ins-part="y"]` (0,3,1): the stack names the part too,
+     so it outranks every seat, and sits later in the sheet. */
+  .ins[data-altitude] .ins-panel[data-ins-part],
+  .ins[data-altitude] .ins-chip,
+  .ins[data-altitude] .ins-node[data-ins-id],
+  .ins[data-altitude] .ins-frame[data-at] {
+    position: static;
+    width: auto;
+    height: auto;
+    grid-area: auto;
+    grid-column: auto;
+    grid-row: auto;
+    margin: 0;
+    opacity: 1;
+    z-index: auto;
+  }
+  .ins[data-altitude] .ins-frame,
+  .ins-wires,
+  .ins-ground,
+  .ins[data-altitude="run"] .ins-panel::after {
+    display: none !important;
+  }
+  /* The return path's named area would open a phantom column on the
+     one-column stack (an unknown area makes implicit lines). */
+  .ins[data-altitude="check"] .ins-return {
+    grid-area: auto;
+    order: 3;
+    margin: 0;
+  }
+  .ins[data-altitude] .ins-chip {
+    order: -1;
+  }
+  .ins[data-altitude] .ins-panel[data-ins-part] {
+    order: 2;
+  }
+  .ins[data-altitude] .ins-panel[data-ins-state="lit"] {
+    order: 0;
+  }
+  .ins[data-altitude] .ins-panel[data-ins-state="human"] {
+    order: 1;
+  }
+  .ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] .ins-panel__head {
+    border-right: 0;
+    border-bottom: 1px solid var(--ins-rule);
+  }
+  .ins[data-altitude="check"] .ins-panel[data-ins-part="interface"] {
+    display: flex;
+  }
+}

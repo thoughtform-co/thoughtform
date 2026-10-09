@@ -19,6 +19,7 @@ import {
   SURI_WORKSTREAM_ORDER,
   SURI_WORKSTREAMS,
 } from "@/lib/arcs/content/shared/suriWork";
+import { SURI_INSTRUMENT } from "@/lib/instrument/records/suri";
 import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
 import { THE_CATCH_LINE } from "@/lib/arcs/content/shared/workshopFraming";
 import { WHAT_FOLLOWS_TITLE } from "@/lib/arcs/content/shared/whatFollows";
@@ -211,12 +212,12 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
       "spectrum:tool-and-collaborator",
       "curve:the-curve",
       "interstitial:real-question",
-      "questions:configuration",
+      "instrument:configuration",
       "cards:skills-and-evals",
       "horizon:the-horizon",
       "interstitial:real-jobs",
       "prompt-to-loop:case",
-      "skill-run:workstream",
+      "instrument:workstream",
       "close:close",
     ]);
     const steer = CONFIG.sections[0];
@@ -232,22 +233,35 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
       THE_CATCH_LINE
     );
     const board = CONFIG.sections.find((s) => s.id === "configuration");
-    expect(board?.kind === "questions" && arcTitleText(board.head.title)).toBe(
+    expect(board?.kind === "instrument" && arcTitleText(board.head.title)).toBe(
       "How intelligence should take part in the work."
     );
+    /* ADR-154 U1: the studio's six are the instrument at the work altitude,
+       the one record, with the picker up to the plugin and down into a run. */
+    expect(board?.kind === "instrument" && board.record).toBe(SURI_INSTRUMENT);
+    expect(board?.kind === "instrument" && board.altitude).toBe("work");
+    expect(board?.kind === "instrument" && board.picker).toEqual([
+      "plugin",
+      "work",
+      "run",
+      "check",
+    ]);
   });
 
   it("runs three of Suri's workstreams under one switch, from one record", () => {
-    const runs = CONFIG.sections.filter((s) => s.kind === "skill-run");
+    const runs = CONFIG.sections.filter(
+      (s) => s.kind === "instrument" && s.worked?.group === "workstream"
+    );
     expect(runs.map((s) => s.worked?.id)).toEqual([...SURI_WORKSTREAM_ORDER]);
     expect(runs.map((s) => s.worked?.label)).toEqual(
       SURI_WORKSTREAM_ORDER.map((w) => SURI_WORKSTREAMS[w].label)
     );
     for (const s of runs) {
-      if (s.kind !== "skill-run") continue;
+      if (s.kind !== "instrument") continue;
       const which = SURI_WORKSTREAM_ORDER.find((w) => SURI_WORKSTREAMS[w].id === s.worked?.id)!;
-      expect(s.ask).toBe(SURI_RUNS[which].ask);
-      expect(s.evals).toBe(SURI_RUNS[which].evals);
+      expect(s.altitude).toBe("run");
+      expect(s.record.run?.ask).toBe(SURI_RUNS[which].ask);
+      expect(s.record.checksNote).toBe(SURI_RUNS[which].evals.note);
     }
     expect(JSON.stringify(CONFIG), "no fee, no key").not.toMatch(/£|\$|€|GBP|sk-|AIza/);
   });
@@ -278,7 +292,9 @@ describe("Suri's Creative Intelligence Configuration (ADR-147)", () => {
     expect(ews.kind === "breakdown" && ews.breakdown).toBe(EVERY_WORD_STAYS);
     const bridge = CONFIG.sections.find((s) => s.id === "real-jobs");
     expect(bridge?.kind === "interstitial" && arcTitleText(bridge.line)).toMatch(/three real jobs/);
-    const runs = CONFIG.sections.filter((s) => s.kind === "skill-run");
+    const runs = CONFIG.sections.filter(
+      (s) => s.kind === "instrument" && s.worked?.group === "workstream"
+    );
     expect(JSON.stringify(runs), "the teaser left the video tab").not.toContain("teaser");
   });
 

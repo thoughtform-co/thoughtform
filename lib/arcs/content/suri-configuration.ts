@@ -1,8 +1,12 @@
 import type { ArcDef } from "../types";
 
+import { SURI_INSTRUMENT, suriWorkstreamInstrument } from "@/lib/instrument/records/suri";
+
 import {
-  SURI_STUDIO_CONFIGURATION,
-  suriRuns,
+  SURI_RUN_SUB,
+  SURI_RUN_TITLE,
+  SURI_WORKSTREAM_ORDER,
+  SURI_WORKSTREAMS,
   UNDER_THE_GLASS,
   EVERY_WORD_STAYS,
 } from "./shared/suriWork";
@@ -38,7 +42,10 @@ const CLOSE_SUB =
  *
  * ⚠ THE WORKSTREAMS ARE ONE RECORD (`SURI_RUNS`), each from the plugin
  * repository (`suri-ai-studio`): the skill's starting prompt, its steps and
- * rubric, the eval log's figures. What has not run says so.
+ * rubric, the eval log's figures. What has not run says so. Since ADR-154 U1
+ * the configuration and the three runs are ONE INSTRUMENT (`SURI_INSTRUMENT`,
+ * `suriWorkstreamInstrument`): the same drawing at the work altitude with a
+ * picker, and at the run altitude opening into the checks.
  *
  * ⚠ IT IS THE CLIENT'S PAGE. It names people by role; it prints no fee, no
  * break clause and no fleet word; no key and no price appear on it.
@@ -111,10 +118,12 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
 
     /* ── 04 · The configuration, once for the studio ───────────────────────
        ADR-148 U2: its title carries the question the interstitial used to
-       ask, so the page asks it once, where it is answered. */
+       ask, so the page asks it once, where it is answered. ADR-154 U1: the
+       instrument at the work altitude, the studio's six on the shared
+       record, with the picker up to the plugin and down into a run. */
     {
       id: "configuration",
-      kind: "questions",
+      kind: "instrument",
       menuLabel: "Configuration",
       menuPrimary: true,
       head: {
@@ -122,7 +131,9 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
         title: { pre: "How intelligence should", em: "take part in the work." },
         sub: "Running it is the part you set up. Suri answers four of these once, for the whole studio; the team writes the other two, per workstream.",
       },
-      ...SURI_STUDIO_CONFIGURATION,
+      record: SURI_INSTRUMENT,
+      altitude: "work",
+      picker: ["plugin", "work", "run", "check"],
     },
 
     /* ── 04 · The two the team writes ────────────────────────────────────── */
@@ -216,8 +227,23 @@ export const SURI_CONFIGURATION_ARC: ArcDef = {
       breakdown: EVERY_WORD_STAYS,
     },
 
-    /* ── 08 · In practice: three workstreams under one floating switch ──── */
-    ...suriRuns({ eyebrow: "08 · In practice", menuLabel: "In practice", menuPrimary: true }),
+    /* ── 08 · In practice: three workstreams under one floating switch ────
+       ADR-154 U1: each workstream is the same instrument at the run altitude,
+       its record cut from `SURI_RUNS`, opening into its checks. */
+    ...SURI_WORKSTREAM_ORDER.map((which, i) => ({
+      id: `in-practice-${SURI_WORKSTREAMS[which].id}`,
+      kind: "instrument" as const,
+      ...(i === 0 ? { menuLabel: "In practice", menuPrimary: true as const } : {}),
+      worked: {
+        group: "workstream",
+        id: SURI_WORKSTREAMS[which].id,
+        label: SURI_WORKSTREAMS[which].label,
+      },
+      head: { eyebrow: "08 · In practice", title: SURI_RUN_TITLE, sub: SURI_RUN_SUB },
+      record: suriWorkstreamInstrument(which),
+      altitude: "run" as const,
+      picker: ["run", "check"] as const,
+    })),
 
     /* ── 09 · What follows ───────────────────────────────────────────────────
        The shared close, with this page's own sub: the shared one says the

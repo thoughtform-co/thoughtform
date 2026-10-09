@@ -30,10 +30,22 @@ const GUARDED = [
   "lib/sheet",
   "components/sessions",
   "lib/sessions",
+  /* ADR-154: the instrument's engines (gsap/Flip, animejs) are loaded by
+     `import()` on the first pick only; a static import would put them on
+     every arc route. */
+  "components/instrument",
+  "lib/instrument",
 ];
 
 /** Bare specifiers no file under the guarded trees may STATICALLY import. */
-const BANNED = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/, /^@supabase\//];
+const BANNED = [
+  /^three(\/|$)/,
+  /^@react-three\//,
+  /^postprocessing(\/|$)/,
+  /^@supabase\//,
+  /^gsap(\/|$)/,
+  /^animejs(\/|$)/,
+];
 
 /**
  * The enumerated exceptions, and why each is safe:

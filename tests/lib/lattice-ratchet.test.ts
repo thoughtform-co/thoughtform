@@ -47,6 +47,7 @@ const PINS: Record<string, Counts> = {
      `clip-path: polygon(` is ever written — the one place the site's corner
      text lives is geometry.ts, and `lattice-tokens` pins the sheet to it. */
   "components/lattice/lattice.css": { P: 0, S: 0, F: 0, M: 0 },
+  "components/instrument/instrument.css": { P: 0, S: 16, F: 6, M: 0 },
   "app/styles/variables.css": { P: 0, S: 0, F: 0, M: 2 },
   "components/landing/v7/landing.css": { P: 1, S: 232, F: 203, M: 18 },
   "components/landing/v7/site-footer/site-footer.css": { P: 0, S: 13, F: 8, M: 0 },
@@ -80,7 +81,7 @@ const PINS: Record<string, Counts> = {
   /* The Home sessions page (ADR-150): every cut is `.lat-frame`'s, so it
      enters at zero and may never rise. */
   "components/sessions/sessions.css": { P: 0, S: 0, F: 0, M: 0 },
-  "components/arcs/arcs.css": { P: 6, S: 388, F: 263, M: 14 },
+  "components/arcs/arcs.css": { P: 6, S: 374, F: 251, M: 13 },
   "components/arcs/course.css": { P: 0, S: 30, F: 17, M: 0 },
   "components/arcs/prompt-to-loop/prompt-to-loop.css": { P: 0, S: 89, F: 61, M: 3 },
 };

@@ -1,0 +1,481 @@
+/* The leverage and the handoff (ADR-153).
+   Scoped to `.arc-lev*` and `.arc-hand*`: an arc without either beat gets
+   bytes and no matching rule. Reads the arcs' and the lattice's tokens only
+   (`.arc-root` re-derives them for light), so it carries no theme branch.
+
+   THE BRIEF (owner, 2026-10-08): a board reads it in ten seconds, AND it
+   looks like an instrument, retro-futuristic and clean, never a slide. So:
+   one idea per beat and one lit thing, housed in the arcs' own chamfered
+   plate (`.arc-plate`, no new polygon), with a head strip, mono readouts,
+   data glyphs, a dot ground and bar-code tracks. Spacing is the lattice's
+   roles and the --space ladder; type is the --type ladder. */
+
+.arc-lev,
+.arc-hand {
+  --lv-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --lv-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --lv-gold-text: var(--gold-ink, var(--gold));
+  --lv-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  --lv-dots: radial-gradient(rgba(var(--dawn-rgb), 0.1) 1px, transparent 1px) 0 0 / var(--space-md)
+    var(--space-md);
+  margin-top: var(--lat-gap-block);
+  font-family: var(--lv-sans);
+  color: var(--arc-ink);
+}
+:where(.arc-lev, .arc-hand) :where(p, ol, ul, dl, dt, dd) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Shared mono chrome. */
+.arc-lev__sys,
+.arc-lev__status,
+.arc-lev__label,
+.arc-lev__uses-label,
+.arc-lev__plate-label,
+.arc-lev__chip,
+.arc-lev__index,
+.arc-lev__read,
+.arc-hand__step-label,
+.arc-hand__when,
+.arc-hand__step-who,
+.arc-hand__run,
+.arc-hand__time-label,
+.arc-hand__time-note,
+.arc-hand__row-label,
+.arc-hand__seg-name {
+  font-family: var(--lv-mono);
+  font-size: var(--type-sm);
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.arc-lev__line {
+  margin-top: var(--space-sm);
+  font-size: var(--type-md);
+  line-height: 1.5;
+  color: var(--arc-ink-60);
+  max-width: 36ch;
+}
+
+/* A head strip: the plate's own bar, stopping short of the cut. */
+.arc-lev__bar,
+.arc-hand__head,
+.arc-hand__time-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--lat-pad-cell);
+  padding-right: calc(var(--lat-pad-cell) + var(--arc-plate-ch));
+  border-bottom: 1px solid var(--arc-rule);
+}
+
+/* ── The leverage: one console ─────────────────────────────────────── */
+
+.arc-lev__sys {
+  display: flex;
+  gap: var(--space-md);
+  color: var(--arc-ink-70);
+}
+.arc-lev__sys-key {
+  padding-inline: var(--space-xs);
+  background: rgba(var(--dawn-rgb), 0.08);
+  color: var(--arc-ink-50);
+}
+.arc-lev__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--lv-gold-text);
+}
+.arc-lev__pulse {
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--gold);
+}
+.arc-lev__split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+}
+.arc-lev__idea {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3xl);
+  padding: var(--space-2xl) var(--lat-pad-cell);
+  border-right: 1px solid var(--arc-rule);
+}
+
+/* The stack: three slabs on one dashed spine. */
+.arc-lev__stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.arc-lev__stack::before {
+  content: "";
+  position: absolute;
+  top: var(--space-xl);
+  bottom: var(--space-xl);
+  left: calc(var(--space-3xl) - 1px);
+  border-left: 1px dashed var(--arc-seam);
+}
+.arc-lev__plate {
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(var(--space-3xl) * 2) minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-xl);
+  padding-block: var(--space-lg);
+  color: var(--arc-ink-50);
+}
+.arc-lev__slab {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.arc-lev__slab-top,
+.arc-lev__slab-side {
+  fill: var(--arc-plate, rgba(10, 9, 8, 0.9));
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-lev__slab[data-tier="shared"] .arc-lev__slab-top,
+.arc-lev__slab[data-tier="shared"] .arc-lev__slab-side {
+  stroke: var(--arc-ink-22);
+  stroke-dasharray: 3 3;
+}
+.arc-lev__slab[data-tier="own"] .arc-lev__slab-top {
+  fill: var(--arc-gold-wash);
+  stroke: var(--gold);
+}
+.arc-lev__slab[data-tier="own"] .arc-lev__slab-side {
+  fill: rgba(var(--gold-rgb), 0.22);
+  stroke: var(--gold);
+}
+.arc-lev__hatch {
+  stroke: var(--gold);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.arc-lev__plate-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.arc-lev__plate-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+.arc-lev__plate-line {
+  font-size: var(--type-base);
+  line-height: 1.4;
+}
+.arc-lev__chip {
+  flex-shrink: 0;
+  font-size: var(--type-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--arc-rule);
+  white-space: nowrap;
+}
+.arc-lev__plate[data-lev-own] {
+  color: var(--arc-ink);
+}
+.arc-lev__plate[data-lev-own] .arc-lev__plate-label,
+.arc-lev__plate[data-lev-own] .arc-lev__chip {
+  color: var(--lv-gold-text);
+  border-color: var(--lv-gold-line);
+}
+.arc-lev__plate[data-lev-own] .arc-lev__chip {
+  background: var(--arc-gold-wash);
+}
+.arc-lev__plate[data-lev-own] .arc-lev__plate-line {
+  font-size: var(--type-lg);
+}
+.arc-lev__note {
+  padding-left: var(--space-md);
+  border-left: 2px solid var(--gold);
+}
+.arc-lev__note .arc-lev__label {
+  color: var(--lv-gold-text);
+}
+.arc-lev__note .arc-lev__line {
+  color: var(--arc-ink-80);
+  font-size: var(--type-lg);
+}
+
+/* The 2×2, on the dot ground. */
+.arc-lev__uses {
+  display: flex;
+  flex-direction: column;
+  background: var(--lv-dots);
+}
+.arc-lev__uses-label {
+  padding: var(--space-md) var(--lat-pad-cell);
+  border-bottom: 1px solid var(--arc-rule);
+  color: var(--arc-ink-60);
+  background: var(--arc-plate, rgba(10, 9, 8, 0.9));
+}
+.arc-lev__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.arc-lev__cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl) var(--lat-pad-cell) var(--space-2xl);
+}
+.arc-lev__cell:nth-child(odd) {
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-lev__cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-lev__index {
+  color: var(--arc-ink-40);
+}
+.arc-lev__title {
+  margin-top: var(--space-md);
+  font-size: var(--type-xl);
+  line-height: 1.25;
+  color: var(--arc-ink);
+}
+.arc-lev__cell .arc-lev__line {
+  margin-top: 0;
+}
+.arc-lev__glyph {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  overflow: visible;
+}
+.arc-lev__glyph-grid,
+.arc-lev__glyph-ink {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-lev__glyph-ink {
+  stroke: var(--arc-ink-40);
+}
+.arc-lev__glyph-act {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.arc-lev__glyph-dash {
+  stroke-dasharray: 3 3;
+}
+.arc-lev__glyph-dot {
+  fill: var(--gold);
+}
+
+/* The readout foot. */
+.arc-lev__readout {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-lev__read {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--lat-pad-cell);
+  color: var(--arc-ink-50);
+}
+.arc-lev__read + .arc-lev__read {
+  border-left: 1px solid var(--arc-rule);
+}
+.arc-lev__read dd {
+  color: var(--arc-ink-80);
+}
+.arc-lev__read:last-child dd {
+  color: var(--lv-gold-text);
+}
+
+/* ── The handoff: three plates, then the time ─────────────────────── */
+
+.arc-hand__steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+}
+.arc-hand__run {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-3xl);
+  color: var(--arc-ink-40);
+}
+.arc-hand__step-label {
+  display: flex;
+  gap: var(--space-md);
+  color: var(--arc-ink-70);
+}
+.arc-hand__step-n {
+  color: var(--arc-ink-40);
+}
+.arc-hand__when {
+  font-size: var(--type-xs);
+  color: var(--arc-ink-50);
+  white-space: nowrap;
+}
+.arc-hand__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-xl) var(--lat-pad-cell) var(--space-lg);
+  background: var(--lv-dots);
+}
+.arc-hand__step-title {
+  min-height: calc(var(--space-4xl) + var(--space-md));
+  font-size: var(--type-xl);
+  line-height: 1.3;
+  color: var(--arc-ink-80);
+}
+.arc-hand__step-who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: auto;
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--arc-rule);
+  color: var(--arc-ink-70);
+}
+.arc-hand__who-key {
+  color: var(--arc-ink-40);
+}
+/* The siblings fade back; the hinge stays at full strength. */
+.arc-hand__step:not([data-hand-lit]) .arc-hand__head,
+.arc-hand__step:not([data-hand-lit]) .arc-hand__body {
+  opacity: 0.55;
+}
+.arc-hand__step[data-hand-lit] .arc-hand__head {
+  flex-direction: row;
+  border-bottom-color: var(--lv-gold-line);
+}
+.arc-hand__step[data-hand-lit] .arc-hand__step-label,
+.arc-hand__step[data-hand-lit] .arc-hand__step-n,
+.arc-hand__step[data-hand-lit] .arc-hand__when {
+  color: var(--lv-gold-text);
+}
+.arc-hand__step[data-hand-lit] .arc-hand__step-title {
+  color: var(--arc-ink);
+}
+
+.arc-hand__time {
+  margin-top: var(--space-3xl);
+}
+.arc-hand__time-label {
+  color: var(--arc-ink-80);
+}
+.arc-hand__time-note {
+  font-size: var(--type-xs);
+  color: var(--arc-ink-40);
+}
+.arc-hand__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+  padding: var(--space-2xl) var(--lat-pad-cell);
+}
+.arc-hand__row {
+  display: grid;
+  grid-template-columns: calc(var(--space-4xl) + var(--space-2xl)) minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-lg);
+}
+.arc-hand__row-label {
+  color: var(--arc-ink-60);
+}
+.arc-hand__bar {
+  display: flex;
+  gap: var(--space-sm);
+}
+.arc-hand__seg {
+  flex-basis: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+  color: var(--arc-ink-50);
+}
+/* Tensorlake's bar-code: stripes, not a fill. */
+.arc-hand__seg-track {
+  display: block;
+  height: var(--space-xl);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--arc-ink-22) 0 2px,
+    transparent 2px var(--space-sm)
+  );
+}
+.arc-hand__seg[data-hand-lit] {
+  color: var(--lv-gold-text);
+}
+.arc-hand__seg[data-hand-lit] .arc-hand__seg-track {
+  background: repeating-linear-gradient(90deg, var(--gold) 0 2px, transparent 2px var(--space-xs));
+}
+.arc-hand__seg-name {
+  font-size: var(--type-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── The phone ─────────────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .arc-lev__split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-lev__idea {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  .arc-hand__steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-hand__run {
+    width: auto;
+    height: var(--space-2xl);
+    writing-mode: vertical-lr;
+  }
+  .arc-hand__step-title {
+    min-height: 0;
+  }
+  .arc-hand__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
+}
+@media (max-width: 640px) {
+  .arc-lev__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-lev__cell:nth-child(odd) {
+    border-right: 0;
+  }
+  .arc-lev__cell:not(:last-child) {
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  .arc-lev__plate {
+    grid-template-columns: var(--space-4xl) minmax(0, 1fr);
+    column-gap: var(--space-md);
+  }
+  .arc-lev__stack::before {
+    left: calc(var(--space-2xl) + var(--space-md) - 1px);
+  }
+  .arc-lev__read + .arc-lev__read {
+    border-left: 0;
+  }
+}

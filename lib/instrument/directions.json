@@ -1,0 +1,88 @@
+{
+  "$comment": "THE ONE REGISTRY for the instrument lab's knobs (ADR-154). Read by /test/instrument-lab (TS import through lib/instrument/variants.ts) and by scripts/capture-instrument.mjs (readFileSync). TYPE IDS ARE LETTERS ONLY. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: IA is every knob at its first value and the control; every other direction is one argument against it. The `zoom` knob is the owner's 'try all': three engines for the altitude transition, decided on the read, the losers deleted with their guards (ADR-070 U35).",
+  "knobs": {
+    "housing": {
+      "values": ["lip", "seam"],
+      "label": "Housing",
+      "note": "lip = the housing's one sanctioned gold line, lit on the altitude you are at. seam = every frame in dawn; gold spent on the chip and the lit plates alone."
+    },
+    "panel": {
+      "values": ["strip", "bare"],
+      "label": "Panel",
+      "note": "strip = Tensor Lake's header band inside the frame: label left, state chip right. bare = the label alone over a hairline."
+    },
+    "ribbon": {
+      "values": ["eight", "four"],
+      "label": "Ribbon",
+      "note": "eight = R4's eight-wire ribbon at pitch 4, the switchboard's bundle. four = half the conductors, the same pitch."
+    },
+    "ground": {
+      "values": ["dots", "void"],
+      "label": "Ground",
+      "note": "dots = the 24px dot grid under the wiring, masked to the centre. void = the page alone."
+    },
+    "zoom": {
+      "values": ["css", "flip", "anime"],
+      "label": "Zoom",
+      "note": "css = data-altitude swaps and CSS transitions: a cut with a fade, no layout interpolation. flip = gsap/Flip moves the same six nodes between their seats. anime = animejs timelines do the same; the lab's dependency only."
+    }
+  },
+  "directions": [
+    {
+      "id": "IA",
+      "name": "House",
+      "question": "does one record, drawn at five altitudes with the house values, read as one instrument the reader can zoom?",
+      "shape": "the TR+BL housing on a gold lip, Tensor Lake's strip, eight wires, the dot grid, a cut between altitudes",
+      "knobs": {}
+    },
+    {
+      "id": "IB",
+      "name": "Dawn",
+      "question": "with the housing in dawn, is the one lit object enough to say where you are?",
+      "shape": "the same five altitudes with no gold on any frame",
+      "knobs": { "housing": "seam" }
+    },
+    {
+      "id": "IC",
+      "name": "Bare",
+      "question": "without the header strip, does a panel still read as a module of the same device?",
+      "shape": "the same five altitudes, every panel headed by its label alone",
+      "knobs": { "panel": "bare" }
+    },
+    {
+      "id": "ID",
+      "name": "Four",
+      "question": "do four conductors still read as wiring, or do they read as lines?",
+      "shape": "the work altitude at half the ribbon",
+      "knobs": { "ribbon": "four" }
+    },
+    {
+      "id": "IE",
+      "name": "Void",
+      "question": "without the dot grid, does the wiring float?",
+      "shape": "the work altitude on the page alone",
+      "knobs": { "ground": "void" }
+    },
+    {
+      "id": "IF",
+      "name": "Flip",
+      "question": "when the same six nodes travel between their seats, does the reader keep hold of the object across the zoom?",
+      "shape": "the zoom board on gsap/Flip",
+      "knobs": { "zoom": "flip" }
+    },
+    {
+      "id": "IG",
+      "name": "Anime",
+      "question": "does animejs's timeline give the explainer feel the owner named, and what does it cost against Flip?",
+      "shape": "the zoom board on animejs",
+      "knobs": { "zoom": "anime" }
+    }
+  ],
+  "wave": {
+    "lane": "ins",
+    "viewports": ["1280x720", "1470x830", "1920x1247"],
+    "binding": "1280x720",
+    "themes": ["dark", "light"],
+    "note": "1280x720 is the binding cell; 1470x830 is the owner's laptop; 1920x1247 the owner's window. The jury scores the surfaces board per cell."
+  }
+}

@@ -1818,61 +1818,78 @@ describe("the workshop's shared beats (ADR-143)", () => {
     }
   });
 
-  /* ADR-148: the simplified setup page draws the studio's board once and
-     runs three workstreams, each body one record in `suriWork.ts`. */
-  it("the Suri setup page reads the studio board and the workstream runs", () => {
+  /* ADR-148, ADR-154 U1: the simplified setup page draws the studio's six
+     once, as the instrument at the work altitude, and runs three workstreams
+     as the same instrument at the run altitude, each record cut from
+     `SURI_RUNS` in `suriWork.ts`. */
+  it("the Suri setup page reads the studio record and the workstream runs", () => {
     const runs = ARCS.flatMap((arc) =>
-      arc.sections.flatMap((s) => (s.kind === "skill-run" ? [{ arc: arc.slug, s }] : []))
+      arc.sections.flatMap((s) =>
+        s.kind === "instrument" && s.worked?.group === "workstream" ? [{ arc: arc.slug, s }] : []
+      )
     );
-    for (const { arc, s } of runs.filter((r) => r.s.worked?.group === "workstream")) {
+    expect(runs.length).toBeGreaterThan(0);
+    for (const { arc, s } of runs) {
       const which = SURI_WORKSTREAM_ORDER.find((w) => SURI_WORKSTREAMS[w].id === s.worked?.id);
       expect(which, `${arc}#${s.id}: a known workstream`).toBeDefined();
       const body = SURI_RUNS[which!];
-      expect(s.steps, `${arc}#${s.id}`).toBe(body.steps);
-      expect(s.checks, `${arc}#${s.id}`).toBe(body.checks);
-      expect(s.evals, `${arc}#${s.id}`).toBe(body.evals);
+      expect(s.altitude, `${arc}#${s.id}: the run altitude`).toBe("run");
+      expect(s.picker, `${arc}#${s.id}: opens into its checks`).toEqual(["run", "check"]);
+      expect(s.record.run?.steps, `${arc}#${s.id}`).toBe(body.steps);
+      expect(s.record.run?.ask, `${arc}#${s.id}`).toBe(body.ask);
+      expect(s.record.checksNote, `${arc}#${s.id}: the log's line`).toBe(body.evals.note);
+      expect(
+        s.record.checks?.filter((c) => !c.code).map((c) => c.label),
+        `${arc}#${s.id}: the rubric's rows`
+      ).toEqual(body.checks.map((c) => c.line));
+      expect(
+        s.record.checks?.filter((c) => c.code).map((c) => c.label),
+        `${arc}#${s.id}: the cases as filed`
+      ).toEqual(body.evals.cases.map((c) => c.name));
       expect(s.head.sub, `${arc}#${s.id}: the record's sub`).toBe(SURI_RUN_SUB);
     }
     const page = ARCS.find((a) => a.slug === "suri-configuration")!;
-    const board = page.sections.find((s) => s.kind === "questions");
-    expect(board?.kind === "questions" && board.left).toBe(SURI_STUDIO_CONFIGURATION.left);
-    expect(board?.kind === "questions" && board.right).toBe(SURI_STUDIO_CONFIGURATION.right);
+    const board = page.sections.find((s) => s.id === "configuration");
+    expect(board?.kind).toBe("instrument");
+    if (board?.kind !== "instrument") return;
+    expect(board.altitude).toBe("work");
+    expect(board.picker).toEqual(["plugin", "work", "run", "check"]);
+    expect(board.record.parts.map((p) => p.answer)).toEqual(
+      [...SURI_STUDIO_CONFIGURATION.left, ...SURI_STUDIO_CONFIGURATION.right].map((x) => x.answer)
+    );
   });
 
-  /* ADR-148: a skill run is the five steps as data. The station names are
-     chrome; the body is held to what one station can letter. */
-  it("every skill run holds its shape", () => {
-    for (const arc of ARCS) {
-      for (const s of arc.sections) {
-        if (s.kind !== "skill-run") continue;
-        const at = `${arc.slug}#${s.id}`;
-        expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(110);
-        expect(s.steps.length, `${at}: steps`).toBeGreaterThanOrEqual(3);
-        expect(s.steps.length, `${at}: steps`).toBeLessThanOrEqual(5);
-        for (const step of s.steps) expect(step.length, `${at}: ${step}`).toBeLessThanOrEqual(64);
-        expect(s.checks.length, `${at}: checks`).toBeGreaterThanOrEqual(2);
-        expect(s.checks.length, `${at}: checks`).toBeLessThanOrEqual(4);
-        expect(
-          s.checks.some((c) => c.gate),
-          `${at}: at least one gate`
-        ).toBe(true);
-        for (const c of s.checks) expect(c.line.length, `${at}: ${c.line}`).toBeLessThanOrEqual(48);
-        expect(s.evals.cases.length, `${at}: cases`).toBeGreaterThanOrEqual(1);
-        for (const c of s.evals.cases) {
-          expect(c.name, `${at}: a case is named as filed`).toMatch(/^[a-z0-9-]+$/);
-          for (const r of [c.with, c.without])
-            if (r) expect(r, `${at}/${c.name}`).toMatch(/^\d+ of \d+$/);
-          expect(!c.without || !!c.with, `${at}/${c.name}: without needs with`).toBe(true);
-        }
-        const text = JSON.stringify({
-          ask: s.ask,
-          steps: s.steps,
-          checks: s.checks,
-          decide: s.decide,
-          note: s.evals.note,
-        });
-        expect(text, `${at}: no em dash`).not.toMatch(/\u2014/);
+  /* ADR-148: a run is the five steps as data. The station names are chrome;
+     the body is held to what one station can letter. */
+  it("every run holds its shape", () => {
+    for (const [which, s] of Object.entries(SURI_RUNS)) {
+      const at = `SURI_RUNS.${which}`;
+      expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(110);
+      expect(s.steps.length, `${at}: steps`).toBeGreaterThanOrEqual(3);
+      expect(s.steps.length, `${at}: steps`).toBeLessThanOrEqual(5);
+      for (const step of s.steps) expect(step.length, `${at}: ${step}`).toBeLessThanOrEqual(64);
+      expect(s.checks.length, `${at}: checks`).toBeGreaterThanOrEqual(2);
+      expect(s.checks.length, `${at}: checks`).toBeLessThanOrEqual(4);
+      expect(
+        s.checks.some((c) => c.gate),
+        `${at}: at least one gate`
+      ).toBe(true);
+      for (const c of s.checks) expect(c.line.length, `${at}: ${c.line}`).toBeLessThanOrEqual(48);
+      expect(s.evals.cases.length, `${at}: cases`).toBeGreaterThanOrEqual(1);
+      for (const c of s.evals.cases) {
+        expect(c.name, `${at}: a case is named as filed`).toMatch(/^[a-z0-9-]+$/);
+        for (const r of [c.with, c.without])
+          if (r) expect(r, `${at}/${c.name}`).toMatch(/^\d+ of \d+$/);
+        expect(!c.without || !!c.with, `${at}/${c.name}: without needs with`).toBe(true);
       }
+      const text = JSON.stringify({
+        ask: s.ask,
+        steps: s.steps,
+        checks: s.checks,
+        decide: s.decide,
+        note: s.evals.note,
+      });
+      expect(text, `${at}: no em dash`).not.toMatch(/\u2014/);
     }
   });
 

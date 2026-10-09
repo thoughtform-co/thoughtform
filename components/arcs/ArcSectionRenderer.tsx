@@ -14,6 +14,9 @@ import { ArcCurve } from "./ArcCurve";
 import { ArcDossier } from "./ArcDossier";
 import { ArcFlow } from "./ArcFlow";
 import { ArcGuide } from "./ArcGuide";
+import { ArcInstrument } from "./ArcInstrument";
+import { ArcHandoff } from "./ArcHandoff";
+import { ArcLeverage } from "./ArcLeverage";
 import { ArcGround } from "./ArcGround";
 import { ArcHull } from "./ArcHull";
 import { ArcHeroBoard } from "./ArcHeroBoard";
@@ -30,7 +33,6 @@ import { ArcPortrait } from "./ArcPortrait";
 import { ArcQuestions } from "./ArcQuestions";
 import { ArcRepository } from "./ArcRepository";
 import { ArcResource } from "./ArcResource";
-import { ArcSkillRun } from "./ArcSkillRun";
 import { ArcBreakdown, breakdownLength } from "./ArcBreakdown";
 import { PromptToLoop } from "./prompt-to-loop/PromptToLoop";
 import { promptToLoopRun } from "./prompt-to-loop/promptToLoopRun";
@@ -153,14 +155,18 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcHull key={section.id} section={section} index={index} motion={motion} />;
     case "repository":
       return <ArcRepository key={section.id} section={section} index={index} motion={motion} />;
-    case "skill-run":
-      return <ArcSkillRun key={section.id} section={section} index={index} motion={motion} />;
     case "prompt-to-loop":
       return <PromptToLoop key={section.id} startIndex={index} slides={promptToLoopRun(section)} />;
     case "breakdown":
       return <ArcBreakdown key={section.id} section={section} index={index} motion={motion} />;
     case "guide":
       return <ArcGuide key={section.id} section={section} index={index} motion={motion} />;
+    case "instrument":
+      return <ArcInstrument key={section.id} section={section} index={index} motion={motion} />;
+    case "leverage":
+      return <ArcLeverage key={section.id} section={section} index={index} motion={motion} />;
+    case "handoff":
+      return <ArcHandoff key={section.id} section={section} index={index} motion={motion} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;
