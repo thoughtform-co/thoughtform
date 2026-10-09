@@ -304,7 +304,11 @@ export type ArcSection = ArcSectionBase &
     | {
         /** Full-bleed display line — chapter question, callout, or quote. */
         kind: "interstitial";
-        variant: "question" | "callout" | "quote";
+        /** `chapter` (ADR-153): a compact band, not a screen; the line set
+         *  left under a part ruler, for a page read by a board. */
+        variant: "question" | "callout" | "quote" | "chapter";
+        /** The part ruler, `chapter` only: which part of how many. */
+        chapter?: { n: number; of: number };
         eyebrow?: string;
         line: ArcTitle;
         subline?: string;
@@ -1425,6 +1429,31 @@ export type ArcSection = ArcSectionBase &
           rows: readonly [ArcHandoffRow, ArcHandoffRow];
         };
       }
+    | {
+        /**
+         * THE TERMS (ADR-153): the fee and what it is measured against, as
+         * one console in the leverage's own housing, for the reader who
+         * signs: the day rate as the one large readout with the shape of the
+         * engagement under it, and what we measure as a 2×2 of glyphs.
+         *
+         * ⚠ THE THIRTY-FIRST ENUMERATED EXCEPTION. Server, no state, DOM
+         * only, `data-terms-*`. No total is ever lettered (ADR-133 U5).
+         */
+        kind: "terms";
+        head: ArcHead;
+        console: { name: string; status: string };
+        /** The one large readout, e.g. "€1,000" + "a day". */
+        rate: { label: string; value: string; unit: string; line: string };
+        /** The shape under it: two to four mono rows. */
+        shape: readonly ArcMetaRow[];
+        /** What we measure: exactly four. */
+        measures: {
+          label: string;
+          items: readonly [ArcLeverageUse, ArcLeverageUse, ArcLeverageUse, ArcLeverageUse];
+        };
+        /** The readout foot. */
+        readout: readonly { label: string; value: string }[];
+      }
   );
 
 /* ── The leverage and the handoff (ADR-153) ─────────────────────── */
@@ -1444,7 +1473,7 @@ export interface ArcLeveragePlate {
 export interface ArcLeverageUse {
   id: string;
   /** The drawing above the label. */
-  glyph: "brief" | "frame" | "flow" | "check";
+  glyph: "brief" | "frame" | "flow" | "check" | "ratio" | "spread" | "clock" | "meter";
   /** Mono, e.g. "Strategy". ≤ 16. */
   label: string;
   /** One line. ≤ 60. */

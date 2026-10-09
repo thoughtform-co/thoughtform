@@ -432,6 +432,102 @@
   white-space: nowrap;
 }
 
+/* ── The terms: the leverage's console, the rate as its one readout ── */
+
+.arc-terms__rate {
+  justify-content: space-between;
+}
+.arc-terms__rate-label {
+  color: var(--lv-gold-text);
+}
+.arc-terms__value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  font-family: var(--lv-mono);
+  font-size: var(--lat-display);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--arc-ink);
+}
+.arc-terms__unit {
+  font-size: var(--type-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--arc-ink-60);
+}
+.arc-terms__shape {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-terms__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-md);
+  border-bottom: 1px dashed var(--arc-rule);
+  font-family: var(--lv-mono);
+  font-size: var(--type-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.arc-terms__row dt {
+  color: var(--arc-ink-50);
+}
+.arc-terms__row dd {
+  color: var(--arc-ink-80);
+  text-align: right;
+}
+
+/* ── The chapter band (an interstitial for a board) ─────────────────
+   A band the height of its content, set left under a part ruler: where
+   the reader is in the argument, then one line. Never a screen. */
+
+.arc-inter--chapter {
+  min-height: 0;
+  padding-block: var(--space-4xl);
+}
+.arc-inter--chapter .arc-inter__band {
+  justify-items: start;
+  text-align: left;
+  gap: var(--space-lg);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-inter--chapter .arc-inter__line {
+  max-width: 24ch;
+  font-size: var(--lat-display);
+}
+.arc-inter--chapter .arc-inter__subline {
+  max-width: 56ch;
+  margin-inline: 0;
+  text-align: left;
+}
+.arc-inter__ruler {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-ink, var(--gold));
+}
+.arc-inter__ticks {
+  display: flex;
+  gap: var(--space-xs);
+}
+.arc-inter__tick {
+  width: var(--space-2xl);
+  height: var(--space-xs);
+  background: var(--arc-ink-22);
+}
+.arc-inter__tick[data-on] {
+  background: var(--gold);
+}
+
 /* ── The phone ─────────────────────────────────────────────────────── */
 
 @media (max-width: 960px) {
