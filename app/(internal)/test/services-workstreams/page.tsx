@@ -6,7 +6,6 @@ import "@/components/landing/v7/landing.css";
 import "@/components/landing/v7/theme.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
-import "@/components/lattice/lattice.css";
 import "./services-workstreams.css";
 
 /**

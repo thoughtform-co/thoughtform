@@ -25,9 +25,9 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
  *
  * What differs: the faces come from `faceBaker` (the lab seam on
  * `ServicesCardRing`), the face variant is `card` (a drawn face — no photo
- * fetch, no veil, the tight slab), and there is no drawer: the open state on
- * this lab is the DOM evidence deck, so this lab never writes `openPlateRef`
- * (its two writers stay two).
+ * fetch, no veil, the tight slab), and the fourth slot is hidden. A card
+ * opens IN PLACE through the ring's own drawer (ADR-050), driven by the
+ * shell's `openPlateRef` write.
  */
 
 const INSTRUMENT_SCALE = 0.62;
@@ -94,7 +94,7 @@ export default function RingBackdrop({
             aboutProgressRef={aboutRef}
             entrance="off"
             faceVariant="card"
-            openDrawer={false}
+            openDrawer
             deckFlip={false}
             publishAnchors
             plates={plates}

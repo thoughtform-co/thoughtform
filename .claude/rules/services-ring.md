@@ -497,8 +497,14 @@ the landing changed; no ADR until a face direction wins.
   per-slot reads (`openPlateRef` matching, the anchors' `serviceId`) now key on
   `plates[i].id`, not `SERVICES[i].id` — identical for production, whose two
   records share one order, and what lets a lab order its plates freely.
-- **The lab writes no `openPlateRef`** — its open state is a DOM evidence deck,
-  so the single-writer contract above still has two writers.
+- **A card opens IN PLACE, through the ring's own drawer** (owner, 2026-10-09:
+  a panel of client folders beside the card was removed — the card is one
+  object and its open state is its own drawer, ADR-050). The drawer letters
+  the workstream's `what` and who it was proven at, then the shared spec.
+  ⚠ The lab shell is its route's ONE `openPlateRef` writer — the contract is
+  one writer PER ROUTE (`ServicesStage` on the landing, each lab's shell on
+  its own), and the stage carries `data-plate-open` so the masthead steps
+  back exactly as on the landing.
 - **The record is `lib/services-workstreams/`, built BY REFERENCE** from
   `LOOP_INTELLIGENCE_MAP.works` (by `stream`, through `runModeOf`), `SURI_RUNS`
   / `SURI_ITERATIONS` and `SAMAKO_PRODUCT_SHOTS` / `SAMAKO_AUTUMN_FILM`;

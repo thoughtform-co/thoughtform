@@ -5,7 +5,7 @@
  *
  *   node scripts/capture-services-workstreams.mjs
  *   node scripts/capture-services-workstreams.mjs --faces ladder --themes dark --vp 1440x900
- *   node scripts/capture-services-workstreams.mjs --deck 0          # the ring alone
+ *   node scripts/capture-services-workstreams.mjs --open 1          # each card opened
  *   node scripts/capture-services-workstreams.mjs --headless        # SwiftShader
  *
  * HEADED BY DEFAULT — the real WebGL ring under bloom, which SwiftShader
@@ -33,7 +33,8 @@ const OUT = argOf("--out", "docs/design/services-workstreams/stills");
 const FACES = argOf("--faces", "ladder,run,specimen").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
 const PARKS = argOf("--parks", "0,1,2").split(",").map(Number);
-const DECK = argOf("--deck", "0");
+/** `--open 1` shoots each parked card OPENED — its own drawer out. */
+const OPEN = argOf("--open", "0");
 const VIEWPORTS = argOf("--vp", "1280x720,1920x1247")
   .split(",")
   .map((s) => s.split("x").map(Number));
@@ -63,28 +64,25 @@ for (const [w, h] of VIEWPORTS) {
     });
     for (const face of FACES) {
       for (const park of PARKS) {
-        const url = `http://localhost:${PORT}/test/services-workstreams?face=${face}&svc=${park}&theme=${theme}&deck=${DECK}&console=0`;
+        const url = `http://localhost:${PORT}/test/services-workstreams?face=${face}&svc=${park}&theme=${theme}&open=${OPEN}&console=0`;
         await page.goto(url, { waitUntil: "domcontentloaded" });
         const stamp = `${face}|${theme}|${park}`;
         try {
           await page.waitForSelector(`main[data-stamp="${stamp}"]`, { timeout: 45_000 });
           await page.waitForSelector(".svc-ring-hits__hit--front", { timeout: 15_000 });
-          if (DECK === "1") await page.waitForSelector(".svw-folder", { timeout: 10_000 });
-          // The bloom's mip chain, and the deck's 560ms aperture + stagger.
-          await page.waitForTimeout(1100);
-          const file = path.join(OUT, `${face}-p${park}-${theme}-${w}x${h}.png`);
+          // The bloom's mip chain, and the drawer's slide when opened.
+          if (OPEN === "1") {
+            await page.waitForSelector('.svc-ring-hits__hit--front[aria-expanded="true"]', {
+              timeout: 10_000,
+            });
+          }
+          await page.waitForTimeout(OPEN === "1" ? 2400 : 1100);
+          const file = path.join(
+            OUT,
+            `${face}-p${park}${OPEN === "1" ? "-open" : ""}-${theme}-${w}x${h}.png`
+          );
           await page.screenshot({ path: file });
-          const deck = await page.evaluate(() => {
-            const d = document.querySelector(".svw-deck");
-            if (!d) return null;
-            const r = d.getBoundingClientRect();
-            return {
-              folders: d.querySelectorAll(".svw-folder").length,
-              overflow: d.scrollHeight - d.clientHeight,
-              right: Math.round(r.right),
-            };
-          });
-          console.log(`ok  ${stamp} ${w}x${h}  deck=${JSON.stringify(deck)}  → ${file}`);
+          console.log(`ok  ${stamp} ${w}x${h}  → ${file}`);
         } catch (e) {
           failures++;
           console.log(`ERR ${stamp} ${w}x${h}: ${String(e).split("\n")[0]}`);

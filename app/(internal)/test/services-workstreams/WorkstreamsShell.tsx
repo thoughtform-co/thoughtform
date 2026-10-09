@@ -7,7 +7,9 @@ import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { ServicesMasthead } from "@/components/landing/home-v2/services/ServicesMasthead";
 import { ServicesRingHitAreas } from "@/components/landing/home-v2/services/ServicesRingHitAreas";
 import type { CardFaceBaker } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
+import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
 import { activeServiceForProgress, ringParkProgress } from "@/lib/services-ring/ringMath";
+import { openPlateRef } from "@/lib/services-ring/openPlateRef";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import {
   WORKSTREAM_BAKERS,
@@ -19,12 +21,8 @@ import {
   HIDDEN_SLOTS,
   WORKSTREAMS_MASTHEAD,
   WORKSTREAM_PLATES,
-  workstreamForSlot,
 } from "@/lib/services-workstreams/plates";
 import { WORKSTREAMS } from "@/lib/services-workstreams/record";
-import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
-
-import { EvidenceDeck } from "./EvidenceDeck";
 
 /* The canvas is client-only and wrapped in the boundary, or a lost GL context
    replaces the whole page (the card-face lab's own note). */
@@ -52,14 +50,6 @@ const FACE_NOTE: Record<WorkstreamFace, string> = {
     "The real output, with its verdicts: kept in green, sent back in gold. Samako's product shots and film, Suri's iterations.",
 };
 
-/** A side panel's width, the air between it and the card, and the floor
- *  under which a side is too narrow to hold one. */
-const PANEL_W = 400;
-const PANEL_GAP = 28;
-const PANEL_MIN = 260;
-/** The rails' margin. */
-const RAIL = 72;
-
 interface ShellProps {
   hudHtml: string;
   bodyClass: string;
@@ -68,22 +58,27 @@ interface ShellProps {
 export function WorkstreamsShell({ hudHtml, bodyClass }: ShellProps) {
   const [face, setFace] = useState<WorkstreamFace>("ladder");
   const [t, setT] = useState(0);
-  const [deckOpen, setDeckOpen] = useState(false);
+  /* The card the reader opened. It opens IN PLACE — the ring's own drawer
+     slides out of the card (ADR-050: the card is one object, its open state
+     is its own drawer), never a panel beside it. */
+  const [openId, setOpenId] = useState<ServicePlateId | null>(null);
   const [consoleOpen, setConsoleOpen] = useState(true);
   const runwayRef = useRef<HTMLDivElement>(null);
   const [stamp, setStamp] = useState<string | null>(null);
 
   /* Deep links, adopted after mount (never `useSearchParams`, which bails
-     the route to CSR): `?face=`, `?svc=N` (park N), `?deck=0`. */
+     the route to CSR): `?face=`, `?svc=N` (park N), `?open=1` (the parked card opened). */
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const f = q.get("face");
     if (f && (WORKSTREAM_FACES as readonly string[]).includes(f)) setFace(f as WorkstreamFace);
-    if (q.get("deck") === "1") setDeckOpen(true);
+    const wantOpen = q.get("open") === "1";
     if (q.get("console") === "0") setConsoleOpen(false);
     const svc = Number.parseInt(q.get("svc") ?? "", 10);
     if (Number.isFinite(svc)) {
-      requestAnimationFrame(() => scrollToT(tForPark(Math.min(LAST_CARD, Math.max(0, svc)))));
+      const i = Math.min(LAST_CARD, Math.max(0, svc));
+      requestAnimationFrame(() => scrollToT(tForPark(i)));
+      if (wantOpen) setOpenId(WORKSTREAM_PLATES[i].id);
     }
   }, []);
 
@@ -138,64 +133,37 @@ export function WorkstreamsShell({ hudHtml, bodyClass }: ShellProps) {
   const progress = progressFor(t);
   const activeIndex = activeServiceForProgress(progress);
   const activePlate = WORKSTREAM_PLATES[activeIndex];
-  const activeWs = workstreamForSlot(activePlate.id);
-
-  /* The deck seats beside the FRONT card's published rect (the ring's own
-     anchors — the hit layer reads the same store). */
-  const ringAnchors = useHologramConnectors((s) => s.ringAnchors);
-  const front = ringAnchors.find((a) => a.front && a.visible && a.w > 8) ?? null;
-  /* The masthead ends where a side panel may begin. Measured on mount and
-     resize, never per frame. */
-  const [mastheadFloor, setMastheadFloor] = useState(0);
-  useEffect(() => {
-    const measure = () => {
-      /* Both columns: the title on the left, the paragraph on the right —
-         a side panel seats under whichever it shares a column with, so it
-         clears the lower of the two. */
-      const ends = [".services-masthead__title", ".services-masthead__intro-copy"].map(
-        (sel) => document.querySelector(`.svw ${sel}`)?.getBoundingClientRect().bottom ?? 0
-      );
-      setMastheadFloor(Math.max(...ends));
-    };
-    const id = requestAnimationFrame(measure);
-    window.addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-  /* The open card's detail seats beside it, on whichever side has room —
-     the ring drifts with the pointer, so neither side is fixed. */
-  const seat = useMemo(() => {
-    if (!front) return null;
-    const vw = typeof window === "undefined" ? 1440 : window.innerWidth;
-    const vh = typeof window === "undefined" ? 900 : window.innerHeight;
-    const roomR = vw - (front.x + front.w + PANEL_GAP) - RAIL;
-    const roomL = front.x - PANEL_GAP - RAIL;
-    const width = Math.min(PANEL_W, Math.max(roomR, roomL));
-    if (width < PANEL_MIN) return null;
-    const left = roomR >= roomL ? front.x + front.w + PANEL_GAP : front.x - PANEL_GAP - width;
-    const top = Math.max(front.y, mastheadFloor + 28);
-    /* Clear of the bottom corners' chrome (the wordmark, the theme row). */
-    return { left, top, width, maxHeight: vh - top - 104 };
-  }, [front, mastheadFloor]);
 
   const onSelectService = useCallback((serviceId: string) => {
     const i = WORKSTREAM_PLATES.findIndex((p) => p.id === serviceId);
     if (i >= 0) scrollToT(tForPark(i), true);
   }, []);
-  const onOpenFront = useCallback(() => setDeckOpen((o) => !o), []);
+  const onOpenFront = useCallback((id: string) => setOpenId(id as ServicePlateId), []);
+  const onCloseDrawer = useCallback(() => setOpenId(null), []);
+
+  const parked = Math.abs(progress - ringParkProgress(activeIndex)) < 0.02;
+  /* Open only while that card is the parked front one: scrolling the ring on
+     closes it, with no listener of its own (the ring dismisses on progress). */
+  const drawerId = openId === activePlate.id && parked ? openId : null;
+
+  /* THE ROUTE'S ONE `openPlateRef` WRITER (the services-ring single-writer
+     contract, one per route: `ServicesStage` on the landing, the card-face
+     lab's shell there, this shell here). */
+  useEffect(() => {
+    openPlateRef.current.serviceId = drawerId;
+    return () => {
+      openPlateRef.current.serviceId = null;
+    };
+  }, [drawerId]);
 
   useEffect(() => {
-    if (!deckOpen) return;
+    if (!drawerId) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDeckOpen(false);
+      if (e.key === "Escape") setOpenId(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [deckOpen]);
-
-  const parked = Math.abs(progress - ringParkProgress(activeIndex)) < 0.02;
+  }, [drawerId]);
   const parkStamp = parked ? String(activeIndex) : "travel";
 
   return (
@@ -223,27 +191,26 @@ export function WorkstreamsShell({ hudHtml, bodyClass }: ShellProps) {
           />
 
           <div className="svw-stationbox">
-            <div className="services-stage" data-card-ring="on" style={STAGE_STYLE}>
+            <div
+              className="services-stage"
+              data-card-ring="on"
+              /* The landing's own hook: the masthead steps back while a card
+                 is open (services.css). */
+              data-plate-open={drawerId ? "1" : undefined}
+              style={STAGE_STYLE}
+            >
               <div className="services-stage__items">
                 <ServicesMasthead copy={WORKSTREAMS_MASTHEAD} />
                 <ServicesRingHitAreas
                   plates={WORKSTREAM_PLATES}
                   onSelectService={onSelectService}
                   onOpenFront={onOpenFront}
-                  openServiceId={deckOpen ? activePlate.id : null}
+                  onCloseDrawer={onCloseDrawer}
+                  openServiceId={drawerId}
                 />
               </div>
             </div>
           </div>
-
-          {deckOpen && parked && seat && activeWs && (
-            <EvidenceDeck
-              key={`${activePlate.id}|${face}`}
-              workstream={activeWs}
-              seat={seat}
-              onClose={() => setDeckOpen(false)}
-            />
-          )}
         </div>
       </div>
 
@@ -286,15 +253,6 @@ export function WorkstreamsShell({ hudHtml, bodyClass }: ShellProps) {
               {ws.name}
             </button>
           ))}
-          <button
-            type="button"
-            className="svw-chip svw-chip--sm"
-            data-on={deckOpen || undefined}
-            aria-pressed={deckOpen}
-            onClick={() => setDeckOpen((o) => !o)}
-          >
-            Deck {deckOpen ? "on" : "off"}
-          </button>
           <button
             type="button"
             className="svw-chip svw-chip--sm"

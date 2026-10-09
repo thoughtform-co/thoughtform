@@ -10,9 +10,9 @@ import type { ReactNode } from "react";
  *
  * A fork of `/test/services-card-face-lab`: the real ring, the real particle
  * mark and orbits, the real masthead and hit layer, on that lab's calibrated
- * camera. What is new is the record (`lib/services-workstreams/`), three card
- * faces that differ in WHAT IS DRAWN, and the evidence deck the open card
- * fans beside the ring.
+ * camera. What is new is the record (`lib/services-workstreams/`) and three
+ * card faces that differ in WHAT IS DRAWN; a card opens in place, through the
+ * ring's own drawer.
  */
 export const metadata: Metadata = {
   title: "Services as Workstreams (Internal)",

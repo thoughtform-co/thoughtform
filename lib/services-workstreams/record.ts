@@ -91,6 +91,9 @@ export interface Workstream {
   name: string;
   /** The card's paragraph, ≤160 (`LEDE_MAX_CH`). */
   line: string;
+  /** What the open card says it does — the drawer's `01 / WHAT`, two lines;
+   *  the third, who it was proven at, is derived from the entries. */
+  what: readonly [string, string];
   entries: readonly WorkEntry[];
   run: WorkstreamRun;
   specimen: WorkstreamSpecimen;
@@ -259,6 +262,10 @@ export const WORKSTREAMS: readonly Workstream[] = [
     key: "production",
     name: "Creative production",
     line: "Ads, iterations and films at the team's pace, every frame read against the real product before a person looks at it.",
+    what: [
+      "Briefs become ads, variants and films in the team's own tools",
+      "Every frame read against the real product before a person looks",
+    ],
     entries: [...loopEntries("production"), SURI_ITERATE, SURI_RETOUCH, SAMAKO_SHOTS, SAMAKO_FILM],
     run: suriRun("iterations", "Iterations"),
     specimen: {
@@ -272,6 +279,10 @@ export const WORKSTREAMS: readonly Workstream[] = [
     key: "operations",
     name: "Creative operations",
     line: "Briefs, names and the production queue kept by the setup, so the team spends its hours on the work and not on the tracking.",
+    what: [
+      "Briefs written, named and filed where the team already works",
+      "The production queue read and proposed, never assigned",
+    ],
     entries: [...loopEntries("operations"), SURI_BRIEF, SAMAKO_CLICKUP, SAMAKO_OPS],
     run: suriRun("briefing", "Briefing + naming"),
     specimen: {
@@ -285,6 +296,10 @@ export const WORKSTREAMS: readonly Workstream[] = [
     key: "review",
     name: "Creative review",
     line: "What good looks like, written down: checks and cases that read every piece first, with your team as the last gate.",
+    what: [
+      "What good looks like, written down as checks and cases",
+      "Every piece read first, with your team as the last gate",
+    ],
     entries: [...loopEntries("review"), SURI_REVIEW, SAMAKO_GRADER, SAMAKO_BLIND],
     run: suriRun("video", "Video retouch"),
     specimen: {

@@ -18,7 +18,7 @@ import type {
   ServicePlateId,
 } from "@/components/landing/home-v2/services/servicePlateData";
 
-import { WORKSTREAMS, type Workstream } from "./record";
+import { CLIENT_NAME, WORKSTREAMS, clientsOf, type Workstream } from "./record";
 
 /** The slot each card sits on, in ring order. */
 export const WORKSTREAM_SLOTS: readonly ServicePlateId[] = [
@@ -43,12 +43,20 @@ function workstreamPlate(ws: Workstream, id: ServicePlateId): ServicePlate {
     statusCode: ws.key.slice(0, 3).toUpperCase(),
     title: ws.name,
     lede: [ws.line],
-    breakdown: ws.entries.slice(0, 4).map((e) => e.title),
+    /* The open card's `01 / WHAT` (the ring's own drawer, ADR-050): what the
+       workstream does, then who it was proven at, from its own entries. */
+    breakdown: [
+      ...ws.what,
+      `Proven at ${clientsOf(ws)
+        .map((c) => CLIENT_NAME[c])
+        .join(", ")
+        .replace(/, ([^,]*)$/, " and $1")}`,
+    ],
     spec: SHARED_SPEC,
     feedLabel: ws.name,
     feedStatus: "Live",
     includes: [],
-    ctaLabel: `See the ${ws.name.toLowerCase()} work`,
+    ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
   };
 }
