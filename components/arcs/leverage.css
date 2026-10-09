@@ -94,23 +94,7 @@
   width: var(--space-sm);
   height: var(--space-sm);
   background: var(--gold);
-  animation: arc-lev-pulse 2.4s ease-in-out infinite;
 }
-@keyframes arc-lev-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .arc-lev__pulse {
-    animation: none;
-  }
-}
-
 .arc-lev__split {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);

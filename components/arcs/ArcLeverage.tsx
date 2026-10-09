@@ -22,8 +22,8 @@ interface ArcLeverageProps {
  *          its label, one line and a chip; one sentence under the stack.
  *   right  a 2×2 on a dot ground: an index, a data glyph, a title, a line.
  *
- * ⚠ SERVER, NO STATE, DOM ONLY; the SVGs letter nothing. The only motion is
- * the status dot's pulse, which reduced motion stops.
+ * ⚠ SERVER, NO STATE, DOM ONLY; the SVGs letter nothing. Nothing idles
+ * (ADR-080): the status light is lit, not pulsing.
  */
 export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeverageProps) {
   const { stack, note, uses, console: con, readout } = section;
