@@ -74,8 +74,13 @@ export function InstrumentLabShell({ hudHtml, bodyClass }: ShellProps) {
   const dirDef = INS_DIRECTIONS.find((d) => d.id === dirId);
 
   /* eslint-disable react-hooks/set-state-in-effect -- the URL is read once per mount. */
+  /* The mirror below must not write the defaults over a deep link before the
+     adopted state has landed (React's dev double-effect reads the URL twice),
+     so the first mirror run after adoption is skipped. */
+  const adopting = useRef(false);
   useEffect(() => {
     const q = parseInsQuery(new URLSearchParams(window.location.search));
+    adopting.current = true;
     setKnobsState(q.knobs);
     setBoardState(q.board);
     setThemeState(q.theme);
@@ -83,41 +88,27 @@ export function InstrumentLabShell({ hudHtml, bodyClass }: ShellProps) {
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const writeParam = useCallback((key: string, value: string) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set(key, value);
-    window.history.replaceState(null, "", url.toString());
-  }, []);
-
+  /* Handlers only set state. ONE effect mirrors the state into the URL and
+     the theme store, so no updater carries a side effect. */
   const applyKnobs = useCallback((partial: Partial<InsKnobs>) => {
-    setKnobsState((prev) => {
-      const next = { ...prev, ...partial };
-      const url = new URL(window.location.href);
-      for (const key of INS_KNOB_KEYS) url.searchParams.set(key, next[key]);
-      url.searchParams.set("k", directionOf(next));
-      window.history.replaceState(null, "", url.toString());
-      return next;
-    });
+    setKnobsState((prev) => ({ ...prev, ...partial }));
   }, []);
+  const applyDirection = useCallback((id: string) => setKnobsState(knobsFor(id)), []);
+  const applyTheme = setThemeState;
+  const applyBoard = setBoardState;
 
-  const applyDirection = useCallback((id: string) => applyKnobs(knobsFor(id)), [applyKnobs]);
-
-  const applyTheme = useCallback(
-    (next: InsTheme) => {
-      setThemeState(next);
-      writeParam("theme", next);
-      setMode(next);
-    },
-    [setMode, writeParam]
-  );
-
-  const applyBoard = useCallback(
-    (next: InsBoard) => {
-      setBoardState(next);
-      writeParam("board", next);
-    },
-    [writeParam]
-  );
+  useEffect(() => {
+    if (adopting.current) {
+      adopting.current = false;
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("board", board);
+    for (const key of INS_KNOB_KEYS) url.searchParams.set(key, knobs[key]);
+    url.searchParams.set("k", directionOf(knobs));
+    url.searchParams.set("theme", theme);
+    window.history.replaceState(null, "", url.toString());
+  }, [board, knobs, theme]);
 
   const measure = useCallback(() => measureInstrument(document), []);
 

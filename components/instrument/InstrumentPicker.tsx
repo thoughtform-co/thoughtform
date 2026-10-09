@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Altitude } from "@/lib/instrument/types";
 
@@ -29,8 +29,9 @@ function cutTo({ swap }: Move) {
 
 /** gsap/Flip: record the seats, swap, animate the same nodes to their new seats. */
 async function flipTo({ nodes, swap }: Move) {
-  const { Flip } = await import("gsap/Flip");
-  const { gsap } = await import("gsap");
+  /* `gsap/all`, not `gsap/Flip`: the plugin's types ship as `flip.d.ts` and
+     a case-insensitive disk sees two casings of one file (TS1149). */
+  const { Flip, gsap } = await import("gsap/all");
   gsap.registerPlugin(Flip);
   const state = Flip.getState(nodes, { props: "opacity" });
   swap();
@@ -43,6 +44,10 @@ async function flipTo({ nodes, swap }: Move) {
     ease: "power3.out",
     stagger: 0.03,
     nested: true,
+    /* The sheet owns every resting state (ADR-080): the sizes and the
+       transform Flip wrote for the move are cleared when it lands. */
+    clearProps:
+      "transform,translate,rotate,scale,width,height,minWidth,minHeight,maxWidth,maxHeight,opacity",
   });
 }
 
@@ -93,43 +98,30 @@ async function animeTo({ nodes, swap }: Move) {
  */
 export function InstrumentPicker({ figureId, altitudes, initial, engine, words }: PickerProps) {
   const [at, setAt] = useState<Altitude>(initial);
-  const busy = useRef(false);
+  const shown = useRef<Altitude>(initial);
 
+  /* A pick sets the state; the move runs from the state, in an effect, so
+     the handler is pure and the engine is one effect with one job. */
   useEffect(() => {
-    setAt(initial);
-  }, [initial]);
-
-  const pick = useCallback(
-    async (next: Altitude) => {
-      if (busy.current || next === at) return;
-      const fig = document.getElementById(figureId);
-      if (!fig) return;
-      /* `fig` is in the Move for the engines that need the figure's box. */
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const nodes = Array.from(fig.querySelectorAll<HTMLElement>(MOVING));
-      const move: Move = {
-        fig,
-        nodes,
-        swap: () => {
-          fig.setAttribute("data-altitude", next);
-          const alt = fig.getAttribute(`data-alt-${next}`);
-          if (alt) fig.setAttribute("aria-label", alt);
-        },
-      };
-      busy.current = true;
-      setAt(next);
-      try {
-        if (reduced || engine === "css") cutTo(move);
-        else if (engine === "flip") await flipTo(move);
-        else await animeTo(move);
-      } finally {
-        window.setTimeout(() => {
-          busy.current = false;
-        }, DURATION * 1000);
-      }
-    },
-    [at, engine, figureId]
-  );
+    if (at === shown.current) return;
+    const fig = document.getElementById(figureId);
+    if (!fig) return;
+    shown.current = at;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const nodes = Array.from(fig.querySelectorAll<HTMLElement>(MOVING));
+    const move: Move = {
+      fig,
+      nodes,
+      swap: () => {
+        fig.setAttribute("data-altitude", at);
+        const alt = fig.getAttribute(`data-alt-${at}`);
+        if (alt) fig.setAttribute("aria-label", alt);
+      },
+    };
+    if (reduced || engine === "css") cutTo(move);
+    else if (engine === "flip") void flipTo(move);
+    else void animeTo(move);
+  }, [at, engine, figureId]);
 
   return (
     <nav className="ins__crumb" aria-label="Altitude" data-ins-picker={engine}>
@@ -140,7 +132,7 @@ export function InstrumentPicker({ figureId, altitudes, initial, engine, words }
           className="ins__crumb-at"
           data-on={a === at || undefined}
           aria-pressed={a === at}
-          onClick={() => void pick(a)}
+          onClick={() => setAt(a)}
         >
           {words[a]}
         </button>

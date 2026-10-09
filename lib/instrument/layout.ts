@@ -99,7 +99,8 @@ export function rectVars(r: Rect): Record<string, string> {
 
 /** Which part each station is the opening of. Chrome words live in the
  *  component (`STATION_WORDS`); the order is the record's. */
-export const STATION_PARTS: readonly PartId[] = ["interface", "model", "context", "evals", "owner"];
+export const STATION_PARTS = ["interface", "model", "context", "evals", "owner"] as const;
+export type StationPart = (typeof STATION_PARTS)[number];
 
 /* ── The plugin altitude: the parts as a plugin's folders ────────────── */
 

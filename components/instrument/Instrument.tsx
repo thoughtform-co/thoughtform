@@ -5,6 +5,7 @@ import {
   ALTITUDE_WORDS,
   PLUGIN_ORDER,
   STATION_PARTS,
+  type StationPart,
   WORK_CARD,
   WORK_PITCH,
   WORK_VB,
@@ -26,7 +27,7 @@ import {
 import { InstrumentPicker } from "./InstrumentPicker";
 
 /** The five stations' words: chrome, never content (ADR-148). */
-export const STATION_WORDS: Record<(typeof STATION_PARTS)[number], string> = {
+export const STATION_WORDS: Record<StationPart, string> = {
   interface: "You ask",
   model: "Claude picks the skill",
   context: "It follows the steps",
@@ -247,7 +248,7 @@ export function Instrument({
               </ul>
             </span>
             <span className="ins-chip__at" data-at="plugin">
-              <span className="ins-chip__label">Reads every skill's work</span>
+              <span className="ins-chip__label">{"Reads every skill's work"}</span>
               <span className="ins-chip__name">{mother?.name ?? record.plugin?.name}</span>
               <span className="ins-chip__line">The mother. Never makes, never approves.</span>
             </span>
@@ -272,7 +273,7 @@ export function Instrument({
           {/* THE SIX, once. */}
           {parts.map((p) => {
             const { side, i } = sideOf(p.id);
-            const station = STATION_PARTS.indexOf(p.id);
+            const station = (STATION_PARTS as readonly PartId[]).indexOf(p.id);
             return (
               <section
                 key={p.id}
@@ -289,7 +290,7 @@ export function Instrument({
                     <span data-at="plugin">{PLUGIN_WORDS[p.id]}</span>
                     <span data-at="run">
                       {station >= 0
-                        ? `${station + 1} · ${STATION_WORDS[p.id as keyof typeof STATION_WORDS]}`
+                        ? `${station + 1} · ${STATION_WORDS[p.id as StationPart]}`
                         : "The tools"}
                     </span>
                   </span>
