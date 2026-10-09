@@ -68,10 +68,11 @@ interface ArcShellProps {
   /**
    * `ArcDef.rhythm` (ADR-128 U2), published as `data-arc-rhythm`: a head
    * beat sits 128px under its own top edge and is as tall as its content,
-   * Linear's rule. Absent, nothing renders, so every other arc's root is
-   * byte-identical.
+   * Linear's rule. `"fill"` (ADR-128 U3) keeps the datum and makes the beat
+   * one screen, its figure taking the rest. Absent, nothing renders, so
+   * every other arc's root is byte-identical.
    */
-  rhythm?: "flow";
+  rhythm?: "flow" | "fill";
   /**
    * The client's mark (`ClientDef.mark`), drawn in the HUD's top-left
    * corner in place of the plain bracket: the design skill's client shell

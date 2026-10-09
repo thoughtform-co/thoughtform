@@ -101,6 +101,10 @@
   background: var(--gold);
 }
 .arc-lev__split {
+  /* Under the fill rhythm (ADR-128 U3) the plate is given the screen's
+     remainder: the split takes it, the strip and the readout keep theirs. */
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 }
@@ -315,6 +319,12 @@
 
 /* ── The handoff: three plates, then the time ─────────────────────── */
 
+/* A column, so under the fill rhythm the time plate takes what the steps
+   leave and its two bars spread through it (ADR-128 U3). */
+.arc-hand {
+  display: flex;
+  flex-direction: column;
+}
 .arc-hand__steps {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
@@ -384,6 +394,8 @@
 }
 
 .arc-hand__time {
+  flex: 1;
+  min-height: 0;
   margin-top: calc(var(--lv-v) * 2);
 }
 .arc-hand__time-label {
@@ -394,8 +406,10 @@
   color: var(--arc-ink-40);
 }
 .arc-hand__rows {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-evenly;
   gap: calc(var(--lv-v) * 1.25);
   padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell);
 }

@@ -1,5 +1,7 @@
 import type { ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
+import { Slab } from "@/components/instrument/Slab";
+
 import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
@@ -59,7 +61,14 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
               <ol className="arc-lev__stack">
                 {stack.map((p, i) => (
                   <li key={p.id} className="arc-lev__plate" data-lev-own={p.own ? "" : undefined}>
-                    <Slab tier={p.own ? "own" : i === stack.length - 1 ? "shared" : "host"} />
+                    <Slab
+                      tier={p.own ? "own" : i === stack.length - 1 ? "shared" : "host"}
+                      id={`${section.id}-lev-${p.id}`}
+                      className="arc-lev__slab"
+                      faceClass="arc-lev__slab-top"
+                      sideClass="arc-lev__slab-side"
+                      hatchClass="arc-lev__hatch"
+                    />
                     <div className="arc-lev__plate-copy">
                       <span className="arc-lev__plate-label">
                         {p.label}
@@ -100,29 +109,6 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
         </div>
       </div>
     </ArcBeat>
-  );
-}
-
-/** One isometric slab: a top face and two side faces, on a 120×56 box. */
-function Slab({ tier }: { tier: "own" | "host" | "shared" }) {
-  return (
-    <svg className="arc-lev__slab" data-tier={tier} viewBox="0 0 120 56" aria-hidden="true">
-      <defs>
-        <pattern
-          id={`lev-hatch-${tier}`}
-          width="6"
-          height="6"
-          patternUnits="userSpaceOnUse"
-          patternTransform="rotate(45)"
-        >
-          <line x1="0" y1="0" x2="0" y2="6" className="arc-lev__hatch" />
-        </pattern>
-      </defs>
-      <path className="arc-lev__slab-side" d="M4 22 L60 44 L60 52 L4 30 Z" />
-      <path className="arc-lev__slab-side" d="M116 22 L60 44 L60 52 L116 30 Z" />
-      <path className="arc-lev__slab-top" d="M4 22 L60 2 L116 22 L60 44 Z" />
-      {tier === "own" && <path d="M4 22 L60 2 L116 22 L60 44 Z" fill={`url(#lev-hatch-${tier})`} />}
-    </svg>
   );
 }
 

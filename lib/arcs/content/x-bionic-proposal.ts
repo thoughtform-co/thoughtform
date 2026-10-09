@@ -53,9 +53,9 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
   status: "proposed",
   // Filed the day of the call; the overview's monitor plots it (ADR-118).
   date: "2026-10-08",
-  // Linear's rule for the head beats (ADR-128 U2): the head 128px under the
-  // beat's top edge, the beat as tall as its content.
-  rhythm: "flow",
+  // The fill rhythm (ADR-128 U3): the head 128px under the beat's top edge,
+  // as Linear's, and the beat one screen, its figure taking the rest.
+  rhythm: "fill",
   cardTitle: "X-Bionic · the proposal",
   cardLede:
     "A creative engine for paid social, built in X-Bionic's own Claude Enterprise and run by its team.",

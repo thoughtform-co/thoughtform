@@ -2371,8 +2371,15 @@ export interface ArcDef {
    * ⚠ OPT-IN, NOT FORMAT-WIDE, AND THAT IS THE TRINNY PAGE. Its pinned scene
    * (ADR-102) is measured against the centre-solved datum; a format-wide
    * change moves it. Another proposal adopts the rule with this one line.
+   *
+   * `"fill"` (ADR-128 U3, owner 2026-10-09: "move items a bit up and down so
+   * we use the full space"): the head on the same 128px datum, but the beat
+   * is one screen and its figure takes the rest of it, ADR-080 U3's
+   * remainder recipe (`auto 1fr`). A figure that opts in fills the
+   * remainder to `--arc-fill-cap`; every other figure is centred in it, so
+   * no beat pools its slack at the floor.
    */
-  rhythm?: "flow";
+  rhythm?: "flow" | "fill";
   /** Choreography system — see ArcMotion. Default "reveal". */
   motion?: ArcMotion;
   /**

@@ -145,4 +145,20 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
   `--ins-4` 16→40px, full from about 1100px tall), and the chip's workstreams read as one row
   (the chip 640px wide, wrapping on the phone). Measured: whole at 1440 × 790, 1470 × 800,
   1470 × 830 and 1710 × 980; the work and run altitudes are untouched.
-
+- **U4 (2026-10-09): the organisation altitude is an exploded stack.** The owner: the offer
+  ("one plugin, in the Claude you run") read as a regression from the vision's console, panels of
+  12px sentences on nothing. The altitude is redrawn as the leverage's stack (amends §2's `org`
+  and the grammar's org row): the workstreams as tiles on top, one per discipline (the bucket in
+  mono, the name in sans, the owner by role on a `line`); under them the layer the team writes,
+  one isometric slab, owned (hatched, gold) when the context or the evaluations is lit; under
+  that the organisation's slab, the socket's name on it. The six parts are callouts either side,
+  no frame and no fill, their answers sans at `--type-base`; the owner's label carries the
+  person's green diamond. Retired: the chip's workstream list (the tiles are the one place they
+  are drawn), the org's dashed frame and the socket node. `InstrumentWorkstream.bucket` (≤12,
+  optional) carries the discipline; X-Bionic's record has four (strategy, production, ops,
+  review), production lit as the one phase one starts with. The slab is one drawing,
+  `components/instrument/Slab.tsx`, shared with the leverage, its hatch pattern's id per
+  instance. The measure's `BOX_SELECTOR` gains `.ins-tile`. Suri's record keeps three
+  workstreams and no buckets, so the lab keeps a bed without them. Measured headless: the lab's
+  twelve cells clean; the engine whole at 1440 × 790 and 1470 × 830 in both themes; a list on
+  the phone.

@@ -25,6 +25,7 @@ import {
 } from "@/lib/instrument/types";
 
 import { InstrumentPicker } from "./InstrumentPicker";
+import { Slab } from "./Slab";
 
 /** The five stations' words: chrome, never content (ADR-148). */
 export const STATION_WORDS: Record<StationPart, string> = {
@@ -44,6 +45,9 @@ const PLUGIN_WORDS: Record<PartId, string> = {
   model: "The account",
   interface: "The interfaces",
 };
+
+/** The organisation's lower slab, when the record names no socket (ADR-154 U4). */
+const ORG_LAYER_WORDS = "The layer your team writes";
 
 export const CHECK_WORDS = {
   pass: "Pass",
@@ -120,6 +124,7 @@ export function Instrument({
   };
 
   const parts = record.parts.map((p) => ({ ...p, state: stateOf(p) }));
+  const layerLit = parts.some((p) => (p.id === "context" || p.id === "evals") && p.state === "lit");
   const mother = record.plugin?.skills.find((s) => s.reads);
   const father = record.plugin?.skills.find((s) => s.sorts);
   const skills = record.plugin?.skills.filter((s) => !s.reads && !s.sorts) ?? [];
@@ -203,15 +208,8 @@ export function Instrument({
               </span>
             </div>
           ) : null}
-          {record.org ? (
-            <div className="ins-frame" data-at="org" data-ins-id="frame-org" aria-hidden="true">
-              <span className="ins-frame__label">
-                {record.org.label} · {record.org.name}
-              </span>
-            </div>
-          ) : null}
 
-          {/* The nodes outside the housing's centre: above the plugin, the socket under the org. */}
+          {/* The nodes outside the housing's centre: above the plugin. */}
           {record.plugin?.above.map((n, i) => (
             <div key={n.label} className="ins-node" data-at="plugin" data-ins-id={`above-${i + 1}`}>
               <span className="ins-node__label">{n.label}</span>
@@ -219,12 +217,6 @@ export function Instrument({
               {n.line ? <span className="ins-node__line">{n.line}</span> : null}
             </div>
           ))}
-          {record.org?.socket ? (
-            <div className="ins-node" data-at="org" data-ins-id="socket">
-              <span className="ins-node__label">{record.org.socket.label}</span>
-              <span className="ins-node__name">{record.org.socket.name}</span>
-            </div>
-          ) : null}
 
           {/* THE CHIP: the one filled object, what the altitude is about. */}
           <div
@@ -239,13 +231,6 @@ export function Instrument({
             <span className="ins-chip__at" data-at="org">
               <span className="ins-chip__label">{record.org?.os.name}</span>
               <span className="ins-chip__name">{record.org?.os.line}</span>
-              <ul className="ins-chip__list">
-                {record.org?.workstreams.map((w) => (
-                  <li key={w.id} data-lit={w.lit?.length ? "" : undefined}>
-                    {w.name}
-                  </li>
-                ))}
-              </ul>
             </span>
             <span className="ins-chip__at" data-at="plugin">
               <span className="ins-chip__label">{"Reads every skill's work"}</span>
@@ -269,6 +254,69 @@ export function Instrument({
               <span className="ins-chip__name">{record.run?.skill.name} checks itself</span>
             </span>
           </div>
+
+          {/* THE ORGANISATION AS A STACK (ADR-154 U4): the workstreams on top,
+              one per discipline; under them the layer the team writes; under
+              that the enterprise the company already runs. The six parts are
+              the callouts either side; each slab's leaders run out to them. */}
+          {record.org ? (
+            <>
+              <ul className="ins-tiles" data-at="org">
+                {record.org.workstreams.map((w) => (
+                  <li
+                    key={w.id}
+                    className="ins-tile"
+                    data-ins-id={`tile-${w.id}`}
+                    data-lit={w.lit?.length ? "" : undefined}
+                  >
+                    {w.bucket ? <span className="ins-tile__bucket">{w.bucket}</span> : null}
+                    <span className="ins-tile__name">{w.name}</span>
+                    {w.line ? <span className="ins-tile__line">{w.line}</span> : null}
+                  </li>
+                ))}
+              </ul>
+              <div
+                className="ins-slab"
+                data-at="org"
+                data-ins-slab="layer"
+                data-ins-state={layerLit ? "lit" : "quiet"}
+                aria-hidden="true"
+              >
+                <i className="ins-slab__lead" />
+                <Slab
+                  tier={layerLit ? "own" : "host"}
+                  id={`${figId}-layer`}
+                  className="ins-slab__svg"
+                  faceClass="ins-slab__top"
+                  sideClass="ins-slab__side"
+                  hatchClass="ins-slab__hatch"
+                />
+                <i className="ins-slab__lead" />
+                <span className="ins-slab__name">{ORG_LAYER_WORDS}</span>
+              </div>
+              <div
+                className="ins-slab"
+                data-at="org"
+                data-ins-slab="org"
+                data-ins-state="quiet"
+                aria-hidden="true"
+              >
+                <i className="ins-slab__lead" />
+                <Slab
+                  tier="host"
+                  id={`${figId}-org`}
+                  className="ins-slab__svg"
+                  faceClass="ins-slab__top"
+                  sideClass="ins-slab__side"
+                  hatchClass="ins-slab__hatch"
+                />
+                <i className="ins-slab__lead" />
+                <span className="ins-slab__name">
+                  {record.org.socket?.name ?? `${record.org.label} · ${record.org.name}`}
+                </span>
+              </div>
+            </>
+          ) : null}
 
           {/* THE SIX, once. */}
           {parts.map((p) => {
