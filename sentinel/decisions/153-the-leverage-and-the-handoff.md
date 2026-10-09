@@ -56,3 +56,22 @@ labelled bars) and the Hex and Cyberpunk references:
 - The handoff's three steps are chamfered plates with a head strip and a timing readout, joined by
   chevron runs; the hinge takes `.arc-plate__head`'s gold band and its siblings fade back. The time
   is a plate of bar-code tracks, gold stripes where the time goes to ideas.
+
+## Amendment, 2026-10-09: the rest of the X-Bionic page
+
+The owner: "now do the rest of the x-bionic page". The audit found the slide grammar in three
+places and walls of text in two:
+
+- **The chapter band.** A fourth interstitial variant, `chapter`, with a `chapter: { n, of }`
+  part ruler: a band the height of its content, set left under the ruler, never a screen. The
+  page's three interstitials take it, their copy cut to one line and one sentence. Pandora's
+  callouts are untouched.
+- **The terms.** `kind: "terms"` (the thirty-first enumerated exception) merges the fee and what
+  we measure into the leverage's own console: the day rate as the one large readout, the shape of
+  the engagement as mono rows, what we measure as the 2×2 on four new glyphs (`ratio`, `spread`,
+  `clock`, `meter`), a readout foot. No total is lettered. The page opens and closes on one
+  instrument.
+- **Copy cut.** The phases and who takes part keep each item's name and readout and lose its
+  paragraph; the repeated `X-Bionic` chip under a column already titled "From X-Bionic" goes.
+- "What plugs in" moves to ADR-154's instrument (its U2).
+

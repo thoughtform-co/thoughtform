@@ -94,6 +94,7 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
       "trinny-london-pitch",
+      "x-bionic-proposal",
     ]);
   });
 
@@ -223,6 +224,12 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
           "Creative operations and scaling|M3|",
         ],
         links: ["Claude×3", "Figma×3", "Monday×3", "Slack×3"],
+      },
+      /* X-Bionic (ADR-154 step 3): the instrument at the organisation
+         altitude is the page's configuration, read as its one work. */
+      "x-bionic-proposal": {
+        rows: ["X-Bionic's paid social||"],
+        links: ["Claude×1"],
       },
     });
   });

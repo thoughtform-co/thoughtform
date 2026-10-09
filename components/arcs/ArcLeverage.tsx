@@ -127,7 +127,7 @@ function Slab({ tier }: { tier: "own" | "host" | "shared" }) {
 }
 
 /** Four data glyphs on one 120×64 box, hairline, gold where it acts. */
-function Glyph({ kind }: { kind: ArcLeverageUse["glyph"] }) {
+export function Glyph({ kind }: { kind: ArcLeverageUse["glyph"] }) {
   return (
     <svg className="arc-lev__glyph" viewBox="0 0 120 64" aria-hidden="true">
       {kind === "brief" && (
@@ -182,6 +182,54 @@ function Glyph({ kind }: { kind: ArcLeverageUse["glyph"] }) {
           />
           <path className="arc-lev__glyph-ink" d="M60 32 H72" />
           <path className="arc-lev__glyph-act" d="M78 34 L90 46 L112 18" />
+        </g>
+      )}
+      {kind === "ratio" && (
+        <g>
+          <path className="arc-lev__glyph-grid" d="M0 56 H120" />
+          <rect className="arc-lev__glyph-ink" x="20" y="44" width="24" height="12" />
+          <rect className="arc-lev__glyph-act" x="64" y="10" width="24" height="46" />
+          <path className="arc-lev__glyph-ink" d="M50 50 L58 50 M54 46 L58 50 L54 54" />
+        </g>
+      )}
+      {kind === "spread" && (
+        <g>
+          {Array.from({ length: 24 }, (_, i) => (
+            <rect
+              key={i}
+              className={
+                [3, 8, 13, 17, 22].includes(i) ? "arc-lev__glyph-dot" : "arc-lev__glyph-ink"
+              }
+              x={8 + (i % 8) * 14}
+              y={10 + Math.floor(i / 8) * 16}
+              width="8"
+              height="8"
+            />
+          ))}
+        </g>
+      )}
+      {kind === "clock" && (
+        <g>
+          <path className="arc-lev__glyph-grid" d="M8 32 H112" />
+          {[8, 34, 60, 86, 112].map((x) => (
+            <path key={x} className="arc-lev__glyph-ink" d={`M${x} 26 V38`} />
+          ))}
+          <path className="arc-lev__glyph-act" d="M8 32 H46" />
+          <rect className="arc-lev__glyph-dot" x="4" y="28" width="8" height="8" />
+          <path className="arc-lev__glyph-act" d="M46 24 L54 32 L46 40 L38 32 Z" />
+        </g>
+      )}
+      {kind === "meter" && (
+        <g>
+          <rect className="arc-lev__glyph-ink" x="8" y="22" width="104" height="20" />
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
+            <path
+              key={i}
+              className={i < 7 ? "arc-lev__glyph-act" : "arc-lev__glyph-ink"}
+              d={`M${14 + i * 8} 26 V38`}
+            />
+          ))}
+          <path className="arc-lev__glyph-ink" d="M8 50 V54 M60 50 V54 M112 50 V54" />
         </g>
       )}
     </svg>

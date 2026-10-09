@@ -90,7 +90,7 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
 0 ✓ the record, the adapters, the geometry, the registry, the measure, the guards.
 1 ✓ the drawing, the lab, the capture → the owner's read → the engine ruled → Accepted.
 2 ✓ Suri configuration: `questions` → `instrument[work]` with the picker; `skill-run` → `[run]` (U1).
-3 X-Bionic: `circuit` → `instrument[org]`, static, one lit workstream.
+3 ✓ X-Bionic: `circuit` → `instrument[org]`, static, one lit workstream (U2).
 4 Workshop-v2 and the Armada companion: `plugin-board`, `repository` → `[plugin]`.
 5 The setup guides: `guide.system` → `[org]`.
 6 The three `configuration` proposals: teams become records on the picker.
@@ -129,3 +129,14 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
   pages move (step 4 onward). Measured headless: every state of both beats clean at 1470×830
   (one screen each), 1920×1247 and 375 wide; at 1280×720 the run beats run to 797px, the
   figure itself clean.
+- **U2 (2026-10-09): X-Bionic takes the instrument (step 3).** `/arcs/x-bionic/proposal`'s
+  "what plugs into Claude Enterprise" beat draws `X_BIONIC_INSTRUMENT`
+  (`lib/instrument/records/x-bionic.ts`) at the organisation altitude, static, no picker: the
+  model, the data and the interface shared along the top, the creative engine as the one chip,
+  three workstreams with the product voice lit as the one phase one starts with, the context and
+  the evaluations the team writes, the owner by role, the socket into X-Bionic's Claude
+  Enterprise. ⚠ IT IS A PROPOSAL, NOT A BUILD: every answer is what phase one sets up, from the
+  8 October call; no plugin altitude until the plugin has a name. The `circuit` kind has no other
+  page left on X-Bionic; Pandora still draws it. The overview reads the instrument as the page's
+  configuration (`sheet-config-fit` pins it).
+

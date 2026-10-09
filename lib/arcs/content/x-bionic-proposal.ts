@@ -3,6 +3,7 @@ import type { ArcDef } from "../types";
 import { LOOP_IN_PRACTICE, LOOP_PROOF_CARDS, LOOP_RETURN, VINCE_ABOUT } from "./shared/loopProof";
 import { SAMAKO_AUTUMN_FILM, SAMAKO_PRODUCT_SHOTS } from "./shared/samakoWork";
 import { SURI_ITERATIONS, UNDER_THE_GLASS } from "./shared/suriWork";
+import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 
 /**
  * X-Bionic, the proposal, as an arc (ADR-098; the Pandora cut of the format,
@@ -228,7 +229,14 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     /* ── Part one · Loop ─────────────────────────────────────────────────
        Loop's four cards, by reference, in the pile's order: the last one is
        the layer the agents run on, which the next part picks up. */
-    LOOP_IN_PRACTICE,
+    {
+      ...LOOP_IN_PRACTICE,
+      variant: "chapter",
+      chapter: { n: 1, of: 3 },
+      eyebrow: "Loop, 2024 to now",
+      line: { pre: "In 2024, Loop decided to go", em: "AI-first." },
+      subline: "Creative operations came first. This is what it produced.",
+    },
     ...LOOP_PROOF_CARDS,
     LOOP_RETURN,
 
@@ -238,13 +246,14 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     {
       id: "the-layer",
       kind: "interstitial",
-      variant: "callout",
+      variant: "chapter",
+      chapter: { n: 2, of: 3 },
       menuLabel: "The layer, at work",
       menuPrimary: true,
-      eyebrow: "Part two · the layer, at work",
-      line: { pre: "The layer agents run on is now", em: "what I set up for other brands." },
+      eyebrow: "The layer, at work",
+      line: { pre: "The same layer,", em: "for other brands." },
       subline:
-        "Since September, inside two brands' own Claude: four real jobs across strategy, production and review. Switch between them on the bar.",
+        "Four real jobs since September, inside two brands' own Claude. Switch between them on the bar.",
     },
     {
       id: "case-shots",
@@ -281,11 +290,11 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     {
       id: "turn",
       kind: "interstitial",
-      variant: "callout",
-      eyebrow: "Part three · X-Bionic",
-      line: { pre: "The product is the hero.", em: "Now make it teachable at volume." },
-      subline:
-        "Form, fit, function and materials are already X-Bionic's. Paid social needs them told many ways, tested, and read back. That is what the setup is for.",
+      variant: "chapter",
+      chapter: { n: 3, of: 3 },
+      eyebrow: "X-Bionic",
+      line: { pre: "The product is the hero.", em: "Now make it teachable." },
+      subline: "Form, fit, function and materials, told many ways, tested and read back.",
     },
     {
       /* THE LEDGER STATES THE SETUP, NEVER A GAP (Pandora's rule, owner
@@ -345,33 +354,21 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
-      /* WHAT PLUGS INTO CLAUDE ENTERPRISE (Ganesh on the call: "anything
-         that you say that links into our Claude enterprise, the investors
-         will be like, perfect"). The circuit's own drawing: six configs, one
-         centre, a socket for what is already there. */
+      /* WHAT PLUGS INTO CLAUDE ENTERPRISE (Ganesh on the call: "anything that
+         you say that links into our Claude enterprise, the investors will be
+         like, perfect"). The instrument at the organisation altitude
+         (ADR-154 step 3): static, no picker, one lit workstream, the one
+         phase one starts with. */
       id: "engine",
-      kind: "circuit",
+      kind: "instrument",
       menuLabel: "What plugs in",
       head: {
         eyebrow: "X-Bionic · what plugs into Claude Enterprise",
         title: { pre: "One plugin,", em: "in the Claude you run." },
-        sub: "Each workflow becomes a skill its owner keeps, installed as one plugin in X-Bionic's Claude organisation and kept in your own repository. It reads through the connectors you already have.",
+        sub: "Each workstream gets a skill its owner keeps, installed as one plugin in your Claude organisation. The product voice is first.",
       },
-      configs: [
-        { id: "voice", name: "Product voice", line: "the copy editor's" },
-        { id: "brief", name: "Briefs", line: "the paid social lead's" },
-        { id: "copy", name: "Ad copy", line: "the copy editor's" },
-        { id: "imagery", name: "Imagery", line: "the creative lead's" },
-        { id: "review", name: "Pre-review", line: "the designer's" },
-        { id: "intake", name: "Intake", line: "the digital team's" },
-      ],
-      os: {
-        key: "X-Bionic's",
-        name: "Creative engine",
-        line: "a plugin in Claude Enterprise",
-      },
-      socket: { key: "Already there", name: "The AI champion's enterprise setup" },
-      alt: "X-Bionic's creative engine as a map: six workflows, each a skill with an owner. The product voice and the ad copy, kept by the copy editor; the briefs, by the paid social lead; the imagery, by the creative lead; the pre-review, by the product designer; the intake and naming, by the digital team. Every one is wired to the creative engine at the centre, a plugin in Claude Enterprise, which plugs into the enterprise setup the AI champion already runs.",
+      record: X_BIONIC_INSTRUMENT,
+      altitude: "org",
     },
     {
       id: "phases",
@@ -382,7 +379,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · the engagement",
         title: { pre: "Two weeks,", em: "then a rhythm." },
-        sub: "Phase one sets the engine up and runs it once on real work. After that I come back every quarter, so the team keeps pace with what changes.",
+        sub: "Phase one sets the engine up and runs it once on real work. Then I come back every quarter.",
       },
       groups: [
         {
@@ -394,19 +391,16 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
               id: "w1-map",
               tag: "Day one",
               name: "How the work really runs",
-              body: "With the creative lead, the digital team and the AI champion: the briefs, the ads, the tools and the data.",
             },
             {
               id: "w1-voice",
               tag: "The voice",
               name: "The product voice, written down first",
-              body: "From the copywriter's own work, before they leave, so the voice stays when they go.",
             },
             {
               id: "w1-brief",
               tag: "The brief",
               name: "From campaign to platform",
-              body: "A campaign idea becomes briefs, audiences and variants a paid social lead can run.",
             },
           ],
           foot: {
@@ -426,19 +420,16 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
               id: "w2-run",
               tag: "One full run",
               name: "One iteration, end to end",
-              body: "Brief, copy, imagery, pre-review, naming and launch, run by your team on a real product.",
             },
             {
               id: "w2-review",
               tag: "Review",
               name: "The product designer's eye, as checks",
-              body: "Proportions, colour and materials: what only they can judge, written down so Claude reads it first.",
             },
             {
               id: "w2-handover",
               tag: "Handover",
               name: "In your Claude, in your repository",
-              body: "The plugin installed with the AI champion, every skill with a named owner.",
             },
           ],
           foot: {
@@ -458,19 +449,16 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
               id: "q-outside",
               tag: "Inspiration",
               name: "What changed out there",
-              body: "New models, new formats, and what other growth brands are learning.",
             },
             {
               id: "q-upkeep",
               tag: "Upkeep",
               name: "The skills, brought up to date",
-              body: "What the team learned, written back in; what broke, fixed.",
             },
             {
               id: "q-next",
               tag: "Next",
               name: "The next workflows",
-              body: "Creators, TikTok, the next product pillar: whichever the numbers ask for.",
             },
           ],
           foot: {
@@ -491,7 +479,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · how we work",
         title: { pre: "Who", em: "takes part." },
-        sub: "One week on site, one remote, then two days a quarter. In between, the team's own channels, never extra meetings.",
+        sub: "Who is in the room, and what it costs them in time.",
       },
       groups: [
         {
@@ -501,44 +489,32 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           items: [
             {
               id: "sponsor",
-              tag: "X-Bionic",
-              name: "The digital lead, who owns the result",
-              body: "Sets the goal, decides what runs, and reads what phase one produced.",
+              name: "Digital lead · owns the result",
               meta: "The kickoff, and the end of each week",
             },
             {
               id: "champion",
-              tag: "X-Bionic",
-              name: "The AI champion, who keeps it running",
-              body: "Installs the plugin in the enterprise setup and keeps it there after phase one.",
+              name: "AI champion · keeps it running",
               meta: "Day one, and the handover",
             },
             {
               id: "process",
-              tag: "X-Bionic",
-              name: "The business process lead",
-              body: "Where the engine meets the rest of the company's way of working.",
+              name: "Business process lead · fits it in",
               meta: "Day one, and the handover",
             },
             {
               id: "creative",
-              tag: "X-Bionic",
-              name: "The creative lead, the last gate",
-              body: "Decides what good looks like for the imagery and the campaigns, and what goes live.",
+              name: "Creative lead · the last gate",
               meta: "Two sessions in week one",
             },
             {
               id: "paid-social",
-              tag: "X-Bionic",
-              name: "The paid social lead, who runs it",
-              body: "Freelance, still to be found; I can make introductions. Runs the engine day to day once phase one ends.",
+              name: "Paid social lead · runs it daily",
               meta: "From phase one, if in place",
             },
             {
               id: "copywriter",
-              tag: "X-Bionic",
-              name: "The copywriter, before they leave",
-              body: "Two hours on the voice: what they always write, and what they never would.",
+              name: "Copywriter · the voice, first",
               meta: "Week one",
             },
           ],
@@ -550,9 +526,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           items: [
             {
               id: "vince",
-              tag: "Thoughtform",
-              name: "Vince, on AI and creative technology",
-              body: "On site for week one, remote for week two, then two days a quarter. Writes the skills with the team, then steps back.",
+              name: "Vince · AI and creative technology",
               meta: "About ten days in phase one",
             },
           ],
@@ -563,14 +537,12 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
               {
                 id: "claude",
                 tag: "Week one",
-                name: "Access to Claude",
-                body: "A seat in X-Bionic's Claude Enterprise, set up with the AI champion.",
+                name: "A seat in your Claude Enterprise",
               },
               {
                 id: "work",
                 tag: "Week one",
-                name: "Access to the work",
-                body: "Recent ads and their results, the product facts, and the copywriter's best work.",
+                name: "Recent ads, their results, the best copy",
               },
             ],
           },
@@ -578,84 +550,64 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
-      /* THE DAY RATE (owner, 2026-10-08): the rate and the days, no total. */
+      /* THE TERMS (ADR-153): the day rate and what it is measured against,
+         one console, the page closing on the instrument it opened with. The
+         rate and the shape, no total (owner, 2026-10-08, ADR-133 U5). */
       id: "pricing",
-      kind: "cards",
+      kind: "terms",
+      // The terminal menu entry is the exit mark, never a chapter (arc-marks).
       menuLabel: "Pricing",
-      menuPrimary: true,
-      columns: 4,
       head: {
         eyebrow: "X-Bionic · the fee",
-        title: { pre: "The", em: "day rate." },
-        sub: "One rate for every day on the work, on site or remote.",
+        title: { pre: "The day rate,", em: "and what it buys." },
+        sub: "One rate for every day on the work. Everything is counted from your own ad accounts and your own Claude.",
       },
-      cards: [
-        {
-          id: "rate",
-          kicker: "Rate",
-          title: `${eur(DAY_RATE)} a day`,
-          body: "The same rate on site or remote.",
-        },
-        {
-          id: "phase-one",
-          kicker: "Phase one",
-          title: "About ten days",
-          body: "Week one on site, week two remote.",
-        },
-        {
-          id: "retainer",
-          kicker: "Then",
-          title: "Two days a quarter",
-          body: "Booked a quarter ahead, at the same rate.",
-        },
-        {
-          id: "invoicing",
-          kicker: "Invoicing",
-          title: "On the days worked",
-          body: "At the end of phase one, then after each visit.",
-        },
+      console: { name: "Terms", status: "Phase one" },
+      rate: {
+        label: "Day rate",
+        value: eur(DAY_RATE),
+        unit: "a day",
+        line: "On site or remote, invoiced on the days worked.",
+      },
+      shape: [
+        { label: "Phase one", value: "About 10 days" },
+        { label: "Week one", value: "On site" },
+        { label: "Week two", value: "Remote" },
+        { label: "Then", value: "2 days a quarter" },
       ],
-      footnote:
-        "Travel at cost. Model usage runs on X-Bionic's own Claude Enterprise. Everything built belongs to X-Bionic, including if you stop after phase one.",
-    },
-    {
-      /* THE BUSINESS CASE, PROMISED AS COUNTING (Pandora's rule): no figure
-         is forecast; four numbers read from X-Bionic's own systems. ROAC is
-         the owner's measure from Loop, named on the call. */
-      id: "measures",
-      kind: "cards",
-      menuLabel: "What we measure",
-      columns: 4,
-      head: {
-        eyebrow: "X-Bionic · the business case",
-        title: { pre: "What we", em: "measure." },
-        sub: "Read from your own ad accounts and your own Claude, from the first iteration on, beside the shift of media from search to paid social.",
+      measures: {
+        label: "What we measure",
+        items: [
+          {
+            id: "roac",
+            glyph: "ratio",
+            label: "Return on ad cost creation",
+            line: "What each ad cost to make, beside what it returned",
+          },
+          {
+            id: "variety",
+            glyph: "spread",
+            label: "Ads in market",
+            line: "Distinct ideas a week, not resized copies",
+          },
+          {
+            id: "speed",
+            glyph: "clock",
+            label: "Brief to live",
+            line: "How long an idea waits before it runs",
+          },
+          {
+            id: "tokens",
+            glyph: "meter",
+            label: "Token spend",
+            line: "Where the Claude budget goes, by workflow",
+          },
+        ],
       },
-      cards: [
-        {
-          id: "roac",
-          kicker: "ROAC",
-          title: "Return on ad cost creation",
-          body: "What each ad cost to make, in tokens and hours, beside what it returned.",
-        },
-        {
-          id: "variety",
-          kicker: "Variety",
-          title: "Distinct ads in market a week",
-          body: "Different ideas, not resized copies: what Meta needs to find new audiences.",
-        },
-        {
-          id: "speed",
-          kicker: "Speed",
-          title: "From brief to live",
-          body: "How long an idea waits before it runs.",
-        },
-        {
-          id: "tokens",
-          kicker: "Tokens",
-          title: "Token spend, by workflow",
-          body: "So leadership sees where the Claude budget goes, and what it buys.",
-        },
+      readout: [
+        { label: "Travel", value: "At cost" },
+        { label: "Usage", value: "Your Claude" },
+        { label: "Built", value: "Yours to keep" },
       ],
     },
     {

@@ -12,6 +12,9 @@ import { arcTitleText } from "./chrome";
  * or `quote` with a mono attribution under a short gold rule. Emphasis
  * is upright gold (`em`) — the Shards italics never port.
  *
+ * `chapter` (ADR-153) is the same beat for a board's page: a band the
+ * height of its content, set left, a part ruler above the line.
+ *
  * Terminal: a pure decode beat — one panel, no travel. The QUOTE variant
  * TYPES rather than scrambles: the glyph pool is mono caps, so sentence
  * case through it reads as noise — but the masthead law is absolute
@@ -39,6 +42,23 @@ export function ArcInterstitial({
         {...(motion === "terminal" ? { "data-arc-still": "" } : {})}
         {...rung(motion, 0.1)}
       >
+        {section.chapter ? (
+          <div className="arc-inter__ruler" aria-hidden="true">
+            <span className="arc-inter__part">
+              Part {String(section.chapter.n).padStart(2, "0")} /{" "}
+              {String(section.chapter.of).padStart(2, "0")}
+            </span>
+            <span className="arc-inter__ticks">
+              {Array.from({ length: section.chapter.of }, (_, i) => (
+                <span
+                  key={i}
+                  className="arc-inter__tick"
+                  data-on={i < section.chapter!.n ? "" : undefined}
+                />
+              ))}
+            </span>
+          </div>
+        ) : null}
         {section.eyebrow ? <p className="arc-desig arc-inter__eyebrow">{section.eyebrow}</p> : null}
         {/* The silent loop (ADR-143 U7), above the line it pictures. Absent,
             nothing is drawn: a beat with no file is the line alone. */}
