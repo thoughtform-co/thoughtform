@@ -18,6 +18,9 @@ export const JOB_BUCKETS: readonly { id: ArcJobBucket; word: string }[] = [
 
 const two = (n: number) => String(n).padStart(2, "0");
 
+/** Chrome, never content: the result column's label. */
+export const RESULT_LABEL = "The return";
+
 /**
  * ArcJob — one real piece of client work on one screen (ADR-153 U1, U2), in
  * the leverage's housing. No head above it: the frame carries everything, as
@@ -31,10 +34,11 @@ const two = (n: number) => String(n).padStart(2, "0");
  *   fig     the evidence on a dot ground with corner ticks, "Fig. 0N" under
  *           it: a silent loop, a kept and a sent-back still, or the record as
  *           a log with dot leaders.
- *   cells   three measured numbers, neutral, each drawn as a tally in the
- *           gold's tints (Tensorlake's bar codes): the gold is the data. The
- *           longest value's length rides the column (`--case-len`), so the
- *           three are set at one size, as large as the column allows.
+ *   result  what it returned (U3): ONE number, large and neutral, and one
+ *           line a decision maker reads, with the count drawn as a tally in
+ *           the gold's tints when it is a count (Tensorlake's bar codes: the
+ *           gold is the data). The value's length rides the column
+ *           (`--case-len`), so the number is as large as the column allows.
  *   foot    the gate: the person who decided, by role, with the person's
  *           green diamond, and what they decided.
  *
@@ -51,9 +55,8 @@ export function ArcJob({
   index: number;
   motion?: ArcMotion;
 }) {
-  const { n, title, bucket, ask, did, gate, figure, cells } = section;
+  const { n, title, bucket, ask, did, gate, figure, result } = section;
   const titleId = `${section.id}-title`;
-  const longest = Math.max(...cells.map((c) => c.value.length));
   return (
     <ArcBeat
       id={section.id}
@@ -130,15 +133,18 @@ export function ArcJob({
                 {figure.caption}
               </figcaption>
             </figure>
-            <ul className="arc-case__cells" style={{ "--case-len": longest } as CSSProperties}>
-              {cells.map((c) => (
-                <li key={c.key} className="arc-case__cell">
-                  <span className="arc-case__num">{c.value}</span>
-                  <span className="arc-case__key">{c.key}</span>
-                  {c.tally ? <Tally groups={c.tally} /> : null}
-                </li>
-              ))}
-            </ul>
+            <section
+              className="arc-case__result"
+              aria-label={RESULT_LABEL}
+              style={{ "--case-len": result.value.length } as CSSProperties}
+            >
+              <p className="arc-case__result-label">{RESULT_LABEL}</p>
+              <div className="arc-case__result-body">
+                <p className="arc-case__num">{result.value}</p>
+                <p className="arc-case__result-line">{result.line}</p>
+                {result.tally ? <Tally groups={result.tally} /> : null}
+              </div>
+            </section>
           </div>
           <p className="arc-case__gate">
             <span className="arc-case__gate-key">The gate</span>

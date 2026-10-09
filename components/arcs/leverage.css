@@ -55,7 +55,7 @@
 .arc-case__row dt,
 .arc-case__did-n,
 .arc-case__caption,
-.arc-case__key,
+.arc-case__result-label,
 .arc-case__verdict b,
 .arc-case__ledger,
 .arc-case__gate-key,
@@ -575,10 +575,10 @@
 }
 .arc-case__title {
   margin: 0;
-  max-width: 26ch;
+  max-width: 44ch;
   font-family: var(--lv-sans);
   font-weight: 400;
-  font-size: var(--lat-title);
+  font-size: var(--type-2xl);
   line-height: 1.1;
   letter-spacing: var(--track-display);
   color: var(--arc-ink);
@@ -793,22 +793,26 @@
   color: var(--arc-ink-40);
 }
 
-/* Three measured cells, Tensorlake's stat cell: the numeral, what it
-   counts, and the count drawn as a tally in the gold's tints. */
-.arc-case__cells {
+/* What it returned (U3): one number, large and neutral, one line a
+   decision maker reads at reading size, and the count drawn under it in
+   the gold's tints when it is a count. Never three small cells. */
+.arc-case__result {
   display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr);
   border-left: 1px solid var(--arc-rule);
   container-type: inline-size;
 }
-.arc-case__cell {
+.arc-case__result-label {
+  padding: var(--lv-v) var(--lat-pad-cell);
+  border-bottom: 1px solid var(--arc-rule);
+  color: var(--arc-ink-60);
+}
+.arc-case__result-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--lv-v) var(--lat-pad-cell);
-}
-.arc-case__cell + .arc-case__cell {
-  border-top: 1px solid var(--arc-rule);
+  justify-content: center;
+  gap: var(--space-md);
+  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell);
 }
 /* The display size, or less: a mono glyph is 0.6em, so a value of
    `--case-len` characters is held to the column it sits in. */
@@ -824,14 +828,15 @@
   color: var(--arc-ink);
   white-space: nowrap;
 }
-.arc-case__key {
-  color: var(--arc-ink-50);
+.arc-case__result-line {
+  font-size: var(--type-lg);
+  line-height: 1.4;
+  color: var(--arc-ink-80);
 }
 .arc-case__tally {
   display: flex;
   gap: var(--space-sm);
   height: calc(var(--lv-v) * 1.25);
-  margin-top: auto;
 }
 .arc-case__tally-group {
   flex: var(--case-of) 1 0;
@@ -977,6 +982,7 @@
     gap: var(--space-md);
   }
   .arc-case__spec {
+    grid-template-rows: none;
     border-right: 0;
     border-bottom: 1px solid var(--arc-rule);
   }
@@ -995,19 +1001,9 @@
     --case-still: calc((100% - var(--space-md)) / 2);
     width: 100%;
   }
-  .arc-case__cells {
-    grid-template-rows: none;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .arc-case__result {
     border-left: 0;
     border-top: 1px solid var(--arc-rule);
-  }
-  .arc-case__cell + .arc-case__cell {
-    border-top: 0;
-    border-left: 1px solid var(--arc-rule);
-  }
-  /* Three cells share the row, so the numeral takes a fixed rung. */
-  .arc-case__num {
-    --case-num: var(--type-xl);
   }
   .arc-lev__idea {
     border-right: 0;
@@ -1049,14 +1045,10 @@
   .arc-lev__read + .arc-lev__read {
     border-left: 0;
   }
-  .arc-case__cells {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .arc-case__cell + .arc-case__cell {
-    border-left: 0;
-    border-top: 1px solid var(--arc-rule);
-  }
-  .arc-case__num {
-    --case-num: var(--type-2xl);
+  /* Two stills share the width: the verdict sits over its reason. */
+  .arc-case__verdict {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
   }
 }

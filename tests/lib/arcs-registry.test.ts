@@ -1983,19 +1983,18 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
         expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
         expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(40);
-        for (const c of s.cells) {
-          expect(c.value.length, `${at}: "${c.value}"`).toBeLessThanOrEqual(10);
-          expect(c.key.length, `${at}: "${c.key}"`).toBeLessThanOrEqual(44);
-          /* A tally draws a count: whole numbers, lit within the group, at
-             most 60 segments a cell so a segment stays a segment. */
-          if (c.tally) {
-            const segments = c.tally.reduce((sum, g) => sum + g.of, 0);
-            expect(segments, `${at}: "${c.value}" tally`).toBeLessThanOrEqual(60);
-            for (const g of c.tally) {
-              expect(Number.isInteger(g.of) && g.of >= 1, `${at}: "${c.value}" of`).toBe(true);
-              expect(Number.isInteger(g.lit), `${at}: "${c.value}" lit`).toBe(true);
-              expect(g.lit >= 0 && g.lit <= g.of, `${at}: "${c.value}" lit ≤ of`).toBe(true);
-            }
+        /* U3: ONE return, a number a decision maker reads and a plain
+           line; a tally draws it only when it is a count: whole numbers,
+           lit within the group, at most 60 segments. */
+        expect(s.result.value.length, `${at}: "${s.result.value}"`).toBeLessThanOrEqual(10);
+        expect(s.result.line.length, `${at}: the return's line`).toBeLessThanOrEqual(110);
+        if (s.result.tally) {
+          const segments = s.result.tally.reduce((sum, g) => sum + g.of, 0);
+          expect(segments, `${at}: tally`).toBeLessThanOrEqual(60);
+          for (const g of s.result.tally) {
+            expect(Number.isInteger(g.of) && g.of >= 1, `${at}: tally of`).toBe(true);
+            expect(Number.isInteger(g.lit), `${at}: tally lit`).toBe(true);
+            expect(g.lit >= 0 && g.lit <= g.of, `${at}: tally lit ≤ of`).toBe(true);
           }
         }
         const media: string[] = [];

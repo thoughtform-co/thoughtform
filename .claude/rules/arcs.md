@@ -1587,10 +1587,11 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   (Tensorlake): the top row is the four buckets with this one marked by the gold square, the
   concrete `title` (≤ 56, sentence case, never a working name) and client · made in · date; then
   the spec (ask · Claude did 01–03), the figure (`clip` · `pair` kept beside sent back · `ledger`
-  as a log with dot leaders), three measured cells; the gate (by role, green diamond) is the
-  foot. ⚠ THE GOLD IS THE DATA: the bucket's square, a `tally` under a counted number (groups of
+  as a log with dot leaders), and ONE return (U3: `result`, a number and a line a decision maker
+  reads, never three small cells); the gate (by role, green diamond) is the foot. ⚠ THE GOLD IS
+  THE DATA: the bucket's square, a `tally` under the return when it is a count (groups of
   `{ of, lit, dim? }`, ≤ 60 segments, every count as filed), a logged record's values. Text and
-  numerals stay neutral. Classes `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes
+  numerals stay neutral. No money figure unless one is filed. Classes `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes
   `data-job-*`; under the fill rhythm the headless frame sits on the datum. ⚠ A did-line is ONE line (≤ 44): two-line wraps ran the jobs past the fold at
   1470 × 830. ⚠ The frame is a SIZE CONTAINER and the media are sized in `cq` units: a loop or a
   still never sizes itself from its file (a 1080 × 1920 poster would). Within a page the jobs

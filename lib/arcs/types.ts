@@ -1466,10 +1466,11 @@ export type ArcSection = ArcSectionBase &
          * the frame carries everything, as Tensorlake's does. Its top row is
          * the four buckets with this one marked, the title, and the client,
          * where it ran and the date; under it Tensorlake's sandwich (the
-         * spec · the figure · three measured cells, each drawn as a tally);
-         * the person who decided is the frame's foot. The bucket is the
-         * vision's 2×2 and the engine's workstream tiles, so one vocabulary
-         * runs down the page.
+         * spec · the figure · what it returned); the person who decided is
+         * the frame's foot. The bucket is the vision's 2×2 and the engine's
+         * workstream tiles, so one vocabulary runs down the page. U3: the
+         * return is ONE number in a decision maker's words, never three
+         * small cells.
          *
          * ⚠ THE THIRTY-SECOND ENUMERATED EXCEPTION. Server, no state, DOM
          * only, `data-job-*`; its classes are `.arc-case__*` because
@@ -1497,8 +1498,8 @@ export type ArcSection = ArcSectionBase &
         /** The person who decided, by role (≤ 32), and on what (≤ 110). */
         gate: { who: string; line: string };
         figure: ArcJobFigure;
-        /** Three measured numbers, as filed. */
-        cells: readonly [ArcJobCell, ArcJobCell, ArcJobCell];
+        /** What it returned, one number or one plain statement (U3). */
+        result: ArcJobResult;
       }
   );
 
@@ -1507,20 +1508,28 @@ export type ArcSection = ArcSectionBase &
 /** The four buckets of the work: the vision's 2×2, the engine's tiles. */
 export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
 
-/** A measured number: the value large (≤ 10), what it counts small (≤ 44),
- *  and, when it counts something, the count drawn as a tally. */
-export interface ArcJobCell {
+/**
+ * What the job returned (U3, owner 2026-10-09, after the practice's adviser:
+ * "if we can quantify the changes it becomes super powerful"): one number
+ * where the record gives one, hours saved, assets made, right first time,
+ * and the line says it in a decision maker's words. Not every job has a
+ * number; the line then carries it plainly. Every figure as filed.
+ */
+export interface ArcJobResult {
+  /** The one number, large, e.g. "15 of 18" or "2–3 hrs". ≤ 10. */
   value: string;
-  key: string;
+  /** What it means for the business, one or two sentences. ≤ 110. */
+  line: string;
+  /** The count drawn, when the number is a count. */
   tally?: readonly ArcJobTally[];
 }
 
 /**
- * One group of a cell's tally, Tensorlake's bar code (U2): `of` segments,
+ * One group of a result's tally, Tensorlake's bar code (U2): `of` segments,
  * the first `lit` of them gold. A second group is a second state (before and
  * after) or a sibling (the other models); `dim` sets its lit segments in the
  * gold's quiet tint, so the group that is the claim reads first. At most 60
- * segments a cell, every count as filed.
+ * segments a tally, every count as filed.
  */
 export interface ArcJobTally {
   of: number;

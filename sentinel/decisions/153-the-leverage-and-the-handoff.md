@@ -163,3 +163,28 @@ board, Vorflux, the two Cyberpunk panels):
 
 Measured headless: nothing overflows at 1440 × 790, 1470 × 830, 1710 × 980 or 1920 × 1200 (the
 880px cap engages there); both themes; no horizontal scroll at 375 wide.
+
+## Update 3 (2026-10-09, owner): one return a job, in a decision maker's words
+
+The owner, on Update 2: the titles need not be so big; the right column's "2 + 4" with small text
+under it is not what a reader wants, "one number, the actual return, concise"; and a line like
+"Cold reads that got the joke, was 0 of 3" makes no sense to an executive. The practice's adviser,
+the same day: "put actual £ against those activities … if we can quantify the changes it becomes
+super powerful."
+
+1. **One return a job** (`result: { value, line, tally? }`, replacing the three cells): the number
+   large, the line at reading size (`--type-lg`) saying what it means for the business, under the
+   label "The return". Samako's ads: 6 ads from one open brief. Suri's teaser: retouching and
+   masking in 2 to 3 hours a video, not a full manual session (the video editor's account in the
+   team's week-one debrief). Suri's brief: 5 problems caught before any editing began. Samako's
+   test: 15 of 18 product shots right first time on the model now in use, up from 4 of 18. A tally
+   draws the number only where it is a count.
+2. **No money yet.** No job has a filed money figure; a pound figure needs a rate the records do
+   not hold, so the returns are in hours, assets and first-time-right, the adviser's own examples.
+   The X-Bionic terms already measure what each ad costs to make.
+3. **Executive wording throughout**: the did-lines lose the craft words ("locked-off",
+   "composited", "house set"); the gate says what was decided in plain terms.
+4. **The title is `--type-2xl`**, one line on desktop (measure 44ch).
+
+Measured headless: each job exactly one screen at 1440 × 790 and 1470 × 830, nothing overflowing
+at 1710 × 980 or 1920 × 1200; both themes; no horizontal scroll at 375 wide.
