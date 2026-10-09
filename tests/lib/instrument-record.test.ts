@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { SURI_STUDIO_CONFIGURATION } from "@/lib/arcs/content/shared/suriWork";
+import {
+  SURI_RUNS,
+  SURI_STUDIO_CONFIGURATION,
+  SURI_WORKSTREAM_ORDER,
+} from "@/lib/arcs/content/shared/suriWork";
 import { SURI_PROPOSAL_ARC } from "@/lib/arcs/content/suri-proposal";
 import { PANDORA_PROPOSAL_ARC } from "@/lib/arcs/content/pandora-proposal";
 import { fromBoard, fromConfiguration, fromQuestions } from "@/lib/instrument/adapt";
-import { SURI_INSTRUMENT } from "@/lib/instrument/records/suri";
+import { SURI_INSTRUMENT, suriWorkstreamInstrument } from "@/lib/instrument/records/suri";
 import {
   ALTITUDES,
   PART_ORDER,
@@ -80,6 +84,45 @@ describe("the instrument record (ADR-154)", () => {
     expect(rec.work.name).toBe(configured.card.name);
     expect(rec.org?.socket?.name).toBe(configured.reach.value);
     expect(altitudesOf(rec)).toEqual(["org", "work"]);
+  });
+
+  /* ADR-154 U1: a workstream's record is the studio's six with its run
+     opened; its check rows are the eval log's, never invented. */
+  it("cuts each Suri workstream to a lawful record whose checks are the log's", () => {
+    for (const which of SURI_WORKSTREAM_ORDER) {
+      const rec = suriWorkstreamInstrument(which);
+      const body = SURI_RUNS[which];
+      expect(recordFaults(rec), which).toEqual([]);
+      expect(altitudesOf(rec), which).toEqual(["work", "run", "check"]);
+      expect(rec.parts, `${which}: the studio's six`).toEqual(SURI_INSTRUMENT.parts);
+      expect(rec.run?.steps).toBe(body.steps);
+      expect(rec.checksNote).toBe(body.evals.note);
+      const rows = rec.checks ?? [];
+      const rubric = rows.filter((r) => !r.code);
+      const cases = rows.filter((r) => r.code);
+      expect(rubric.map((r) => r.label)).toEqual(body.checks.map((c) => c.line));
+      expect(rubric.filter((r) => r.gate)).toHaveLength(body.checks.filter((c) => c.gate).length);
+      expect(cases.map((r) => r.label)).toEqual(body.evals.cases.map((c) => c.name));
+      for (const c of body.evals.cases) {
+        const row = cases.find((r) => r.label === c.name)!;
+        if (!c.with) {
+          expect(row.state, c.name).toBe("not-run");
+          expect(row.figure, c.name).toBeUndefined();
+        } else {
+          const [got, of] = c.with.split(" of ").map(Number);
+          expect(row.state, c.name).toBe(got === of ? "pass" : "review");
+          expect(row.figure, c.name).toContain(c.with);
+          if (c.without) expect(row.figure, c.name).toContain(`${c.without} without`);
+        }
+      }
+      /* The rubric's rows hold only as far as the log says. */
+      const ran = body.evals.cases.filter((c) => c.with);
+      const held =
+        ran.length > 0 && ran.every((c) => c.with!.split(" of ")[0] === c.with!.split(" of ")[1]);
+      const want = ran.length === 0 ? "not-run" : held ? "pass" : "review";
+      for (const r of rubric) expect(r.state, `${which}: ${r.label}`).toBe(want);
+    }
+    expect(suriWorkstreamInstrument("briefing").checks).toEqual(SURI_INSTRUMENT.checks);
   });
 
   it("names people by role: no colleague's first name in the Suri record", () => {

@@ -81,7 +81,7 @@ const PINS: Record<string, Counts> = {
   /* The Home sessions page (ADR-150): every cut is `.lat-frame`'s, so it
      enters at zero and may never rise. */
   "components/sessions/sessions.css": { P: 0, S: 0, F: 0, M: 0 },
-  "components/arcs/arcs.css": { P: 6, S: 388, F: 263, M: 14 },
+  "components/arcs/arcs.css": { P: 6, S: 374, F: 251, M: 13 },
   "components/arcs/course.css": { P: 0, S: 30, F: 17, M: 0 },
   "components/arcs/prompt-to-loop/prompt-to-loop.css": { P: 0, S: 89, F: 61, M: 3 },
 };

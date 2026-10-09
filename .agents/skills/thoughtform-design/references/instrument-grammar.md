@@ -107,3 +107,12 @@ a paragraph inside a panel · four-corner or TL+BR chamfers · radius · gradien
 depth · idle pulses, spins, orbit rotations · a second gold object · green for anything but a
 person · SVG `<text>` for a sentence · a dashed run asked to draw on · a second instrument of the
 same record on one page (the said-twice defect).
+
+## The check rows (ADR-154 U1)
+
+A check row is the eval log's, never invented. The rubric's checks are rows that pass only when
+every case that ran held in full, go to review when one missed, and have not run when none has.
+Each eval case is a row of its own, its name as filed set in code, its result as filed in the
+state slot ("3 of 3, 0 of 3 without · Pass"); a case not run says so. The log's one line sits
+under the rows. A passed check is filled ink; review is a gold ring; block is red; green stays
+the human's (ADR-100).

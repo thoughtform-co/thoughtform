@@ -41,8 +41,10 @@ import type { ArcDef, ArcKind } from "@/lib/arcs/types";
 import { atOnWindow, axisWindow } from "./axis";
 import {
   configurationFromBoard,
+  configurationFromInstrument,
   configurationFromQuestions,
   configurationFromSection,
+  instrumentIsConfiguration,
 } from "./configuration";
 import { letterDateShort } from "./dates";
 import type {
@@ -244,12 +246,15 @@ const PAGE_CONFIGURATIONS: Record<string, () => SheetConfiguration> = {
 };
 
 /** An arc's configuration: its `configuration` picker, or — a workshop that
- *  draws the six-question board instead (ADR-130) — its `questions` beat. A
- *  page carries one or the other; two would be the said-twice defect. */
+ *  draws the six-question board instead (ADR-130) — its `questions` beat, or
+ *  the instrument at the work or organisation altitude (ADR-154 U1). A page
+ *  carries one of them; two would be the said-twice defect. */
 function arcConfiguration(arc: ArcDef): SheetConfiguration | null {
   for (const s of arc.sections) {
     if (s.kind === "configuration") return configurationFromSection(s);
     if (s.kind === "questions") return configurationFromQuestions(s);
+    if (s.kind === "instrument" && instrumentIsConfiguration(s))
+      return configurationFromInstrument(s);
   }
   return null;
 }

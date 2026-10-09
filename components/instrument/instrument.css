@@ -481,7 +481,7 @@ button.ins__crumb-at {
   grid-template-columns: 10px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
-  padding: 7px 0;
+  padding: 5px 0;
   border-top: 1px solid var(--ins-edge);
   font: 12px/1.4 var(--ins-mono);
   color: var(--ins-ink-90);
@@ -495,9 +495,10 @@ button.ins__crumb-at {
   border: 1px solid var(--ins-ink-50);
   transform: rotate(45deg);
 }
+/* A passed check is ink, filled: green stays the human's (ADR-100). */
 [data-check="pass"] .ins-check__mark {
-  background: var(--ins-person);
-  border-color: var(--ins-person);
+  background: var(--ins-ink-70);
+  border-color: var(--ins-ink-70);
 }
 [data-check="block"] .ins-check__mark {
   background: #c8644f;
@@ -513,7 +514,24 @@ button.ins__crumb-at {
   color: var(--ins-ink-50);
 }
 [data-check="pass"] .ins-check__state {
-  color: var(--ins-person-text);
+  color: var(--ins-ink-90);
+}
+.ins-check__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ins-check__label code {
+  font: inherit;
+  color: var(--ins-ink);
+}
+/* One line on what the log shows, under the rows. */
+.ins-panel__note {
+  display: block;
+  margin-top: var(--ins-1);
+  padding-top: 2px;
+  border-top: 1px solid var(--ins-edge);
+  font: 11px/1.5 var(--ins-mono);
+  color: var(--ins-ink-60);
 }
 .ins-return {
   display: none;
@@ -628,6 +646,15 @@ button.ins__crumb-at {
   border-right: 1px solid var(--ins-rule);
 }
 .ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] .ins-panel__tie {
+  display: none;
+}
+/* run: a station is a fifth of the band, and its words are chrome that must
+   read whole (ADR-148): the label wraps and the lit strip is the mark, so
+   the "you write this" chip stands down here. */
+.ins[data-altitude="run"] .ins-panel__label {
+  white-space: normal;
+}
+.ins[data-altitude="run"] .ins-panel__chip {
   display: none;
 }
 
@@ -793,10 +820,13 @@ button.ins__crumb-at {
     grid-template-areas: none;
     aspect-ratio: auto;
   }
-  .ins[data-altitude] .ins-panel,
+  /* ⚠ An altitude seats a part by name, `.ins[data-altitude="x"]
+     .ins-panel[data-ins-part="y"]` (0,3,1): the stack names the part too,
+     so it outranks every seat, and sits later in the sheet. */
+  .ins[data-altitude] .ins-panel[data-ins-part],
   .ins[data-altitude] .ins-chip,
-  .ins[data-altitude] .ins-node,
-  .ins[data-altitude] .ins-frame {
+  .ins[data-altitude] .ins-node[data-ins-id],
+  .ins[data-altitude] .ins-frame[data-at] {
     position: static;
     width: auto;
     height: auto;
@@ -805,6 +835,7 @@ button.ins__crumb-at {
     grid-row: auto;
     margin: 0;
     opacity: 1;
+    z-index: auto;
   }
   .ins[data-altitude] .ins-frame,
   .ins-wires,
@@ -812,17 +843,24 @@ button.ins__crumb-at {
   .ins[data-altitude="run"] .ins-panel::after {
     display: none !important;
   }
+  /* The return path's named area would open a phantom column on the
+     one-column stack (an unknown area makes implicit lines). */
+  .ins[data-altitude="check"] .ins-return {
+    grid-area: auto;
+    order: 3;
+    margin: 0;
+  }
   .ins[data-altitude] .ins-chip {
     order: -1;
+  }
+  .ins[data-altitude] .ins-panel[data-ins-part] {
+    order: 2;
   }
   .ins[data-altitude] .ins-panel[data-ins-state="lit"] {
     order: 0;
   }
   .ins[data-altitude] .ins-panel[data-ins-state="human"] {
     order: 1;
-  }
-  .ins[data-altitude] .ins-panel {
-    order: 2;
   }
   .ins[data-altitude="plugin"] .ins-panel[data-ins-part="interface"] {
     flex-direction: column;

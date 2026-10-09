@@ -36,6 +36,7 @@ type ConfigurationSection = Extract<ArcSection, { kind: "configuration" }>;
 type QuestionsSection = Extract<ArcSection, { kind: "questions" }>;
 type BoardSection = Extract<ArcSection, { kind: "board" }>;
 type ListGroupsSection = Extract<ArcSection, { kind: "list-groups" }>;
+type InstrumentSection = Extract<ArcSection, { kind: "instrument" }>;
 
 /**
  * A workstream's `work` line — `"stills and video, M1"` — as the row's note
@@ -105,6 +106,26 @@ export function configurationFromQuestions(s: QuestionsSection): SheetConfigurat
   const rows: SheetConfigRow[] = [{ id: "work", name: s.work.name }];
   const links = STACK.filter((item) => item.match.test(answers)).map((item) => link(item, 1));
   return { rows, links: ordered(links) };
+}
+
+/**
+ * The instrument, drawn (ADR-154 U1): the six of its record at the work or
+ * the organisation altitude are the same board `configurationFromQuestions`
+ * reads, so the reading is the same — one row, the work's name; the links
+ * are the stack items the six answers name. A page's runs (the instrument
+ * at the run altitude) are that configuration opened, not restated, and are
+ * never read here.
+ */
+export function configurationFromInstrument(s: InstrumentSection): SheetConfiguration {
+  const answers = s.record.parts.map((p) => p.answer).join(" ");
+  const rows: SheetConfigRow[] = [{ id: "work", name: s.record.work.name }];
+  const links = STACK.filter((item) => item.match.test(answers)).map((item) => link(item, 1));
+  return { rows, links: ordered(links) };
+}
+
+/** The altitudes at which an instrument IS the page's configuration. */
+export function instrumentIsConfiguration(s: InstrumentSection): boolean {
+  return s.altitude === "work" || s.altitude === "org";
 }
 
 /**

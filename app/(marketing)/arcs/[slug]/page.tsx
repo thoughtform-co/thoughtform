@@ -35,6 +35,11 @@ import "@/components/arcs/course.css";
 // The setup guide (ADR-151 U1), `.arc-guide*`-scoped: an arc without a guide
 // beat gets bytes and no matching rule. After arcs.css, before theme.css.
 import "@/components/arcs/guide.css";
+// The instrument (ADR-154) on the lattice housing (ADR-149), `.lat-*` and
+// `.ins*`-scoped: an arc without an instrument beat gets bytes and no
+// matching rule. After arcs.css, before theme.css.
+import "@/components/lattice/lattice.css";
+import "@/components/instrument/instrument.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
 import "@/components/sheet/sheet.css";

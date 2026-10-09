@@ -89,7 +89,7 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
 
 0 ✓ the record, the adapters, the geometry, the registry, the measure, the guards.
 1 ✓ the drawing, the lab, the capture → the owner's read → the engine ruled → Accepted.
-2 Suri configuration: `questions` → `instrument[work]` with the picker; `skill-run` → `[run]`.
+2 ✓ Suri configuration: `questions` → `instrument[work]` with the picker; `skill-run` → `[run]` (U1).
 3 X-Bionic: `circuit` → `instrument[org]`, static, one lit workstream.
 4 Workshop-v2 and the Armada companion: `plugin-board`, `repository` → `[plugin]`.
 5 The setup guides: `guide.system` → `[org]`.
@@ -104,3 +104,28 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
   padding around it. The lab's measure is the gate at 1280×720.
 - Flip against the chip's `clip-path`: `scale: false`; a stretched ring is a wrong 1px.
 - `animejs` is a dev dependency for the lab only; it leaves with its direction if not chosen.
+
+## Updates
+
+- **U1 (2026-10-09): the Suri configuration page takes the instrument.** `/arcs/suri/configuration`
+  draws its `04 · The configuration` beat as the instrument at the work altitude, on
+  `SURI_INSTRUMENT`, with the picker `plugin · work · run · check`; its three `08 · In practice`
+  workstreams are the same instrument at the run altitude, each record cut from `SURI_RUNS` by
+  `suriWorkstreamInstrument` (`lib/instrument/records/suri.ts`), opening into its checks. The
+  `skill-run` kind is deleted with its guard (`ArcSkillRun.tsx`, its sheet block, the workshop
+  frame's rules for it; `RunBody` stands on its own in `suriWork.ts`, read by the services ring
+  too). ⚠ **THE CHECK ROWS ARE THE EVAL LOG'S**: a case is a row with its result as filed
+  ("3 of 3, 0 of 3 without"; not run says so), the rubric's rows pass only when every case that
+  ran held in full, go to review when one missed, and have not run when none has; the log's one
+  line sits under the rows (`checksNote`). ⚠ A passed check is filled ink, not green: green
+  stays the human's (ADR-100). Both arc routes import `lattice.css` and `instrument.css` after
+  `guide.css`; the beat takes the `questions` beat's air (`.arc-sec--instrument`), and at the work
+  altitude the figure's width follows the viewport's height so the 2:1 crop and its housing fit
+  one screen at 1470×830 (1080px there; the band whole from 1920×1247). The arcs overview reads
+  the instrument at the work or organisation altitude as the page's configuration
+  (`configurationFromInstrument`, `instrumentIsConfiguration`; ADR-118 U2), never its runs. At
+  the run altitude the station words wrap and the "you write this" chip stands down, so the
+  five read whole in a fifth of the band. The `questions` kind stays until its seven other
+  pages move (step 4 onward). Measured headless: every state of both beats clean at 1470×830
+  (one screen each), 1920×1247 and 375 wide; at 1280×720 the run beats run to 797px, the
+  figure itself clean.

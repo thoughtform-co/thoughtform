@@ -80,6 +80,10 @@ export interface InstrumentCheck {
   label: string;
   /** A gate: the work fails on it. */
   gate?: true;
+  /** The label is a name as the plugin files it (an eval case), set in code. */
+  code?: true;
+  /** The eval log's result as filed, e.g. "3 of 3, 0 of 3 without". */
+  figure?: string;
   state: CheckState;
 }
 
@@ -142,6 +146,8 @@ export interface InstrumentRecord {
   work: InstrumentWork;
   run?: InstrumentRun;
   checks?: readonly InstrumentCheck[];
+  /** One line on what the eval log shows, under the checks at the check altitude. */
+  checksNote?: string;
   plugin?: InstrumentPlugin;
   org?: InstrumentOrg;
   /** The mark on the lit parts, e.g. "You write this". */

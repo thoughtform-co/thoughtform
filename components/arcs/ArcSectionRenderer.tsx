@@ -31,7 +31,6 @@ import { ArcPortrait } from "./ArcPortrait";
 import { ArcQuestions } from "./ArcQuestions";
 import { ArcRepository } from "./ArcRepository";
 import { ArcResource } from "./ArcResource";
-import { ArcSkillRun } from "./ArcSkillRun";
 import { ArcBreakdown, breakdownLength } from "./ArcBreakdown";
 import { PromptToLoop } from "./prompt-to-loop/PromptToLoop";
 import { promptToLoopRun } from "./prompt-to-loop/promptToLoopRun";
@@ -154,8 +153,6 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcHull key={section.id} section={section} index={index} motion={motion} />;
     case "repository":
       return <ArcRepository key={section.id} section={section} index={index} motion={motion} />;
-    case "skill-run":
-      return <ArcSkillRun key={section.id} section={section} index={index} motion={motion} />;
     case "prompt-to-loop":
       return <PromptToLoop key={section.id} startIndex={index} slides={promptToLoopRun(section)} />;
     case "breakdown":

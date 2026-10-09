@@ -1324,39 +1324,6 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * A SKILL RUN (ADR-148): one workstream, run once, in the five steps
-         * Prompt to Loop's "How it runs" slide draws — you ask, Claude picks
-         * the skill, it follows the steps, it checks itself, you decide —
-         * with the skill's evals under the rail. Prompt to Loop's slide is
-         * injected HTML for one example; this is the same breakdown as data,
-         * so a client's workstreams can each carry their own.
-         *
-         * ⚠ THE TWENTY-FIFTH ENUMERATED EXCEPTION. One leaf, server, no state,
-         * `data-run-*` only; the stations are DOM on the workshop frame, the
-         * connectors 1px DOM, never an SVG line (ADR-068 U6).
-         * ⚠ The station NAMES are chrome (`ArcSkillRun`'s constants), never
-         * content, so every run reads the same five steps in the same words.
-         */
-        kind: "skill-run";
-        head: ArcHead;
-        /** What someone types, in their own words. ≤ 110. */
-        ask: string;
-        /** The skill Claude picks, as the plugin names it, and the ones it
-         *  hands on to. */
-        skill: { name: string; also?: readonly string[] };
-        /** What it does, in order. Three to five, ≤ 64 each. */
-        steps: readonly string[];
-        /** The rubric's checks it runs on its own work, gates first. Two to
-         *  four, ≤ 48 each; at least one gate. */
-        checks: readonly ArcRunCheck[];
-        /** Who decides, by role, and where the work lands. */
-        decide: { who: string; line: string };
-        /** The skill's evals: its cases with and without the skill, as the
-         *  eval log records them, and one line on what they show. */
-        evals: { cases: readonly ArcRunCase[]; note: string };
-      }
-    | {
-        /**
          * A CASE BREAKDOWN (ADR-148 U5): how Claude made one real piece of
          * work, as slides in Prompt to Loop's own format: a hero with the
          * film and its facts, then one slide per beat, each a head and its

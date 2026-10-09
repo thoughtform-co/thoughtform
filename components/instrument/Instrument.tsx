@@ -364,11 +364,18 @@ export function Instrument({
                     {p.id === "evals" ? (
                       <ul className="ins-panel__checks">
                         {record.checks?.map((c) => (
-                          <li key={c.id} data-check={c.state} data-gate={c.gate ? "" : undefined}>
+                          <li
+                            key={c.id}
+                            data-check={c.state}
+                            data-gate={c.gate ? "" : undefined}
+                            data-case={c.code ? "" : undefined}
+                          >
                             <span className="ins-check__mark" aria-hidden="true" />
-                            <span className="ins-check__label">{c.label}</span>
+                            <span className="ins-check__label">
+                              {c.code ? <code>{c.label}</code> : c.label}
+                            </span>
                             <span className="ins-check__state">
-                              {c.gate ? "Gate · " : ""}
+                              {c.figure ? `${c.figure} · ` : c.gate ? "Gate · " : ""}
                               {CHECK_WORDS[c.state]}
                             </span>
                           </li>
@@ -381,6 +388,9 @@ export function Instrument({
                     ) : (
                       <span className="ins-panel__line">{p.answer}</span>
                     )}
+                    {p.id === "evals" && record.checksNote ? (
+                      <span className="ins-panel__note">{record.checksNote}</span>
+                    ) : null}
                   </span>
                 </div>
               </section>
@@ -395,7 +405,13 @@ export function Instrument({
       </div>
 
       <footer className="lat-frame__foot ins__foot">
-        <span>{ALTITUDE_WORDS[altitude]}</span>
+        <span className="ins__foot-at">
+          {altitudesOf(record).map((a) => (
+            <span key={a} data-at={a}>
+              {ALTITUDE_WORDS[a]}
+            </span>
+          ))}
+        </span>
         <span className="ins__legend">
           <i data-ins-state="lit" /> what the team writes
           <i data-ins-state="human" /> a person
