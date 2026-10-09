@@ -1231,6 +1231,15 @@ line }, socket, alt }`: six small configurations in the board's cross whose
   head for one body height only. Opt-in because the Trinny scene (ADR-102) is
   measured against the centre-solved datum; beats without a head stay whole
   frames. Gated like the datum (≥961px, no PRM).
+- ⚠ **`rhythm: "fill"` IS THE SECOND OPT-IN (ADR-128 U3, 2026-10-09; the
+  X-Bionic proposal only).** The head on the same 128px datum, but the beat is
+  one screen (the base `100svh` stays) and its band `auto minmax(0, 1fr)`,
+  ADR-080 U3's remainder recipe: a figure that opts in (`leverage`, `handoff`,
+  `terms`, `job`, the instrument at the organisation altitude) fills the
+  remainder to `--arc-fill-cap` (880px), every other figure is centred in it.
+  `min-height`, never `height`: a figure taller than the remainder grows its
+  beat, never clips. Same gate, same release as `flow`. Registry-guarded: a
+  rhythm is `flow` or `fill`, and only a proposal takes one.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,
@@ -1568,6 +1577,24 @@ harness, or the drive lands short. The drive helpers live in
 Cycle B when adding a section kind or surface; Cycle A after fixes.
 
 
+## The board's beats (ADR-153)
+
+- **Four console kinds, one housing.** `leverage` (28th), `handoff` (29th), `terms` (31st) and
+  `job` (32nd, U1) are the arcs' chamfered plate with a head strip and a readout foot, styled in
+  `components/arcs/leverage.css` (pinned at zero in `lattice-ratchet` and `type-material-tokens`:
+  every spacing a token or `--lv-v`, every tracking a role). One idea and one lit thing a beat.
+- **A `job` is one client job on one screen** (U1): strip (`JOB 0N`, name, the bucket chip with
+  the 2×2's glyph), the spec (ask · Claude did 01–03 · the gate, by role, green diamond), the
+  figure (`clip` · `pair` kept beside sent back · `ledger`), three measured cells, a foot
+  (client · made in · date). Classes `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes
+  `data-job-*`. ⚠ A did-line is ONE line (≤ 44): two-line wraps ran the jobs past the fold at
+  1470 × 830. ⚠ The frame is a SIZE CONTAINER and the media are sized in `cq` units: a loop or a
+  still never sizes itself from its file (a 1080 × 1920 poster would). Within a page the jobs
+  number 1, 2, 3 … and no two share a bucket; every figure as filed, people by role and no
+  pronoun, no money (registry-guarded, media on disk).
+- **A chapter band may carry an `index`** (U1): 3–5 rows, `n` "01" onward, labels ≤ 18, each
+  `href` a section after the band and before the next chapter (registry-guarded).
+
 ## The instrument (ADR-154)
 
 - **One record, five altitudes.** The intelligence configuration is `InstrumentRecord`
@@ -1596,3 +1623,9 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   the eval log's: a case is a row with its result as filed, the rubric's rows hold only as far as
   the cases that ran did, the log's line sits under them (`checksNote`); a passed check is ink,
   never green (ADR-100). Both arc routes import `lattice.css` and `instrument.css`.
+- **The organisation altitude is an exploded stack (U4, 2026-10-09).** The workstreams as tiles
+  on top (`InstrumentWorkstream.bucket`, ≤ 12, the discipline; the owner by role on `line`), the
+  layer the team writes as one slab (owned and hatched when the context or the evaluations is
+  lit), the organisation's slab under it, the six as callouts either side with no frame. One
+  slab drawing, `components/instrument/Slab.tsx`, shared with the leverage; its hatch id is per
+  instance. The chip at this altitude is `os.name` and `os.line` only.

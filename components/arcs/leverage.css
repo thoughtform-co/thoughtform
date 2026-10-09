@@ -49,10 +49,18 @@
 .arc-hand__time-label,
 .arc-hand__time-note,
 .arc-hand__row-label,
-.arc-hand__seg-name {
+.arc-hand__seg-name,
+.arc-case__bucket,
+.arc-case__row dt,
+.arc-case__did-n,
+.arc-case__caption,
+.arc-case__cell dt,
+.arc-case__verdict b,
+.arc-case__ledger,
+.arc-inter__index-n {
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   line-height: 1.4;
   text-transform: uppercase;
 }
@@ -473,12 +481,12 @@
   font-family: var(--lv-mono);
   font-size: var(--lat-display);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--track-display);
   color: var(--arc-ink);
 }
 .arc-terms__unit {
   font-size: var(--type-sm);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--arc-ink-60);
 }
@@ -495,7 +503,7 @@
   border-bottom: 1px dashed var(--arc-rule);
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
 }
 .arc-terms__row dt {
@@ -504,6 +512,280 @@
 .arc-terms__row dd {
   color: var(--arc-ink-80);
   text-align: right;
+}
+
+/* ── The job: one client job on one screen (ADR-153 U1) ────────────
+   The console's strip and foot; under the strip Tensorlake's sandwich: the
+   spec · the figure · three measured cells. One lit object, the bucket. */
+
+.arc-case {
+  --case-person: var(--atreides-light, #5b7a4e);
+  --case-person-text: var(--atreides-ink, #7a9e6a);
+  --case-mark: var(--space-sm);
+}
+.arc-case__bucket {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--lv-gold-line);
+  background: var(--arc-gold-wash);
+  color: var(--lv-gold-text);
+  white-space: nowrap;
+}
+.arc-case__bucket .arc-lev__glyph {
+  height: var(--space-lg);
+  align-self: center;
+}
+.arc-case .arc-lev__read:last-child dd {
+  color: var(--arc-ink-80);
+}
+.arc-case .arc-lev__sys-key,
+.arc-case__fig-n {
+  flex: none;
+  white-space: nowrap;
+}
+/* Under the fill rhythm the split takes what the strip and the foot leave
+   (ADR-128 U3). */
+.arc-case__split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 3fr);
+}
+
+/* The spec: the ask at the top, the gate at the foot, the work between. */
+.arc-case__spec {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: calc(var(--lv-v) * 0.5) var(--lat-pad-cell);
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-case__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-block: calc(var(--lv-v) * 0.75);
+}
+.arc-case__row + .arc-case__row {
+  border-top: 1px dashed var(--arc-rule);
+}
+.arc-case__row:nth-child(2) {
+  justify-content: center;
+}
+.arc-case__row dt {
+  color: var(--arc-ink-50);
+}
+.arc-case__row dd {
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-80);
+}
+.arc-case__did {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.arc-case__did li {
+  display: grid;
+  grid-template-columns: var(--space-xl) minmax(0, 1fr);
+  align-items: baseline;
+}
+.arc-case__did-n {
+  color: var(--arc-ink-40);
+}
+/* The gate is a person: the person's green diamond (ADR-100), the role in
+   ink, then what they decided. */
+.arc-case__row[data-job-gate] dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--case-person-text);
+}
+.arc-case__row[data-job-gate] dt::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--case-person);
+  transform: rotate(45deg);
+}
+.arc-case__who {
+  display: block;
+  color: var(--arc-ink);
+}
+
+/* The figure on the dot ground, its frame marked at the corners
+   (Arrakis's step frame: ticks, never a filled card). The frame is a size
+   container, so the media is sized from the space the screen leaves it
+   and never from its own pixels. */
+.arc-case__fig {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  min-height: 0;
+  margin: 0;
+  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell) var(--lv-v);
+  background: var(--lv-dots);
+}
+.arc-case__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  container-type: size;
+}
+.arc-case__frame::before,
+.arc-case__cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--case-tick), var(--case-tick)) left top / var(--case-mark) 1px,
+    linear-gradient(var(--case-tick), var(--case-tick)) left top / 1px var(--case-mark),
+    linear-gradient(var(--case-tick), var(--case-tick)) right top / var(--case-mark) 1px,
+    linear-gradient(var(--case-tick), var(--case-tick)) right top / 1px var(--case-mark),
+    linear-gradient(var(--case-tick), var(--case-tick)) left bottom / var(--case-mark) 1px,
+    linear-gradient(var(--case-tick), var(--case-tick)) left bottom / 1px var(--case-mark),
+    linear-gradient(var(--case-tick), var(--case-tick)) right bottom / var(--case-mark) 1px,
+    linear-gradient(var(--case-tick), var(--case-tick)) right bottom / 1px var(--case-mark);
+  background-repeat: no-repeat;
+}
+.arc-case__frame::before {
+  --case-tick: var(--arc-ink-40);
+}
+.arc-case__clip {
+  height: 100cqh;
+  width: min(100cqw, 100cqh * 9 / 16);
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+  overflow: hidden;
+}
+.arc-case__pair {
+  --case-still: min((100cqw - var(--space-md)) / 2, 100cqh - var(--space-2xl));
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+}
+.arc-case__pair[data-job-ratio="9:16"] {
+  --case-still: min((100cqw - var(--space-md)) / 2, (100cqh - var(--space-2xl)) * 9 / 16);
+}
+.arc-case__pair[data-job-ratio="3:2"] {
+  --case-still: min((100cqw - var(--space-md)) / 2, (100cqh - var(--space-2xl)) * 3 / 2);
+}
+.arc-case__still {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: var(--case-still);
+}
+.arc-case__still img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--arc-edge);
+}
+.arc-case__pair[data-job-ratio="9:16"] img {
+  aspect-ratio: 9 / 16;
+}
+.arc-case__pair[data-job-ratio="3:2"] img {
+  aspect-ratio: 3 / 2;
+}
+.arc-case__verdict {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  font-size: var(--type-base);
+  line-height: 1.3;
+  color: var(--arc-ink-60);
+}
+.arc-case__verdict b {
+  flex: none;
+  font-weight: 400;
+  color: var(--arc-ink);
+}
+.arc-case__still[data-job-verdict="rejected"] img {
+  opacity: 0.7;
+}
+.arc-case__ledger {
+  width: min(100%, 60ch);
+  border-top: 1px solid var(--arc-rule);
+  font-size: var(--type-sm);
+  background: var(--arc-plate);
+}
+.arc-case__ledger div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--lv-v) var(--space-md);
+  border-bottom: 1px dashed var(--arc-rule);
+}
+.arc-case__ledger dt {
+  color: var(--arc-ink-50);
+  white-space: nowrap;
+}
+.arc-case__ledger dd {
+  color: var(--arc-ink-80);
+  text-align: right;
+}
+.arc-case__caption {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  font-size: var(--type-sm);
+  color: var(--arc-ink-60);
+}
+.arc-case__fig-n {
+  color: var(--arc-ink-40);
+}
+
+/* Three measured cells: Spade's stat cell, a keyed label over the numeral,
+   the corners marked. */
+.arc-case__cells {
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  border-left: 1px solid var(--arc-rule);
+  container-type: inline-size;
+}
+.arc-case__cell {
+  --case-tick: var(--arc-ink-22);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--lv-v) var(--lat-pad-cell);
+}
+.arc-case__cell + .arc-case__cell {
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-case__cell dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--arc-ink-60);
+}
+.arc-case__cell dt::before {
+  content: "";
+  flex: none;
+  border-left: var(--space-sm) solid var(--arc-ink-40);
+  border-block: calc(var(--space-sm) * 0.5) solid transparent;
+}
+/* The display size, or less: a mono glyph is 0.6em, so a value of
+   `--case-len` characters is held to the column it sits in. */
+.arc-case__cell dd {
+  --case-num: min(
+    var(--lat-display),
+    (100cqi - 2 * var(--lat-pad-cell)) / (var(--case-len, 6) * 0.6)
+  );
+  font-family: var(--lv-mono);
+  font-size: var(--case-num);
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+  white-space: nowrap;
 }
 
 /* ── The chapter band (an interstitial for a board) ─────────────────
@@ -536,7 +818,7 @@
   gap: var(--space-lg);
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-size: var(--type-sm);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--gold-ink, var(--gold));
 }
@@ -552,12 +834,78 @@
 .arc-inter__tick[data-on] {
   background: var(--gold);
 }
+/* The part's index (ADR-153 U1): Linear's mono-numbered columns, each a
+   link down the page. */
+.arc-inter__index {
+  width: 100%;
+  margin-top: var(--space-md);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-inter__index ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-inter__index a {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  font-size: var(--type-md);
+  line-height: 1.3;
+  color: var(--arc-ink-80);
+  text-decoration: none;
+}
+.arc-inter__index a:hover,
+.arc-inter__index a:focus-visible {
+  color: var(--arc-ink);
+}
+.arc-inter__index-n {
+  font-size: var(--type-sm);
+  color: var(--arc-ink-40);
+}
 
 /* ── The phone ─────────────────────────────────────────────────────── */
 
 @media (max-width: 960px) {
-  .arc-lev__split {
+  .arc-lev__split,
+  .arc-case__split {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-case__spec {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  /* The frame is content-sized here: no size container, the media at a
+     phone's width. */
+  .arc-case__frame {
+    container-type: normal;
+    padding-block: var(--space-md);
+  }
+  .arc-case__clip {
+    height: auto;
+    width: min(100%, calc(var(--space-4xl) * 3));
+    aspect-ratio: 9 / 16;
+  }
+  .arc-case__pair {
+    --case-still: calc((100% - var(--space-md)) / 2);
+    width: 100%;
+  }
+  .arc-case__cells {
+    grid-template-rows: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-left: 0;
+    border-top: 1px solid var(--arc-rule);
+  }
+  .arc-case__cell + .arc-case__cell {
+    border-top: 0;
+    border-left: 1px solid var(--arc-rule);
+  }
+  .arc-case__cell dd {
+    font-size: var(--type-xl);
   }
   .arc-lev__idea {
     border-right: 0;
@@ -598,5 +946,12 @@
   }
   .arc-lev__read + .arc-lev__read {
     border-left: 0;
+  }
+  .arc-case__cells {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-case__cell + .arc-case__cell {
+    border-left: 0;
+    border-top: 1px solid var(--arc-rule);
   }
 }

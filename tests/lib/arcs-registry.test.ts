@@ -1950,6 +1950,134 @@ describe("the workshop's shared beats (ADR-143)", () => {
   });
 });
 
+describe("the proposal as one argument (ADR-153 U1)", () => {
+  /* A job: one client job on one screen, in one template. Every cap is the
+     one the screen was measured at (1470×830); the media are self-hosted
+     files that exist; people by role and no pronoun; no money. Within a
+     page the jobs run 1, 2, 3 … and no two share a bucket, because the
+     bucket is the vocabulary the vision and the engine use too. */
+  it("every job holds its shape", () => {
+    let seen = 0;
+    for (const arc of ARCS) {
+      const jobs = arc.sections.filter((s) => s.kind === "job");
+      const buckets = new Set<string>();
+      jobs.forEach((s, i) => {
+        if (s.kind !== "job") return;
+        seen += 1;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.n, `${at}: its place among the page's jobs`).toBe(i + 1);
+        expect(s.n, `${at}: one digit`).toBeLessThanOrEqual(9);
+        expect(buckets.has(s.bucket), `${at}: ${s.bucket} once a page`).toBe(false);
+        buckets.add(s.bucket);
+        expect(s.head.eyebrow?.length ?? 0, `${at}: eyebrow`).toBeLessThanOrEqual(40);
+        expect(arcTitleText(s.head.title).length, `${at}: title`).toBeLessThanOrEqual(64);
+        expect(s.head.sub?.length ?? 0, `${at}: sub`).toBeLessThanOrEqual(160);
+        expect(s.name.length, `${at}: name`).toBeLessThanOrEqual(28);
+        expect(s.client.length, `${at}: client`).toBeLessThanOrEqual(20);
+        expect(s.date.length, `${at}: date`).toBeLessThanOrEqual(16);
+        expect(s.madeIn.length, `${at}: made in`).toBeLessThanOrEqual(20);
+        expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(110);
+        for (const d of s.did) {
+          expect(d.length, `${at}: "${d}" sets on one line`).toBeLessThanOrEqual(44);
+          expect(d.length, `${at}: an empty step`).toBeGreaterThan(0);
+        }
+        expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
+        expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
+        expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(40);
+        for (const c of s.cells) {
+          expect(c.value.length, `${at}: "${c.value}"`).toBeLessThanOrEqual(10);
+          expect(c.key.length, `${at}: "${c.key}"`).toBeLessThanOrEqual(44);
+        }
+        const media: string[] = [];
+        if (s.figure.kind === "clip") {
+          media.push(s.figure.clip.src, s.figure.clip.poster);
+          expect(s.figure.clip.alt.length, `${at}: the loop's alt`).toBeGreaterThan(0);
+        } else if (s.figure.kind === "pair") {
+          const { a, b } = s.figure;
+          media.push(a.src, b.src);
+          expect([a.verdict, b.verdict].sort(), `${at}: kept beside sent back`).toEqual([
+            "kept",
+            "rejected",
+          ]);
+          for (const f of [a, b]) {
+            expect(f.label.length, `${at}: ${f.label}`).toBeLessThanOrEqual(28);
+            expect(f.alt.length, `${at}: ${f.src} alt`).toBeGreaterThan(0);
+          }
+        } else {
+          expect(s.figure.rows.length, `${at}: ledger rows`).toBeGreaterThanOrEqual(2);
+          expect(s.figure.rows.length, `${at}: ledger rows`).toBeLessThanOrEqual(5);
+          for (const r of s.figure.rows) {
+            expect(r.label.length, `${at}: ${r.label}`).toBeLessThanOrEqual(12);
+            expect(r.value.length, `${at}: ${r.value}`).toBeLessThanOrEqual(32);
+          }
+        }
+        for (const src of media) {
+          expect(src, `${at}: self-hosted`).toMatch(/^\/arcs\//);
+          expect(existsSync(join(process.cwd(), "public", src)), `${at}: ${src} exists`).toBe(true);
+        }
+        const text = JSON.stringify(s);
+        expect(text, `${at}: no em dash`).not.toMatch(/—/);
+        expect(text, `${at}: no money`).not.toMatch(/£|\$|€/);
+        expect(text, `${at}: people by role`).not.toMatch(
+          /\b(Daryna|Kate|Caroline|Bea|Nick|Georgia|Lottie|Sampson|Rita|Katia|Mati|Nameya|Lucas|Jeev|Megan)\b/
+        );
+        expect(text, `${at}: no pronoun for a person`).not.toMatch(
+          /\b(she|her|hers|he|him|his)\b/i
+        );
+      });
+    }
+    expect(seen, "the X-Bionic page's four jobs").toBeGreaterThanOrEqual(4);
+  });
+
+  /* A chapter's index lists the beats of its own part, Linear's numbered
+     columns: two-digit numbers from 01, short labels, and every link lands
+     on a section after the band and before the next chapter. */
+  it("every chapter index points down its own part", () => {
+    let seen = 0;
+    for (const arc of ARCS) {
+      const ids = arc.sections.map((s) => s.id);
+      const chapters = arc.sections
+        .map((s, i) => ({ s, i }))
+        .filter(({ s }) => s.kind === "interstitial" && s.variant === "chapter")
+        .map(({ i }) => i);
+      arc.sections.forEach((s, i) => {
+        if (s.kind !== "interstitial" || !s.index) return;
+        seen += 1;
+        const at = `${arc.slug}#${s.id}`;
+        expect(s.variant, `${at}: an index is a chapter's`).toBe("chapter");
+        expect(s.index.length, `${at}: rows`).toBeGreaterThanOrEqual(3);
+        expect(s.index.length, `${at}: rows`).toBeLessThanOrEqual(5);
+        const next = chapters.find((c) => c > i) ?? arc.sections.length;
+        s.index.forEach((row, k) => {
+          expect(row.n, `${at}: row ${k + 1}`).toBe(String(k + 1).padStart(2, "0"));
+          expect(row.label.length, `${at}: "${row.label}"`).toBeLessThanOrEqual(18);
+          expect(row.href, `${at}: "${row.href}" is an anchor`).toMatch(/^#/);
+          const target = ids.indexOf(row.href.slice(1));
+          expect(target, `${at}: "${row.href}" is on the page`).toBeGreaterThan(-1);
+          expect(target > i && target < next, `${at}: "${row.href}" is in this part`).toBe(true);
+        });
+        expect(new Set(s.index.map((r) => r.href)).size, `${at}: one link a beat`).toBe(
+          s.index.length
+        );
+      });
+    }
+    expect(seen, "the X-Bionic page's three chapters").toBeGreaterThanOrEqual(3);
+  });
+
+  /* ADR-128 U2 and U3: two opt-in rhythms, each a proposal's. */
+  it("a rhythm is flow or fill, and only a proposal takes one", () => {
+    for (const arc of ARCS) {
+      if (arc.rhythm === undefined) continue;
+      expect(["flow", "fill"], `${arc.slug}: rhythm`).toContain(arc.rhythm);
+      expect(arc.format, `${arc.slug}: a ${arc.rhythm} page is a proposal`).toBe("proposal");
+    }
+    expect(
+      ARCS.some((a) => a.rhythm === "fill"),
+      "the X-Bionic page fills"
+    ).toBe(true);
+  });
+});
+
 describe("the worked-example switch (ADR-139)", () => {
   it("every group is contiguous, and groups that share an example share the set", () => {
     /* The pick is PAGE-WIDE: the island writes one id on the arc root and
