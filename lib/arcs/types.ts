@@ -2116,8 +2116,6 @@ export interface InstrumentLayerFace {
   kind: "layer";
   /** The housing's bar, the vision console's own: SYS name, then status. */
   console: { name: string; status: string };
-  /** The label column's head strip, e.g. "One plugin, four skills". */
-  label: string;
   /** The slab's own tag, e.g. "Your layer". */
   layer: string;
   /** The plain slab under it, e.g. "X-Bionic's Claude Enterprise". */

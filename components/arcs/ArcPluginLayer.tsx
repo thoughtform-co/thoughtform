@@ -112,7 +112,6 @@ export function ArcPluginLayer({
           <figcaption className="visually-hidden">{section.record.alt.org}</figcaption>
         </figure>
         <div className="arc-plug__list">
-          <p className="arc-lev__uses-label">{face.label}</p>
           <ol className="arc-plug__rows">
             {org.workstreams.map((w, i) => {
               const b = JOB_BUCKETS.find((x) => x.id === w.id);

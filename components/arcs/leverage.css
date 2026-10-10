@@ -1279,8 +1279,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: calc(var(--lv-v) * 0.5);
-  padding: var(--lv-v) var(--lat-pad-cell);
+  gap: calc(var(--lv-v) * 0.25);
+  padding: calc(var(--lv-v) * 0.5) var(--lat-pad-cell);
 }
 .arc-plug__row + .arc-plug__row {
   border-top: 1px solid var(--arc-rule);

@@ -45,9 +45,11 @@ const GRAIN_MIN = 0.9;
 /** A person's half-diagonal on screen. */
 const PERSON_R = 3.6;
 /** The connectors' x on screen, under the host's right half (the left half
- *  is the host's own label), and where they end. */
+ *  is the host's own label), and how far each drops below the host. One
+ *  length for all three, so their feet step with the slab's own slant and
+ *  the three labels sit on three rows: side by side they touched. */
 const CONN_X = [240, 300, 360] as const;
-const CONN_FOOT = 190;
+const CONN_LEN = 50;
 
 /** The crop: the drawing plus the room its words take, in drawing units. */
 export const PLUG_VB = { x: -4, y: -90, w: 424, h: 312 } as const;
@@ -218,7 +220,9 @@ export function pluginLayer(
     return `M${r1(a[0])} ${r1(a[1])}L${r1(b[0])} ${r1(b[1])}`;
   }).join("");
 
-  const connectors = connX.map((x) => `M${x} ${r1(hostFloor(x))}V${CONN_FOOT}`).join("");
+  const connectors = connX
+    .map((x) => `M${x} ${r1(hostFloor(x))}V${r1(hostFloor(x) + CONN_LEN)}`)
+    .join("");
 
   return {
     vb: PLUG_VB,
@@ -244,7 +248,7 @@ export function pluginLayer(
       host: seat([0, hostFloor(100) + 26]),
       /* Past each lane's far end. */
       index: lanes.map((_, k) => seat(pt(SIDE + 12, k * LANE + LANE / 2))),
-      connectors: connX.map((x) => seat([x, CONN_FOOT + 6])),
+      connectors: connX.map((x) => seat([x, hostFloor(x) + CONN_LEN + 6])),
     },
   };
 }
