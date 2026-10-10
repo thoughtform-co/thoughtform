@@ -84,7 +84,14 @@ export function StackFigure({
   const seats = stackSeats(tiers, sides, gap);
   const hatch = `${id}-hatch`;
   const skills = courses?.skills.length ?? 0;
-  const calloutTiers = tiers.filter((t) => callouts[t] || (t === "tiles" && tiles.length));
+  /* TOP-DOWN, whatever order `tiers` came in. A flow column and the phone's
+     list stack their words in DOM order, so the leverage's bottom-up
+     `tiers` lettered the lit layer "The models" and the ghost slab "Your
+     layer" (found 2026-10-10, after the merge); a seated word is placed by
+     its seat and does not care. */
+  const calloutTiers = tiers
+    .filter((t) => callouts[t] || (t === "tiles" && tiles.length))
+    .sort((a, b) => seats[a].at - seats[b].at);
   /* Every word on one side: the drawing takes the other column's room. */
   const layout = calloutTiers.every((t) => seats[t].side === "right")
     ? "right"

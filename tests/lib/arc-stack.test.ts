@@ -1,5 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { StackFigure } from "@/components/arcs/stack/StackFigure";
 import { frameAround } from "@/components/arcs/framing/floor";
 import {
   ISO_BASIS_STAGE,
@@ -219,6 +222,37 @@ describe("the stack on the live stage", () => {
     for (const t of beads.tangents!) {
       expect(t[0]).toBeGreaterThan(0);
       expect(t[1]).toBeCloseTo(0, 9);
+    }
+  });
+});
+
+describe("the stack's words", () => {
+  /* A flow column and the phone's list stack the callouts in DOM order, so
+     the order IS the reading: the leverage passes its tiers bottom-up and,
+     unsorted, lettered the lit layer "The models" (2026-10-10). */
+  it("read top-down, whatever order the tiers came in", () => {
+    for (const tiers of [
+      ["shared", "host", "layer"],
+      ["layer", "host", "shared"],
+    ] as StackTier[][]) {
+      const markup = renderToStaticMarkup(
+        createElement(StackFigure, {
+          id: "t",
+          tiers,
+          flow: true,
+          sides: { shared: "right", host: "right", layer: "right" },
+          callouts: {
+            layer: { label: "Your layer" },
+            host: { label: "Claude Enterprise" },
+            shared: { label: "The models" },
+          },
+          alt: "",
+        })
+      );
+      const order = [...markup.matchAll(/class="stk__callout" data-stack-tier="(\w+)"/g)].map(
+        (m) => m[1]
+      );
+      expect(order, tiers.join(" ")).toEqual(["layer", "host", "shared"]);
     }
   });
 });

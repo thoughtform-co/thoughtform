@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { crewParticles, crewSeed } from "@/components/arcs/crewParticles";
+import { ISO_ANGLE } from "@/components/arcs/framing/iso";
 import { PLUG_VB, pluginLayer } from "@/components/arcs/pluginLayer";
+import { SLAB_PATHS } from "@/components/arcs/stack/stackLayout";
 import type { PlugDrawing } from "@/components/arcs/pluginLayer";
 import { ARCS } from "@/lib/arcs/registry";
 import type { ArcSectionOf } from "@/lib/arcs/types";
@@ -152,5 +154,20 @@ describe("the plugin's opened layer (ADR-153 U6)", () => {
         pluginLayer(face.lanes, face.connectors.length)
       );
     }
+  });
+
+  /* One projection on the page: the opened layer sat at 20.6 degrees for a
+     day after the vision's stack and every Slab moved to the stage's 22
+     (2026-10-10), which reads as a rendering fault, not a second view. */
+  it("leans at the stage's own angle, the Slab's", () => {
+    const deg = (d: string) => {
+      const [[x0, y0], [x1, y1]] = pathPoints(d);
+      return (Math.atan2(Math.abs(y1 - y0), Math.abs(x1 - x0)) * 180) / Math.PI;
+    };
+    const { section } = FACED[0];
+    const face = section.face!;
+    const d = pluginLayer(face.lanes, face.connectors.length);
+    expect(deg(d.layer.top)).toBeCloseTo(ISO_ANGLE, 1);
+    expect(deg(d.layer.top)).toBeCloseTo(deg(SLAB_PATHS.top), 0);
   });
 });

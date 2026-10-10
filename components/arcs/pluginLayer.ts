@@ -22,9 +22,13 @@ import type { CrewOutput } from "@/lib/arcs/types";
 
 import { crewParticles, crewSeed, grainPaths, personPath } from "./crewParticles";
 import type { CrewGrain, CrewPerson } from "./crewParticles";
+import { ISO_ANGLE } from "./framing/iso";
 
-/** The rise of the slab's top, as the vision console's slab draws it. */
-const RISE = 0.375;
+/** The rise of the slab's top: the stage's own floor angle (`framing/iso`),
+ *  the one the vision's stack and every Slab are drawn at, so the page shows
+ *  one projection. It was 0.375 (20.6 degrees) while the Slab was drawn by
+ *  hand, and stayed there for a day after the Slab moved to 22. */
+const RISE = Math.tan((ISO_ANGLE * Math.PI) / 180);
 /** The footprint, square, in drawing units. */
 const SIDE = 200;
 /** One lane's depth across `v`, and the air inside it. */
@@ -206,12 +210,16 @@ export function pluginLayer(
   const B = pt(0, SIDE);
   const down = (p: Pt, z: number): Pt => [p[0], p[1] + z];
 
-  /* The host's top is hidden where the layer's lower outline crosses it. */
+  /* The host's top is hidden where the layer's lower outline crosses it:
+   * the host's back edge (DROP − RISE·x) meets the layer's front one
+   * (THICK + RISE·x) half way between the two, at any rise. */
   const hL = down(L, DROP);
   const hR = down(R, DROP);
   const hB = down(B, DROP);
   const lB = down(B, THICK);
-  const hostTop: Pt[] = [hL, [64, 40], lB, [336, 40], hR, hB];
+  const cutX = (DROP - THICK) / (2 * RISE);
+  const cutY = (DROP + THICK) / 2;
+  const hostTop: Pt[] = [hL, [cutX, cutY], lB, [2 * SIDE - cutX, cutY], hR, hB];
   const hz = DROP + THICK;
 
   const seams = Array.from({ length: n - 1 }, (_, i) => {

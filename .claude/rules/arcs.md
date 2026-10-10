@@ -1653,7 +1653,8 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   record's (`org.workstreams`); the face carries only the drawing. ⚠ Its lanes are in the
   record's order (lane k on the slab is row k in the column) and borrow the Loop return's
   figures BY REFERENCE (`LOOP_RETURN`, which Pandora's sent page also draws: never edit it for
-  this). Guard: `arc-plugin-layer`.
+  this). ⚠ Its slant is `tan(ISO_ANGLE)`, the stage's, so it and the stack are one projection;
+  it sat at a hand-set 20.6 degrees for a day after the Slab moved to 22. Guard: `arc-plugin-layer`.
 
 ## The proposal system (ADR-155)
 
@@ -1670,7 +1671,10 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   negative case. ⚠ **The figure is the size container and the grid is its child**: a container
   unit on the container resolves against its ancestor. ⚠ **The hologram mounts over the SVG's
   own box** (`StackFigure`'s `holo` slot), never the figure's. ⚠ A host whose column is narrow
-  takes the words in FLOW (`flow`) and a wider plate `gap`; the leverage does both.
+  takes the words in FLOW (`flow`) and a wider plate `gap`; the leverage does both. ⚠ **A flow
+  column and the phone's list stack the words in DOM order**, so `StackFigure` sorts them by
+  seat, top-down: the leverage passes its tiers bottom-up and, unsorted, lettered the lit layer
+  "The models" with every geometry guard green (2026-10-10; `arc-stack` renders the markup).
 - **The approach** is `handoff.figure` (ADR-153 amended): the three steps as a rail of buttons
   (`StackSteps`, `data-step`, step 2 at rest), the layer dim at 0, written at 1, the run at 2;
   the hologram's `write` and `run` groups ride the same attribute (`ArcHoloStageMount`, scene
