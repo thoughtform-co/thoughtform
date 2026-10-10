@@ -62,6 +62,8 @@
 .arc-case__lanes-key,
 .arc-case__lane-key,
 .arc-case__lane-work,
+.arc-plug__tag,
+.arc-plug__keeper,
 .arc-inter__index-n {
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
@@ -1157,12 +1159,171 @@
   color: var(--arc-ink-40);
 }
 
+/* ── The plugin, the layer opened (ADR-153 U6) ───────────────────────
+   Section 5's slab drawn large (owner, 2026-10-10: "Layer opened"): the
+   gold layer the team writes, one lane per skill carrying the figure its
+   workstream's lane draws on the Loop return, the client's Claude
+   Enterprise as a plain slab under it, its connectors running in dotted
+   from below. One label column on the right. The slab paint is
+   `.ins-slab`'s (instrument.css), restated on this prefix: the host plain
+   in ink, the layer the one lit thing in gold. */
+.arc-plug {
+  --case-person: var(--atreides-light, #5b7a4e);
+  --case-person-text: var(--atreides-ink, #7a9e6a);
+  /* The crop (`PLUG_VB`), so the stage holds the drawing's aspect. */
+  --plug-w: 424;
+  --plug-h: 312;
+}
+.arc-plug__split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+/* A size container: the stage is the largest box of the crop's aspect the
+   cell holds, so the drawing never pushes the beat past one screen. */
+.arc-plug__fig {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  margin: 0;
+  padding: calc(var(--lv-v) * 1.5) var(--lat-pad-cell);
+  border-right: 1px solid var(--arc-rule);
+  background: var(--lv-dots);
+  container-type: size;
+}
+.arc-plug__stage {
+  position: relative;
+  width: min(100cqw, calc(100cqh * var(--plug-w) / var(--plug-h)));
+  aspect-ratio: var(--plug-w) / var(--plug-h);
+}
+.arc-plug__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-plug__host-top,
+.arc-plug__host-side {
+  fill: var(--arc-plate);
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-plug__layer-top,
+.arc-plug__layer-side {
+  fill: var(--arc-gold-wash);
+  stroke: var(--gold);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-plug__layer-side {
+  fill: rgba(var(--gold-rgb), 0.22);
+}
+.arc-plug__seam {
+  fill: none;
+  stroke: var(--lv-gold-line);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-plug__link {
+  fill: none;
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  stroke-dasharray: 1 4;
+  vector-effect: non-scaling-stroke;
+}
+/* On the gold top a lane's marks are gold itself, or they vanish. */
+.arc-plug .arc-case__grain {
+  fill: var(--gold);
+}
+/* Every word is DOM on a seat the geometry computes, never on a face. */
+.arc-plug__tag {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--arc-ink-60);
+}
+.arc-plug__tag[data-plug-tag="layer"] {
+  translate: 0 -50%;
+  color: var(--lv-gold-text);
+}
+.arc-plug__tag[data-plug-tag="host"] {
+  white-space: normal;
+  max-width: 14em;
+}
+.arc-plug__tag[data-plug-tag="index"] {
+  translate: 0 -50%;
+  color: var(--arc-ink-40);
+}
+.arc-plug__tag[data-plug-tag="link"] {
+  translate: -50% 0;
+}
+.arc-plug__list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.arc-plug__rows {
+  flex: 1;
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+}
+.arc-plug__row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--lv-v) * 0.5);
+  padding: var(--lv-v) var(--lat-pad-cell);
+}
+.arc-plug__row + .arc-plug__row {
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-plug__row .arc-lev__index {
+  top: 50%;
+  translate: 0 -50%;
+}
+.arc-plug__skill {
+  font-size: var(--type-lg);
+  line-height: 1.25;
+  color: var(--arc-ink);
+}
+.arc-plug__keeper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--case-person-text);
+}
+.arc-plug__mark {
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--case-person);
+  transform: rotate(45deg);
+}
+
 /* ── The phone ─────────────────────────────────────────────────────── */
 
 @media (max-width: 960px) {
   .arc-lev__split,
-  .arc-case__split {
+  .arc-case__split,
+  .arc-plug__split {
     grid-template-columns: minmax(0, 1fr);
+  }
+  /* The figure is content-sized here: the stage takes the width. */
+  .arc-plug__fig {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+    container-type: inline-size;
+  }
+  .arc-plug__stage {
+    width: 100%;
   }
   /* The top row stacks: the buckets and the title, then who, where, when. */
   .arc-case__top {
