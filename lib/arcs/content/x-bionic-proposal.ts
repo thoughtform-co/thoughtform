@@ -285,21 +285,37 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       line: { pre: "And this is how we'll do it at", em: "X-Bionic." },
     },
     {
-      /* WHAT PLUGS INTO CLAUDE ENTERPRISE (Ganesh on the call: "anything that
-         you say that links into our Claude enterprise, the investors will be
-         like, perfect"). The instrument at the organisation altitude, drawn
-         as the exploded stack (ADR-154 U4): the four workstreams on the
-         layer the team writes, on X-Bionic's own Claude Enterprise. */
+      /* WHAT PLUGS INTO CLAUDE ENTERPRISE (the client's own lead on the
+         call: anything that links into their Claude Enterprise is what the
+         investors want to hear). The plugin drawn as the layer opened
+         (ADR-153 U6, owner 2026-10-10: "Layer opened"): the gold slab the
+         team writes, one lane per skill carrying the figure its
+         workstream's lane draws on the Loop return, X-Bionic's Claude
+         Enterprise as a plain slab under it. The words are the record's
+         (`org.workstreams`); the drawing is the `face`. */
       id: "engine",
       kind: "instrument",
-      menuLabel: "The engine",
+      menuLabel: "The plugin",
       head: {
-        eyebrow: "X-Bionic · the engine",
-        title: { pre: "Four skills, one plugin,", em: "in your Claude Enterprise." },
-        sub: "Each discipline gets a skill its owner keeps. The product voice comes first, written down with the copywriter in week one.",
+        eyebrow: "X-Bionic · the plugin",
+        title: { pre: "The plugin,", em: "in your Claude Enterprise." },
+        sub: "One plugin for the whole creative team, with a skill for each workstream. Each skill has its own checks and is kept up to date by the people who use it. The product voice comes first, written with the copywriter in the first week.",
       },
       record: X_BIONIC_INSTRUMENT,
       altitude: "org",
+      face: {
+        kind: "layer",
+        console: { name: "Intelligence configuration", status: "X-Bionic" },
+        layer: "Your layer",
+        host: "X-Bionic's Claude Enterprise",
+        connectors: ["Shopify", "Analytics", "Ad accounts"],
+        lanes: LOOP_RETURN.rows.map((r) => ({
+          id: r.bucket ?? r.id,
+          output: r.output,
+          seed: r.id,
+          keepers: r.bucket === "production" ? 2 : r.bucket === "strategy" ? 1 : undefined,
+        })),
+      },
     },
     {
       id: "phases",

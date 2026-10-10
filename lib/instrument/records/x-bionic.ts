@@ -79,14 +79,14 @@ export const X_BIONIC_INSTRUMENT: InstrumentRecord = {
       {
         id: "production",
         bucket: "Creative production",
-        name: "Product voice + imagery",
+        name: "The product voice",
         line: "The copywriter and the creative lead",
         lit: ["context", "evals"],
       },
       {
         id: "ops",
         bucket: "Creative ops",
-        name: "Intake + naming",
+        name: "Intake and naming",
         line: "The digital team",
       },
       {
@@ -98,7 +98,7 @@ export const X_BIONIC_INSTRUMENT: InstrumentRecord = {
       {
         id: "strategy",
         bucket: "Creative strategy",
-        name: "Brief + variants",
+        name: "Brief and variants",
         line: "The paid social lead",
       },
     ],
@@ -107,6 +107,6 @@ export const X_BIONIC_INSTRUMENT: InstrumentRecord = {
   tag: "You write this",
   alt: {
     work: "X-Bionic's paid social as one configuration: Claude in X-Bionic's own Enterprise organisation runs it; the product voice, the product facts and the brief are the context the team writes; the copywriter's and the product designer's checks are the evaluations; Shopify, analytics and the ad accounts are the data; the team meets it in Claude; one owner per workstream answers for it",
-    org: "X-Bionic's creative engine as a stack: four workstreams on top, one per discipline (creative production, the product voice and imagery, lit as the first, run by the copywriter and the creative lead; creative ops, intake and naming, run by the digital team; creative review, the pre-review, run by the product designer; creative strategy, the brief and variants, run by the paid social lead); under them the layer the team writes, the context and the evaluations; under that X-Bionic's Claude Enterprise, with the model, the data and the interface; one owner per workstream",
+    org: "X-Bionic's plugin as the layer the team writes, opened: four skills on it, one per workstream (creative production, the product voice, kept by the copywriter and the creative lead; creative ops, intake and naming, kept by the digital team; creative review, the pre-review, kept by the product designer; creative strategy, the brief and variants, kept by the paid social lead); under it X-Bionic's Claude Enterprise, with Shopify, analytics and the ad accounts running in through their connectors",
   },
 };

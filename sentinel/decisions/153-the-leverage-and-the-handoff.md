@@ -272,3 +272,47 @@ the review lane letters no work label and the phone hides the "What runs now" ke
 stands without a heading there; copy is filed under ops here where the vision's diagram files it
 under production; and whether four separate Loop job cards would read better than one card of four
 lanes.
+
+## Update 6 (2026-10-10, owner): the plugin, drawn as the layer opened
+
+The owner, on the engine beat's options (`what plugs into Claude Enterprise`, four directions on
+stills): "Layer opened". Then, on the stills of it styled and titled: "Continue." The beat is the
+offer's own picture, so it draws the thing the client installs, not the stack it sits in.
+
+1. **An opt-in `face` on the instrument kind** (`InstrumentLayerFace`, `lib/arcs/types.ts`):
+   absent, the instrument draws exactly as before; present, `ArcInstrument` hands the section to
+   `ArcPluginLayer`. The words are the record's (`org.workstreams`: the workstream, the skill, who
+   keeps it); the face carries only the drawing (the console's bar, the two slab tags, the
+   connectors, one lane per workstream). Amends ADR-154 U4 for a faced section only.
+2. **The drawing** (`components/arcs/pluginLayer.ts`, pure): the vision console's housing and
+   ruled field; the gold slab the team writes, drawn large on the vision slab's own geometry, one
+   lane per skill on its top; each lane carries the figure its workstream's lane draws on the Loop
+   return (`crewParticles`, mapped onto the lane, read from `LOOP_RETURN` by reference, so the
+   proof and the offer share drawings and Pandora's record is untouched); the client's Claude
+   Enterprise as a plain slab under it; its connectors (Shopify, analytics, the ad accounts) run
+   in from below. A lane may name its `keepers` (1 or 2 green diamonds past the figure's end) in
+   place of the figure's own person: production two (the copywriter and the creative lead),
+   strategy one (the paid social lead). One label column on the right: the index, the
+   workstream's glyph and word, the skill, the keeper. The SVG letters nothing; every word is DOM
+   on a seat the geometry computes. Gold is the layer, green is a person.
+3. **Copy**: the title is a name ("The plugin, in your Claude Enterprise."), the menu "The
+   plugin", the dek says what a skill is in plain words (one per workstream, its own checks,
+   kept by the people who use it). The four skills lose their "+": The product voice ·
+   Intake and naming · Pre-review · Brief and variants. `alt.org` describes the drawing.
+4. **Fit**: the column's key row is deleted (the beat ran about 96px past the frame at
+   1280 × 720 with it); the connectors share one length so their feet step with the host's slant
+   and their three labels sit on three rows (side by side they touched). `.arc-head + .arc-plug`
+   joins the fill rhythm's list. On the phone the console bar's status keeps its line
+   (`.arc-lev__status`, `flex: none` and `nowrap`): the client's own hyphen was a break, and
+   "X-Bionic" split across two lines on every console that letters it.
+
+Measured headless: the beat exactly one screen at 1280 × 720 and 1470 × 830 in both themes,
+nothing overflowing at 390 × 844. Pandora's page is unchanged (`arc-terminal-markup`).
+**Guard**: `arc-plugin-layer` (lane k on the slab is row k in the column, one to three connectors
+of at most 12 characters, every mark inside the crop and every seat on it, the field's own count,
+the keepers named, one drawing per record).
+
+**Left open, for the owner**: three beats run past one screen at 1280 × 720 and were before this
+change (the vision by 62px, the adoption by 34px, the terms by 63px; the terms by 19px at
+1470 × 830); and the ops lane draws Loop's one copy editor as its person, where X-Bionic's skill
+is kept by the digital team.

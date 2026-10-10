@@ -104,10 +104,15 @@
   background: rgba(var(--dawn-rgb), 0.08);
   color: var(--arc-ink-50);
 }
+/* The status is one chip: it keeps its line and the system name wraps
+   beside it. On a phone the client's own hyphen was a break, and the
+   name split across two lines. */
 .arc-lev__status {
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  white-space: nowrap;
   color: var(--lv-gold-text);
 }
 .arc-lev__pulse {

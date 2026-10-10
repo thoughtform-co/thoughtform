@@ -162,3 +162,8 @@ columns). `window.__instrument.measure()` is the gate: collisions, overflow, tex
   workstreams and no buckets, so the lab keeps a bed without them. Measured headless: the lab's
   twelve cells clean; the engine whole at 1440 × 790 and 1470 × 830 in both themes; a list on
   the phone.
+- **U5 (2026-10-10): a section may draw the organisation altitude as the layer opened.** The
+  owner picked "Layer opened" for X-Bionic's engine beat. `face?: InstrumentLayerFace` on the
+  `instrument` kind routes the section to `ArcPluginLayer` (ADR-153 U6); absent, this ADR's
+  drawing is unchanged. The record keeps every reader it had: the face carries only the drawing,
+  the words are still `org.workstreams`.

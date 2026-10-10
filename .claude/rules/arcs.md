@@ -1646,3 +1646,11 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   lit), the organisation's slab under it, the six as callouts either side with no frame. One
   slab drawing, `components/instrument/Slab.tsx`, shared with the leverage; its hatch id is per
   instance. The chip at this altitude is `os.name` and `os.line` only.
+- **A section may draw that altitude as the layer opened (ADR-153 U6, 2026-10-10; X-Bionic's
+  engine only).** `face?: InstrumentLayerFace` on the `instrument` kind: absent, the instrument
+  draws unchanged; present, `ArcInstrument` hands the section to `ArcPluginLayer`
+  (`components/arcs/pluginLayer.ts` pure, `.arc-plug*` in `leverage.css`). The words stay the
+  record's (`org.workstreams`); the face carries only the drawing. ⚠ Its lanes are in the
+  record's order (lane k on the slab is row k in the column) and borrow the Loop return's
+  figures BY REFERENCE (`LOOP_RETURN`, which Pandora's sent page also draws: never edit it for
+  this). Guard: `arc-plugin-layer`.
