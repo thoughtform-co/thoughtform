@@ -1,0 +1,153 @@
+/* /test/adoption-flow-lab — the lab's chrome and the trackers. */
+
+.afl {
+  --afl-ink: 235, 227, 214;
+  --afl-gold: 202, 165, 84;
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  color: rgb(var(--afl-ink));
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+}
+
+.afl[data-mode="light"] {
+  --afl-ink: 20, 17, 12;
+  --afl-gold: 110, 82, 22;
+}
+
+.afl-canvas {
+  position: absolute;
+  inset: 0 0 0 min(400px, 28vw);
+}
+
+.afl-canvas canvas {
+  touch-action: none;
+}
+
+.afl-bar {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.afl-bar__title {
+  margin-right: 10px;
+  color: rgb(var(--afl-gold));
+}
+
+.afl-bar__tab {
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--afl-ink), 0.2);
+  color: rgba(var(--afl-ink), 0.72);
+  text-decoration: none;
+}
+
+.afl-bar__tab[aria-current="page"] {
+  border-color: rgb(var(--afl-gold));
+  color: rgb(var(--afl-ink));
+}
+
+.afl-read {
+  position: absolute;
+  bottom: 28px;
+  left: 32px;
+  z-index: 3;
+  width: min(340px, 24vw);
+  pointer-events: none;
+}
+
+.afl-read__kicker,
+.afl-read__record {
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+  color: rgba(var(--afl-ink), 0.55);
+}
+
+.afl-read__title {
+  margin: 6px 0 10px;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-size: 28px;
+  font-weight: var(--weight-lit, 500);
+  letter-spacing: var(--track-display, -0.02em);
+}
+
+.afl-read__body {
+  margin: 0 0 12px;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(var(--afl-ink), 0.8);
+}
+
+/* ── Trackers: holo.ui8's corner bracket and live readout ── */
+
+.afl-trackers {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.afl-trk {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  font-size: 10px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--afl-gold), 0.92);
+}
+
+.afl-trk__box {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  width: 18px;
+  height: 18px;
+  background:
+    linear-gradient(currentcolor, currentcolor) 0 0 / 5px 1px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 0 0 / 1px 5px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 100% 0 / 5px 1px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 100% 0 / 1px 5px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 0 100% / 5px 1px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 0 100% / 1px 5px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 100% 100% / 5px 1px no-repeat,
+    linear-gradient(currentcolor, currentcolor) 100% 100% / 1px 5px no-repeat;
+}
+
+.afl-trk__txt {
+  position: absolute;
+  bottom: 13px;
+  left: -9px;
+}
+
+.afl-trk__txt b {
+  font-weight: 400;
+  color: rgba(var(--afl-ink), 0.6);
+}
+
+.afl-trk__ro {
+  position: absolute;
+  top: 13px;
+  left: -9px;
+  color: rgba(var(--afl-ink), 0.42);
+}
+
+.afl-trk[data-side="left"] .afl-trk__txt,
+.afl-trk[data-side="left"] .afl-trk__ro {
+  right: -9px;
+  left: auto;
+}
