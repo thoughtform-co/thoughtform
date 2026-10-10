@@ -116,8 +116,9 @@ export interface InstrumentPlugin {
 
 export interface InstrumentWorkstream {
   id: string;
-  /** The discipline it belongs to, a mono label ≤ 12 (ADR-154 U4), e.g.
-   *  "Production". Absent, the tile draws its name alone. */
+  /** The discipline it belongs to, a mono label ≤ 20 (ADR-154 U4; 12 until
+   *  ADR-153 U4 gave the page one vocabulary), e.g. "Creative production". It
+   *  may wrap to two lines on a tile. Absent, the tile draws its name alone. */
   bucket?: string;
   name: string;
   /** Who runs it, by role. */

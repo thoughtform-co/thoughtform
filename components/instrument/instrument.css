@@ -710,7 +710,11 @@ button.ins__crumb-at {
   border-color: var(--ins-gold);
   background: var(--ins-gold-wash);
 }
+/* ⚠ The bucket holds TWO lines (ADR-153 U4): "Creative production" wraps on a
+   tile and "Creative ops" does not, and a one-line bucket started the names
+   on two different rows across one row of tiles. */
 .ins-tile__bucket {
+  min-height: 2.6em;
   font: 10px/1.3 var(--ins-mono);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;

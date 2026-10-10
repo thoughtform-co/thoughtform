@@ -16,13 +16,18 @@ import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
  * company's AI champion and its investors read it for one thing above all,
  * WHAT PLUGS INTO CLAUDE ENTERPRISE, so the circuit beat says it plainly.
  *
- * ⚠ ONE ARGUMENT, READ TOP TO BOTTOM (owner, 2026-10-09; ADR-153 U1):
- * who I am, then my approach (the vision, then how adoption and automation
- * connect), then the proof (Loop, then two other brands), then what we set
- * up at X-Bionic and the fee. Three chapter bands carry it, each with the
- * index of its beats. Plain titles, no slogans. One vocabulary runs down
- * the page three times: the vision's four disciplines, the four jobs'
- * buckets and the engine's four workstreams are the same four words.
+ * ⚠ ONE ARGUMENT, READ TOP TO BOTTOM (owner, 2026-10-09 and 2026-10-10;
+ * ADR-153 U1, U4): who does the work, then the vision and how adoption and
+ * automation connect, then Loop (one line, then its cards, landing on the
+ * layer the agents run on), then the same approach at two other brands,
+ * then what is set up at X-Bionic and the fee. THREE BARE LINES carry it,
+ * each the owner's own sentence and nothing else (U4: "an interstitial
+ * section with only that quote, and then we show the cases"). Plain titles,
+ * no slogans, and NO FIRST PERSON anywhere on the page (owner, 2026-10-10).
+ * One vocabulary runs down the page three times: the vision's four
+ * workstreams, the four jobs' buckets and the engine's four workstreams are
+ * the same four words, in the same order: Creative production, Creative
+ * ops, Creative review, Creative strategy.
  *
  * ⚠ OTHER CLIENTS BY NAME, THEIR PEOPLE BY ROLE (owner, 2026-10-08): Samako
  * and Suri are named on their jobs; no staff name, no quote from a
@@ -67,7 +72,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     plate: "gateway",
     curtain: true,
     actions: [
-      { id: "read", label: "How I see it", href: "#vision", primary: true },
+      { id: "read", label: "The vision", href: "#vision", primary: true },
       { id: "plan", label: "The two weeks", href: "#phases" },
     ],
   },
@@ -81,33 +86,34 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
        The homepage's About, first on this page (owner: "a hero section with
        the new key visuals and an About section"), its bio cut to two
        paragraphs here (owner, 2026-10-09: "more concise"); the shared
-       record is the homepage's and stays whole. */
+       record is the homepage's and stays whole. Its head is the record's
+       own: the page never speaks in the first person (owner, 2026-10-10). */
     {
       ...VINCE_ABOUT,
       id: "about",
       menuLabel: "About",
-      head: { ...VINCE_ABOUT.head, eyebrow: "Thoughtform · who I am" },
       bio: [
         "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
         "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",
       ],
     },
 
-    /* ── My approach (ADR-153) ─────────────────────────────────────────
+    /* ── The vision (ADR-153) ──────────────────────────────────────────
        Rebuilt for a board (owner, 2026-10-08: "I don't know what people
        should be looking at"), then written as the proposal's own view
-       (2026-10-09): first my vision, the layer only X-Bionic can write and
-       what my approach adds to it, then how adoption and automation
-       connect. */
+       (2026-10-09): the layer only X-Bionic can write and what Thoughtform
+       adds to it, then how adoption and automation connect. Never in the
+       first person (owner, 2026-10-10: "we should NEVER talk in the first
+       person"). */
     {
       id: "vision",
       kind: "leverage",
-      menuLabel: "How I see it",
+      menuLabel: "The vision",
       menuPrimary: true,
       head: {
-        eyebrow: "Thoughtform · my approach",
+        eyebrow: "Thoughtform · the vision",
         title: { pre: "How intelligence should", em: "take part in the work." },
-        sub: "My view: every company gets the same models and the same Claude. What makes them work like X-Bionic is the layer your team writes down.",
+        sub: "Every company gets the same models and the same Claude. What makes them work like X-Bionic is the layer your team writes down.",
       },
       stack: [
         {
@@ -131,8 +137,8 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         },
       ],
       note: {
-        label: "What my approach adds",
-        line: "I write the first layer with your team, in your Claude, and hand it over with an owner per workstream.",
+        label: "What Thoughtform adds",
+        line: "The first layer, written with your team in your Claude and handed over with an owner per workstream.",
       },
       console: { name: "Intelligence configuration", status: "X-Bionic" },
       readout: [
@@ -140,32 +146,36 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         { label: "Claude", value: "Installed" },
         { label: "Layer", value: "Owned" },
       ],
+      /* The four workstreams in the owner's order and words (2026-10-10):
+         Creative production, Creative ops, Creative review, Creative
+         strategy. The same four, in the same order, are the jobs' buckets
+         and the engine's workstreams. */
       uses: {
-        label: "One layer, four disciplines",
+        label: "One layer, four workstreams",
         items: [
-          {
-            id: "strategy",
-            glyph: "brief",
-            label: "Strategy",
-            line: "Briefs with an audience and variants",
-          },
           {
             id: "production",
             glyph: "frame",
-            label: "Production",
+            label: "Creative production",
             line: "Imagery, motion and copy, at volume",
           },
           {
             id: "ops",
             glyph: "flow",
-            label: "Ops",
+            label: "Creative ops",
             line: "Every ad briefed, named and filed",
           },
           {
             id: "review",
             glyph: "check",
-            label: "Review",
+            label: "Creative review",
             line: "Checked against the real product first",
+          },
+          {
+            id: "strategy",
+            glyph: "brief",
+            label: "Creative strategy",
+            line: "Briefs with an audience and variants",
           },
         ],
       },
@@ -192,7 +202,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           when: "Weeks 1–2",
           label: "Write it down",
           title: "How the work is done, and what good looks like",
-          who: "Your team, with me",
+          who: "Your team, with Thoughtform",
           lit: true,
         },
         {
@@ -226,72 +236,53 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       },
     },
 
-    /* ── Proof · Loop ──────────────────────────────────────────────────
-       Part one of three (owner, 2026-10-09: the AI-first line introduces
-       the Loop cases): the line, then the part's index, then Loop's four
-       cards in the pile's order and what they returned. */
+    /* ── Loop ──────────────────────────────────────────────────────────
+       The first of three bare lines (owner, 2026-10-10: "an interstitial
+       section with only that quote, and then we show the cases"). No
+       eyebrow, no ruler, no index: one sentence on a screen of its own,
+       then Loop's four cards in the pile's order and what they returned. */
     {
       id: "proof-loop",
       kind: "interstitial",
-      variant: "chapter",
-      chapter: { n: 1, of: 3 },
-      menuLabel: "Proof · Loop",
+      variant: "callout",
+      menuLabel: "Loop",
       menuPrimary: true,
-      eyebrow: "Proof · Loop Earplugs, 2024 to now",
       line: { pre: "In 2024, Loop decided to go", em: "AI-first." },
-      subline: "Creative operations came first. This is what it produced, in four parts.",
-      index: [
-        { n: "01", label: "Films", href: "#practice-frontier" },
-        { n: "02", label: "Tools", href: "#practice-tools" },
-        { n: "03", label: "Studio", href: "#practice-studio" },
-        { n: "04", label: "The layer", href: "#practice-layer" },
-      ],
     },
     ...LOOP_PROOF_CARDS,
-    LOOP_RETURN,
+    /* The return in the jobs' own housing (ADR-153 U5, owner 2026-10-10:
+       it "looks different from the other sections … redesign what it
+       returned at Loop … so they match the examples from Samako and
+       Suri"): one card, a lane per workstream. Pandora keeps the circuit. */
+    { ...LOOP_RETURN, layout: "case" },
 
-    /* ── Proof · two brands ────────────────────────────────────────────
-       Part two: four jobs, one screen each, in one template, on the same
-       four buckets as the vision's 2×2 (ADR-153 U1). */
+    /* ── Two brands ────────────────────────────────────────────────────
+       The second line, the owner's own sentence: Loop set the layer up,
+       and this is the same approach at two other brands. Then four jobs,
+       one screen each, in one template, on the vision's four workstreams. */
     {
       id: "proof-brands",
       kind: "interstitial",
-      variant: "chapter",
-      chapter: { n: 2, of: 3 },
-      menuLabel: "Proof · two brands",
+      variant: "callout",
+      menuLabel: "Two brands",
       menuPrimary: true,
-      eyebrow: "Proof · Samako and Suri, October 2026",
-      line: { pre: "The same approach,", em: "at two other brands." },
-      subline:
-        "Four jobs from the first week of October, one per discipline, each run in the brand's own Claude.",
-      index: [
-        { n: "01", label: "Strategy · Samako", href: "#job-strategy" },
-        { n: "02", label: "Production · Suri", href: "#job-production" },
-        { n: "03", label: "Ops · Suri", href: "#job-ops" },
-        { n: "04", label: "Review · Samako", href: "#job-review" },
-      ],
+      line: {
+        pre: "This is how we recently built intelligence configurations by making the team",
+        em: "self-sufficient.",
+      },
     },
     ...X_BIONIC_JOBS,
 
     /* ── The offer ─────────────────────────────────────────────────────
-       Part three: what we set up at X-Bionic, then the fee. */
+       The third line, the owner's own: what is set up at X-Bionic, then
+       the fee. */
     {
       id: "offer",
       kind: "interstitial",
-      variant: "chapter",
-      chapter: { n: 3, of: 3 },
+      variant: "callout",
       menuLabel: "The offer",
       menuPrimary: true,
-      eyebrow: "X-Bionic · the offer",
-      line: { pre: "What we set up", em: "at X-Bionic." },
-      subline:
-        "Paid social at X-Bionic is product education: form, fit, function and materials, told many ways and tested.",
-      index: [
-        { n: "01", label: "The engine", href: "#engine" },
-        { n: "02", label: "The two weeks", href: "#phases" },
-        { n: "03", label: "Who takes part", href: "#how-we-work" },
-        { n: "04", label: "The fee", href: "#pricing" },
-      ],
+      line: { pre: "And this is how we'll do it at", em: "X-Bionic." },
     },
     {
       /* WHAT PLUGS INTO CLAUDE ENTERPRISE (Ganesh on the call: "anything that
@@ -319,7 +310,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · the two weeks",
         title: { pre: "The two weeks." },
-        sub: "Phase one sets the engine up and runs it once on real work. Then I come back every quarter.",
+        sub: "Phase one sets the engine up and runs it once on real work. Then Thoughtform comes back every quarter.",
       },
       groups: [
         {
@@ -346,7 +337,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           foot: {
             label: "Done when",
             lines: [
-              "The voice skill writes copy the copy editor keeps",
+              "The voice skill writes copy the copywriter keeps",
               "A brief goes from idea to variants in Claude",
             ],
           },
@@ -375,7 +366,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           foot: {
             label: "Done when",
             lines: [
-              "The team runs a second iteration without me",
+              "The team runs a second iteration on its own",
               "Each skill has an owner who can change it",
             ],
           },
@@ -471,7 +462,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
             },
           ],
           sub: {
-            label: "What I need",
+            label: "What Thoughtform needs",
             blurb: "Before week one.",
             items: [
               {

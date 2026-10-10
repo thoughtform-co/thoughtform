@@ -41,9 +41,12 @@ const circuits = ARCS.flatMap((arc) =>
     .filter((s): s is ArcSectionOf<"circuit"> => s.kind === "circuit")
     .map((s) => ({ name: `${arc.slug}#${s.id}`, s }))
 );
+/* ⚠ A crew set as a case card (`layout: "case"`, ADR-153 U5) draws in the
+   job cards' housing (`ArcCrewCase`), never with these primitives; its
+   particles have their own guard (`arc-crew-particles`). */
 const crews = ARCS.flatMap((arc) =>
   arc.sections
-    .filter((s): s is ArcSectionOf<"crew"> => s.kind === "crew")
+    .filter((s): s is ArcSectionOf<"crew"> => s.kind === "crew" && s.layout !== "case")
     .map((s) => ({ name: `${arc.slug}#${s.id}`, s }))
 );
 

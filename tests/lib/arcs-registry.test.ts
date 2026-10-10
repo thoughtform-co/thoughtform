@@ -897,6 +897,67 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  /* ADR-153 U5 (owner, 2026-10-10: the return "looks different from the
+     other sections … redesign what it returned at Loop … so they match the
+     examples from Samako and Suri"). A crew set as a case card carries the
+     job card's band and one lane per workstream; each lane says where the
+     role's time goes now, a phrase with no figure (the record's one number
+     stays in `line`). The shared record is Pandora's too, so nothing here
+     may require a change to its rows' own words. */
+  it("a crew set as a case card heads each lane with its own workstream (ADR-153 U5)", () => {
+    const BUCKETS = ["production", "ops", "review", "strategy"];
+    let seen = 0;
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "crew") continue;
+        const at = `${arc.slug}/${section.id}`;
+        // The shared record carries the card's fields for every page; only a
+        // page that sets the case layout letters them.
+        if (section.layout !== "case") continue;
+        seen += 1;
+        const card = section.card;
+        expect(card, `${at}: the case layout needs its band`).toBeDefined();
+        if (!card) continue;
+        expect(card.title.length, `${at}: the title`).toBeGreaterThan(0);
+        expect(card.title.length, `${at}: the title at the job title's rung`).toBeLessThanOrEqual(
+          56
+        );
+        expect(card.title, `${at}: sentence case`).toMatch(/^[A-Z]/);
+        expect(card.title, `${at}: a name, no period`).not.toMatch(/\.$/);
+        expect(card.meta.length, `${at}: the band's line`).toBeGreaterThanOrEqual(1);
+        expect(card.meta.length, `${at}: the band's line`).toBeLessThanOrEqual(3);
+        for (const m of card.meta) {
+          expect(m.length, `${at}: "${m}"`).toBeGreaterThan(0);
+          expect(m.length, `${at}: "${m}" is one item of a mono line`).toBeLessThanOrEqual(24);
+        }
+        const buckets = section.rows.map((r) => r.bucket);
+        for (const [i, b] of buckets.entries()) {
+          expect(BUCKETS, `${at}/${section.rows[i].id}: a vision workstream`).toContain(b);
+        }
+        expect(new Set(buckets).size, `${at}: one lane a workstream`).toBe(buckets.length);
+        for (const row of section.rows) {
+          const allows = row.allows ?? "";
+          expect(allows.length, `${at}/${row.id}: where the time goes`).toBeGreaterThan(0);
+          /* One line in the lane's last column at 1280. */
+          expect(allows.length, `${at}/${row.id}: "${allows}"`).toBeLessThanOrEqual(40);
+          expect(/\d/.test(allows), `${at}/${row.id}: a figure outside the line`).toBe(false);
+          expect(allows, `${at}/${row.id}: a phrase, no period`).not.toMatch(/\.$/);
+          expect(allows, `${at}/${row.id}: says something the line does not`).not.toBe(row.line);
+        }
+        const text = JSON.stringify({ card, rows: section.rows });
+        expect(text, `${at}: no em dash`).not.toMatch(/—/);
+        expect(text, `${at}: no money`).not.toMatch(/£|\$|€/);
+        expect(text, `${at}: people by role`).not.toMatch(
+          /\b(Daryna|Kate|Caroline|Bea|Nick|Georgia|Lottie|Sampson|Rita|Katia|Mati|Nameya|Lucas|Jeev|Megan|Rob)\b/
+        );
+        expect(text, `${at}: no pronoun for a person`).not.toMatch(
+          /\b(she|her|hers|he|him|his)\b/i
+        );
+      }
+    }
+    expect(seen, "the X-Bionic page's return").toBeGreaterThanOrEqual(1);
+  });
+
   it("a steps beat's three stages are one dial, read three ways (ADR-106)", () => {
     /* No registered arc carries a `steps` beat yet — the Trinny page mounts it
        through its own dispatch and `trinny-offer.test.ts` walks that copy. The
@@ -1982,12 +2043,30 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         }
         expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
         expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
-        expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(40);
+        /* U4: the caption sets on one line under the figure at 1280. */
+        expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(29);
         /* U3: ONE return, a number a decision maker reads and a plain
            line; a tally draws it only when it is a count: whole numbers,
            lit within the group, at most 60 segments. */
         expect(s.result.value.length, `${at}: "${s.result.value}"`).toBeLessThanOrEqual(10);
         expect(s.result.line.length, `${at}: the return's line`).toBeLessThanOrEqual(110);
+        /* U4: the return reads in two steps, the saving and then what it
+           allows, and neither line restates the number. */
+        if (s.result.label !== undefined) {
+          expect(s.result.label.length, `${at}: the return's label`).toBeLessThanOrEqual(20);
+          expect(s.result.label.length, `${at}: an empty label`).toBeGreaterThan(0);
+        }
+        expect(s.result.allows.length, `${at}: what it allows`).toBeGreaterThan(0);
+        expect(s.result.allows.length, `${at}: what it allows`).toBeLessThanOrEqual(110);
+        const value = s.result.value.toLowerCase();
+        for (const line of [s.result.line, s.result.allows]) {
+          expect(line.toLowerCase().includes(value), `${at}: "${line}" restates the number`).toBe(
+            false
+          );
+        }
+        expect(s.result.allows, `${at}: the two steps say different things`).not.toBe(
+          s.result.line
+        );
         if (s.result.tally) {
           const segments = s.result.tally.reduce((sum, g) => sum + g.of, 0);
           expect(segments, `${at}: tally`).toBeLessThanOrEqual(60);
@@ -2018,6 +2097,11 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
           for (const r of s.figure.rows) {
             expect(r.label.length, `${at}: ${r.label}`).toBeLessThanOrEqual(12);
             expect(r.value.length, `${at}: ${r.value}`).toBeLessThanOrEqual(32);
+            /* U4: a row is one line at 1280, key and value together. */
+            expect(
+              r.label.length + r.value.length,
+              `${at}: ${r.label} · ${r.value}`
+            ).toBeLessThanOrEqual(32);
           }
         }
         for (const src of media) {
@@ -2042,7 +2126,8 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
      columns: two-digit numbers from 01, short labels, and every link lands
      on a section after the band and before the next chapter. */
   it("every chapter index points down its own part", () => {
-    let seen = 0;
+    /* No page carries one since the X-Bionic page's three bands became bare
+       lines (ADR-153 U4); the walk stays for the next page that does. */
     for (const arc of ARCS) {
       const ids = arc.sections.map((s) => s.id);
       const chapters = arc.sections
@@ -2051,7 +2136,6 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         .map(({ i }) => i);
       arc.sections.forEach((s, i) => {
         if (s.kind !== "interstitial" || !s.index) return;
-        seen += 1;
         const at = `${arc.slug}#${s.id}`;
         expect(s.variant, `${at}: an index is a chapter's`).toBe("chapter");
         expect(s.index.length, `${at}: rows`).toBeGreaterThanOrEqual(3);
@@ -2070,7 +2154,27 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         );
       });
     }
-    expect(seen, "the X-Bionic page's three chapters").toBeGreaterThanOrEqual(3);
+  });
+
+  /* ADR-153 U4 (owner, 2026-10-10: "an interstitial section with only that
+     quote, and then we show the cases"): the X-Bionic page turns on three
+     bare lines, each the owner's own sentence, with nothing around them. */
+  it("the X-Bionic page turns on three bare lines", () => {
+    const arc = ARCS.find((a) => a.slug === "x-bionic-proposal");
+    expect(arc, "the X-Bionic proposal is registered").toBeDefined();
+    const lines = arc!.sections.flatMap((s) => (s.kind === "interstitial" ? [s] : []));
+    expect(lines.map((s) => arcTitleText(s.line))).toEqual([
+      "In 2024, Loop decided to go AI-first.",
+      "This is how we recently built intelligence configurations by making the team self-sufficient.",
+      "And this is how we'll do it at X-Bionic.",
+    ]);
+    for (const s of lines) {
+      expect(s.variant, `${s.id}: a bare line`).toBe("callout");
+      expect(
+        [s.eyebrow, s.subline, s.index, s.chapter, s.attribution, s.clip],
+        `${s.id}: the line alone`
+      ).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
+    }
   });
 
   /* ADR-128 U2 and U3: two opt-in rhythms, each a proposal's. */

@@ -86,7 +86,6 @@ index rides a cell's corner; the fixed `min-height`s go. Every beat is whole at 
 1470 × 800, 1470 × 830 and 1710 × 980, with no horizontal scroll and no text of these beats under
 10px (`--type-xs` raised to `--type-sm`).
 
-
 ## Update 1 (2026-10-09, owner): the page as one argument, read top to bottom
 
 The owner's brief of 9 October, on the whole page: it read as a run of unrelated sections ("The
@@ -188,3 +187,88 @@ super powerful."
 
 Measured headless: each job exactly one screen at 1440 × 790 and 1470 × 830, nothing overflowing
 at 1710 × 980 or 1920 × 1200; both themes; no horizontal scroll at 375 wide.
+
+## Update 4 (2026-10-10, owner): the band, one workstream, and a return in two steps
+
+The owner, on Update 3: the copy was AI slop ("we just need to get rid of it"), the title was
+still too big, the four buckets in the top row made the bar too high, the right column repeated
+itself, and the ask and what Claude did were too small and felt disconnected from each other. He
+kept the structure: "on the left side, we showcase the briefing, in the middle, the proof, and on
+the right side, the numbers". And on the right, "okay, this is the time we've saved, and this is
+what it now allows us to do". The four jobs were re-cut to the work he named (film B of Samako's
+autumn round; Suri's Drive map; the first pass on Samako's AI renders; Suri's brief skill).
+
+1. **The top is a Tensor Gold band**, the proof cards' head grammar in the arcs' own wash
+   (`--arc-gold-wash` in two layers and a 2px `--lv-gold-line` rule stopping at the cut): part of
+   the Loop cards' language without copying them. The title is `--type-xl`; one mono line under it
+   carries client · where it ran · date.
+2. **The card shows its own workstream alone**, on the right of the band, drawn with the vision's
+   glyph and word (`JOB_BUCKETS`: production frame · ops flow · review check · strategy brief). The
+   row of four is deleted; it is what made the bar too high.
+3. **The brief is one rail**: the ask at `--type-lg`, then what Claude did, 01 · 02 · 03, joined by
+   one hairline with hollow gold nodes on the two keys and ink nodes on the steps.
+4. **The return reads in two steps**: what it saved (`result.label`, default "Time saved", ≤ 20)
+   and then what it now allows (`result.allows`, ≤ 110). The registry fails a line or an allows
+   that restates the number, and the two lines being the same sentence. The time figures are the
+   owner's estimates, and each line opens "Estimated". The motion ad's return is its filed count
+   (0 product frames drawn by a model).
+5. **Fit, guarded**: a caption sets on one line at 1280 (≤ 29); a ledger row is one line, key and
+   value together (≤ 32); a still's verdict sits over its label.
+
+Measured headless at 1280 × 720 and 1470 × 830, both themes: one screen each, nothing wrapping
+where it should not.
+
+## Update 5 (2026-10-10, owner): what it returned at Loop, in the jobs' housing
+
+The owner, on the proposal's order: the Loop return "is proof in the pudding … but as a separate
+section that also looks different from the other sections. I think that's a bit confusing unless we
+redesign what it returned at Loop and some of the components so they match the examples from Samako
+and Suri." The card's own law holds for it ("on the left side, a bit of the briefing; in the middle,
+the visual; on the right side, the results and what they couldn't do before"), and so does the
+return in two steps: "this is the time we've saved, and this is what it now allows us to do".
+
+1. **The return is a `crew` set as a case card** (`layout: "case"` plus `card: { title, meta }`),
+   not a new kind: `ArcCrew` hands it to `ArcCrewCase`, which draws the job card's housing (the
+   chamfered plate, the Tensor Gold band with a title and one mono line). The band names no
+   workstream, because each lane names its own.
+2. **Four lanes on one grid, each lane a subgrid row**: who (the vision's glyph and word, then the
+   role), the figure, what runs now (Loop's work and the record's line), and what it now allows.
+   Subgrid rows seat the four figures on one dot ground inside one set of corner ticks, as the job
+   card's single figure is, and line every lane's text up with nothing measured. The column keys
+   are drawn once and hidden from a screen reader; each lane carries its own keys for a reader and
+   for the phone.
+3. **The figures are particles** (`components/arcs/crewParticles.ts`; owner: "our leitmotif is the
+   particle system diagrams"). The field draws exactly the record's count, one grain per asset;
+   the funnel streams the pre-filled lines of copy into the one copy editor; the tenfold is ten
+   reviews with the tenth lifted to the person; the split fans the month's ad count out into its
+   briefs. One colour law: a gold grain is what runs, a green diamond is a person and nothing else,
+   a dawn hairline is structure. Seeded, so every render is the same drawing. The funnel's twelve
+   lines and the split's six briefs are illustrative, which is why no caption letters a figure
+   under them.
+4. **The third column is "What runs now", not "Time saved".** Loop's record states throughput
+   (about 700 assets a month, about ten times less review by hand), not hours, and an estimate
+   would be a new claim on a page already sent to Pandora. The fourth column is the job card's own
+   "What it now allows", carrying ADR-133 U4's upstream lines.
+5. **One record, two pages.** `card`, `CrewRow.bucket` and `CrewRow.allows` live on the shared
+   `LOOP_RETURN`, and Pandora's circuit reads none of them. Where a lane would print one thing
+   twice (the strategy lane's role is its workstream's name, the review lane's work its
+   workstream's last word), `says()` hides the repeat and the record is not edited. Pandora's
+   `#return` markup is byte-identical and its pixels unchanged at 1280 × 720 and 1470 × 830.
+6. **Fit**: the fill rhythm's job rules read `:is(.arc-sec--job, .arc-sec--return)`, so the return
+   is one screen like the jobs. The who cell keeps the shared `--space-xs` gap: at `--space-sm` the
+   first lane's wrapped role put the beat 2.8px past the frame at 1280 × 720. On the phone the
+   lanes stack, each figure a short band, and the band's meta stacks one item a line (the job
+   cards' too: wrapped as a row, its second line opened on a separator).
+7. **Guards**: `arc-crew-particles` (the field's count, a person only where one checks, every mark
+   inside the crop, one seed one drawing); the registry's case-card walk (one lane a workstream, a
+   last column with no figure in at most 40 characters, people by role, no money);
+   `arc-circuit-fit` skips a case crew.
+
+Measured headless at 1280 × 720, 1470 × 830 and 1920 × 1200, both themes: one screen each, no
+text on text; 1456px tall on a 390 phone, no horizontal scroll.
+
+**Left open, for the owner**: the first column has no key over it (an empty cell, or "The team");
+the review lane letters no work label and the phone hides the "What runs now" key, so its line
+stands without a heading there; copy is filed under ops here where the vision's diagram files it
+under production; and whether four separate Loop job cards would read better than one card of four
+lanes.

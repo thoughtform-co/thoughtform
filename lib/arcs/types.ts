@@ -1000,6 +1000,18 @@ export type ArcSection = ArcSectionBase &
         rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow];
         /** The drawing's accessible name. */
         alt: string;
+        /**
+         * THE CASE CARD (ADR-153 U5, owner 2026-10-10: the return "looks
+         * different from the other sections … redesign what it returned at
+         * Loop … so they match the examples from Samako and Suri"). `"case"`
+         * sets the record in the jobs' own housing: one card, a lane per role
+         * read left to right, the people, what runs drawn as particles, what
+         * runs now, and where the time goes. Absent, the circuit drawing
+         * (Pandora's page, sent 2026-09-29, renders byte-identical).
+         */
+        layout?: "case";
+        /** The case card's band; required when `layout` is set. */
+        card?: CrewCard;
       }
     | {
         /**
@@ -1470,7 +1482,11 @@ export type ArcSection = ArcSectionBase &
          * the frame's foot. The bucket is the vision's 2×2 and the engine's
          * workstream tiles, so one vocabulary runs down the page. U3: the
          * return is ONE number in a decision maker's words, never three
-         * small cells.
+         * small cells. U4 (owner, 2026-10-10): the top row is a low gold
+         * band in the proof cards' language, carrying the title, one meta
+         * line and THIS job's workstream alone (its glyph and its name, on
+         * the right, as the vision draws it); the return reads "time saved,
+         * then what it now allows", and the two never repeat each other.
          *
          * ⚠ THE THIRTY-SECOND ENUMERATED EXCEPTION. Server, no state, DOM
          * only, `data-job-*`; its classes are `.arc-case__*` because
@@ -1514,12 +1530,22 @@ export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
  * where the record gives one, hours saved, assets made, right first time,
  * and the line says it in a decision maker's words. Not every job has a
  * number; the line then carries it plainly. Every figure as filed.
+ *
+ * U4 (owner, 2026-10-10: "this is the time we've saved, and this is what it
+ * now allows us to do"): the column reads in two steps, the saving and then
+ * what the saving opens up, upstream or downstream of the job. ⚠ The line
+ * never restates the number (the owner read "2–3 hrs" over a line saying
+ * two to three hours, and called it the same thing twice).
  */
 export interface ArcJobResult {
-  /** The one number, large, e.g. "15 of 18" or "2–3 hrs". ≤ 10. */
+  /** What the number is, mono, e.g. "Time saved". ≤ 20. Absent ⇒ "Time saved". */
+  label?: string;
+  /** The one number, large, e.g. "Weeks" or "14 of 15". ≤ 10. */
   value: string;
-  /** What it means for the business, one or two sentences. ≤ 110. */
+  /** What the number counts, one sentence, never the number again. ≤ 110. */
   line: string;
+  /** What the saving now allows the team to do, one sentence. ≤ 110. */
+  allows: string;
   /** The count drawn, when the number is a count. */
   tally?: readonly ArcJobTally[];
 }
@@ -1575,7 +1601,8 @@ export interface ArcLeverageUse {
   id: string;
   /** The drawing above the label. */
   glyph: "brief" | "frame" | "flow" | "check" | "ratio" | "spread" | "clock" | "meter";
-  /** Mono, e.g. "Strategy". ≤ 16. */
+  /** Mono, e.g. "Creative strategy". ≤ 20 (16 until ADR-153 U4 named the
+   *  four workstreams in full). */
   label: string;
   /** One line. ≤ 60. */
   line: string;
@@ -2094,6 +2121,24 @@ export interface CrewRow {
    *  record's own number, if any, lives here and nowhere else. */
   line: string;
   output: CrewOutput;
+  /** The vision's workstream this role's lane belongs to: the case card heads
+   *  the lane with its glyph and word (ADR-153 U5). Required by the case
+   *  layout. */
+  bucket?: ArcJobBucket;
+  /** Where the role's time goes now, a short phrase in the owner's own words
+   *  (ADR-133 U4's upstream lines, back on the case card in ADR-153 U5):
+   *  "this is what it now allows us to do". Required by the case layout. */
+  allows?: string;
+}
+
+/** The case card's band (ADR-153 U5): the jobs' head grammar. No caption:
+ *  two of the four drawings are illustrative counts (twelve streams, six
+ *  parts), so a "Fig." line under them would claim a record they are not. */
+export interface CrewCard {
+  /** Sentence case, no period, at the job title's rung. */
+  title: string;
+  /** The band's mono line, client · who · when, one to three items. */
+  meta: readonly string[];
 }
 
 /* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */
