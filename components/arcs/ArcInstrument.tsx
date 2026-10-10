@@ -23,7 +23,7 @@ export function ArcInstrument({ section, index, motion = "reveal" }: ArcInstrume
     <ArcBeat
       id={section.id}
       kind="instrument"
-      className="arc-section arc-sec arc-sec--instrument"
+      className={`arc-section arc-sec arc-sec--instrument${section.pin ? " arc-sec--instrument-pin" : ""}`}
       ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
       motion={motion}
     >
@@ -35,7 +35,11 @@ export function ArcInstrument({ section, index, motion = "reveal" }: ArcInstrume
           sectionId={section.id}
           motion={motion}
         />
-        <div className="arc-instrument arc-reveal" {...rung(motion, 0.14)}>
+        <div
+          className="arc-instrument arc-reveal"
+          data-ins-pin={section.pin ? "" : undefined}
+          {...rung(motion, 0.14)}
+        >
           <Instrument
             record={section.record}
             altitude={section.altitude}

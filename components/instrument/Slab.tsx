@@ -12,7 +12,13 @@
  *
  * ⚠ IT LETTERS NOTHING; the words are DOM beside it. Every class is the
  * caller's, so each sheet styles its own plates.
+ *
+ * ⚠ THE PATHS ARE DERIVED (the proposal system, 2026-10-10): one plate in
+ * the stage's own projection (`stack/stackLayout.ts` `SLAB_PATHS`), so the
+ * leverage, the engine and the approach's stack draw ONE object.
  */
+import { SLAB_PATHS, SLAB_VIEWBOX } from "@/components/arcs/stack/stackLayout";
+
 export interface SlabProps {
   tier: "own" | "host" | "shared";
   /** The instance id; the hatch pattern is `${id}-hatch`. */
@@ -29,7 +35,7 @@ export function Slab({ tier, id, className, faceClass, sideClass, hatchClass }: 
     <svg
       className={className}
       data-tier={tier}
-      viewBox="0 0 120 56"
+      viewBox={`0 0 ${SLAB_VIEWBOX.w} ${SLAB_VIEWBOX.h}`}
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
@@ -46,10 +52,10 @@ export function Slab({ tier, id, className, faceClass, sideClass, hatchClass }: 
           </pattern>
         </defs>
       ) : null}
-      <path className={sideClass} d="M4 22 L60 44 L60 52 L4 30 Z" />
-      <path className={sideClass} d="M116 22 L60 44 L60 52 L116 30 Z" />
-      <path className={faceClass} d="M4 22 L60 2 L116 22 L60 44 Z" />
-      {tier === "own" ? <path d="M4 22 L60 2 L116 22 L60 44 Z" fill={`url(#${hatch})`} /> : null}
+      <path className={sideClass} d={SLAB_PATHS.left} />
+      <path className={sideClass} d={SLAB_PATHS.right} />
+      <path className={faceClass} d={SLAB_PATHS.top} />
+      {tier === "own" ? <path d={SLAB_PATHS.top} fill={`url(#${hatch})`} /> : null}
     </svg>
   );
 }

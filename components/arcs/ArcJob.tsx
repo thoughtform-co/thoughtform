@@ -1,25 +1,24 @@
-import type { CSSProperties } from "react";
-
-import type { ArcJobBucket, ArcJobTally, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+import { DISCIPLINES, disciplineOf } from "@/lib/arcs/content/shared/disciplines";
+import type { ArcJobBucket, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { BREAKDOWN_KEPT, BREAKDOWN_REJECTED } from "./ArcBreakdown";
 import { ArcClipLoop } from "./ArcClipLoop";
+import { Glyph } from "./ArcLeverage";
+import { ArcReturn, RESULT_LABEL } from "./ArcReturn";
 import { rung } from "./arcMotion";
 
 /** Chrome, never content: the four buckets in the order the page runs them,
- *  the vision's 2×2 and the engine's workstreams in the same words. */
-export const JOB_BUCKETS: readonly { id: ArcJobBucket; word: string }[] = [
-  { id: "strategy", word: "Strategy" },
-  { id: "production", word: "Production" },
-  { id: "ops", word: "Ops" },
-  { id: "review", word: "Review" },
-];
+ *  the vision's 2×2 and the engine's workstreams in the same words — ONE
+ *  record since the proposal system (`shared/disciplines.ts`). */
+export const JOB_BUCKETS: readonly { id: ArcJobBucket; word: string }[] = DISCIPLINES.map((d) => ({
+  id: d.id,
+  word: d.word,
+}));
+
+export { RESULT_LABEL };
 
 const two = (n: number) => String(n).padStart(2, "0");
-
-/** Chrome, never content: the result column's label. */
-export const RESULT_LABEL = "The return";
 
 /**
  * ArcJob — one real piece of client work on one screen (ADR-153 U1, U2), in
@@ -56,6 +55,7 @@ export function ArcJob({
   motion?: ArcMotion;
 }) {
   const { n, title, bucket, ask, did, gate, figure, result } = section;
+  const head = section.top ?? "strip";
   const titleId = `${section.id}-title`;
   return (
     <ArcBeat
@@ -69,40 +69,61 @@ export function ArcJob({
         <article
           className="arc-lev arc-case arc-plate arc-reveal"
           data-job-bucket={bucket}
+          data-job-head={head}
           aria-labelledby={titleId}
           {...rung(motion, 0.1)}
         >
+          {/* The top row. `strip` (U2): the four buckets, this one marked.
+              `mark` (the proposal system): ONE lit discipline, the glyph the
+              vision's 2×2 gives it and its long name, over a smaller title,
+              with who, where and when as one mono line, on the proof cards'
+              gold band, so the jobs and Loop's cards share one material. */}
           <header className="arc-case__top">
             <div className="arc-case__lead">
-              <ol className="arc-case__buckets">
-                {JOB_BUCKETS.map((b) => (
-                  <li
-                    key={b.id}
-                    data-job-on={b.id === bucket ? "" : undefined}
-                    aria-current={b.id === bucket ? "true" : undefined}
-                  >
-                    {b.word}
-                  </li>
-                ))}
-              </ol>
+              {head === "mark" ? (
+                <p className="arc-case__mark">
+                  <Glyph kind={disciplineOf(bucket).glyph} />
+                  <span className="arc-case__mark-word">{disciplineOf(bucket).long}</span>
+                </p>
+              ) : (
+                <ol className="arc-case__buckets">
+                  {JOB_BUCKETS.map((b) => (
+                    <li
+                      key={b.id}
+                      data-job-on={b.id === bucket ? "" : undefined}
+                      aria-current={b.id === bucket ? "true" : undefined}
+                    >
+                      {b.word}
+                    </li>
+                  ))}
+                </ol>
+              )}
               <h2 className="arc-case__title" id={titleId}>
                 {title}
               </h2>
             </div>
-            <dl className="arc-case__meta">
-              <div>
-                <dt>Client</dt>
-                <dd>{section.client}</dd>
-              </div>
-              <div>
-                <dt>Made in</dt>
-                <dd>{section.madeIn}</dd>
-              </div>
-              <div>
-                <dt>Date</dt>
-                <dd>{section.date}</dd>
-              </div>
-            </dl>
+            {head === "mark" ? (
+              <p className="arc-case__meta-line">
+                <span>{section.client}</span>
+                <span>{section.madeIn}</span>
+                <span>{section.date}</span>
+              </p>
+            ) : (
+              <dl className="arc-case__meta">
+                <div>
+                  <dt>Client</dt>
+                  <dd>{section.client}</dd>
+                </div>
+                <div>
+                  <dt>Made in</dt>
+                  <dd>{section.madeIn}</dd>
+                </div>
+                <div>
+                  <dt>Date</dt>
+                  <dd>{section.date}</dd>
+                </div>
+              </dl>
+            )}
           </header>
           <div className="arc-case__split">
             <dl className="arc-case__spec">
@@ -133,18 +154,7 @@ export function ArcJob({
                 {figure.caption}
               </figcaption>
             </figure>
-            <section
-              className="arc-case__result"
-              aria-label={RESULT_LABEL}
-              style={{ "--case-len": result.value.length } as CSSProperties}
-            >
-              <p className="arc-case__result-label">{RESULT_LABEL}</p>
-              <div className="arc-case__result-body">
-                <p className="arc-case__num">{result.value}</p>
-                <p className="arc-case__result-line">{result.line}</p>
-                {result.tally ? <Tally groups={result.tally} /> : null}
-              </div>
-            </section>
+            <ArcReturn result={result} />
           </div>
           <p className="arc-case__gate">
             <span className="arc-case__gate-key">The gate</span>
@@ -154,27 +164,6 @@ export function ArcJob({
         </article>
       </div>
     </ArcBeat>
-  );
-}
-
-/** A count as Tensorlake draws one: segments, the counted ones in gold. Each
- *  group's width follows its count, so a segment is one width across groups. */
-function Tally({ groups }: { groups: readonly ArcJobTally[] }) {
-  return (
-    <span className="arc-case__tally" aria-hidden="true">
-      {groups.map((g, gi) => (
-        <span
-          key={gi}
-          className="arc-case__tally-group"
-          data-job-dim={g.dim ? "" : undefined}
-          style={{ "--case-of": g.of } as CSSProperties}
-        >
-          {Array.from({ length: g.of }, (_, i) => (
-            <i key={i} data-job-lit={i < g.lit ? "" : undefined} />
-          ))}
-        </span>
-      ))}
-    </span>
   );
 }
 

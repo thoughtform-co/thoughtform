@@ -1,0 +1,119 @@
+{
+  "$comment": "THE ONE REGISTRY for the proposal system lab's knobs (the X-Bionic rework, 2026-10-10). Read by /test/proposal-system (TS import through lib/proposal-system/variants.ts) and by scripts/capture-proposal-system.mjs (readFileSync). TYPE IDS ARE LETTERS ONLY. THE FIRST VALUE OF EVERY KNOB IS PRODUCTION: PA is every knob at its first value and the control, byte-identical to /arcs/x-bionic/proposal; every other direction is one argument against it; PZ is the owner's whole brief at once. When the owner picks, the winning values land on the production record and the losing branches are deleted with their guards (ADR-070 U35).",
+  "knobs": {
+    "order": {
+      "values": ["current", "narrative"],
+      "label": "Order",
+      "note": "current = the page as shipped. narrative = the owner's order of 10 October: about, the vision, the approach, where it plugs in, Loop, two brands, X-Bionic."
+    },
+    "interstitial": {
+      "values": ["chapter", "quote"],
+      "label": "Chapter band",
+      "note": "chapter = ADR-153 U1's band: the ruler, an eyebrow, the line, a sentence and an index. quote = the ruler and the line alone."
+    },
+    "jobHead": {
+      "values": ["strip", "mark"],
+      "label": "Job head",
+      "note": "strip = the four buckets with this one marked, a tall title, who/where/when as a block. mark = one lit discipline, the title one size down, one mono line, on the proof cards' gold band."
+    },
+    "return": {
+      "values": ["crew", "ledger"],
+      "label": "Loop's return",
+      "note": "crew = ADR-133's circuit drawing. ledger = the same four rows as returns in the job's vocabulary: a value, a line, a tally."
+    },
+    "approach": {
+      "values": ["handoff", "stack"],
+      "label": "The approach",
+      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge."
+    },
+    "upstream": {
+      "values": ["off", "horizon"],
+      "label": "Longer tasks",
+      "note": "off = the approach beat carries the claim alone. horizon = a second beat on the owned horizon: the team's day upstream, the agent's run reaching up three times."
+    },
+    "engine": {
+      "values": ["stack", "pinned"],
+      "label": "The engine",
+      "note": "stack = ADR-154 U4's exploded stack, static. pinned = the same stack on a runway, its slabs and callouts lighting one after another as the reader scrolls."
+    }
+  },
+  "directions": [
+    {
+      "id": "PA",
+      "name": "House",
+      "question": "the page as it ships: does it already read as one argument?",
+      "shape": "production, byte-identical",
+      "knobs": {}
+    },
+    {
+      "id": "PB",
+      "name": "Narrative",
+      "question": "in the owner's order, with the vision first and the layer placed after the approach, does the page read top to bottom?",
+      "shape": "the reordered sections, every beat as shipped",
+      "knobs": { "order": "narrative" }
+    },
+    {
+      "id": "PC",
+      "name": "Quote",
+      "question": "does a part open better on the line alone?",
+      "shape": "three chapter bands with no sentence and no index",
+      "knobs": { "interstitial": "quote" }
+    },
+    {
+      "id": "PD",
+      "name": "Mark",
+      "question": "with one lit discipline and the proof cards' gold band, do the jobs read as the Loop cards' kin?",
+      "shape": "four jobs on the mark head",
+      "knobs": { "jobHead": "mark" }
+    },
+    {
+      "id": "PE",
+      "name": "Ledger",
+      "question": "do Loop's returns and the jobs' returns read as one language?",
+      "shape": "Loop's return as four returns",
+      "knobs": { "return": "ledger" }
+    },
+    {
+      "id": "PF",
+      "name": "Stack",
+      "question": "does the layer being written, drawn once, say that adoption and automation are one motion?",
+      "shape": "the approach on the stack figure",
+      "knobs": { "approach": "stack" }
+    },
+    {
+      "id": "PG",
+      "name": "Horizon",
+      "question": "does the longer-horizon claim need its own beat, or does the stack's run carry it?",
+      "shape": "the stack, then the owned horizon",
+      "knobs": { "approach": "stack", "upstream": "horizon" }
+    },
+    {
+      "id": "PH",
+      "name": "Pinned",
+      "question": "read in nine lit steps on a pinned runway, does the engine stop being a diagram and become the object?",
+      "shape": "the engine pinned",
+      "knobs": { "engine": "pinned" }
+    },
+    {
+      "id": "PZ",
+      "name": "The brief",
+      "question": "the owner's whole ask at once: one narrative, quote bands, marked jobs, one return language, the stack, the pinned engine.",
+      "shape": "every knob at its second value, the horizon off",
+      "knobs": {
+        "order": "narrative",
+        "interstitial": "quote",
+        "jobHead": "mark",
+        "return": "ledger",
+        "approach": "stack",
+        "engine": "pinned"
+      }
+    }
+  ],
+  "wave": {
+    "lane": "ps",
+    "viewports": ["1440x790", "1470x830", "1920x1200"],
+    "binding": "1470x830",
+    "themes": ["dark", "light"],
+    "note": "1470x830 is the owner's MacBook Air, the binding cell (ADR-153); 1440x790 the smaller Air; 1920x1200 where the 880px fill cap engages. Every beat is one screen by content bottom."
+  }
+}

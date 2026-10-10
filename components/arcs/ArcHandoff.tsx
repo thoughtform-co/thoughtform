@@ -4,6 +4,9 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
+import { ArcHoloStageMount } from "./ArcHoloStageMount";
+import { StackFigure } from "./stack/StackFigure";
+import { StackSteps } from "./stack/StackSteps";
 
 interface ArcHandoffProps {
   section: ArcSectionOf<"handoff">;
@@ -26,7 +29,8 @@ interface ArcHandoffProps {
  * drawing is whole in a static render.
  */
 export function ArcHandoff({ section, index, motion = "reveal" }: ArcHandoffProps) {
-  const { steps, time } = section;
+  const { steps, time, figure } = section;
+  if (figure) return <ArcHandoffFigure section={section} index={index} motion={motion} />;
   return (
     <ArcBeat
       id={section.id}
@@ -73,32 +77,123 @@ export function ArcHandoff({ section, index, motion = "reveal" }: ArcHandoffProp
               </li>,
             ])}
           </ol>
-          <div className="arc-hand__time arc-plate">
-            <div className="arc-hand__time-head">
-              <p className="arc-hand__time-label">{time.label}</p>
-              <p className="arc-hand__time-note">{time.note}</p>
-            </div>
-            <div className="arc-hand__rows">
-              {time.rows.map((r) => (
-                <div key={r.label} className="arc-hand__row">
-                  <p className="arc-hand__row-label">{r.label}</p>
-                  <div className="arc-hand__bar">
-                    {r.segments.map((g) => (
-                      <span
-                        key={g.label}
-                        className="arc-hand__seg"
-                        data-hand-lit={g.lit ? "" : undefined}
-                        style={{ flexGrow: g.share }}
-                      >
-                        <span className="arc-hand__seg-name">{g.label}</span>
-                        <span className="arc-hand__seg-track" aria-hidden="true" />
-                      </span>
-                    ))}
+          {time ? (
+            <div className="arc-hand__time arc-plate">
+              <div className="arc-hand__time-head">
+                <p className="arc-hand__time-label">{time.label}</p>
+                <p className="arc-hand__time-note">{time.note}</p>
+              </div>
+              <div className="arc-hand__rows">
+                {time.rows.map((r) => (
+                  <div key={r.label} className="arc-hand__row">
+                    <p className="arc-hand__row-label">{r.label}</p>
+                    <div className="arc-hand__bar">
+                      {r.segments.map((g) => (
+                        <span
+                          key={g.label}
+                          className="arc-hand__seg"
+                          data-hand-lit={g.lit ? "" : undefined}
+                          style={{ flexGrow: g.share }}
+                        >
+                          <span className="arc-hand__seg-name">{g.label}</span>
+                          <span className="arc-hand__seg-track" aria-hidden="true" />
+                        </span>
+                      ))}
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </ArcBeat>
+  );
+}
+
+/**
+ * The layer being written (the proposal system, 2026-10-10): the three steps
+ * as one mono rail (the lit one gold) over ONE drawing, the stack, so the
+ * approach uses the same object the leverage places and the engine
+ * configures. The rail's steps are the figure's three states (`StackSteps`,
+ * `data-step`); the hologram rides the same attribute. No plates, no bars.
+ */
+function ArcHandoffFigure({ section, index, motion = "reveal" }: ArcHandoffProps) {
+  const { steps, figure } = section;
+  if (!figure) return null;
+  const tiers = ["host", "layer", "tiles"] as const;
+  return (
+    <ArcBeat
+      id={section.id}
+      kind="handoff"
+      className="arc-section arc-sec arc-sec--handoff arc-sec--handoff-figure"
+      ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
+      motion={motion}
+    >
+      <div className="arc-band">
+        <ArcSectionHead
+          head={section.head}
+          kind="handoff"
+          index={index}
+          sectionId={section.id}
+          motion={motion}
+        />
+        <div className="arc-hand__fig arc-reveal" {...rung(motion, 0.14)}>
+          <StackSteps
+            steps={steps.map((s, i) => ({
+              id: s.id,
+              n: String(i + 1).padStart(2, "0"),
+              label: s.label,
+              when: s.when,
+            }))}
+          >
+            <div className="arc-hand__stage">
+              <StackFigure
+                id={`${section.id}-stack`}
+                tiers={tiers}
+                lit="layer"
+                callouts={{
+                  layer: { label: figure.layer },
+                  host: { label: figure.host },
+                }}
+                tiles={figure.tiles.map((t) => ({
+                  id: t.id,
+                  bucket: t.bucket,
+                  name: t.name,
+                  line: t.line,
+                  lit: t.lit,
+                }))}
+                courses={figure.courses}
+                alt={figure.alt}
+                holo={
+                  <ArcHoloStageMount
+                    scene={{
+                      kind: "stack",
+                      data: {
+                        tiers,
+                        courses: {
+                          skills: figure.courses.skills.length,
+                          evals: figure.courses.evals.length,
+                        },
+                        tiles: figure.tiles.map((t) => ({ id: t.id, lit: t.lit })),
+                      },
+                    }}
+                  />
+                }
+              />
+            </div>
+            <dl className="arc-hand__legend">
+              {steps.map((s, i) => (
+                <div key={s.id} className="arc-hand__legend-row" data-hand-step={i}>
+                  <dt>{s.label}</dt>
+                  <dd>
+                    {s.title}
+                    <span className="arc-hand__legend-who">{s.who}</span>
+                  </dd>
                 </div>
               ))}
-            </div>
-          </div>
+            </dl>
+          </StackSteps>
         </div>
       </div>
     </ArcBeat>

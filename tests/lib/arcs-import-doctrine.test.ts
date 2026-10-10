@@ -67,7 +67,7 @@ const BANNED = [
  * First Load JS — a ban whose one mechanism did not cover its own neighbour.
  */
 const HOLO_FREE =
-  /@\/components\/holo-(program\/(holoProgramGeom|hoverRef|holoLabelLayout|holoAnchorsRef|holoPalette)|stage\/(stageGeom|stageFit|stageAnchors|curveGeom|spectrumGeom))/;
+  /@\/components\/holo-(program\/(holoProgramGeom|hoverRef|holoLabelLayout|holoAnchorsRef|holoPalette)|stage\/(stageGeom|stageFit|stageAnchors|curveGeom|spectrumGeom|stackGeom))/;
 /** Anything else under either folder is three-full until proven otherwise. */
 const HOLO_TREE = /@\/components\/holo-(program|stage)\//;
 /** The leaves the ADRs name, and the only files that may reach a scene. */

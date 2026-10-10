@@ -1,0 +1,9 @@
+/* The proposal system lab's own chrome. Nothing here is a recipe: the
+   console and the read are the lattice lab's (`lattice-lab.css`, scoped
+   under `.lat-lab`, which the console's wrapper carries). Every knob's CSS
+   lives in the production sheets behind record-driven attributes, so a
+   promotion is a deletion, never a copy. */
+
+.ps-lab .lat-console {
+  z-index: 80;
+}

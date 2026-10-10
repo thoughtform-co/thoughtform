@@ -997,6 +997,14 @@ export type ArcSection = ArcSectionBase &
          */
         kind: "crew";
         head: ArcHead;
+        /**
+         * `returns` (the proposal system, 2026-10-10): the same four rows as
+         * four RETURNS in the job's own vocabulary (one value, one line, a
+         * tally where it is a count), the role on the person's green seat,
+         * so Loop's return and the client jobs read as one language. Needs
+         * `result` on every row. Absent: the circuit drawing, byte-identical.
+         */
+        layout?: "returns";
         rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow];
         /** The drawing's accessible name. */
         alt: string;
@@ -1383,6 +1391,14 @@ export type ArcSection = ArcSectionBase &
         altitude: Altitude;
         focus?: PartId;
         picker?: readonly Altitude[];
+        /**
+         * The organisation altitude PINNED (the proposal system, 2026-10-10):
+         * the beat becomes a runway, the band holds the screen, and the
+         * stack's slabs and callouts light one after another as the reader
+         * scrolls (a CSS view timeline, no writer). The resting render is
+         * whole. Absent: the static figure, byte-identical.
+         */
+        pin?: true;
       }
     | {
         /**
@@ -1426,12 +1442,23 @@ export type ArcSection = ArcSectionBase &
         kind: "handoff";
         head: ArcHead;
         steps: readonly [ArcHandoffStep, ArcHandoffStep, ArcHandoffStep];
-        time: {
+        /** The two time bars. Optional since the proposal system
+         *  (2026-10-10): a beat that draws a `figure` letters no bars. */
+        time?: {
           label: string;
           /** A mono aside on the bars, e.g. "Illustrative". */
           note: string;
           rows: readonly [ArcHandoffRow, ArcHandoffRow];
         };
+        /**
+         * The layer being written (the proposal system, 2026-10-10): the
+         * three steps as one mono rail over ONE drawing, the stack, in three
+         * states: the team on the organisation's slab, the layer appearing
+         * under them with its courses (the skills, then the evaluations),
+         * Claude's runs along its edge. With a figure the three plates and
+         * the bars are not drawn. Absent: ADR-153's plates, byte-identical.
+         */
+        figure?: ArcHandoffFigure;
       }
     | {
         /**
@@ -1478,6 +1505,16 @@ export type ArcSection = ArcSectionBase &
          * client's repository, dated, people by role, no money.
          */
         kind: "job";
+        /**
+         * The frame's top row (the proposal system, 2026-10-10). `strip`, the
+         * default, is U2's: the four buckets with this one marked. `mark` is
+         * ONE lit discipline (its glyph and its long name, the vision's 2×2's
+         * own), the title one size down, and the client, where it ran and
+         * the date as one mono line, so the frame spends its height on the
+         * work. Absent means `strip`: production is byte-identical. (`top`,
+         * not `head`: every other kind's `head` is an `ArcHead`.)
+         */
+        top?: "strip" | "mark";
         /** The job's concrete title, sentence case, set in the frame's top
          *  row (U2: the job carries its own title; no head above it), e.g.
          *  "A Black Friday teaser, cut from raw footage". ≤ 56. */
@@ -1575,7 +1612,7 @@ export interface ArcLeverageUse {
   id: string;
   /** The drawing above the label. */
   glyph: "brief" | "frame" | "flow" | "check" | "ratio" | "spread" | "clock" | "meter";
-  /** Mono, e.g. "Strategy". ≤ 16. */
+  /** Mono, e.g. "Strategy" or "Creative production". ≤ 20. */
   label: string;
   /** One line. ≤ 60. */
   line: string;
@@ -1601,6 +1638,37 @@ export interface ArcHandoffRow {
   /** Left to right; each `share` is a fraction of the bar, summing to 1. The
    *  bar letters the names, never the fractions. */
   segments: readonly { label: string; share: number; lit?: true }[];
+}
+
+/** A tile on the stack's top: one discipline's workstream, by role. */
+export interface ArcHandoffTile {
+  id: string;
+  /** The discipline, mono, e.g. "Production". ≤ 12. */
+  bucket: string;
+  /** The workstream, e.g. "Product voice + imagery". ≤ 28. */
+  name: string;
+  /** Who runs it, by role. ≤ 40. */
+  line: string;
+  /** The one the first phase starts with. */
+  lit?: true;
+}
+
+/**
+ * The layer being written, drawn as the stack (the proposal system,
+ * 2026-10-10): the tiers bottom-up, the layer's courses by name, the tiles
+ * on top. The words are the record's; the geometry is the drawing's.
+ */
+export interface ArcHandoffFigure {
+  /** The skills the team writes first, then the evaluations. ≤ 8 in all,
+   *  each ≤ 24, no digit. */
+  courses: { skills: readonly string[]; evals: readonly string[] };
+  tiles: readonly ArcHandoffTile[];
+  /** The organisation's slab, e.g. "X-Bionic's Claude Enterprise". ≤ 32. */
+  host: string;
+  /** The layer's name, e.g. "Your layer". ≤ 20. */
+  layer: string;
+  /** The drawing's accessible name. */
+  alt: string;
 }
 
 /* ── The setup guide (ADR-151 U1, the system of U5) ────────────────
@@ -2094,6 +2162,9 @@ export interface CrewRow {
    *  record's own number, if any, lives here and nowhere else. */
   line: string;
   output: CrewOutput;
+  /** The row as a return (`layout: "returns"`): the job's own shape, so a
+   *  return is ONE type on the page. Every figure the record's own. */
+  result?: ArcJobResult;
 }
 
 /* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */
