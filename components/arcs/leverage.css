@@ -59,6 +59,9 @@
 .arc-case__verdict b,
 .arc-case__ledger,
 .arc-case__gate-key,
+.arc-case__lanes-key,
+.arc-case__lane-key,
+.arc-case__lane-work,
 .arc-inter__index-n {
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
@@ -532,6 +535,7 @@
   --case-person: var(--atreides-light, #5b7a4e);
   --case-person-text: var(--atreides-ink, #7a9e6a);
   --case-mark: var(--space-sm);
+  --case-tick: var(--arc-ink-40);
   margin-top: 0;
 }
 
@@ -703,7 +707,6 @@
   background: var(--lv-dots);
 }
 .arc-case__frame {
-  --case-tick: var(--arc-ink-40);
   position: relative;
   display: grid;
   place-items: center;
@@ -714,6 +717,9 @@
   content: "";
   position: absolute;
   inset: 0;
+}
+.arc-case__frame::before,
+.arc-case__lanes-frame {
   pointer-events: none;
   background:
     linear-gradient(var(--case-tick), var(--case-tick)) left top / var(--case-mark) 1px,
@@ -943,6 +949,134 @@
   color: var(--arc-ink);
 }
 
+/* ── The return as a case card (ADR-153 U5) ──────────────────────────
+   What it returned at Loop in the jobs' own housing (owner, 2026-10-10:
+   it "looks different from the other sections … redesign what it returned
+   at Loop … so they match the examples from Samako and Suri"). The band is
+   the job card's, without a workstream on the right: every lane carries its
+   own. Under it, one lane per workstream on four shared columns: the
+   people (the vision's glyph and word, then who), the figure (the quantity
+   as particles on the job card's dot ground and corner ticks), what runs
+   now, and what it now allows.
+   ⚠ THE COLUMNS ARE ONE GRID AND THE LANES ARE ITS SUBGRID ROWS, so the
+   dot ground and the frame are drawn once behind all four figures, as the
+   job card draws its one figure, and every lane's text lines up across
+   lanes without a measurement.
+   ⚠ THE FIGURE CELL IS A SIZE CONTAINER: a drawing never sets its own
+   lane's height. The text decides the rows and the drawing takes what is
+   left, the job card's frame rule one object over. */
+.arc-case__lanes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr) minmax(0, 6fr) minmax(0, 6fr);
+  grid-template-rows: auto repeat(4, minmax(0, 1fr));
+}
+.arc-case__lanes-fig {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  border-inline: 1px solid var(--arc-rule);
+  background: var(--lv-dots);
+}
+.arc-case__lanes-frame {
+  grid-column: 2;
+  grid-row: 2 / -1;
+  margin: calc(var(--lv-v) * 0.5) calc(var(--lat-pad-cell) * 0.5);
+}
+.arc-case__lanes-key {
+  grid-row: 1;
+  align-self: end;
+  padding: var(--lv-v) var(--lat-pad-cell) calc(var(--lv-v) * 0.75);
+  color: var(--arc-ink-60);
+}
+.arc-case__lanes-key[data-crew-col="runs"] {
+  grid-column: 3;
+}
+.arc-case__lanes-key[data-crew-col="allows"] {
+  grid-column: 4;
+}
+.arc-case__lanes-list {
+  grid-column: 1 / -1;
+  grid-row: 2 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+  min-height: 0;
+}
+.arc-case__lane {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  min-height: 0;
+}
+.arc-case__lane-who,
+.arc-case__lane-runs,
+.arc-case__lane-allows {
+  display: grid;
+  align-content: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding: var(--lv-v) var(--lat-pad-cell);
+  border-top: 1px solid var(--arc-rule);
+}
+/* Every lane's workstream word on two lines, "Creative" over its kind, so
+   four labels read as one set rather than three wrapping and one not. */
+.arc-case__lane-who .arc-case__ws-word {
+  width: min-content;
+}
+.arc-case__lane-fig {
+  min-height: 0;
+  padding: var(--lv-v) var(--lat-pad-cell);
+  container-type: size;
+}
+.arc-case__particles {
+  display: block;
+  width: 100cqw;
+  height: 100cqh;
+}
+/* The house's colour law: gold is what runs, the green diamond is a
+   person and nothing else, a dawn hairline is structure. */
+.arc-case__trace {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-case__grain {
+  fill: var(--lv-gold-line);
+}
+.arc-case__person {
+  fill: var(--case-person);
+}
+/* Each lane keys its own columns for a screen reader and for the phone,
+   where the shared keys are gone; on the grid the column keys say it once. */
+.arc-case__lane-key {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.arc-case__lane-role {
+  font-family: var(--lv-sans);
+  font-size: var(--type-md);
+  line-height: 1.35;
+  color: var(--arc-ink);
+}
+.arc-case__lane-work {
+  color: var(--arc-ink-60);
+}
+.arc-case__lane-line {
+  font-family: var(--lv-sans);
+  font-size: var(--type-md);
+  line-height: 1.45;
+  color: var(--arc-ink);
+}
+.arc-case__lane-allows .arc-case__lane-line {
+  color: var(--arc-ink-80);
+}
+
 /* ── The chapter band (an interstitial for a board) ─────────────────
    A band the height of its content, set left under a part ruler: where
    the reader is in the argument, then one line. Never a screen. */
@@ -1060,6 +1194,40 @@
     border-left: 0;
     border-top: 1px solid var(--arc-rule);
   }
+  /* The return's lanes stack: each lane reads down, its figure on its own
+     strip of dot ground, its "what it now allows" keyed in place. */
+  .arc-case__lanes,
+  .arc-case__lanes-list,
+  .arc-case__lane {
+    display: block;
+  }
+  .arc-case__lanes-fig,
+  .arc-case__lanes-frame,
+  .arc-case__lanes-key {
+    display: none;
+  }
+  .arc-case__lane + .arc-case__lane {
+    border-top: 1px solid var(--arc-rule);
+  }
+  .arc-case__lane-who,
+  .arc-case__lane-runs,
+  .arc-case__lane-allows {
+    border-top: 0;
+  }
+  .arc-case__lane-fig {
+    height: calc(var(--space-4xl) * 1.25);
+    border-block: 1px solid var(--arc-rule);
+    background: var(--lv-dots);
+  }
+  .arc-case__lane-key[data-crew-key="allows"] {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    color: var(--arc-ink-60);
+  }
   .arc-lev__idea {
     border-right: 0;
     border-bottom: 1px solid var(--arc-rule);
@@ -1105,5 +1273,14 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-xs);
+  }
+  /* The meta stacks, one item a line: wrapped as a row, its second line
+     opened on a separator. */
+  .arc-case__meta {
+    flex-direction: column;
+    gap: 0;
+  }
+  .arc-case__meta span + span::before {
+    content: none;
   }
 }

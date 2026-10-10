@@ -84,6 +84,15 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
     title: { pre: "What it returned", em: "at Loop." },
     sub: "Each role at Loop, the workstream it runs, and what is possible now.",
   },
+  /* THE CASE CARD'S FIELDS (ADR-153 U5): read only by a page that sets
+     `layout: "case"` (the X-Bionic proposal); Pandora's circuit reads none
+     of them and renders byte-identical. Each lane is one of the vision's
+     four workstreams, and `allows` is where the role's time goes now,
+     ADR-133 U4's upstream lines in the owner's own words. */
+  card: {
+    title: "What it returned at Loop",
+    meta: ["Loop Earplugs", "The creative team", "2024 to now"],
+  },
   rows: [
     {
       id: "assets",
@@ -91,6 +100,8 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Paid social",
       line: "About 700 assets a month",
       output: { kind: "field", count: 700 },
+      bucket: "production",
+      allows: "Concepting and brand storytelling",
     },
     {
       id: "copy",
@@ -98,6 +109,8 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Copy",
       line: "Filled in by the PMs, checked by one copy editor",
       output: { kind: "funnel", lines: 12 },
+      bucket: "ops",
+      allows: "The brief",
     },
     {
       id: "review",
@@ -105,6 +118,8 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Review",
       line: "About ten times less review by hand",
       output: { kind: "tenfold" },
+      bucket: "review",
+      allows: "The final call",
     },
     {
       id: "strategy",
@@ -112,6 +127,8 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Briefing",
       line: "The ad count, divided across partners and formats",
       output: { kind: "split", parts: 6 },
+      bucket: "strategy",
+      allows: "The ideas worth testing",
     },
   ],
   alt: "What it returned at Loop, each role beside the workstream it runs. Two designers and a copywriter, paid social: about 700 assets a month. The PMs, copy: filled in by the PMs, checked by one copy editor. The head of design, review: about ten times less review by hand. Creative strategy, briefing: the ad count, divided across partners and formats.",

@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcCrewCase } from "./ArcCrewCase";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -20,8 +21,14 @@ interface ArcCrewProps {
  *
  * ⚠ SERVER, NO STATE, NO SCRIPT. On a phone the drawing gives way to the same
  * record as one ruled list (a 1400-unit drawing at 390px paints at 4px).
+ *
+ * ⚠ `layout: "case"` (ADR-153 U5) sets the same record in the job cards'
+ * housing instead (`ArcCrewCase`); absent, this drawing, byte-identical.
  */
 export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
+  if (section.layout === "case") {
+    return <ArcCrewCase section={section} index={index} motion={motion} />;
+  }
   const g = crewGeom(section);
   return (
     <ArcBeat

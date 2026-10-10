@@ -4904,17 +4904,20 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     min-height: min(100%, var(--arc-fill-cap));
   }
   /* A job has no head: its frame carries its own title (ADR-153 U2), so
-     the frame itself sits on the datum and takes the screen to the floor. */
-  .arc-root[data-arc-rhythm="fill"] .arc-sec--job {
+     the frame itself sits on the datum and takes the screen to the floor.
+     The return set as a case card (ADR-153 U5) is the same object and sits
+     the same way. ⚠ `.arc-sec--return`, never `--crew`: that class carries
+     the circuit's own section padding. */
+  .arc-root[data-arc-rhythm="fill"] :is(.arc-sec--job, .arc-sec--return) {
     align-content: stretch;
     padding-block: var(--arc-head-datum) var(--lat-sec-pad);
   }
-  .arc-root[data-arc-rhythm="fill"] .arc-sec--job > .arc-band {
+  .arc-root[data-arc-rhythm="fill"] :is(.arc-sec--job, .arc-sec--return) > .arc-band {
     display: grid;
     grid-template-rows: minmax(0, 1fr);
     min-height: 0;
   }
-  .arc-root[data-arc-rhythm="fill"] .arc-sec--job > .arc-band > .arc-case {
+  .arc-root[data-arc-rhythm="fill"] :is(.arc-sec--job, .arc-sec--return) > .arc-band > .arc-case {
     align-self: center;
     min-height: min(100%, var(--arc-fill-cap));
   }

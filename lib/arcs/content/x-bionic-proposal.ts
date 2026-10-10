@@ -250,7 +250,11 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       line: { pre: "In 2024, Loop decided to go", em: "AI-first." },
     },
     ...LOOP_PROOF_CARDS,
-    LOOP_RETURN,
+    /* The return in the jobs' own housing (ADR-153 U5, owner 2026-10-10:
+       it "looks different from the other sections … redesign what it
+       returned at Loop … so they match the examples from Samako and
+       Suri"): one card, a lane per workstream. Pandora keeps the circuit. */
+    { ...LOOP_RETURN, layout: "case" },
 
     /* ── Two brands ────────────────────────────────────────────────────
        The second line, the owner's own sentence: Loop set the layer up,

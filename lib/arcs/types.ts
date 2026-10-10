@@ -1000,6 +1000,18 @@ export type ArcSection = ArcSectionBase &
         rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow];
         /** The drawing's accessible name. */
         alt: string;
+        /**
+         * THE CASE CARD (ADR-153 U5, owner 2026-10-10: the return "looks
+         * different from the other sections … redesign what it returned at
+         * Loop … so they match the examples from Samako and Suri"). `"case"`
+         * sets the record in the jobs' own housing: one card, a lane per role
+         * read left to right, the people, what runs drawn as particles, what
+         * runs now, and where the time goes. Absent, the circuit drawing
+         * (Pandora's page, sent 2026-09-29, renders byte-identical).
+         */
+        layout?: "case";
+        /** The case card's band; required when `layout` is set. */
+        card?: CrewCard;
       }
     | {
         /**
@@ -2109,6 +2121,24 @@ export interface CrewRow {
    *  record's own number, if any, lives here and nowhere else. */
   line: string;
   output: CrewOutput;
+  /** The vision's workstream this role's lane belongs to: the case card heads
+   *  the lane with its glyph and word (ADR-153 U5). Required by the case
+   *  layout. */
+  bucket?: ArcJobBucket;
+  /** Where the role's time goes now, a short phrase in the owner's own words
+   *  (ADR-133 U4's upstream lines, back on the case card in ADR-153 U5):
+   *  "this is what it now allows us to do". Required by the case layout. */
+  allows?: string;
+}
+
+/** The case card's band (ADR-153 U5): the jobs' head grammar. No caption:
+ *  two of the four drawings are illustrative counts (twelve streams, six
+ *  parts), so a "Fig." line under them would claim a record they are not. */
+export interface CrewCard {
+  /** Sentence case, no period, at the job title's rung. */
+  title: string;
+  /** The band's mono line, client · who · when, one to three items. */
+  meta: readonly string[];
 }
 
 /* ── The curve's models (ADR-130 U5) ─────────────────────────────────── */

@@ -1600,6 +1600,15 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   from its file (a 1080 × 1920 poster would). Within a page the jobs number 1, 2, 3 … and no two
   share a bucket; every figure as filed, people by role and no pronoun (registry-guarded, media
   on disk).
+- **A `crew` may be set as a case card** (U5): `layout: "case"` plus `card: { title, meta }`, the
+  X-Bionic proposal's "What it returned at Loop". `ArcCrewCase` draws the job card's housing with
+  one lane per workstream (`CrewRow.bucket`, none twice) on one grid, the lanes its subgrid rows:
+  who, the figure as particles (`components/arcs/crewParticles.ts`, seeded; a field draws exactly
+  its count, a green diamond is a person and nothing else), what runs now, and what it now allows
+  (`CrewRow.allows`, ≤ 40, no figure). ⚠ The record is the shared `LOOP_RETURN`, which Pandora's
+  sent page draws as the circuit: a lane hides a repeat (`says()`), never edits the record, and
+  Pandora's markup stays byte-identical. Guards: `arc-crew-particles` and the registry's case-card
+  walk; `arc-circuit-fit` skips a case crew.
 - **A chapter band may carry an `index`** (U1): 3–5 rows, `n` "01" onward, labels ≤ 18, each
   `href` a section after the band and before the next chapter (registry-guarded).
 

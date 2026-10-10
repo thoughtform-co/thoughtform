@@ -897,6 +897,67 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  /* ADR-153 U5 (owner, 2026-10-10: the return "looks different from the
+     other sections … redesign what it returned at Loop … so they match the
+     examples from Samako and Suri"). A crew set as a case card carries the
+     job card's band and one lane per workstream; each lane says where the
+     role's time goes now, a phrase with no figure (the record's one number
+     stays in `line`). The shared record is Pandora's too, so nothing here
+     may require a change to its rows' own words. */
+  it("a crew set as a case card heads each lane with its own workstream (ADR-153 U5)", () => {
+    const BUCKETS = ["production", "ops", "review", "strategy"];
+    let seen = 0;
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "crew") continue;
+        const at = `${arc.slug}/${section.id}`;
+        // The shared record carries the card's fields for every page; only a
+        // page that sets the case layout letters them.
+        if (section.layout !== "case") continue;
+        seen += 1;
+        const card = section.card;
+        expect(card, `${at}: the case layout needs its band`).toBeDefined();
+        if (!card) continue;
+        expect(card.title.length, `${at}: the title`).toBeGreaterThan(0);
+        expect(card.title.length, `${at}: the title at the job title's rung`).toBeLessThanOrEqual(
+          56
+        );
+        expect(card.title, `${at}: sentence case`).toMatch(/^[A-Z]/);
+        expect(card.title, `${at}: a name, no period`).not.toMatch(/\.$/);
+        expect(card.meta.length, `${at}: the band's line`).toBeGreaterThanOrEqual(1);
+        expect(card.meta.length, `${at}: the band's line`).toBeLessThanOrEqual(3);
+        for (const m of card.meta) {
+          expect(m.length, `${at}: "${m}"`).toBeGreaterThan(0);
+          expect(m.length, `${at}: "${m}" is one item of a mono line`).toBeLessThanOrEqual(24);
+        }
+        const buckets = section.rows.map((r) => r.bucket);
+        for (const [i, b] of buckets.entries()) {
+          expect(BUCKETS, `${at}/${section.rows[i].id}: a vision workstream`).toContain(b);
+        }
+        expect(new Set(buckets).size, `${at}: one lane a workstream`).toBe(buckets.length);
+        for (const row of section.rows) {
+          const allows = row.allows ?? "";
+          expect(allows.length, `${at}/${row.id}: where the time goes`).toBeGreaterThan(0);
+          /* One line in the lane's last column at 1280. */
+          expect(allows.length, `${at}/${row.id}: "${allows}"`).toBeLessThanOrEqual(40);
+          expect(/\d/.test(allows), `${at}/${row.id}: a figure outside the line`).toBe(false);
+          expect(allows, `${at}/${row.id}: a phrase, no period`).not.toMatch(/\.$/);
+          expect(allows, `${at}/${row.id}: says something the line does not`).not.toBe(row.line);
+        }
+        const text = JSON.stringify({ card, rows: section.rows });
+        expect(text, `${at}: no em dash`).not.toMatch(/—/);
+        expect(text, `${at}: no money`).not.toMatch(/£|\$|€/);
+        expect(text, `${at}: people by role`).not.toMatch(
+          /\b(Daryna|Kate|Caroline|Bea|Nick|Georgia|Lottie|Sampson|Rita|Katia|Mati|Nameya|Lucas|Jeev|Megan|Rob)\b/
+        );
+        expect(text, `${at}: no pronoun for a person`).not.toMatch(
+          /\b(she|her|hers|he|him|his)\b/i
+        );
+      }
+    }
+    expect(seen, "the X-Bionic page's return").toBeGreaterThanOrEqual(1);
+  });
+
   it("a steps beat's three stages are one dial, read three ways (ADR-106)", () => {
     /* No registered arc carries a `steps` beat yet — the Trinny page mounts it
        through its own dispatch and `trinny-offer.test.ts` walks that copy. The
