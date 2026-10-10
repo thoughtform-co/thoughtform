@@ -85,12 +85,22 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
     sub: "Each role at Loop, the workstream it runs, and what is possible now.",
   },
   rows: [
+    /* ⚠ `result` IS THE ROW AS A RETURN (the proposal system, 2026-10-10,
+       `layout: "returns"`): the same four facts in the job's vocabulary, a
+       value, a line, a tally where the number is a count. Every figure is
+       the row's own; a count the record does not give is not drawn (700 is
+       too many segments; the briefing's split is a glyph count, not a
+       filed figure). */
     {
       id: "assets",
       who: "Two designers and a copywriter",
       work: "Paid social",
       line: "About 700 assets a month",
       output: { kind: "field", count: 700 },
+      result: {
+        value: "~700",
+        line: "Paid social assets a month, from two designers and a copywriter.",
+      },
     },
     {
       id: "copy",
@@ -98,6 +108,10 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Copy",
       line: "Filled in by the PMs, checked by one copy editor",
       output: { kind: "funnel", lines: 12 },
+      result: {
+        value: "1 editor",
+        line: "The copy is filled in by the PMs themselves; one copy editor checks all of it.",
+      },
     },
     {
       id: "review",
@@ -105,6 +119,11 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Review",
       line: "About ten times less review by hand",
       output: { kind: "tenfold" },
+      result: {
+        value: "10×",
+        line: "About ten times less review by hand for the head of design.",
+        tally: [{ of: 10, lit: 1 }],
+      },
     },
     {
       id: "strategy",
@@ -112,6 +131,10 @@ export const LOOP_RETURN: ArcSectionOf<"crew"> = {
       work: "Briefing",
       line: "The ad count, divided across partners and formats",
       output: { kind: "split", parts: 6 },
+      result: {
+        value: "By brief",
+        line: "The month's ad count arrives divided across partners and formats, as briefs.",
+      },
     },
   ],
   alt: "What it returned at Loop, each role beside the workstream it runs. Two designers and a copywriter, paid social: about 700 assets a month. The PMs, copy: filled in by the PMs, checked by one copy editor. The head of design, review: about ten times less review by hand. Creative strategy, briefing: the ad count, divided across partners and formats.",

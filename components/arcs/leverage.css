@@ -59,6 +59,13 @@
 .arc-case__verdict b,
 .arc-case__ledger,
 .arc-case__gate-key,
+.arc-case__mark-word,
+.arc-case__meta-line,
+.arc-returns__work,
+.arc-hand__rail-label,
+.arc-hand__rail-run,
+.arc-hand__legend dt,
+.arc-hand__legend-who,
 .arc-inter__index-n {
   font-family: var(--lv-mono);
   font-size: var(--type-sm);
@@ -127,19 +134,12 @@
   border-right: 1px solid var(--arc-rule);
 }
 
-/* The stack: three slabs on one dashed spine. */
+/* The stack (the proposal system, 2026-10-10): `StackFigure`, the page's
+   one object, in the console's idea column; its rules are `stack.css`. */
 .arc-lev__stack {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.arc-lev__stack::before {
-  content: "";
-  position: absolute;
-  top: var(--space-xl);
-  bottom: var(--space-xl);
-  left: calc(var(--space-2xl) - 1px);
-  border-left: 1px dashed var(--arc-seam);
+  /* The idea column's own gap spaces the stack from the note; a margin on
+     top of it ran the beat 10px past the fold at 1440 × 790. */
+  margin-bottom: 0;
 }
 .arc-lev__plate {
   position: relative;
@@ -189,7 +189,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-md);
+  /* The chip sits clear of the label (owner, 2026-10-10: "Only yours" was
+     too close to the text): the lattice's block gap, not its inline one. */
+  gap: var(--space-xl);
 }
 .arc-lev__plate-line {
   font-size: var(--type-base);
@@ -968,6 +970,241 @@
   color: var(--arc-ink-40);
 }
 
+/* ── The job's mark head (the proposal system, 2026-10-10) ─────────────
+   ONE lit discipline where the strip stood: its glyph (the vision's 2×2's
+   own) and its long name on the gold square; the title one size down; who,
+   where and when as one mono line; the whole top row on the proof cards'
+   material (`.arc-plate__head`'s wash and its 2px rule stopping at the
+   cut), so the four jobs and Loop's four cards share one band. The split
+   and the gate are untouched. */
+.arc-case[data-job-head="mark"] .arc-case__top {
+  position: relative;
+  align-items: center;
+  padding-block: var(--lv-v);
+  background:
+    linear-gradient(0deg, var(--arc-gold-wash), var(--arc-gold-wash)),
+    linear-gradient(172deg, var(--arc-sheen) 0%, rgba(var(--dawn-rgb), 0) 55%);
+  border-bottom-color: var(--arc-seam);
+}
+.arc-case[data-job-head="mark"] .arc-case__top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - var(--arc-plate-ch));
+  height: 2px;
+  background: var(--lv-gold-line);
+  pointer-events: none;
+}
+.arc-case[data-job-head="mark"] .arc-case__lead {
+  gap: calc(var(--lv-v) * 0.75);
+}
+.arc-case__mark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--lv-gold-text);
+}
+.arc-case__mark .arc-lev__glyph {
+  width: var(--space-4xl);
+  height: auto;
+  flex: none;
+}
+.arc-case__mark-word {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.arc-case__mark-word::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--gold);
+}
+.arc-case[data-job-head="mark"] .arc-case__title {
+  font-size: var(--type-xl);
+  max-width: 52ch;
+}
+.arc-case__meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm) var(--space-lg);
+  color: var(--arc-ink-60);
+  text-align: right;
+}
+.arc-case__meta-line span + span::before {
+  content: "·";
+  margin-right: var(--space-lg);
+  color: var(--arc-ink-40);
+}
+
+/* ── Loop's return as four returns (the proposal system) ───────────────
+   One row per role on the house plate: the role on the person's green seat
+   and the workstream in mono left, the job's own return block right, so
+   the Loop beat and the jobs letter a return in one vocabulary. */
+.arc-returns {
+  display: grid;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--lat-gap-block);
+  min-height: 0;
+  --lv-v: clamp(8px, 1.6svh, 24px);
+  --lv-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --lv-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --lv-gold-text: var(--gold-ink, var(--gold));
+  --case-person: var(--atreides-light, #5b7a4e);
+  --case-person-text: var(--atreides-ink, #7a9e6a);
+  font-family: var(--lv-sans);
+  color: var(--arc-ink);
+}
+.arc-returns__row {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  margin-top: 0;
+}
+.arc-returns__who {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: calc(var(--lv-v) * 0.75) var(--lat-pad-cell);
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-returns__seat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--type-lg);
+  line-height: 1.3;
+  color: var(--arc-ink);
+}
+.arc-returns__seat::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--case-person);
+  transform: rotate(45deg);
+}
+.arc-returns__work {
+  color: var(--arc-ink-50);
+}
+/* The return block, laid on its side: the label and the value in one row,
+   the line under them. */
+.arc-returns__return {
+  grid-template-rows: auto;
+  grid-template-columns: auto minmax(0, 1fr);
+  border-left: 0;
+}
+.arc-returns__return .arc-case__result-label {
+  display: flex;
+  align-items: center;
+  border-bottom: 0;
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-returns__return .arc-case__result-body {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-xl);
+  padding-block: calc(var(--lv-v) * 0.75);
+}
+.arc-returns__return .arc-case__num {
+  /* One rung under the job's display size: four rows share one screen. */
+  --case-num: var(--type-2xl);
+}
+.arc-returns__return .arc-case__result-line {
+  flex: 1 1 24ch;
+  font-size: var(--type-base);
+}
+.arc-returns__return .arc-case__tally {
+  flex-basis: 100%;
+  height: var(--lv-v);
+}
+
+/* ── The approach on the stack (the proposal system) ────────────────────
+   One mono rail (the three steps, the lit one gold) over the figure, and a
+   legend under it: the step, what it is, who does it. No plates, no bars. */
+.arc-hand--figure {
+  flex: 1;
+  min-height: 0;
+  gap: calc(var(--lv-v) * 1.25);
+  margin-top: var(--lat-gap-block);
+}
+.arc-hand__fig > .arc-hand--figure {
+  margin-top: 0;
+}
+.arc-hand__rail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+.arc-hand__rail-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--arc-rule);
+  color: var(--arc-ink-50);
+}
+.arc-hand__rail-step[data-hand-lit] {
+  border-color: var(--lv-gold-line);
+  background: var(--arc-gold-wash);
+  color: var(--lv-gold-text);
+}
+.arc-hand__rail-step[data-hand-lit] .arc-hand__step-n,
+.arc-hand__rail-step[data-hand-lit] .arc-hand__when {
+  color: var(--lv-gold-text);
+}
+.arc-hand__rail-run {
+  color: var(--arc-ink-40);
+}
+.arc-hand__legend-row[data-hand-step] {
+  color: var(--arc-ink-50);
+}
+[data-step="0"] .arc-hand__legend-row[data-hand-step="0"],
+[data-step="1"] .arc-hand__legend-row[data-hand-step="1"],
+[data-step="2"] .arc-hand__legend-row[data-hand-step="2"] {
+  color: var(--arc-ink);
+}
+[data-step="0"] .arc-hand__legend-row[data-hand-step="0"] dt,
+[data-step="1"] .arc-hand__legend-row[data-hand-step="1"] dt,
+[data-step="2"] .arc-hand__legend-row[data-hand-step="2"] dt {
+  color: var(--lv-gold-text);
+}
+.arc-hand__legend {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-lg);
+  padding-top: var(--lv-v);
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-hand__legend-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  color: var(--arc-ink-50);
+}
+.arc-hand__legend-row[data-hand-lit] {
+  color: var(--arc-ink);
+}
+.arc-hand__legend-row[data-hand-lit] dt {
+  color: var(--lv-gold-text);
+}
+.arc-hand__legend dd {
+  font-size: var(--type-base);
+  line-height: 1.4;
+  color: var(--arc-ink-80);
+}
+.arc-hand__legend-who {
+  display: block;
+  margin-top: var(--space-xs);
+  color: var(--arc-ink-50);
+}
+
 /* ── The phone ─────────────────────────────────────────────────────── */
 
 @media (max-width: 960px) {
@@ -1023,6 +1260,20 @@
   .arc-hand__row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-sm);
+  }
+  .arc-returns__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-returns__who {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  .arc-hand__legend {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-case__meta-line {
+    justify-content: flex-start;
+    text-align: left;
   }
 }
 @media (max-width: 640px) {

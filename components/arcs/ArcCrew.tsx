@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcReturn } from "./ArcReturn";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -22,6 +23,8 @@ interface ArcCrewProps {
  * record as one ruled list (a 1400-unit drawing at 390px paints at 4px).
  */
 export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
+  if (section.layout === "returns")
+    return <ArcReturns section={section} index={index} motion={motion} />;
   const g = crewGeom(section);
   return (
     <ArcBeat
@@ -79,6 +82,51 @@ export function ArcCrew({ section, index, motion = "reveal" }: ArcCrewProps) {
             ))}
           </dl>
         </div>
+      </div>
+    </ArcBeat>
+  );
+}
+
+/**
+ * ArcReturns — the same four rows as four RETURNS (the proposal system,
+ * 2026-10-10): the role on the person's green seat, the workstream in mono,
+ * then the job's own return block (one value, one line, a tally where it is
+ * a count), so Loop's return and the client jobs read as one language. The
+ * circuit drawing is untouched for every page that draws it.
+ *
+ * ⚠ SERVER, NO STATE, DOM ONLY. `data-crew-layout`, never `data-arc-*`.
+ */
+function ArcReturns({ section, index, motion = "reveal" }: ArcCrewProps) {
+  return (
+    <ArcBeat
+      id={section.id}
+      kind="crew"
+      className="arc-section arc-sec arc-sec--crew arc-sec--returns"
+      ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
+      motion={motion}
+    >
+      <div className="arc-band">
+        <ArcSectionHead
+          head={section.head}
+          kind="crew"
+          index={index}
+          sectionId={section.id}
+          motion={motion}
+        />
+        <ol className="arc-returns arc-reveal" data-crew-layout="returns" {...rung(motion, 0.14)}>
+          {section.rows.map((r) => {
+            const result = r.result ?? { value: "", line: r.line };
+            return (
+              <li key={r.id} className="arc-returns__row arc-plate">
+                <div className="arc-returns__who">
+                  <span className="arc-returns__seat">{r.who}</span>
+                  <span className="arc-returns__work">{r.work}</span>
+                </div>
+                <ArcReturn result={result} className="arc-returns__return" />
+              </li>
+            );
+          })}
+        </ol>
       </div>
     </ArcBeat>
   );

@@ -17,8 +17,8 @@ import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
  * WHAT PLUGS INTO CLAUDE ENTERPRISE, so the circuit beat says it plainly.
  *
  * ⚠ ONE ARGUMENT, READ TOP TO BOTTOM (owner, 2026-10-09; ADR-153 U1):
- * who I am, then my approach (the vision, then how adoption and automation
- * connect), then the proof (Loop, then two other brands), then what we set
+ * who does the work, then the approach (the vision, then how adoption and
+ * automation connect), then the proof (Loop, then two other brands), then what we set
  * up at X-Bionic and the fee. Three chapter bands carry it, each with the
  * index of its beats. Plain titles, no slogans. One vocabulary runs down
  * the page three times: the vision's four disciplines, the four jobs'
@@ -67,7 +67,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     plate: "gateway",
     curtain: true,
     actions: [
-      { id: "read", label: "How I see it", href: "#vision", primary: true },
+      { id: "read", label: "The approach", href: "#vision", primary: true },
       { id: "plan", label: "The two weeks", href: "#phases" },
     ],
   },
@@ -86,7 +86,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       ...VINCE_ABOUT,
       id: "about",
       menuLabel: "About",
-      head: { ...VINCE_ABOUT.head, eyebrow: "Thoughtform · who I am" },
+      head: { ...VINCE_ABOUT.head, eyebrow: "Thoughtform · who does the work" },
       bio: [
         "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
         "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",
@@ -102,12 +102,12 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     {
       id: "vision",
       kind: "leverage",
-      menuLabel: "How I see it",
+      menuLabel: "The approach",
       menuPrimary: true,
       head: {
-        eyebrow: "Thoughtform · my approach",
+        eyebrow: "Thoughtform · the approach",
         title: { pre: "How intelligence should", em: "take part in the work." },
-        sub: "My view: every company gets the same models and the same Claude. What makes them work like X-Bionic is the layer your team writes down.",
+        sub: "Every company gets the same models and the same Claude. What makes them work like X-Bionic is the layer your team writes down.",
       },
       stack: [
         {
@@ -131,8 +131,8 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         },
       ],
       note: {
-        label: "What my approach adds",
-        line: "I write the first layer with your team, in your Claude, and hand it over with an owner per workstream.",
+        label: "What Thoughtform adds",
+        line: "The first layer is written with your team, in your Claude, and handed over with an owner per workstream.",
       },
       console: { name: "Intelligence configuration", status: "X-Bionic" },
       readout: [
@@ -192,7 +192,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           when: "Weeks 1–2",
           label: "Write it down",
           title: "How the work is done, and what good looks like",
-          who: "Your team, with me",
+          who: "Your team, with Thoughtform",
           lit: true,
         },
         {
@@ -319,7 +319,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · the two weeks",
         title: { pre: "The two weeks." },
-        sub: "Phase one sets the engine up and runs it once on real work. Then I come back every quarter.",
+        sub: "Phase one sets the engine up and runs it once on real work. Then Thoughtform comes back every quarter.",
       },
       groups: [
         {
@@ -375,7 +375,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
           foot: {
             label: "Done when",
             lines: [
-              "The team runs a second iteration without me",
+              "The team runs a second iteration on its own",
               "Each skill has an owner who can change it",
             ],
           },
@@ -471,7 +471,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
             },
           ],
           sub: {
-            label: "What I need",
+            label: "What Thoughtform needs",
             blurb: "Before week one.",
             items: [
               {

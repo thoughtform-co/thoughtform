@@ -14,10 +14,12 @@ import { UNDER_THE_GLASS } from "./suriWork";
  *  - Strategy: `samako-ai-studio/records/eval-log.md`, Autumn Deals 02
  *    (6 October). Its review line still reads "not reviewed yet".
  *  - Production: Suri's showcase of Under the glass and `UNDER_THE_GLASS`.
- *  - Ops: the briefing skill's handover of 8 October (the skill at v2.13,
- *    rebuilt from 504 briefs; twelve evals, six new that week; the board
- *    record of the run on the week's iterations deck). No with-and-without
- *    result is filed for this skill, so none is drawn.
+ *  - Ops: the briefing skill as the eval log files it (`suri-ai-studio/
+ *    records/eval-log.md`, 4 October: `ai-studio-strategy` 7 of 7 cases pass
+ *    three runs each, 1.00 with the plugin, 0.71 above the runs without it;
+ *    3 October: brief-waits-for-answers at 0.95 overall). The 8 October
+ *    handover's own counts (the briefs read, the version, the evals) are
+ *    not in a record this page can cite, so they are not drawn.
  *  - Review: the same log, wave 11's race (7 October), its review (8
  *    October, the reviewer's 14 of 15) and wave 12 (8 October, 6 of 6).
  *
@@ -29,7 +31,13 @@ import { UNDER_THE_GLASS } from "./suriWork";
  * after the practice's adviser: put a number against each activity). The
  * production job's 2 to 3 hours is the video editor's own account in the
  * team's week-one debrief; no job has a filed money figure, so none is
- * drawn. A tally draws the count only where the number is one.
+ * drawn. A tally draws the count only where the number is one. The return's
+ * line never restates its value (the proposal system, 2026-10-10).
+ *
+ * ⚠ THE STRATEGY JOB SHOWS FILM A; the owner asked for Film B ("Alles op z'n
+ * plek", the room resetting itself, then the range hopping in). Its file is
+ * on the Samako drive, which this machine does not mount; the clip swaps in
+ * once `autumn-b.mp4` and its poster are under `public/arcs/samako/`.
  *
  * ⚠ PEOPLE BY ROLE, NEVER BY NAME OR PRONOUN; no money; the films and
  * stills are the shared records' own objects, so a fix lands once.
@@ -53,7 +61,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     id: "job-strategy",
     kind: "job",
     menuLabel: "Strategy · Samako",
-    title: "Autumn sale ads, reworked from a flat first round",
+    title: "Six autumn sale ads for Samako, from one brief",
     n: 1,
     bucket: "strategy",
     client: "Samako",
@@ -61,9 +69,9 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     madeIn: "Claude Code",
     ask: "Sale statics for the autumn offer, with complete creative freedom.",
     did: [
-      "Rewrote round one around a story per frame",
-      "Kept one cast and set across every shot",
-      "Placed the real product photo in every frame",
+      "A story and a layout for every frame",
+      "One house, drawn once, in every shot",
+      "The real product photo, placed in code",
     ],
     gate: {
       who: "The client's visual lead",
@@ -76,7 +84,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       value: "6 ads",
-      line: "Two 15-second films and four statics, from one open brief.",
+      line: "Two films and four statics from one open brief, the product never drawn and every model call priced.",
       tally: [
         { of: 2, lit: 2 },
         { of: 4, lit: 4 },
@@ -110,24 +118,24 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       value: "2–3 hrs",
-      line: "Retouching and masking now take 2 to 3 hours a video in Claude, not a full manual session.",
+      line: "A video's retouching and masking now happen in Claude, and the editor's afternoon goes to the next cut.",
     },
   },
   {
     id: "job-ops",
     kind: "job",
     menuLabel: "Ops · Suri",
-    title: "A six-slide brief, filed on the studio's board",
+    title: "A briefing skill, written with the producer",
     n: 3,
     bucket: "ops",
     client: "Suri",
     date: "8 Oct 2026",
     madeIn: "Cowork",
-    ask: "The week's iterations deck, briefed onto the studio's Monday board.",
+    ask: "One format for every brief the studio gets, whatever team it comes from, filed where the work runs.",
     did: [
-      "Read the deck and its four resolved comments",
-      "Filled the card already on the board",
-      "Sent the open questions as one reply",
+      "Reads the deck, the comments and the board",
+      "Asks each open question before it files",
+      "Files the brief in the studio's own format",
     ],
     gate: {
       who: "The creative lead",
@@ -135,26 +143,26 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     figure: {
       kind: "ledger",
-      caption: "The board item as filed",
+      caption: "The skill's own checks, as run",
       rows: [
-        { label: "Item", value: "1, no new card" },
-        { label: "Sub-items", value: "3, all video" },
-        { label: "Docs", value: "1 overview, 3 sub-item docs" },
-        { label: "Left alone", value: "Status, editor, hours" },
-        { label: "Next day", value: "Editor assigned, deadline moved" },
+        { label: "Cases", value: "7 of 7 pass, three runs each" },
+        { label: "With it", value: "1.00" },
+        { label: "Without it", value: "0.29" },
+        { label: "Run on", value: "The studio's own briefs" },
+        { label: "Reviewed", value: "Not yet, by the studio" },
       ],
     },
     result: {
-      value: "5",
-      line: "Problems caught in the brief before any editing began, from clashing copy to a deadline with no editor.",
-      tally: [{ of: 5, lit: 5 }],
+      value: "7 of 7",
+      line: "Every brief now passes the studio's checks before it files; without the skill, fewer than one in three did.",
+      tally: [{ of: 7, lit: 7 }],
     },
   },
   {
     id: "job-review",
     kind: "job",
     menuLabel: "Review · Samako",
-    title: "Three image models, tested blind on the real product",
+    title: "A pre-review of every AI product shot",
     n: 4,
     bucket: "review",
     client: "Samako",
@@ -184,7 +192,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       value: "15 of 18",
-      line: "Product shots right first time on the model now in use, up from 4 of 18 on the one before.",
+      line: "Product shots right first time on the model now in use, up from four of the same set on the one before.",
       tally: [
         { of: 18, lit: 4, dim: true },
         { of: 18, lit: 15 },

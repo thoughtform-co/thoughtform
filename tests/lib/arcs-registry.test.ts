@@ -35,7 +35,7 @@ import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
-import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
+import { heroMeasureFaults, PROPOSAL_COPY_BANS, PROPOSAL_VOICE_BANS } from "@/lib/arcs/copyLaw";
 import {
   SURI_CONFIGURATION_BODIES,
   SURI_CONFIGURATION_SUB,
@@ -892,6 +892,20 @@ describe("arcs registry (ADR-052)", () => {
               String(row.output.count)
             );
           }
+          /* The proposal system (2026-10-10): a row's return takes the job's
+             own caps, and a `returns` layout needs one on every row. */
+          if (section.layout === "returns") {
+            expect(row.result, `${at}/${row.id}: a returns layout needs a result`).toBeTruthy();
+          }
+          if (row.result) {
+            expect(row.result.value.length, `${at}/${row.id}: value`).toBeLessThanOrEqual(10);
+            expect(row.result.line.length, `${at}/${row.id}: line`).toBeLessThanOrEqual(110);
+            const segments = (row.result.tally ?? []).reduce((sum, g) => sum + g.of, 0);
+            expect(segments, `${at}/${row.id}: tally`).toBeLessThanOrEqual(60);
+            for (const g of row.result.tally ?? []) {
+              expect(g.lit >= 0 && g.lit <= g.of, `${at}/${row.id}: tally lit ≤ of`).toBe(true);
+            }
+          }
         }
       }
     }
@@ -1556,7 +1570,10 @@ describe("arcs registry (ADR-052)", () => {
        surface reads them: the Trinny pitch page's offer is the same beats
        OUTSIDE `ARCS`, and `tests/lib/trinny-offer.test.ts` walks it with the
        same list. One law, two readers. */
-    const banned = PROPOSAL_COPY_BANS;
+    /* The voice bans (the first person) join the walk on the registered
+       proposals alone (ADR-155): the general law stays what the musings and
+       the sheets read. */
+    const banned = [...PROPOSAL_COPY_BANS, ...PROPOSAL_VOICE_BANS];
     const offenders: string[] = [];
     for (const arc of ARCS) {
       if (arc.format !== "proposal") continue;
@@ -1983,6 +2000,16 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
         expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
         expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(40);
+        /* The proposal system (2026-10-10): the head is the strip or the
+           mark, and the return's line never restates its value. */
+        if (s.top !== undefined) expect(["strip", "mark"], `${at}: top`).toContain(s.top);
+        const digits = s.result.value.match(/\d+/g) ?? [];
+        if (digits.length) {
+          expect(
+            digits.every((d) => s.result.line.includes(d)),
+            `${at}: the line restates the value "${s.result.value}"`
+          ).toBe(false);
+        }
         /* U3: ONE return, a number a decision maker reads and a plain
            line; a tally draws it only when it is a count: whole numbers,
            lit within the group, at most 60 segments. */
@@ -2070,7 +2097,20 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         );
       });
     }
-    expect(seen, "the X-Bionic page's three chapters").toBeGreaterThanOrEqual(3);
+    /* The floor that asked for three INDEXED chapters is retired (the
+       proposal system, 2026-10-10): a chapter band may carry the line
+       alone, so the registry asks only that X-Bionic's three chapter bands
+       exist and count 1..3 of 3; an index, where present, is walked above. */
+    const xb = ARCS.find((a) => a.slug === "x-bionic-proposal");
+    const bands = (xb?.sections ?? []).filter(
+      (s) => s.kind === "interstitial" && s.variant === "chapter"
+    );
+    expect(bands.length, "the X-Bionic page's three chapters").toBe(3);
+    bands.forEach((b, i) => {
+      if (b.kind !== "interstitial") return;
+      expect(b.chapter, `${b.id}: the part ruler`).toEqual({ n: i + 1, of: 3 });
+    });
+    expect(seen).toBeGreaterThanOrEqual(0);
   });
 
   /* ADR-128 U2 and U3: two opt-in rhythms, each a proposal's. */

@@ -165,3 +165,7 @@ scripts/voidwalker-avatar/__pycache__/
 # The services-workstreams lab's stills — ~48 regenerable renders (~42 MB) via
 # `node scripts/capture-services-workstreams.mjs`.
 docs/design/services-workstreams/stills/
+
+# The proposal-system lab's matrix — ~1,200 regenerable stills (~416 MB) plus
+# its report, via `node scripts/capture-proposal-system.mjs` (ADR-155).
+docs/design/proposal-system/stills/
