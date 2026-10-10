@@ -997,20 +997,28 @@ export type ArcSection = ArcSectionBase &
          */
         kind: "crew";
         head: ArcHead;
+        /**
+         * How the record is set. Absent: the circuit drawing (Pandora's page,
+         * sent 2026-09-29, renders byte-identical).
+         *
+         * `case`, THE CASE CARD (ADR-153 U5, owner 2026-10-10: the return
+         * "looks different from the other sections … redesign what it
+         * returned at Loop … so they match the examples from Samako and
+         * Suri"): the record in the jobs' own housing, one card, a lane per
+         * role read left to right, the people, what runs drawn as particles,
+         * what runs now, and where the time goes. Needs `card`, and `bucket`
+         * and `allows` on every row. The X-Bionic page's own.
+         *
+         * `returns` (the proposal system, ADR-155, a lab direction): the same
+         * four rows as four RETURNS in the job's own vocabulary (one value,
+         * one line, a tally where it is a count), the role on the person's
+         * green seat. Needs `result` on every row.
+         */
+        layout?: "case" | "returns";
         rows: readonly [CrewRow, CrewRow, CrewRow, CrewRow];
         /** The drawing's accessible name. */
         alt: string;
-        /**
-         * THE CASE CARD (ADR-153 U5, owner 2026-10-10: the return "looks
-         * different from the other sections … redesign what it returned at
-         * Loop … so they match the examples from Samako and Suri"). `"case"`
-         * sets the record in the jobs' own housing: one card, a lane per role
-         * read left to right, the people, what runs drawn as particles, what
-         * runs now, and where the time goes. Absent, the circuit drawing
-         * (Pandora's page, sent 2026-09-29, renders byte-identical).
-         */
-        layout?: "case";
-        /** The case card's band; required when `layout` is set. */
+        /** The case card's band; required by `layout: "case"`. */
         card?: CrewCard;
       }
     | {
@@ -1401,8 +1409,18 @@ export type ArcSection = ArcSectionBase &
          *  client's Claude Enterprise under it, and one label column. Opt-in
          *  per section, as the crew's `layout: "case"` is; absent, the beat
          *  draws the instrument unchanged. The words come from the record's
-         *  `org` (workstream, skill, keeper); this carries only the drawing. */
+         *  `org` (workstream, skill, keeper); this carries only the drawing.
+         *  ⚠ It replaces the instrument's figure, so `pin` (below) has
+         *  nothing to light when a face is set. */
         face?: InstrumentLayerFace;
+        /**
+         * The organisation altitude PINNED (the proposal system, 2026-10-10):
+         * the beat becomes a runway, the band holds the screen, and the
+         * stack's slabs and callouts light one after another as the reader
+         * scrolls (a CSS view timeline, no writer). The resting render is
+         * whole. Absent: the static figure, byte-identical.
+         */
+        pin?: true;
       }
     | {
         /**
@@ -1446,12 +1464,23 @@ export type ArcSection = ArcSectionBase &
         kind: "handoff";
         head: ArcHead;
         steps: readonly [ArcHandoffStep, ArcHandoffStep, ArcHandoffStep];
-        time: {
+        /** The two time bars. Optional since the proposal system
+         *  (2026-10-10): a beat that draws a `figure` letters no bars. */
+        time?: {
           label: string;
           /** A mono aside on the bars, e.g. "Illustrative". */
           note: string;
           rows: readonly [ArcHandoffRow, ArcHandoffRow];
         };
+        /**
+         * The layer being written (the proposal system, 2026-10-10): the
+         * three steps as one mono rail over ONE drawing, the stack, in three
+         * states: the team on the organisation's slab, the layer appearing
+         * under them with its courses (the skills, then the evaluations),
+         * Claude's runs along its edge. With a figure the three plates and
+         * the bars are not drawn. Absent: ADR-153's plates, byte-identical.
+         */
+        figure?: ArcHandoffFigure;
       }
     | {
         /**
@@ -1502,6 +1531,17 @@ export type ArcSection = ArcSectionBase &
          * client's repository, dated, people by role, no money.
          */
         kind: "job";
+        /**
+         * The frame's top row. Absent is ADR-153 U4's GOLD BAND (owner,
+         * 2026-10-10): the title and its mono line on the left, the job's one
+         * workstream, glyph and long name, on the right. `mark` (the proposal
+         * system, ADR-155, a lab direction) is that ONE lit discipline first,
+         * the title one size down, and the client, where it ran and the date
+         * as one mono line under it. U2's four-bucket strip was the default
+         * until U4 and is retired with it. (`top`, not `head`: every other
+         * kind's `head` is an `ArcHead`.)
+         */
+        top?: "mark";
         /** The job's concrete title, sentence case, set in the frame's top
          *  row (U2: the job carries its own title; no head above it), e.g.
          *  "A Black Friday teaser, cut from raw footage". ≤ 56. */
@@ -1552,8 +1592,11 @@ export interface ArcJobResult {
   value: string;
   /** What the number counts, one sentence, never the number again. ≤ 110. */
   line: string;
-  /** What the saving now allows the team to do, one sentence. ≤ 110. */
-  allows: string;
+  /** What the saving now allows the team to do, one sentence. ≤ 110.
+   *  Required on a job (the registry says so); optional here only because a
+   *  crew row's return (`layout: "returns"`) shares this type and carries
+   *  none. */
+  allows?: string;
   /** The count drawn, when the number is a count. */
   tally?: readonly ArcJobTally[];
 }
@@ -1636,6 +1679,37 @@ export interface ArcHandoffRow {
   /** Left to right; each `share` is a fraction of the bar, summing to 1. The
    *  bar letters the names, never the fractions. */
   segments: readonly { label: string; share: number; lit?: true }[];
+}
+
+/** A tile on the stack's top: one discipline's workstream, by role. */
+export interface ArcHandoffTile {
+  id: string;
+  /** The discipline, mono, e.g. "Production". ≤ 12. */
+  bucket: string;
+  /** The workstream, e.g. "Product voice + imagery". ≤ 28. */
+  name: string;
+  /** Who runs it, by role. ≤ 40. */
+  line: string;
+  /** The one the first phase starts with. */
+  lit?: true;
+}
+
+/**
+ * The layer being written, drawn as the stack (the proposal system,
+ * 2026-10-10): the tiers bottom-up, the layer's courses by name, the tiles
+ * on top. The words are the record's; the geometry is the drawing's.
+ */
+export interface ArcHandoffFigure {
+  /** The skills the team writes first, then the evaluations. ≤ 8 in all,
+   *  each ≤ 24, no digit. */
+  courses: { skills: readonly string[]; evals: readonly string[] };
+  tiles: readonly ArcHandoffTile[];
+  /** The organisation's slab, e.g. "X-Bionic's Claude Enterprise". ≤ 32. */
+  host: string;
+  /** The layer's name, e.g. "Your layer". ≤ 20. */
+  layer: string;
+  /** The drawing's accessible name. */
+  alt: string;
 }
 
 /* ── The setup guide (ADR-151 U1, the system of U5) ────────────────
@@ -2162,6 +2236,9 @@ export interface CrewRow {
    *  (ADR-133 U4's upstream lines, back on the case card in ADR-153 U5):
    *  "this is what it now allows us to do". Required by the case layout. */
   allows?: string;
+  /** The row as a return (`layout: "returns"`): the job's own shape, so a
+   *  return is ONE type on the page. Every figure the record's own. */
+  result?: ArcJobResult;
 }
 
 /** The case card's band (ADR-153 U5): the jobs' head grammar. No caption:

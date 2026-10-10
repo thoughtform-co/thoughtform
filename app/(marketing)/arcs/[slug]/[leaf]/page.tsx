@@ -43,6 +43,10 @@ import "@/components/lattice/lattice.css";
 import "@/components/instrument/instrument.css";
 // The leverage and the handoff (ADR-153), `.arc-lev*` / `.arc-hand*`-scoped.
 import "@/components/arcs/leverage.css";
+// The stack (the proposal system, 2026-10-10), `.stk*`-scoped: the layer the
+// team writes, drawn wherever a beat places it. After leverage.css, whose
+// `--lv-v` it reads, before theme.css.
+import "@/components/arcs/stack/stack.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

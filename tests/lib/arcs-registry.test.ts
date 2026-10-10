@@ -35,7 +35,7 @@ import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
-import { heroMeasureFaults, PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
+import { heroMeasureFaults, PROPOSAL_COPY_BANS, PROPOSAL_VOICE_BANS } from "@/lib/arcs/copyLaw";
 import {
   SURI_CONFIGURATION_BODIES,
   SURI_CONFIGURATION_SUB,
@@ -892,6 +892,20 @@ describe("arcs registry (ADR-052)", () => {
               String(row.output.count)
             );
           }
+          /* The proposal system (2026-10-10): a row's return takes the job's
+             own caps, and a `returns` layout needs one on every row. */
+          if (section.layout === "returns") {
+            expect(row.result, `${at}/${row.id}: a returns layout needs a result`).toBeTruthy();
+          }
+          if (row.result) {
+            expect(row.result.value.length, `${at}/${row.id}: value`).toBeLessThanOrEqual(10);
+            expect(row.result.line.length, `${at}/${row.id}: line`).toBeLessThanOrEqual(110);
+            const segments = (row.result.tally ?? []).reduce((sum, g) => sum + g.of, 0);
+            expect(segments, `${at}/${row.id}: tally`).toBeLessThanOrEqual(60);
+            for (const g of row.result.tally ?? []) {
+              expect(g.lit >= 0 && g.lit <= g.of, `${at}/${row.id}: tally lit ≤ of`).toBe(true);
+            }
+          }
         }
       }
     }
@@ -1617,7 +1631,10 @@ describe("arcs registry (ADR-052)", () => {
        surface reads them: the Trinny pitch page's offer is the same beats
        OUTSIDE `ARCS`, and `tests/lib/trinny-offer.test.ts` walks it with the
        same list. One law, two readers. */
-    const banned = PROPOSAL_COPY_BANS;
+    /* The voice bans (the first person) join the walk on the registered
+       proposals alone (ADR-155): the general law stays what the musings and
+       the sheets read. */
+    const banned = [...PROPOSAL_COPY_BANS, ...PROPOSAL_VOICE_BANS];
     const offenders: string[] = [];
     for (const arc of ARCS) {
       if (arc.format !== "proposal") continue;
@@ -2045,6 +2062,17 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
         /* U4: the caption sets on one line under the figure at 1280. */
         expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(29);
+        /* The head is U4's gold band, or the mark (the proposal system,
+           ADR-155, a lab direction); U2's strip is retired with U4. And the
+           return's line never restates its value's digits. */
+        if (s.top !== undefined) expect(["mark"], `${at}: top`).toContain(s.top);
+        const digits = s.result.value.match(/\d+/g) ?? [];
+        if (digits.length) {
+          expect(
+            digits.every((d) => s.result.line.includes(d)),
+            `${at}: the line restates the value "${s.result.value}"`
+          ).toBe(false);
+        }
         /* U3: ONE return, a number a decision maker reads and a plain
            line; a tally draws it only when it is a count: whole numbers,
            lit within the group, at most 60 segments. */
@@ -2056,10 +2084,13 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
           expect(s.result.label.length, `${at}: the return's label`).toBeLessThanOrEqual(20);
           expect(s.result.label.length, `${at}: an empty label`).toBeGreaterThan(0);
         }
-        expect(s.result.allows.length, `${at}: what it allows`).toBeGreaterThan(0);
-        expect(s.result.allows.length, `${at}: what it allows`).toBeLessThanOrEqual(110);
+        /* A job's return always says what it allows (the type leaves it
+           optional only for a crew row's return). */
+        const allows = s.result.allows ?? "";
+        expect(allows.length, `${at}: what it allows`).toBeGreaterThan(0);
+        expect(allows.length, `${at}: what it allows`).toBeLessThanOrEqual(110);
         const value = s.result.value.toLowerCase();
-        for (const line of [s.result.line, s.result.allows]) {
+        for (const line of [s.result.line, allows]) {
           expect(line.toLowerCase().includes(value), `${at}: "${line}" restates the number`).toBe(
             false
           );

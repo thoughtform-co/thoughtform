@@ -1,0 +1,504 @@
+/* The stack (the proposal system, 2026-10-10): the proposal's ONE object,
+   the layer the team writes between the organisation's slab and the
+   workstreams, drawn by `StackFigure` wherever a beat places it: the
+   approach (written, three steps), the leverage (placed), the engine
+   (configured). Scoped to `.stk*` and `.arc-hand__fig`: an arc without the
+   figure gets bytes and no matching rule. Reads the arcs' and the lattice's
+   tokens only; light is the ramp's (ADR-077), the fills re-derived at the
+   foot. No type literal, no spacing literal: this sheet sits at zero in the
+   ratchets. */
+
+.stk {
+  --stk-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --stk-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --stk-v: var(--lv-v, clamp(8px, 1.6svh, 24px));
+  --stk-gold-text: var(--gold-ink, var(--gold));
+  --stk-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  --stk-gap: var(--space-xl);
+  position: relative;
+  margin: 0;
+  min-height: 0;
+  height: 100%;
+  /* The figure is a SIZE container: the drawing's column is solved from
+     its height (the fill rhythm's remainder) against its own aspect, and
+     capped by the width a host allows. */
+  container-type: size;
+  font-family: var(--stk-sans);
+  color: var(--arc-ink);
+}
+.stk__in {
+  /* The drawing's column: height-bound by the figure, width-capped by the
+     host (`--stk-col-max`). The leader lengths are solved from it. The
+     words sit either side of it, the organisation's left, the layer's and
+     the tiles' right. */
+  --stk-col: min(
+    var(--stk-col-max, 48cqw),
+    calc(var(--stk-h-max, 100cqh) * var(--stk-w) / var(--stk-h))
+  );
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stk-col) minmax(0, 1fr);
+  column-gap: var(--stk-gap);
+  align-items: start;
+  justify-content: center;
+  height: 100%;
+}
+.stk__plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 0;
+}
+.stk__plot > .arc-holo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stk__plot > .arc-holo[data-live] {
+  pointer-events: auto;
+}
+.stk__callouts[data-stack-side="left"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+.stk__callouts[data-stack-side="right"] {
+  grid-column: 3;
+  grid-row: 1;
+}
+/* The words in flow (the leverage): a column spread evenly over the
+   drawing's height; a leader level with each word. */
+.stk[data-stack-flow] .stk__callouts {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.stk[data-stack-flow] .stk__callout {
+  position: relative;
+  top: auto;
+  transform: none;
+}
+/* Every word on one side: two columns, the drawing first or last. */
+.stk[data-stack-layout="right"] .stk__in {
+  grid-template-columns: var(--stk-col) minmax(0, 1fr);
+}
+.stk[data-stack-layout="right"] .stk__plot {
+  grid-column: 1;
+}
+.stk[data-stack-layout="right"] .stk__callouts[data-stack-side="right"] {
+  grid-column: 2;
+}
+.stk[data-stack-layout="right"] .stk__callouts[data-stack-side="left"],
+.stk[data-stack-layout="left"] .stk__callouts[data-stack-side="right"] {
+  display: none;
+}
+.stk[data-stack-layout="left"] .stk__in {
+  grid-template-columns: minmax(0, 1fr) var(--stk-col);
+}
+.stk[data-stack-layout="left"] .stk__plot {
+  grid-column: 2;
+}
+.stk :where(ul, li, p) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.stk__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--stk-aspect);
+  overflow: visible;
+}
+
+
+/* The line work: the ramp at two weights; the hidden edges dashed. */
+.stk__face {
+  fill: var(--arc-plate, rgba(10, 9, 8, 0.9));
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.stk__hidden {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+.stk__plate[data-stack-tier="shared"] .stk__face {
+  stroke: var(--arc-ink-22);
+  stroke-dasharray: 3 3;
+}
+.stk__plate[data-stack-lit] .stk__face--top {
+  fill: var(--arc-gold-wash);
+  stroke: var(--gold);
+}
+.stk__plate[data-stack-lit] .stk__face--left,
+.stk__plate[data-stack-lit] .stk__face--right {
+  fill: rgba(var(--gold-rgb), 0.22);
+  stroke: var(--gold);
+}
+.stk__hatch {
+  stroke: var(--gold);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.stk__course {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.9;
+}
+.stk__course[data-stack-course="eval"] {
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.stk__run {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  vector-effect: non-scaling-stroke;
+}
+.stk__tile .stk__face {
+  fill: var(--arc-plate);
+  stroke: var(--arc-ink-50);
+}
+.stk__tile[data-stack-lit] .stk__face {
+  stroke: var(--gold);
+}
+.stk__tile[data-stack-lit] .stk__face--top {
+  fill: var(--arc-gold-wash);
+}
+
+/* The callouts: DOM words beside the plate each names, seated by the
+   geometry's own fraction, a 1px DOM leader running back to the plate's
+   right vertex (instrument grammar: a leader is a DOM line, never a
+   single-axis SVG stroke). */
+.stk__callouts {
+  position: relative;
+  /* As tall as the drawing: the seats are fractions of its crop. */
+  height: calc(var(--stk-col) * var(--stk-h) / var(--stk-w));
+  min-height: 0;
+}
+.stk__callout {
+  position: absolute;
+  top: calc(var(--at) * 100%);
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-left: var(--space-lg);
+  transform: translateY(-50%);
+  border-left: 1px solid var(--arc-seam);
+  color: var(--arc-ink-70);
+}
+[data-stack-side="left"] .stk__callout {
+  padding-left: 0;
+  padding-right: var(--space-lg);
+  border-left: 0;
+  border-right: 1px solid var(--arc-seam);
+  text-align: right;
+  align-items: flex-end;
+}
+.stk__callout[data-stack-lit] {
+  border-color: var(--stk-gold-line);
+}
+/* The leader: from the word's edge to the plate's vertex it names. */
+.stk__lead {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: calc((1 - var(--ax)) * var(--stk-col) + var(--stk-gap));
+  height: 1px;
+  background: var(--arc-seam);
+  pointer-events: none;
+}
+[data-stack-side="left"] .stk__lead {
+  right: auto;
+  left: 100%;
+  width: calc(var(--ax) * var(--stk-col) + var(--stk-gap));
+}
+[data-stack-side="left"] .stk__callout-label {
+  flex-direction: row-reverse;
+}
+.stk__callout[data-stack-lit] .stk__lead {
+  background: var(--stk-gold-line);
+}
+.stk__callout-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs) var(--space-md);
+  font-family: var(--stk-mono);
+  font-size: var(--type-sm);
+  /* The label rung, not the eyebrow's: a plate's name and its chip share
+     one row in a column 230px wide, and the wider tracking wrapped the chip
+     onto its own line, which is what ran the leverage past the fold. */
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-80);
+}
+.stk__callout[data-stack-lit] .stk__callout-label {
+  color: var(--stk-gold-text);
+}
+.stk__chip {
+  flex-shrink: 0;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--arc-rule);
+  font-size: var(--type-xs, var(--type-sm));
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.stk__callout[data-stack-lit] .stk__chip {
+  border-color: var(--stk-gold-line);
+}
+.stk__callout-line {
+  font-size: var(--type-base);
+  line-height: 1.4;
+}
+
+/* The layer's courses: the skills as filled ticks, the evaluations open. */
+.stk__courses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-xs) var(--space-md);
+  font-size: var(--type-sm);
+  line-height: 1.35;
+}
+.stk__courses li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.stk__courses li::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-xs);
+  background: var(--gold);
+}
+.stk__courses li[data-stack-course="eval"]::before {
+  background: transparent;
+  border: 1px solid var(--gold);
+}
+
+/* The tiles' words: the discipline in mono, the workstream, the role. */
+.stk__tiles {
+  display: grid;
+  gap: var(--space-xs);
+}
+.stk__tile-word {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  font-size: var(--type-sm);
+  line-height: 1.3;
+  color: var(--arc-ink-70);
+}
+.stk__tile-bucket {
+  flex: none;
+  min-width: 8ch;
+}
+.stk__tile-word[data-stack-lit] {
+  color: var(--arc-ink);
+}
+.stk__tile-bucket {
+  font-family: var(--stk-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.stk__tile-word[data-stack-lit] .stk__tile-bucket {
+  color: var(--stk-gold-text);
+}
+.stk__tile-line {
+  color: var(--arc-ink-50);
+}
+
+/* ── The approach's three states (`StackSteps`' data-step) ─────────────
+   0 = the team on the organisation's slab, nothing written: the layer and
+   its words dim, the courses and the run absent. 1 = the layer written. 2 =
+   the run along its edge. The server sends 2; no-JS, PRM and print read it. */
+.arc-hand__fig {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.arc-hand__stage {
+  position: relative;
+  flex: 1;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  padding-block: var(--stk-v, var(--lv-v));
+}
+.stk__plate[data-stack-tier="layer"],
+.stk__callout[data-stack-tier="layer"],
+.stk__course,
+.stk__run {
+  transition: opacity 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-step="0"] .stk__plate[data-stack-tier="layer"],
+[data-step="0"] .stk__callout[data-stack-tier="layer"] {
+  opacity: 0.18;
+}
+/* At step 0 the tiles float over the organisation's slab with nothing
+   between: the work happens, unconnected to the enterprise, until the layer
+   is written under it. The hologram draws the same. */
+[data-step="0"] .stk__course,
+[data-step="0"] .stk__run,
+[data-step="1"] .stk__run {
+  opacity: 0;
+}
+/* The hologram, once live, hides the flat figure's drawing and keeps its
+   words (ADR-130 U4's own rule: the DOM words stay over the canvas). */
+.arc-sec--handoff[data-holo="live"] .stk__svg {
+  opacity: 0;
+}
+
+/* The approach's rail is a tablist of buttons. */
+.arc-hand__rail button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The leverage's stack: no remainder to fill in the console's idea column,
+   so the drawing is capped by height in `svh` and takes the column's half. */
+.arc-lev__stack {
+  height: auto;
+  container-type: inline-size;
+}
+.arc-lev__stack .stk__in {
+  --stk-col-max: 44cqw;
+  /* THE STACK MAY BE NO TALLER THAN THE PLATES IT REPLACED. The console is
+     content-sized and its idea column binds: at 1440 × 790 the old three
+     plates ran 180px and the beat ended 39px inside the fold; a 259px
+     drawing put it 12px past it (measured against the stashed tree). 28svh
+     (221px there) still ended the console 5px past the fold once the chip
+     sat on its label's row; 26svh is 205px and ends it 11px inside. */
+  --stk-h-max: clamp(170px, 26svh, 400px);
+  height: auto;
+}
+
+/* The approach's legend: with script, the current step's own sentence; a
+   reader without script, under reduced motion or on paper sees all three. */
+.is-arc-js .arc-hand--figure[data-step] .arc-hand__legend {
+  grid-template-columns: minmax(0, 1fr);
+}
+.is-arc-js .arc-hand--figure[data-step="0"] .arc-hand__legend-row:not([data-hand-step="0"]),
+.is-arc-js .arc-hand--figure[data-step="1"] .arc-hand__legend-row:not([data-hand-step="1"]),
+.is-arc-js .arc-hand--figure[data-step="2"] .arc-hand__legend-row:not([data-hand-step="2"]) {
+  display: none;
+}
+.arc-hand__legend-row dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-lg);
+}
+.arc-hand__legend-row .arc-hand__legend-who {
+  margin-top: 0;
+}
+
+@media (max-width: 960px) {
+  .stk__in {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-md);
+  }
+  .stk__plot,
+  .stk__callouts[data-stack-side] {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  [data-stack-side="left"] .stk__callout {
+    text-align: left;
+    align-items: flex-start;
+    border-right: 0;
+    padding-right: 0;
+  }
+  .stk__callouts {
+    display: grid;
+    gap: var(--space-md);
+    height: auto;
+  }
+  .stk__callout {
+    position: static;
+    transform: none;
+  }
+  .stk__lead {
+    display: none;
+  }
+}
+
+/* Light, re-derived (ADR-077): the owned fills read against parchment. */
+html[data-theme="light"] .stk__plate[data-stack-lit] .stk__face--left,
+html[data-theme="light"] .stk__plate[data-stack-lit] .stk__face--right {
+  fill: rgba(var(--gold-rgb), 0.3);
+}
+
+/* ── The engine, pinned (the proposal system, 2026-10-10) ──────────────
+   The organisation altitude on a RUNWAY: the band holds the screen while
+   the reader scrolls nine steps, and the stack's slabs and callouts light
+   one after another, bottom-up (Arrakis's platform read): the organisation's
+   slab and its three parts, the layer and its two, the workstreams, the
+   owner. Each lights and STAYS (`fill-mode: both`), so the runway's end is
+   the static figure, which no-JS, reduced motion, print and Firefox read
+   whole. The driver is a CSS view timeline: no writer, nothing idles. The
+   cursor is INK, never a second gold; the current step's leader alone lifts
+   to the lit lip. */
+@supports (animation-timeline: view()) {
+  @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+    .arc-root[data-arc-rhythm="fill"] .arc-sec--instrument-pin:has(> .arc-band > .arc-head) {
+      --ins-step-run: 28svh;
+      min-height: calc(100svh + 9 * var(--ins-step-run));
+      padding-block: 0 0;
+      view-timeline: --ins-pin block;
+    }
+    .arc-root[data-arc-rhythm="fill"] .arc-sec--instrument-pin > .arc-band {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      box-sizing: border-box;
+      padding-block: var(--arc-head-datum) var(--lat-sec-pad);
+    }
+    .arc-sec--instrument-pin [data-ins-step] {
+      animation: ins-step-lit linear both;
+      animation-timeline: --ins-pin;
+    }
+    .arc-sec--instrument-pin [data-ins-step] .ins-slab__lead,
+    .arc-sec--instrument-pin .ins-panel[data-ins-step]::before {
+      animation: ins-step-lead linear both;
+      animation-timeline: --ins-pin;
+      animation-range: inherit;
+    }
+    .arc-sec--instrument-pin [data-ins-step="1"] { animation-range: contain 0% contain 9%; }
+    .arc-sec--instrument-pin [data-ins-step="2"] { animation-range: contain 11% contain 20%; }
+    .arc-sec--instrument-pin [data-ins-step="3"] { animation-range: contain 22% contain 31%; }
+    .arc-sec--instrument-pin [data-ins-step="4"] { animation-range: contain 33% contain 42%; }
+    .arc-sec--instrument-pin [data-ins-step="5"] { animation-range: contain 44% contain 53%; }
+    .arc-sec--instrument-pin [data-ins-step="6"] { animation-range: contain 55% contain 64%; }
+    .arc-sec--instrument-pin [data-ins-step="7"] { animation-range: contain 66% contain 75%; }
+    .arc-sec--instrument-pin [data-ins-step="8"] { animation-range: contain 77% contain 86%; }
+    .arc-sec--instrument-pin [data-ins-step="9"] { animation-range: contain 88% contain 97%; }
+  }
+}
+@keyframes ins-step-lit {
+  from {
+    opacity: var(--ins-dim, 0.22);
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ins-step-lead {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

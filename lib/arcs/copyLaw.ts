@@ -31,6 +31,25 @@ export const PROPOSAL_COPY_BANS: readonly (readonly [RegExp, string])[] = [
 ];
 
 /**
+ * NEVER THE FIRST PERSON ON A PROPOSAL (owner, 2026-10-10: "we should NEVER
+ * talk in the first person"). A proposal speaks as Thoughtform and to "your
+ * team"; "I", "my", "me" on it is one person pitching, not a practice.
+ * Word-bounded on both sides, with the apostrophe forms, so "AI", "Mímir"
+ * and "Mimir" pass; the About's bio is third person.
+ *
+ * ⚠ A SEPARATE LIST, for the registered `format: "proposal"` arcs alone:
+ * `PROPOSAL_COPY_BANS` above is read as the house's general copy law by the
+ * musings, the sessions page and the arcs overview, where the first person
+ * is the voice (a musing is an essay in his own voice).
+ */
+export const PROPOSAL_VOICE_BANS: readonly (readonly [RegExp, string])[] = [
+  [
+    /(^|[^\p{L}\p{N}'’])(I|I'm|I’m|I'll|I’ll|I've|I’ve|I'd|I’d|my|My|me|Me|myself|Myself|mine|Mine)(?=$|[^\p{L}\p{N}'’])/u,
+    "the first person",
+  ],
+];
+
+/**
  * The hero's measure: the homepage hero's own, for every arc.
  *
  * The owner, 2026-09-27, on the Plopsa workshop's hero: "the hero section

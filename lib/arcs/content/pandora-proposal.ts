@@ -654,7 +654,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
              access to Claude and all the tools in week 1 so I can map out
              everything"). It takes over the next steps' asks. */
           sub: {
-            label: "What I need",
+            label: "What Thoughtform needs",
             blurb: "Before week one.",
             items: [
               {
@@ -667,7 +667,7 @@ export const PANDORA_PROPOSAL_ARC: ArcDef = {
                 id: "tools",
                 tag: "Week one",
                 name: "Access to the tools",
-                body: "Figma, Primo, Asana and Hub Planner, so I can map how the work runs.",
+                body: "Figma, Primo, Asana and Hub Planner, so the work can be mapped as it runs.",
               },
             ],
           },

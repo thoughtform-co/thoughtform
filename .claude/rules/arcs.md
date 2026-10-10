@@ -1654,3 +1654,43 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   record's order (lane k on the slab is row k in the column) and borrow the Loop return's
   figures BY REFERENCE (`LOOP_RETURN`, which Pandora's sent page also draws: never edit it for
   this). Guard: `arc-plugin-layer`.
+
+## The proposal system (ADR-155)
+
+- **A proposal is one argument in three parts, told with ONE object.** Five registers, one per
+  beat type: statement · instrument · record · ledger · index. No two adjacent beats share a
+  register or an arrangement; the stack appears in three states and nowhere else draws a slab;
+  every number as filed, lettered neutral. The lab is `/test/proposal-system` (`lib/proposal-system/`,
+  `xBionicV2(knobs)` composing from the shared records by reference; `PA` IS production, `toBe`-pinned),
+  shot by `scripts/capture-proposal-system.mjs` (headed; a pinned beat three times with the
+  animations running).
+- **The stack** (`components/arcs/stack/`): `stackLayout.ts` is pure and the one geometry;
+  `Slab.tsx` reads `SLAB_PATHS` from it. The SVG letters nothing; every word is a DOM span on a
+  DOM leader, seated by `stackSeats`; `tests/lib/arc-stack.test.ts` walks the pairs with a
+  negative case. ⚠ **The figure is the size container and the grid is its child**: a container
+  unit on the container resolves against its ancestor. ⚠ **The hologram mounts over the SVG's
+  own box** (`StackFigure`'s `holo` slot), never the figure's. ⚠ A host whose column is narrow
+  takes the words in FLOW (`flow`) and a wider plate `gap`; the leverage does both.
+- **The approach** is `handoff.figure` (ADR-153 amended): the three steps as a rail of buttons
+  (`StackSteps`, `data-step`, step 2 at rest), the layer dim at 0, written at 1, the run at 2;
+  the hologram's `write` and `run` groups ride the same attribute (`ArcHoloStageMount`, scene
+  `stack`, `holo-stage/stackGeom.ts` on the doctrine's allow-list).
+- **The engine** takes `instrument.pin`: a runway on a CSS view timeline, nine steps derived by
+  `lib/instrument/steps.ts` and stamped `data-ins-step`; no writer; the rest state whole.
+- **A return is drawn three ways, and one module holds the count.** The job's return is its two
+  steps (ADR-153 U4: what it saved, what it now allows), Loop's return in production is the case
+  card (U5, `layout: "case"`), and `layout: "returns"` (a lab direction) sets each row through
+  `ArcReturn`, which also exports the `Tally` the job draws. A crew with `layout: "returns"` needs
+  `result` on every row (registry-guarded at the job's caps). A job's `top: "mark"` is one lit
+  discipline on the proof cards' band (a lab direction; absent, the U4 gold band); the four
+  disciplines are `shared/disciplines.ts`, read by the 2×2, the jobs, the case card and the
+  engine's tiles.
+- **Never the first person on a proposal** (`PROPOSAL_VOICE_BANS`, the registered proposals alone; the general `PROPOSAL_COPY_BANS` is the musings' and the sheets' law too, where the first person is the voice); a chapter band may carry the
+  line alone (the registry's indexed-chapter floor is retired).
+- ⚠ **THE MERGE WITH THE X-BIONIC BRANCH (2026-10-10) KEPT BOTH LINES.** Production is what the
+  owner picked on that branch: the job's gold band (ADR-153 U4, `top` absent), Loop's return as a
+  case card (U5), the engine as the layer opened (U6, `face`), the three interstitials as his own
+  callouts. ADR-155's directions are the lab's knobs (`jobHead: mark`, `return: ledger`,
+  `engine: pinned`, `interstitial: quote`, `order: narrative`); the FIRST value of every knob
+  names production and `PA` stays `toBe` production. ⚠ **A `face` and a `pin` never share a
+  section**: the face replaces the figure the pin lights, so the pinned direction drops the face.

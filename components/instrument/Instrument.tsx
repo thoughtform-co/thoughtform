@@ -15,6 +15,7 @@ import {
   sideOf,
   workRun,
 } from "@/lib/instrument/layout";
+import { insStepOf, insStepOrder } from "@/lib/instrument/steps";
 import {
   altitudesOf,
   type Altitude,
@@ -124,6 +125,9 @@ export function Instrument({
   };
 
   const parts = record.parts.map((p) => ({ ...p, state: stateOf(p) }));
+  /* The pinned organisation altitude lights the stack in steps (the proposal system). */
+  const stepOrder = insStepOrder(record);
+  const stepOf = (id: Parameters<typeof insStepOf>[1]) => insStepOf(stepOrder, id);
   const layerLit = parts.some((p) => (p.id === "context" || p.id === "evals") && p.state === "lit");
   const mother = record.plugin?.skills.find((s) => s.reads);
   const father = record.plugin?.skills.find((s) => s.sorts);
@@ -261,7 +265,7 @@ export function Instrument({
               the callouts either side; each slab's leaders run out to them. */}
           {record.org ? (
             <>
-              <ul className="ins-tiles" data-at="org">
+              <ul className="ins-tiles" data-at="org" data-ins-step={stepOf("tiles")}>
                 {record.org.workstreams.map((w) => (
                   <li
                     key={w.id}
@@ -279,6 +283,7 @@ export function Instrument({
                 className="ins-slab"
                 data-at="org"
                 data-ins-slab="layer"
+                data-ins-step={stepOf("slab-layer")}
                 data-ins-state={layerLit ? "lit" : "quiet"}
                 aria-hidden="true"
               >
@@ -298,6 +303,7 @@ export function Instrument({
                 className="ins-slab"
                 data-at="org"
                 data-ins-slab="org"
+                data-ins-step={stepOf("slab-org")}
                 data-ins-state="quiet"
                 aria-hidden="true"
               >
@@ -327,6 +333,7 @@ export function Instrument({
                 key={p.id}
                 className="ins-panel"
                 data-ins-part={p.id}
+                data-ins-step={stepOf(p.id)}
                 data-ins-state={p.state}
                 data-ins-order={PLUGIN_ORDER.indexOf(p.id)}
                 aria-label={p.title}

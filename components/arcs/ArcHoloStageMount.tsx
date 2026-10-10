@@ -38,6 +38,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { CURVE_GROUP_EFFORT, curveSpec, type CurveData } from "@/components/holo-stage/curveGeom";
 import { spectrumSpec, type SpectrumData } from "@/components/holo-stage/spectrumGeom";
+import {
+  STACK_GROUP_RUN,
+  STACK_GROUP_WRITE,
+  stackSpec,
+  type StackData,
+} from "@/components/holo-stage/stackGeom";
 import { createAnchorChannel } from "@/components/holo-stage/stageAnchors";
 import { stagesSpec, type HoloStageSpec, type StagesData } from "@/components/holo-stage/stageGeom";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
@@ -55,7 +61,10 @@ const STAGE_MEDIA = "(min-width: 901px) and (prefers-reduced-motion: no-preferen
 export type StageScene =
   | { kind: "stages"; data: StagesData }
   | { kind: "curve"; data: CurveData }
-  | { kind: "spectrum" };
+  | { kind: "spectrum" }
+  /** The layer stack (the proposal system): its two groups ride the
+   *  figure's `data-step`, as the curve's one does. */
+  | { kind: "stack"; data: StackData };
 
 const HoloStageCanvas = dynamic(
   () => import("@/components/holo-stage/HoloStageCanvas").then((m) => m.HoloStageCanvas),
@@ -168,14 +177,20 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
     let built: HoloStageSpec | null;
     if (scene.kind === "stages") built = stagesSpec({ ...scene.data, agent: dials.agent });
     else if (scene.kind === "curve") built = curveSpec(scene.data);
+    else if (scene.kind === "stack") built = stackSpec(scene.data);
     else built = spectrum ? spectrumSpec(spectrum) : null;
     if (built && dials.sweep === false) built = { ...built, sweep: undefined };
     return built;
   }, [scene, spectrum, dials]);
-  const groups = useMemo(
-    () => (scene.kind === "curve" ? { [CURVE_GROUP_EFFORT]: step >= 2 } : undefined),
-    [scene.kind, step]
-  );
+  const groups = useMemo((): Readonly<Record<string, boolean>> | undefined => {
+    const g: Record<string, boolean> = {};
+    if (scene.kind === "curve") g[CURVE_GROUP_EFFORT] = step >= 2;
+    else if (scene.kind === "stack") {
+      g[STACK_GROUP_WRITE] = step >= 1;
+      g[STACK_GROUP_RUN] = step >= 2;
+    } else return undefined;
+    return g;
+  }, [scene.kind, step]);
 
   useEffect(() => {
     /* eslint-disable-next-line react-hooks/set-state-in-effect --
@@ -251,8 +266,8 @@ export function ArcHoloStageMount({ scene, labels = [], arm = "io" }: ArcHoloSta
      attribute `ArcCurveSteps` writes — so the two buttons drive the hologram
      without a second piece of state. */
   useEffect(() => {
-    if (scene.kind !== "curve" || !allowed) return;
-    const figure = hostRef.current?.closest<HTMLElement>(".arc-cv");
+    if ((scene.kind !== "curve" && scene.kind !== "stack") || !allowed) return;
+    const figure = hostRef.current?.closest<HTMLElement>("[data-step]");
     if (!figure) return;
     const read = () => setStep(Number(figure.getAttribute("data-step") ?? 2));
     read();

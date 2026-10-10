@@ -1,0 +1,134 @@
+{
+  "$comment": "THE ONE REGISTRY for the proposal system lab's knobs (the X-Bionic rework, 2026-10-10). Read by /test/proposal-system (TS import through lib/proposal-system/variants.ts) and by scripts/capture-proposal-system.mjs (readFileSync). TYPE IDS ARE LETTERS ONLY. THE FIRST VALUE OF EVERY KNOB IS PRODUCTION: PA is every knob at its first value and the control, byte-identical to /arcs/x-bionic/proposal; every other direction is one argument against it; PZ is ADR-155's whole answer at once. Since the merge with the X-Bionic branch (2026-10-10) the first values name the owner's picks there (the band, the case card, the layer opened, his three lines alone) and the second values are ADR-155's directions. When the owner picks, the winning values land on the production record and the losing branches are deleted with their guards (ADR-070 U35).",
+  "knobs": {
+    "order": {
+      "values": ["current", "narrative"],
+      "label": "Order",
+      "note": "current = the page as shipped. narrative = the owner's order of 10 October: about, the vision, the approach, where it plugs in, Loop, two brands, X-Bionic."
+    },
+    "interstitial": {
+      "values": ["callout", "quote"],
+      "label": "Part opener",
+      "note": "callout = the owner's three lines, each alone on a screen (ADR-153 U4). quote = ADR-155's chapter band: the part ruler over the same line, numbered one to three."
+    },
+    "jobHead": {
+      "values": ["band", "mark"],
+      "label": "Job head",
+      "note": "band = ADR-153 U4's low gold band: the title and its mono line on the left, the job's one workstream on the right. mark = that one lit discipline first, the title one size down, the client, where it ran and the date as one mono line under it."
+    },
+    "return": {
+      "values": ["case", "ledger"],
+      "label": "Loop's return",
+      "note": "case = ADR-153 U5's case card: the record in the jobs' own housing, a lane per role. ledger = the same four rows as returns in the job's vocabulary: a value, a line, a tally."
+    },
+    "approach": {
+      "values": ["handoff", "stack"],
+      "label": "The approach",
+      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge."
+    },
+    "upstream": {
+      "values": ["off", "horizon"],
+      "label": "Longer tasks",
+      "note": "off = the approach beat carries the claim alone. horizon = a second beat on the owned horizon: the team's day upstream, the agent's run reaching up three times."
+    },
+    "engine": {
+      "values": ["layer", "pinned"],
+      "label": "The engine",
+      "note": "layer = ADR-153 U6, the layer opened: the gold slab the team writes, a lane per skill, X-Bionic's Claude Enterprise under it. pinned = ADR-154 U4's exploded stack on a runway, its slabs and callouts lighting one after another; the face is dropped, because a face and a pin never share a section."
+    }
+  },
+  "directions": [
+    {
+      "id": "PA",
+      "name": "House",
+      "question": "the page as it ships, with the owner's picks of 10 October: does it already read as one argument?",
+      "shape": "production, byte-identical",
+      "knobs": {}
+    },
+    {
+      "id": "PB",
+      "name": "Narrative",
+      "question": "in the owner's order, with the vision first and the layer placed after the approach, does the page read top to bottom?",
+      "shape": "the reordered sections, every beat as shipped",
+      "knobs": {
+        "order": "narrative"
+      }
+    },
+    {
+      "id": "PC",
+      "name": "Chapter",
+      "question": "does a part open better under a numbered ruler than on its line alone?",
+      "shape": "three chapter bands, the same three lines under the part ruler",
+      "knobs": {
+        "interstitial": "quote"
+      }
+    },
+    {
+      "id": "PD",
+      "name": "Mark",
+      "question": "with one lit discipline and the proof cards' gold band, do the jobs read as the Loop cards' kin?",
+      "shape": "four jobs on the mark head",
+      "knobs": {
+        "jobHead": "mark"
+      }
+    },
+    {
+      "id": "PE",
+      "name": "Ledger",
+      "question": "do Loop's returns and the jobs' returns read as one language?",
+      "shape": "Loop's return as four returns",
+      "knobs": {
+        "return": "ledger"
+      }
+    },
+    {
+      "id": "PF",
+      "name": "Stack",
+      "question": "does the layer being written, drawn once, say that adoption and automation are one motion?",
+      "shape": "the approach on the stack figure",
+      "knobs": {
+        "approach": "stack"
+      }
+    },
+    {
+      "id": "PG",
+      "name": "Horizon",
+      "question": "does the longer-horizon claim need its own beat, or does the stack's run carry it?",
+      "shape": "the stack, then the owned horizon",
+      "knobs": {
+        "approach": "stack",
+        "upstream": "horizon"
+      }
+    },
+    {
+      "id": "PH",
+      "name": "Pinned",
+      "question": "read in nine lit steps on a pinned runway, does the stack say more than the layer opened?",
+      "shape": "the engine as the exploded stack, pinned",
+      "knobs": {
+        "engine": "pinned"
+      }
+    },
+    {
+      "id": "PZ",
+      "name": "The brief",
+      "question": "ADR-155's whole answer at once: one narrative, chapter bands, marked jobs, one return language, the stack, the pinned engine.",
+      "shape": "every knob at its second value, the horizon off",
+      "knobs": {
+        "order": "narrative",
+        "interstitial": "quote",
+        "jobHead": "mark",
+        "return": "ledger",
+        "approach": "stack",
+        "engine": "pinned"
+      }
+    }
+  ],
+  "wave": {
+    "lane": "ps",
+    "viewports": ["1440x790", "1470x830", "1920x1200"],
+    "binding": "1470x830",
+    "themes": ["dark", "light"],
+    "note": "1470x830 is the owner's MacBook Air, the binding cell (ADR-153); 1440x790 the smaller Air; 1920x1200 where the 880px fill cap engages. Every beat is one screen by content bottom."
+  }
+}

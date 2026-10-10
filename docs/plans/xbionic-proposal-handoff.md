@@ -24,9 +24,9 @@ The same brief of 10 October was worked twice, in two places.
 - `7cd7964`: [ADR-155](../../sentinel/decisions/155-the-proposal-as-a-system.md), the proposal as a system. A look-dev lab, `http://localhost:3003/test/proposal-system`, with nine directions (`PA` production, `PZ` the whole brief): a mark head on the jobs (`job.top`), Loop's return as a ledger of four returns (`crew.layout: "returns"`), the engine pinned as nine steps on a view timeline (`instrument.pin`), the approach as the WRITTEN layer stack. Two things went straight to production: the first person swept off both proposals (`PROPOSAL_VOICE_BANS`), and the leverage's stack drawn by one geometry (`components/arcs/stack/**`).
 - `e6e35fd`: the adoption-flow lab, `http://localhost:3003/test/adoption-flow-lab`. Adoption to automation as four holographic options (A Axis, B Exploded stack, C Field, D Dish), on Loop's record.
 
-ADR-155's lab was built on `main`, which does not have Line A. Its `PA` control is the page without the job cards, the Loop return card or the plugin layer.
+ADR-155's lab was built on `main`, which did not have Line A, so its `PA` control was the page without the job cards, the Loop return card or the plugin layer. Since the merge below, `PA` is this branch's page.
 
-**Where they collide.** `git merge origin/main` into this branch conflicts in ten files: `.claude/rules/arcs.md`, `components/arcs/{ArcCrew,ArcInstrument,ArcJob}.tsx`, `components/arcs/leverage.css`, `lib/arcs/content/shared/{jobs,loopProof}.ts`, `lib/arcs/content/x-bionic-proposal.ts`, `lib/arcs/types.ts`, `tests/lib/arcs-registry.test.ts`. Most are both sides adding to the same place (both added a crew `layout`: `"case"` here, `"returns"` there), so a merge can keep both as options. Which one the page uses is the owner's call, per beat:
+**Where they collided.** `git merge origin/main` into this branch conflicted in ten files: `.claude/rules/arcs.md`, `components/arcs/{ArcCrew,ArcInstrument,ArcJob}.tsx`, `components/arcs/leverage.css`, `lib/arcs/content/shared/{jobs,loopProof}.ts`, `lib/arcs/content/x-bionic-proposal.ts`, `lib/arcs/types.ts`, `tests/lib/arcs-registry.test.ts`. Most are both sides adding to the same place (both added a crew `layout`: `"case"` here, `"returns"` there), so a merge can keep both as options. Which one the page uses is the owner's call, per beat:
 
 | Beat                                  | Line A (this branch)                                  | Line B (main)                                                                                |
 | ------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -36,7 +36,9 @@ ADR-155's lab was built on `main`, which does not have Line A. Its `PA` control 
 | The approach (the configuration beat) | the eight-step outline below, approved, not drawn yet | the WRITTEN stack (`PF` against `PG`), and the adoption-flow lab's four options, none picked |
 | First person                          | swept, own wording                                    | swept, and banned by `PROPOSAL_VOICE_BANS`; keep both sweeps and the ban                     |
 
-Nothing has been merged either way. Do not resolve this by picking a side in a conflict hunk: that is how one session's ruling undoes another's.
+**Merged on 2026-10-10, keeping both lines** (`main` at `e6e35fd` into this branch). The page is Line A: the gold band, the case card, the layer opened, and the owner's three lines each alone on a screen. Line B's directions are the knobs of `http://localhost:3003/test/proposal-system`, whose first values now name Line A (`interstitial: callout`, `jobHead: band`, `return: case`, `engine: layer`), so `PA` is this page by reference and the test pins that. Line B's production changes came in whole: `PROPOSAL_VOICE_BANS`, the leverage drawn by `StackFigure`, the slab's derived paths, Pandora's sweep, `disciplines.ts`, `ArcReturn`. A `face` and a `pin` never share a section, so the pinned engine drops the face. Pandora renders identical to `main`: its markup and every beat's height were compared on two servers.
+
+The rule for the next time two sessions work one brief: never resolve it by picking a side in a conflict hunk. That is how one session's ruling undoes another's.
 
 ## The section order on this branch
 
@@ -77,7 +79,7 @@ What the owner has said about drawing it (2026-10-10):
 
 ## Open items
 
-- At 1280x720, `vision` runs 21px and `pricing` 22px past one screen by content bottom. Every other beat fits; `engine` fits at both laptop sizes and on the phone. Measure with `node scripts/measure-arc-beats.mjs --vp 1280x720` (and `--vp 1470x830`, `--theme light`).
+- At 1280x720, `vision` runs 12px (21 before the merge brought in the new stack) and `pricing` 22px past one screen by content bottom. Every other beat fits; `engine` fits at both laptop sizes and on the phone. Measure with `node scripts/measure-arc-beats.mjs --vp 1280x720` (and `--vp 1470x830`, `--theme light`).
 - ADR-153 U5 and U6 list what they leave open, among them the ops lane drawing Loop's one copy editor.
 - `npm run lint` on `main` was already at 338 warnings against a 337 cap on 2026-10-10. That red is not from this branch.
 
