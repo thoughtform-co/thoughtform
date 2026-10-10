@@ -22,14 +22,14 @@
       "note": "case = ADR-153 U5's case card: the record in the jobs' own housing, a lane per role. ledger = the same four rows as returns in the job's vocabulary: a value, a line, a tally."
     },
     "approach": {
-      "values": ["handoff", "stack"],
+      "values": ["handoff", "stack", "sheet", "pinned", "states"],
       "label": "The approach",
-      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge."
+      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. sheet, pinned and states = the owner's eight-step outline drawn as one run (ArcConfigRun): the vision's own layer, one lane opened onto creative production, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking once. sheet reads it whole; pinned lights its six parts on a runway; states puts the handoff's rail over it, one state per pass."
     },
     "upstream": {
-      "values": ["off", "horizon"],
+      "values": ["off", "horizon", "lines"],
       "label": "Longer tasks",
-      "note": "off = the approach beat carries the claim alone. horizon = a second beat on the owned horizon: the team's day upstream, the agent's run reaching up three times."
+      "note": "off = the approach beat carries the claim alone. horizon = a second beat on the owned horizon: the team's day upstream, the agent's run reaching up three times. lines = the owner's two lines (outline steps 7 and 8): a tool you operate, checked at every step, over an agent with the context and the evals, which runs much longer before it asks; the head carries the move upstream."
     },
     "engine": {
       "values": ["layer", "pinned"],
@@ -107,6 +107,36 @@
       "shape": "the engine as the exploded stack, pinned",
       "knobs": {
         "engine": "pinned"
+      }
+    },
+    {
+      "id": "PI",
+      "name": "Run",
+      "question": "the owner's eight steps drawn as one run, read whole: does the configuration read in one look, from his layer to the finished ad?",
+      "shape": "the configuration as one sheet, then the two lines",
+      "knobs": {
+        "approach": "sheet",
+        "upstream": "lines"
+      }
+    },
+    {
+      "id": "PJ",
+      "name": "Run pinned",
+      "question": "the same run lit part by part on a pinned runway: does reading it in six steps tell the story better than the sheet?",
+      "shape": "the configuration on a runway, then the two lines",
+      "knobs": {
+        "approach": "pinned",
+        "upstream": "lines"
+      }
+    },
+    {
+      "id": "PK",
+      "name": "Run states",
+      "question": "the same run under the handoff's rail, one state per pass: does clicking adoption, encoding, automation build it better than scrolling?",
+      "shape": "the configuration in three states, then the two lines",
+      "knobs": {
+        "approach": "states",
+        "upstream": "lines"
       }
     },
     {

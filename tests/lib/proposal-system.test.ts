@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DISCIPLINE_ORDER } from "@/lib/arcs/content/shared/disciplines";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
+import { THE_HORIZON_RECORD } from "@/lib/arcs/content/shared/workshopPractice";
 import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
 import { PROPOSAL_COPY_BANS, PROPOSAL_VOICE_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import {
@@ -23,6 +24,7 @@ import { xBionicV2 } from "@/lib/proposal-system/xBionicV2";
 const PROD_IDS = X_BIONIC_PROPOSAL_ARC.sections.map((s) => s.id);
 const PROD_OPENERS = X_BIONIC_PROPOSAL_ARC.sections.filter((s) => s.kind === "interstitial");
 const PROD_RETURN = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "return");
+const RUN_MODES: readonly string[] = ["sheet", "pinned", "states"];
 
 describe("the proposal system lab", () => {
   it("the registry's first value is production and its ids are letters", () => {
@@ -174,13 +176,62 @@ describe("the proposal system lab", () => {
           }
           expect(f.layer.length).toBeLessThanOrEqual(20);
           expect(f.host.length).toBeLessThanOrEqual(32);
+        } else if (RUN_MODES.includes(knobs.approach)) {
+          /* The owner's eight-step outline as one run: the vision's own
+             layer and workstreams, one lane and one job lit, the three
+             steps as three passes, every lettered string inside its seat. */
+          const r = approach.run;
+          expect(r, "the run").toBeTruthy();
+          expect(r!.mode).toBe(knobs.approach);
+          expect(approach.figure).toBeUndefined();
+          expect(approach.time).toBeUndefined();
+          expect(approach.steps.map((s) => s.label)).toEqual(["Adoption", "Encoding", "Automation"]);
+          expect(r!.layer.workstreams.map((w) => w.id)).toEqual([...DISCIPLINE_ORDER]);
+          expect(r!.layer.workstreams.filter((w) => w.lit).length, "one lit lane").toBe(1);
+          expect(r!.jobs.length).toBeGreaterThanOrEqual(2);
+          expect(r!.jobs.length).toBeLessThanOrEqual(4);
+          expect(r!.jobs.filter((j) => j.lit).length, "one lit job").toBe(1);
+          for (const s of [...r!.jobs.map((j) => j.name), ...r!.inputs, r!.output]) {
+            expect(s.length, s).toBeLessThanOrEqual(18);
+          }
+          for (const l of r!.lines) expect(l.length, l).toBeLessThanOrEqual(76);
+          for (const s of [
+            r!.layer.label,
+            ...r!.layer.workstreams.map((w) => w.name),
+            ...r!.jobs.map((j) => j.name),
+            ...r!.inputs,
+            r!.output,
+            ...r!.lines,
+            r!.keys.skill,
+            r!.keys.evals,
+          ]) {
+            expect(s, s).not.toMatch(/\d/);
+          }
+          /* The reader meets the vision's words again: the same layer, the
+             same four workstreams, in the same order. */
+          const vision = arc.sections.find((s) => s.kind === "leverage");
+          if (vision?.kind === "leverage") {
+            expect(r!.layer.label).toBe(vision.stack.find((p) => p.own)?.label);
+            expect(r!.layer.workstreams.map((w) => w.name)).toEqual(
+              vision.uses.items.map((u) => u.label)
+            );
+          }
         } else {
           expect(approach.figure).toBeUndefined();
+          expect(approach.run).toBeUndefined();
           expect(approach.time).toBeTruthy();
         }
       }
       const horizon = arc.sections.filter((s) => s.kind === "horizon");
-      expect(horizon.length).toBe(knobs.upstream === "horizon" ? 1 : 0);
+      expect(horizon.length).toBe(knobs.upstream !== "off" ? 1 : 0);
+      if (knobs.upstream === "lines") {
+        /* The owner's two lines are the workshop's record, by reference. */
+        const h = horizon[0];
+        if (h?.kind !== "horizon") throw new Error(`${d.id}: the two lines`);
+        expect(h.operated).toBe(THE_HORIZON_RECORD.operated);
+        expect(h.agent).toBe(THE_HORIZON_RECORD.agent);
+        expect(h.upstream).toBeUndefined();
+      }
 
       const engine = arc.sections.find((s) => s.kind === "instrument");
       expect(engine).toBeTruthy();

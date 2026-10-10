@@ -1,0 +1,202 @@
+import type { CSSProperties, ReactNode } from "react";
+
+import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+
+import { ArcBeat } from "./ArcBeat";
+import { ArcSectionHead } from "./ArcSectionHead";
+import { rung } from "./arcMotion";
+import { arcTitleText } from "./chrome";
+import { configRun } from "./configRun";
+import type { CfgSeat } from "./configRun";
+import { StackSteps } from "./stack/StackSteps";
+
+const at = (s: CfgSeat) => ({ "--ax": s.ax, "--at": s.at }) as CSSProperties;
+const two = (n: number) => String(n).padStart(2, "0");
+
+interface ArcConfigRunProps {
+  section: ArcSectionOf<"handoff">;
+  index: number;
+  motion?: ArcMotion;
+}
+
+/**
+ * ArcConfigRun — the configuration, drawn as one run (the X-Bionic
+ * proposal, 2026-10-10; the owner's eight-step outline, "Draw it"). One
+ * drawing in six parts, left to right:
+ *
+ *   1  the vision's own layer, as a key plan: a lane per workstream, the
+ *      lit lane the workstream the reader follows
+ *   2  that lane opened onto one panel, its jobs across the head, the job
+ *      worked through lit
+ *   3  the job's three inputs on the left and the finished ad on the right
+ *   4  adoption: the upper pass, made with Claude, a person at every step
+ *   5  encoding: the band between the passes, a skill and its evals, fed by
+ *      the checks that are kept
+ *   6  automation: the lower pass, one line through the evals to one
+ *      person, asked before it goes out
+ *
+ * Three ways to read it (`run.mode`): `sheet`, whole; `pinned`, its six
+ * parts lighting on a runway (stack.css's view timeline, copied); `states`,
+ * the handoff's rail over it, the three passes as three states
+ * (`StackSteps`).
+ *
+ * ⚠ THE SVG LETTERS NOTHING. Every word is DOM on a seat `configRun`
+ * computes, so no word sits on a drawn face and every collision is a box a
+ * test can measure.
+ * ⚠ SERVER. The states' rail is the only client island, and it is the
+ * stack's own.
+ */
+export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRunProps) {
+  const { run, steps } = section;
+  if (!run) return null;
+  const lanes = run.layer.workstreams.length;
+  const litLane = run.layer.workstreams.findIndex((w) => w.lit);
+  const d = configRun(section.id, lanes);
+  const pinned = run.mode === "pinned";
+  const states = run.mode === "states";
+  const lit = run.layer.workstreams[litLane] ?? run.layer.workstreams[0];
+
+  const figure = (
+    <figure className="cfg__fig" role="img" aria-label={run.alt}>
+      <div className="cfg__stage">
+        <svg
+          className="cfg__svg"
+          viewBox={`0 0 ${d.vb.w} ${d.vb.h}`}
+          preserveAspectRatio="xMidYMid meet"
+          aria-hidden="true"
+          focusable="false"
+        >
+          {d.groups.map((g) => (
+            <g key={g.step} className="cfg__part" data-cfg-step={g.step}>
+              {g.marks.map((m, i) => (
+                <path
+                  key={`${m.cls}-${i}`}
+                  className={`cfg__${m.cls}`}
+                  d={m.d}
+                  fillOpacity={m.a}
+                />
+              ))}
+            </g>
+          ))}
+        </svg>
+        <div className="cfg__words" aria-hidden="true">
+          <p className="cfg__tag" data-cfg-tag="layer" data-cfg-step="1" style={at(d.seats.layer)}>
+            {run.layer.label}
+          </p>
+          <ul className="cfg__tag cfg__list" data-cfg-tag="list" data-cfg-step="1" style={at(d.seats.list)}>
+            {run.layer.workstreams.map((w) => (
+              <li key={w.id} className="cfg__ws" data-cfg-lit={w.lit ? "" : undefined}>
+                <span className="cfg__ws-mark" />
+                {w.name}
+              </li>
+            ))}
+          </ul>
+          <p className="cfg__tag cfg__head" data-cfg-tag="head" data-cfg-step="2" style={at(d.seats.head)}>
+            <span className="cfg__head-ws">{lit?.name}</span>
+            <span className="cfg__head-run">›</span>
+            {run.jobs.map((j) => (
+              <span key={j.id} className="cfg__job" data-cfg-lit={j.lit ? "" : undefined}>
+                {j.name}
+              </span>
+            ))}
+          </p>
+          {run.inputs.map((label, i) => (
+            <p
+              key={label}
+              className="cfg__tag"
+              data-cfg-tag="input"
+              data-cfg-step="3"
+              style={at(d.seats.inputs[i])}
+            >
+              {label}
+            </p>
+          ))}
+          <p className="cfg__tag" data-cfg-tag="output" data-cfg-step="3" style={at(d.seats.output)}>
+            {run.output}
+          </p>
+          {steps.map((s, i) => (
+            <div
+              key={s.id}
+              className="cfg__tag cfg__row"
+              data-cfg-tag="row"
+              data-cfg-row={i}
+              data-cfg-step={4 + i}
+              style={at(d.seats.rows[i])}
+            >
+              <p className="cfg__row-key">
+                <span className="cfg__row-n">{two(i + 1)}</span>
+                {s.label}
+              </p>
+              <p className="cfg__row-line">{run.lines[i]}</p>
+            </div>
+          ))}
+          <p className="cfg__tag" data-cfg-tag="key" data-cfg-step="5" style={at(d.seats.keys.skill)}>
+            {run.keys.skill}
+          </p>
+          <p className="cfg__tag" data-cfg-tag="key" data-cfg-step="5" style={at(d.seats.keys.evals)}>
+            {run.keys.evals}
+          </p>
+        </div>
+      </div>
+    </figure>
+  );
+
+  /* The phone's words: the drawing is too small there to seat them, so the
+     three passes are a list under it. Hidden on the desktop. */
+  const legend = (
+    <ol className="cfg__legend">
+      {steps.map((s, i) => (
+        <li key={s.id} className="cfg__legend-row" data-cfg-step={4 + i}>
+          <p className="cfg__row-key">
+            <span className="cfg__row-n">{two(i + 1)}</span>
+            {s.label}
+          </p>
+          <p className="cfg__row-line">{run.lines[i]}</p>
+        </li>
+      ))}
+    </ol>
+  );
+
+  let body: ReactNode = (
+    <>
+      {figure}
+      {legend}
+    </>
+  );
+  if (states) {
+    body = (
+      <StackSteps
+        figure="run"
+        steps={steps.map((s, i) => ({ id: s.id, n: two(i + 1), label: s.label, when: s.when }))}
+      >
+        {figure}
+        {legend}
+      </StackSteps>
+    );
+  }
+
+  return (
+    <ArcBeat
+      id={section.id}
+      kind="handoff"
+      className={`arc-section arc-sec arc-sec--handoff arc-sec--handoff-run${
+        pinned ? " arc-sec--handoff-pin" : ""
+      }`}
+      ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
+      motion={motion}
+    >
+      <div className="arc-band">
+        <ArcSectionHead
+          head={section.head}
+          kind="handoff"
+          index={index}
+          sectionId={section.id}
+          motion={motion}
+        />
+        <div className="cfg arc-reveal" data-cfg-mode={run.mode} {...rung(motion, 0.14)}>
+          {body}
+        </div>
+      </div>
+    </ArcBeat>
+  );
+}

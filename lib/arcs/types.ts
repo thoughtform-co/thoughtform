@@ -1481,6 +1481,14 @@ export type ArcSection = ArcSectionBase &
          * the bars are not drawn. Absent: ADR-153's plates, byte-identical.
          */
         figure?: ArcHandoffFigure;
+        /**
+         * The configuration, drawn as one run (the X-Bionic proposal,
+         * 2026-10-10, the owner's eight-step outline): the layer and its
+         * workstreams, one job's inputs and its finished ad, and the three
+         * steps as three passes over the same ground. With a run the
+         * plates, the bars and the figure are not drawn.
+         */
+        run?: ArcHandoffRun;
       }
     | {
         /**
@@ -1708,6 +1716,44 @@ export interface ArcHandoffFigure {
   host: string;
   /** The layer's name, e.g. "Your layer". ≤ 20. */
   layer: string;
+  /** The drawing's accessible name. */
+  alt: string;
+}
+
+/**
+ * The configuration as one run (the X-Bionic proposal, 2026-10-10): the
+ * vision's own layer as a key plan with a lane per workstream, one job
+ * opened from the lit lane, its three inputs and the finished ad at the two
+ * ends, and the handoff's three steps as three passes between them: made
+ * with Claude and checked at every step, written down as a skill and its
+ * evals, run by an agent that asks the owner once. The words are the
+ * record's, the geometry is `configRun`'s; the SVG letters nothing.
+ */
+export interface ArcHandoffRun {
+  /**
+   * How the three passes are read. `sheet`: the drawing whole, at once.
+   * `pinned`: on a runway, its six parts lighting one after another as the
+   * reader scrolls (CSS view timeline; whole without one). `states`: the
+   * handoff's rail over the drawing, the three passes as three states.
+   */
+  mode: "sheet" | "pinned" | "states";
+  /** The layer, as the vision names it, and its workstreams in the house
+   *  order; the lit one is the workstream the job opens from. */
+  layer: {
+    label: string;
+    workstreams: readonly { id: string; name: string; lit?: true }[];
+  };
+  /** The lit workstream's jobs, across the opened panel's head; the lit one
+   *  is the job worked through. Two to four, each ≤ 18. */
+  jobs: readonly { id: string; name: string; lit?: true }[];
+  /** The job's three inputs, top to bottom. Each ≤ 18, mono. */
+  inputs: readonly [string, string, string];
+  /** What the job makes, under the finished ad. ≤ 18, mono. */
+  output: string;
+  /** One sans line per pass, in the handoff's step order. Each ≤ 76. */
+  lines: readonly [string, string, string];
+  /** The two things written down, in the band between the passes. */
+  keys: { skill: string; evals: string };
   /** The drawing's accessible name. */
   alt: string;
 }

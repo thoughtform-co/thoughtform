@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcConfigRun } from "./ArcConfigRun";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -29,7 +30,8 @@ interface ArcHandoffProps {
  * drawing is whole in a static render.
  */
 export function ArcHandoff({ section, index, motion = "reveal" }: ArcHandoffProps) {
-  const { steps, time, figure } = section;
+  const { steps, time, figure, run } = section;
+  if (run) return <ArcConfigRun section={section} index={index} motion={motion} />;
   if (figure) return <ArcHandoffFigure section={section} index={index} motion={motion} />;
   return (
     <ArcBeat
