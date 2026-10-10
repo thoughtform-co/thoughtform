@@ -11,7 +11,7 @@
  * text; it is INTEGRATION — what structure ties the panels to each other and
  * to the figure, which is exactly what the Starfield reference does.
  *
- * Runs a curated slate against Gemini (Nano Banana 2 / Pro) and OpenAI
+ * Runs a curated slate against Gemini (Nano Banana 2.1 / Pro) and OpenAI
  * (GPT Image 2) using plain `fetch` on Node 20+, so no npm deps land in the
  * lockfile (npm-supply-chain-defense). Reads GEMINI_API_KEY and OPENAI_API_KEY
  * from .env.local (falling back to .env).
@@ -23,6 +23,11 @@
  *     into logs, proxies and referrer headers).
  *   — Model ids verified live against models.list() on 2026-08-31:
  *     gemini-3.1-flash-image (NB2) and gemini-3-pro-image (NB Pro).
+ *     2026-10-07: NB2 moved to gemini-nano-banana-2.1 (GA 2026-10-06, Google's
+ *     named replacement). Same generateContent body, only the id changed;
+ *     not yet verified by a live call. The slate's aspects (16:9, 9:16, 1:1)
+ *     are all on 2.1's list. The *_nb.json sidecars keep the id they were
+ *     drawn with.
  *   — GPT Image 2 goes to /v1/images/EDITS as multipart, because references
  *     do not work on /generations. It does NOT take input_fidelity (a
  *     gpt-image-1 parameter; gpt-image-2 400s on it).
@@ -1071,12 +1076,12 @@ is the whole argument for making the figure a tab.
 /* Nano Banana. References ride as leading inline_data parts so the prompt
    reads as an instruction ABOUT them; the key rides the header. NB Pro
    (gemini-3-pro-image) draws the panel close-ups because legible text on a
-   surface is its listed strength; NB2 carries the composition slates. */
+   surface is its listed strength; NB 2.1 carries the composition slates. */
 async function callGemini(env, item, refs) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY missing from env");
 
-  const model = item.slate === "panels" ? "gemini-3-pro-image" : "gemini-3.1-flash-image";
+  const model = item.slate === "panels" ? "gemini-3-pro-image" : "gemini-nano-banana-2.1";
 
   const parts = refs.map((r) => ({
     inline_data: { mime_type: r.mime, data: r.buf.toString("base64") },

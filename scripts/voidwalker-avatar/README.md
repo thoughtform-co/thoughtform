@@ -200,7 +200,8 @@ the install.
   held out on his true outline, against the model's own 19.6 self-disagreement),
   his measured bloom, and the exposure gate.
 - **`grade.py`** — the deterministic gates, before a human looks.
-- **`vid.py`** — Veo. ⚠ `last_frame` is not used for an IDLE: the first=last
+- **`vid.py`** — the video model: Gemini Omni Flash since 2026-10-07 (the Veo
+  3.1 previews shut down 2026-10-22; the measurements below were taken on Veo). ⚠ `last_frame` is not used for an IDLE: the first=last
   trick was measured leaving a seam louder than the movement. A SCENE
   (`--scene`) is the one exception — an action that big cannot come home by
   luck — and it is written to HOLD at both ends so the drift can be dissolved.

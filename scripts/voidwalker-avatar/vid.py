@@ -1,5 +1,22 @@
 """
-vid — the picked still becomes an 8-second idle, through Veo.
+vid — the picked still becomes an 8-second idle, through Gemini Omni Flash.
+
+⚠ 2026-10-07: VEO 3.1 PREVIEW SHUTS DOWN 2026-10-22, AND OMNI IS A DIFFERENT API.
+The three Veo 3.1 preview variants are retired by Google; the migration target
+is `gemini-omni-1.1-flash`, which answers only on the Interactions API (one
+POST to `/v1beta/interactions`), not `generate_videos` / predictLongRunning.
+So this lane is now SDK-free like `generate.py`: one signed urllib POST, the key
+in the `x-goog-api-key` header. What Veo took and Omni does not:
+  * `last_frame` → a SECOND IMAGE before the text (two images then text is
+    Omni's first/last-frame interpolation);
+  * `negative_prompt` → folded into the prompt as "Avoid: …" (Omni has none);
+  * `duration_seconds` no longer exists → the length is SAID in the prompt;
+  * `person_generation`, `number_of_videos` → gone (one video per request).
+⚠ UNVERIFIED BY A LIVE CALL. Omni documents first/last interpolation for TWO
+images; for ONE image it documents "subject references", not "the opening
+frame". An idle sends one still, so check the first idle's frame 0 against the
+still before trusting it. Everything below measured on Veo (U14, U33, U34) is a
+record of Veo and has not been re-measured on Omni.
 
 ⚠ `last_frame` IS NOT USED FOR AN IDLE, AND THAT IS A RECORDED MEASUREMENT.
 ADR-082 U14 tried Veo's first=last trick to close the loop and it left a seam of
@@ -24,8 +41,13 @@ animation in strobe. One still, animated.
 from __future__ import annotations
 
 import argparse
+import base64
+import json
+import mimetypes
 import sys
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -39,7 +61,9 @@ from prompt import (  # noqa: E402
     plate_scene_prompt,
 )
 
-MODEL = "veo-3.1-generate-preview"
+MODEL = "gemini-omni-1.1-flash"
+ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions"
+FILES = "https://generativelanguage.googleapis.com/v1beta/"
 #: ⚠ VEO 3 ALWAYS DRAWS A SOUNDTRACK, AND IT CAN REFUSE A CLIP ON IT ALONE
 #: (ADR-082 U34). The standing commander was refused five times — "an issue with
 #: the audio for your prompt", uncharged — through a directed near-silence, a
@@ -50,7 +74,35 @@ MODEL = "veo-3.1-generate-preview"
 #: draws no audio) answers 404 for this key: the key serves the three Veo 3.1
 #: variants only (`ListModels`), so `--model` picks among those (the lite one
 #: rejects `negativePrompt`).
-MODELS = ("veo-3.1-generate-preview", "veo-3.1-fast-generate-preview", "veo-3.1-lite-generate-preview")
+#: 2026-10-07: the three Veo 3.1 previews shut down 2026-10-22; Omni Flash is
+#: the one video model left on this lane. Whether Omni's audio filter refuses a
+#: mid-word plate the same way is not yet measured: look at the MOUTH regardless.
+MODELS = (MODEL,)
+
+
+def part(path: Path) -> dict:
+    mime = mimetypes.guess_type(path.name)[0] or "image/png"
+    return {"type": "image", "data": base64.b64encode(path.read_bytes()).decode(), "mime_type": mime}
+
+
+def call(url: str, key: str, body: dict | None = None, timeout: int = 900) -> bytes:
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode() if body is not None else None,
+        headers={"Content-Type": "application/json", "x-goog-api-key": key},
+        method="POST" if body is not None else "GET",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as err:
+        if err.code in (401, 403):
+            # ⚠ NAME THE KEY AND STOP — never a fallback to another one.
+            raise SystemExit(
+                f"the video model refused GEMINI_API_KEY (HTTP {err.code}). Stopping. Check it with:\n"
+                "  python scripts/voidwalker-avatar/env.py --check GEMINI_API_KEY"
+            ) from None
+        raise SystemExit(f"omni {err.code}: {err.read().decode('utf-8', 'ignore')[:400]}") from None
 
 
 def main() -> int:
@@ -85,7 +137,11 @@ def main() -> int:
     ap.add_argument("--listen", action="store_true",
                     help="scene (--ending aim): the listening take instead of the mouthed order")
     ap.add_argument("--model", choices=MODELS, default=MODEL,
-                    help="the Veo variant (the default is the full model)")
+                    help="the video model (Omni Flash, since the Veo previews retired)")
+    # ⚠ Omni returns the clip INLINE only under 4 MB. A bigger one needs
+    # `delivery: uri`, a Files API record polled to ACTIVE, then a download.
+    ap.add_argument("--delivery", choices=("inline", "uri"), default="inline",
+                    help="inline base64 (< 4 MB) or a Files API uri for a bigger clip")
     ap.add_argument("--dry-run", action="store_true", help="print the request, send nothing")
     args = ap.parse_args()
     model = args.model
@@ -134,60 +190,50 @@ def main() -> int:
         else ""
     )
     raw = out_dir / (f"{stem}.raw.mp4" if plate else "raw.mp4")
+    # ⚠ Omni has no `duration_seconds` and no `negative_prompt`: the length is
+    # said in the prompt, and the negative rides it as an "Avoid:" clause.
+    text = f"{prompt}\n\nThe clip is eight seconds long.\n\nAvoid: {negative}"
     if args.dry_run:
-        ends = f"  (last_frame = {last.name})" if args.scene else ""
-        print(f"veo · {model} · from {still.name} -> {raw.name}{ends}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
+        ends = f"  (last frame = {last.name})" if args.scene else ""
+        print(f"omni · {model} · from {still.name} -> {raw.name}{ends}\n\nPROMPT\n{text}")
         return 0
     if raw.exists():
         print(f"{raw} already on disk — kept (delete it to re-draw)")
         return 0
 
-    from google import genai
-    from google.genai import types
+    key = require("GEMINI_API_KEY")
+    print(f"omni · {model} · from {still.name}")
 
-    client = genai.Client(api_key=require("GEMINI_API_KEY"))
-    print(f"veo · {model} · from {still.name}")
+    # Two images then text is Omni's first/last-frame interpolation (Veo's
+    # `last_frame`); one image then text is the idle.
+    images = [part(still)] + ([part(last)] if args.scene else [])
+    response_format = {"type": "video", "aspect_ratio": "9:16", "resolution": "720p"}
+    if args.delivery == "uri":
+        response_format["delivery"] = "uri"
+    # ⚠ NO `person_generation`, NO `number_of_videos`, NO audio toggle: Omni
+    # documents none of them, and draws one video per request.
+    body = {"model": model, "input": images + [{"type": "text", "text": text}],
+            "response_format": response_format}
+    data = json.loads(call(ENDPOINT, key, body))
 
-    extra = {"last_frame": types.Image.from_file(location=str(last))} if args.scene else {}
-    extra["resolution"] = "720p"
-    op = client.models.generate_videos(
-        model=model,
-        prompt=prompt,
-        image=types.Image.from_file(location=str(still)),
-        config=types.GenerateVideosConfig(
-            aspect_ratio="9:16",
-            duration_seconds=8,
-            negative_prompt=negative,
-            # The figure is a hologram of a real person; the model needs this
-            # to be explicit rather than inferred.
-            person_generation="allow_adult",
-            number_of_videos=1,
-            # ⚠ NO `generate_audio` HERE. It is a Gemini Enterprise Agent
-            # Platform field and the Developer API rejects the request outright
-            # rather than ignoring it. The asset is muted at the element
-            # anyway, so the only cost is bytes in `raw.mp4`, which never ship.
-            **extra,
-        ),
-    )
-
-    waited = 0
-    while not op.done:
-        time.sleep(10)
-        waited += 10
-        op = client.operations.get(op)
-        print(f"  … {waited}s")
-        if waited > 900:
-            raise SystemExit("veo did not finish within 15 minutes")
-
-    if getattr(op, "error", None):
-        raise SystemExit(f"veo failed: {op.error}")
-
-    videos = op.response.generated_videos
-    if not videos:
-        raise SystemExit(f"veo returned no video: {op.response}")
-
-    client.files.download(file=videos[0].video)
-    videos[0].video.save(str(raw))
+    video = data.get("output_video") or {}
+    if video.get("data"):
+        raw.write_bytes(base64.b64decode(video["data"]))
+    elif video.get("uri"):
+        # ⚠ The file record's shape is UNVERIFIED: polled by its `name` to
+        # ACTIVE, then fetched from its `uri` with the same header, as Veo's was.
+        name = video.get("name") or video["uri"].split("/v1beta/", 1)[-1].split(":", 1)[0]
+        waited = 0
+        while json.loads(call(FILES + name, key)).get("state") != "ACTIVE":
+            time.sleep(10)
+            waited += 10
+            print(f"  … {waited}s")
+            if waited > 900:
+                raise SystemExit("the clip's file did not turn ACTIVE within 15 minutes")
+        raw.write_bytes(call(video["uri"], key))
+    else:
+        hint = " (over 4 MB? re-run with --delivery uri)" if args.delivery == "inline" else ""
+        raise SystemExit(f"omni returned no video{hint}: {json.dumps(data)[:400]}")
     print(f"  -> {raw}  {raw.stat().st_size // 1024} KB")
     return 0
 
