@@ -2,6 +2,7 @@ import { Instrument } from "@/components/instrument/Instrument";
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcPluginLayer } from "./ArcPluginLayer";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -16,7 +17,8 @@ interface ArcInstrumentProps {
  * ArcInstrument — the instrument as an arc beat (ADR-154): the arc's own
  * head over one `Instrument`. The drawing lives in `components/instrument`,
  * because it is mounted beyond the arcs (the labs, the explainers); this is
- * the beat's frame around it and nothing more.
+ * the beat's frame around it and nothing more. A section carrying a `face`
+ * draws the record as the layer opened instead (`ArcPluginLayer`, ADR-153 U6).
  */
 export function ArcInstrument({ section, index, motion = "reveal" }: ArcInstrumentProps) {
   return (
@@ -35,15 +37,19 @@ export function ArcInstrument({ section, index, motion = "reveal" }: ArcInstrume
           sectionId={section.id}
           motion={motion}
         />
-        <div className="arc-instrument arc-reveal" {...rung(motion, 0.14)}>
-          <Instrument
-            record={section.record}
-            altitude={section.altitude}
-            focus={section.focus}
-            picker={section.picker}
-            id={`ins-${section.id}`}
-          />
-        </div>
+        {section.face ? (
+          <ArcPluginLayer section={section} motion={motion} />
+        ) : (
+          <div className="arc-instrument arc-reveal" {...rung(motion, 0.14)}>
+            <Instrument
+              record={section.record}
+              altitude={section.altitude}
+              focus={section.focus}
+              picker={section.picker}
+              id={`ins-${section.id}`}
+            />
+          </div>
+        )}
       </div>
     </ArcBeat>
   );

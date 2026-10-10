@@ -1395,6 +1395,14 @@ export type ArcSection = ArcSectionBase &
         altitude: Altitude;
         focus?: PartId;
         picker?: readonly Altitude[];
+        /** Draw the record as THE LAYER, OPENED (owner, 2026-10-10: "Layer
+         *  opened"): the vision console's housing, the gold slab the team
+         *  writes drawn large with one particle lane per skill on it, the
+         *  client's Claude Enterprise under it, and one label column. Opt-in
+         *  per section, as the crew's `layout: "case"` is; absent, the beat
+         *  draws the instrument unchanged. The words come from the record's
+         *  `org` (workstream, skill, keeper); this carries only the drawing. */
+        face?: InstrumentLayerFace;
       }
     | {
         /**
@@ -2098,6 +2106,33 @@ export interface CircuitConfig {
   /** The card's one line under it, e.g. "owned by the PMs" — the board's
    *  own "owned by the studio", one workflow down. */
   line: string;
+}
+
+/** The instrument's opened-layer face (ADR-153 U6): what the drawing needs
+ *  beyond the record. Each lane is one skill on the slab, drawn with the
+ *  figure its workstream's lane draws on the Loop return, so the proof and
+ *  the offer share drawings. */
+export interface InstrumentLayerFace {
+  kind: "layer";
+  /** The housing's bar, the vision console's own: SYS name, then status. */
+  console: { name: string; status: string };
+  /** The label column's head strip, e.g. "One plugin, four skills". */
+  label: string;
+  /** The slab's own tag, e.g. "Your layer". */
+  layer: string;
+  /** The plain slab under it, e.g. "X-Bionic's Claude Enterprise". */
+  host: string;
+  /** What runs into the host as dotted lines, 1 to 3, each ≤ 12. */
+  connectors: readonly string[];
+  /** One per workstream, in the record's order. `seed` is the Loop row the
+   *  figure is drawn from; `keepers` overrides the figure's own person
+   *  marks (absent: the figure's). */
+  lanes: readonly {
+    id: string;
+    output: CrewOutput;
+    seed: string;
+    keepers?: 1 | 2;
+  }[];
 }
 
 /** How a record row's output is DRAWN: the quantity, as marks. */
