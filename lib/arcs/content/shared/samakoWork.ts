@@ -1,4 +1,4 @@
-import type { ArcBreakdown } from "../../types";
+import type { ArcBreakdown, ArcClip } from "../../types";
 
 /**
  * SAMAKO'S WORK, AS BREAKDOWNS (2026-10-08): two jobs from the Samako
@@ -20,6 +20,18 @@ import type { ArcBreakdown } from "../../types";
  * percentage and no end date.
  */
 const SAM = "/arcs/samako";
+
+/**
+ * FILM B OF THE SAME ROUND (6 October): the room tidies itself, then the
+ * range hops in on the beat. The clean cut, as film A is. The X-Bionic
+ * proposal's production job plays it (owner, 2026-10-10: "use the other
+ * one"); the breakdown below keeps film A.
+ */
+export const SAMAKO_AUTUMN_FILM_B: ArcClip = {
+  src: `${SAM}/autumn-b.mp4`,
+  poster: `${SAM}/autumn-b-poster.webp`,
+  alt: "Autumn leaves across a living room; the cushions fly back onto the sofa and the floor clears, then Samako's range hops in under a banner reading Herfst deals, tijdelijke actie.",
+};
 
 export const SAMAKO_PRODUCT_SHOTS: ArcBreakdown = {
   eyebrow: "Production · Samako · product shots · 7 Oct 2026",

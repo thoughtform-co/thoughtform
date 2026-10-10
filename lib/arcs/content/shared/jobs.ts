@@ -1,44 +1,43 @@
-import type { ArcClip, ArcSectionOf } from "../../types";
+import type { ArcSectionOf } from "../../types";
 
-import { SAMAKO_AUTUMN_FILM, SAMAKO_PRODUCT_SHOTS } from "./samakoWork";
-import { UNDER_THE_GLASS } from "./suriWork";
+import { SAMAKO_AUTUMN_FILM_B, SAMAKO_PRODUCT_SHOTS } from "./samakoWork";
 
 /**
  * FOUR CLIENT JOBS, ONE TEMPLATE (ADR-153 U1, owner 2026-10-09: "a template
  * where I can fill in the stuff, Suri, Samako. Ideally two example sections
- * per client … uniformize it"). One job per bucket, two per client: Samako's
- * strategy and review, Suri's production and ops, in the order the buckets
- * run on the vision's 2×2 and the engine's tiles.
+ * per client … uniformize it"). One job per workstream, two per client, in
+ * the order the workstreams run on the vision and the engine: creative
+ * production, ops, review, strategy (U4).
  *
- * ⚠ EVERY NUMBER IS AS FILED, read 9 October 2026:
- *  - Strategy: `samako-ai-studio/records/eval-log.md`, Autumn Deals 02
- *    (6 October). Its review line still reads "not reviewed yet".
- *  - Production: Suri's showcase of Under the glass and `UNDER_THE_GLASS`.
- *  - Ops: the briefing skill's handover of 8 October (the skill at v2.13,
- *    rebuilt from 504 briefs; twelve evals, six new that week; the board
- *    record of the run on the week's iterations deck). No with-and-without
- *    result is filed for this skill, so none is drawn.
- *  - Review: the same log, wave 11's race (7 October), its review (8
- *    October, the reviewer's 14 of 15) and wave 12 (8 October, 6 of 6).
+ * ⚠ U4 (owner, 2026-10-10) RE-CUT ALL FOUR TO THE WORK HE NAMED: the
+ * motion ad is film B ("use the other one"), the ops job is the Drive map
+ * and its search by meaning ("where is that?"), the review job is the first
+ * pass on AI product renders, the strategy job is the brief skill. Every
+ * figure as filed, read 10 October 2026:
+ *  - Production: `samako-ai-studio/records/eval-log.md`, film B of the
+ *    Autumn Deals round (6 October): no product frame drawn by a model,
+ *    three cold reads, not reviewed yet.
+ *  - Ops: `suri-ai-studio`, the Drive map (8 to 9 October, commits 24ecd54,
+ *    d9ca99a, afed625): 3.1 TB read only, 41,450 files read, 82,307 items in
+ *    60 groups, 78 % of the files read tied to no campaign, Monday and Figma
+ *    joined. Its groups are Claude's names and nobody has used the page yet.
+ *  - Review: the Samako log's wave 11 (7 October, 15 of 18 blind) and its
+ *    review (8 October, the client's lead agreed on 14 of 15).
+ *  - Strategy: Suri's brief skill as run on 4 October (`SURI_RUNS`): twelve
+ *    fields, `brief-waits-for-answers` 3 of 3.
  *
- * ⚠ THE TITLE SAYS WHAT THE JOB WAS (owner, 2026-10-09: a working name
- * like "Under the glass" says nothing). Concrete and practical, in the
- * frame's top row; there is no head above it (U2).
+ * ⚠ THE TIME FIGURES ARE THE OWNER'S ESTIMATES, AND SAY SO (owner,
+ * 2026-10-10: the Drive map "saved weeks", the brief skill "saves hours",
+ * the render review "a couple of hours a week"). No job has a filed time
+ * or money figure; each line opens "Estimated". The motion ad's return is
+ * the filed count instead.
  *
- * ⚠ ONE RETURN A JOB, IN A DECISION MAKER'S WORDS (U3, owner 2026-10-09,
- * after the practice's adviser: put a number against each activity). The
- * production job's 2 to 3 hours is the video editor's own account in the
- * team's week-one debrief; no job has a filed money figure, so none is
- * drawn. A tally draws the count only where the number is one.
+ * ⚠ THE RETURN READS IN TWO STEPS, the saving and then what it allows, and
+ * the line never restates the number (U4; registry-guarded).
  *
  * ⚠ PEOPLE BY ROLE, NEVER BY NAME OR PRONOUN; no money; the films and
  * stills are the shared records' own objects, so a fix lands once.
  */
-
-const film = (clip: ArcClip | undefined): ArcClip => {
-  if (!clip) throw new Error("jobs: a shared breakdown lost its film");
-  return clip;
-};
 
 const still = (i: number) => {
   const f = SAMAKO_PRODUCT_SHOTS.beats[0]?.frames?.[i];
@@ -50,130 +49,100 @@ const shotSentBack = still(1);
 
 export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
   {
-    id: "job-strategy",
+    id: "job-production",
     kind: "job",
-    menuLabel: "Strategy · Samako",
-    title: "Autumn sale ads, reworked from a flat first round",
+    menuLabel: "Motion ad · Samako",
+    title: "A 15-second motion ad for the autumn sale",
     n: 1,
-    bucket: "strategy",
+    bucket: "production",
     client: "Samako",
     date: "6 Oct 2026",
     madeIn: "Claude Code",
-    ask: "Sale statics for the autumn offer, with complete creative freedom.",
+    ask: "A short motion ad for the autumn sale, in Dutch, for paid social, from an open brief.",
     did: [
-      "Rewrote round one around a story per frame",
-      "Kept one cast and set across every shot",
-      "Placed the real product photo in every frame",
+      "Drew the room once, for every shot",
+      "Animated the scenes on three video models",
+      "Checked the cut in three cold reads",
     ],
     gate: {
       who: "The client's visual lead",
-      line: "Picks film A or B, and the statics. Not reviewed yet.",
+      line: "Chooses between film A and film B. Not reviewed yet.",
     },
     figure: {
       kind: "clip",
-      clip: film(SAMAKO_AUTUMN_FILM.film),
-      caption: "Film A · 15 s, 9:16, in Dutch",
+      clip: SAMAKO_AUTUMN_FILM_B,
+      caption: "Film B · 15 s, 9:16, in Dutch",
     },
     result: {
-      value: "6 ads",
-      line: "Two 15-second films and four statics, from one open brief.",
-      tally: [
-        { of: 2, lit: 2 },
-        { of: 4, lit: 4 },
-      ],
-    },
-  },
-  {
-    id: "job-production",
-    kind: "job",
-    menuLabel: "Production · Suri",
-    title: "A Black Friday teaser, cut from raw footage",
-    n: 2,
-    bucket: "production",
-    client: "Suri",
-    date: "6 Oct 2026",
-    madeIn: "Cowork",
-    ask: "A Black Friday teaser from the shoot: edit only, no generated footage.",
-    did: [
-      "Cut 31 raw clips down to two shots",
-      "Revealed the message under the moving glass",
-      "Cleaned the steel, kept its brushed grain",
-    ],
-    gate: {
-      who: "The video editor",
-      line: "Cut the film down to the card, and said when the steel looked AI.",
-    },
-    figure: {
-      kind: "clip",
-      clip: film(UNDER_THE_GLASS.film),
-      caption: "The teaser · 16.16 s, 9:16",
-    },
-    result: {
-      value: "2–3 hrs",
-      line: "Retouching and masking now take 2 to 3 hours a video in Claude, not a full manual session.",
+      label: "Product drawn by AI",
+      value: "0 frames",
+      line: "Every product shot is the photographer's original, set into the scene in code.",
+      allows:
+        "Motion ads for paid social without a motion designer on each one: a better return on ad creation cost.",
     },
   },
   {
     id: "job-ops",
     kind: "job",
-    menuLabel: "Ops · Suri",
-    title: "A six-slide brief, filed on the studio's board",
-    n: 3,
+    menuLabel: "Drive map · Suri",
+    title: "The marketing Drive, mapped and searchable by meaning",
+    n: 2,
     bucket: "ops",
     client: "Suri",
-    date: "8 Oct 2026",
-    madeIn: "Cowork",
-    ask: "The week's iterations deck, briefed onto the studio's Monday board.",
+    date: "8 to 9 Oct 2026",
+    madeIn: "Claude Code",
+    ask: "Find what the team already owns across the marketing Drive, without opening every folder.",
     did: [
-      "Read the deck and its four resolved comments",
-      "Filled the card already on the board",
-      "Sent the open questions as one reply",
+      "Read 41,450 files with a vision model",
+      "Grouped the files by what they show",
+      "Joined Monday and Figma to the same map",
     ],
     gate: {
-      who: "The creative lead",
-      line: "Gave the one yes before anything was written to the board.",
+      who: "The asset library owner",
+      line: "Not reviewed yet: Claude named the groups, and the owner has yet to use the page.",
     },
     figure: {
       kind: "ledger",
-      caption: "The board item as filed",
+      caption: "The Drive as mapped, 9 Oct",
       rows: [
-        { label: "Item", value: "1, no new card" },
-        { label: "Sub-items", value: "3, all video" },
-        { label: "Docs", value: "1 overview, 3 sub-item docs" },
-        { label: "Left alone", value: "Status, editor, hours" },
-        { label: "Next day", value: "Editor assigned, deadline moved" },
+        { label: "Drive", value: "3.1 TB, read only" },
+        { label: "Map", value: "82,307 items, 60 groups" },
+        { label: "Shoot video", value: "7,674 files" },
+        { label: "Shoot images", value: "36,387 files" },
+        { label: "No campaign", value: "78% of files read" },
       ],
     },
     result: {
-      value: "5",
-      line: "Problems caught in the brief before any editing began, from clashing copy to a deadline with no editor.",
-      tally: [{ of: 5, lit: 5 }],
+      label: "Time saved",
+      value: "Weeks",
+      line: "Estimated, against mapping the Drive by hand.",
+      allows: "Reuse the shoots the team already owns, found by what is in each picture.",
     },
   },
   {
     id: "job-review",
     kind: "job",
-    menuLabel: "Review · Samako",
-    title: "Three image models, tested blind on the real product",
-    n: 4,
+    menuLabel: "Renders · Samako",
+    title: "A first-pass review of AI product renders",
+    n: 3,
     bucket: "review",
     client: "Samako",
     date: "7 to 8 Oct 2026",
     madeIn: "Claude Code",
-    ask: "Which model draws the CleanDetect Pro exactly, in hero, in-use and room shots?",
+    ask: "Catch the AI renders that get the product wrong, before the creative team reviews them.",
     did: [
-      "Drew the same 18 shots on three models",
-      "Hid which model made each shot, then graded",
-      "Matched the grades to the client's reviewer",
+      "Wrote the product's own checks as evals",
+      "Graded 18 shots on three models, blind",
+      "Flagged every unsure render for a person",
     ],
     gate: {
       who: "The client's visual lead",
-      line: "Rejected the one shot the AI grading had passed.",
+      line: "Agreed with the grading on 14 of 15 shots, and rejected the one it had passed.",
     },
     figure: {
       kind: "pair",
       ratio: "1:1",
-      caption: "Kept and rejected, graded blind",
+      caption: "Graded blind, 7 Oct",
       a: { src: shotKept.src, alt: shotKept.alt, label: shotKept.label, verdict: "kept" },
       b: {
         src: shotSentBack.src,
@@ -183,12 +152,50 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
       },
     },
     result: {
-      value: "15 of 18",
-      line: "Product shots right first time on the model now in use, up from 4 of 18 on the one before.",
-      tally: [
-        { of: 18, lit: 4, dim: true },
-        { of: 18, lit: 15 },
+      label: "Time saved",
+      value: "2 hrs/wk",
+      line: "Estimated, for the creative director, the art director and the brand manager.",
+      allows:
+        "Review starts from the renders it flags as unsure, the jarring errors already caught.",
+    },
+  },
+  {
+    id: "job-strategy",
+    kind: "job",
+    menuLabel: "Briefs · Suri",
+    title: "One brief format for every channel",
+    n: 4,
+    bucket: "strategy",
+    client: "Suri",
+    date: "4 Oct 2026",
+    madeIn: "Cowork",
+    ask: "Briefs that arrive complete and in one shape, whoever writes them.",
+    did: [
+      "Asked for each missing field, one at a time",
+      "Put every claim in brackets until approved",
+      "Showed the ad names before writing them",
+    ],
+    gate: {
+      who: "The strategist",
+      line: "Marks the brief ready. It lands as a Monday item, with its ad names.",
+    },
+    figure: {
+      kind: "ledger",
+      caption: "The brief skill, run on 4 Oct",
+      rows: [
+        { label: "Fields", value: "12, in one format" },
+        { label: "Channel", value: "Formats and timing named" },
+        { label: "Approver", value: "Named in the brief" },
+        { label: "Status", value: "Ready, marked by a person" },
+        { label: "Check", value: "Waits for answers, 3 of 3" },
       ],
+    },
+    result: {
+      label: "Time saved",
+      value: "Hours",
+      line: "Estimated: the studio lead's time each week, finding what a brief left out.",
+      allows:
+        "Every brief reaches the studio complete and in its channel's shape, so the work starts sooner.",
     },
   },
 ];

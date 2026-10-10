@@ -1470,7 +1470,11 @@ export type ArcSection = ArcSectionBase &
          * the frame's foot. The bucket is the vision's 2×2 and the engine's
          * workstream tiles, so one vocabulary runs down the page. U3: the
          * return is ONE number in a decision maker's words, never three
-         * small cells.
+         * small cells. U4 (owner, 2026-10-10): the top row is a low gold
+         * band in the proof cards' language, carrying the title, one meta
+         * line and THIS job's workstream alone (its glyph and its name, on
+         * the right, as the vision draws it); the return reads "time saved,
+         * then what it now allows", and the two never repeat each other.
          *
          * ⚠ THE THIRTY-SECOND ENUMERATED EXCEPTION. Server, no state, DOM
          * only, `data-job-*`; its classes are `.arc-case__*` because
@@ -1514,12 +1518,22 @@ export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
  * where the record gives one, hours saved, assets made, right first time,
  * and the line says it in a decision maker's words. Not every job has a
  * number; the line then carries it plainly. Every figure as filed.
+ *
+ * U4 (owner, 2026-10-10: "this is the time we've saved, and this is what it
+ * now allows us to do"): the column reads in two steps, the saving and then
+ * what the saving opens up, upstream or downstream of the job. ⚠ The line
+ * never restates the number (the owner read "2–3 hrs" over a line saying
+ * two to three hours, and called it the same thing twice).
  */
 export interface ArcJobResult {
-  /** The one number, large, e.g. "15 of 18" or "2–3 hrs". ≤ 10. */
+  /** What the number is, mono, e.g. "Time saved". ≤ 20. Absent ⇒ "Time saved". */
+  label?: string;
+  /** The one number, large, e.g. "Weeks" or "14 of 15". ≤ 10. */
   value: string;
-  /** What it means for the business, one or two sentences. ≤ 110. */
+  /** What the number counts, one sentence, never the number again. ≤ 110. */
   line: string;
+  /** What the saving now allows the team to do, one sentence. ≤ 110. */
+  allows: string;
   /** The count drawn, when the number is a count. */
   tally?: readonly ArcJobTally[];
 }
@@ -1575,7 +1589,8 @@ export interface ArcLeverageUse {
   id: string;
   /** The drawing above the label. */
   glyph: "brief" | "frame" | "flow" | "check" | "ratio" | "spread" | "clock" | "meter";
-  /** Mono, e.g. "Strategy". ≤ 16. */
+  /** Mono, e.g. "Creative strategy". ≤ 20 (16 until ADR-153 U4 named the
+   *  four workstreams in full). */
   label: string;
   /** One line. ≤ 60. */
   line: string;

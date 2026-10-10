@@ -86,7 +86,6 @@ index rides a cell's corner; the fixed `min-height`s go. Every beat is whole at 
 1470 × 800, 1470 × 830 and 1710 × 980, with no horizontal scroll and no text of these beats under
 10px (`--type-xs` raised to `--type-sm`).
 
-
 ## Update 1 (2026-10-09, owner): the page as one argument, read top to bottom
 
 The owner's brief of 9 October, on the whole page: it read as a run of unrelated sections ("The
@@ -188,3 +187,33 @@ super powerful."
 
 Measured headless: each job exactly one screen at 1440 × 790 and 1470 × 830, nothing overflowing
 at 1710 × 980 or 1920 × 1200; both themes; no horizontal scroll at 375 wide.
+
+## Update 4 (2026-10-10, owner): the band, one workstream, and a return in two steps
+
+The owner, on Update 3: the copy was AI slop ("we just need to get rid of it"), the title was
+still too big, the four buckets in the top row made the bar too high, the right column repeated
+itself, and the ask and what Claude did were too small and felt disconnected from each other. He
+kept the structure: "on the left side, we showcase the briefing, in the middle, the proof, and on
+the right side, the numbers". And on the right, "okay, this is the time we've saved, and this is
+what it now allows us to do". The four jobs were re-cut to the work he named (film B of Samako's
+autumn round; Suri's Drive map; the first pass on Samako's AI renders; Suri's brief skill).
+
+1. **The top is a Tensor Gold band**, the proof cards' head grammar in the arcs' own wash
+   (`--arc-gold-wash` in two layers and a 2px `--lv-gold-line` rule stopping at the cut): part of
+   the Loop cards' language without copying them. The title is `--type-xl`; one mono line under it
+   carries client · where it ran · date.
+2. **The card shows its own workstream alone**, on the right of the band, drawn with the vision's
+   glyph and word (`JOB_BUCKETS`: production frame · ops flow · review check · strategy brief). The
+   row of four is deleted; it is what made the bar too high.
+3. **The brief is one rail**: the ask at `--type-lg`, then what Claude did, 01 · 02 · 03, joined by
+   one hairline with hollow gold nodes on the two keys and ink nodes on the steps.
+4. **The return reads in two steps**: what it saved (`result.label`, default "Time saved", ≤ 20)
+   and then what it now allows (`result.allows`, ≤ 110). The registry fails a line or an allows
+   that restates the number, and the two lines being the same sentence. The time figures are the
+   owner's estimates, and each line opens "Estimated". The motion ad's return is its filed count
+   (0 product frames drawn by a model).
+5. **Fit, guarded**: a caption sets on one line at 1280 (≤ 29); a ledger row is one line, key and
+   value together (≤ 32); a still's verdict sits over its label.
+
+Measured headless at 1280 × 720 and 1470 × 830, both themes: one screen each, nothing wrapping
+where it should not.

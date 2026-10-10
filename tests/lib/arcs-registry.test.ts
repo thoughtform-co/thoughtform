@@ -1982,12 +1982,30 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         }
         expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
         expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
-        expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(40);
+        /* U4: the caption sets on one line under the figure at 1280. */
+        expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(29);
         /* U3: ONE return, a number a decision maker reads and a plain
            line; a tally draws it only when it is a count: whole numbers,
            lit within the group, at most 60 segments. */
         expect(s.result.value.length, `${at}: "${s.result.value}"`).toBeLessThanOrEqual(10);
         expect(s.result.line.length, `${at}: the return's line`).toBeLessThanOrEqual(110);
+        /* U4: the return reads in two steps, the saving and then what it
+           allows, and neither line restates the number. */
+        if (s.result.label !== undefined) {
+          expect(s.result.label.length, `${at}: the return's label`).toBeLessThanOrEqual(20);
+          expect(s.result.label.length, `${at}: an empty label`).toBeGreaterThan(0);
+        }
+        expect(s.result.allows.length, `${at}: what it allows`).toBeGreaterThan(0);
+        expect(s.result.allows.length, `${at}: what it allows`).toBeLessThanOrEqual(110);
+        const value = s.result.value.toLowerCase();
+        for (const line of [s.result.line, s.result.allows]) {
+          expect(line.toLowerCase().includes(value), `${at}: "${line}" restates the number`).toBe(
+            false
+          );
+        }
+        expect(s.result.allows, `${at}: the two steps say different things`).not.toBe(
+          s.result.line
+        );
         if (s.result.tally) {
           const segments = s.result.tally.reduce((sum, g) => sum + g.of, 0);
           expect(segments, `${at}: tally`).toBeLessThanOrEqual(60);
@@ -2018,6 +2036,11 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
           for (const r of s.figure.rows) {
             expect(r.label.length, `${at}: ${r.label}`).toBeLessThanOrEqual(12);
             expect(r.value.length, `${at}: ${r.value}`).toBeLessThanOrEqual(32);
+            /* U4: a row is one line at 1280, key and value together. */
+            expect(
+              r.label.length + r.value.length,
+              `${at}: ${r.label} · ${r.value}`
+            ).toBeLessThanOrEqual(32);
           }
         }
         for (const src of media) {
@@ -2042,7 +2065,8 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
      columns: two-digit numbers from 01, short labels, and every link lands
      on a section after the band and before the next chapter. */
   it("every chapter index points down its own part", () => {
-    let seen = 0;
+    /* No page carries one since the X-Bionic page's three bands became bare
+       lines (ADR-153 U4); the walk stays for the next page that does. */
     for (const arc of ARCS) {
       const ids = arc.sections.map((s) => s.id);
       const chapters = arc.sections
@@ -2051,7 +2075,6 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         .map(({ i }) => i);
       arc.sections.forEach((s, i) => {
         if (s.kind !== "interstitial" || !s.index) return;
-        seen += 1;
         const at = `${arc.slug}#${s.id}`;
         expect(s.variant, `${at}: an index is a chapter's`).toBe("chapter");
         expect(s.index.length, `${at}: rows`).toBeGreaterThanOrEqual(3);
@@ -2070,7 +2093,27 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         );
       });
     }
-    expect(seen, "the X-Bionic page's three chapters").toBeGreaterThanOrEqual(3);
+  });
+
+  /* ADR-153 U4 (owner, 2026-10-10: "an interstitial section with only that
+     quote, and then we show the cases"): the X-Bionic page turns on three
+     bare lines, each the owner's own sentence, with nothing around them. */
+  it("the X-Bionic page turns on three bare lines", () => {
+    const arc = ARCS.find((a) => a.slug === "x-bionic-proposal");
+    expect(arc, "the X-Bionic proposal is registered").toBeDefined();
+    const lines = arc!.sections.flatMap((s) => (s.kind === "interstitial" ? [s] : []));
+    expect(lines.map((s) => arcTitleText(s.line))).toEqual([
+      "In 2024, Loop decided to go AI-first.",
+      "This is how we recently built intelligence configurations by making the team self-sufficient.",
+      "And this is how we'll do it at X-Bionic.",
+    ]);
+    for (const s of lines) {
+      expect(s.variant, `${s.id}: a bare line`).toBe("callout");
+      expect(
+        [s.eyebrow, s.subline, s.index, s.chapter, s.attribution, s.clip],
+        `${s.id}: the line alone`
+      ).toEqual([undefined, undefined, undefined, undefined, undefined, undefined]);
+    }
   });
 
   /* ADR-128 U2 and U3: two opt-in rhythms, each a proposal's. */

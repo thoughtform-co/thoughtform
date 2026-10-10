@@ -145,20 +145,26 @@ describe("the instrument record (ADR-154)", () => {
 
   /* ADR-154 U4: X-Bionic's organisation is the page's four disciplines, one
      workstream each, each run by a role; the lit one is the one phase one
-     starts with. */
+     starts with. ADR-153 U4: in the page's one vocabulary and order, the
+     same four names the vision and the job cards letter. */
   it("the X-Bionic record is lawful and its organisation is the four disciplines", () => {
     expect(recordFaults(X_BIONIC_INSTRUMENT)).toEqual([]);
     expect(altitudesOf(X_BIONIC_INSTRUMENT)).toEqual(["org", "work"]);
     const streams = X_BIONIC_INSTRUMENT.org?.workstreams ?? [];
-    expect(streams.map((w) => w.id)).toEqual(["strategy", "production", "ops", "review"]);
-    expect(streams.map((w) => w.bucket)).toEqual(["Strategy", "Production", "Ops", "Review"]);
+    expect(streams.map((w) => w.id)).toEqual(["production", "ops", "review", "strategy"]);
+    expect(streams.map((w) => w.bucket)).toEqual([
+      "Creative production",
+      "Creative ops",
+      "Creative review",
+      "Creative strategy",
+    ]);
     const lit = streams.filter((w) => w.lit?.length);
     expect(lit.map((w) => w.id)).toEqual(["production"]);
     expect(lit[0].lit).toEqual(["context", "evals"]);
     for (const w of streams) {
       expect(w.line?.length, w.id).toBeGreaterThan(0);
       expect(w.line, w.id).not.toMatch(/\d/);
-      expect((w.bucket ?? "").length, w.id).toBeLessThanOrEqual(12);
+      expect((w.bucket ?? "").length, w.id).toBeLessThanOrEqual(20);
     }
     const text = JSON.stringify(X_BIONIC_INSTRUMENT);
     expect(text).not.toMatch(/—/);

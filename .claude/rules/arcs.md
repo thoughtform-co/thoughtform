@@ -757,7 +757,7 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   with `text-align: center`, and the two side stations sit on exactly that row
   — the overlap walk read `MAKE` as printing through `THE STUDIO` while nothing
   on screen touched. **A box is what a guard measures.**
-  ⚠ Copy: `self-sufficient` is banned by the copy law, and `trinny-offer`
+  ⚠ Copy: `self-sufficient` is NOT banned (owner, 2026-09-28; `copyLaw.ts`), and `trinny-offer`
   pins that no row restates a phase's name or deliverable line — the owner:
   "not a simulacrum of those three modules". Rules for the scene it lives in:
   `.claude/rules/trinny-london.md` §The head decodes.
@@ -1262,7 +1262,7 @@ line }, socket, alt }`: six small configurations in the board's cross whose
 - **A proposal is OUTSIDE `ENVELOPE_ARCS`** and deliberately so: that envelope
   is for a page forwarded to strangers, and a proposal names its fee and its
   addressee. What it does hold is the client-facing copy law — no fleet
-  vocabulary, no "self-sufficient", no em dash (`meta.title` exempt: every
+  vocabulary (and "self-sufficient" allowed since 2026-09-28), no em dash (`meta.title` exempt: every
   arc's tab title carries the site's own dash) — walked over every
   `format: "proposal"` arc.
 - **A new client page is one command**: `node scripts/new-arc.mjs --client
@@ -1576,27 +1576,30 @@ harness, or the drive lands short. The drive helpers live in
 **Process:** [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) —
 Cycle B when adding a section kind or surface; Cycle A after fixes.
 
-
 ## The board's beats (ADR-153)
 
 - **Four console kinds, one housing.** `leverage` (28th), `handoff` (29th), `terms` (31st) and
   `job` (32nd, U1) are the arcs' chamfered plate with a head strip and a readout foot, styled in
   `components/arcs/leverage.css` (pinned at zero in `lattice-ratchet` and `type-material-tokens`:
   every spacing a token or `--lv-v`, every tracking a role). One idea and one lit thing a beat.
-- **A `job` is one client job on one screen** (U1, U2): NO HEAD, the frame carries everything
-  (Tensorlake): the top row is the four buckets with this one marked by the gold square, the
-  concrete `title` (≤ 56, sentence case, never a working name) and client · made in · date; then
-  the spec (ask · Claude did 01–03), the figure (`clip` · `pair` kept beside sent back · `ledger`
-  as a log with dot leaders), and ONE return (U3: `result`, a number and a line a decision maker
-  reads, never three small cells); the gate (by role, green diamond) is the foot. ⚠ THE GOLD IS
-  THE DATA: the bucket's square, a `tally` under the return when it is a count (groups of
-  `{ of, lit, dim? }`, ≤ 60 segments, every count as filed), a logged record's values. Text and
-  numerals stay neutral. No money figure unless one is filed. Classes `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes
-  `data-job-*`; under the fill rhythm the headless frame sits on the datum. ⚠ A did-line is ONE line (≤ 44): two-line wraps ran the jobs past the fold at
-  1470 × 830. ⚠ The frame is a SIZE CONTAINER and the media are sized in `cq` units: a loop or a
-  still never sizes itself from its file (a 1080 × 1920 poster would). Within a page the jobs
-  number 1, 2, 3 … and no two share a bucket; every figure as filed, people by role and no
-  pronoun, no money (registry-guarded, media on disk).
+- **A `job` is one client job on one screen** (U1 → U4): NO HEAD, the frame carries everything.
+  ⚠ **U4 (2026-10-10, owner) IS THE LIVE CARD**: the top is a Tensor Gold BAND (the proof cards'
+  head grammar in `--arc-gold-wash`, the 2px rule stopping at the cut) with the concrete `title`
+  (≤ 56, sentence case, `--type-xl`) over one mono line (client · made in · date), and the card's
+  ONE workstream on the right, drawn with the vision's glyph and word (`JOB_BUCKETS`); the row of
+  four buckets is deleted. Then the brief as one rail (the ask at `--type-lg`, Claude did 01–03),
+  the figure (`clip` · `pair` kept beside sent back, the verdict OVER its label · `ledger` with dot
+  leaders), and the return in TWO steps: what it saved (`result.label`, default "Time saved",
+  ≤ 20) and what it now allows (`result.allows`, ≤ 110); the registry fails a line that restates
+  the number. The gate (by role, green diamond) is the foot. A time figure the record does not
+  hold is the owner's estimate and says "Estimated". No money figure unless one is filed. Classes
+  `.arc-case__*` (`.arc-job__*` is the breakdown's), attributes `data-job-*`; under the fill
+  rhythm the headless frame sits on the datum. ⚠ A did-line is ONE line (≤ 44); a caption is
+  one line at 1280 (≤ 29); a ledger row is one line, key and value together (≤ 32). ⚠ The frame
+  is a SIZE CONTAINER and the media are sized in `cq` units: a loop or a still never sizes itself
+  from its file (a 1080 × 1920 poster would). Within a page the jobs number 1, 2, 3 … and no two
+  share a bucket; every figure as filed, people by role and no pronoun (registry-guarded, media
+  on disk).
 - **A chapter band may carry an `index`** (U1): 3–5 rows, `n` "01" onward, labels ≤ 18, each
   `href` a section after the band and before the next chapter (registry-guarded).
 
@@ -1629,7 +1632,7 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   the cases that ran did, the log's line sits under them (`checksNote`); a passed check is ink,
   never green (ADR-100). Both arc routes import `lattice.css` and `instrument.css`.
 - **The organisation altitude is an exploded stack (U4, 2026-10-09).** The workstreams as tiles
-  on top (`InstrumentWorkstream.bucket`, ≤ 12, the discipline; the owner by role on `line`), the
+  on top (`InstrumentWorkstream.bucket`, ≤ 20 since ADR-153 U4, the discipline; the owner by role on `line`), the
   layer the team writes as one slab (owned and hatched when the context or the evaluations is
   lit), the organisation's slab under it, the six as callouts either side with no frame. One
   slab drawing, `components/instrument/Slab.tsx`, shared with the leverage; its hatch id is per

@@ -50,9 +50,9 @@
 .arc-hand__time-note,
 .arc-hand__row-label,
 .arc-hand__seg-name,
-.arc-case__buckets li,
+.arc-case__key,
 .arc-case__meta,
-.arc-case__row dt,
+.arc-case__ws-word,
 .arc-case__did-n,
 .arc-case__caption,
 .arc-case__result-label,
@@ -180,10 +180,13 @@
   stroke-width: 1;
   opacity: 0.5;
 }
+/* The label row carries a framed chip, so the gap under it is a full step:
+   at `--space-xs` the chip's bottom edge sat on the line below it (owner,
+   2026-10-10: "the 'Only yours' button is too close to the text"). */
 .arc-lev__plate-copy {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 .arc-lev__plate-label {
   display: flex;
@@ -516,14 +519,14 @@
   text-align: right;
 }
 
-/* ── The job: one client job on one screen (ADR-153 U1, U2) ───────
-   No head: the frame carries everything, as Tensorlake's do. Its top row
-   is the four buckets (this one marked with the gold square, Tensorlake's
-   "■ METRICS"), the title and a key-value block; under it the sandwich
-   (the spec · the figure · three measured cells); the gate is the foot.
-   THE GOLD IS THE DATA, as the references use their accent: the bucket's
-   square, the tallies under the numbers, the values of a logged record.
-   Text and numerals stay neutral. */
+/* ── The job: one client job on one screen (ADR-153 U1 → U4) ──────
+   No head: the frame carries everything. U4 (owner, 2026-10-10): the top
+   is a Tensor Gold BAND, the proof cards' head grammar in the arcs' own
+   wash, with the title and one mono line on the left and the card's ONE
+   workstream on the right (the vision's glyph and word). Under it the
+   brief, the figure and the return (the saving, then what it allows);
+   the gate is the foot. Gold marks the band, the rail's nodes, the tally
+   and a logged record's values; the copy and the numerals stay ink. */
 
 .arc-case {
   --case-person: var(--atreides-light, #5b7a4e);
@@ -532,120 +535,157 @@
   margin-top: 0;
 }
 
-/* The top row: the buckets, the title, and who, where and when. */
+/* The band (U4): the title and one mono line on the proof cards' Tensor
+   Gold head, in the arcs' own wash; the card's ONE workstream on the right,
+   glyph and word as the vision draws it. */
 .arc-case__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: var(--space-xl);
-  padding: calc(var(--lv-v) * 1.5) var(--lat-pad-cell);
-  padding-right: calc(var(--lat-pad-cell) + var(--arc-plate-ch));
-  border-bottom: 1px solid var(--arc-rule);
-}
-.arc-case__lead {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--lv-v) * 1.25);
-}
-.arc-case__buckets {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: var(--space-lg);
-  row-gap: var(--space-xs);
-}
-.arc-case__buckets li {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  color: var(--arc-ink-40);
+  justify-content: space-between;
+  gap: var(--space-xl);
+  padding: var(--lv-v) calc(var(--lat-pad-cell) + var(--arc-plate-ch)) var(--lv-v)
+    var(--lat-pad-cell);
+  border-bottom: 1px solid var(--arc-rule);
+  background:
+    linear-gradient(90deg, var(--arc-gold-wash), transparent),
+    linear-gradient(
+      90deg,
+      var(--arc-gold-wash),
+      color-mix(in srgb, var(--arc-gold-wash) 40%, transparent)
+    );
 }
-.arc-case__buckets li::before {
+.arc-case__top::before {
   content: "";
-  flex: none;
-  width: var(--space-sm);
-  height: var(--space-sm);
-  border: 1px solid var(--arc-ink-22);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - var(--arc-plate-ch));
+  height: 2px;
+  background: var(--lv-gold-line);
 }
-.arc-case__buckets li[data-job-on] {
-  color: var(--arc-ink);
-}
-.arc-case__buckets li[data-job-on]::before {
-  border-color: var(--gold);
-  background: var(--gold);
+.arc-case__lead {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
 }
 .arc-case__title {
   margin: 0;
-  max-width: 44ch;
   font-family: var(--lv-sans);
-  font-weight: 400;
-  font-size: var(--type-2xl);
-  line-height: 1.1;
+  font-size: var(--type-xl);
+  font-weight: var(--weight-text);
   letter-spacing: var(--track-display);
+  line-height: 1.1;
   color: var(--arc-ink);
-  text-wrap: balance;
 }
 .arc-case__meta {
-  display: grid;
-  gap: var(--space-xs);
-}
-.arc-case__meta div {
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-xl);
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0;
+  color: var(--arc-ink-60);
 }
-.arc-case__meta dt {
+.arc-case__meta span + span::before {
+  content: "\00b7";
+  margin-right: var(--space-md);
   color: var(--arc-ink-40);
 }
-.arc-case__meta dd {
+.arc-case__ws {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
   color: var(--arc-ink-80);
-  text-align: right;
+}
+.arc-case__ws .arc-lev__glyph {
+  height: var(--space-lg);
+  align-self: center;
 }
 
-/* Under the fill rhythm the split takes what the top row and the foot
-   leave (ADR-128 U3). */
+/* Under the fill rhythm the split takes what the band and the foot leave. */
 .arc-case__split {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr) minmax(0, 3fr);
+  grid-template-columns: minmax(0, 9fr) minmax(0, 9fr) minmax(0, 6fr);
 }
 
-/* The spec: two cells of one height, the ask and what Claude did, each
-   read from its top (Tensorlake's paired stat cells). */
+/* The spec as one rail (U4, owner: the ask and what Claude did read
+   "disconnected"): a hollow node on each key, a filled one on each step,
+   one hairline through them all. */
 .arc-case__spec {
-  display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  padding: calc(var(--lv-v) * 0.5) var(--lat-pad-cell);
+  --case-node: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--lv-v) var(--lat-pad-cell);
   border-right: 1px solid var(--arc-rule);
 }
-.arc-case__row {
-  display: flex;
-  flex-direction: column;
+.arc-case__rail {
+  position: relative;
+  display: grid;
   gap: var(--space-sm);
-  padding-block: calc(var(--lv-v) * 0.75);
+  padding-left: calc(var(--case-node) + var(--space-md));
 }
-.arc-case__row + .arc-case__row {
-  border-top: 1px dashed var(--arc-rule);
+.arc-case__rail::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--type-sm) * 0.7);
+  bottom: calc(var(--type-md) * 0.725);
+  left: calc(var(--case-node) / 2);
+  width: 1px;
+  background: var(--arc-rule);
 }
-.arc-case__row dt {
-  color: var(--arc-ink-50);
+.arc-case__key {
+  position: relative;
+  margin: 0;
+  color: var(--arc-ink-60);
 }
-.arc-case__row dd {
-  font-size: var(--type-base);
-  line-height: 1.45;
-  color: var(--arc-ink-80);
+.arc-case__key::before,
+.arc-case__did li::before {
+  content: "";
+  position: absolute;
+  top: calc(0.5lh - var(--case-node) / 2);
+  left: calc(-1 * (var(--case-node) + var(--space-md)));
+  width: var(--case-node);
+  height: var(--case-node);
+  box-sizing: border-box;
+}
+.arc-case__key::before {
+  border: 1px solid var(--lv-gold-line);
+  background: var(--arc-plate);
+}
+.arc-case__did li::before {
+  background: var(--arc-ink-40);
+}
+.arc-case__ask {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--lv-sans);
+  font-size: var(--type-lg);
+  line-height: 1.35;
+  color: var(--arc-ink);
 }
 .arc-case__did {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .arc-case__did li {
-  display: grid;
-  grid-template-columns: var(--space-xl) minmax(0, 1fr);
-  align-items: baseline;
+  position: relative;
+  display: flex;
+  gap: var(--space-sm);
+  font-family: var(--lv-sans);
+  font-size: var(--type-md);
+  line-height: 1.45;
+  color: var(--arc-ink-80);
+  white-space: nowrap;
 }
 .arc-case__did-n {
+  flex: none;
   color: var(--arc-ink-40);
 }
 
@@ -724,10 +764,13 @@
 .arc-case__pair[data-job-ratio="3:2"] img {
   aspect-ratio: 3 / 2;
 }
+/* The verdict sits over its label, so a still's own line never breaks
+   beside a chip a quarter of its width. */
 .arc-case__verdict {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-sm);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
   font-size: var(--type-base);
   line-height: 1.3;
   color: var(--arc-ink-60);
@@ -779,6 +822,7 @@
 .arc-case__ledger dd {
   color: var(--lv-gold-text);
   text-align: right;
+  white-space: nowrap;
 }
 .arc-case__caption {
   display: flex;
@@ -793,26 +837,35 @@
   color: var(--arc-ink-40);
 }
 
-/* What it returned (U3): one number, large and neutral, one line a
-   decision maker reads at reading size, and the count drawn under it in
-   the gold's tints when it is a count. Never three small cells. */
+/* What it returned (U4): what it saved, then what it now allows, two
+   steps on one column, the line never restating the number. */
 .arc-case__result {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
   border-left: 1px solid var(--arc-rule);
   container-type: inline-size;
 }
-.arc-case__result-label {
+.arc-case__saved,
+.arc-case__allows {
+  display: grid;
+  align-content: center;
+  gap: var(--space-sm);
   padding: var(--lv-v) var(--lat-pad-cell);
-  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-case__allows {
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-case__result-label {
+  margin: 0;
   color: var(--arc-ink-60);
 }
-.arc-case__result-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-md);
-  padding: calc(var(--lv-v) * 1.25) var(--lat-pad-cell);
+.arc-case__allows-line {
+  margin: 0;
+  font-family: var(--lv-sans);
+  font-size: var(--type-md);
+  line-height: 1.45;
+  color: var(--arc-ink-80);
 }
 /* The display size, or less: a mono glyph is 0.6em, so a value of
    `--case-len` characters is held to the column it sits in. */
@@ -829,9 +882,11 @@
   white-space: nowrap;
 }
 .arc-case__result-line {
-  font-size: var(--type-lg);
-  line-height: 1.4;
-  color: var(--arc-ink-80);
+  margin: 0;
+  font-family: var(--lv-sans);
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-60);
 }
 .arc-case__tally {
   display: flex;
@@ -977,8 +1032,8 @@
   }
   /* The top row stacks: the buckets and the title, then who, where, when. */
   .arc-case__top {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: var(--space-md);
   }
   .arc-case__spec {
