@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
@@ -8,7 +8,6 @@ import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
 import { configRun } from "./configRun";
 import type { CfgSeat } from "./configRun";
-import { StackSteps } from "./stack/StackSteps";
 
 const at = (s: CfgSeat) => ({ "--ax": s.ax, "--at": s.at }) as CSSProperties;
 const two = (n: number) => String(n).padStart(2, "0");
@@ -35,16 +34,15 @@ interface ArcConfigRunProps {
  *   6  automation: the lower pass, one line through the evals to one
  *      person, asked before it goes out
  *
- * Three ways to read it (`run.mode`): `sheet`, whole; `pinned`, its six
- * parts lighting on a runway (stack.css's view timeline, copied); `states`,
- * the handoff's rail over it, the three passes as three states
- * (`StackSteps`).
+ * ⚠ READ WHOLE, ON ONE SCREEN (owner, 2026-10-11, "Whole"): the six parts
+ * at once at 1280×720 and 1470×830. A runway lighting them in turn and the
+ * handoff's rail over them were the other two readings, and came out with
+ * his pick.
  *
  * ⚠ THE SVG LETTERS NOTHING. Every word is DOM on a seat `configRun`
  * computes, so no word sits on a drawn face and every collision is a box a
  * test can measure.
- * ⚠ SERVER. The states' rail is the only client island, and it is the
- * stack's own.
+ * ⚠ SERVER, NO STATE, DOM ONLY: the drawing is whole in a static render.
  */
 export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRunProps) {
   const { run, steps } = section;
@@ -55,8 +53,6 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
     run.layer.workstreams.findIndex((w) => w.lit)
   );
   const d = configRun(section.id, count, litIndex);
-  const pinned = run.mode === "pinned";
-  const states = run.mode === "states";
   const lit = run.layer.workstreams[litIndex];
   /* The slab's hatch, the stack's own (StackFigure), its id per instance. */
   const hatch = `${section.id}-cfg-hatch`;
@@ -83,7 +79,7 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
             </pattern>
           </defs>
           {d.groups.map((g) => (
-            <g key={g.step} className="cfg__part" data-cfg-step={g.step}>
+            <g key={g.step} className="cfg__part">
               {g.marks.map((m, i) => (
                 <path
                   key={`${m.cls}-${i}`}
@@ -97,15 +93,10 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
           ))}
         </svg>
         <div className="cfg__words" aria-hidden="true">
-          <p className="cfg__tag" data-cfg-tag="layer" data-cfg-step="1" style={at(d.seats.layer)}>
+          <p className="cfg__tag" data-cfg-tag="layer" style={at(d.seats.layer)}>
             {run.layer.label}
           </p>
-          <ul
-            className="cfg__tag cfg__list"
-            data-cfg-tag="list"
-            data-cfg-step="1"
-            style={at(d.seats.list)}
-          >
+          <ul className="cfg__tag cfg__list" data-cfg-tag="list" style={at(d.seats.list)}>
             {run.layer.workstreams.map((w) => (
               <li key={w.id} className="cfg__ws" data-cfg-lit={w.lit ? "" : undefined}>
                 <span className="cfg__ws-mark" />
@@ -113,12 +104,7 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
               </li>
             ))}
           </ul>
-          <p
-            className="cfg__tag cfg__head"
-            data-cfg-tag="head"
-            data-cfg-step="2"
-            style={at(d.seats.head)}
-          >
+          <p className="cfg__tag cfg__head" data-cfg-tag="head" style={at(d.seats.head)}>
             <span className="cfg__head-ws">{lit?.name}</span>
             <span className="cfg__head-run">›</span>
             {run.jobs.map((j) => (
@@ -128,22 +114,11 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
             ))}
           </p>
           {run.inputs.map((label, i) => (
-            <p
-              key={label}
-              className="cfg__tag"
-              data-cfg-tag="input"
-              data-cfg-step="3"
-              style={at(d.seats.inputs[i])}
-            >
+            <p key={label} className="cfg__tag" data-cfg-tag="input" style={at(d.seats.inputs[i])}>
               {label}
             </p>
           ))}
-          <p
-            className="cfg__tag"
-            data-cfg-tag="output"
-            data-cfg-step="3"
-            style={at(d.seats.output)}
-          >
+          <p className="cfg__tag" data-cfg-tag="output" style={at(d.seats.output)}>
             {run.output}
           </p>
           {steps.map((s, i) => (
@@ -152,7 +127,6 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
               className="cfg__tag cfg__row"
               data-cfg-tag="row"
               data-cfg-row={i}
-              data-cfg-step={4 + i}
               style={at(d.seats.rows[i])}
             >
               <p className="cfg__row-key">
@@ -162,20 +136,10 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
               <p className="cfg__row-line">{run.lines[i]}</p>
             </div>
           ))}
-          <p
-            className="cfg__tag"
-            data-cfg-tag="key"
-            data-cfg-step="5"
-            style={at(d.seats.keys.skill)}
-          >
+          <p className="cfg__tag" data-cfg-tag="key" style={at(d.seats.keys.skill)}>
             {run.keys.skill}
           </p>
-          <p
-            className="cfg__tag"
-            data-cfg-tag="key"
-            data-cfg-step="5"
-            style={at(d.seats.keys.evals)}
-          >
+          <p className="cfg__tag" data-cfg-tag="key" style={at(d.seats.keys.evals)}>
             {run.keys.evals}
           </p>
         </div>
@@ -188,7 +152,7 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
   const legend = (
     <ol className="cfg__legend">
       {steps.map((s, i) => (
-        <li key={s.id} className="cfg__legend-row" data-cfg-step={4 + i}>
+        <li key={s.id} className="cfg__legend-row">
           <p className="cfg__row-key">
             <span className="cfg__row-n">{two(i + 1)}</span>
             {s.label}
@@ -199,31 +163,11 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
     </ol>
   );
 
-  let body: ReactNode = (
-    <>
-      {figure}
-      {legend}
-    </>
-  );
-  if (states) {
-    body = (
-      <StackSteps
-        figure="run"
-        steps={steps.map((s, i) => ({ id: s.id, n: two(i + 1), label: s.label, when: s.when }))}
-      >
-        {figure}
-        {legend}
-      </StackSteps>
-    );
-  }
-
   return (
     <ArcBeat
       id={section.id}
       kind="handoff"
-      className={`arc-section arc-sec arc-sec--handoff arc-sec--handoff-run${
-        pinned ? " arc-sec--handoff-pin" : ""
-      }`}
+      className="arc-section arc-sec arc-sec--handoff arc-sec--handoff-run"
       ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
       motion={motion}
     >
@@ -235,8 +179,9 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
           sectionId={section.id}
           motion={motion}
         />
-        <div className="cfg arc-reveal" data-cfg-mode={run.mode} {...rung(motion, 0.14)}>
-          {body}
+        <div className="cfg arc-reveal" {...rung(motion, 0.14)}>
+          {figure}
+          {legend}
         </div>
       </div>
     </ArcBeat>

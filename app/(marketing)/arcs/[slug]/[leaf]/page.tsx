@@ -47,6 +47,11 @@ import "@/components/arcs/leverage.css";
 // team writes, drawn wherever a beat places it. After leverage.css, whose
 // `--lv-v` it reads, before theme.css.
 import "@/components/arcs/stack/stack.css";
+// The configuration as one run (the X-Bionic proposal, the owner's pick of
+// 2026-10-11), `.cfg*`-scoped: an arc without the run gets bytes and no
+// matching rule. After leverage.css, whose handoff beat it draws, before
+// theme.css.
+import "@/components/arcs/config-run.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

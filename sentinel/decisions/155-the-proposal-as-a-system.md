@@ -14,7 +14,7 @@
   sweep), `lib/arcs/copyLaw.ts` (`PROPOSAL_VOICE_BANS`, read on the registered proposals alone: the general law is also the musings' and the sheets', where the first person is the voice), `lib/arcs/types.ts` (`job.top`, `crew.layout`,
   `CrewRow.result`, `handoff.time?` and `handoff.figure`, `instrument.pin`,
   `ArcLeverageUse.label` ≤ 20); `components/arcs/{ArcReturn,ArcJob,ArcCrew,ArcHandoff,
-  ArcLeverage,ArcInstrument,ArcHoloStageMount}.tsx`, `components/arcs/stack/**` (new),
+ArcLeverage,ArcInstrument,ArcHoloStageMount}.tsx`, `components/arcs/stack/**` (new),
   `components/holo-stage/stackGeom.ts` (new), `components/instrument/{Instrument,Slab}.tsx`,
   `lib/instrument/steps.ts` (new), `leverage.css`, `stack.css` (new route sheet); tests
   `arc-stack`, `instrument-steps`, the registry's chapter floor, job and crew guards, the
@@ -115,8 +115,51 @@ never goes idle.
 
 ## Left open
 
-- The owner's read: one visual or two for the approach (`PF` against `PG`), the quote band, the
-  mark head, the ledger, the pinned engine.
+- The owner's read: the quote band, the mark head, the ledger, the pinned engine. One visual or
+  two for the approach is answered: one run, read whole, with the two lines after it (U1).
 - The jobs' copy and evidence (the Suri briefing skill, Samako's Film B) are the next pass,
   through the voice skill, every number as filed.
 - The lab is deleted once this is Accepted; it is a one-page look-dev, not a standing lab.
+
+## Update 1 (2026-10-11, owner): the approach is one run, read whole, and the two lines follow it
+
+On 2026-10-10 the owner approved an eight-step outline for the approach ("Draw it"): the layer and
+its four workstreams, creative production opened onto its jobs, ads design worked through from its
+inputs to the finished ad, adoption with a person checking, encoding as a skill and its evals,
+automation asking the workstream's owner once, the two lines, and the move upstream. It was drawn
+as one run and offered three ways: whole on one screen, lit part by part on a pinned runway, and
+stepped by the handoff's rail over the run. He picked "Whole" (2026-10-11): the run read in one
+look, on one screen at both laptop sizes.
+
+1. **The approach is `handoff.run`** (`ArcHandoffRun`; `components/arcs/ArcConfigRun.tsx`, the
+   geometry pure in `configRun.ts`, the sheet `config-run.css`, imported by the arcs' leaf route
+   and the lab): one drawing in six parts, the SVG lettering nothing and every word a DOM span
+   seated by `--ax`/`--at`. Its layer and four workstreams are the vision's own words, read from
+   one const (`WORKSTREAMS`) by both beats; one workstream and one job are lit; the three run
+   lines are at most 76 characters (a line that runs over is shortened, never the cap). With a
+   run, the plates, the time bars and the figure are not drawn; on the phone (≤ 960) a three-row
+   legend carries the three lines. Under the fill rhythm the figure is a size container and the
+   stage is the largest box of the crop's aspect it holds.
+2. **The two lines follow it** (the outline's steps 7 and 8) as `upstream`, a `horizon` titled
+   "Longer tasks for Claude, upstream time for your team." that spreads `THE_HORIZON_RECORD` by
+   reference: the workshop's two lines, one record, with this page's own head.
+3. **The other two readings are deleted** with their CSS and their guards, the runway (`pinned`)
+   and the rail over the run (`states`), so the run has no mode. The stack (`approach=stack`, §3's
+   WRITTEN state) and the plates as they shipped before (`approach=plates`, ADR-153) stay as lab
+   values, and the lab's `upstream` knob is `lines · off · horizon`. `PA` is still production by
+   reference.
+
+Measured headless at 1280 × 720 and 1470 × 830, both themes: the approach ends at 678 of 720 and
+780 of 830, its smallest word 11.52px and 11.8px, no two words touching; the two lines end at 662
+of 720 and 764 of 830. At 390 × 844 the legend carries the run. Pandora's sent page renders the
+same DOM as before (nothing under `shared/**` moved). The whole unit suite passes.
+**Guard**: `proposal-system` (the run is production's by reference, the vision's layer and
+workstreams in order, one lit lane and one lit job, the jobs, inputs and output ≤ 18 and the run
+lines ≤ 76, every lettered string digit-free; the two lines are `THE_HORIZON_RECORD`'s by
+reference; the leaf route imports the sheet); `config-run.css` at zero in `lattice-ratchet` and
+`type-material-tokens`.
+
+**Left open, for the owner**: the two lines' title takes three lines at 1280 × 720 (a proposal
+title's budget is two; it is copy, so his word); the run's other two jobs ("Product imagery",
+"Motion") are placeholders until the jobs' pass names them; within the run, the copy editor and
+the product designer who write the checks are named in its alt text only.

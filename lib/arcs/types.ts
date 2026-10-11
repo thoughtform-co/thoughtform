@@ -1465,7 +1465,8 @@ export type ArcSection = ArcSectionBase &
         head: ArcHead;
         steps: readonly [ArcHandoffStep, ArcHandoffStep, ArcHandoffStep];
         /** The two time bars. Optional since the proposal system
-         *  (2026-10-10): a beat that draws a `figure` letters no bars. */
+         *  (2026-10-10): a beat that draws a `figure` or a `run` letters no
+         *  bars. */
         time?: {
           label: string;
           /** A mono aside on the bars, e.g. "Illustrative". */
@@ -1485,8 +1486,9 @@ export type ArcSection = ArcSectionBase &
          * The configuration, drawn as one run (the X-Bionic proposal,
          * 2026-10-10, the owner's eight-step outline): the layer and its
          * workstreams, one job's inputs and its finished ad, and the three
-         * steps as three passes over the same ground. With a run the
-         * plates, the bars and the figure are not drawn.
+         * steps as three passes over the same ground, read whole. With a
+         * run the plates, the bars and the figure are not drawn. The
+         * X-Bionic page's approach since the owner's pick (2026-10-11).
          */
         run?: ArcHandoffRun;
       }
@@ -1671,7 +1673,8 @@ export interface ArcHandoffStep {
   id: string;
   /** The plate's readout, top right, e.g. "Week 1". ≤ 16. */
   when: string;
-  /** Mono verb, e.g. "Adopt". ≤ 16. */
+  /** Mono, the step's name, e.g. "Adoption" (a verb, "Adopt", on the
+   *  plates). ≤ 16. */
   label: string;
   /** The step as a short sentence. ≤ 48. */
   title: string;
@@ -1722,21 +1725,19 @@ export interface ArcHandoffFigure {
 
 /**
  * The configuration as one run (the X-Bionic proposal, 2026-10-10): the
- * vision's own layer as a key plan with a lane per workstream, one job
- * opened from the lit lane, its three inputs and the finished ad at the two
- * ends, and the handoff's three steps as three passes between them: made
- * with Claude and checked at every step, written down as a skill and its
- * evals, run by an agent that asks the owner once. The words are the
- * record's, the geometry is `configRun`'s; the SVG letters nothing.
+ * vision's own layer with a tile per workstream, one job opened from the
+ * lit tile, its three inputs and the finished ad at the two ends, and the
+ * handoff's three steps as three passes between them: made with Claude and
+ * checked at every step, written down as a skill and its evals, run by an
+ * agent that asks the owner once. The words are the record's, the geometry
+ * is `configRun`'s; the SVG letters nothing.
+ *
+ * ⚠ READ WHOLE, ON ONE SCREEN (owner, 2026-10-11, "Whole"). A runway that
+ * lit its six parts in turn and the handoff's rail over it, one state per
+ * pass, were the other two readings; they came out of the lab with his
+ * pick, so the run has no mode.
  */
 export interface ArcHandoffRun {
-  /**
-   * How the three passes are read. `sheet`: the drawing whole, at once.
-   * `pinned`: on a runway, its six parts lighting one after another as the
-   * reader scrolls (CSS view timeline; whole without one). `states`: the
-   * handoff's rail over the drawing, the three passes as three states.
-   */
-  mode: "sheet" | "pinned" | "states";
   /** The layer, as the vision names it, and its workstreams in the house
    *  order; the lit one is the workstream the job opens from. */
   layer: {

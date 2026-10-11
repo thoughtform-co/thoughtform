@@ -1,7 +1,8 @@
-import type { ArcDef } from "../types";
+import type { ArcDef, ArcLeverageUse } from "../types";
 
 import { X_BIONIC_JOBS } from "./shared/jobs";
 import { LOOP_PROOF_CARDS, LOOP_RETURN, VINCE_ABOUT } from "./shared/loopProof";
+import { THE_HORIZON_RECORD } from "./shared/workshopPractice";
 import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 
 /**
@@ -39,6 +40,40 @@ import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 
 const DAY_RATE = 1000;
 const eur = (n: number) => `€${n.toLocaleString("en-GB")}`;
+
+/* The vision's layer and its four workstreams, in the owner's order and
+   words (2026-10-10): Creative production, Creative ops, Creative review,
+   Creative strategy. The same four, in the same order, are the jobs'
+   buckets and the engine's workstreams. Hoisted (2026-10-11) because the
+   approach's run reads them too, by reference: the reader meets the same
+   layer and the same four names twice, and they cannot drift apart. */
+const LAYER = "Your layer";
+const WORKSTREAMS: readonly [ArcLeverageUse, ArcLeverageUse, ArcLeverageUse, ArcLeverageUse] = [
+  {
+    id: "production",
+    glyph: "frame",
+    label: "Creative production",
+    line: "Imagery, motion and copy, at volume",
+  },
+  {
+    id: "ops",
+    glyph: "flow",
+    label: "Creative ops",
+    line: "Every ad briefed, named and filed",
+  },
+  {
+    id: "review",
+    glyph: "check",
+    label: "Creative review",
+    line: "Checked against the real product first",
+  },
+  {
+    id: "strategy",
+    glyph: "brief",
+    label: "Creative strategy",
+    line: "Briefs with an audience and variants",
+  },
+];
 
 export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
   slug: "x-bionic-proposal",
@@ -118,7 +153,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       stack: [
         {
           id: "layer",
-          label: "Your layer",
+          label: LAYER,
           line: "Skills and evals your team writes",
           chip: "Only yours",
           own: true,
@@ -146,40 +181,19 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         { label: "Claude", value: "Installed" },
         { label: "Layer", value: "Owned" },
       ],
-      /* The four workstreams in the owner's order and words (2026-10-10):
-         Creative production, Creative ops, Creative review, Creative
-         strategy. The same four, in the same order, are the jobs' buckets
-         and the engine's workstreams. */
-      uses: {
-        label: "One layer, four workstreams",
-        items: [
-          {
-            id: "production",
-            glyph: "frame",
-            label: "Creative production",
-            line: "Imagery, motion and copy, at volume",
-          },
-          {
-            id: "ops",
-            glyph: "flow",
-            label: "Creative ops",
-            line: "Every ad briefed, named and filed",
-          },
-          {
-            id: "review",
-            glyph: "check",
-            label: "Creative review",
-            line: "Checked against the real product first",
-          },
-          {
-            id: "strategy",
-            glyph: "brief",
-            label: "Creative strategy",
-            line: "Briefs with an audience and variants",
-          },
-        ],
-      },
+      uses: { label: "One layer, four workstreams", items: WORKSTREAMS },
     },
+
+    /* ── The approach: the configuration as one run ────────────────────
+       The owner's eight-step outline (2026-10-10, "Draw it"), read whole
+       on one screen (2026-10-11, "Whole"): the vision's layer and its four
+       workstreams, creative production opened onto its jobs and ads design
+       worked through, from its three inputs to the finished ad, and the
+       three steps as three passes over the same ground: made with Claude
+       and checked at every step, written down as a skill and its evals,
+       run by an agent that asks the workstream's owner once. The plates
+       and the time bars it replaced are a lab value now
+       (/test/proposal-system, `approach=plates`). */
     {
       id: "adoption",
       kind: "handoff",
@@ -187,20 +201,20 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Thoughtform · the approach",
         title: { pre: "How adoption and", em: "automation connect." },
-        sub: "Claude can only automate what your team has written down. So adoption comes first: the team learns on its own work, then Claude takes the repetitive part.",
+        sub: "Claude can only automate what your team has written down. The first phase starts with ads design: the team makes the ads with Claude, writes down what works, and an agent runs it from there.",
       },
       steps: [
         {
           id: "adopt",
           when: "Week 1",
-          label: "Adopt",
+          label: "Adoption",
           title: "Your team learns on its own work",
           who: "Your team",
         },
         {
           id: "encode",
           when: "Weeks 1–2",
-          label: "Write it down",
+          label: "Encoding",
           title: "How the work is done, and what good looks like",
           who: "Your team, with Thoughtform",
           lit: true,
@@ -208,32 +222,54 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         {
           id: "automate",
           when: "From week 2",
-          label: "Automate",
+          label: "Automation",
           title: "Claude runs it, and asks when unsure",
           who: "Claude, checked by your team",
         },
       ],
-      time: {
-        label: "Where your team's time goes",
-        note: "Illustrative",
-        rows: [
-          {
-            label: "Today",
-            segments: [
-              { label: "Making and resizing", share: 0.55 },
-              { label: "Admin", share: 0.25 },
-              { label: "Ideas", share: 0.2, lit: true },
-            ],
-          },
-          {
-            label: "Configured",
-            segments: [
-              { label: "Checking", share: 0.2 },
-              { label: "Ideas, briefs and campaigns", share: 0.8, lit: true },
-            ],
-          },
+      run: {
+        layer: {
+          label: LAYER,
+          workstreams: WORKSTREAMS.map((w) => ({
+            id: w.id,
+            name: w.label,
+            ...(w.id === "production" ? { lit: true as const } : {}),
+          })),
+        },
+        jobs: [
+          { id: "ads", name: "Ads design", lit: true },
+          { id: "imagery", name: "Product imagery" },
+          { id: "motion", name: "Motion" },
         ],
+        inputs: ["Product renders", "Tone of voice", "The brief"],
+        output: "The finished ad",
+        lines: [
+          "Your team makes the ads with Claude, and checks every step",
+          "What works, written down once for everyone",
+          "An agent runs it against the evals, and asks the workstream's owner once",
+        ],
+        keys: { skill: "Skill", evals: "Evals" },
+        alt: "The configuration as one run. X-Bionic's layer with its four workstreams, creative production opened onto its jobs and ads design worked through: the product renders, the tone of voice and the brief run into one job and out to the finished ad three ways. Made with Claude, a person checking every step; what works written down between the runs, as a skill and its evals, the checks the copy editor and the product designer write; run by an agent through the evals, which asks the workstream's owner once before the ad goes out.",
       },
+    },
+
+    /* ── Longer tasks: the two lines ───────────────────────────────────
+       Steps seven and eight of the outline, right after the run: a tool
+       you operate, checked at every step, over an agent with the context
+       and the evals, which runs much longer before it asks. The body is
+       the workshop's own record, by reference (`THE_HORIZON_RECORD`, the
+       `theHorizon` precedent: share the record, author the frame); the
+       head carries the move upstream. */
+    {
+      id: "upstream",
+      kind: "horizon",
+      menuLabel: "Longer tasks",
+      head: {
+        eyebrow: "Thoughtform · what it buys",
+        title: { pre: "Longer tasks for Claude,", em: "upstream time for your team." },
+        sub: "A tool you operate needs a person at every step. An agent with the context and the evals runs much longer before it asks, so your team's time goes a level higher, to the briefs and the campaigns, where the same loop starts again.",
+      },
+      ...THE_HORIZON_RECORD,
     },
 
     /* ── Loop ──────────────────────────────────────────────────────────

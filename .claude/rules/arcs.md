@@ -1582,6 +1582,8 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   `job` (32nd, U1) are the arcs' chamfered plate with a head strip and a readout foot, styled in
   `components/arcs/leverage.css` (pinned at zero in `lattice-ratchet` and `type-material-tokens`:
   every spacing a token or `--lv-v`, every tracking a role). One idea and one lit thing a beat.
+  A `handoff` that carries a `run` draws the configuration run instead (§The proposal system;
+  `config-run.css`, pinned at zero in the same two ratchets).
 - **A `job` is one client job on one screen** (U1 → U4): NO HEAD, the frame carries everything.
   ⚠ **U4 (2026-10-10, owner) IS THE LIVE CARD**: the top is a Tensor Gold BAND (the proof cards'
   head grammar in `--arc-gold-wash`, the 2px rule stopping at the cut) with the concrete `title`
@@ -1675,10 +1677,24 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   column and the phone's list stack the words in DOM order**, so `StackFigure` sorts them by
   seat, top-down: the leverage passes its tiers bottom-up and, unsorted, lettered the lit layer
   "The models" with every geometry guard green (2026-10-10; `arc-stack` renders the markup).
-- **The approach** is `handoff.figure` (ADR-153 amended): the three steps as a rail of buttons
-  (`StackSteps`, `data-step`, step 2 at rest), the layer dim at 0, written at 1, the run at 2;
-  the hologram's `write` and `run` groups ride the same attribute (`ArcHoloStageMount`, scene
-  `stack`, `holo-stage/stackGeom.ts` on the doctrine's allow-list).
+- ⚠ **THE APPROACH IS ONE RUN, READ WHOLE (owner, 2026-10-11, "Whole"; ADR-155 U1).**
+  `handoff.run` (`ArcHandoffRun`) hands the section to `ArcConfigRun` (geometry pure in
+  `configRun.ts`; the sheet `config-run.css`, `.cfg`-scoped, imported by `[slug]/[leaf]/page.tsx`
+  and the lab): the owner's eight-step outline as one drawing in six parts. The vision's own layer
+  and its four workstreams (the record's `WORKSTREAMS`, the const the vision reads), the lit
+  workstream opened onto its jobs, the lit job's three inputs to its output, and the three steps
+  as three passes over the same ground. The SVG letters nothing; the words are DOM seated by
+  `--ax`/`--at`; ≤960 draws a three-row legend (`.cfg__legend`). With a run the plates, the bars
+  and the figure are not drawn (`time` and `figure` absent). A run line is ≤ 76: shorten the
+  line, never the cap. ⚠ Under `rhythm: "fill"` (≥961, motion allowed) the figure is a size
+  container and the stage takes `min(100cqw, 100cqh × w / h)`. ⚠ **The runway and the rail over
+  the run (`pinned`, `states`) were DELETED with the pick**; the stack (`handoff.figure`:
+  `StackSteps`, `data-step`, the hologram's `write`/`run` groups in scene `stack`,
+  `holo-stage/stackGeom.ts` on the doctrine's allow-list) and the plates (`time`) stay as lab
+  values (`approach=stack`, `approach=plates`).
+- **The two lines follow the run** (outline steps 7 and 8): `upstream`, a `horizon` spreading
+  `THE_HORIZON_RECORD` by reference (share the record, author the head), titled "Longer tasks
+  for Claude, upstream time for your team." The lab's `upstream` knob is `lines · off · horizon`.
 - **The engine** takes `instrument.pin`: a runway on a CSS view timeline, nine steps derived by
   `lib/instrument/steps.ts` and stamped `data-ins-step`; no writer; the rest state whole.
 - **A return is drawn three ways, and one module holds the count.** The job's return is its two
@@ -1694,7 +1710,9 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
 - ⚠ **THE MERGE WITH THE X-BIONIC BRANCH (2026-10-10) KEPT BOTH LINES.** Production is what the
   owner picked on that branch: the job's gold band (ADR-153 U4, `top` absent), Loop's return as a
   case card (U5), the engine as the layer opened (U6, `face`), the three interstitials as his own
-  callouts. ADR-155's directions are the lab's knobs (`jobHead: mark`, `return: ledger`,
-  `engine: pinned`, `interstitial: quote`, `order: narrative`); the FIRST value of every knob
-  names production and `PA` stays `toBe` production. ⚠ **A `face` and a `pin` never share a
+  callouts, and since 11 October the approach as one run with the two lines after it
+  (`approach: run`, `upstream: lines`, ADR-155 U1). ADR-155's directions are the lab's knobs
+  (`jobHead: mark`, `return: ledger`, `engine: pinned`, `interstitial: quote`,
+  `order: narrative`, `approach: stack | plates`, `upstream: off | horizon`); the FIRST value of
+  every knob names production and `PA` stays `toBe` production. ⚠ **A `face` and a `pin` never share a
   section**: the face replaces the figure the pin lights, so the pinned direction drops the face.

@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { DISCIPLINE_ORDER } from "@/lib/arcs/content/shared/disciplines";
@@ -24,7 +27,8 @@ import { xBionicV2 } from "@/lib/proposal-system/xBionicV2";
 const PROD_IDS = X_BIONIC_PROPOSAL_ARC.sections.map((s) => s.id);
 const PROD_OPENERS = X_BIONIC_PROPOSAL_ARC.sections.filter((s) => s.kind === "interstitial");
 const PROD_RETURN = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "return");
-const RUN_MODES: readonly string[] = ["sheet", "pinned", "states"];
+const PROD_ADOPTION = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "adoption");
+const PROD_RUN = PROD_ADOPTION?.kind === "handoff" ? PROD_ADOPTION.run : undefined;
 
 describe("the proposal system lab", () => {
   it("the registry's first value is production and its ids are letters", () => {
@@ -133,6 +137,7 @@ describe("the proposal system lab", () => {
         expect(ids.indexOf("offer")).toBeLessThan(ids.indexOf("engine"));
         /* Every production beat is still on the page, two of them renamed. */
         for (const id of PROD_IDS) {
+          if (id === "upstream" && knobs.upstream === "off") continue;
           const renamed = id === "vision" ? "plugs-in" : id === "adoption" ? "approach" : id;
           expect(ids, `${d.id}: ${id}`).toContain(renamed);
         }
@@ -160,6 +165,7 @@ describe("the proposal system lab", () => {
         if (knobs.approach === "stack") {
           expect(approach.figure, "the stack figure").toBeTruthy();
           expect(approach.time).toBeUndefined();
+          expect(approach.run, "the stack carries no run").toBeUndefined();
           const f = approach.figure!;
           expect(f.courses.skills.length + f.courses.evals.length).toBeLessThanOrEqual(8);
           for (const c of [...f.courses.skills, ...f.courses.evals]) {
@@ -176,16 +182,22 @@ describe("the proposal system lab", () => {
           }
           expect(f.layer.length).toBeLessThanOrEqual(20);
           expect(f.host.length).toBeLessThanOrEqual(32);
-        } else if (RUN_MODES.includes(knobs.approach)) {
-          /* The owner's eight-step outline as one run: the vision's own
-             layer and workstreams, one lane and one job lit, the three
-             steps as three passes, every lettered string inside its seat. */
+        } else if (knobs.approach === "run") {
+          /* The owner's eight-step outline as one run, read whole (his pick
+             of 11 October): production's own run, by reference, with the
+             vision's own layer and workstreams, one lane and one job lit,
+             the three steps as three passes, every lettered string inside
+             its seat. */
           const r = approach.run;
           expect(r, "the run").toBeTruthy();
-          expect(r!.mode).toBe(knobs.approach);
+          expect(r, "production's run, by reference").toBe(PROD_RUN);
           expect(approach.figure).toBeUndefined();
           expect(approach.time).toBeUndefined();
-          expect(approach.steps.map((s) => s.label)).toEqual(["Adoption", "Encoding", "Automation"]);
+          expect(approach.steps.map((s) => s.label)).toEqual([
+            "Adoption",
+            "Encoding",
+            "Automation",
+          ]);
           expect(r!.layer.workstreams.map((w) => w.id)).toEqual([...DISCIPLINE_ORDER]);
           expect(r!.layer.workstreams.filter((w) => w.lit).length, "one lit lane").toBe(1);
           expect(r!.jobs.length).toBeGreaterThanOrEqual(2);
@@ -217,9 +229,17 @@ describe("the proposal system lab", () => {
             );
           }
         } else {
+          /* The plates, as the beat shipped before the run (ADR-153): a
+             verb per plate and the two time bars, no run. */
+          expect(knobs.approach).toBe("plates");
           expect(approach.figure).toBeUndefined();
           expect(approach.run).toBeUndefined();
           expect(approach.time).toBeTruthy();
+          expect(approach.steps.map((s) => s.label)).toEqual([
+            "Adopt",
+            "Write it down",
+            "Automate",
+          ]);
         }
       }
       const horizon = arc.sections.filter((s) => s.kind === "horizon");
@@ -270,11 +290,42 @@ describe("the proposal system lab", () => {
       (x) => x.knobs.order !== "narrative"
     );
     for (const { label, knobs } of [...flips, ...directions]) {
-      const ids = xBionicV2(knobs)
-        .sections.map((s) => s.id)
-        .filter((id) => id !== "upstream");
-      expect(ids, label).toEqual(PROD_IDS);
+      const ids = xBionicV2(knobs).sections.map((s) => s.id);
+      const expected =
+        knobs.upstream === "off" ? PROD_IDS.filter((id) => id !== "upstream") : PROD_IDS;
+      expect(ids, label).toEqual(expected);
     }
+  });
+
+  it("production draws the run whole, then the two lines (the owner's pick of 11 October)", () => {
+    /* "Whole": the run read on one screen, the two lines after it. The
+       runway and the rail over the run came out with the pick, so the run
+       carries no mode, and the beat no time bars and no stack figure. */
+    expect(PROD_ADOPTION?.kind).toBe("handoff");
+    if (PROD_ADOPTION?.kind !== "handoff") return;
+    expect(PROD_RUN, "the run").toBeTruthy();
+    expect(Object.keys(PROD_RUN!), "no reading mode on the run").not.toContain("mode");
+    expect(PROD_ADOPTION.time).toBeUndefined();
+    expect(PROD_ADOPTION.figure).toBeUndefined();
+
+    const at = PROD_IDS.indexOf("adoption");
+    expect(PROD_IDS[at + 1], "the two lines follow the run").toBe("upstream");
+    const lines = X_BIONIC_PROPOSAL_ARC.sections[at + 1];
+    expect(lines?.kind).toBe("horizon");
+    if (lines?.kind === "horizon") {
+      expect(lines.operated).toBe(THE_HORIZON_RECORD.operated);
+      expect(lines.agent).toBe(THE_HORIZON_RECORD.agent);
+      expect(lines.upstream).toBeUndefined();
+    }
+
+    /* The run's sheet is a ROUTE import (it is `.cfg`-scoped, inert on an
+       arc without the beat); a route that dropped it would draw the run
+       unstyled with every guard here green. */
+    const route = readFileSync(
+      join(__dirname, "..", "..", "app", "(marketing)", "arcs", "[slug]", "[leaf]", "page.tsx"),
+      "utf8"
+    );
+    expect(route).toContain('"@/components/arcs/config-run.css"');
   });
 
   it("every knob key is read by the composer", () => {

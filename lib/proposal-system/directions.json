@@ -1,5 +1,5 @@
 {
-  "$comment": "THE ONE REGISTRY for the proposal system lab's knobs (the X-Bionic rework, 2026-10-10). Read by /test/proposal-system (TS import through lib/proposal-system/variants.ts) and by scripts/capture-proposal-system.mjs (readFileSync). TYPE IDS ARE LETTERS ONLY. THE FIRST VALUE OF EVERY KNOB IS PRODUCTION: PA is every knob at its first value and the control, byte-identical to /arcs/x-bionic/proposal; every other direction is one argument against it; PZ is ADR-155's whole answer at once. Since the merge with the X-Bionic branch (2026-10-10) the first values name the owner's picks there (the band, the case card, the layer opened, his three lines alone) and the second values are ADR-155's directions. When the owner picks, the winning values land on the production record and the losing branches are deleted with their guards (ADR-070 U35).",
+  "$comment": "THE ONE REGISTRY for the proposal system lab's knobs (the X-Bionic rework, 2026-10-10). Read by /test/proposal-system (TS import through lib/proposal-system/variants.ts) and by scripts/capture-proposal-system.mjs (readFileSync). TYPE IDS ARE LETTERS ONLY. THE FIRST VALUE OF EVERY KNOB IS PRODUCTION: PA is every knob at its first value and the control, byte-identical to /arcs/x-bionic/proposal; every other direction is one argument against it; PZ is ADR-155's whole answer at once. Since the merge with the X-Bionic branch (2026-10-10) the first values name the owner's picks there (the band, the case card, the layer opened, his three lines alone) and the second values are ADR-155's directions. On 11 October he picked the approach drawn as one run, read whole, with the two lines after it (\"Whole\"): both are first values now, and the runway and the rail over the run were deleted with their guards. When the owner picks, the winning values land on the production record and the losing branches are deleted with their guards (ADR-070 U35).",
   "knobs": {
     "order": {
       "values": ["current", "narrative"],
@@ -22,14 +22,14 @@
       "note": "case = ADR-153 U5's case card: the record in the jobs' own housing, a lane per role. ledger = the same four rows as returns in the job's vocabulary: a value, a line, a tally."
     },
     "approach": {
-      "values": ["handoff", "stack", "sheet", "pinned", "states"],
+      "values": ["run", "stack", "plates"],
       "label": "The approach",
-      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. sheet, pinned and states = the owner's eight-step outline drawn as one run (ArcConfigRun): the vision's own layer with its four workstream tiles, creative production's tile opened onto its jobs, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking once. sheet reads it whole; pinned lights its six parts on a runway; states puts the handoff's rail over it, one state per pass."
+      "note": "run = production since the owner's pick of 11 October (\"Whole\"): his eight-step outline drawn as one run (ArcConfigRun), read whole on one screen. The vision's own layer with its four workstream tiles, creative production's tile opened onto its jobs, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking the workstream's owner once. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. plates = the beat as it shipped before the run (ADR-153): three plates with a verb each and two time bars, in its own words. The runway and the rail over the run came out with the pick."
     },
     "upstream": {
-      "values": ["off", "horizon", "lines"],
+      "values": ["lines", "off", "horizon"],
       "label": "Longer tasks",
-      "note": "off = the approach beat carries the claim alone. horizon = a second beat on the owned horizon: the team's day upstream, the agent's run reaching up three times. lines = the owner's two lines (outline steps 7 and 8): a tool you operate, checked at every step, over an agent with the context and the evals, which runs much longer before it asks; the head carries the move upstream."
+      "note": "lines = production since the pick of 11 October: the owner's two lines (outline steps 7 and 8), a tool you operate, checked at every step, over an agent with the context and the evals, which runs much longer before it asks; the head carries the move upstream. off = the approach beat carries the claim alone. horizon = a second beat on the owned horizon: the team's day upstream, the agent's run reaching up three times."
     },
     "engine": {
       "values": ["layer", "pinned"],
@@ -41,7 +41,7 @@
     {
       "id": "PA",
       "name": "House",
-      "question": "the page as it ships, with the owner's picks of 10 October: does it already read as one argument?",
+      "question": "the page as it ships, with the owner's picks of 10 and 11 October: does it already read as one argument?",
       "shape": "production, byte-identical",
       "knobs": {}
     },
@@ -84,7 +84,7 @@
     {
       "id": "PF",
       "name": "Stack",
-      "question": "does the layer being written, drawn once, say that adoption and automation are one motion?",
+      "question": "does the layer being written, drawn once, say that adoption and automation are one motion, better than the run?",
       "shape": "the approach on the stack figure",
       "knobs": {
         "approach": "stack"
@@ -93,7 +93,7 @@
     {
       "id": "PG",
       "name": "Horizon",
-      "question": "does the longer-horizon claim need its own beat, or does the stack's run carry it?",
+      "question": "the stack, then the owned horizon in place of the two lines: does the longer-horizon claim read better as the team's day upstream?",
       "shape": "the stack, then the owned horizon",
       "knobs": {
         "approach": "stack",
@@ -110,46 +110,17 @@
       }
     },
     {
-      "id": "PI",
-      "name": "Run",
-      "question": "the owner's eight steps drawn as one run, read whole: does the configuration read in one look, from his layer to the finished ad?",
-      "shape": "the configuration as one sheet, then the two lines",
-      "knobs": {
-        "approach": "sheet",
-        "upstream": "lines"
-      }
-    },
-    {
-      "id": "PJ",
-      "name": "Run pinned",
-      "question": "the same run lit part by part on a pinned runway: does reading it in six steps tell the story better than the sheet?",
-      "shape": "the configuration on a runway, then the two lines",
-      "knobs": {
-        "approach": "pinned",
-        "upstream": "lines"
-      }
-    },
-    {
-      "id": "PK",
-      "name": "Run states",
-      "question": "the same run under the handoff's rail, one state per pass: does clicking adoption, encoding, automation build it better than scrolling?",
-      "shape": "the configuration in three states, then the two lines",
-      "knobs": {
-        "approach": "states",
-        "upstream": "lines"
-      }
-    },
-    {
       "id": "PZ",
       "name": "The brief",
       "question": "ADR-155's whole answer at once: one narrative, chapter bands, marked jobs, one return language, the stack, the pinned engine.",
-      "shape": "every knob at its second value, the horizon off",
+      "shape": "every knob at its second value",
       "knobs": {
         "order": "narrative",
         "interstitial": "quote",
         "jobHead": "mark",
         "return": "ledger",
         "approach": "stack",
+        "upstream": "off",
         "engine": "pinned"
       }
     }

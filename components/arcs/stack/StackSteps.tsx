@@ -20,13 +20,9 @@ type Step = 0 | 1 | 2;
 export function StackSteps({
   steps,
   children,
-  figure = "stack",
 }: {
   steps: readonly { id: string; n: string; label: string; when: string }[];
   children: ReactNode;
-  /** What the rail drives, on `data-hand-figure`: the stack, or the
-   *  configuration's run (`ArcConfigRun`), which reads the same steps. */
-  figure?: "stack" | "run";
 }) {
   const [step, setStep] = useState<Step>(2);
   const root = useRef<HTMLDivElement>(null);
@@ -47,7 +43,7 @@ export function StackSteps({
   }, []);
 
   return (
-    <div className="arc-hand--figure arc-hand" data-hand-figure={figure} data-step={step} ref={root}>
+    <div className="arc-hand--figure arc-hand" data-hand-figure="stack" data-step={step} ref={root}>
       <ol className="arc-hand__rail" role="tablist" aria-label="The approach, step by step">
         {steps.map((s, i) => [
           i > 0 ? (

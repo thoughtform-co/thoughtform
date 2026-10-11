@@ -40,17 +40,6 @@
   padding: 0;
   list-style: none;
 }
-/* The states' rail carries the handoff's root (`StackSteps`): it is the
-   column here, so it drops its own lead, and under the fill rhythm (below)
-   it takes the slack.
-   ⚠ ONLY THERE. A zero basis with no floor in a content-sized column is a
-   box of no height: on a phone and under reduced motion the rail and the
-   drawing hung out of the section, under the next one. */
-.cfg > .arc-hand--figure {
-  flex: none;
-  margin-top: 0;
-}
-
 /* ── The figure ──────────────────────────────────────────────────────
    Content-sized by default (a phone, reduced motion, print): the stage
    takes the width and the crop's aspect gives the height. Under the fill
@@ -316,89 +305,18 @@
   display: none;
 }
 
-/* ── The fill rhythm: the figure takes the beat to the floor ───────── */
+/* ── The fill rhythm: the figure takes the beat to the floor ─────────
+   ⚠ ONLY THERE. A zero basis with no floor in a content-sized column is a
+   box of no height: on a phone and under reduced motion the drawing would
+   hang out of the section, under the next one. */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .arc-root[data-arc-rhythm="fill"] .cfg > .arc-hand--figure,
   .arc-root[data-arc-rhythm="fill"] .cfg__fig {
     flex: 1 1 0;
     min-height: 0;
-  }
-  .arc-root[data-arc-rhythm="fill"] .cfg__fig {
     container-type: size;
   }
   .arc-root[data-arc-rhythm="fill"] .cfg__stage {
     width: min(100cqw, calc(100cqh * var(--cfg-w) / var(--cfg-h)));
-  }
-}
-
-/* ── Three states (`StackSteps`' data-step) ─────────────────────────
-   0 = adoption: the layer, the job, its ends and the upper run. 1 = the
-   band written. 2 = the lower run. The server sends 2; no-JS, reduced
-   motion and print read it whole. The rail carries each pass's name, so the
-   drawing's own keys stand down. */
-.cfg[data-cfg-mode="states"] [data-cfg-step] {
-  transition: opacity 560ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.cfg [data-step="0"] [data-cfg-step="5"],
-.cfg [data-step="0"] [data-cfg-step="6"],
-.cfg [data-step="1"] [data-cfg-step="6"] {
-  opacity: 0.12;
-}
-.cfg[data-cfg-mode="states"] .cfg__row .cfg__row-key {
-  display: none;
-}
-
-/* ── Pinned: the six parts light on a runway ────────────────────────
-   The band holds the screen while the reader scrolls six steps (the
-   engine's view timeline, stack.css, copied): the layer, the job, its ends,
-   the adopted run, the band written, the automated run. Each lights and
-   STAYS (`fill-mode: both`), so the runway's end is the static figure,
-   which no-JS, reduced motion, print and Firefox read whole. */
-@supports (animation-timeline: view()) {
-  @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-    .arc-root[data-arc-rhythm="fill"] .arc-sec--handoff-pin:has(> .arc-band > .arc-head) {
-      --cfg-step-run: 28svh;
-      min-height: calc(100svh + 6 * var(--cfg-step-run));
-      padding-block: 0 0;
-      view-timeline: --cfg-pin block;
-    }
-    .arc-root[data-arc-rhythm="fill"] .arc-sec--handoff-pin > .arc-band {
-      position: sticky;
-      top: 0;
-      height: 100svh;
-      box-sizing: border-box;
-      padding-block: var(--arc-head-datum) var(--lat-sec-pad);
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step] {
-      animation: cfg-step-lit linear both;
-      animation-timeline: --cfg-pin;
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step="1"] {
-      animation-range: contain 0% contain 10%;
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step="2"] {
-      animation-range: contain 14% contain 24%;
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step="3"] {
-      animation-range: contain 28% contain 38%;
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step="4"] {
-      animation-range: contain 44% contain 56%;
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step="5"] {
-      animation-range: contain 62% contain 74%;
-    }
-    .arc-sec--handoff-pin .cfg [data-cfg-step="6"] {
-      animation-range: contain 80% contain 92%;
-    }
-  }
-}
-@keyframes cfg-step-lit {
-  from {
-    opacity: var(--cfg-dim, 0.12);
-  }
-  to {
-    opacity: 1;
   }
 }
 

@@ -164,6 +164,15 @@ route, after `arcs.css`. U1 adds the worked example after it and the
 `path` kind (the fifteenth exception: dated stages of real frames on one rail).
 Canonical text: `.claude/rules/arcs.md`.
 
+⚠ ADR-155 (2026-10-10, Proposed): a proposal is one argument told with one
+object, looked at in the lab `/test/proposal-system` (`xBionicV2(knobs)`,
+`PA` is production by reference). U1 (2026-10-11, owner, "Whole"): the
+X-Bionic approach is `handoff.run`, the configuration drawn as one run and
+read whole (`ArcConfigRun`, `configRun.ts`, `config-run.css` imported at the
+leaf route), and the two lines follow it as a `horizon` spreading
+`THE_HORIZON_RECORD`. A run line is ≤ 76: shorten the line, never the cap.
+Canonical text: `.claude/rules/arcs.md` §The proposal system.
+
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no
 three.js / Supabase / `LandingPage` imports — the casefile's dossier LEAVES

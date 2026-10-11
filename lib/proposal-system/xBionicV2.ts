@@ -2,7 +2,6 @@ import { disciplineOf } from "@/lib/arcs/content/shared/disciplines";
 import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 import { LOOP_PROOF_CARDS } from "@/lib/arcs/content/shared/loopProof";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
-import { THE_HORIZON_RECORD } from "@/lib/arcs/content/shared/workshopPractice";
 import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
 import type { ArcDef, ArcJobBucket, ArcSection, ArcSectionOf } from "@/lib/arcs/types";
 import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
@@ -30,6 +29,15 @@ import type { PsKnobs } from "./variants";
  * ADR-155's direction, argued against it. ⚠ A `face` and a `pin` never share
  * a section: the face replaces the figure the pin lights, so the pinned
  * engine drops the face.
+ *
+ * ⚠ THE OWNER'S PICK OF 11 OCTOBER ("Whole"): the approach is his
+ * eight-step outline drawn as one run, read whole on one screen, and the
+ * two lines follow it. Both are production now, so `run` and `lines` are
+ * the first values; the runway and the rail over the run came out with the
+ * pick. `plates` keeps the beat as it shipped before the run (ADR-153's
+ * three plates and two time bars), and `stack` ADR-155's figure; neither
+ * may carry the run (`ArcHandoff` draws `ArcConfigRun` whenever it is set),
+ * so both clear it.
  *
  * ⚠ THE OWNER'S ORDER (10 October): about · the vision · the approach ·
  * where it plugs in · "In 2024, Loop decided to go AI-first." · the four
@@ -75,15 +83,12 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const mark = knobs.jobHead === "mark";
   const ledger = knobs.return === "ledger";
   const stack = knobs.approach === "stack";
-  const runMode =
-    knobs.approach === "sheet" || knobs.approach === "pinned" || knobs.approach === "states"
-      ? knobs.approach
-      : null;
+  const plates = knobs.approach === "plates";
+  const noUpstream = knobs.upstream === "off";
   const horizon = knobs.upstream === "horizon";
-  const lines = knobs.upstream === "lines";
   const pinned = knobs.engine === "pinned";
   const anyKnob =
-    narrative || quote || mark || ledger || stack || !!runMode || horizon || lines || pinned;
+    narrative || quote || mark || ledger || stack || plates || noUpstream || horizon || pinned;
 
   if (!anyKnob) return PROD;
 
@@ -121,113 +126,89 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
 
   const prodAdoption = sectionOf("adoption", "handoff");
   const approachId = narrative ? "approach" : "adoption";
-  /* The owner's eight-step outline, drawn as one run (10 October): his
-     layer from the vision, its four workstreams, creative production opened
-     onto its jobs and ads design worked through, the three steps as three
-     passes over the same ground. The layer's name and the workstreams are
-     the vision's own (`prodLeverage`), so the reader meets the same words;
-     the steps keep production's when, title and who, and take the
-     outline's three nouns. */
-  const layerPlate = prodLeverage.stack.find((p) => p.own);
-  const run: ArcSectionOf<"handoff"> | null = runMode
+
+  const approach: ArcSectionOf<"handoff"> = stack
     ? {
         ...prodAdoption,
         id: approachId,
+        menuLabel: "The approach",
         head: {
-          ...prodAdoption.head,
-          sub: "Claude can only automate what your team has written down. The first phase starts with ads design: the team makes the ads with Claude, writes down what works, and an agent runs it from there.",
+          eyebrow: "Thoughtform · the approach",
+          title: { pre: "An intelligence configuration,", em: "built with your team." },
+          sub: "Claude can only automate what your team has written down. So adoption comes first: the team learns on its own work, writes down how it is done, and Claude takes the repetitive part from there.",
         },
-        steps: [
-          { ...prodAdoption.steps[0], label: "Adoption" },
-          { ...prodAdoption.steps[1], label: "Encoding" },
-          { ...prodAdoption.steps[2], label: "Automation" },
-        ],
         time: undefined,
-        figure: undefined,
-        run: {
-          mode: runMode,
-          layer: {
-            label: layerPlate?.label ?? "Your layer",
-            workstreams: prodLeverage.uses.items.map((u) => ({
-              id: u.id,
-              name: u.label,
-              ...(u.id === "production" ? { lit: true as const } : {}),
-            })),
+        run: undefined,
+        figure: {
+          layer: "Your layer",
+          host: "X-Bionic's Claude Enterprise",
+          courses: {
+            skills: ["The product voice", "The brief", "Intake and naming", "Pre-review"],
+            evals: ["The copy editor's checks", "The designer's checks"],
           },
-          jobs: [
-            { id: "ads", name: "Ads design", lit: true },
-            { id: "imagery", name: "Product imagery" },
-            { id: "motion", name: "Motion" },
-          ],
-          inputs: ["Product renders", "Tone of voice", "The brief"],
-          output: "The finished ad",
-          lines: [
-            "Your team makes the ads with Claude, and checks every step",
-            "What works, written down once for everyone",
-            "An agent runs it against the evals, and asks the workstream's owner once",
-          ],
-          keys: { skill: "Skill", evals: "Evals" },
-          alt: "The configuration as one run. X-Bionic's layer with its four workstreams, creative production opened onto its jobs and ads design worked through: the product renders, the tone of voice and the brief run into one job and out to the finished ad three ways. Made with Claude, a person checking every step; what works written down between the runs, as a skill and its evals, the checks the copy editor and the product designer write; run by an agent through the evals, which asks the workstream's owner once before the ad goes out.",
+          /* The tile's mono chip is the discipline's short word (its cap
+             is 12); the record's bucket is the owner's long name. */
+          tiles: X_BIONIC_INSTRUMENT.org!.workstreams.map((w) => ({
+            id: w.id,
+            bucket: disciplineOf(w.id as ArcJobBucket).word,
+            name: w.name,
+            line: w.line ?? "",
+            ...(w.lit?.length ? { lit: true as const } : {}),
+          })),
+          alt: "The layer being written: four workstreams on the layer the team writes, the product voice, the brief, intake and naming and pre-review as its skills, the copy editor's and the product designer's checks as its evaluations, on X-Bionic's Claude Enterprise.",
         },
       }
-    : null;
-
-  const approach: ArcSectionOf<"handoff"> = run
-    ? run
-    : stack
-      ? {
+    : plates
+      ? /* The beat as it shipped before the run (ADR-153): three plates
+           with a verb each, and where the team's time goes, today against
+           configured. Its own words, kept here so the lab can still argue
+           the plates against the run. */
+        {
           ...prodAdoption,
           id: approachId,
-          menuLabel: "The approach",
           head: {
-            eyebrow: "Thoughtform · the approach",
-            title: { pre: "An intelligence configuration,", em: "built with your team." },
-            sub: "Claude can only automate what your team has written down. So adoption comes first: the team learns on its own work, writes down how it is done, and Claude takes the repetitive part from there.",
+            ...prodAdoption.head,
+            sub: "Claude can only automate what your team has written down. So adoption comes first: the team learns on its own work, then Claude takes the repetitive part.",
           },
-          time: undefined,
-          figure: {
-            layer: "Your layer",
-            host: "X-Bionic's Claude Enterprise",
-            courses: {
-              skills: ["The product voice", "The brief", "Intake and naming", "Pre-review"],
-              evals: ["The copy editor's checks", "The designer's checks"],
-            },
-            /* The tile's mono chip is the discipline's short word (its cap
-             is 12); the record's bucket is the owner's long name. */
-            tiles: X_BIONIC_INSTRUMENT.org!.workstreams.map((w) => ({
-              id: w.id,
-              bucket: disciplineOf(w.id as ArcJobBucket).word,
-              name: w.name,
-              line: w.line ?? "",
-              ...(w.lit?.length ? { lit: true as const } : {}),
-            })),
-            alt: "The layer being written: four workstreams on the layer the team writes, the product voice, the brief, intake and naming and pre-review as its skills, the copy editor's and the product designer's checks as its evaluations, on X-Bionic's Claude Enterprise.",
+          steps: [
+            { ...prodAdoption.steps[0], label: "Adopt" },
+            { ...prodAdoption.steps[1], label: "Write it down" },
+            { ...prodAdoption.steps[2], label: "Automate" },
+          ],
+          run: undefined,
+          time: {
+            label: "Where your team's time goes",
+            note: "Illustrative",
+            rows: [
+              {
+                label: "Today",
+                segments: [
+                  { label: "Making and resizing", share: 0.55 },
+                  { label: "Admin", share: 0.25 },
+                  { label: "Ideas", share: 0.2, lit: true },
+                ],
+              },
+              {
+                label: "Configured",
+                segments: [
+                  { label: "Checking", share: 0.2 },
+                  { label: "Ideas, briefs and campaigns", share: 0.8, lit: true },
+                ],
+              },
+            ],
           },
         }
       : narrative
         ? { ...prodAdoption, id: approachId }
         : prodAdoption;
 
-  /* The owner's two lines (outline steps 7 and 8), right after the run: a
-     tool you operate over an agent with the context and the evals, the
-     workshop's own record by reference; the head carries the move
-     upstream. */
-  const twoLines: ArcSectionOf<"horizon"> | null = lines
-    ? {
-        id: "upstream",
-        kind: "horizon",
-        menuLabel: "Longer tasks",
-        head: {
-          eyebrow: "Thoughtform · what it buys",
-          title: { pre: "Longer tasks for Claude,", em: "upstream time for your team." },
-          sub: "A tool you operate needs a person at every step. An agent with the context and the evals runs much longer before it asks, so your team's time goes a level higher, to the briefs and the campaigns, where the same loop starts again.",
-        },
-        ...THE_HORIZON_RECORD,
-      }
-    : null;
-
-  const upstream: ArcSectionOf<"horizon"> | null = twoLines
-    ? twoLines
+  /* Longer tasks. Production is the owner's two lines (outline steps 7 and
+     8, picked with the run on 11 October); `off` lets the approach carry
+     the claim alone, and `horizon` draws it as the owned horizon: the
+     team's day upstream, the agent's run reaching up three times. */
+  const prodUpstream = sectionOf("upstream", "horizon");
+  const upstream: ArcSectionOf<"horizon"> | null = noUpstream
+    ? null
     : horizon
       ? {
           id: "upstream",
@@ -263,7 +244,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
             end: "You judge the result",
           },
         }
-      : null;
+      : prodUpstream;
 
   const proofLoop = opener("proof-loop", 1, quote);
   const proofBrands = opener("proof-brands", 2, quote);

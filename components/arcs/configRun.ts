@@ -28,8 +28,10 @@
  * crop (`seats`), so no label sits on a drawn face and every collision is a
  * DOM box a test can measure (`pluginLayer`'s rule).
  * ⚠ SEEDED, never `Math.random()`: a render is the same drawing every time.
- * ⚠ The PRNG and the grain helpers are COPIED from `crewParticles` (private
- * there), never re-imported through a widened export.
+ * ⚠ The PRNG and the other private helpers (`rng`, `grain`, `bezier`) are
+ * COPIED from `crewParticles`, never re-imported through a widened export;
+ * `crewSeed`, `grainPaths` and `personPath` are its public exports and are
+ * imported.
  */
 import { crewSeed, grainPaths, personPath } from "./crewParticles";
 import type { CrewGrain } from "./crewParticles";
@@ -41,8 +43,10 @@ export const CFG_VB = { w: 1200, h: 470 } as const;
 
 type Pt = readonly [number, number];
 
-/** The steps a part of the drawing belongs to: what lights it on the runway
- *  and what the three states dim. */
+/** The part of the drawing a mark belongs to, one of the six in the
+ *  outline's order (`ArcConfigRun` lists them); each part is one `<g>`. The
+ *  drawing is read whole (owner, 2026-10-11), so a part lights nothing on
+ *  its own. */
 export type CfgStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** One mark, in draw order inside its step. `a` is set on grains only. */

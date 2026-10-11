@@ -315,4 +315,5 @@ the keepers named, one drawing per record).
 **Left open, for the owner**: three beats run past one screen at 1280 × 720 and were before this
 change (the vision by 62px, the adoption by 34px, the terms by 63px; the terms by 19px at
 1470 × 830); and the ops lane draws Loop's one copy editor as its person, where X-Bionic's skill
-is kept by the digital team.
+is kept by the digital team. (The adoption's 34px closed on 2026-10-11: the approach is drawn as
+one run now and ends at 678 of 720, [ADR-155 U1](155-the-proposal-as-a-system.md).)
