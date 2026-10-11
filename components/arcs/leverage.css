@@ -530,6 +530,22 @@
   color: var(--arc-ink-80);
   text-align: right;
 }
+/* A short frame (the ladder's compact rung): with the leverage's cell air
+   the fee's console ran 22px past the fold at 1280×720 and its readout
+   foot was cut. The four measure cells give back half their vertical air
+   and the glyph one rung; the vision's 2×2 keeps its own. */
+@media (max-height: 760px) {
+  .arc-terms .arc-lev__cell {
+    gap: calc(var(--lv-v) * 0.5);
+    padding-block: calc(var(--lv-v) * 0.75);
+  }
+  .arc-terms .arc-lev__index {
+    top: calc(var(--lv-v) * 0.75);
+  }
+  .arc-terms .arc-lev__glyph {
+    height: clamp(28px, 4.5svh, 64px);
+  }
+}
 
 /* ── The job: one client job on one screen (ADR-153 U1 → U4) ──────
    No head: the frame carries everything. U4 (owner, 2026-10-10): the top
