@@ -116,7 +116,7 @@ const onWindow = (xd: number, yl: number, zt: number) => {
 };
 
 /** The mark, etched into a face: recess, shadow wall, lit rim, cut ring. */
-function EtchedMark({ transform, id }: { transform: string; id: string }) {
+export function EtchedMark({ transform, id }: { transform: string; id: string }) {
   const { w, h } = BRANDMARK_VIEWBOX;
   const d = 16; // wall depth, in mark units
   const ring = { cx: w / 2, cy: h / 2, r: Math.max(w, h) * 0.6 };

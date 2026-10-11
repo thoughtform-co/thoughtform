@@ -104,7 +104,8 @@
 #p3-board .xb-stage::before,
 #s2-pinned .xb-stage::before,
 #p4-hero .xb-stage::before,
-#p3b-board .xb-stage::before {
+#p3b-board .xb-stage::before,
+#flow-ab .xb-stage::before {
   position: absolute;
   z-index: 5;
   top: calc(var(--hud-rail-y-start) - 36px);
@@ -139,6 +140,9 @@
 }
 #p3b-board .xb-stage::before {
   content: "7 · P3 B · the board, windows";
+}
+#flow-ab .xb-stage::before {
+  content: "8 · Flow · S1 A into P3 B";
 }
 
 /* P4 is width-bound in the frame's box: a narrower text column keeps its

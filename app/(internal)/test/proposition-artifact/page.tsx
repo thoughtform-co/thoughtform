@@ -10,6 +10,7 @@ import "../halyard/halyard.css";
 import "@/components/xb-proposal/xb.css";
 import "@/components/xb-proposal/layer/layer.css";
 import "@/components/xb-proposal/substrate/substrate.css";
+import "@/components/xb-proposal/flow/flow.css";
 import "./proposition.css";
 
 import { PropositionShell } from "./PropositionShell";

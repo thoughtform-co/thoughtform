@@ -1,0 +1,36 @@
+/* Flow · S1 A into P3 B: the head's step list (P3's head carries the intro
+   in this slot; the flow carries S1 A's three steps, the lit one the step
+   the drawing is on). The rest is P3's `.xbP` layout and the kit's type. */
+
+.xbF__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 300px;
+}
+
+.xbF__step {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--xb-text-3);
+  transition: color 240ms ease;
+}
+
+.xbF__step[data-on] {
+  color: var(--xb-text);
+}
+
+.xbF__n {
+  padding-top: 3px;
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.xbF__step[data-on] .xbF__n {
+  color: var(--xb-gold);
+}
