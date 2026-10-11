@@ -1,0 +1,471 @@
+/* X-Bionic proposal, rebuilt from the 2026-10-11 brief.
+   Self-contained on purpose: its own faces, tokens, rails and column, so
+   nothing from the site's proposal sheets reaches these sections. */
+
+@font-face {
+  font-family: "XB Montreal";
+  src: url("/fonts/PPNeueMontreal-Book.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "XB Mono";
+  src: url("/fonts/PTMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+
+.xb {
+  --xb-ground: #0a0908;
+  --xb-ground-2: #11100e;
+  --xb-text: #ebe3d6;
+  --xb-text-2: rgb(235 227 214 / 0.62);
+  --xb-text-3: rgb(235 227 214 / 0.4);
+  --xb-line: rgb(235 227 214 / 0.16);
+  --xb-line-2: rgb(235 227 214 / 0.28);
+  --xb-gold: #caa554;
+  --xb-gold-2: rgb(202 165 84 / 0.62);
+  --xb-gold-3: rgb(202 165 84 / 0.22);
+  --xb-sans: "XB Montreal", "Helvetica Neue", Arial, sans-serif;
+  --xb-mono: "XB Mono", ui-monospace, monospace;
+  --xb-rail: 28px;
+  --xb-col: min(1200px, calc(100vw - 224px));
+
+  background: var(--xb-ground);
+  color: var(--xb-text);
+  font-family: var(--xb-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- the stage: one screen, rails at both edges, the column centred ---- */
+
+.xb-stage {
+  position: relative;
+  height: 100svh;
+  min-height: 600px;
+  overflow: hidden;
+  background: var(--xb-ground);
+}
+
+.xb-rail {
+  position: absolute;
+  top: 56px;
+  bottom: 56px;
+  width: 9px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--xb-line-2), var(--xb-line-2)) no-repeat,
+    repeating-linear-gradient(to bottom, var(--xb-line) 0 1px, transparent 1px 48px);
+}
+
+.xb-rail--l {
+  left: var(--xb-rail);
+  background-position:
+    0 0,
+    0 0;
+  background-size:
+    1px 100%,
+    9px 100%;
+}
+
+.xb-rail--r {
+  right: var(--xb-rail);
+  background-position:
+    100% 0,
+    0 0;
+  background-size:
+    1px 100%,
+    9px 100%;
+}
+
+.xb-corner {
+  position: absolute;
+  top: 24px;
+  left: var(--xb-rail);
+  width: 18px;
+  height: 18px;
+  border-top: 1px solid var(--xb-line-2);
+  border-left: 1px solid var(--xb-line-2);
+}
+
+.xb-route {
+  position: absolute;
+  top: 26px;
+  right: var(--xb-rail);
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xb-text-3);
+}
+
+.xb-col {
+  position: absolute;
+  inset: 72px 0 56px;
+  width: var(--xb-col);
+  margin-inline: auto;
+}
+
+/* ---- type ---- */
+
+.xb-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--xb-text-2);
+}
+
+.xb-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--xb-gold);
+}
+
+.xb-title {
+  margin: 0;
+  font-size: 48px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.xb-title span {
+  color: var(--xb-text-3);
+}
+
+.xb-body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--xb-text-2);
+}
+
+.xb-label {
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xb-text-3);
+}
+
+/* ---- the drawing's own type, inside SVG ---- */
+
+.xb svg text {
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.xb svg .xb-t-sans {
+  font-family: var(--xb-sans);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+/* ---- the ruled frame: hairline box, one cut corner top right ---- */
+
+.xb-frame {
+  --cut: 18px;
+  position: relative;
+  background: var(--xb-line-2);
+  padding: 1px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+
+.xb-frame > .xb-frame__in {
+  height: 100%;
+  background: var(--xb-ground);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut) + 0.42px) 0,
+    100% calc(var(--cut) - 0.42px),
+    100% 100%,
+    0 100%
+  );
+}
+
+/* ================= Section 1 · A · the pinned build ================= */
+
+.xbA-runway {
+  height: 320svh;
+}
+
+.xbA-pin {
+  position: sticky;
+  top: 0;
+}
+
+.xbA {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  column-gap: 48px;
+  height: 100%;
+}
+
+.xbA__text {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.xbA__text .xb-title {
+  margin-top: 18px;
+}
+
+.xbA__steps {
+  list-style: none;
+  margin: 44px 0 0;
+  padding: 0;
+  border-bottom: 1px solid var(--xb-line);
+}
+
+.xbA__step {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  padding: 16px 0 14px;
+  border-top: 1px solid var(--xb-line);
+  color: var(--xb-text-3);
+  transition: color 240ms ease;
+}
+
+.xbA__step[data-on] {
+  color: var(--xb-text);
+}
+
+.xbA__n {
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding-top: 5px;
+}
+
+.xbA__step[data-on] .xbA__n {
+  color: var(--xb-gold);
+}
+
+.xbA__head {
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.xbA__step {
+  grid-template-rows: auto 0fr;
+  transition:
+    color 240ms ease,
+    grid-template-rows 320ms ease;
+}
+
+.xbA__step[data-on] {
+  grid-template-rows: auto 1fr;
+}
+
+/* Exactly one sentence is open at a time, so the list's height holds still
+   while the reader scrolls. */
+.xbA__body {
+  grid-column: 2;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--xb-text-2);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.xbA__step[data-on] .xbA__body {
+  padding-top: 8px;
+  opacity: 1;
+}
+
+.xbA__fig {
+  min-height: 0;
+  display: flex;
+}
+
+.xbA__fig svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ================= Section 1 · B · the schematic ================= */
+
+.xbB {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+}
+
+.xbB__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 48px;
+}
+
+.xbB__title {
+  margin-top: 14px;
+  white-space: nowrap;
+}
+
+.xbB__intro {
+  max-width: 400px;
+}
+
+.xbB__frame {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+.xbB__in {
+  display: flex;
+  flex-direction: column;
+}
+
+.xbB__strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 48px;
+  padding: 0 40px 0 24px;
+  border-bottom: 1px solid var(--xb-line);
+}
+
+.xbB__fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.xbB__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid var(--xb-line);
+}
+
+.xbB__legend li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-content: start;
+  padding: 18px 24px 20px;
+}
+
+.xbB__legend li + li {
+  border-left: 1px solid var(--xb-line);
+}
+
+.xbB__tag {
+  align-self: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--xb-line-2);
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  color: var(--xb-text-2);
+}
+
+.xbB__legend li[data-gold] .xbB__tag {
+  border-color: var(--xb-gold-2);
+  color: var(--xb-gold);
+}
+
+.xbB__lh {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.xbB__lb {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--xb-text-2);
+}
+
+/* ================= Section 1 · C · the board ================= */
+
+.xbC {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  column-gap: 56px;
+  height: 100%;
+}
+
+.xbC__fig {
+  min-height: 0;
+  display: flex;
+}
+
+.xbC__fig svg {
+  width: 100%;
+  height: 100%;
+}
+
+.xbC__text {
+  align-self: center;
+}
+
+.xbC__text .xb-title {
+  margin-top: 18px;
+}
+
+.xbC__notes {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+}
+
+.xbC__notes li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  column-gap: 14px;
+  row-gap: 6px;
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--xb-line);
+}
+
+.xbC__tag {
+  align-self: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--xb-line-2);
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  color: var(--xb-text-2);
+}
+
+.xbC__notes li[data-gold] .xbC__tag {
+  border-color: var(--xb-gold-2);
+  color: var(--xb-gold);
+}
+
+.xbC__head {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.xbC__body {
+  grid-column: 2;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--xb-text-2);
+}
