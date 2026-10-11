@@ -2,6 +2,7 @@ import { disciplineOf } from "@/lib/arcs/content/shared/disciplines";
 import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 import { LOOP_PROOF_CARDS } from "@/lib/arcs/content/shared/loopProof";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
+import { THE_HORIZON_RECORD } from "@/lib/arcs/content/shared/workshopPractice";
 import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
 import type { ArcDef, ArcJobBucket, ArcSection, ArcSectionOf } from "@/lib/arcs/types";
 import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
@@ -86,7 +87,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const plates = knobs.approach === "plates";
   const written = knobs.approach === "written";
   const opened = knobs.approach === "opened";
-  const noUpstream = knobs.upstream === "off";
+  const lines = knobs.upstream === "lines";
   const horizon = knobs.upstream === "horizon";
   const pinned = knobs.engine === "pinned";
   const visionTeam = knobs.vision === "team";
@@ -100,7 +101,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
     plates ||
     written ||
     opened ||
-    noUpstream ||
+    lines ||
     horizon ||
     pinned ||
     visionTeam ||
@@ -340,49 +341,62 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
             ? { ...prodAdoption, id: approachId }
             : prodAdoption;
 
-  /* Longer tasks. Production is the owner's two lines (outline steps 7 and
-     8, picked with the run on 11 October); `off` lets the approach carry
-     the claim alone, and `horizon` draws it as the owned horizon: the
-     team's day upstream, the agent's run reaching up three times. */
-  const prodUpstream = sectionOf("upstream", "horizon");
-  const upstream: ArcSectionOf<"horizon"> | null = noUpstream
-    ? null
-    : horizon
-      ? {
-          id: "upstream",
-          kind: "horizon",
-          menuLabel: "Longer tasks",
-          head: {
-            eyebrow: "Thoughtform · what it buys",
-            title: { pre: "Longer tasks for Claude,", em: "upstream time for your team." },
-            sub: "Once the work is written down, Claude can be given a whole task rather than a prompt every five minutes. It checks its own work, retries, and asks when it is unsure, so the team's day goes to the brief, the campaign and what to test next.",
-          },
-          owner: {
-            key: "The owner",
-            name: "The paid social lead and the creative lead",
-            rows: [
-              { tag: "Writes", line: "How the work is done" },
-              { tag: "Sets", line: "What a good result looks like" },
-              { tag: "Decides", line: "What goes out" },
-            ],
-          },
-          upstream: {
-            label: "Your team, upstream",
-            spans: ["The brief", "The campaign", "What to test next"],
-            line: "The brief, the campaign and what to test next, with Claude checking in once.",
-          },
-          agent: {
-            label: "Claude, on the rest",
-            start: "You set the goal and the checks",
-            gates: [
-              { kind: "check", at: 0.18, label: "Checks its own work" },
-              { kind: "retry", at: 0.5, label: "Steps back and retries" },
-              { kind: "ask", at: 0.72, label: "Checks in with you" },
-            ],
-            end: "You judge the result",
-          },
-        }
-      : prodUpstream;
+  /* Longer tasks. Production carries NONE since the owner's video of
+     11 October (the two lanes were "completely out of place"; the
+     approach's last sentence hands to Loop instead). `lines` keeps the two
+     lines as they shipped from the pick of 11 October (outline steps 7 and
+     8), authored here now that the page no longer holds them; `horizon`
+     draws the owned horizon: the team's day upstream, the agent's run
+     reaching up three times. */
+  const upstream: ArcSectionOf<"horizon"> | null =
+    !lines && !horizon
+      ? null
+      : horizon
+        ? {
+            id: "upstream",
+            kind: "horizon",
+            menuLabel: "Longer tasks",
+            head: {
+              eyebrow: "Thoughtform · what it buys",
+              title: { pre: "Longer tasks for Claude,", em: "upstream time for your team." },
+              sub: "Once the work is written down, Claude can be given a whole task rather than a prompt every five minutes. It checks its own work, retries, and asks when it is unsure, so the team's day goes to the brief, the campaign and what to test next.",
+            },
+            owner: {
+              key: "The owner",
+              name: "The paid social lead and the creative lead",
+              rows: [
+                { tag: "Writes", line: "How the work is done" },
+                { tag: "Sets", line: "What a good result looks like" },
+                { tag: "Decides", line: "What goes out" },
+              ],
+            },
+            upstream: {
+              label: "Your team, upstream",
+              spans: ["The brief", "The campaign", "What to test next"],
+              line: "The brief, the campaign and what to test next, with Claude checking in once.",
+            },
+            agent: {
+              label: "Claude, on the rest",
+              start: "You set the goal and the checks",
+              gates: [
+                { kind: "check", at: 0.18, label: "Checks its own work" },
+                { kind: "retry", at: 0.5, label: "Steps back and retries" },
+                { kind: "ask", at: 0.72, label: "Checks in with you" },
+              ],
+              end: "You judge the result",
+            },
+          }
+        : {
+            id: "upstream",
+            kind: "horizon",
+            menuLabel: "Longer tasks",
+            head: {
+              eyebrow: "Thoughtform · what it buys",
+              title: { pre: "Longer tasks for Claude,", em: "upstream time for your team." },
+              sub: "A tool you operate needs a person at every step. An agent with the context and the evals runs much longer before it asks, so your team's time goes a level higher, to the briefs and the campaigns, where the same loop starts again.",
+            },
+            ...THE_HORIZON_RECORD,
+          };
 
   const proofLoop = opener("proof-loop", 1, quote);
   const proofBrands = opener("proof-brands", 2, quote);

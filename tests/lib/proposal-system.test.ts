@@ -343,8 +343,16 @@ describe("the proposal system lab", () => {
     );
     for (const { label, knobs } of [...flips, ...directions]) {
       const ids = xBionicV2(knobs).sections.map((s) => s.id);
+      /* Production holds no "Longer tasks" beat since 11 October; `lines`
+         and `horizon` ADD one right after the approach. */
       const expected =
-        knobs.upstream === "off" ? PROD_IDS.filter((id) => id !== "upstream") : PROD_IDS;
+        knobs.upstream === "off"
+          ? PROD_IDS
+          : (() => {
+              const ids = [...PROD_IDS];
+              ids.splice(ids.indexOf("adoption") + 1, 0, "upstream");
+              return ids;
+            })();
       expect(ids, label).toEqual(expected);
     }
   });
@@ -360,9 +368,15 @@ describe("the proposal system lab", () => {
     expect(PROD_ADOPTION.time).toBeUndefined();
     expect(PROD_ADOPTION.figure).toBeUndefined();
 
+    /* The two lines came off the page on 11 October (the owner's video:
+       "completely out of place"); Loop's line follows the approach, whose
+       last sentence hands to it. The lab keeps the lines as a value. */
     const at = PROD_IDS.indexOf("adoption");
-    expect(PROD_IDS[at + 1], "the two lines follow the run").toBe("upstream");
-    const lines = X_BIONIC_PROPOSAL_ARC.sections[at + 1];
+    expect(PROD_IDS[at + 1], "Loop's line follows the approach").toBe("proof-loop");
+    expect(PROD_IDS, "no Longer tasks beat on the page").not.toContain("upstream");
+    const lines = xBionicV2({ ...PS_DEFAULTS, upstream: "lines" }).sections.find(
+      (s) => s.id === "upstream"
+    );
     expect(lines?.kind).toBe("horizon");
     if (lines?.kind === "horizon") {
       expect(lines.operated).toBe(THE_HORIZON_RECORD.operated);

@@ -2,7 +2,6 @@ import type { ArcDef, ArcLeverageUse } from "../types";
 
 import { X_BIONIC_JOBS } from "./shared/jobs";
 import { LOOP_PROOF_CARDS, LOOP_RETURN, VINCE_ABOUT } from "./shared/loopProof";
-import { THE_HORIZON_RECORD } from "./shared/workshopPractice";
 import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 
 /**
@@ -253,24 +252,12 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       },
     },
 
-    /* ── Longer tasks: the two lines ───────────────────────────────────
-       Steps seven and eight of the outline, right after the run: a tool
-       you operate, checked at every step, over an agent with the context
-       and the evals, which runs much longer before it asks. The body is
-       the workshop's own record, by reference (`THE_HORIZON_RECORD`, the
-       `theHorizon` precedent: share the record, author the frame); the
-       head carries the move upstream. */
-    {
-      id: "upstream",
-      kind: "horizon",
-      menuLabel: "Longer tasks",
-      head: {
-        eyebrow: "Thoughtform · what it buys",
-        title: { pre: "Longer tasks for Claude,", em: "upstream time for your team." },
-        sub: "A tool you operate needs a person at every step. An agent with the context and the evals runs much longer before it asks, so your team's time goes a level higher, to the briefs and the campaigns, where the same loop starts again.",
-      },
-      ...THE_HORIZON_RECORD,
-    },
+    /* The two lines ("Longer tasks for Claude, upstream time for your
+       team.", outline steps 7 and 8) came off this page on 2026-10-11, on
+       the owner's video: "completely out of place in terms of design …
+       these rounded shapes, we shouldn't use them … doodle arrow". The
+       approach's last sentence hands to Loop instead; the lab keeps the two
+       lines as `upstream: lines`. */
 
     /* ── Loop ──────────────────────────────────────────────────────────
        The first of three bare lines (owner, 2026-10-10: "an interstitial
