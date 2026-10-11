@@ -1,6 +1,7 @@
 import type { ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcConfigFigure } from "./ArcConfigFigure";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcVision } from "./ArcVisionFigure";
 import { rung } from "./arcMotion";
@@ -62,29 +63,41 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           </div>
           <div className="arc-lev__split">
             <div className="arc-lev__idea">
-              {/* The stack, the page's one object (the proposal system,
+              {section.idea ? (
+                /* The configuration plugged into the host and used by the
+                   team (owner, 2026-10-11), in place of the stack. */
+                <ArcConfigFigure idea={section.idea} id={section.id} />
+              ) : (
+                <>
+                  {/* The stack, the page's one object (the proposal system,
                   2026-10-10): the plates top to bottom are the owned layer,
                   the host (Claude), the shared models, drawn by the same
                   geometry the approach writes and the engine configures. */}
-              <StackFigure
-                id={`${section.id}-lev`}
-                className="arc-lev__stack"
-                tiers={["shared", "host", "layer"]}
-                lit="layer"
-                sides={{ shared: "right", host: "right" }}
-                gap={3.4}
-                flow
-                callouts={{
-                  layer: { label: stack[0].label, lines: [stack[0].line], chip: stack[0].chip },
-                  host: { label: stack[1].label, lines: [stack[1].line], chip: stack[1].chip },
-                  shared: { label: stack[2].label, lines: [stack[2].line], chip: stack[2].chip },
-                }}
-                alt={`${stack[0].label}, ${stack[0].line}; ${stack[1].label}, ${stack[1].line}; ${stack[2].label}, ${stack[2].line}.`}
-              />
-              <div className="arc-lev__note">
-                <p className="arc-lev__label">{note.label}</p>
-                <p className="arc-lev__line">{note.line}</p>
-              </div>
+                  <StackFigure
+                    id={`${section.id}-lev`}
+                    className="arc-lev__stack"
+                    tiers={["shared", "host", "layer"]}
+                    lit="layer"
+                    sides={{ shared: "right", host: "right" }}
+                    gap={3.4}
+                    flow
+                    callouts={{
+                      layer: { label: stack[0].label, lines: [stack[0].line], chip: stack[0].chip },
+                      host: { label: stack[1].label, lines: [stack[1].line], chip: stack[1].chip },
+                      shared: {
+                        label: stack[2].label,
+                        lines: [stack[2].line],
+                        chip: stack[2].chip,
+                      },
+                    }}
+                    alt={`${stack[0].label}, ${stack[0].line}; ${stack[1].label}, ${stack[1].line}; ${stack[2].label}, ${stack[2].line}.`}
+                  />
+                  <div className="arc-lev__note">
+                    <p className="arc-lev__label">{note.label}</p>
+                    <p className="arc-lev__line">{note.line}</p>
+                  </div>
+                </>
+              )}
             </div>
             <div className="arc-lev__uses">
               <p className="arc-lev__uses-label">{uses.label}</p>
