@@ -1,0 +1,553 @@
+/* ════════════════════════════════════════════════════════════════════════
+   /test/halyard — the X-Bionic offer sections, from the brief alone.
+
+   Brand: ground #0A0908, ink #EBE3D6, one accent (Tensor gold #CAA554) kept
+   for THE LAYER and nothing else. PP Neue Montreal for titles and text,
+   PT Mono for labels (never under 12px). Straight corners; at most one cut.
+   Everything is scoped under `.hy-root`; the frame is the shipped HUD.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.hy-root {
+  --hy-ground: #0a0908;
+  --hy-ink-rgb: 235, 227, 214;
+  --hy-gold-rgb: 202, 165, 84;
+  --hy-ink: rgb(var(--hy-ink-rgb));
+  --hy-ink-2: rgba(var(--hy-ink-rgb), 0.66);
+  --hy-ink-3: rgba(var(--hy-ink-rgb), 0.46);
+  --hy-ink-4: rgba(var(--hy-ink-rgb), 0.3);
+  --hy-rule: rgba(var(--hy-ink-rgb), 0.14);
+  --hy-gold: rgb(var(--hy-gold-rgb));
+  --hy-gold-45: rgba(var(--hy-gold-rgb), 0.45);
+  --hy-gold-12: rgba(var(--hy-gold-rgb), 0.12);
+  --hy-sans: var(--font-pp-neue-montreal);
+  --hy-mono: var(--font-pt-mono);
+  --hy-title: 48px;
+  --hy-body: 17px;
+  --hy-label: 12px;
+  --hy-air: 40px;
+
+  min-height: 100svh;
+  background: var(--hy-ground);
+  color: var(--hy-ink);
+  font-family: var(--hy-sans);
+  font-weight: var(--weight-text);
+}
+
+/* The frame's own fixed gold radial is a wash over the composition. */
+.hy-root .gateway {
+  display: none !important;
+}
+/* The wordmark docks from the first frame, as on every sheet. */
+.hy-root .hud__brand {
+  left: var(--hud-margin);
+  transform: scale(var(--hud-brand-dock));
+}
+
+.hy-root[data-hy-still] *,
+.hy-root[data-hy-still] *::before,
+.hy-root[data-hy-still] *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* ── The stage: the band between the rails, the rail's vertical extent ── */
+.hy-runway {
+  position: relative;
+  z-index: 2;
+  height: 340svh;
+}
+.hy-runway[data-frozen] {
+  height: 100svh;
+}
+.hy-stage {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100svh;
+}
+.hy-stage--one {
+  position: relative;
+}
+.hy-box {
+  position: absolute;
+  top: var(--hud-rail-y-start);
+  bottom: var(--hud-rail-y-end);
+  left: var(--band-margin);
+  /* the right rail's telemetry reads up to ~24px into the band */
+  right: calc(var(--band-margin) + 36px);
+}
+
+/* ── Shared type ── */
+.hy-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--hy-mono);
+  font-size: var(--hy-label);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--hy-ink-3);
+}
+.hy-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--hy-ink-3);
+}
+.hy-title {
+  margin: 14px 0 0;
+  text-wrap: balance;
+  font-family: var(--hy-sans);
+  font-size: var(--hy-title);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-display);
+  line-height: 1.04;
+  color: var(--hy-ink);
+}
+.hy-body {
+  margin: 0;
+  font-size: var(--hy-body);
+  line-height: 1.45;
+  letter-spacing: 0;
+  color: var(--hy-ink-2);
+}
+.hy-label {
+  font-family: var(--hy-mono);
+  font-size: var(--hy-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--hy-ink-3);
+}
+
+/* ── SVG line work ── */
+.hy-svg {
+  display: block;
+  overflow: visible;
+}
+.hy-svg--clip {
+  overflow: hidden;
+}
+.hy-svg path,
+.hy-svg rect {
+  vector-effect: non-scaling-stroke;
+}
+.hy-hair {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.07);
+  stroke-width: 1;
+}
+.hy-line {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.46);
+  stroke-width: 1;
+}
+.hy-line-2 {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.24);
+  stroke-width: 1;
+}
+.hy-line-dash {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.26);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.hy-pad {
+  fill: #0f0e0c;
+  stroke: rgba(var(--hy-ink-rgb), 0.42);
+  stroke-width: 1;
+}
+.hy-chip {
+  fill: var(--hy-ground);
+  stroke: rgba(var(--hy-ink-rgb), 0.34);
+  stroke-width: 1;
+}
+.hy-board-top {
+  fill: #12110e;
+  stroke: rgba(var(--hy-ink-rgb), 0.6);
+  stroke-width: 1.25;
+  stroke-linejoin: miter;
+}
+.hy-board-face {
+  fill: #0d0c0a;
+  stroke: rgba(var(--hy-ink-rgb), 0.6);
+  stroke-width: 1.25;
+  stroke-linejoin: miter;
+}
+.hy-housing {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.66);
+  stroke-width: 1.25;
+}
+.hy-glyph {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.88);
+  stroke-width: 1.25;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+.hy-trace {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.5);
+  stroke-width: 1.25;
+  transition: d 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.hy-trace--tool {
+  stroke: rgba(var(--hy-ink-rgb), 0.38);
+}
+
+/* THE LAYER — opaque faces so whatever passes behind it is hidden */
+.hy-gold-top {
+  fill: #241e13;
+  stroke: var(--hy-gold);
+  stroke-width: 1.25;
+  stroke-linejoin: miter;
+}
+.hy-gold-face {
+  fill: #17140e;
+  stroke: var(--hy-gold);
+  stroke-width: 1.25;
+  stroke-linejoin: miter;
+}
+.hy-gold-sep {
+  fill: none;
+  stroke: var(--hy-gold-45);
+  stroke-width: 1;
+}
+.hy-gold-mark {
+  fill: none;
+  stroke: rgba(var(--hy-gold-rgb), 0.78);
+  stroke-width: 1.5;
+}
+.hy-gold-lead {
+  fill: none;
+  stroke: var(--hy-gold);
+  stroke-width: 1;
+}
+
+.hy-svg-label {
+  font-family: var(--hy-mono);
+  font-size: 12px;
+  letter-spacing: var(--track-label);
+  fill: rgba(var(--hy-ink-rgb), 0.72);
+  /* knock the floor grid out from under the type */
+  stroke: var(--hy-ground);
+  stroke-width: 6px;
+  stroke-linejoin: miter;
+  paint-order: stroke;
+}
+.hy-svg-label--dim {
+  fill: var(--hy-ink-3);
+}
+.hy-svg-label--ink {
+  fill: rgba(var(--hy-ink-rgb), 0.92);
+}
+.hy-svg-label--gold {
+  fill: var(--hy-gold);
+}
+
+/* ════ A · ASSEMBLY ═══════════════════════════════════════════════════ */
+.hy-a {
+  display: grid;
+  grid-template-columns: minmax(0, 0.33fr) minmax(0, 0.67fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: 30px;
+}
+.hy-a__head {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+}
+.hy-a__steps {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  margin: 0;
+  padding: 6px var(--hy-air) 0 0;
+  list-style: none;
+}
+.hy-a__step {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  grid-template-rows: auto 0fr;
+  align-items: start;
+  color: var(--hy-ink-4);
+  transition:
+    color 0.5s ease,
+    grid-template-rows 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.hy-a__step[data-on] {
+  grid-template-rows: auto 1fr;
+  color: var(--hy-ink);
+}
+.hy-a__n {
+  grid-row: 1;
+  padding-top: 12px;
+  font-family: var(--hy-mono);
+  font-size: var(--hy-label);
+  letter-spacing: var(--track-label);
+}
+.hy-a__t {
+  grid-row: 1;
+  font-size: 28px;
+  letter-spacing: var(--track-display);
+  line-height: 1.2;
+}
+.hy-a__b {
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 0s linear 0.6s;
+}
+.hy-a__step[data-on] .hy-a__b {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.hy-a__b .hy-body {
+  display: block;
+  padding-top: 10px;
+  max-width: 30ch;
+}
+.hy-a__fig {
+  position: relative;
+  min-height: 0;
+  padding-left: var(--hy-air);
+}
+.hy-a__fig::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--hy-rule);
+}
+.hy-a__draw {
+  position: absolute;
+  inset: 0 0 0 var(--hy-air);
+}
+.hy-a__draw > svg {
+  position: absolute;
+  inset: 0;
+}
+
+.hy-a__traces,
+.hy-a__claude,
+.hy-a__layer,
+.hy-a__layer-label {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.hy-a__traces[data-on],
+.hy-a__claude[data-on],
+.hy-a__layer[data-on],
+.hy-a__layer-label[data-on] {
+  opacity: 1;
+}
+.hy-a__layer {
+  transition:
+    opacity 0.6s ease,
+    transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ── The lab switch (hidden on stills) ── */
+.hy-switch {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 60;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+  font-family: var(--hy-mono);
+  font-size: var(--hy-label);
+  letter-spacing: var(--track-label);
+}
+.hy-switch a {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  border: 1px solid var(--hy-rule);
+  color: var(--hy-ink-3);
+  text-decoration: none;
+}
+.hy-switch a[data-on] {
+  border-color: rgba(var(--hy-ink-rgb), 0.6);
+  color: var(--hy-ink);
+}
+.hy-switch__steps {
+  display: flex;
+  gap: 6px;
+  margin-left: 14px;
+}
+
+/* ── B and C share these marks ── */
+.hy-datum {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.3);
+  stroke-width: 1;
+  stroke-dasharray: 16 4 2 4;
+}
+.hy-key {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.5);
+  stroke-width: 1;
+}
+.hy-node {
+  fill: var(--hy-ground);
+  stroke: rgba(var(--hy-ink-rgb), 0.7);
+  stroke-width: 1;
+}
+.hy-port {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.3);
+  stroke-width: 1;
+}
+.hy-gold-travel {
+  fill: none;
+  stroke: var(--hy-gold);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 4;
+}
+
+/* ════ B · AXIS ═══════════════════════════════════════════════════════ */
+.hy-b {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  row-gap: 26px;
+}
+.hy-b__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);
+  align-items: end;
+  column-gap: var(--hy-air);
+  padding-top: 8px;
+}
+.hy-b__lede {
+  max-width: 40ch;
+  padding-bottom: 6px;
+}
+.hy-b__draw {
+  position: relative;
+  min-height: 0;
+}
+.hy-b__draw > svg {
+  position: absolute;
+  inset: 0;
+}
+.hy-b__caps {
+  display: grid;
+  grid-template-columns: 29fr 31fr 40fr;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hy-b__caps li {
+  display: grid;
+  align-content: start;
+  row-gap: 10px;
+  padding-right: 36px;
+}
+.hy-b__caps .hy-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--hy-ink-2);
+}
+.hy-b__key {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(var(--hy-ink-rgb), 0.5);
+  color: var(--hy-ink);
+}
+.hy-b__caps .hy-body {
+  font-size: 16px;
+  max-width: 34ch;
+}
+
+/* ════ C · SCHEMATIC ══════════════════════════════════════════════════ */
+.hy-c {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: 24px;
+}
+.hy-c__head {
+  padding-top: 8px;
+}
+.hy-c__frame {
+  position: relative;
+  display: grid;
+  grid-template-rows: 44px minmax(0, 1fr) auto;
+  min-height: 0;
+}
+.hy-c__ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hy-frame-line {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.26);
+  stroke-width: 1;
+}
+.hy-c__strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 44px 0 24px;
+  border-bottom: 1px solid var(--hy-rule);
+}
+.hy-c__strip .hy-label {
+  margin: 0;
+}
+.hy-c__fig {
+  position: relative;
+  min-height: 0;
+}
+.hy-c__fig > svg {
+  position: absolute;
+  inset: 0;
+}
+.hy-c__cells {
+  display: grid;
+  grid-template-columns: 33fr 31fr 36fr;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hy-rule);
+}
+.hy-c__cells li {
+  display: grid;
+  align-content: start;
+  row-gap: 10px;
+  padding: 20px 28px 24px;
+}
+.hy-c__cells li + li {
+  border-left: 1px solid var(--hy-rule);
+}
+.hy-c__cells .hy-label {
+  margin: 0;
+  color: var(--hy-ink-2);
+}
+.hy-c__cells .hy-body {
+  font-size: 16px;
+  max-width: 36ch;
+}
+.hy-guide {
+  fill: none;
+  stroke: rgba(var(--hy-ink-rgb), 0.1);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+.hy-dot {
+  fill: rgba(var(--hy-ink-rgb), 0.12);
+}
+.hy-chip--solid {
+  fill: #0e0d0b;
+}
