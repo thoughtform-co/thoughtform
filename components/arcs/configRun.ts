@@ -3,9 +3,12 @@
  * 2026-10-10; the owner's eight-step outline, approved "Draw it"). Pure,
  * server-safe, no react: numbers and path strings, so a test can count them.
  *
- *   1  the layer      the vision's "Your layer" as a key plan: the gold slab
- *                     with one lane per workstream, the lit one in front
- *   2  the job        a cone opens from that lane onto ONE panel: the
+ *   1  the layer      the vision's "Your layer", the same slab at the
+ *                     stage's 22 degrees in the vision's paint (the gold
+ *                     wash, the hatch, the dashed run along its front
+ *                     edge), a tile per workstream standing on it, the one
+ *                     followed lit (`stackLayout`'s own boxes)
+ *   2  the job        a cone opens from that tile onto ONE panel: the
  *                     workstream's jobs across its head, ads design lit
  *   3  the ends       the job's three inputs on the left (the renders, the
  *                     voice, the brief) and the finished ad on the right
@@ -30,7 +33,8 @@
  */
 import { crewSeed, grainPaths, personPath } from "./crewParticles";
 import type { CrewGrain } from "./crewParticles";
-import { ISO_ANGLE } from "./framing/iso";
+import { ISO_ANGLE, ISO_BASIS_STAGE } from "./framing/iso";
+import { PLATE, TILE, tileBoxes } from "./stack/stackLayout";
 
 /** The crop, in drawing units. Every coordinate below is written against it. */
 export const CFG_VB = { w: 1200, h: 470 } as const;
@@ -46,8 +50,12 @@ export interface CfgMark {
   cls:
     | "plate"
     | "plate-side"
-    | "lane-lit"
-    | "seam"
+    | "plate-hatch"
+    | "run"
+    | "tile-face"
+    | "tile-face-lit"
+    | "tile-top"
+    | "tile-top-lit"
     | "cone"
     | "panel"
     | "rule"
@@ -279,14 +287,44 @@ function prose(x0: number, y: number, len: number, R: () => number, a0: number, 
   return out;
 }
 
-/* ── The key plan: the vision's layer, its lanes as the workstreams ─────── */
+/* ── The layer: the vision's slab, its workstreams standing on it ─────── */
 
+const COS = Math.cos((ISO_ANGLE * Math.PI) / 180);
 const RISE = Math.tan((ISO_ANGLE * Math.PI) / 180);
-const PLAN = { x: 8, y: 193, side: 92, lane: 23, thick: 9 } as const;
+/** The slab's left corner and its side, in drawing units. */
+const PLAN = { x: 8, y: 193, side: 92 } as const;
+/** One world unit of the stack (`stackLayout`), in drawing units across the
+ *  plan; and one unit of height, from the stage's own basis, so the slab's
+ *  thickness and the tiles' height keep the vision's proportions. */
+const STAGE = PLAN.side / PLATE.w;
+const HEIGHT = (-ISO_BASIS_STAGE.Z[1] * STAGE) / COS;
+const THICK = PLATE.h * HEIGHT;
 
-/** A point on the plan's top: `u` along a lane, `v` across, back to front. */
+/** A point on the plan's top: `u` along the front-right edge, `v` across it,
+ *  back to front; `z` down the screen. */
 function plan(u: number, v: number, z = 0): Pt {
   return [PLAN.x + u + v, PLAN.y + RISE * (v - u) + z];
+}
+
+/** A point of the stack's own world (`a`, `b`, height `h`) on the slab: the
+ *  stage's orientation, its front corner at the foot of the plan. */
+const onSlab = (a: number, b: number, h = 0): Pt =>
+  plan(a * STAGE, PLAN.side - b * STAGE, -h * HEIGHT);
+
+/** The workstreams' tiles, `stackLayout`'s boxes, front (0) to back: the
+ *  two faces the eye sees, the top, and the top's highest corner. */
+function tiles(n: number) {
+  return tileBoxes(n).map(({ a, b, w, d }) => {
+    const h = TILE.h;
+    const a1 = a + w;
+    const b1 = b + d;
+    return {
+      left: poly([onSlab(a, b), onSlab(a, b1), onSlab(a, b1, h), onSlab(a, b, h)]),
+      right: poly([onSlab(a, b), onSlab(a1, b), onSlab(a1, b, h), onSlab(a, b, h)]),
+      top: poly([onSlab(a, b, h), onSlab(a1, b, h), onSlab(a1, b1, h), onSlab(a, b1, h)]),
+      peak: onSlab(a1, b1, h),
+    };
+  });
 }
 
 /* ── The rows: where every run, gate and person sits ─────────────────── */
@@ -307,63 +345,54 @@ const BAND = { x0: 712, x1: 945, y0: 206, y1: 294 } as const;
 const AD = { x0: 1020, y0: 204, w: 104, h: 130 } as const;
 
 /**
- * The whole drawing for a run. `lanes` is the layer's workstream count (four
- * on the record); `lit` the lane the cone opens from, counted back to front.
+ * The whole drawing for a run. `count` is the layer's workstream count (four
+ * on the record); `lit` the one followed, in the record's order. The record's
+ * first workstream stands at the BACK of the row, so the list under the plan
+ * reads down as the tiles step down toward the viewer, and the lit tile's
+ * cone leaves the slab without crossing it.
  */
-export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRunDrawing {
+export function configRun(seedId: string, count = 4, lit = 0): ConfigRunDrawing {
   const R = rng(crewSeed(seedId));
   const groups: CfgGroup[] = [];
 
   /* 1 · the layer ------------------------------------------------------ */
+  const row = tiles(count);
+  const litTile = row[clamp(row.length - 1 - lit, 0, row.length - 1)];
+  const { side } = PLAN;
+  const Rr = plan(side, side);
+  const down = (p: Pt): Pt => [p[0], p[1] + THICK];
   {
-    const { side, lane, thick } = PLAN;
-    const depth = lane * lanes;
     const L = plan(0, 0);
     const T = plan(side, 0);
-    const Rr = plan(side, depth);
-    const B = plan(0, depth);
-    const down = (p: Pt): Pt => [p[0], p[1] + thick];
+    const B = plan(0, side);
+    const top = poly([L, T, Rr, B]);
     const marks: CfgMark[] = [
       { cls: "plate-side", d: poly([L, B, down(B), down(L)]) },
       { cls: "plate-side", d: poly([B, Rr, down(Rr), down(B)]) },
-      { cls: "plate", d: poly([L, T, Rr, B]) },
-      {
-        cls: "lane-lit",
-        d: poly([plan(0, lit * lane), plan(side, lit * lane), plan(side, (lit + 1) * lane), plan(0, (lit + 1) * lane)]),
-      },
-      {
-        cls: "seam",
-        d: Array.from({ length: lanes - 1 }, (_, i) => {
-          const [a, b] = [plan(0, (i + 1) * lane), plan(side, (i + 1) * lane)];
-          return `M${r1(a[0])} ${r1(a[1])}L${r1(b[0])} ${r1(b[1])}`;
-        }).join(""),
-      },
+      { cls: "plate", d: top },
+      { cls: "plate-hatch", d: top },
+      /* The run along the front-right top edge, where Claude's work travels
+         on the vision's slab. */
+      { cls: "run", d: `M${r1(B[0])} ${r1(B[1])}L${r1(Rr[0])} ${r1(Rr[1])}` },
     ];
-    /* Every lane carries work; the lit one runs, brightening along its
-       length, and the rest are a faint record of theirs. */
-    const quiet: CrewGrain[] = [];
-    const bright: CrewGrain[] = [];
-    for (let k = 0; k < lanes; k += 1) {
-      const on = k === lit;
-      const rows = on ? [lane * 0.32, lane * 0.68] : [lane * 0.5];
-      for (const dv of rows) {
-        for (let u = 5; u <= side - 5; u += on ? 3 : 6) {
-          if (!on && R() < 0.35) continue;
-          const [x, y] = plan(u + (R() - 0.5) * 1.4, k * lane + dv + (R() - 0.5) * 3);
-          const t = u / side;
-          if (on) bright.push(grain(x, y, 1.5 + R() * 0.6, 0.45 + 0.5 * t));
-          else quiet.push(grain(x, y, 1.2 + R() * 0.4, 0.2 + R() * 0.2));
-        }
-      }
+    /* Back to front, so the nearer tile paints over the farther. */
+    for (let i = row.length - 1; i >= 0; i -= 1) {
+      const on = row[i] === litTile;
+      marks.push(
+        { cls: on ? "tile-face-lit" : "tile-face", d: row[i].left },
+        { cls: on ? "tile-face-lit" : "tile-face", d: row[i].right },
+        { cls: on ? "tile-top-lit" : "tile-top", d: row[i].top }
+      );
     }
-    marks.push(...grainMarks(quiet, "gold"), ...grainMarks(bright, "gold"));
     groups.push({ step: 1, marks });
   }
 
   /* 2 · the job: the cone and the panel --------------------------------- */
   {
-    const [cx0, cy0] = plan(PLAN.side, lit * PLAN.lane);
-    const [cx1, cy1] = plan(PLAN.side, (lit + 1) * PLAN.lane);
+    /* From the lit tile's highest corner and the slab's right foot: the
+       wedge holds the tile and leaves the slab without crossing it. */
+    const [cx0, cy0] = litTile.peak;
+    const [cx1, cy1] = down(Rr);
     groups.push({
       step: 2,
       marks: [
@@ -383,7 +412,9 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
     marks.push({ cls: "frame", d: "M256 130H308V174H256Z" });
     ink.push(...garment(266, 136, 32, R));
     /* The voice: a page of copy, five ragged lines. */
-    [70, 64, 70, 52, 40].forEach((len, i) => ink.push(...prose(256, 251 + i * 9, len, R, 0.35, 0.75)));
+    [70, 64, 70, 52, 40].forEach((len, i) =>
+      ink.push(...prose(256, 251 + i * 9, len, R, 0.5, 0.9))
+    );
     /* The brief: a card of fields, a key and its value per row. */
     marks.push({ cls: "frame", d: "M256 364H316V414H256Z" });
     [374, 384, 394, 404].forEach((y, i) => {
@@ -393,9 +424,25 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
     });
     /* The strands: each input into the one node, brightening as it goes. */
     const strands: Seg[][] = [
-      [{ line: [[322, 149], [420, 149]] }, { cubic: [[420, 149], [445, 149], [435, 269], NODE] }],
+      [
+        {
+          line: [
+            [322, 149],
+            [420, 149],
+          ],
+        },
+        { cubic: [[420, 149], [445, 149], [435, 269], NODE] },
+      ],
       [{ line: [[332, 269], NODE] }],
-      [{ line: [[322, 389], [420, 389]] }, { cubic: [[420, 389], [445, 389], [435, 269], NODE] }],
+      [
+        {
+          line: [
+            [322, 389],
+            [420, 389],
+          ],
+        },
+        { cubic: [[420, 389], [445, 389], [435, 269], NODE] },
+      ],
     ];
     marks.push({ cls: "trace", d: strands.map(segPath).join("") });
     for (const s of strands) {
@@ -415,7 +462,14 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
     for (let x = AD.x0 + 12; x <= AD.x0 + 70; x += 2.8) ink.push(grain(x, AD.y0 + 100, 1.2, 0.45));
     marks.push({ cls: "cta", d: `M${AD.x0 + 12} ${AD.y0 + 108}h40v12h-40z` });
     /* The exit strand, node to ad. */
-    const exit: Seg[] = [{ line: [[EXIT[0] + 3, EXIT[1]], [AD.x0, EXIT[1]]] }];
+    const exit: Seg[] = [
+      {
+        line: [
+          [EXIT[0] + 3, EXIT[1]],
+          [AD.x0, EXIT[1]],
+        ],
+      },
+    ];
     marks.push({ cls: "trace", d: segPath(exit) });
     ink.push(...along(exit, R, { step: 3.4, jitter: 0.6, shape: () => ({ s: 1.6, a: 0.8 }) }));
     marks.push(...grainMarks(ink, "ink"));
@@ -425,17 +479,42 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
 
   /** A run's gold, along a row from the fork to the exit. */
   const runGrains = (y: number, gaps: readonly [number, number][]) =>
-    along([{ line: [[RUN_X0, y], [RUN_X1, y]] }], R, {
-      step: 4.2,
-      jitter: 2,
-      gaps,
-      shape: () => ({ s: 1.8 + R() * 0.6, a: 0.55 + R() * 0.35 }),
-    });
+    along(
+      [
+        {
+          line: [
+            [RUN_X0, y],
+            [RUN_X1, y],
+          ],
+        },
+      ],
+      R,
+      {
+        step: 4.2,
+        jitter: 2,
+        gaps,
+        shape: () => ({ s: 1.8 + R() * 0.6, a: 0.55 + R() * 0.35 }),
+      }
+    );
   const forkTo = (y: number): Seg[] => [
-    { cubic: [[NODE[0] + 3, NODE[1]], [485, NODE[1]], [483, y], [RUN_X0, y]] },
+    {
+      cubic: [
+        [NODE[0] + 3, NODE[1]],
+        [485, NODE[1]],
+        [483, y],
+        [RUN_X0, y],
+      ],
+    },
   ];
   const exitFrom = (y: number): Seg[] => [
-    { cubic: [[RUN_X1, y], [968, y], [972, EXIT[1]], [EXIT[0] - 3, EXIT[1]]] },
+    {
+      cubic: [
+        [RUN_X1, y],
+        [968, y],
+        [972, EXIT[1]],
+        [EXIT[0] - 3, EXIT[1]],
+      ],
+    },
   ];
   const curveGrains = (segs: Seg[], rising: boolean) =>
     along(segs, R, {
@@ -450,7 +529,10 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
     const exit = exitFrom(ROW_A);
     const gold = [
       ...curveGrains(fork, true),
-      ...runGrains(ROW_A, CHECK_X.map((x) => [x - 10, x + 10] as [number, number])),
+      ...runGrains(
+        ROW_A,
+        CHECK_X.map((x) => [x - 10, x + 10] as [number, number])
+      ),
       ...curveGrains(exit, false),
     ];
     groups.push({
@@ -458,7 +540,10 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
       marks: [
         { cls: "trace", d: segPath(fork) + segPath(exit) },
         ...grainMarks(gold, "gold"),
-        ...CHECK_X.map((x) => ({ cls: "person" as const, d: personPath({ cx: x, cy: ROW_A, r: PERSON_R }) })),
+        ...CHECK_X.map((x) => ({
+          cls: "person" as const,
+          d: personPath({ cx: x, cy: ROW_A, r: PERSON_R }),
+        })),
       ],
     });
   }
@@ -466,16 +551,22 @@ export function configRun(seedId: string, lanes = 4, lit = lanes - 1): ConfigRun
   /* 5 · write it down: the band, the skill's course, the evals ---------- */
   {
     const gold: CrewGrain[] = [];
-    /* The skill: a written course, dense, the house's lane grain. */
+    /* The skill: a written course, dense, the house's lane grain, with a
+       channel left open where each kept check falls through it. */
     for (let y = 222; y <= 238; y += 3.2) {
       for (let x = 795; x <= 935; x += 3.2) {
-        gold.push(grain(x + (R() - 0.5) * 0.8, y + (R() - 0.5) * 0.8, 1.4 + R() * 0.5, 0.5 + R() * 0.45));
+        if (EVAL_X.some((e) => Math.abs(x - e) < 6)) continue;
+        gold.push(
+          grain(x + (R() - 0.5) * 0.8, y + (R() - 0.5) * 0.8, 1.4 + R() * 0.5, 0.5 + R() * 0.45)
+        );
       }
     }
-    /* Two checks fall from the adopted run and are kept. */
+    /* Two checks fall from the adopted run, through the course's channels,
+       and are kept as the evals. */
+    const KEPT = 270 - 5 - 3;
     for (const x of EVAL_X) {
-      for (let y = ROW_A + PERSON_R + 6; y <= 216; y += 4) {
-        const t = (y - ROW_A) / (216 - ROW_A);
+      for (let y = ROW_A + PERSON_R + 6; y <= KEPT; y += 4) {
+        const t = (y - ROW_A) / (KEPT - ROW_A);
         gold.push(grain(x + (R() - 0.5) * 1.6, y, 1.4 + 0.5 * t, 0.3 + 0.55 * t));
       }
     }

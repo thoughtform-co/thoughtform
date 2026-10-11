@@ -24,7 +24,7 @@
     "approach": {
       "values": ["handoff", "stack", "sheet", "pinned", "states"],
       "label": "The approach",
-      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. sheet, pinned and states = the owner's eight-step outline drawn as one run (ArcConfigRun): the vision's own layer, one lane opened onto creative production, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking once. sheet reads it whole; pinned lights its six parts on a runway; states puts the handoff's rail over it, one state per pass."
+      "note": "handoff = ADR-153's three plates and two time bars. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. sheet, pinned and states = the owner's eight-step outline drawn as one run (ArcConfigRun): the vision's own layer with its four workstream tiles, creative production's tile opened onto its jobs, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking once. sheet reads it whole; pinned lights its six parts on a runway; states puts the handoff's rail over it, one state per pass."
     },
     "upstream": {
       "values": ["off", "horizon", "lines"],

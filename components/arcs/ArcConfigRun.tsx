@@ -24,9 +24,9 @@ interface ArcConfigRunProps {
  * proposal, 2026-10-10; the owner's eight-step outline, "Draw it"). One
  * drawing in six parts, left to right:
  *
- *   1  the vision's own layer, as a key plan: a lane per workstream, the
- *      lit lane the workstream the reader follows
- *   2  that lane opened onto one panel, its jobs across the head, the job
+ *   1  the vision's own layer, in its own paint, a tile per workstream
+ *      standing on it, the lit tile the workstream the reader follows
+ *   2  that tile opened onto one panel, its jobs across the head, the job
  *      worked through lit
  *   3  the job's three inputs on the left and the finished ad on the right
  *   4  adoption: the upper pass, made with Claude, a person at every step
@@ -49,12 +49,17 @@ interface ArcConfigRunProps {
 export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRunProps) {
   const { run, steps } = section;
   if (!run) return null;
-  const lanes = run.layer.workstreams.length;
-  const litLane = run.layer.workstreams.findIndex((w) => w.lit);
-  const d = configRun(section.id, lanes);
+  const count = run.layer.workstreams.length;
+  const litIndex = Math.max(
+    0,
+    run.layer.workstreams.findIndex((w) => w.lit)
+  );
+  const d = configRun(section.id, count, litIndex);
   const pinned = run.mode === "pinned";
   const states = run.mode === "states";
-  const lit = run.layer.workstreams[litLane] ?? run.layer.workstreams[0];
+  const lit = run.layer.workstreams[litIndex];
+  /* The slab's hatch, the stack's own (StackFigure), its id per instance. */
+  const hatch = `${section.id}-cfg-hatch`;
 
   const figure = (
     <figure className="cfg__fig" role="img" aria-label={run.alt}>
@@ -66,6 +71,17 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
           aria-hidden="true"
           focusable="false"
         >
+          <defs>
+            <pattern
+              id={hatch}
+              width="6"
+              height="6"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45) scale(0.42)"
+            >
+              <line x1="0" y1="0" x2="0" y2="6" className="cfg__hatch" />
+            </pattern>
+          </defs>
           {d.groups.map((g) => (
             <g key={g.step} className="cfg__part" data-cfg-step={g.step}>
               {g.marks.map((m, i) => (
@@ -73,6 +89,7 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
                   key={`${m.cls}-${i}`}
                   className={`cfg__${m.cls}`}
                   d={m.d}
+                  fill={m.cls === "plate-hatch" ? `url(#${hatch})` : undefined}
                   fillOpacity={m.a}
                 />
               ))}
@@ -83,7 +100,12 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
           <p className="cfg__tag" data-cfg-tag="layer" data-cfg-step="1" style={at(d.seats.layer)}>
             {run.layer.label}
           </p>
-          <ul className="cfg__tag cfg__list" data-cfg-tag="list" data-cfg-step="1" style={at(d.seats.list)}>
+          <ul
+            className="cfg__tag cfg__list"
+            data-cfg-tag="list"
+            data-cfg-step="1"
+            style={at(d.seats.list)}
+          >
             {run.layer.workstreams.map((w) => (
               <li key={w.id} className="cfg__ws" data-cfg-lit={w.lit ? "" : undefined}>
                 <span className="cfg__ws-mark" />
@@ -91,7 +113,12 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
               </li>
             ))}
           </ul>
-          <p className="cfg__tag cfg__head" data-cfg-tag="head" data-cfg-step="2" style={at(d.seats.head)}>
+          <p
+            className="cfg__tag cfg__head"
+            data-cfg-tag="head"
+            data-cfg-step="2"
+            style={at(d.seats.head)}
+          >
             <span className="cfg__head-ws">{lit?.name}</span>
             <span className="cfg__head-run">›</span>
             {run.jobs.map((j) => (
@@ -111,7 +138,12 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
               {label}
             </p>
           ))}
-          <p className="cfg__tag" data-cfg-tag="output" data-cfg-step="3" style={at(d.seats.output)}>
+          <p
+            className="cfg__tag"
+            data-cfg-tag="output"
+            data-cfg-step="3"
+            style={at(d.seats.output)}
+          >
             {run.output}
           </p>
           {steps.map((s, i) => (
@@ -130,10 +162,20 @@ export function ArcConfigRun({ section, index, motion = "reveal" }: ArcConfigRun
               <p className="cfg__row-line">{run.lines[i]}</p>
             </div>
           ))}
-          <p className="cfg__tag" data-cfg-tag="key" data-cfg-step="5" style={at(d.seats.keys.skill)}>
+          <p
+            className="cfg__tag"
+            data-cfg-tag="key"
+            data-cfg-step="5"
+            style={at(d.seats.keys.skill)}
+          >
             {run.keys.skill}
           </p>
-          <p className="cfg__tag" data-cfg-tag="key" data-cfg-step="5" style={at(d.seats.keys.evals)}>
+          <p
+            className="cfg__tag"
+            data-cfg-tag="key"
+            data-cfg-step="5"
+            style={at(d.seats.keys.evals)}
+          >
             {run.keys.evals}
           </p>
         </div>
