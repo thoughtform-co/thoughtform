@@ -20,6 +20,7 @@ export const PS_KNOB_KEYS = [
   "approach",
   "upstream",
   "engine",
+  "vision",
 ] as const;
 export type PsKnobKey = (typeof PS_KNOB_KEYS)[number];
 export type PsKnobs = Record<PsKnobKey, string>;

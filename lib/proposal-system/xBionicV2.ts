@@ -89,6 +89,8 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const noUpstream = knobs.upstream === "off";
   const horizon = knobs.upstream === "horizon";
   const pinned = knobs.engine === "pinned";
+  const visionTeam = knobs.vision === "team";
+  const visionPhases = knobs.vision === "phases";
   const anyKnob =
     narrative ||
     quote ||
@@ -100,7 +102,9 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
     opened ||
     noUpstream ||
     horizon ||
-    pinned;
+    pinned ||
+    visionTeam ||
+    visionPhases;
 
   if (!anyKnob) return PROD;
 
@@ -122,7 +126,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   };
 
   const prodLeverage = sectionOf("vision", "leverage");
-  const plugsIn: ArcSectionOf<"leverage"> = narrative
+  const visionBase: ArcSectionOf<"leverage"> = narrative
     ? {
         ...prodLeverage,
         id: "plugs-in",
@@ -136,8 +140,65 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
       }
     : prodLeverage;
 
-  const prodAdoption = sectionOf("adoption", "handoff");
+  /* The vision in another route (the lab, 2026-10-11; the owner: the
+     console's IA and its 2×2 stay, "the models, that's already part of
+     Claude Enterprise", "what's missing is THE TEAM"). The models tier
+     goes and the team arrives; the note's sentence moves into the head.
+     The team is the instrument record's workstreams and owners, by
+     reference; the connectors the plugin's; the layer's line the vision's
+     own plate's. `team` keeps the console (its readout spelled, no digit);
+     `phases` is one housing cut into three rows with a sentence a row. */
   const prodEngine = sectionOf("engine", "instrument");
+  const visionRoute = (kind: "team" | "phases"): ArcSectionOf<"leverage"> => ({
+    ...visionBase,
+    head: {
+      ...visionBase.head,
+      sub: "Every company gets the same models and the same Claude. What makes them work like X-Bionic is the layer your team writes down: written with Thoughtform in your Claude in phase one, and handed over with an owner per workstream.",
+    },
+    readout:
+      kind === "team"
+        ? [
+            { label: "Team", value: "Four workstreams" },
+            { label: "Layer", value: "Owned" },
+            { label: "Claude", value: "In place" },
+          ]
+        : visionBase.readout,
+    figure: {
+      kind,
+      levels: { team: "The team", layer: "The layer", host: "Claude Enterprise" },
+      layerLine: visionBase.stack[0].line,
+      connectors: prodEngine.face?.connectors ?? [],
+      courses: {
+        skills: ["The product voice", "The product facts", "The brief"],
+        evals: ["The copywriter's checks", "The product designer's checks"],
+      },
+      tiles: X_BIONIC_INSTRUMENT.org!.workstreams.map((w) => ({
+        id: w.id,
+        name: w.bucket ?? w.name,
+        role: w.line ?? "",
+      })),
+      ...(kind === "phases"
+        ? {
+            lines: [
+              "Your team, on the four workstreams it already runs.",
+              "The skills and the evals the team writes down, in phase one.",
+              "Plugged into the Claude Enterprise X-Bionic already runs.",
+            ] as const,
+          }
+        : {}),
+      alt:
+        kind === "team"
+          ? "The team on the stack: X-Bionic's Claude Enterprise as a plain slab with Shopify, analytics and the ad accounts running in under it; the layer the team writes, gold and hatched, over it; the four workstreams standing on the layer, a person on each: creative production, creative ops, creative review and creative strategy, run by the copywriter and the creative lead, the digital team, the product designer and the paid social lead."
+          : "Three phases, read down: the team on the four workstreams it already runs, a person on each; the layer the team writes, with the product voice, the product facts and the brief as skills and the copywriter's and the product designer's checks as evals; and the Claude Enterprise X-Bionic already runs, with Shopify, analytics and the ad accounts plugged into it.",
+    },
+  });
+  const plugsIn: ArcSectionOf<"leverage"> = visionTeam
+    ? visionRoute("team")
+    : visionPhases
+      ? visionRoute("phases")
+      : visionBase;
+
+  const prodAdoption = sectionOf("adoption", "handoff");
   const approachId = narrative ? "approach" : "adoption";
 
   /* The two variations of 2026-10-11, agreed with the owner in words: the

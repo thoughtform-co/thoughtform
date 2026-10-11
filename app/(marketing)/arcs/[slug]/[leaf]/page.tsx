@@ -56,6 +56,11 @@ import "@/components/arcs/config-run.css";
 // written and the lane opened. Inert on every production arc (no record
 // sets `written` or `opened`); after config-run.css, before theme.css.
 import "@/components/arcs/approach-figure.css";
+// The vision in another route (the proposal system lab, 2026-10-11),
+// `.vis*`-scoped: an arc whose vision draws no figure gets bytes and no
+// matching rule. After leverage.css, whose console it keeps, before
+// theme.css.
+import "@/components/arcs/vision-figure.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

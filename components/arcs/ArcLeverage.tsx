@@ -2,6 +2,7 @@ import type { ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
+import { ArcVision } from "./ArcVisionFigure";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
 import { StackFigure } from "./stack/StackFigure";
@@ -27,6 +28,10 @@ interface ArcLeverageProps {
  * (ADR-080): the status light is lit, not pulsing.
  */
 export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeverageProps) {
+  /* Another route on the vision (the proposal system lab, 2026-10-11): the
+     team on the stack, or three phases read down. An opt-in field, as the
+     handoff's `run` is; production sets none and draws the console below. */
+  if (section.figure) return <ArcVision section={section} index={index} motion={motion} />;
   const { stack, note, uses, console: con, readout } = section;
   return (
     <ArcBeat

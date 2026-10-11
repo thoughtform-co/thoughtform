@@ -27,6 +27,7 @@ import "@/components/arcs/leverage.css";
 import "@/components/arcs/stack/stack.css";
 import "@/components/arcs/config-run.css";
 import "@/components/arcs/approach-figure.css";
+import "@/components/arcs/vision-figure.css";
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 import "@/components/sheet/sheet.css";
 import "@/components/landing/v7/site-footer/site-footer.css";

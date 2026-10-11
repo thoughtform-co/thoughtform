@@ -1450,6 +1450,16 @@ export type ArcSection = ArcSectionBase &
           label: string;
           items: readonly [ArcLeverageUse, ArcLeverageUse, ArcLeverageUse, ArcLeverageUse];
         };
+        /**
+         * The vision in another route (the proposal system lab, 2026-10-11):
+         * the team on the stack (`team`: the console, its stack three tiers
+         * with the four workstreams standing on the layer as a team and the
+         * host's connectors under it), or three phases read down (`phases`:
+         * one housing cut into three rows, the slab at a crop in each). An
+         * opt-in field, as the handoff's `run` is; absent, the console with
+         * its three plates and its note, byte-identical.
+         */
+        figure?: ArcVisionFigure;
       }
     | {
         /**
@@ -1722,6 +1732,43 @@ export interface ArcLeverageUse {
   label: string;
   /** One line. ≤ 60. */
   line: string;
+}
+
+/**
+ * The vision in another route (the proposal system lab, 2026-10-11): what the
+ * two drawings letter beside the slab. The words are the records' (the
+ * workstreams and their owners by role from the instrument record, the
+ * connectors from the plugin's face, the layer's line from the vision's own
+ * plate); the geometry is `visionFigure`'s. The SVG letters nothing.
+ */
+export interface ArcVisionTile {
+  id: string;
+  /** The workstream, e.g. "Creative production" (the record's `bucket`). */
+  name: string;
+  /** Who runs it, by role (the record's `line`). ≤ 40, no digit. */
+  role: string;
+}
+
+export interface ArcVisionFigure {
+  /** `team`: the console, the team standing on the stack. `phases`: one
+   *  housing cut into three rows, read down. */
+  kind: "team" | "phases";
+  /** The three levels, top to bottom, as the ladder letters them. Mono,
+   *  each ≤ 18, no digit. */
+  levels: { team: string; layer: string; host: string };
+  /** What the layer is, one sans line beside it. ≤ 48. */
+  layerLine: string;
+  /** The host's connectors, one to three, each ≤ 12. */
+  connectors: readonly string[];
+  /** The layer's courses: the skills the team writes, then the evals. ≤ 8
+   *  in all, each ≤ 32, no digit. */
+  courses: { skills: readonly string[]; evals: readonly string[] };
+  /** The team: one tile per workstream, in the vision's order. */
+  tiles: readonly ArcVisionTile[];
+  /** Phases only: one sans sentence per row, top to bottom. Each ≤ 76. */
+  lines?: readonly [string, string, string];
+  /** The drawing's accessible name. */
+  alt: string;
 }
 
 export interface ArcHandoffStep {

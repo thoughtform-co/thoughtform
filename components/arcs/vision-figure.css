@@ -1,0 +1,431 @@
+/* The vision in two routes (the proposal system lab, 2026-10-11): the team
+   on the stack, and three phases read down. Scoped to `.vis*`: an arc
+   without the figure gets bytes and no matching rule. Reads the arcs' and
+   the lattice's tokens only (`.arc-root` re-derives them for light), and
+   restates the stack's paint on its own prefix (the lattice's law: tokens
+   and mechanisms are shared, skins stay copied). Every length a token or
+   the console's fluid unit, every tracking a role: it sits at zero in both
+   ratchets.
+
+   ONE COLOUR LAW, the house's: the layer is the one filled gold object in
+   a housing, a green diamond is a person and nothing else, a hairline is
+   structure, dashed dawn is not yet written.
+
+   ⚠ THE SVG LETTERS NOTHING. Every word is a DOM block beside the drawing
+   on a seat the geometry computes (`--ax` / `--at` the vertex, `--ay` the
+   block's centre), and a leader is a DOM line: one run, and one vertical
+   at the vertex's own x where the block sits off its level. */
+
+.vis {
+  --vis-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --vis-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --vis-gold-text: var(--gold-ink, var(--gold));
+  --vis-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  --vis-person: var(--atreides-light, #5b7a4e);
+  --vis-person-text: var(--atreides-ink, #7a9e6a);
+  /* The console's fluid unit, restated: 8px on a short screen, 24px on a
+     tall one. */
+  --vis-v: var(--lv-v, clamp(8px, 1.6svh, 24px));
+  --vis-gap: var(--space-md);
+  /* The words' column beside a crop: "CLAUDE ENTERPRISE" on one line at the
+     chrome rung (147px) with its bracket's pad. */
+  --vis-words: calc(var(--space-4xl) + var(--space-3xl));
+  /* The housing sits on the head's own breath: the console's block gap on
+     top of it ran the beat past the fold at 1280 × 720. */
+  margin-top: 0;
+}
+.vis :where(p, ol, ul, li) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The mono chrome, the console's own rung. */
+.vis__label,
+.vis__rail,
+.vis__role,
+.vis__link {
+  font-family: var(--vis-mono);
+  font-size: var(--type-sm);
+  letter-spacing: var(--track-eyebrow);
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* ── The figure: a crop, the words beside it ───────────────────────────
+   The figure is a SIZE container; the drawing's column is the largest box
+   of the crop's aspect its height holds, capped by what the words leave,
+   and the words' column is as tall as the drawing, so a seat is a fraction
+   of one height. */
+.vis__fig {
+  display: block;
+  margin: 0;
+  min-height: 0;
+}
+.vis__in {
+  --vis-col: min(
+    calc(100cqh * var(--vis-w) / var(--vis-h)),
+    calc(100cqw - var(--vis-words) - var(--vis-gap))
+  );
+  --vis-plot-h: calc(var(--vis-col) * var(--vis-h) / var(--vis-w));
+  display: grid;
+  grid-template-columns: var(--vis-col) minmax(0, 1fr);
+  column-gap: var(--vis-gap);
+  align-items: center;
+  height: 100%;
+}
+.vis__plot {
+  position: relative;
+  width: var(--vis-col);
+  aspect-ratio: var(--vis-aspect);
+}
+.vis__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.vis__svg path {
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+/* The line work: the ramp at two weights, the hidden edges dashed, the
+   deck (not yet written) dashed, the layer the one lit thing. */
+.vis__m-face,
+.vis__m-side {
+  fill: var(--arc-plate);
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+}
+.vis__m-hidden,
+.vis__m-tile-hidden {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.vis__m-deck {
+  fill: none;
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.vis__m-face-lit {
+  fill: var(--arc-gold-wash);
+  stroke: var(--gold);
+  stroke-width: 1;
+}
+.vis__m-side-lit {
+  fill: rgba(var(--gold-rgb), 0.22);
+  stroke: var(--gold);
+  stroke-width: 1;
+}
+.vis__m-hatch {
+  stroke: none;
+}
+.vis__hatch-line {
+  stroke: var(--gold);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.vis__m-tile-top,
+.vis__m-tile-side {
+  fill: var(--arc-plate);
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+}
+.vis__m-person {
+  fill: var(--vis-person);
+  stroke: none;
+}
+.vis__m-course {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1;
+  opacity: 0.9;
+}
+.vis__m-course-eval {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.vis__m-link {
+  fill: none;
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  stroke-dasharray: 1 3;
+}
+
+/* ── The words ──────────────────────────────────────────────────────── */
+.vis__words {
+  position: relative;
+  height: var(--vis-plot-h);
+  min-height: 0;
+}
+.vis__callout {
+  position: absolute;
+  top: calc(var(--ay) * 100%);
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  /* One step in from the bracket: at the lattice's cell pad the host's
+     label ("CLAUDE ENTERPRISE", 133px at the chrome rung) wrapped in the
+     console's 144px column. */
+  padding-left: var(--space-sm);
+  border-left: 1px solid var(--arc-seam);
+  translate: 0 -50%;
+  color: var(--arc-ink-70);
+}
+.vis__callout[data-vis-lit] {
+  border-color: var(--vis-gold-line);
+}
+/* The leader: from the block's edge to the vertex's x at the block's
+   centre, and down (or up) that x to the vertex, collinear with the box's
+   own vertical edge. */
+.vis__lead {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: calc((1 - var(--ax)) * var(--vis-col) + var(--vis-gap));
+  height: 1px;
+  background: var(--arc-seam);
+  pointer-events: none;
+}
+.vis__lead-v {
+  position: absolute;
+  top: calc(50% + min(var(--at) - var(--ay), 0) * var(--vis-plot-h));
+  right: calc(100% + (1 - var(--ax)) * var(--vis-col) + var(--vis-gap) - 1px);
+  width: 1px;
+  height: calc(max(var(--at) - var(--ay), var(--ay) - var(--at)) * var(--vis-plot-h));
+  background: var(--arc-seam);
+  pointer-events: none;
+}
+.vis__callout[data-vis-lit] .vis__lead,
+.vis__callout[data-vis-lit] .vis__lead-v {
+  background: var(--vis-gold-line);
+}
+.vis__label {
+  color: var(--arc-ink-80);
+}
+.vis__callout[data-vis-lit] .vis__label {
+  color: var(--vis-gold-text);
+}
+/* The team: a person's diamond, then the workstream. Sans: they are names. */
+.vis__names {
+  display: grid;
+  gap: var(--space-xs);
+  font-family: var(--vis-sans);
+  /* The chrome's rung, not the copy's: "Creative production" at the copy
+     size wrapped in the console's words column at 1280 × 720, and a
+     wrapped name put the team's block through the layer's. */
+  font-size: var(--type-sm);
+  line-height: 1.35;
+  color: var(--arc-ink);
+}
+.vis__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.vis__person-mark {
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-sm);
+  background: var(--vis-person);
+  transform: rotate(45deg);
+}
+.vis__layer-line {
+  font-family: var(--vis-sans);
+  font-size: var(--type-sm);
+  line-height: 1.35;
+  color: var(--arc-ink-80);
+}
+/* The layer's courses: the skills as filled ticks, the evals open. */
+.vis__courses {
+  display: grid;
+  gap: var(--space-xs);
+  font-family: var(--vis-sans);
+  font-size: var(--type-sm);
+  line-height: 1.35;
+  color: var(--arc-ink-80);
+}
+.vis__courses li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.vis__courses li::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-xs);
+  background: var(--gold);
+}
+.vis__courses li[data-vis-course="eval"]::before {
+  background: transparent;
+  border: 1px solid var(--gold);
+}
+/* The host's connectors: a dotted stub, then the name, as the drops are. */
+.vis__links {
+  display: grid;
+  gap: var(--space-xs);
+}
+.vis__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--arc-ink-60);
+}
+.vis__link::before {
+  content: "";
+  flex: none;
+  width: var(--space-md);
+  height: 0;
+  border-top: 1px dotted var(--arc-ink-40);
+}
+
+/* ── The team: the console ──────────────────────────────────────────────
+   The idea column gives the figure its whole height (the note is gone), and
+   the 2×2 cell takes the owner's role as one more mono line, paid for out
+   of the cell's air and the glyph: at 1280 × 720 the beat is one screen. */
+.vis--team .arc-lev__idea {
+  justify-content: stretch;
+  padding: var(--vis-v) var(--lat-pad-cell);
+}
+.vis--team .vis__fig {
+  flex: 1 1 auto;
+  height: 100%;
+  container-type: size;
+}
+.vis__cell {
+  gap: calc(var(--vis-v) * 0.5);
+  padding-block: calc(var(--vis-v) * 0.9);
+}
+.vis__cell .arc-lev__index {
+  top: calc(var(--vis-v) * 0.9);
+}
+.vis__cell .arc-lev__glyph {
+  height: calc(var(--space-lg) + var(--vis-v) * 0.4);
+}
+.vis__cell .arc-lev__title {
+  margin-top: calc(var(--vis-v) * 0.25);
+}
+.vis__cell .arc-lev__line {
+  font-size: var(--type-base);
+  line-height: 1.35;
+}
+.vis__role {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--vis-person-text);
+}
+
+/* ── The phases: one housing, three rows ──────────────────────────────── */
+.vis__rows {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.vis__row {
+  --vis-row-pad: calc(var(--vis-v) * 0.75);
+  position: relative;
+  display: grid;
+  /* The rail holds "03 CLAUDE ENTERPRISE" on one line at the chrome rung
+     (PT Mono with the eyebrow's tracking advances 0.75em a character). */
+  grid-template-columns: calc(var(--space-4xl) * 2) minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: var(--lat-pad-cell);
+  align-items: center;
+  min-height: 0;
+  padding: var(--vis-row-pad) calc(var(--lat-pad-cell) + var(--arc-plate-ch)) var(--vis-row-pad)
+    var(--lat-pad-cell);
+}
+.vis__row + .vis__row {
+  border-top: 1px solid var(--arc-rule);
+}
+.vis__rail {
+  display: flex;
+  gap: var(--space-md);
+  color: var(--arc-ink-70);
+}
+.vis__rail-n {
+  color: var(--arc-ink-40);
+}
+.vis__row[data-vis-lit] .vis__rail {
+  color: var(--vis-gold-text);
+}
+.vis--phases .vis__fig {
+  align-self: stretch;
+  height: 100%;
+  container-type: size;
+}
+.vis__line {
+  font-family: var(--vis-sans);
+  font-size: var(--type-md);
+  line-height: 1.5;
+  color: var(--arc-ink-80);
+  max-width: 36ch;
+}
+/* The flow: from this drawing's front corner down into the next row, onto
+   its drawing's back corner. The stages share one height, so the run is
+   the crop's own tail, the two rows' air, the hairline, and the next crop's
+   head. */
+.vis__flow {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--fx) * 100%);
+  top: calc(var(--fb) * 100%);
+  width: 1px;
+  height: calc(
+    (1 - var(--fb) + var(--fa)) * var(--vis-plot-h) + (100cqh - var(--vis-plot-h)) + 2 *
+      var(--vis-row-pad) + 1px
+  );
+  background: var(--arc-seam);
+  pointer-events: none;
+}
+
+/* ── The phone: the words under the drawing, no leaders ───────────────── */
+@media (max-width: 960px) {
+  .vis__in {
+    --vis-col: 100cqw;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-md);
+    height: auto;
+  }
+  .vis__words {
+    height: auto;
+  }
+  .vis__callout {
+    position: static;
+    translate: none;
+  }
+  .vis__lead,
+  .vis__lead-v,
+  .vis__flow {
+    display: none;
+  }
+  .vis--team .vis__fig,
+  .vis--phases .vis__fig {
+    height: auto;
+    container-type: inline-size;
+  }
+  .vis__rows {
+    display: block;
+  }
+  .vis__row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-md);
+  }
+}
+
+/* Light, re-derived (ADR-077): the owned fills read against parchment. */
+html[data-theme="light"] .vis__m-side-lit {
+  fill: rgba(var(--gold-rgb), 0.3);
+}
