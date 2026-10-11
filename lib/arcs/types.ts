@@ -1461,12 +1461,13 @@ export type ArcSection = ArcSectionBase &
          */
         figure?: ArcVisionFigure;
         /**
-         * The left cell as S1 A, the pinned build from the proposition
-         * artifact page (owner, 2026-10-11: "port S1 A Pinned Build to the
-         * section"): the lab's own drawing, built in three steps while the
-         * section pins. Opt-in; absent, the cell is byte-identical.
+         * The whole section as a block ported from /test/proposition-artifact
+         * (owner, 2026-10-11: "port that S1A pin build verbatim"): `s1a` is
+         * S1 A, the pinned build, mounted as the lab mounts it, text column,
+         * drawing and pin. The console, its stack and its uses are not drawn.
+         * Opt-in; absent, the section is byte-identical.
          */
-        build?: { kind: "assembly"; alt: string };
+        port?: "s1a";
       }
     | {
         /**

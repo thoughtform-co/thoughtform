@@ -135,25 +135,6 @@
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 }
-/* S1 · A, the pinned build, in the idea column (owner, 2026-10-11: "port
-   S1 A Pinned Build to the section"). The drawing is S1 A's own, square
-   and label-heavy, so the idea column takes three fifths and the 2×2 two:
-   at five twelfths its labels lettered at 8px. The section pins on its
-   band while the runway after it scrolls (`ArcAssemblyBuild` writes the
-   pin's `top`); the gate is the fill rhythm's, so a phone or reduced
-   motion reads the drawing built and nothing pins. */
-.arc-lev--build .arc-lev__split {
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-}
-@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .arc-sec--lev-build > .arc-band {
-    position: sticky;
-    top: var(--lev-pin, 0px);
-  }
-  .arc-sec--lev-build > .arc-lev__run {
-    height: 200svh;
-  }
-}
 .arc-lev__idea {
   display: flex;
   flex-direction: column;

@@ -1,7 +1,7 @@
 import type { ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
-import { ArcAssemblyBuild } from "./ArcAssemblyBuild";
 import { ArcBeat } from "./ArcBeat";
+import { ArcOfferPort } from "./ArcOfferPort";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcVision } from "./ArcVisionFigure";
 import { rung } from "./arcMotion";
@@ -33,12 +33,15 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
      team on the stack, or three phases read down. An opt-in field, as the
      handoff's `run` is; production sets none and draws the console below. */
   if (section.figure) return <ArcVision section={section} index={index} motion={motion} />;
-  const { stack, note, uses, console: con, readout, build } = section;
+  /* S1 A, the pinned build, ported whole from /test/proposition-artifact
+     (owner, 2026-10-11): the section is that block, not this console. */
+  if (section.port === "s1a") return <ArcOfferPort id={section.id} motion={motion} />;
+  const { stack, note, uses, console: con, readout } = section;
   return (
     <ArcBeat
       id={section.id}
       kind="leverage"
-      className={`arc-section arc-sec arc-sec--leverage${build ? " arc-sec--lev-build" : ""}`}
+      className="arc-section arc-sec arc-sec--leverage"
       ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
       motion={motion}
     >
@@ -50,10 +53,7 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           sectionId={section.id}
           motion={motion}
         />
-        <div
-          className={`arc-lev arc-plate arc-reveal${build ? " arc-lev--build" : ""}`}
-          {...rung(motion, 0.14)}
-        >
+        <div className="arc-lev arc-plate arc-reveal" {...rung(motion, 0.14)}>
           <div className="arc-lev__bar">
             <p className="arc-lev__sys">
               <span className="arc-lev__sys-key">SYS</span>
@@ -66,41 +66,29 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           </div>
           <div className="arc-lev__split">
             <div className="arc-lev__idea">
-              {build ? (
-                /* S1 A, the pinned build (owner, 2026-10-11), in place of
-                   the stack and the note: the lab's drawing, imported. */
-                <ArcAssemblyBuild label={build.alt} />
-              ) : (
-                <>
-                  {/* The stack, the page's one object (the proposal system,
+              {/* The stack, the page's one object (the proposal system,
                   2026-10-10): the plates top to bottom are the owned layer,
                   the host (Claude), the shared models, drawn by the same
                   geometry the approach writes and the engine configures. */}
-                  <StackFigure
-                    id={`${section.id}-lev`}
-                    className="arc-lev__stack"
-                    tiers={["shared", "host", "layer"]}
-                    lit="layer"
-                    sides={{ shared: "right", host: "right" }}
-                    gap={3.4}
-                    flow
-                    callouts={{
-                      layer: { label: stack[0].label, lines: [stack[0].line], chip: stack[0].chip },
-                      host: { label: stack[1].label, lines: [stack[1].line], chip: stack[1].chip },
-                      shared: {
-                        label: stack[2].label,
-                        lines: [stack[2].line],
-                        chip: stack[2].chip,
-                      },
-                    }}
-                    alt={`${stack[0].label}, ${stack[0].line}; ${stack[1].label}, ${stack[1].line}; ${stack[2].label}, ${stack[2].line}.`}
-                  />
-                  <div className="arc-lev__note">
-                    <p className="arc-lev__label">{note.label}</p>
-                    <p className="arc-lev__line">{note.line}</p>
-                  </div>
-                </>
-              )}
+              <StackFigure
+                id={`${section.id}-lev`}
+                className="arc-lev__stack"
+                tiers={["shared", "host", "layer"]}
+                lit="layer"
+                sides={{ shared: "right", host: "right" }}
+                gap={3.4}
+                flow
+                callouts={{
+                  layer: { label: stack[0].label, lines: [stack[0].line], chip: stack[0].chip },
+                  host: { label: stack[1].label, lines: [stack[1].line], chip: stack[1].chip },
+                  shared: { label: stack[2].label, lines: [stack[2].line], chip: stack[2].chip },
+                }}
+                alt={`${stack[0].label}, ${stack[0].line}; ${stack[1].label}, ${stack[1].line}; ${stack[2].label}, ${stack[2].line}.`}
+              />
+              <div className="arc-lev__note">
+                <p className="arc-lev__label">{note.label}</p>
+                <p className="arc-lev__line">{note.line}</p>
+              </div>
             </div>
             <div className="arc-lev__uses">
               <p className="arc-lev__uses-label">{uses.label}</p>
@@ -126,8 +114,6 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           </dl>
         </div>
       </div>
-      {/* The pinned build's runway: the band holds while this scrolls. */}
-      {build && <div className="arc-lev__run" aria-hidden="true" />}
     </ArcBeat>
   );
 }

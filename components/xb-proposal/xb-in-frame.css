@@ -1,0 +1,55 @@
+/* The xb-proposal kit inside the site's real HUD frame, as
+   /test/proposition-artifact frames it (`proposition.css`, the `.pa-xb`
+   rules), for a page that mounts a kit block verbatim: the X-Bionic
+   proposal's vision section is S1 A, the pinned build (owner, 2026-10-11).
+
+   The kit draws its own stand-in rails and route tag; the real frame is
+   present here, so those go, the stage's ground goes clear, and the column
+   takes the band between the rails, the rails' vertical extent.
+
+   The kit's colours are re-read from the site's tokens so the page's light
+   theme reaches the block; in dark every value is the kit's own hex. */
+
+.xb-in-frame {
+  --xb-ground: rgb(var(--void-rgb, 10, 9, 8));
+  --xb-text: rgb(var(--dawn-rgb, 235, 227, 214));
+  --xb-text-2: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+  --xb-text-3: rgba(var(--dawn-rgb, 235, 227, 214), 0.4);
+  --xb-line: rgba(var(--dawn-rgb, 235, 227, 214), 0.16);
+  --xb-line-2: rgba(var(--dawn-rgb, 235, 227, 214), 0.28);
+  --xb-gold: var(--gold-ink, #caa554);
+
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+.xb-in-frame .xb-stage {
+  background: transparent;
+}
+
+.xb-in-frame .xb-rail,
+.xb-in-frame .xb-corner,
+.xb-in-frame .xb-route {
+  display: none;
+}
+
+.xb-in-frame .xb-col {
+  inset: auto;
+  top: var(--hud-rail-y-start);
+  bottom: var(--hud-rail-y-end);
+  left: var(--band-margin);
+  right: calc(var(--band-margin) + 36px);
+  width: auto;
+  margin: 0;
+}
+
+/* In the HUD frame's box the kit's drawings render at about 0.9 of their
+   size at 1280×720, so their type is set one step up to land at 12px. */
+.xb.xb-in-frame svg text {
+  font-size: 13.5px;
+}
+
+.xb.xb-in-frame svg .xb-t-sans {
+  font-size: 16px;
+}
