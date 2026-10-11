@@ -35,6 +35,11 @@
       "values": ["layer", "pinned"],
       "label": "The engine",
       "note": "layer = ADR-153 U6, the layer opened: the gold slab the team writes, a lane per skill, X-Bionic's Claude Enterprise under it. pinned = ADR-154 U4's exploded stack on a runway, its slabs and callouts lighting one after another; the face is dropped, because a face and a pin never share a section."
+    },
+    "vision": {
+      "values": ["console", "team", "phases"],
+      "label": "The vision",
+      "note": "console = production: the console with its three plates (the layer, Claude, the models) and its note. team = the console as it ships, the models tier gone and the team on the stack: the host, the lit layer, the four workstreams standing on it with a green diamond each, the host's connectors dropping under it, the three levels lettered beside it, the owner's role under each workstream in the 2×2. phases = three phases read down: one housing cut into three rows that share edges, a mono rail at the left of each (the team, the layer, Claude Enterprise), the same slab at a crop in each (the deck with its people, the layer with its courses, the host with its connectors), one sentence at the right, a flow leader down. Both carry the note's sentence in the head."
     }
   },
   "directions": [
@@ -122,6 +127,24 @@
         "approach": "stack",
         "upstream": "off",
         "engine": "pinned"
+      }
+    },
+    {
+      "id": "VA",
+      "name": "The team on the stack",
+      "question": "with the models tier gone and the four workstreams standing on the layer as a team, each with a person on it, does the console say in ten seconds who runs what on what?",
+      "shape": "the console, its stack three tiers with the team on top, the role under each workstream",
+      "knobs": {
+        "vision": "team"
+      }
+    },
+    {
+      "id": "VB",
+      "name": "Three phases, read down",
+      "question": "read down three rows of one housing, the team, then the layer, then the Claude it plugs into, does the same object at three crops say the order of the work better than one stack?",
+      "shape": "one housing cut into three rows, the slab at a crop in each, a sentence a row",
+      "knobs": {
+        "vision": "phases"
       }
     }
   ],
