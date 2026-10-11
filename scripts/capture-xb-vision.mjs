@@ -9,9 +9,10 @@
  * same point of its runway: the text column, the title, the three steps and
  * the active step land on the same boxes within 1px. The drawing is the
  * one thing the owner asked to move (2026-10-11: "a bit to the right and a
- * bit bigger", aligned like the About's diagram): its ink must be wider
- * than block 1's, sit further right, and end on the band's right edge
- * (within 16px), where the About's diagram ends. Also shoots the About.
+ * bit bigger", aligned like the About's diagram): its body (every polygon)
+ * must be taller than block 1's and further right, and either centred on the
+ * About's ring (within 2px) or, where the labels would reach the right rail,
+ * as far right as their 32px clearance allows. Also shoots the About.
  *
  *   node scripts/capture-xb-vision.mjs [--port 3003] [--out dir] [--theme dark|light]
  */
@@ -30,6 +31,7 @@ const SIZES = [
   [1280, 720],
   [1470, 830],
   [1920, 1247],
+  [2560, 1330],
 ];
 const STOPS = [0.02, 0.5, 0.98];
 
@@ -57,9 +59,18 @@ function read(rootSel) {
     const m = t.ownerSVGElement.getScreenCTM();
     const px = parseFloat(getComputedStyle(t).fontSize) * (m ? Math.hypot(m.a, m.b) : 1);
     if (px < 11.95) problems.push(`svg text at ${px.toFixed(1)}px: "${label(t)}"`);
-    const s = t.ownerSVGElement.getBoundingClientRect();
-    if (r.left < s.left - 0.5 || r.right > s.right + 0.5 || r.top < s.top - 0.5 || r.bottom > s.bottom + 0.5)
-      problems.push(`svg text cut by its drawing: "${label(t)}"`);
+    /* an svg that lets its labels overhang clips at its stage instead */
+    const svgEl = t.ownerSVGElement;
+    const clipEl =
+      getComputedStyle(svgEl).overflow === "visible" ? svgEl.closest(".xb-stage") : svgEl;
+    const c = clipEl.getBoundingClientRect();
+    if (
+      r.left < c.left - 0.5 ||
+      r.right > c.right + 0.5 ||
+      r.top < c.top - 0.5 ||
+      r.bottom > c.bottom + 0.5
+    )
+      problems.push(`svg text cut by its ${clipEl === svgEl ? "drawing" : "stage"}: "${label(t)}"`);
   }
   for (const el of root.querySelectorAll("p, span, li, h2, div")) {
     if (el.children.length || !el.textContent.trim()) continue;
@@ -77,17 +88,24 @@ function read(rootSel) {
       title: box(".xb-title"),
       steps: box(".xbA__steps"),
     },
-    ink: (() => {
-      const g = root.querySelector(".xbA__fig svg > g").getBoundingClientRect();
-      return { left: g.left, right: g.right, width: g.width };
+    /* the drawing's body: every polygon (board, layer, plates, tools) */
+    body: (() => {
+      const u = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const el of root.querySelectorAll(".xbA__fig svg polygon")) {
+        const r = el.getBoundingClientRect();
+        u[0] = Math.min(u[0], r.left);
+        u[1] = Math.min(u[1], r.top);
+        u[2] = Math.max(u[2], r.right);
+        u[3] = Math.max(u[3], r.bottom);
+      }
+      return { cx: (u[0] + u[2]) / 2, cy: (u[1] + u[3]) / 2, h: u[3] - u[1], left: u[0] };
     })(),
-    /* the band's right edge, resolved by layout (a custom property is a
-       string until something lays it out): the About's band padding */
-    bandRight: (() => {
-      const band = document.querySelector("#about > .arc-band");
-      if (!band) return NaN;
-      return band.getBoundingClientRect().right - parseFloat(getComputedStyle(band).paddingRight);
-    })(),
+    labelEnd: Math.max(
+      ...[...root.querySelectorAll(".xbA__fig svg text")].map(
+        (t) => t.getBoundingClientRect().right
+      )
+    ),
+    railX: document.querySelector(".hud__rail--r")?.getBoundingClientRect().left ?? NaN,
   };
 }
 
@@ -107,10 +125,18 @@ for (const [w, h] of SIZES) {
   }, THEME);
   const page = await ctx.newPage();
   const lab = await ctx.newPage();
-  await page.goto(`http://localhost:${PORT}/arcs/x-bionic/proposal`, { waitUntil: "load", timeout: 180000 });
-  await lab.goto(`http://localhost:${PORT}/test/proposition-artifact`, { waitUntil: "load", timeout: 180000 });
+  await page.goto(`http://localhost:${PORT}/arcs/x-bionic/proposal`, {
+    waitUntil: "load",
+    timeout: 180000,
+  });
+  await lab.goto(`http://localhost:${PORT}/test/proposition-artifact`, {
+    waitUntil: "load",
+    timeout: 180000,
+  });
   for (const p of [page, lab]) {
-    await p.addStyleTag({ content: "nextjs-portal,.pa-index{display:none!important} *{transition:none!important}" });
+    await p.addStyleTag({
+      content: "nextjs-portal,.pa-index{display:none!important} *{transition:none!important}",
+    });
     await p.evaluate(() => document.fonts.ready);
   }
   const tops = [];
@@ -132,10 +158,27 @@ for (const [w, h] of SIZES) {
         problems.push(`${key} ${JSON.stringify(p)} against block 1's ${JSON.stringify(q)}`);
     }
     if (k === STOPS.length - 1) {
-      if (!(a.ink.width > b.ink.width + 1)) problems.push(`drawing ${a.ink.width.toFixed(0)}px wide, block 1's ${b.ink.width.toFixed(0)}px`);
-      if (!(a.ink.right > b.ink.right + 1)) problems.push(`drawing ends at ${a.ink.right.toFixed(0)}, block 1's at ${b.ink.right.toFixed(0)}`);
-      if (!Number.isFinite(a.bandRight) || a.ink.right > a.bandRight + 1 || a.ink.right < a.bandRight - 16)
-        problems.push(`drawing ends at ${a.ink.right.toFixed(0)}, the band's edge is ${a.bandRight.toFixed(0)}`);
+      /* where the About seats its ring, measured on the same page */
+      const ring = await page.evaluate(() => {
+        const r = document.querySelector("#about .arc-about__orbit").getBoundingClientRect();
+        return { cx: r.left + r.width / 2, h: r.height };
+      });
+      a.ring = ring;
+      const clear = a.railX - 32;
+      const centred = Math.abs(a.body.cx - ring.cx) <= 2;
+      const railBound = a.labelEnd >= clear - 2 && a.labelEnd <= clear + 1;
+      if (!centred && !railBound)
+        problems.push(
+          `body centred at ${a.body.cx.toFixed(0)}, the About's ring at ${ring.cx.toFixed(0)}, labels end ${a.labelEnd.toFixed(0)} (rail clear ${clear.toFixed(0)})`
+        );
+      if (a.labelEnd > clear + 1)
+        problems.push(
+          `labels end at ${a.labelEnd.toFixed(0)}, past the rail's clearance ${clear.toFixed(0)}`
+        );
+      if (!(a.body.h > b.body.h + 1))
+        problems.push(`body ${a.body.h.toFixed(0)}px tall, block 1's ${b.body.h.toFixed(0)}px`);
+      if (!(a.body.cx > b.body.cx + 1))
+        problems.push(`body centre ${a.body.cx.toFixed(0)}, block 1's ${b.body.cx.toFixed(0)}`);
     }
     if (problems.length) {
       failed++;
@@ -143,12 +186,14 @@ for (const [w, h] of SIZES) {
       for (const p of problems.slice(0, 12)) console.log(`    ${p}`);
     } else
       console.log(
-        `✓ ${w}x${h} stop ${k + 1} (step ${a.on}) text as block 1 · drawing ${a.ink.width.toFixed(0)}px to ${a.ink.right.toFixed(0)} (block 1: ${b.ink.width.toFixed(0)}px to ${b.ink.right.toFixed(0)}, band edge ${a.bandRight.toFixed(0)})`
+        `✓ ${w}x${h} stop ${k + 1} (step ${a.on}) text as block 1 · body ${a.body.h.toFixed(0)}px tall at x ${a.body.cx.toFixed(0)} (block 1: ${b.body.h.toFixed(0)}px at ${b.body.cx.toFixed(0)}${a.ring ? `; About's ring ${a.ring.h.toFixed(0)}px at ${a.ring.cx.toFixed(0)}` : ""}) · labels end ${a.labelEnd.toFixed(0)}, rail ${a.railX.toFixed(0)}`
       );
   }
   await page.evaluate(() => document.getElementById("about").scrollIntoView({ block: "start" }));
   await page.waitForTimeout(1200);
-  const hasArt = await page.evaluate(() => !!document.querySelector("#about .voidwalker__orbit__svg"));
+  const hasArt = await page.evaluate(
+    () => !!document.querySelector("#about .voidwalker__orbit__svg")
+  );
   await page.screenshot({ path: `${OUT}/about-${THEME}-${w}x${h}.png` });
   if (!hasArt) {
     failed++;
