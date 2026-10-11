@@ -20,7 +20,9 @@ const SIZES = [
   [1280, 720],
   [1470, 830],
 ];
-const BLOCKS = ["s1-pinned", "halyard-a", "p1-sheets", "p3-board", "s2-pinned", "p4-hero"];
+const BLOCKS = process.argv.includes("--only")
+  ? process.argv[process.argv.indexOf("--only") + 1].split(",")
+  : ["s1-pinned", "halyard-a", "p1-sheets", "p3-board", "s2-pinned", "p4-hero", "p3b-board"];
 
 function gate(id) {
   const out = [];
@@ -34,7 +36,12 @@ function gate(id) {
     const px = parseFloat(getComputedStyle(t).fontSize) * (m ? Math.hypot(m.a, m.b) : 1);
     if (px < 11.95) out.push(`svg text at ${px.toFixed(1)}px: "${label(t)}"`);
     const s = t.ownerSVGElement.getBoundingClientRect();
-    if (r.left < s.left - 0.5 || r.right > s.right + 0.5 || r.top < s.top - 0.5 || r.bottom > s.bottom + 0.5)
+    if (
+      r.left < s.left - 0.5 ||
+      r.right > s.right + 0.5 ||
+      r.top < s.top - 0.5 ||
+      r.bottom > s.bottom + 0.5
+    )
       out.push(`svg text cut by its drawing: "${label(t)}"`);
   }
   for (const el of root.querySelectorAll("p, span, li, h2, div")) {
@@ -53,9 +60,16 @@ let failed = 0;
 for (const [w, h] of SIZES) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
   const page = await ctx.newPage();
-  await page.goto(`http://localhost:${PORT}/test/proposition-artifact`, { waitUntil: "load", timeout: 120000 });
-  await page.waitForFunction(() => document.documentElement.dataset.xbReady === "1", null, { timeout: 60000 });
-  await page.addStyleTag({ content: "nextjs-portal,.pa-index{display:none!important} *{transition:none!important}" });
+  await page.goto(`http://localhost:${PORT}/test/proposition-artifact`, {
+    waitUntil: "load",
+    timeout: 120000,
+  });
+  await page.waitForFunction(() => document.documentElement.dataset.xbReady === "1", null, {
+    timeout: 60000,
+  });
+  await page.addStyleTag({
+    content: "nextjs-portal,.pa-index{display:none!important} *{transition:none!important} html{scroll-behavior:auto!important}",
+  });
   for (const id of BLOCKS) {
     const run = await page.evaluate((i) => {
       const el = document.getElementById(i);

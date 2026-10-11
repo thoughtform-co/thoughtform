@@ -11,6 +11,7 @@ import { OfferPinned } from "@/components/xb-proposal/offer/OfferPinned";
 import { Ready } from "@/components/xb-proposal/Ready";
 import { SubstrateHero } from "@/components/xb-proposal/substrate/SubstrateHero";
 import { SubstrateBoard } from "@/components/xb-proposal/substrate/SubstrateBoard";
+import { SubstrateBoardB } from "@/components/xb-proposal/substrate/SubstrateBoardB";
 import { SubstrateSheets } from "@/components/xb-proposal/substrate/SubstrateSheets";
 
 import { DirectionA as HalyardA } from "../halyard/DirectionA";
@@ -28,6 +29,8 @@ import { HudFrame } from "../hud-panel-lab/HudFrame";
  *   5  xb-offer-rebuild · S2 A, the pinned build continued (section 2)
  *   6  xb-offer-rebuild · P4, Unsiloed's hero, the team's raw work
  *      written into one gold panel
+ *   7  P3 B, the board's second cut: the mark etched, the chip wider,
+ *      Claude Enterprise alone, the four interfaces as upright windows
  *
  * The two labs stay as they are; this page only mounts their components.
  */
@@ -38,6 +41,7 @@ export const BLOCKS = [
   { id: "p3-board", n: "4", short: "P3", label: "P3 · the board" },
   { id: "s2-pinned", n: "5", short: "S2 A", label: "S2 · A · pinned build" },
   { id: "p4-hero", n: "6", short: "P4", label: "P4 · Unsiloed hero" },
+  { id: "p3b-board", n: "7", short: "P3 B", label: "P3 B · the board, windows" },
 ] as const;
 
 export function PropositionShell({ hudHtml, bodyClass }: { hudHtml: string; bodyClass: string }) {
@@ -79,6 +83,9 @@ export function PropositionShell({ hudHtml, bodyClass }: { hudHtml: string; body
       </div>
       <div className="xb pa-xb" id="p4-hero">
         <SubstrateHero />
+      </div>
+      <div className="xb pa-xb" id="p3b-board">
+        <SubstrateBoardB />
       </div>
 
       <nav className="pa-index" aria-label="Blocks on this page">
