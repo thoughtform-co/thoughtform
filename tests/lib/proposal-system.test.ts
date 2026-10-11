@@ -105,7 +105,7 @@ describe("the proposal system lab", () => {
       jobs.forEach((j, i) => {
         if (j.kind !== "job") return;
         expect(j.n, `${j.id}: n`).toBe(i + 1);
-        expect(j.result.value.length, `${j.id}: value`).toBeLessThanOrEqual(10);
+        expect(j.result.said?.em?.length ?? 0, `${j.id}: said`).toBeLessThanOrEqual(24);
         if (knobs.jobHead === "mark") expect(j.top).toBe("mark");
         else expect(j.top).toBeUndefined();
       });
@@ -150,8 +150,8 @@ describe("the proposal system lab", () => {
           expect(ret.layout).toBe("returns");
           for (const r of ret.rows) {
             expect(r.result, `${r.id}: a return`).toBeTruthy();
-            expect(r.result!.value.length).toBeLessThanOrEqual(10);
-            expect(r.result!.line.length).toBeLessThanOrEqual(110);
+            expect(r.result!.value?.length ?? 0).toBeLessThanOrEqual(10);
+            expect(r.result!.line?.length ?? 0).toBeLessThanOrEqual(110);
           }
         } else {
           expect(ret.layout).toBe("case");

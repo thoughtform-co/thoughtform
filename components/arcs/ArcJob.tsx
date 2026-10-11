@@ -1,7 +1,13 @@
 import type { CSSProperties } from "react";
 
 import { DISCIPLINES, disciplineOf } from "@/lib/arcs/content/shared/disciplines";
-import type { ArcJobBucket, ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
+import type {
+  ArcJobBucket,
+  ArcJobFigure,
+  ArcLeverageUse,
+  ArcMotion,
+  ArcSectionOf,
+} from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
 import { BREAKDOWN_KEPT, BREAKDOWN_REJECTED } from "./ArcBreakdown";
@@ -9,6 +15,9 @@ import { ArcClipLoop } from "./ArcClipLoop";
 import { Glyph } from "./ArcLeverage";
 import { Tally } from "./ArcReturn";
 import { rung } from "./arcMotion";
+import { ArcTitleText } from "./chrome";
+import { crewSeed } from "./crewParticles";
+import { type MapCallout, jobMap } from "./jobMap";
 
 /** Chrome, never content: the four workstreams in the order the page runs
  *  them, with the vision's own glyph for each (U4: the card shows its own
@@ -22,6 +31,7 @@ export const JOB_BUCKETS: readonly {
 }[] = DISCIPLINES.map((d) => ({ id: d.id, word: d.long, glyph: d.glyph }));
 
 const two = (n: number) => String(n).padStart(2, "0");
+const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 /** Chrome, never content: the return reads in two steps (U4), the saving and
  *  then what it now allows. A job may name its own saving (`result.label`). */
@@ -29,22 +39,31 @@ export const RESULT_LABEL = "Time saved";
 export const ALLOWS_LABEL = "What it now allows";
 
 /**
- * ArcJob — one real piece of client work on one screen (ADR-153 U1 → U4), in
+ * ArcJob — one real piece of client work on one screen (ADR-153 U1 → U7), in
  * the leverage's housing. No head above it: the frame carries everything.
  *
- *   band    the title and one mono line (client · where it ran · when) on a
- *           Tensor Gold band, the proof cards' head grammar in the arcs' own
- *           wash (U4, owner: "part of the same visual language"); the card's
- *           ONE workstream on the right, glyph and word as the vision draws it.
- *           `top: "mark"` (the proposal system, ADR-155, a lab direction)
- *           sets that workstream FIRST, over the title, with the mono line on
- *           the right instead.
+ *   band    the title over one mono line on a Tensor Gold band, the proof
+ *           cards' head grammar in the arcs' own wash (U4, owner: "part of
+ *           the same visual language"). ⚠ U7 (owner, 2026-10-11: "Made in
+ *           Claude, nobody cares. 6 October, nobody cares. The client is
+ *           important"): the line is the CLIENT, then the workstream's long
+ *           name, and nothing else; `madeIn` and `date` stay on the record
+ *           and are drawn only by the `mark` head (the proposal system,
+ *           ADR-155, a lab direction: that workstream FIRST, over the title,
+ *           with the mono line on the right). On the right of the band the
+ *           workstream's GLYPH alone, centred, since the line already names
+ *           it (U7: the glyph-and-word pair "doesn't look clean").
  *   spec    the ask, then what Claude did (01 · 02 · 03), on one rail.
  *   fig     the evidence on a dot ground with corner ticks, "Fig. 0N" under
- *           it: a silent loop, a kept and a rejected still, or a logged record.
- *   result  what it saved, then what it now allows: two steps, the line never
- *           restating the number (registry-guarded).
- *   foot    the gate: the person who decided, by role, with the green diamond.
+ *           it: a silent loop, a kept and a rejected still, a logged record,
+ *           or a mapped collection drawn as a grain field (`jobMap.ts`).
+ *   result  what it saved as ONE SENTENCE a decision maker reads, the figure
+ *           lit as its `em` (U7: a big numeral over a small line "breaks the
+ *           sentence and gives one part a big font"), under its mono kicker;
+ *           then what it now allows. A job without `said` still draws the
+ *           numeral and its line (U3).
+ *   foot    the gate: the person who decided, by role, with the green
+ *           diamond, and what that person decides when the record says so.
  *
  * ⚠ SERVER, NO STATE, DOM ONLY; the loop is the house's one autoplaying
  * picture (`ArcClipLoop`). Attributes `data-job-*`; classes `.arc-case__*`,
@@ -104,13 +123,11 @@ export function ArcJob({
                 </h2>
                 <p className="arc-case__meta">
                   <span>{section.client}</span>
-                  <span>Made in {section.madeIn}</span>
-                  <span>{section.date}</span>
+                  <span>{ws.word}</span>
                 </p>
               </div>
-              <p className="arc-case__ws">
+              <p className="arc-case__ws" aria-hidden="true">
                 <Glyph kind={ws.glyph} />
-                <span className="arc-case__ws-word">{ws.word}</span>
               </p>
             </header>
           )}
@@ -132,7 +149,7 @@ export function ArcJob({
             </div>
             <figure className="arc-case__fig" data-job-figure={figure.kind}>
               <div className="arc-case__frame">
-                <Evidence figure={figure} />
+                <Evidence figure={figure} seed={crewSeed(section.id)} />
               </div>
               <figcaption className="arc-case__caption">
                 <span className="arc-case__fig-n">Fig. {two(n)}</span>
@@ -142,12 +159,20 @@ export function ArcJob({
             <section
               className="arc-case__result"
               aria-label={saved}
-              style={{ "--case-len": result.value.length } as CSSProperties}
+              style={{ "--case-len": (result.value ?? "").length } as CSSProperties}
             >
               <div className="arc-case__saved">
                 <p className="arc-case__result-label">{saved}</p>
-                <p className="arc-case__num">{result.value}</p>
-                <p className="arc-case__result-line">{result.line}</p>
+                {result.said ? (
+                  <p className="arc-case__said">
+                    <ArcTitleText title={result.said} />
+                  </p>
+                ) : (
+                  <>
+                    <p className="arc-case__num">{result.value}</p>
+                    <p className="arc-case__result-line">{result.line}</p>
+                  </>
+                )}
                 {result.tally ? <Tally groups={result.tally} /> : null}
               </div>
               <div className="arc-case__allows">
@@ -159,7 +184,7 @@ export function ArcJob({
           <p className="arc-case__gate">
             <span className="arc-case__gate-key">The gate</span>
             <span className="arc-case__who">{gate.who}</span>
-            <span className="arc-case__gate-line">{gate.line}</span>
+            {gate.line ? <span className="arc-case__gate-line">{gate.line}</span> : null}
           </p>
         </article>
       </div>
@@ -167,7 +192,7 @@ export function ArcJob({
   );
 }
 
-function Evidence({ figure }: { figure: ArcSectionOf<"job">["figure"] }) {
+function Evidence({ figure, seed }: { figure: ArcJobFigure; seed: number }) {
   if (figure.kind === "clip") {
     return (
       <div className="arc-case__clip">
@@ -191,6 +216,9 @@ function Evidence({ figure }: { figure: ArcSectionOf<"job">["figure"] }) {
       </div>
     );
   }
+  if (figure.kind === "map") {
+    return <JobMap figure={figure} seed={seed} />;
+  }
   return (
     <dl className="arc-case__ledger">
       {figure.rows.map((r) => (
@@ -200,5 +228,77 @@ function Evidence({ figure }: { figure: ArcSectionOf<"job">["figure"] }) {
         </div>
       ))}
     </dl>
+  );
+}
+
+/** A callout's seat as the DOM label's inline position: the corner edges the
+ *  leader meets are the ones set, so the rendered text's width never moves
+ *  the weld (`jobMap.ts`). */
+function seat(c: MapCallout): CSSProperties {
+  const style: CSSProperties = {};
+  if (c.anchor === "start") style.left = `${c.ax * 100}%`;
+  else style.right = `${(1 - c.ax) * 100}%`;
+  if (c.vAlign === "top") style.top = `${c.at * 100}%`;
+  else style.bottom = `${(1 - c.at) * 100}%`;
+  return style;
+}
+
+/**
+ * The map as the house's grain field: one grain per sample point in the
+ * gold's ramp by density, the named groups called out from the corners on
+ * dawn hairlines. The SVG letters nothing; the words are DOM, seated over
+ * it. The whole is one image to a screen reader, its label the record.
+ */
+function JobMap({
+  figure,
+  seed,
+}: {
+  figure: Extract<ArcJobFigure, { kind: "map" }>;
+  seed: number;
+}) {
+  const d = jobMap(figure.map, figure.labels ?? [], seed);
+  const named = d.callouts.map((c) => c.text.toLowerCase());
+  const label =
+    `${thousands(figure.map.total)} items in ${figure.map.clusters.length} groups, one grain each` +
+    (named.length ? `; the largest groups named: ${named.join(", ")}.` : ".");
+  return (
+    <div className="arc-case__map" role="img" aria-label={label}>
+      <svg
+        className="arc-case__map-svg"
+        viewBox={`0 0 ${d.vb} ${d.vb}`}
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
+        focusable="false"
+      >
+        {d.tiers.map((t) =>
+          t.paths.map((p) => (
+            <path
+              key={`${t.tier}-${p.a}`}
+              className="arc-case__map-grain"
+              data-map-tier={t.tier}
+              fillOpacity={p.a}
+              d={p.d}
+            />
+          ))
+        )}
+        {d.callouts.map((c) => (
+          <g key={c.id}>
+            <path className="arc-case__map-leader" d={c.leader} />
+            <path className="arc-case__map-node" d={c.node} />
+          </g>
+        ))}
+      </svg>
+      {d.callouts.map((c) => (
+        <p
+          key={c.id}
+          className="arc-case__map-label"
+          data-map-seat={c.id}
+          style={seat(c)}
+          aria-hidden="true"
+        >
+          {c.text}
+        </p>
+      ))}
+    </div>
   );
 }

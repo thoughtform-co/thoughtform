@@ -30,10 +30,13 @@ export function ArcReturn({
     <section
       className={`arc-case__result ${className}`.trim()}
       aria-label={label}
-      style={{ "--case-len": result.value.length } as CSSProperties}
+      style={{ "--case-len": (result.value ?? "").length } as CSSProperties}
     >
       <p className="arc-case__result-label">{label}</p>
       <div className="arc-case__result-body">
+        {/* The numeral and its line are optional on the type since the job
+            says its return as one sentence (ADR-153 U7); this layout keeps
+            drawing them, so a row with neither is the registry's to refuse. */}
         <p className="arc-case__num">{result.value}</p>
         <p className="arc-case__result-line">{result.line}</p>
         {result.tally ? <Tally groups={result.tally} /> : null}

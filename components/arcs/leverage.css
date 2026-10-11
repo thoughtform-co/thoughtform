@@ -549,8 +549,12 @@
 }
 
 /* The band (U4): the title and one mono line on the proof cards' Tensor
-   Gold head, in the arcs' own wash; the card's ONE workstream on the right,
-   glyph and word as the vision draws it. */
+   Gold head, in the arcs' own wash; the card's ONE workstream on the right.
+   U7 (owner, 2026-10-11): the line is the client, then the workstream's
+   name, nothing else; the workstream on the right is its GLYPH ALONE,
+   centred in the band (the glyph-and-word pair "doesn't look clean"). The
+   base `.arc-case__ws` keeps the pair for the return card's lanes and the
+   plugin's rows, which Pandora draws; only the job's band takes the rule. */
 .arc-case__top {
   position: relative;
   display: flex;
@@ -615,6 +619,15 @@
   height: var(--space-lg);
   align-self: center;
 }
+/* The job's band: the glyph alone, one size up, centred on the band's own
+   axis at the cell padding (the band already clears the cut on its right). */
+.arc-case__top > .arc-case__ws {
+  align-self: center;
+  gap: 0;
+}
+.arc-case__top > .arc-case__ws .arc-lev__glyph {
+  height: var(--space-xl);
+}
 
 /* Under the fill rhythm the split takes what the band and the foot leave. */
 .arc-case__split {
@@ -636,10 +649,13 @@
   padding: var(--lv-v) var(--lat-pad-cell);
   border-right: 1px solid var(--arc-rule);
 }
+/* U7 (owner, 2026-10-11: the ask and what Claude did are "so crammed
+   together"): a block of air between the two keys, a line of air between
+   the steps, and a step may wrap. */
 .arc-case__rail {
   position: relative;
   display: grid;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   padding-left: calc(var(--case-node) + var(--space-md));
 }
 .arc-case__rail::before {
@@ -674,7 +690,7 @@
   background: var(--arc-ink-40);
 }
 .arc-case__ask {
-  margin: 0 0 var(--space-sm);
+  margin: 0 0 var(--space-md);
   font-family: var(--lv-sans);
   font-size: var(--type-lg);
   line-height: 1.35;
@@ -682,7 +698,7 @@
 }
 .arc-case__did {
   display: grid;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -695,7 +711,6 @@
   font-size: var(--type-md);
   line-height: 1.45;
   color: var(--arc-ink-80);
-  white-space: nowrap;
 }
 .arc-case__did-n {
   flex: none;
@@ -839,6 +854,54 @@
   text-align: right;
   white-space: nowrap;
 }
+/* A mapped collection as the house's grain field (U7, `jobMap.ts`): a
+   square crop the frame draws under `meet`, held to the crop's aspect so
+   the DOM labels seated in percent land on the SVG's own box. The ramp is
+   gold by density: the densest cores in `--gold`, the body in the gold
+   line, the sparse rest in dawn. The callouts are corner labels on dawn
+   hairline leaders to a hollow node on each named group. */
+.arc-case__map {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+}
+.arc-case__map-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.arc-case__map-grain {
+  fill: var(--arc-ink-40);
+}
+.arc-case__map-grain[data-map-tier="body"] {
+  fill: var(--lv-gold-line);
+}
+.arc-case__map-grain[data-map-tier="core"] {
+  fill: var(--gold);
+}
+.arc-case__map-leader {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-case__map-node {
+  fill: var(--arc-plate);
+  stroke: var(--lv-gold-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-case__map-label {
+  position: absolute;
+  margin: 0;
+  font-family: var(--lv-mono);
+  font-size: var(--type-base);
+  letter-spacing: var(--track-eyebrow);
+  line-height: 1.4;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--arc-ink-70);
+}
 .arc-case__caption {
   display: flex;
   justify-content: center;
@@ -881,6 +944,18 @@
   font-size: var(--type-md);
   line-height: 1.45;
   color: var(--arc-ink-80);
+}
+/* The return as one sentence (U7), at the ask's rung so the two ends of
+   the card read at one weight; the figure is its lit `em`, upright gold. */
+.arc-case__said {
+  margin: 0;
+  font-family: var(--lv-sans);
+  font-size: var(--type-lg);
+  line-height: 1.35;
+  color: var(--arc-ink);
+}
+.arc-case__said em {
+  color: var(--lv-gold-text);
 }
 /* The display size, or less: a mono glyph is 0.6em, so a value of
    `--case-len` characters is held to the column it sits in. */
@@ -1598,6 +1673,10 @@
   }
   .arc-case__pair {
     --case-still: calc((100% - var(--space-md)) / 2);
+    width: 100%;
+  }
+  /* No size container here, so the map takes the frame's width. */
+  .arc-case__map {
     width: 100%;
   }
   .arc-case__result {

@@ -201,7 +201,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "Thoughtform · the approach",
         title: { pre: "How adoption and", em: "automation connect." },
-        sub: "Claude can only automate what your team has written down. The first phase starts with ads design: the team makes the ads with Claude, writes down what works, and an agent runs it from there.",
+        sub: "Claude can only automate what your team has written down. The first phase starts with ads design: the team makes the ads with Claude, writes down what works, and an agent runs it from there. Loop Earplugs wrote the first layer of this kind in 2024.",
       },
       steps: [
         {
@@ -335,7 +335,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · the plugin",
         title: { pre: "The plugin,", em: "in your Claude Enterprise." },
-        sub: "One plugin for the whole creative team, with a skill for each workstream. Each skill has its own checks and is kept up to date by the people who use it. The product voice comes first, written with the copywriter in the first week.",
+        sub: "One plugin in X-Bionic's own Claude Enterprise, with a skill for each workstream: the product voice, intake and naming, the pre-review, the brief and its variants. Each is written in phase one with the people who use it, checked by its own evals, and kept by them.",
       },
       record: X_BIONIC_INSTRUMENT,
       altitude: "org",

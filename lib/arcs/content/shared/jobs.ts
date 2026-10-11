@@ -1,6 +1,7 @@
 import type { ArcSectionOf } from "../../types";
 
 import { SAMAKO_AUTUMN_FILM_B, SAMAKO_PRODUCT_SHOTS } from "./samakoWork";
+import { SURI_DRIVE_MAP } from "./suriDriveMap";
 
 /**
  * FOUR CLIENT JOBS, ONE TEMPLATE (ADR-153 U1, owner 2026-10-09: "a template
@@ -33,7 +34,19 @@ import { SAMAKO_AUTUMN_FILM_B, SAMAKO_PRODUCT_SHOTS } from "./samakoWork";
  * the filed count instead.
  *
  * ⚠ THE RETURN READS IN TWO STEPS, the saving and then what it allows, and
- * the line never restates the number (U4; registry-guarded).
+ * the line never restates the number (U4; registry-guarded). ⚠ U7 (owner,
+ * 2026-10-11): the saving is ONE SENTENCE (`said`), the figure lit inside
+ * it, under the mono kicker; the big numeral is gone ("people see time
+ * saved and then they see weeks, big font, it just takes them out"). The
+ * gate's line is one plain sentence about the decision the person makes,
+ * or nothing. The band letters the client and the workstream only.
+ *
+ * ⚠ THE DRIVE JOB'S FIGURE IS THE MAP ITSELF (U7, owner: "we have an actual
+ * cluster, an actual visual map of these things, why can't we use it
+ * here?"): `SURI_DRIVE_MAP`, the mapped Drive reduced by
+ * `scripts/arcs/prep-x-bionic-drive-map.mjs` to counts and positions, drawn
+ * as a grain field. The four words on it are GENERIC by law, chosen on the
+ * groups' own descriptions: never a product, a person or the client's term.
  *
  * ⚠ PEOPLE BY ROLE, NEVER BY NAME OR PRONOUN; no money; the films and
  * stills are the shared records' own objects, so a fix lands once.
@@ -66,7 +79,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ],
     gate: {
       who: "The client's visual lead",
-      line: "Chooses between film A and film B. Not reviewed yet.",
+      line: "Chooses the film that runs.",
     },
     figure: {
       kind: "clip",
@@ -74,9 +87,12 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
       caption: "Film B · 15 s, 9:16, in Dutch",
     },
     result: {
-      label: "Product drawn by AI",
-      value: "0 frames",
-      line: "Every product shot is the photographer's original, set into the scene in code.",
+      label: "The return",
+      said: {
+        pre: "A motion ad from an open brief, every product shot the photographer's own:",
+        em: "no frame drawn by AI",
+        post: ".",
+      },
       allows:
         "Motion ads for paid social without a motion designer on each one: a better return on ad creation cost.",
     },
@@ -99,23 +115,32 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ],
     gate: {
       who: "The asset library owner",
-      line: "Not reviewed yet: Claude named the groups, and the owner has yet to use the page.",
+      line: "Checks the groups before the team searches by them.",
     },
+    /* The map as mapped: 82,307 items in 60 groups, every item a grain; the
+       four words are generic, on the four largest groups of distinct kind
+       (the second-largest kind of ad static is not named twice). The
+       ledger it replaced (3.1 TB read only · 7,674 shoot video files ·
+       36,387 shoot image files · 78 % of files read tied to no campaign)
+       stays filed in the header note above. */
     figure: {
-      kind: "ledger",
+      kind: "map",
       caption: "The Drive as mapped, 9 Oct",
-      rows: [
-        { label: "Drive", value: "3.1 TB, read only" },
-        { label: "Map", value: "82,307 items, 60 groups" },
-        { label: "Shoot video", value: "7,674 files" },
-        { label: "Shoot images", value: "36,387 files" },
-        { label: "No campaign", value: "78% of files read" },
+      map: SURI_DRIVE_MAP,
+      labels: [
+        { group: 18, text: "Ad statics" },
+        { group: 21, text: "Shoot footage" },
+        { group: 14, text: "Email designs" },
+        { group: 8, text: "Product stills" },
       ],
     },
     result: {
       label: "Time saved",
-      value: "Weeks",
-      line: "Estimated, against mapping the Drive by hand.",
+      said: {
+        pre: "The whole marketing Drive mapped in two days, against",
+        em: "weeks by hand",
+        post: ", estimated.",
+      },
       allows: "Reuse the shoots the team already owns, found by what is in each picture.",
     },
   },
@@ -137,7 +162,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ],
     gate: {
       who: "The client's visual lead",
-      line: "Agreed with the grading on 14 of 15 shots, and rejected the one it had passed.",
+      line: "Agreed with the grading on 14 of 15 shots.",
     },
     figure: {
       kind: "pair",
@@ -153,8 +178,11 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "Time saved",
-      value: "2 hrs/wk",
-      line: "Estimated, for the creative director, the art director and the brand manager.",
+      said: {
+        pre: "About",
+        em: "two hours a week",
+        post: "back for the creative director, the art director and the brand manager, estimated.",
+      },
       allows:
         "Review starts from the renders it flags as unsure, the jarring errors already caught.",
     },
@@ -177,7 +205,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ],
     gate: {
       who: "The strategist",
-      line: "Marks the brief ready. It lands as a Monday item, with its ad names.",
+      line: "Marks the brief ready; it lands on the board with its ad names.",
     },
     figure: {
       kind: "ledger",
@@ -192,8 +220,11 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "Time saved",
-      value: "Hours",
-      line: "Estimated: the studio lead's time each week, finding what a brief left out.",
+      said: {
+        pre: "The studio lead gets",
+        em: "hours a week",
+        post: "back from finding what a brief left out, estimated.",
+      },
       allows:
         "Every brief reaches the studio complete and in its channel's shape, so the work starts sooner.",
     },

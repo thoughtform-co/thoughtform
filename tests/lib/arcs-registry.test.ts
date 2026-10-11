@@ -898,8 +898,14 @@ describe("arcs registry (ADR-052)", () => {
             expect(row.result, `${at}/${row.id}: a returns layout needs a result`).toBeTruthy();
           }
           if (row.result) {
-            expect(row.result.value.length, `${at}/${row.id}: value`).toBeLessThanOrEqual(10);
-            expect(row.result.line.length, `${at}/${row.id}: line`).toBeLessThanOrEqual(110);
+            /* A row's return is the numeral and its line (`ArcReturn` draws
+               them); the sentence is the job's (ADR-153 U7). */
+            const value = row.result.value ?? "";
+            const line = row.result.line ?? "";
+            expect(value.length, `${at}/${row.id}: a value`).toBeGreaterThan(0);
+            expect(value.length, `${at}/${row.id}: value`).toBeLessThanOrEqual(10);
+            expect(line.length, `${at}/${row.id}: a line`).toBeGreaterThan(0);
+            expect(line.length, `${at}/${row.id}: line`).toBeLessThanOrEqual(110);
             const segments = (row.result.tally ?? []).reduce((sum, g) => sum + g.of, 0);
             expect(segments, `${at}/${row.id}: tally`).toBeLessThanOrEqual(60);
             for (const g of row.result.tally ?? []) {
@@ -2059,25 +2065,22 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
           expect(d.length, `${at}: an empty step`).toBeGreaterThan(0);
         }
         expect(s.gate.who.length, `${at}: gate who`).toBeLessThanOrEqual(32);
-        expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(110);
+        /* U7: the gate's line, when there is one, is one plain sentence about
+           the decision the person makes, never a status ("not reviewed yet"
+           is a status the reader cannot act on). */
+        if (s.gate.line !== undefined) {
+          expect(s.gate.line.length, `${at}: gate line`).toBeLessThanOrEqual(80);
+          expect(s.gate.line.length, `${at}: an empty gate line`).toBeGreaterThan(0);
+          expect(s.gate.line, `${at}: the gate says the decision, not a status`).not.toMatch(
+            /not reviewed yet/i
+          );
+        }
         /* U4: the caption sets on one line under the figure at 1280. */
         expect(s.figure.caption.length, `${at}: caption`).toBeLessThanOrEqual(29);
         /* The head is U4's gold band, or the mark (the proposal system,
            ADR-155, a lab direction); U2's strip is retired with U4. And the
            return's line never restates its value's digits. */
         if (s.top !== undefined) expect(["mark"], `${at}: top`).toContain(s.top);
-        const digits = s.result.value.match(/\d+/g) ?? [];
-        if (digits.length) {
-          expect(
-            digits.every((d) => s.result.line.includes(d)),
-            `${at}: the line restates the value "${s.result.value}"`
-          ).toBe(false);
-        }
-        /* U3: ONE return, a number a decision maker reads and a plain
-           line; a tally draws it only when it is a count: whole numbers,
-           lit within the group, at most 60 segments. */
-        expect(s.result.value.length, `${at}: "${s.result.value}"`).toBeLessThanOrEqual(10);
-        expect(s.result.line.length, `${at}: the return's line`).toBeLessThanOrEqual(110);
         /* U4: the return reads in two steps, the saving and then what it
            allows, and neither line restates the number. */
         if (s.result.label !== undefined) {
@@ -2089,15 +2092,48 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         const allows = s.result.allows ?? "";
         expect(allows.length, `${at}: what it allows`).toBeGreaterThan(0);
         expect(allows.length, `${at}: what it allows`).toBeLessThanOrEqual(110);
-        const value = s.result.value.toLowerCase();
-        for (const line of [s.result.line, allows]) {
-          expect(line.toLowerCase().includes(value), `${at}: "${line}" restates the number`).toBe(
-            false
-          );
+        if (s.result.said) {
+          /* U7: the saving is ONE sentence a decision maker reads, the
+             figure its lit `em`; what it allows says something else and
+             never repeats the figure. */
+          const { pre, em, post } = s.result.said;
+          const joined = `${[pre, em].filter(Boolean).join(" ")}${post ? ` ${post}` : ""}`;
+          expect(joined.length, `${at}: the return's sentence`).toBeLessThanOrEqual(110);
+          expect(joined.length, `${at}: an empty sentence`).toBeGreaterThan(0);
+          expect((em ?? "").length, `${at}: the sentence's figure`).toBeGreaterThan(0);
+          expect((em ?? "").length, `${at}: the sentence's figure "${em}"`).toBeLessThanOrEqual(24);
+          expect(allows, `${at}: the two steps say different things`).not.toBe(joined);
+          expect(
+            allows.toLowerCase().includes((em ?? "").toLowerCase()),
+            `${at}: "${allows}" restates the figure`
+          ).toBe(false);
+          expect(s.result.value, `${at}: a sentence and a numeral`).toBeUndefined();
+          expect(s.result.line, `${at}: a sentence and a line`).toBeUndefined();
+        } else {
+          /* U3: ONE return, a number a decision maker reads and a plain
+             line, and the line never restates the value's digits; a tally
+             draws it only when it is a count: whole numbers, lit within
+             the group, at most 60 segments. */
+          const value = s.result.value ?? "";
+          const line = s.result.line ?? "";
+          expect(value.length, `${at}: a return`).toBeGreaterThan(0);
+          const digits = value.match(/\d+/g) ?? [];
+          if (digits.length) {
+            expect(
+              digits.every((d) => line.includes(d)),
+              `${at}: the line restates the value "${value}"`
+            ).toBe(false);
+          }
+          expect(value.length, `${at}: "${value}"`).toBeLessThanOrEqual(10);
+          expect(line.length, `${at}: the return's line`).toBeLessThanOrEqual(110);
+          for (const l of [line, allows]) {
+            expect(
+              l.toLowerCase().includes(value.toLowerCase()),
+              `${at}: "${l}" restates the number`
+            ).toBe(false);
+          }
+          expect(allows, `${at}: the two steps say different things`).not.toBe(line);
         }
-        expect(s.result.allows, `${at}: the two steps say different things`).not.toBe(
-          s.result.line
-        );
         if (s.result.tally) {
           const segments = s.result.tally.reduce((sum, g) => sum + g.of, 0);
           expect(segments, `${at}: tally`).toBeLessThanOrEqual(60);
@@ -2122,7 +2158,7 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
             expect(f.label.length, `${at}: ${f.label}`).toBeLessThanOrEqual(28);
             expect(f.alt.length, `${at}: ${f.src} alt`).toBeGreaterThan(0);
           }
-        } else {
+        } else if (s.figure.kind === "ledger") {
           expect(s.figure.rows.length, `${at}: ledger rows`).toBeGreaterThanOrEqual(2);
           expect(s.figure.rows.length, `${at}: ledger rows`).toBeLessThanOrEqual(5);
           for (const r of s.figure.rows) {
@@ -2133,6 +2169,35 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
               r.label.length + r.value.length,
               `${at}: ${r.label} · ${r.value}`
             ).toBeLessThanOrEqual(32);
+          }
+        } else {
+          /* U7: a mapped collection, reduced to counts and positions in a
+             0..1 crop; nothing identifying, and at most four GENERIC words
+             on it, each on a real group, none twice, none with a digit.
+             The drawing's own fit is `arc-job-map.test.ts`. */
+          const { map, labels = [] } = s.figure;
+          expect(map.total, `${at}: a map's total`).toBeGreaterThan(0);
+          expect(
+            map.clusters.reduce((sum, c) => sum + c.count, 0),
+            `${at}: the groups sum to the total`
+          ).toBe(map.total);
+          expect(map.points.length, `${at}: a sample`).toBeGreaterThan(0);
+          for (const p of map.points) {
+            expect(p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1, `${at}: a point in the crop`).toBe(
+              true
+            );
+            expect(map.clusters[p.c], `${at}: a point's group ${p.c}`).toBeTruthy();
+          }
+          expect(labels.length, `${at}: at most four words on the map`).toBeLessThanOrEqual(4);
+          const groups = new Set<number>();
+          for (const l of labels) {
+            expect(map.clusters[l.group], `${at}: "${l.text}" names group ${l.group}`).toBeTruthy();
+            expect(groups.has(l.group), `${at}: group ${l.group} named twice`).toBe(false);
+            groups.add(l.group);
+            expect(l.text.length, `${at}: "${l.text}"`).toBeLessThanOrEqual(14);
+            expect(l.text.length, `${at}: an empty word`).toBeGreaterThan(0);
+            expect(l.text, `${at}: "${l.text}" carries a digit`).not.toMatch(/\d/);
+            expect(l.text, `${at}: "${l.text}" is sentence case`).toMatch(/^[A-Z][^A-Z]*$/);
           }
         }
         for (const src of media) {
