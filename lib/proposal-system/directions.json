@@ -22,9 +22,9 @@
       "note": "case = ADR-153 U5's case card: the record in the jobs' own housing, a lane per role. ledger = the same four rows as returns in the job's vocabulary: a value, a line, a tally."
     },
     "approach": {
-      "values": ["run", "stack", "plates"],
+      "values": ["run", "written", "opened", "stack", "plates"],
       "label": "The approach",
-      "note": "run = production since the owner's pick of 11 October (\"Whole\"): his eight-step outline drawn as one run (ArcConfigRun), read whole on one screen. The vision's own layer with its four workstream tiles, creative production's tile opened onto its jobs, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking the workstream's owner once. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. plates = the beat as it shipped before the run (ADR-153): three plates with a verb each and two time bars, in its own words. The runway and the rail over the run came out with the pick."
+      "note": "run = production since the owner's pick of 11 October (\"Whole\"): his eight-step outline drawn as one run (ArcConfigRun), read whole on one screen. The vision's own layer with its four workstream tiles, creative production's tile opened onto its jobs, ads design worked through from its three inputs to the finished ad, the adopted run checked at every step, the skill and the evals written between the runs, and the automated run asking the workstream's owner once. written = the layer written, read whole (the same evening): the vision's stack one altitude down as one static drawing, the host slab, the gold layer with its courses drawn and named on leaders (the skills filled, the evals open), the team's four diamonds on a deck one course higher, Claude's beads along the front edge to the owner's diamond; the three passes a right column, each on a leader to its mark. opened = the lane opened: the plugin beat's console with only the creative-production lane lit, the three passes as marks along it (the team at its head, the courses mid-lane, the beads to the owner at its end), the passes and the lane's skill and evals in the right column. stack = one mono rail over the layer stack: the team on the organisation's slab, the layer appearing with its courses, Claude's runs along its edge. plates = the beat as it shipped before the run (ADR-153): three plates with a verb each and two time bars, in its own words. The runway and the rail over the run came out with the pick."
     },
     "upstream": {
       "values": ["lines", "off", "horizon"],
@@ -79,6 +79,24 @@
       "shape": "Loop's return as four returns",
       "knobs": {
         "return": "ledger"
+      }
+    },
+    {
+      "id": "AA",
+      "name": "Written",
+      "question": "the layer written, read whole and static: does the vision's object one altitude down, with the three passes on leaders beside it, say the layer better than the run?",
+      "shape": "the approach as the stack at its written state, the passes a right column",
+      "knobs": {
+        "approach": "written"
+      }
+    },
+    {
+      "id": "AB",
+      "name": "Opened",
+      "question": "the lane opened in the plugin's own console, the three passes as marks along it: does the approach read as the engine beat's kin?",
+      "shape": "the approach as the plugin console with one lane lit",
+      "knobs": {
+        "approach": "opened"
       }
     },
     {

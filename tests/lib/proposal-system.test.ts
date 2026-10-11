@@ -228,6 +228,58 @@ describe("the proposal system lab", () => {
               vision.uses.items.map((u) => u.label)
             );
           }
+        } else if (knobs.approach === "written" || knobs.approach === "opened") {
+          /* The two variations of 2026-10-11: the same object as the
+             vision's one altitude down, the three passes as a column (≤ 76
+             a line, no digit), the vision's own layer and four workstreams
+             by reference, the hand-off to Loop as the head's last sentence;
+             neither carries the run, the figure or the bars. */
+          expect(approach.run).toBeUndefined();
+          expect(approach.figure).toBeUndefined();
+          expect(approach.time).toBeUndefined();
+          expect(approach.head.sub).toMatch(/Loop Earplugs wrote the first layer/);
+          expect(approach.head.title).toBe(
+            PROD_ADOPTION?.kind === "handoff" ? PROD_ADOPTION.head.title : undefined
+          );
+          const v = knobs.approach === "written" ? approach.written : approach.opened;
+          expect(v, knobs.approach).toBeTruthy();
+          expect(knobs.approach === "written" ? approach.opened : approach.written).toBeUndefined();
+          for (const l of v!.lines) {
+            expect(l.length, l).toBeLessThanOrEqual(76);
+            expect(l, l).not.toMatch(/\d/);
+          }
+          expect(v!.caption.length).toBeLessThanOrEqual(40);
+          expect(v!.layer).toBe(PROD_RUN!.layer.label);
+          expect(v!.host.length).toBeLessThanOrEqual(32);
+          if (approach.written) {
+            const w = approach.written;
+            expect(w.team, "the vision's workstreams, by reference").toBe(
+              PROD_RUN!.layer.workstreams
+            );
+            expect(w.team.map((t) => t.id)).toEqual([...DISCIPLINE_ORDER]);
+            expect(w.courses.skills.length).toBe(3);
+            expect(w.courses.evals.length).toBe(2);
+            for (const c of [...w.courses.skills, ...w.courses.evals]) {
+              expect(c.length, c).toBeLessThanOrEqual(24);
+              expect(c, c).not.toMatch(/\d/);
+            }
+          }
+          if (approach.opened) {
+            const o = approach.opened;
+            const engine = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "engine");
+            if (engine?.kind !== "instrument" || !engine.face) throw new Error("the engine's face");
+            expect(o.console, "the plugin's own console").toBe(engine.face.console);
+            expect(o.connectors).toBe(engine.face.connectors);
+            expect(o.lanes.map((l) => l.id)).toEqual([...DISCIPLINE_ORDER]);
+            expect(o.lanes.map((l) => l.id)).toContain(o.lit);
+            expect(o.skill.length).toBeLessThanOrEqual(24);
+            for (const e of o.evals) expect(e.length, e).toBeLessThanOrEqual(24);
+            expect(o.readout.length).toBeLessThanOrEqual(4);
+            for (const r of o.readout) {
+              expect(r.label.length, r.label).toBeLessThanOrEqual(12);
+              expect(r.value, r.value).not.toMatch(/\d/);
+            }
+          }
         } else {
           /* The plates, as the beat shipped before the run (ADR-153): a
              verb per plate and the two time bars, no run. */

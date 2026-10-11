@@ -1,0 +1,425 @@
+/* The approach's two lab figures (2026-10-11): the layer written, read
+   whole (`.apr--written`), and the lane opened (`.apr--opened`). Scoped to
+   `.apr*`: an arc without either gets bytes and no matching rule. Reads the
+   arcs' and the lattice's tokens only (`.arc-root` re-derives them for
+   light), and restates the stack's and the leverage's paint on its own
+   prefix (the lattice's law: tokens and mechanisms are shared, skins stay
+   copied). No type literal, no spacing literal: this sheet sits at zero in
+   both ratchets.
+
+   ONE COLOUR LAW, the house's: one filled gold object per housing (the
+   layer), the gold ramp on the data marks (the courses, the beads), gold
+   ink on a lit label, a green diamond is a person and nothing else, a
+   hairline is structure.
+
+   ⚠ THE SVG LETTERS NOTHING. Every word is a DOM tag on a seat the
+   geometry computes (`--ax` / `--at`, fractions of the crop), and every
+   leader is a DOM span seated the same way (`--aw` / `--ah`), so a
+   collision is a box a test can measure. */
+
+.apr {
+  --apr-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --apr-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --apr-gold-text: var(--gold-ink, var(--gold));
+  --apr-gold-line: var(--gold-line, rgba(202, 165, 84, 0.34));
+  --apr-person: var(--atreides-light, #5b7a4e);
+  --apr-dots: radial-gradient(rgba(var(--dawn-rgb), 0.1) 1px, transparent 1px) 0 0 / var(--space-md)
+    var(--space-md);
+  --apr-tick: var(--arc-ink-40);
+  --apr-mark: var(--space-sm);
+  /* The leverage's fluid unit, restated: 8px on a short screen, 24px on a
+     tall one. */
+  --apr-v: clamp(8px, 1.6svh, 24px);
+}
+.apr :where(p, ol, ul, li, dl, dt, dd, figure) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── Shared chrome ────────────────────────────────────────────────── */
+.apr__tag,
+.apr__label,
+.apr__pass-key,
+.apr__caption,
+.apr__ledger dt {
+  font-family: var(--apr-mono);
+  font-size: var(--type-sm);
+  letter-spacing: var(--track-eyebrow);
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--arc-ink-60);
+}
+.apr__pass-key {
+  display: flex;
+  gap: var(--space-sm);
+  color: var(--arc-ink-70);
+}
+.apr__pass-n {
+  color: var(--apr-gold-text);
+}
+.apr__pass-line {
+  font-family: var(--apr-sans);
+  font-size: var(--type-base);
+  letter-spacing: var(--track-copy);
+  line-height: 1.3;
+  text-transform: none;
+  color: var(--arc-ink-80);
+}
+.apr__caption {
+  display: flex;
+  gap: var(--space-md);
+  justify-self: start;
+}
+.apr__fig-n {
+  flex: none;
+  white-space: nowrap;
+  color: var(--arc-ink-40);
+}
+/* A leader: a 1px DOM run (`--aw`) or drop (`--ah`), never a single-axis
+   svg stroke, seated like the words. */
+.apr__lead {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  width: max(1px, calc(var(--aw, 0) * 100%));
+  height: max(1px, calc(var(--ah, 0) * 100%));
+  background: var(--arc-seam);
+  pointer-events: none;
+}
+.apr__lead[data-apr-lead="layer"] {
+  background: var(--apr-gold-line);
+}
+
+/* ── The marks (the stack's paint, restated) ─────────────────────── */
+.apr__svg path,
+.apr__opened path {
+  vector-effect: non-scaling-stroke;
+}
+.apr__face {
+  fill: var(--arc-plate);
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.apr__hidden {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.apr__plate[data-apr-lit] .apr__face--top {
+  fill: var(--arc-gold-wash);
+  stroke: var(--gold);
+}
+.apr__plate[data-apr-lit] .apr__face--left,
+.apr__plate[data-apr-lit] .apr__face--right {
+  fill: rgba(var(--gold-rgb), 0.22);
+  stroke: var(--gold);
+}
+/* The hatch a step quieter than the vision's, so the courses read over it
+   rather than as more hatch. */
+.apr__hatch {
+  stroke: var(--gold);
+  stroke-width: 1;
+  opacity: 0.32;
+}
+.apr__fill {
+  stroke: none;
+}
+/* The courses: the skills solid, the evals open (dashed). */
+.apr__course {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+  opacity: 0.95;
+}
+.apr__course[data-apr-course="eval"] {
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.apr__run {
+  fill: none;
+  stroke: var(--apr-gold-line);
+  stroke-width: 1;
+}
+.apr__tile .apr__face {
+  fill: var(--arc-plate);
+  stroke: var(--arc-ink-50);
+}
+.apr__tile[data-apr-lit] .apr__face {
+  stroke: var(--gold);
+}
+.apr__tile[data-apr-lit] .apr__face--top {
+  fill: var(--arc-gold-wash);
+}
+.apr__bead {
+  fill: var(--gold);
+}
+.apr__person {
+  fill: var(--apr-person);
+}
+
+/* ── Written, read whole ──────────────────────────────────────────── */
+.apr--written {
+  display: flex;
+  flex-direction: column;
+  gap: var(--apr-v);
+  min-height: 0;
+  margin-top: var(--lat-gap-block);
+  font-family: var(--apr-sans);
+  color: var(--arc-ink);
+}
+/* The figure cell: the job's dot ground, its frame marked at the corners,
+   the caption bottom-left. Content-sized by default (a phone, reduced
+   motion, print); under the fill rhythm (below) a size container, so the
+   drawing never pushes the beat past one screen. */
+.apr__fig {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  min-height: 0;
+  padding: calc(var(--apr-v) * 1.25) var(--lat-pad-cell) var(--apr-v);
+  background: var(--apr-dots);
+}
+.apr__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  container-type: inline-size;
+}
+.apr__frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--apr-tick), var(--apr-tick)) left top / var(--apr-mark) 1px,
+    linear-gradient(var(--apr-tick), var(--apr-tick)) left top / 1px var(--apr-mark),
+    linear-gradient(var(--apr-tick), var(--apr-tick)) right top / var(--apr-mark) 1px,
+    linear-gradient(var(--apr-tick), var(--apr-tick)) right top / 1px var(--apr-mark),
+    linear-gradient(var(--apr-tick), var(--apr-tick)) left bottom / var(--apr-mark) 1px,
+    linear-gradient(var(--apr-tick), var(--apr-tick)) left bottom / 1px var(--apr-mark),
+    linear-gradient(var(--apr-tick), var(--apr-tick)) right bottom / var(--apr-mark) 1px,
+    linear-gradient(var(--apr-tick), var(--apr-tick)) right bottom / 1px var(--apr-mark);
+  background-repeat: no-repeat;
+}
+.apr__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--apr-w) / var(--apr-h);
+}
+.apr__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.apr__words {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.apr__tag {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  white-space: nowrap;
+}
+/* The layer's words hang off its left tip: the label level with the tip,
+   the courses under it, the ticks nearest the slab. */
+.apr__tag[data-apr-tag="layer"] {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xs);
+  translate: -100% -0.7em;
+  text-align: right;
+}
+.apr__label {
+  color: var(--apr-gold-text);
+}
+.apr__courses {
+  display: grid;
+  gap: var(--space-xs);
+  font-family: var(--apr-sans);
+  font-size: var(--type-sm);
+  letter-spacing: var(--track-copy);
+  line-height: 1.35;
+  text-transform: none;
+  color: var(--arc-ink-70);
+}
+.apr__courses li {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.apr__courses li::before {
+  content: "";
+  flex: none;
+  width: var(--space-sm);
+  height: var(--space-xs);
+  background: var(--gold);
+}
+.apr__courses li[data-apr-course="eval"]::before {
+  background: transparent;
+  border: 1px solid var(--gold);
+}
+/* The host's tag under the slab's nose, centred, two lines at most. */
+.apr__tag[data-apr-tag="host"] {
+  translate: -50% 0;
+  max-width: 14em;
+  white-space: normal;
+  text-align: center;
+}
+/* The three passes: a column past the drawing, each block's key line on
+   the leader to its mark. */
+.apr__tag[data-apr-tag="pass"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: calc(var(--aw, 0.3) * 100%);
+  white-space: normal;
+}
+
+/* The phone's words, hidden on the desktop. */
+.apr__legend {
+  display: none;
+}
+
+/* ── The fill rhythm: the figure takes the beat to the floor ─────────
+   ⚠ ONLY THERE. A zero basis with no floor in a content-sized column is a
+   box of no height: on a phone and under reduced motion the drawing would
+   hang out of the section, under the next one. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .arc-root[data-arc-rhythm="fill"] .apr--written .apr__fig {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+  .arc-root[data-arc-rhythm="fill"] .apr--written .apr__frame {
+    container-type: size;
+  }
+  .arc-root[data-arc-rhythm="fill"] .apr--written .apr__stage {
+    width: min(100cqw, calc(100cqh * var(--apr-w) / var(--apr-h)));
+  }
+}
+
+/* ── The lane opened (the plugin's console, one lane lit) ─────────── */
+/* The figure takes a visible caption under the stage, bottom-left. */
+.apr--opened .arc-plug__fig {
+  grid-template-rows: minmax(0, 1fr) auto;
+  row-gap: var(--space-sm);
+  justify-items: start;
+}
+.apr--opened .arc-plug__stage {
+  justify-self: center;
+}
+/* The other lanes: dim, dashed centrelines. The lit lane: its own wash,
+   its spine, the marks along it. */
+.apr__lane-dim {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.apr__lane-face {
+  fill: rgba(var(--gold-rgb), 0.14);
+  stroke: var(--apr-gold-line);
+  stroke-width: 1;
+}
+.apr__spine {
+  fill: none;
+  stroke: var(--arc-ink-22);
+  stroke-width: 1;
+}
+.apr__bead[data-apr-quiet] {
+  fill: var(--apr-gold-line);
+}
+/* The pass tags on the drawing: an index each, gold ink, off the faces. */
+.apr--opened .arc-plug__tag[data-plug-tag="pass"] {
+  translate: -50% -50%;
+  color: var(--apr-gold-text);
+}
+.apr--opened .arc-plug__tag[data-plug-tag="pass"][data-apr-anchor="end"] {
+  translate: -100% -50%;
+}
+.apr--opened .arc-plug__tag[data-plug-tag="skill"] {
+  translate: 0 -50%;
+  color: var(--arc-ink-80);
+}
+/* The column: the three passes under their indices, then the ledger. Its
+   air is the fluid unit's halves, so a short screen (720h) keeps the beat
+   on one screen with the lines wrapped. */
+.apr__col {
+  justify-content: center;
+  gap: var(--apr-v);
+  padding: calc(var(--apr-v) * 0.5) var(--lat-pad-cell);
+}
+.apr__passes {
+  display: grid;
+  gap: calc(var(--apr-v) * 0.5);
+}
+.apr__pass {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.apr__ledger {
+  display: grid;
+  gap: var(--space-xs);
+  padding-top: calc(var(--apr-v) * 0.5);
+  border-top: 1px solid var(--arc-rule);
+}
+.apr__ledger div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+.apr__ledger dt {
+  flex: none;
+  min-width: 6ch;
+  color: var(--arc-ink-50);
+}
+.apr__ledger dd {
+  font-family: var(--apr-sans);
+  font-size: var(--type-base);
+  line-height: 1.3;
+  color: var(--arc-ink-80);
+}
+
+/* ── The phone ───────────────────────────────────────────────────────
+   The drawing is too small to seat its words, so they stand down and the
+   three passes are a list under it. */
+@media (max-width: 960px) {
+  .apr__words {
+    display: none;
+  }
+  .apr__legend {
+    display: grid;
+    gap: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--arc-rule);
+  }
+  .apr__legend-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .apr--opened .arc-plug__tag[data-plug-tag="pass"],
+  .apr--opened .apr__lead {
+    display: none;
+  }
+}
+
+/* Light, re-derived (ADR-077): the owned fills read against parchment. */
+html[data-theme="light"] .apr__plate[data-apr-lit] .apr__face--left,
+html[data-theme="light"] .apr__plate[data-apr-lit] .apr__face--right {
+  fill: rgba(var(--gold-rgb), 0.3);
+}
+html[data-theme="light"] .apr__lane-face {
+  fill: rgba(var(--gold-rgb), 0.2);
+}

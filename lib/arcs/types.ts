@@ -1491,6 +1491,21 @@ export type ArcSection = ArcSectionBase &
          * X-Bionic page's approach since the owner's pick (2026-10-11).
          */
         run?: ArcHandoffRun;
+        /**
+         * The layer, written, read whole (a lab direction, 2026-10-11): the
+         * stack at its written state as one static drawing, the three
+         * passes as a right column on leaders to their marks. Opt-in and
+         * never set on production; with it the run, the figure, the plates
+         * and the bars are not drawn.
+         */
+        written?: ArcHandoffWritten;
+        /**
+         * The lane opened (a lab direction, 2026-10-11): the plugin beat's
+         * housing and its opened layer with ONE lane lit, the three passes
+         * mapped along it as three marks, the passes and the lane's skill
+         * and evals in the right column. Opt-in, never set on production.
+         */
+        opened?: ArcHandoffOpened;
       }
     | {
         /**
@@ -1755,6 +1770,66 @@ export interface ArcHandoffRun {
   lines: readonly [string, string, string];
   /** The two things written down, in the band between the passes. */
   keys: { skill: string; evals: string };
+  /** The drawing's accessible name. */
+  alt: string;
+}
+
+/**
+ * The approach's three passes, lettered as a column (the two lab
+ * directions of 2026-10-11): one sans line per pass, in the handoff's step
+ * order, each ≤ 76; the keys are the steps' own labels.
+ */
+export type ArcHandoffPassLines = readonly [string, string, string];
+
+/**
+ * The layer, written, read whole (lab direction `written`): the vision's
+ * object one altitude down, static. The words are the record's; the
+ * geometry is `approachWritten`'s; the SVG letters nothing.
+ */
+export interface ArcHandoffWritten {
+  /** The layer's name, as the vision names it. ≤ 20. */
+  layer: string;
+  /** The organisation's slab, e.g. "X-Bionic's Claude Enterprise". ≤ 32. */
+  host: string;
+  /** The courses written on the layer: the skills (filled ticks), then
+   *  the evals (open ticks). Each ≤ 24, no digit. */
+  courses: { skills: readonly string[]; evals: readonly string[] };
+  /** The team on the deck, the workstreams in the house order; the lit one
+   *  is the workstream the first phase starts with. */
+  team: readonly { id: string; name: string; lit?: true }[];
+  lines: ArcHandoffPassLines;
+  /** The figure's caption, after "Fig. 02 ·". ≤ 40. */
+  caption: string;
+  /** The drawing's accessible name. */
+  alt: string;
+}
+
+/**
+ * The lane opened (lab direction `opened`): the plugin beat's own housing
+ * and `pluginLayer`'s opened layer with one lane lit and the three passes
+ * as marks along it.
+ */
+export interface ArcHandoffOpened {
+  /** The instrument's head strip: its name, and a status on the right. */
+  console: { name: string; status: string };
+  /** The layer's and the host's tags. ≤ 20 / ≤ 32. */
+  layer: string;
+  host: string;
+  /** The host's connectors, one to three, each ≤ 12. */
+  connectors: readonly string[];
+  /** One lane per workstream, in the house order. */
+  lanes: readonly { id: string; name: string }[];
+  /** The lane lit: the workstream the first phase starts with. */
+  lit: string;
+  /** The lit lane's skill, lettered past its end. ≤ 24. */
+  skill: string;
+  /** Its two evals, in the ledger. Each ≤ 24. */
+  evals: readonly [string, string];
+  lines: ArcHandoffPassLines;
+  /** The readout foot: up to four short mono pairs. */
+  readout: readonly { label: string; value: string }[];
+  /** The figure's caption, after "Fig. 02 ·". ≤ 40. */
+  caption: string;
   /** The drawing's accessible name. */
   alt: string;
 }

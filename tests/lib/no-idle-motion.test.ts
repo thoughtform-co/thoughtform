@@ -29,7 +29,12 @@ describe("nothing idles (ADR-080)", () => {
     for (const tree of TREES) {
       for (const file of cssFiles(join(ROOT, tree))) {
         const css = readFileSync(file, "utf8");
-        const rel = file.slice(ROOT.length + 1);
+        /* Forward slashes whatever the platform joins with, or the allow
+           list never matches on Windows. */
+        const rel = file
+          .slice(ROOT.length + 1)
+          .split("\\")
+          .join("/");
         for (const m of css.matchAll(
           /animation(?:-iteration-count)?\s*:\s*([^;]*infinite[^;]*);/g
         )) {
