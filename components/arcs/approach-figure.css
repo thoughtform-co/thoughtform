@@ -31,10 +31,19 @@
      tall one. */
   --apr-v: clamp(8px, 1.6svh, 24px);
 }
-.apr :where(p, ol, ul, li, dl, dt, dd, figure) {
+/* The lists and prose lose their UA box; a figure loses its MARGIN only.
+   The opened route mounts the plugin housing, whose `.arc-plug__fig` is a
+   <figure> with a token padding declared in leverage.css at the same
+   specificity, and this sheet loads after it: a padding reset here won
+   the cascade and seated the caption on the console's edge (found on the
+   merged tree, 2026-10-11). */
+.apr :where(p, ol, ul, li, dl, dt, dd) {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+.apr :where(figure) {
+  margin: 0;
 }
 
 /* ── Shared chrome ────────────────────────────────────────────────── */
