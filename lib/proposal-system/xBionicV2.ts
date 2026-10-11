@@ -164,10 +164,10 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
           lines: [
             "Your team makes the ads with Claude, and checks every step",
             "What works, written down once for everyone",
-            "An agent runs it against the evals, and asks the owner before it goes out",
+            "An agent runs it against the evals, and asks the workstream's owner once",
           ],
           keys: { skill: "Skill", evals: "Evals" },
-          alt: "The configuration as one run. X-Bionic's layer with its four workstreams, creative production opened onto its jobs and ads design worked through: the product renders, the tone of voice and the brief run into one job and out to the finished ad three ways. Made with Claude, a person checking every step; what works written down between the runs, as a skill and its evals; run by an agent through the evals, which asks the owner once before the ad goes out.",
+          alt: "The configuration as one run. X-Bionic's layer with its four workstreams, creative production opened onto its jobs and ads design worked through: the product renders, the tone of voice and the brief run into one job and out to the finished ad three ways. Made with Claude, a person checking every step; what works written down between the runs, as a skill and its evals, the checks the copy editor and the product designer write; run by an agent through the evals, which asks the workstream's owner once before the ad goes out.",
         },
       }
     : null;
