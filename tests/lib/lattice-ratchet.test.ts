@@ -89,6 +89,9 @@ const PINS: Record<string, Counts> = {
   /* The configuration drawn as one run (the X-Bionic rework, 2026-10-10):
      every length a token or the figure's fluid unit, so it enters at zero. */
   "components/arcs/config-run.css": { P: 0, S: 0, F: 0, M: 0 },
+  /* The approach's two lab figures (2026-10-11): every length a token or
+     the figure's fluid unit, so it enters at zero. */
+  "components/arcs/approach-figure.css": { P: 0, S: 0, F: 0, M: 0 },
   "components/arcs/course.css": { P: 0, S: 30, F: 17, M: 0 },
   "components/arcs/prompt-to-loop/prompt-to-loop.css": { P: 0, S: 89, F: 61, M: 3 },
 };

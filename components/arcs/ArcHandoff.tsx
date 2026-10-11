@@ -1,5 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
+import { ArcApproachOpened } from "./ArcApproachOpened";
+import { ArcApproachWritten } from "./ArcApproachWritten";
 import { ArcBeat } from "./ArcBeat";
 import { ArcConfigRun } from "./ArcConfigRun";
 import { ArcSectionHead } from "./ArcSectionHead";
@@ -30,7 +32,11 @@ interface ArcHandoffProps {
  * drawing is whole in a static render.
  */
 export function ArcHandoff({ section, index, motion = "reveal" }: ArcHandoffProps) {
-  const { steps, time, figure, run } = section;
+  const { steps, time, figure, run, written, opened } = section;
+  /* The two lab figures of 2026-10-11 are opt-in fields production never
+     sets, dispatched exactly as the run is. */
+  if (written) return <ArcApproachWritten section={section} index={index} motion={motion} />;
+  if (opened) return <ArcApproachOpened section={section} index={index} motion={motion} />;
   if (run) return <ArcConfigRun section={section} index={index} motion={motion} />;
   if (figure) return <ArcHandoffFigure section={section} index={index} motion={motion} />;
   return (

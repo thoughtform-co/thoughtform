@@ -52,6 +52,10 @@ import "@/components/arcs/stack/stack.css";
 // matching rule. After leverage.css, whose handoff beat it draws, before
 // theme.css.
 import "@/components/arcs/config-run.css";
+// The approach's two lab figures (2026-10-11), `.apr*`-scoped: the layer
+// written and the lane opened. Inert on every production arc (no record
+// sets `written` or `opened`); after config-run.css, before theme.css.
+import "@/components/arcs/approach-figure.css";
 // ADR-148 U1: a generic-route arc may mount Prompt to Loop (`prompt-to-loop`
 // kind); its sheet is scoped under `.ptl`, so it is inert everywhere else.
 import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";

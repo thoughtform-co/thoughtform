@@ -209,6 +209,13 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* The approach's two lab figures (2026-10-11): every tracking a role
+     token, so it enters at zero. */
+  "components/arcs/approach-figure.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
   "app/(marketing)/arcs/thoughtform/claude-workshop-corridor/claude-workshop.css": {
     tier: "content",
     content: { A: 0, B: 0, C: 0 },
