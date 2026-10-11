@@ -34,12 +34,15 @@
   display: none;
 }
 
+/* The column is the band between the rails. Its right edge is the band's,
+   where the page's About seats its diagram (the artifact page stops 36px
+   short of it). */
 .xb-in-frame .xb-col {
   inset: auto;
   top: var(--hud-rail-y-start);
   bottom: var(--hud-rail-y-end);
   left: var(--band-margin);
-  right: calc(var(--band-margin) + 36px);
+  right: var(--band-margin);
   width: auto;
   margin: 0;
 }

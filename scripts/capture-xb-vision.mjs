@@ -6,9 +6,12 @@
  * still: the stage pinned at the screen's top, no text under 12px (SVG
  * text measured after its scale), no SVG text cut by its drawing, and
  * PARITY with block 1 on the artifact page at the same viewport and the
- * same point of its runway: the column, the text column, the title, the
- * three steps, the drawing and the active step land on the same boxes
- * within 1px.
+ * same point of its runway: the text column, the title, the three steps and
+ * the active step land on the same boxes within 1px. The drawing is the
+ * one thing the owner asked to move (2026-10-11: "a bit to the right and a
+ * bit bigger", aligned like the About's diagram): its ink must be wider
+ * than block 1's, sit further right, and end on the band's right edge
+ * (within 16px), where the About's diagram ends. Also shoots the About.
  *
  *   node scripts/capture-xb-vision.mjs [--port 3003] [--out dir] [--theme dark|light]
  */
@@ -70,12 +73,21 @@ function read(rootSel) {
     stageTop: Math.round(root.querySelector(".xb-stage").getBoundingClientRect().top),
     on: [...root.querySelectorAll(".xbA__step")].findIndex((s) => s.hasAttribute("data-on")) + 1,
     boxes: {
-      col: box(".xb-col"),
       text: box(".xbA__text"),
       title: box(".xb-title"),
       steps: box(".xbA__steps"),
-      fig: box(".xbA__fig svg"),
     },
+    ink: (() => {
+      const g = root.querySelector(".xbA__fig svg > g").getBoundingClientRect();
+      return { left: g.left, right: g.right, width: g.width };
+    })(),
+    /* the band's right edge, resolved by layout (a custom property is a
+       string until something lays it out): the About's band padding */
+    bandRight: (() => {
+      const band = document.querySelector("#about > .arc-band");
+      if (!band) return NaN;
+      return band.getBoundingClientRect().right - parseFloat(getComputedStyle(band).paddingRight);
+    })(),
   };
 }
 
@@ -119,12 +131,29 @@ for (const [w, h] of SIZES) {
       if (!p || !q || p.some((v, i) => Math.abs(v - q[i]) > 1))
         problems.push(`${key} ${JSON.stringify(p)} against block 1's ${JSON.stringify(q)}`);
     }
+    if (k === STOPS.length - 1) {
+      if (!(a.ink.width > b.ink.width + 1)) problems.push(`drawing ${a.ink.width.toFixed(0)}px wide, block 1's ${b.ink.width.toFixed(0)}px`);
+      if (!(a.ink.right > b.ink.right + 1)) problems.push(`drawing ends at ${a.ink.right.toFixed(0)}, block 1's at ${b.ink.right.toFixed(0)}`);
+      if (!Number.isFinite(a.bandRight) || a.ink.right > a.bandRight + 1 || a.ink.right < a.bandRight - 16)
+        problems.push(`drawing ends at ${a.ink.right.toFixed(0)}, the band's edge is ${a.bandRight.toFixed(0)}`);
+    }
     if (problems.length) {
       failed++;
       console.log(`✗ ${w}x${h} stop ${k + 1} (step ${a.on})`);
       for (const p of problems.slice(0, 12)) console.log(`    ${p}`);
-    } else console.log(`✓ ${w}x${h} stop ${k + 1} (step ${a.on}) same boxes as block 1`);
+    } else
+      console.log(
+        `✓ ${w}x${h} stop ${k + 1} (step ${a.on}) text as block 1 · drawing ${a.ink.width.toFixed(0)}px to ${a.ink.right.toFixed(0)} (block 1: ${b.ink.width.toFixed(0)}px to ${b.ink.right.toFixed(0)}, band edge ${a.bandRight.toFixed(0)})`
+      );
   }
+  await page.evaluate(() => document.getElementById("about").scrollIntoView({ block: "start" }));
+  await page.waitForTimeout(1200);
+  const hasArt = await page.evaluate(() => !!document.querySelector("#about .voidwalker__orbit__svg"));
+  await page.screenshot({ path: `${OUT}/about-${THEME}-${w}x${h}.png` });
+  if (!hasArt) {
+    failed++;
+    console.log(`✗ ${w}x${h} the About does not draw the homepage's diagram`);
+  } else console.log(`✓ ${w}x${h} the About draws the homepage's diagram`);
   if (tops.some((t) => Math.abs(t) > 1)) {
     failed++;
     console.log(`✗ ${w}x${h} the stage did not pin at the top: ${tops.join(", ")}`);

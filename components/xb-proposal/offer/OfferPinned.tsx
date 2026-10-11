@@ -14,7 +14,18 @@ import { ASSEMBLY_VB, Assembly } from "./Assembly";
 const VB_W = ASSEMBLY_VB.w;
 const VB_H = ASSEMBLY_VB.h;
 
-export function OfferPinned({ step }: { step?: 1 | 2 | 3 }) {
+/* `viewBox` and `align` let a host frame the same drawing differently (the
+   X-Bionic proposal crops it to its ink and seats it on the band's right
+   edge, 2026-10-11); the lab passes neither and is unchanged. */
+export function OfferPinned({
+  step,
+  viewBox,
+  align = "xMidYMid meet",
+}: {
+  step?: 1 | 2 | 3;
+  viewBox?: string;
+  align?: string;
+}) {
   const fixed = step !== undefined;
   const runway = useRef<HTMLDivElement>(null);
   const [p, setP] = useState<number>(step ?? 1);
@@ -67,8 +78,8 @@ export function OfferPinned({ step }: { step?: 1 | 2 | 3 }) {
         </div>
         <div className="xbA__fig">
           <svg
-            viewBox={`0 0 ${VB_W} ${VB_H}`}
-            preserveAspectRatio="xMidYMid meet"
+            viewBox={viewBox ?? `0 0 ${VB_W} ${VB_H}`}
+            preserveAspectRatio={align}
             role="img"
             aria-label="The team, the layer and Claude Enterprise, drawn as one assembly"
           >

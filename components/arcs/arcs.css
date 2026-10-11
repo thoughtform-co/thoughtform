@@ -2251,7 +2251,9 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
 /* ── The About, the homepage's (ADR-133 U5) ────────────────────────────
    `portrait` with `layout: "orbit"`: the homepage's About on a proposal —
    the copy on the left (name, role, bio, meta cells), the portrait on the
-   right at the centre of the About drawing's rings, at 3:4 in grayscale.
+   right at the centre of the About drawing, at 3:4 in grayscale. The
+   drawing is the homepage's own component (`AboutOrbitArt`), styled by
+   landing.css's `.voidwalker__orbit*` rules (2026-10-11).
    Every colour is a rung of the ramp, so a light-locked page paints it. */
 .arc-about {
   display: grid;
@@ -2332,39 +2334,6 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   aspect-ratio: 1;
   margin: 0;
   justify-self: center;
-}
-.arc-about__rings {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.arc-about__rings circle {
-  fill: none;
-  stroke-width: 0.7;
-}
-.arc-about__rings circle[data-tone="ink"] {
-  stroke: var(--arc-ink-40);
-}
-.arc-about__rings circle[data-tone="rule"] {
-  stroke: var(--arc-rule);
-}
-.arc-about__rings circle[data-tone="gold"] {
-  stroke: var(--gold-line, #caa554);
-}
-.arc-about__rings line[data-tone="major"] {
-  stroke: var(--arc-ink-50);
-  stroke-width: 0.8;
-}
-.arc-about__rings line[data-tone="minor"] {
-  stroke: var(--arc-ink-40);
-  stroke-width: 0.5;
-}
-.arc-about__rings line[data-tone="spoke"] {
-  stroke: var(--gold-line, #caa554);
-  stroke-opacity: 0.4;
-  stroke-width: 0.5;
 }
 .arc-about__portrait {
   position: absolute;

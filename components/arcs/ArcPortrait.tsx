@@ -1,5 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
+import { AboutOrbitArt } from "@/components/landing/home-v2/about/AboutOrbitArt";
+
 import { ArcBeat } from "./ArcBeat";
 import { ArcDecodeTitle, ArcDecodeWord } from "./ArcDecodeText";
 import { ArcSectionHead } from "./ArcSectionHead";
@@ -78,31 +80,14 @@ export function ArcPortrait({ section, index, motion = "reveal" }: ArcPortraitPr
   );
 }
 
-/* The About drawing's rings (the homepage's `.voidwalker__orbit__svg`),
-   copied, never imported: six concentric rings on their dash ladder, a
-   stub at each cardinal and a finer one every fifteen degrees, and four
-   short spokes between the two gold rings. Static; nothing turns. */
-const RINGS = [
-  { r: 192, tone: "ink", dash: "1 7" },
-  { r: 172, tone: "rule" },
-  { r: 150, tone: "gold", dash: "2 8", o: 0.45 },
-  { r: 124, tone: "gold", o: 0.75 },
-  { r: 104, tone: "gold", dash: "1 3", o: 0.4 },
-  { r: 82, tone: "ink", dash: "1 4" },
-] as const;
-const TICKS = Array.from({ length: 24 }, (_, i) => i * 15);
-const polar = (deg: number, r: number) => {
-  const a = ((deg - 90) * Math.PI) / 180;
-  return [Math.round(r * Math.cos(a) * 100) / 100, Math.round(r * Math.sin(a) * 100) / 100];
-};
-
 /**
  * ArcPortraitOrbit — THE HOMEPAGE'S ABOUT, ON A PROPOSAL (ADR-133 U5, owner
  * 2026-09-29: "repurpose the About section from our homepage, with my picture
  * on the right side and the text on the left side, so it becomes uniform").
  * The copy column is the homepage's: the name as the title, the role as one
  * mono line, the bio, the meta cells. The portrait sits at the rings' centre
- * at 3:4 in grayscale, the homepage's own treatment.
+ * at 3:4 in grayscale, the homepage's own treatment, over the homepage's
+ * own orbit drawing (`AboutOrbitArt`, one component for both).
  *
  * ⚠ SERVER, NO STATE. On the ramp (ADR-077), so the light-locked proposals
  * paint it. Below 960px the two columns stack, the portrait first.
@@ -151,37 +136,10 @@ function ArcPortraitOrbit({ section, motion = "reveal" }: ArcPortraitProps) {
             </dl>
           </div>
           <figure className="arc-about__orbit arc-reveal" {...rung(motion, 0.2)}>
-            <svg className="arc-about__rings" viewBox="-200 -200 400 400" aria-hidden="true">
-              {RINGS.map((ring) => (
-                <circle
-                  key={ring.r}
-                  r={ring.r}
-                  data-tone={ring.tone}
-                  strokeDasharray={"dash" in ring ? ring.dash : undefined}
-                  strokeOpacity={"o" in ring ? ring.o : undefined}
-                />
-              ))}
-              {TICKS.map((deg) => {
-                const major = deg % 90 === 0;
-                const [x1, y1] = polar(deg, 192);
-                const [x2, y2] = polar(deg, major ? 178 : 184);
-                return (
-                  <line
-                    key={deg}
-                    x1={x1}
-                    y1={y1}
-                    x2={x2}
-                    y2={y2}
-                    data-tone={major ? "major" : "minor"}
-                  />
-                );
-              })}
-              {[0, 90, 180, 270].map((deg) => {
-                const [x1, y1] = polar(deg, 150);
-                const [x2, y2] = polar(deg, 82);
-                return <line key={`s${deg}`} x1={x1} y1={y1} x2={x2} y2={y2} data-tone="spoke" />;
-              })}
-            </svg>
+            {/* The drawing behind the portrait is the homepage's own (owner,
+                2026-10-11: "take the ones from the home page"): the same
+                component the homepage's About stage mounts. */}
+            <AboutOrbitArt />
             <div className="arc-about__portrait">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
