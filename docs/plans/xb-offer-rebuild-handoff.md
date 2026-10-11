@@ -8,7 +8,17 @@ The owner judged the Offering ("Where Thoughtform plugs in") and the Layer ("How
 
 ## Where it stands
 
-**Section 1 (the offering) is built in three directions and is waiting for the owner's pick. Section 2 is not started.** The brief says to start with section 1. Section 2 has to reuse whichever section 1 drawing is chosen.
+**Section 1 (the offering) is built in three directions and is waiting for the owner's pick. Section 2 (the layer) is built in three directions too, all on `LayerSlab`, and is waiting for its pick.** Section 2 was started on the assumption that section 1 goes to A (the pinned build); C shares the same isometric slab, B would need section 2 redrawn flat.
+
+Section 2's directions (`?d=2a|2b|2c`, code in `components/xb-proposal/layer/`, sheet `layer/layer.css`):
+
+| Direction                  | What it is                                                                                                                                                                                                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **2A · Pinned, continued** | Section 1 A's end state, mirrored (drawing left, words right). Step 1 the team writes into the seated layer (adoption); step 2 the layer lifts and opens into Context, Skills, Evals; step 3 it closes, an agent runs across the board to the tools (automation) and the team's plates rise: upstream. |
+| **2B · Opened**            | The exploded slab centred, one leader per stratum on each side: left where it comes from (adoption), right what an agent can then do (automation).                                                                                                                                                     |
+| **2C · Growth**            | One ruled frame over time: the slab gains a stratum per step (Week 1, Week 2, Quarter 1), a gold step line under it rises (an agent runs minutes, an hour, a day), and the bottom row moves the team from making the ads to deciding what to test.                                                     |
+
+The handover ladder from the plan was not built: the ladder was rejected on `/test/x-bionic-core` the same day.
 
 | Direction            | What it is                                                                                                                                                                                                                                                                                                                                                | Brief reference                                 |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -45,12 +55,12 @@ http://localhost:3003/test/xb-offer-rebuild?d=c
 
 ## Next steps
 
-1. Get the owner's pick for section 1.
-2. Build section 2 in two or three directions on the same `LayerSlab`. Starting points from the plan:
+1. Get the owner's pick for section 1 and for section 2 (stills: `layer-contact-*.png` beside the offer's).
+2. Done: section 2 built in three directions on `LayerSlab` (see above). The plan's starting points were:
    - **Opened slab:** the section 1 slab pulled apart into its three strata, with real examples on leader lines (product facts, brief to variants, product accuracy …).
    - **Progression:** Week 1 → Quarter 2, the slab gaining strata step by step, with a measured line beneath for how long an agent runs on its own, rising. It reads as a progression, never a loop.
    - **Handover ladder:** the team's jobs down the side, and across them the share moving from "the team" to "an agent, checked against the evals", in one ruled frame with the slab as its head.
-3. Add `section-2` shots to `scripts/capture-xb-rebuild.mjs` and keep the gate green at 1280×720 and 1470×830.
+3. Done: section 2 shots are in `scripts/capture-xb-rebuild.mjs` (`--only 2a,2b,2c`); the gate is green at 1280×720 and 1470×830.
 4. Only then wire the chosen pair into the real proposal page.
 
 ## What was learned on the way

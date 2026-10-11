@@ -35,17 +35,19 @@ interface LayerSlabProps {
   presence?: number;
   /** Flat marks on the top face: the slab's own name, etched. */
   etch?: boolean;
+  /** How many strata are written yet, base first (section 2's growth). */
+  count?: 1 | 2 | 3;
 }
 
-export function LayerSlab({ iso, g, presence = 1, etch = true }: LayerSlabProps) {
-  const boxes = slabBoxes(g);
+export function LayerSlab({ iso, g, presence = 1, etch = true, count = 3 }: LayerSlabProps) {
+  const boxes = slabBoxes(g).slice(0, count);
   const ghost = 1 - presence;
   return (
     <g>
       {ghost > 0.001 && (
         <g opacity={ghost * 0.55}>
           <polygon
-            points={boxFaces(iso, { ...boxes[0], z1: boxes[2].z1 }).outline}
+            points={boxFaces(iso, { ...boxes[0], z1: boxes[boxes.length - 1].z1 }).outline}
             fill="none"
             stroke={GOLD}
             strokeWidth={1}
@@ -81,7 +83,7 @@ export function LayerSlab({ iso, g, presence = 1, etch = true }: LayerSlabProps)
               </g>
             );
           })}
-          {etch && <SlabEtch iso={iso} b={boxes[2]} />}
+          {etch && <SlabEtch iso={iso} b={boxes[boxes.length - 1]} />}
         </g>
       )}
     </g>

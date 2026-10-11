@@ -1,0 +1,88 @@
+/* Section 2 of the X-Bionic proposal: the layer, opened up. Reads the
+   tokens and the frame from xb.css. */
+
+/* ================= Section 2 · A · the pinned build, mirrored ================= */
+
+.xbA--flip {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+}
+
+/* ================= Section 2 · B · the opened slab ================= */
+
+.xbS2B {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+}
+
+.xbS2B__head,
+.xbS2C__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 48px;
+}
+
+.xbS2B__title,
+.xbS2C__title {
+  margin-top: 14px;
+  white-space: nowrap;
+}
+
+.xbS2B__intro,
+.xbS2C__intro {
+  max-width: 420px;
+}
+
+.xbS2B__fig {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.xbS2B__fig svg {
+  width: 100%;
+  height: 100%;
+  max-height: 440px;
+}
+
+/* ================= Section 2 · C · the layer, growing ================= */
+
+.xbS2C {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+}
+
+.xbS2C__frame {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.xbS2C__frame > .xb-frame__in {
+  flex: 1 1 auto;
+  display: flex;
+  padding: 8px 4px;
+}
+
+.xbS2C__frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100svh - 128px - 170px);
+}
+
+/* The frame's drawing is width-bound and renders a little under 1:1 at
+   1280, so its type is set one step up to land at 12px or more. */
+.xb .xbS2C svg text {
+  font-size: 13px;
+}
+
+.xb .xbS2C svg .xb-t-sans {
+  font-size: 16px;
+}

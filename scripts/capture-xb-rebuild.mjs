@@ -10,7 +10,7 @@
  *   - no text box sits within 12px of a ruled frame's edge.
  *
  * Usage (dev server already running):
- *   node scripts/capture-xb-rebuild.mjs [--port 3003] [--only a,b,c]
+ *   node scripts/capture-xb-rebuild.mjs [--port 3003] [--only a,b,c,2a,2b,2c]
  */
 
 import { chromium } from "@playwright/test";
@@ -24,7 +24,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/xbionic-proposal/rebuild-2026-10-11");
-const ONLY = argOf("--only", "a,b,c").split(",");
+const ONLY = argOf("--only", "a,b,c,2a,2b,2c").split(",");
 const SIZES = [
   [1280, 720],
   [1470, 830],
@@ -36,6 +36,11 @@ const SHOTS = [
   { id: "a", name: "offer-a-s3", q: "d=a&step=3" },
   { id: "b", name: "offer-b", q: "d=b" },
   { id: "c", name: "offer-c", q: "d=c" },
+  { id: "2a", name: "layer-a-s1", q: "d=2a&step=1" },
+  { id: "2a", name: "layer-a-s2", q: "d=2a&step=2" },
+  { id: "2a", name: "layer-a-s3", q: "d=2a&step=3" },
+  { id: "2b", name: "layer-b", q: "d=2b" },
+  { id: "2c", name: "layer-c", q: "d=2c" },
 ].filter((s) => ONLY.includes(s.id));
 
 function gate() {
