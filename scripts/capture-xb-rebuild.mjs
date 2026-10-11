@@ -24,7 +24,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/xbionic-proposal/rebuild-2026-10-11");
-const ONLY = argOf("--only", "a,b,c,2a,2b,2c").split(",");
+const ONLY = argOf("--only", "a,b,c,2a,2b,2c,p1,p2,p3").split(",");
 const SIZES = [
   [1280, 720],
   [1470, 830],
@@ -41,6 +41,9 @@ const SHOTS = [
   { id: "2a", name: "layer-a-s3", q: "d=2a&step=3" },
   { id: "2b", name: "layer-b", q: "d=2b" },
   { id: "2c", name: "layer-c", q: "d=2c" },
+  { id: "p1", name: "substrate-p1", q: "d=p1" },
+  { id: "p2", name: "substrate-p2", q: "d=p2" },
+  { id: "p3", name: "substrate-p3", q: "d=p3" },
 ].filter((s) => ONLY.includes(s.id));
 
 function gate() {

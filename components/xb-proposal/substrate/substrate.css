@@ -1,0 +1,103 @@
+/* The substrate permutations: one visual for "where Thoughtform plugs in",
+   three ways. Reads the tokens and the stage from xb.css. */
+
+/* P1: text left, the sheets right */
+.xbS {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  column-gap: 40px;
+  height: 100%;
+}
+
+.xbS__text {
+  align-self: center;
+}
+
+.xbS__text .xb-title {
+  margin-top: 18px;
+}
+
+.xbS__intro {
+  margin-top: 22px;
+}
+
+.xbS__steps {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  border-bottom: 1px solid var(--xb-line);
+}
+
+.xbS__steps li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  padding: 12px 0;
+  border-top: 1px solid var(--xb-line);
+  font-size: 18px;
+}
+
+.xbS__n {
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--xb-gold);
+  padding-top: 4px;
+}
+
+.xbS__fig {
+  min-height: 0;
+  display: flex;
+}
+
+.xbS__fig svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* P2, P3: the head above, the drawing below */
+.xbP {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.xbP__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 48px;
+}
+
+.xbP__title {
+  margin-top: 14px;
+  white-space: nowrap;
+}
+
+.xbP__intro {
+  max-width: 420px;
+}
+
+.xbP__fig {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.xbP__fig svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* The drawings are height-bound and render a little under 1:1 at 1280, so
+   their type is set one step up to land at 12px or more. */
+.xb .xbP svg text,
+.xb .xbS svg text {
+  font-size: 13.5px;
+}
+
+.xb .xbP svg .xb-t-sans,
+.xb .xbS svg .xb-t-sans {
+  font-size: 16px;
+}
