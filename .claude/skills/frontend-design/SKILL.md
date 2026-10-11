@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: Guides front-end design decisions for Thoughtform.co, focusing on component aesthetics, responsive design, and maintaining the existing HUD aesthetic while avoiding generic AI-generated patterns. Activates when optimizing front-end, designing components, or improving responsive behavior.
+description: Guides front-end design decisions for Thoughtform.co. For a NEW section, visual or page it starts from the brief and the reference sites, builds self-contained with brand tokens only, and judges stills by eye; for changes to an existing surface it follows that surface's rulings. Activates when designing a section or component, exploring directions, or improving responsive behavior.
 ---
 
 # Frontend Design Skill for Thoughtform.co
@@ -23,15 +23,24 @@ Activate this skill when:
 
 ### Core Principles
 
-1. **Build on Existing Patterns**: Always reference existing components and styles before creating new ones
-2. **HUD Aesthetic**: Maintain the futuristic, technical HUD (Heads-Up Display) aesthetic with:
-   - Corner brackets and frame elements
-   - Subtle grid overlays
-   - Monospace typography for technical elements
-   - Gold/Dawn/Void color palette
-3. **Avoid AI Slop**: Reject generic templates, over-designed components, or patterns that don't fit the brand
-4. **Mobile-First**: Design for mobile, enhance for desktop
-5. **Performance-Aware**: Consider rendering performance, especially with animations and 3D elements
+1. **New composition: brief and references first.** A new section, visual or
+   page starts from its brief and the reference sites, not from this repo's
+   existing components, ADRs or `sentinel/SURFACES.md`. Build it in a
+   self-contained folder that imports no house stylesheet, with the brand
+   tokens below as the only shared layer. Reusing an existing component for a
+   new composition is how earlier rounds kept landing back on the same plates,
+   consoles and small labels (owner, 2026-10-11).
+2. **Existing surface: follow its rulings.** Changing a page that already
+   ships means reading its entry in `sentinel/SURFACES.md` and its rule file.
+3. **One main object, then words.** Draw the one object that carries the
+   idea first; label it with as few words as it needs. Large readable type:
+   titles about 48px regular, body 16 to 18px, labels at least 12px.
+4. **Judge by eye before measuring.** Two or three directions as stills at
+   1280×720 and 1470×830. Fit checks (type floors, overlap, nothing crossing
+   the rails) come after the eye, not instead of it.
+5. **Avoid AI slop**: no rows of three identical cards, no stacked plates, no
+   one huge word or number, no first person, no slogans.
+6. **Mobile-first and performance-aware** for anything that ships.
 
 ## Design System Reference
 
@@ -70,10 +79,10 @@ Activate this skill when:
 
 ### Component Design
 
-1. **Check Existing Components First**
-   - Search `components/ui/` for similar components
-   - Review `app/styles/components.css` for styling patterns
-   - Reference Astrogation components for complex UI patterns
+1. **Existing surfaces only: check existing components first**
+   - When CHANGING a shipped surface, search `components/ui/` and that
+     surface's folder for what it already uses
+   - For a NEW composition, skip this step (principle 1 above)
 
 2. **Maintain Visual Consistency**
    - Use CSS variables for colors (never hardcode)

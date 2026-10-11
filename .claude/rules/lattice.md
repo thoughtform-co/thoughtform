@@ -1,3 +1,17 @@
+---
+paths:
+  - "app/styles/lattice.css"
+  - "components/lattice/**"
+  - "lib/lattice/**"
+  - "app/(internal)/test/lattice/**"
+  - "scripts/capture-lattice.mjs"
+  - "scripts/lattice-round.mjs"
+  - "scripts/design-eval/awwwards.mjs"
+  - "tests/lib/lattice-*.test.ts"
+  - "tests/visual/lattice-*.spec.ts"
+description: The lattice: grid, rungs, chamfer ladder, frame recipe (ADR-149)
+---
+
 # Rule: the lattice (ADR-149)
 
 The brand system grid: the floor under the site's three grammars (the

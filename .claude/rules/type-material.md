@@ -1,3 +1,14 @@
+---
+paths:
+  - "app/styles/variables.css"
+  - "components/**/*.css"
+  - "app/**/*.css"
+  - "tests/lib/type-material-tokens.test.ts"
+  - "scripts/design-eval/mechanical.mjs"
+  - "lib/services-ring/ringType.ts"
+description: Tracking and weight tokens by role, and their ratchet (ADR-092)
+---
+
 # Rule: the type ramps by role (ADR-092)
 
 Four tracking rungs and a weight ceiling, declared once on `:root`, read by every

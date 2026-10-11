@@ -1,3 +1,14 @@
+---
+paths:
+  - "app/(internal)/test/interface-kit/**"
+  - "lib/interface-kit/**"
+  - "scripts/capture-interface-kit.mjs"
+  - ".claude/skills/thoughtform-design/eval/armada/**"
+  - ".claude/skills/thoughtform-design/eval/control/**"
+  - ".claude/skills/thoughtform-design/eval/waves/**"
+description: The interface kit lab and its armada ship (ADR-091)
+---
+
 # Rule: the interface kit
 
 The design grid and the proof panel recomposed on it, plus the armada ship that
