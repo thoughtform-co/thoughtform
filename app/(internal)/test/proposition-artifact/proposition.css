@@ -93,3 +93,41 @@
 .xb.pa-xb#p1-sheets .xbS {
   grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
 }
+
+/* Each block names itself top-left in the band, so a still can be referred
+   to by its number and name (owner, 2026-10-11). Lab chrome: drawn on the
+   stage that pins, so it stays put through a pinned block's scroll. */
+#s1-pinned .xb-stage::before,
+#halyard-a .hy-stage::before,
+#p1-sheets .xb-stage::before,
+#p3-board .xb-stage::before,
+#s2-pinned .xb-stage::before {
+  position: absolute;
+  z-index: 5;
+  top: calc(var(--hud-rail-y-start) - 36px);
+  left: var(--band-margin);
+  padding: 5px 9px;
+  border: 1px solid rgba(202, 165, 84, 0.45);
+  background: #0a0908;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #caa554;
+}
+#s1-pinned .xb-stage::before {
+  content: "1 · S1 · A · pinned build";
+}
+#halyard-a .hy-stage::before {
+  content: "2 · Halyard · A · assembly";
+}
+#p1-sheets .xb-stage::before {
+  content: "3 · P1 · exploded sheets";
+}
+#p3-board .xb-stage::before {
+  content: "4 · P3 · the board";
+}
+#s2-pinned .xb-stage::before {
+  content: "5 · S2 · A · pinned build";
+}
