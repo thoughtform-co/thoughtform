@@ -17,7 +17,7 @@ const GOLD = "#caa554";
 const TEXT = "#ebe3d6";
 const VB_W = 600;
 const VB_H = 592;
-const LABEL_X = 452;
+const LABEL_X = 440;
 
 export function OfferPinned({ step }: { step?: 1 | 2 | 3 }) {
   const fixed = step !== undefined;

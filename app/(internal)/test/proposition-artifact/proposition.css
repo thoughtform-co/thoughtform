@@ -1,0 +1,95 @@
+/* /test/proposition-artifact: the xb-proposal kit's stages inside the real
+   HUD frame. The kit draws its own stand-in rails and route tag; here the
+   shipped frame is present, so those go, the stage's ground goes clear, and
+   the column takes the same box as halyard's (the band between the rails,
+   the rail's vertical extent), so every block shares one geometry. */
+
+.pa-xb {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+.pa-xb .xb-stage {
+  background: transparent;
+}
+
+.pa-xb .xb-rail,
+.pa-xb .xb-corner,
+.pa-xb .xb-route {
+  display: none;
+}
+
+.pa-xb .xb-col {
+  inset: auto;
+  top: var(--hud-rail-y-start);
+  bottom: var(--hud-rail-y-end);
+  left: var(--band-margin);
+  right: calc(var(--band-margin) + 36px);
+  width: auto;
+  margin: 0;
+}
+
+.pa-block {
+  position: relative;
+}
+
+/* the page's index: one anchor per block, bottom centre */
+.pa-index {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 60;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pa-index a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  background: #0a0908;
+  color: rgba(235, 227, 214, 0.46);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pa-index a span {
+  color: #caa554;
+}
+
+.pa-index a:hover {
+  border-color: rgba(235, 227, 214, 0.6);
+  color: #ebe3d6;
+}
+
+/* In the HUD frame's box the kit's drawings render at about 0.9 of their
+   size at 1280×720, so their type is set one step up to land at 12px. */
+.xb.pa-xb svg text {
+  font-size: 13.5px;
+}
+
+.xb.pa-xb svg .xb-t-sans {
+  font-size: 16px;
+}
+
+/* The two one-screen drawings are height-bound in the frame's shorter box
+   (about 0.84 at 1280×720): one more step. */
+.xb.pa-xb#p1-sheets svg text,
+.xb.pa-xb#p3-board svg text {
+  font-size: 14.5px;
+}
+
+/* P1 is width-bound in the frame's box: a narrower text column gives the
+   sheets the room their labels need at 1280×720. */
+.xb.pa-xb#p1-sheets .xbS {
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+}

@@ -230,7 +230,7 @@ export function SubstrateSheets() {
               ))}
             </Sheet>
             <Sheet y={CL_Y[1]} strong>
-              <SheetTag text="CLAUDE ENTERPRISE" w={176} />
+              <SheetTag text="CLAUDE ENTERPRISE" w={192} />
               {["AGENTS", "MODELS", "CHAT", "PROJECTS"].map((t, i) => (
                 <g key={t}>
                   <rect
