@@ -1,6 +1,6 @@
 # X-Bionic proposal: handoff (2026-10-10)
 
-Written 2026-10-10 for the owner's move to his Windows computer. Everything a session on another machine needs to carry on the X-Bionic proposal is here or at the paths named. The goal, in the owner's words: "this is a proposal. It should really form a cohesive narrative", and the page becomes the template every later proposal is cut from.
+Written 2026-10-10 for the owner's move to his Windows computer; updated 2026-10-11, when the configuration section was drawn, picked and put on the page. Everything a session on another machine needs to carry on the X-Bionic proposal is here or at the paths named. The goal, in the owner's words: "this is a proposal. It should really form a cohesive narrative", and the page becomes the template every later proposal is cut from.
 
 - Page: `http://localhost:3003/arcs/x-bionic/proposal` (read the port off the running server)
 - Content: `lib/arcs/content/x-bionic-proposal.ts`
@@ -28,27 +28,27 @@ ADR-155's lab was built on `main`, which did not have Line A, so its `PA` contro
 
 **Where they collided.** `git merge origin/main` into this branch conflicted in ten files: `.claude/rules/arcs.md`, `components/arcs/{ArcCrew,ArcInstrument,ArcJob}.tsx`, `components/arcs/leverage.css`, `lib/arcs/content/shared/{jobs,loopProof}.ts`, `lib/arcs/content/x-bionic-proposal.ts`, `lib/arcs/types.ts`, `tests/lib/arcs-registry.test.ts`. Most are both sides adding to the same place (both added a crew `layout`: `"case"` here, `"returns"` there), so a merge can keep both as options. Which one the page uses is the owner's call, per beat:
 
-| Beat                                  | Line A (this branch)                                  | Line B (main)                                                                                |
-| ------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| The jobs                              | brief, proof, return on the gold band (U4)            | the mark head (`job.top: "mark"`), still a lab direction                                     |
-| What it returned at Loop              | the case card, a lane per workstream (U5)             | the ledger of four returns, still a lab direction                                            |
-| The engine                            | the layer opened (U6), live                           | pinned, nine steps (`instrument.pin`), still a lab direction                                 |
-| The approach (the configuration beat) | the eight-step outline below, approved, not drawn yet | the WRITTEN stack (`PF` against `PG`), and the adoption-flow lab's four options, none picked |
-| First person                          | swept, own wording                                    | swept, and banned by `PROPOSAL_VOICE_BANS`; keep both sweeps and the ban                     |
+| Beat                                  | Line A (this branch)                                                              | Line B (main)                                                                                                            |
+| ------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| The jobs                              | brief, proof, return on the gold band (U4)                                        | the mark head (`job.top: "mark"`), still a lab direction                                                                 |
+| What it returned at Loop              | the case card, a lane per workstream (U5)                                         | the ledger of four returns, still a lab direction                                                                        |
+| The engine                            | the layer opened (U6), live                                                       | pinned, nine steps (`instrument.pin`), still a lab direction                                                             |
+| The approach (the configuration beat) | the eight-step outline below, drawn as one run, picked "Whole" (11 October), live | the WRITTEN stack and the plates, lab values (`approach=stack`, `approach=plates`); the adoption-flow lab's four options |
+| First person                          | swept, own wording                                                                | swept, and banned by `PROPOSAL_VOICE_BANS`; keep both sweeps and the ban                                                 |
 
-**Merged on 2026-10-10, keeping both lines** (`main` at `e6e35fd` into this branch). The page is Line A: the gold band, the case card, the layer opened, and the owner's three lines each alone on a screen. Line B's directions are the knobs of `http://localhost:3003/test/proposal-system`, whose first values now name Line A (`interstitial: callout`, `jobHead: band`, `return: case`, `engine: layer`), so `PA` is this page by reference and the test pins that. Line B's production changes came in whole: `PROPOSAL_VOICE_BANS`, the leverage drawn by `StackFigure`, the slab's derived paths, Pandora's sweep, `disciplines.ts`, `ArcReturn`. A `face` and a `pin` never share a section, so the pinned engine drops the face. Pandora renders identical to `main`: its markup and every beat's height were compared on two servers.
+**Merged on 2026-10-10, keeping both lines** (`main` at `e6e35fd` into this branch). The page is Line A: the gold band, the case card, the layer opened, and the owner's three lines each alone on a screen. Line B's directions are the knobs of `http://localhost:3003/test/proposal-system`, whose first values now name Line A (`interstitial: callout`, `jobHead: band`, `return: case`, `engine: layer`), so `PA` is this page by reference and the test pins that. Line B's production changes came in whole: `PROPOSAL_VOICE_BANS`, the leverage drawn by `StackFigure`, the slab's derived paths, Pandora's sweep, `disciplines.ts`, `ArcReturn`. A `face` and a `pin` never share a section, so the pinned engine drops the face. Pandora renders identical to `main`: its markup and every beat's height were compared on two servers. Since 11 October the approach is the run (`approach: run`) with the two lines after it (`upstream: lines`), [ADR-155 U1](../../sentinel/decisions/155-the-proposal-as-a-system.md).
 
 The rule for the next time two sessions work one brief: never resolve it by picking a side in a conflict hunk. That is how one session's ruling undoes another's.
 
 ## The section order on this branch
 
-`about` · `vision` (leverage, "How intelligence should take part in the work.") · `adoption` (handoff, "How adoption and automation connect.") · `proof-loop` (interstitial, the AI-first quote alone) · the four Loop cards (`practice-*`) · `return` · `proof-brands` (interstitial) · the four jobs (`job-production`, `job-ops`, `job-review`, `job-strategy`) · `offer` (interstitial) · `engine` (the plugin) · `phases` ("The two weeks.") · `how-we-work` ("Who takes part.") · `pricing` ("The fee.") · `close`.
+`about` · `vision` (leverage, "How intelligence should take part in the work.") · `adoption` (handoff, "How adoption and automation connect.", the run) · `upstream` (horizon, "Longer tasks for Claude, upstream time for your team.", the two lines) · `proof-loop` (interstitial, the AI-first quote alone) · the four Loop cards (`practice-*`) · `return` · `proof-brands` (interstitial) · the four jobs (`job-production`, `job-ops`, `job-review`, `job-strategy`) · `offer` (interstitial) · `engine` (the plugin) · `phases` ("The two weeks.") · `how-we-work` ("Who takes part.") · `pricing` ("The fee.") · `close`.
 
 The four workstreams, everywhere on the page: **Creative production, Creative ops, Creative review, Creative strategy.**
 
-## The configuration section: approved, not drawn
+## The configuration section: drawn, picked, on the page
 
-The owner approved this outline on 2026-10-10 ("Draw it", 19:36Z). It replaces what the `adoption` beat draws today. Verbatim:
+The owner approved this outline on 2026-10-10 ("Draw it", 19:36Z). It was drawn as one run (`components/arcs/ArcConfigRun.tsx`) and shown three ways: whole on one screen, lit part by part on a pinned runway, and stepped by a rail over the run. On 2026-10-11 he picked "Whole" ([ADR-155 U1](../../sentinel/decisions/155-the-proposal-as-a-system.md), commit `a04607b`); the other two readings were deleted. Steps 1 to 6 are the `adoption` beat (`handoff.run`), and steps 7 and 8 are the `upstream` beat right after it. The outline, verbatim:
 
 1. It opens on the same "Your layer" from the vision section, so the reader recognises it, with the four workstreams on it: Creative production, Creative ops, Creative review and Creative strategy.
 2. It then follows one workstream down. Creative production holds jobs, and ads design is the one worked through, because the first phase starts there.
@@ -64,8 +64,8 @@ What the owner has said about drawing it (2026-10-10):
 - The leitmotif is the particle-system diagrams. No flat or stock-looking icons ("an utter regression").
 - Creative production is the overarching workflow; ads design sits within it. Inputs and workstreams are never mixed in one hub ("1A hub … doesn't make sense").
 - The long-horizon drawing is two lines, not three ("1B … two lines instead of three"). "Many strands, one line" is a maybe.
-- Agree the structure in words first (done: the outline above), then build two or three options on the live page with its own components, and check every still at 1280x720 and 1470x830.
-- Its likely starting points are already on `main`: the adoption-flow lab and ADR-155's WRITTEN stack. Read both before drawing a fourth version.
+- Agree the structure in words first, then build two or three options on the live page with its own components, and check every still at 1280x720 and 1470x830. Done for this section: three readings, one picked.
+- A run line is at most 76 characters (`tests/lib/proposal-system.test.ts`): shorten the line, never the cap.
 
 ## The owner's rules for this page
 
@@ -81,11 +81,13 @@ What the owner has said about drawing it (2026-10-10):
 
 - At 1280x720, `vision` runs 12px (21 before the merge brought in the new stack) and `pricing` 22px past one screen by content bottom. Every other beat fits; `engine` fits at both laptop sizes and on the phone. Measure with `node scripts/measure-arc-beats.mjs --vp 1280x720` (and `--vp 1470x830`, `--theme light`).
 - ADR-153 U5 and U6 list what they leave open, among them the ops lane drawing Loop's one copy editor.
+- The two lines' title, "Longer tasks for Claude, upstream time for your team.", wraps to three lines at 1280x720, where a title's budget is two. It is copy, so it is the owner's call.
+- In the run, the two jobs beside Ads design ("Product imagery", "Motion") are placeholders until the jobs' pass names them, and the copy editor and the product designer who write the checks are named only in the drawing's alt text.
 - `npm run lint` on `main` was already at 338 warnings against a 337 cap on 2026-10-10. That red is not from this branch.
 
 ## Stills
 
-The stills from this work are in the Claude project's files, under `xbionic-proposal/` (`job-cards/`, `loop-return/`, `engine/live/`, `explorations/`). They open from the project in the Claude app; they are not in the repo.
+The stills from this work are in the Claude project's files, under `xbionic-proposal/` (`job-cards/`, `loop-return/`, `engine/live/`, `configuration/`, `explorations/`). They open from the project in the Claude app; they are not in the repo.
 
 ## Picking it up on another machine
 
@@ -100,7 +102,7 @@ npm run dev
 Verifying:
 
 ```bash
-npx vitest run tests/lib/arc-plugin-layer.test.ts tests/lib/arcs-registry.test.ts tests/lib/instrument-record.test.ts
+npx vitest run tests/lib/arc-plugin-layer.test.ts tests/lib/arcs-registry.test.ts tests/lib/instrument-record.test.ts tests/lib/proposal-system.test.ts
 npm run verify
 node scripts/measure-arc-beats.mjs --vp 1280x720
 node scripts/measure-arc-beats.mjs --path /arcs/pandora/proposal   # must not move
