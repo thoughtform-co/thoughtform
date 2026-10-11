@@ -20,7 +20,7 @@ const SIZES = [
   [1280, 720],
   [1470, 830],
 ];
-const BLOCKS = ["s1-pinned", "halyard-a", "p1-sheets", "p3-board", "s2-pinned"];
+const BLOCKS = ["s1-pinned", "halyard-a", "p1-sheets", "p3-board", "s2-pinned", "p4-hero"];
 
 function gate(id) {
   const out = [];

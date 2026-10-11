@@ -6,6 +6,7 @@ import { OfferPinned } from "@/components/xb-proposal/offer/OfferPinned";
 import { OfferSchematic } from "@/components/xb-proposal/offer/OfferSchematic";
 import { Ready } from "@/components/xb-proposal/Ready";
 import { SubstrateBoard } from "@/components/xb-proposal/substrate/SubstrateBoard";
+import { SubstrateHero } from "@/components/xb-proposal/substrate/SubstrateHero";
 import { SubstrateFrontal } from "@/components/xb-proposal/substrate/SubstrateFrontal";
 import { SubstrateSheets } from "@/components/xb-proposal/substrate/SubstrateSheets";
 
@@ -16,7 +17,7 @@ import "@/components/xb-proposal/substrate/substrate.css";
 /* The X-Bionic proposal's two core sections, rebuilt from the 2026-10-11
    brief. Section 1 in three directions (`?d=a|b|c`), section 2 in three
    (`?d=2a|2b|2c`), and the substrate visual in three permutations
-   (`?d=p1|p2|p3`); `&step=1|2|3` fixes a pinned direction's move for a
+   (`?d=p1|p2|p3|p4`); `&step=1|2|3` fixes a pinned direction's move for a
    still. With no `d`, every direction runs down the page, section 1 first. */
 
 type Step = 1 | 2 | 3;
@@ -40,6 +41,7 @@ export default async function XbOfferRebuildPage({
       {(!d || d === "p1") && <SubstrateSheets />}
       {(!d || d === "p2") && <SubstrateFrontal />}
       {(!d || d === "p3") && <SubstrateBoard />}
+      {(!d || d === "p4") && <SubstrateHero />}
     </main>
   );
 }

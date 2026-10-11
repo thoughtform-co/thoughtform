@@ -9,6 +9,7 @@ import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
 import { LayerPinned } from "@/components/xb-proposal/layer/LayerPinned";
 import { OfferPinned } from "@/components/xb-proposal/offer/OfferPinned";
 import { Ready } from "@/components/xb-proposal/Ready";
+import { SubstrateHero } from "@/components/xb-proposal/substrate/SubstrateHero";
 import { SubstrateBoard } from "@/components/xb-proposal/substrate/SubstrateBoard";
 import { SubstrateSheets } from "@/components/xb-proposal/substrate/SubstrateSheets";
 
@@ -25,6 +26,8 @@ import { HudFrame } from "../hud-panel-lab/HudFrame";
  *   3  xb-offer-rebuild · P1, the exploded sheets
  *   4  xb-offer-rebuild · P3, the board
  *   5  xb-offer-rebuild · S2 A, the pinned build continued (section 2)
+ *   6  xb-offer-rebuild · P4, Unsiloed's hero, the team's raw work
+ *      written into one gold panel
  *
  * The two labs stay as they are; this page only mounts their components.
  */
@@ -34,6 +37,7 @@ export const BLOCKS = [
   { id: "p1-sheets", n: "3", short: "P1", label: "P1 · exploded sheets" },
   { id: "p3-board", n: "4", short: "P3", label: "P3 · the board" },
   { id: "s2-pinned", n: "5", short: "S2 A", label: "S2 · A · pinned build" },
+  { id: "p4-hero", n: "6", short: "P4", label: "P4 · Unsiloed hero" },
 ] as const;
 
 export function PropositionShell({ hudHtml, bodyClass }: { hudHtml: string; bodyClass: string }) {
@@ -72,6 +76,9 @@ export function PropositionShell({ hudHtml, bodyClass }: { hudHtml: string; body
       </div>
       <div className="xb pa-xb" id="s2-pinned">
         <LayerPinned />
+      </div>
+      <div className="xb pa-xb" id="p4-hero">
+        <SubstrateHero />
       </div>
 
       <nav className="pa-index" aria-label="Blocks on this page">
