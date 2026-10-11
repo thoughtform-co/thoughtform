@@ -1,7 +1,7 @@
 import type { ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
+import { ArcAssemblyBuild } from "./ArcAssemblyBuild";
 import { ArcBeat } from "./ArcBeat";
-import { ArcConfigFigure } from "./ArcConfigFigure";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcVision } from "./ArcVisionFigure";
 import { rung } from "./arcMotion";
@@ -33,12 +33,12 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
      team on the stack, or three phases read down. An opt-in field, as the
      handoff's `run` is; production sets none and draws the console below. */
   if (section.figure) return <ArcVision section={section} index={index} motion={motion} />;
-  const { stack, note, uses, console: con, readout } = section;
+  const { stack, note, uses, console: con, readout, build } = section;
   return (
     <ArcBeat
       id={section.id}
       kind="leverage"
-      className="arc-section arc-sec arc-sec--leverage"
+      className={`arc-section arc-sec arc-sec--leverage${build ? " arc-sec--lev-build" : ""}`}
       ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
       motion={motion}
     >
@@ -50,7 +50,10 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           sectionId={section.id}
           motion={motion}
         />
-        <div className="arc-lev arc-plate arc-reveal" {...rung(motion, 0.14)}>
+        <div
+          className={`arc-lev arc-plate arc-reveal${build ? " arc-lev--build" : ""}`}
+          {...rung(motion, 0.14)}
+        >
           <div className="arc-lev__bar">
             <p className="arc-lev__sys">
               <span className="arc-lev__sys-key">SYS</span>
@@ -63,10 +66,10 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           </div>
           <div className="arc-lev__split">
             <div className="arc-lev__idea">
-              {section.idea ? (
-                /* The configuration plugged into the host and used by the
-                   team (owner, 2026-10-11), in place of the stack. */
-                <ArcConfigFigure idea={section.idea} id={section.id} />
+              {build ? (
+                /* S1 A, the pinned build (owner, 2026-10-11), in place of
+                   the stack and the note: the lab's drawing, imported. */
+                <ArcAssemblyBuild label={build.alt} />
               ) : (
                 <>
                   {/* The stack, the page's one object (the proposal system,
@@ -123,6 +126,8 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
           </dl>
         </div>
       </div>
+      {/* The pinned build's runway: the band holds while this scrolls. */}
+      {build && <div className="arc-lev__run" aria-hidden="true" />}
     </ArcBeat>
   );
 }

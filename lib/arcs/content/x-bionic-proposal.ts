@@ -174,16 +174,11 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         label: "What Thoughtform adds",
         line: "The first layer, written with your team in your Claude and handed over with an owner per workstream.",
       },
-      // The left cell drawn as the configuration (owner, 2026-10-11: "we
-      // build an intelligence configuration that plugs into your system and
-      // is leveraged by your team"), in place of the stack and the note.
-      idea: {
-        config: "Configuration",
-        courses: [{ label: "Context" }, { label: "Skills" }, { label: "Evals" }],
-        host: "Claude Enterprise",
-        tools: ["Shopify", "Analytics"],
-        team: "Your team",
-        teamLine: "Four workstreams",
+      // The left cell is S1 A, the pinned build (owner, 2026-10-11: "port S1
+      // A Pinned Build to the section"), in place of the stack and the note.
+      build: {
+        kind: "assembly",
+        alt: "The team's four workstreams, the X-Bionic layer drawn out of their work, and the layer seated in Claude Enterprise beside Shopify and analytics.",
       },
       console: { name: "Intelligence configuration", status: "X-Bionic" },
       readout: [

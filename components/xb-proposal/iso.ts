@@ -71,6 +71,13 @@ export const ease = (t: number) => {
   return c < 0.5 ? 4 * c * c * c : 1 - Math.pow(-2 * c + 2, 3) / 2;
 };
 
+/** `over` for a token colour: the mix is done by the browser against the
+    ground token, so it follows the theme (the lab's fallbacks give the same
+    values in dark). */
+export function tint(colour: string, alpha: number) {
+  return `color-mix(in srgb, ${colour} ${(alpha * 100).toFixed(1)}%, rgb(var(--void-rgb, 10, 9, 8)))`;
+}
+
 /** Mix a hex colour over the ground, so a face can be opaque and still read
     as a tint (an opaque face is what hides the lines behind it). */
 export function over(hex: string, alpha: number, ground = "#0a0908") {

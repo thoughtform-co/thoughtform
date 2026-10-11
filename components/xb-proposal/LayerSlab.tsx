@@ -3,9 +3,12 @@
    docked or pulled apart, so the second section opens what the first drew. */
 
 import { STRATA } from "./copy";
-import { boxFaces, over, type Box, type Iso } from "./iso";
+import { boxFaces, tint, type Box, type Iso } from "./iso";
 
-const GOLD = "#caa554";
+/* Tokens with the lab's hex as fallbacks: byte-equal in dark, re-derived
+   in light where the proposal page mounts the slab. */
+const GOLD = "var(--gold-line, #caa554)";
+const WASH = "var(--gold, #caa554)";
 
 export interface SlabGeometry {
   x0: number;
@@ -64,19 +67,19 @@ export function LayerSlab({ iso, g, presence = 1, etch = true, count = 3 }: Laye
               <g key={STRATA[i].id}>
                 <polygon
                   points={f.left}
-                  fill={over(GOLD, 0.1 + lift)}
+                  fill={tint(WASH, 0.1 + lift)}
                   stroke={GOLD}
                   strokeWidth={1}
                 />
                 <polygon
                   points={f.right}
-                  fill={over(GOLD, 0.05 + lift)}
+                  fill={tint(WASH, 0.05 + lift)}
                   stroke={GOLD}
                   strokeWidth={1}
                 />
                 <polygon
                   points={f.top}
-                  fill={over(GOLD, 0.16 + lift)}
+                  fill={tint(WASH, 0.16 + lift)}
                   stroke={GOLD}
                   strokeWidth={1}
                 />

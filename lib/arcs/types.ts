@@ -1461,11 +1461,12 @@ export type ArcSection = ArcSectionBase &
          */
         figure?: ArcVisionFigure;
         /**
-         * The left cell as the configuration plugged into the host and used
-         * by the team (owner, 2026-10-11), in place of the stack and its
-         * note. Opt-in; absent, the cell is byte-identical.
+         * The left cell as S1 A, the pinned build from the proposition
+         * artifact page (owner, 2026-10-11: "port S1 A Pinned Build to the
+         * section"): the lab's own drawing, built in three steps while the
+         * section pins. Opt-in; absent, the cell is byte-identical.
          */
-        idea?: ArcLeverageIdea;
+        build?: { kind: "assembly"; alt: string };
       }
     | {
         /**
@@ -1775,28 +1776,6 @@ export interface ArcVisionFigure {
   lines?: readonly [string, string, string];
   /** The drawing's accessible name. */
   alt: string;
-}
-
-/**
- * The vision console's left cell drawn as the configuration itself (owner,
- * 2026-10-11: "we build an intelligence configuration that plugs into your
- * system and is leveraged by your team"): one gold panel standing in its
- * slot on the host, beside the tools the company already connects, with the
- * team's traces coming in from the workstreams' side. `ArcConfigFigure`
- * draws it; the words are these fields and nothing else.
- */
-export interface ArcLeverageIdea {
-  /** The banner over the panel. Mono, ≤ 13, no digit. */
-  config: string;
-  /** The panel's rows, top to bottom. Mono, exactly three, each ≤ 10. */
-  courses: readonly [{ label: string }, { label: string }, { label: string }];
-  /** The system it plugs into, e.g. "Claude Enterprise". Two words. */
-  host: string;
-  /** The tools already wired to the host. Mono, each ≤ 10. */
-  tools: readonly [string, string];
-  /** Who uses it, mono, ≤ 12; and one sans line under it, ≤ 22. */
-  team: string;
-  teamLine: string;
 }
 
 export interface ArcHandoffStep {
