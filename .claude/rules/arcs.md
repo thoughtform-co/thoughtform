@@ -1658,6 +1658,27 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   this). ⚠ Its slant is `tan(ISO_ANGLE)`, the stage's, so it and the stack are one projection;
   it sat at a hand-set 20.6 degrees for a day after the Slab moved to 22. Guard: `arc-plugin-layer`.
 
+## The equilibrium on a proposal (2026-10-11, owner)
+
+- **The `equilibrium` kind** = `{ title, labels: { upstream, encode, downstream }, plugInto? }`:
+  the workshop opener's station (`equilibriumStationHtml`, ADR-143 U7 → U11) inside its own
+  `.tw-root[data-tw-cut="v3"]` scope, its live hologram (`EquilibriumMount`, the workshop
+  route's dynamic seam) with the BLOOM OFF (`bloom={false}`, owner: "less bloom … super
+  slick"). The title is the beat's accessible name only (the opener letters no head). The
+  generic route imports `equilibrium.css` and `components/arcs/equilibrium-beat.css` (figure
+  62svh, words at 12px and up, the lit tracker bedded on the ground so a leader passes
+  behind it). On X-Bionic it is the second section, `one-motion`, in the About's old place.
+- ⚠ **`plugInto` IS A HAND-OFF, AND ONLY OVER THE LIVE HOLOGRAM.** `ArcEquilibriumIsland`
+  flies the gate's ring and brandmark (the rest pose, `eqProject`) point for point onto the
+  target section's S1 A layer slot (`Assembly`'s `LAYER_XY` at z 6.1, its live screen CTM),
+  measured every scroll event; the scene stops drawing its own mark while lifted
+  (`eqLiftRef`, three-free, on the doctrine's pure list). It HOLDS on the slot as the stage
+  pins and hands over as the layer arrives (`1 − a2`, the drawing's own clock off the same
+  runway), and the drawing lays the same mark on the layer (`Assembly` `mark`, threaded as
+  `OfferPinned` `layerMark`; the lab passes neither and is unchanged). Off the live
+  hologram (static, phone, reduced motion) the carrier never shows, or the mark would be on
+  screen twice. Shot headed by `scripts/capture-xb-equilibrium.mjs`.
+
 ## The proposal system (ADR-155)
 
 - **A proposal is one argument in three parts, told with ONE object.** Five registers, one per

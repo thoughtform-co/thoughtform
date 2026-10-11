@@ -65,9 +65,14 @@ export interface EquilibriumMountProps {
   /** Arm when `scrollY` reaches this fraction of the viewport. The lab, which
    *  has no hero to lift off the figure, passes 0. */
   armAt?: number;
+  /** The canvas's bloom; the proposal turns it off (`HoloEquilibriumCanvas`). */
+  bloom?: boolean;
 }
 
-export default function EquilibriumMount({ armAt = ARM_AT }: EquilibriumMountProps = {}) {
+export default function EquilibriumMount({
+  armAt = ARM_AT,
+  bloom = true,
+}: EquilibriumMountProps = {}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery(MEDIA);
   /* The WebGL probe, and the figure the server drew (ADR-143 U9, off the
@@ -268,6 +273,7 @@ export default function EquilibriumMount({ armAt = ARM_AT }: EquilibriumMountPro
           variant={variant}
           onView={onView}
           bare={variant === "instrument"}
+          bloom={bloom}
         />
       </CanvasErrorBoundary>
     </div>

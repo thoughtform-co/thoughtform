@@ -18,6 +18,7 @@ import { ArcInstrument } from "./ArcInstrument";
 import { ArcHandoff } from "./ArcHandoff";
 import { ArcLeverage } from "./ArcLeverage";
 import { ArcTerms } from "./ArcTerms";
+import { ArcEquilibrium } from "./ArcEquilibrium";
 import { ArcJob } from "./ArcJob";
 import { ArcGround } from "./ArcGround";
 import { ArcHull } from "./ArcHull";
@@ -173,6 +174,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
       return <ArcTerms key={section.id} section={section} index={index} motion={motion} />;
     case "job":
       return <ArcJob key={section.id} section={section} index={index} motion={motion} />;
+    case "equilibrium":
+      return <ArcEquilibrium key={section.id} section={section} />;
     default: {
       const exhaustive: never = section;
       return exhaustive;

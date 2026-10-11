@@ -40,12 +40,13 @@ import type { PsKnobs } from "./variants";
  * may carry the run (`ArcHandoff` draws `ArcConfigRun` whenever it is set),
  * so both clear it.
  *
- * ⚠ THE OWNER'S ORDER (10 October): about · the vision · the approach ·
- * where it plugs in · "In 2024, Loop decided to go AI-first." · the four
+ * ⚠ THE OWNER'S ORDER (10 October; 11 October the equilibrium took the
+ * About's place, and the About moved beside who takes part): the
+ * equilibrium · the vision · the approach · where it plugs in · "In 2024, Loop decided to go AI-first." · the four
  * Loop cards · what it returned · "This is how we recently built
  * intelligence configurations by making the team self-sufficient." · the
  * four jobs · "And this is how we'll do it at X-Bionic." · the engine · the
- * two weeks · who takes part · the fee · the close.
+ * two weeks · the About · who takes part · the fee · the close.
  *
  * ⚠ NEVER THE FIRST PERSON SINGULAR on a proposal (owner, 10 October): the
  * page speaks as Thoughtform and to "your team"; his three lines say "we"
@@ -111,6 +112,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
 
   /* ── The beats, each production's object or a spread of it ─────────── */
 
+  const equilibrium = sectionOf("one-motion", "equilibrium");
   const about = sectionOf("about", "portrait");
 
   const vision: ArcSectionOf<"spectrum"> = {
@@ -419,8 +421,8 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const close = sectionOf("close", "close");
 
   const opening: ArcSection[] = narrative
-    ? [about, vision, approach, ...(upstream ? [upstream] : []), plugsIn]
-    : [about, plugsIn, approach, ...(upstream ? [upstream] : [])];
+    ? [equilibrium, vision, approach, ...(upstream ? [upstream] : []), plugsIn]
+    : [equilibrium, plugsIn, approach, ...(upstream ? [upstream] : [])];
 
   const sections: ArcSection[] = [
     ...opening,
@@ -432,6 +434,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
     offer,
     engine,
     phases,
+    about,
     howWeWork,
     pricing,
     close,

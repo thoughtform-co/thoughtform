@@ -1,0 +1,34 @@
+/* The equilibrium as a proposal beat (the `equilibrium` kind, 2026-10-11).
+   The station is the workshop opener's own (`equilibrium.css`, scoped
+   `.tw-root[data-tw-cut="v3"]`); this sheet only retunes it for a proposal,
+   one class deeper so it wins on specificity, never on order:
+     - the figure takes more of the screen (the opener holds it to half);
+     - its words letter at the proposal's floor, 12px and up (the opener's
+       are 10 and 11). */
+
+.arc-sec-eq .tw-root[data-tw-cut="v3"] {
+  --tw-eq-fig-h: 62svh;
+}
+
+.arc-sec-eq .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__val {
+  font-size: var(--type-md);
+}
+
+.arc-sec-eq .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__line,
+.arc-sec-eq .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__tele {
+  font-size: max(12px, var(--type-sm));
+}
+
+/* The lit middle tracker sits over the others: a lifted tag's leader runs up
+   past it (Automation's crossed "downstream"). The halo only dims a line, so
+   its two text lines take a bed in the page's own ground (`--void-rgb` IS
+   the paper in light, ADR-058): invisible on the page, it stops the hairline
+   at the words, and the line reads as passing behind them. */
+.arc-sec-eq .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] {
+  z-index: 1;
+}
+.arc-sec-eq .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__val,
+.arc-sec-eq .tw-root[data-tw-cut="v3"] #equilibrium .tw-eq__word[data-lit] .tw-eq__line {
+  background: rgb(var(--void-rgb));
+  box-shadow: 0 0 0 3px rgb(var(--void-rgb));
+}

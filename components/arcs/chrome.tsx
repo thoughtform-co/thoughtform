@@ -102,6 +102,8 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   terms: "TERMS",
   /* ADR-153 U1: one client job on one screen. */
   job: "JOB",
+  /* The workshop opener's hologram on a proposal (2026-10-11). */
+  equilibrium: "EQUILIBRIUM",
 };
 
 /**

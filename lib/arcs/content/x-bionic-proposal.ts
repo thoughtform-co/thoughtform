@@ -116,20 +116,26 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       "A creative engine for paid social, built in X-Bionic's own Claude Enterprise and run by its team.",
   },
   sections: [
-    /* ── Who ─────────────────────────────────────────────────────────────
-       The homepage's About, first on this page (owner: "a hero section with
-       the new key visuals and an About section"), its bio cut to two
-       paragraphs here (owner, 2026-10-09: "more concise"); the shared
-       record is the homepage's and stays whole. Its head is the record's
-       own: the page never speaks in the first person (owner, 2026-10-10). */
+    /* ── The equilibrium (owner, 2026-10-11) ───────────────────────────
+       Second on the page, where the About stood: "the second section
+       should not be the About section. It should actually be like that
+       Holo-inspired thing, but updated … less bloom … super slick". The
+       workshop opener's hologram with the bloom off: upstream (adoption),
+       the gate (the intelligence configuration, "what works upstream runs
+       downstream", his own line) and downstream (automation), one motion.
+       On the way down the gate's mark lifts out and plugs into the vision's
+       stack (`plugInto`). The About moved down, beside who does the work. */
     {
-      ...VINCE_ABOUT,
-      id: "about",
-      menuLabel: "About",
-      bio: [
-        "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
-        "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",
-      ],
+      id: "one-motion",
+      kind: "equilibrium",
+      menuLabel: "One motion",
+      title: "Adoption and automation, one motion.",
+      labels: {
+        upstream: { key: "Adoption", text: "The team's judgment, on real work" },
+        encode: { key: "Intelligence configuration", text: "What works upstream runs downstream" },
+        downstream: { key: "Automation", text: "Agents run what the team wrote down" },
+      },
+      plugInto: "vision",
     },
 
     /* ── The vision (ADR-153) ──────────────────────────────────────────
@@ -445,6 +451,23 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         },
       ],
     },
+    /* ── Who ─────────────────────────────────────────────────────────────
+       The homepage's About, beside who does the work (2026-10-11: the second
+       section is the equilibrium now; it stood first, owner: "a hero section
+       with the new key visuals and an About section"), its bio cut to two
+       paragraphs here (owner, 2026-10-09: "more concise"); the shared
+       record is the homepage's and stays whole. Its head is the record's
+       own: the page never speaks in the first person (owner, 2026-10-10). */
+    {
+      ...VINCE_ABOUT,
+      id: "about",
+      menuLabel: "About",
+      bio: [
+        "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
+        "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",
+      ],
+    },
+
     {
       id: "how-we-work",
       kind: "list-groups",

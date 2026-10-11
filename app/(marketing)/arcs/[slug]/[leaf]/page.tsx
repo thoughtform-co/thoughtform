@@ -69,6 +69,10 @@ import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 // its framing in the HUD. Both are `.xb*`-scoped, inert on every other arc.
 import "@/components/xb-proposal/xb.css";
 import "@/components/xb-proposal/xb-in-frame.css";
+// The `equilibrium` kind (2026-10-11): the workshop opener's station, its
+// sheet scoped `.tw-root[data-tw-cut="v3"]`, inert on every other arc.
+import "@/app/(marketing)/arcs/thoughtform/workshop-v3/equilibrium.css";
+import "@/components/arcs/equilibrium-beat.css";
 // The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
 // no matching rule. After arcs.css, before theme.css.
 import "@/components/sheet/sheet.css";

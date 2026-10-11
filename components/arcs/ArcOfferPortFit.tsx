@@ -102,7 +102,7 @@ export function ArcOfferPortFit() {
 
   return (
     <div ref={ref} className="xb xb-in-frame">
-      <OfferPinned viewBox={fit.viewBox} align={fit.align} />
+      <OfferPinned viewBox={fit.viewBox} align={fit.align} layerMark />
     </div>
   );
 }

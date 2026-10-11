@@ -39,6 +39,7 @@ import { type ComponentRef, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import type { AnchorChannel } from "@/components/holo-stage/stageAnchors";
+import { eqLiftRef } from "./eqLiftRef";
 import { VolumetricBrandmarkArtifact } from "@/components/landing/home-v2/services/hologram/VolumetricBrandmarkArtifact";
 
 import {
@@ -645,12 +646,16 @@ export function HoloEquilibriumScene({
       th.visible = tr > 0.001;
     }
 
+    /* Once a page's carrier has lifted the mark out of the gate
+       (`eqLiftRef`, the X-Bionic proposal), the scene stops drawing its own:
+       the carrier is the mark from there. 0 everywhere else. */
+    const lifted = eqLiftRef.current > 0.02;
     for (const l of segLayers) {
       const seg = segRefs.current[l.id];
       if (!seg) continue;
       const v = smootherstep(l.reveal[0], l.reveal[1], p);
       seg.geometry.setDrawRange(0, Math.floor((v * l.count) / 2) * 2);
-      seg.visible = v > 0.001;
+      seg.visible = v > 0.001 && !(lifted && l.id === "mark");
     }
     for (const l of lineLayers) {
       const line = lineRefs.current[l.id];
@@ -667,7 +672,7 @@ export function HoloEquilibriumScene({
     /* The mark settles into the gate: a scale, never a fade. */
     const markIn = smootherstep(0.46, 0.7, p);
     if (markRef.current) {
-      markRef.current.visible = markIn > 0.01;
+      markRef.current.visible = markIn > 0.01 && !lifted;
       markRef.current.scale.setScalar(0.94 + 0.06 * markIn);
     }
 

@@ -66,8 +66,13 @@ const BANNED = [
  * `components/arcs/**` would have passed CI and dragged three into the route's
  * First Load JS — a ban whose one mechanism did not cover its own neighbour.
  */
+/* The equilibrium beat (2026-10-11, the X-Bionic proposal) reads two more
+   three-free modules: the gate's geometry and the one-number lift ref its
+   hand-off writes. Its hologram is the workshop route's own
+   `EquilibriumMount`, which reaches `HoloEquilibriumCanvas` through
+   `next/dynamic` (ADR-143 U7), so no third seam lives under `components/arcs`. */
 const HOLO_FREE =
-  /@\/components\/holo-(program\/(holoProgramGeom|hoverRef|holoLabelLayout|holoAnchorsRef|holoPalette)|stage\/(stageGeom|stageFit|stageAnchors|curveGeom|spectrumGeom|stackGeom))/;
+  /@\/components\/holo-(program\/(holoProgramGeom|hoverRef|holoLabelLayout|holoAnchorsRef|holoPalette|equilibriumGeom|eqLiftRef)|stage\/(stageGeom|stageFit|stageAnchors|curveGeom|spectrumGeom|stackGeom))/;
 /** Anything else under either folder is three-full until proven otherwise. */
 const HOLO_TREE = /@\/components\/holo-(program|stage)\//;
 /** The leaves the ADRs name, and the only files that may reach a scene. */

@@ -1552,6 +1552,26 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
+         * THE THOUGHTFORM EQUILIBRIUM AS A PROPOSAL BEAT (owner, 2026-10-11:
+         * "the second section should … be like that Holo-inspired thing, but
+         * updated … less bloom … super slick"): the workshop opener's hologram
+         * (ADR-143 U7–U11, `equilibriumStationHtml` + `EquilibriumMount`) on a
+         * proposal, the bloom off. Upstream, the encode gate, downstream; the
+         * gate is the intelligence configuration ("what works upstream runs
+         * downstream"), and on the way down it plugs into the stack of the
+         * section named by `plugInto`.
+         *
+         * ⚠ THE THIRTY-THIRD ENUMERATED EXCEPTION. The station letters no
+         * head: `title` is its accessible name.
+         */
+        kind: "equilibrium";
+        title: string;
+        labels: Record<"upstream" | "encode" | "downstream", { key: string; text: string }>;
+        /** The id of the section whose stack the gate's mark lands in. */
+        plugInto?: string;
+      }
+    | {
+        /**
          * A JOB (ADR-153 U1, U2): one real piece of client work on one
          * screen, in one template for every client and every bucket (owner,
          * 2026-10-09: "uniformize it; right now it looks chaotic"). No head:

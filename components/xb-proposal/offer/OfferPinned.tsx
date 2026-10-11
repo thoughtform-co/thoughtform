@@ -16,15 +16,18 @@ const VB_H = ASSEMBLY_VB.h;
 
 /* `viewBox` and `align` let a host frame the same drawing differently (the
    X-Bionic proposal crops it to its ink and seats it on the band's right
-   edge, 2026-10-11); the lab passes neither and is unchanged. */
+   edge, 2026-10-11); the lab passes neither and is unchanged. `layerMark`
+   lays the brandmark on the layer (the proposal's hand-off, `Assembly`). */
 export function OfferPinned({
   step,
   viewBox,
   align = "xMidYMid meet",
+  layerMark = false,
 }: {
   step?: 1 | 2 | 3;
   viewBox?: string;
   align?: string;
+  layerMark?: boolean;
 }) {
   const fixed = step !== undefined;
   const runway = useRef<HTMLDivElement>(null);
@@ -83,7 +86,7 @@ export function OfferPinned({
             role="img"
             aria-label="The team, the layer and Claude Enterprise, drawn as one assembly"
           >
-            <Assembly p={p} />
+            <Assembly p={p} mark={layerMark} />
           </svg>
         </div>
       </div>

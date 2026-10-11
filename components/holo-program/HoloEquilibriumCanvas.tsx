@@ -82,6 +82,11 @@ export interface HoloEquilibriumCanvasProps {
   /** Blend into the page (ADR-143 U11): a transparent canvas, no ground, no
    *  grain or vignette, and the instrument without its floor, dust or bokeh. */
   bare?: boolean;
+  /** The glow on void. Off is the proposal's (owner, 2026-10-11: "less
+   *  bloom … super slick … the light mode looks super slick, but the dark
+   *  mode has a bit of a bloom. I don't want that"): the pass stays mounted
+   *  at zero, so the composer's child count never changes. */
+  bloom?: boolean;
 }
 
 export function HoloEquilibriumCanvas({
@@ -94,6 +99,7 @@ export function HoloEquilibriumCanvas({
   variant = "instrument",
   onView,
   bare = false,
+  bloom: glow = true,
 }: HoloEquilibriumCanvasProps) {
   const figure = EQ_FIGURES[variant];
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -212,7 +218,7 @@ export function HoloEquilibriumCanvas({
                 the threshold on void; on paper nothing is brighter than the
                 paper, so 0.97 leaves bloom nothing to lift (ADR-140). */}
             <Bloom
-              intensity={bloom.intensity * palette.bloomScale}
+              intensity={glow ? bloom.intensity * palette.bloomScale : 0}
               luminanceThreshold={palette.additive ? bloom.threshold : 0.97}
               luminanceSmoothing={POST.bloomRadius}
               /* Bare, a tighter glow: at the figure's 0.86 the widest mips

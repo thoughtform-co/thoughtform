@@ -9,9 +9,11 @@
    line takes `--gold-line`, a letter `--gold-ink`, a face is a tint of the
    ink over the ground (`tint`, opaque, so it still hides what is behind). */
 
+import { BRANDMARK_VIEWBOX, brandmarkPolylines } from "@/lib/brandmark/brandmarkPaths";
+
 import { STRATA, TOOLS, WORKSTREAMS } from "../copy";
 import { Glyph } from "../glyphs";
-import { boxFaces, ease, lerp, makeIso, tint, type Box, type Pt } from "../iso";
+import { boxFaces, ease, lerp, makeIso, tint, type Box, type Iso, type Pt } from "../iso";
 import { LayerSlab, slabBoxes, type SlabGeometry } from "../LayerSlab";
 
 const GOLD = "var(--gold-line, #caa554)";
@@ -26,20 +28,39 @@ const TOOL_BOX: Box[] = [
   { x0: 3.1, x1: 5.7, y0: 0.5, y1: 2.9, z0: 0.5, z1: 1.25 },
 ];
 const TEAM_Z = 10.4;
+
+/* The layer's footprint, and its top face's height before it seats (the
+   proposal's hand-off lands the equilibrium's gate here, so it reads these
+   rather than restating them). */
+export const LAYER_XY = { x0: -5.6, x1: 2.0, y0: -2.6, y1: 2.6 } as const;
+export const ASSEMBLY_ISO = { u: 23, ox: 226, oy: 424 } as const;
+const MARK_UNITS = 3.4;
+
+/** The brandmark lying flat on the layer's top face at height `z`, as
+    polylines in the drawing's own units. */
+export function layerMarkLines(iso: Iso, z: number): Pt[][] {
+  const { w, h } = BRANDMARK_VIEWBOX;
+  const k = MARK_UNITS / h;
+  const cx = (LAYER_XY.x0 + LAYER_XY.x1) / 2;
+  const cy = (LAYER_XY.y0 + LAYER_XY.y1) / 2;
+  return brandmarkPolylines(4).map((l) =>
+    l.map(([u, v]) => iso.p(cx + (u - w / 2) * k, cy + (v - h / 2) * k, z))
+  );
+}
 const PLATE = 1.45;
 const TEAM_X = [-4.65, -2.75, -0.85, 1.05];
 
-export function Assembly({ p }: { p: number }) {
-  const iso = makeIso(23, 226, 424);
+/* `mark` lays the brandmark on the layer's top face as the layer arrives:
+   the proposal plugs the equilibrium's gate into it (2026-10-11). The lab
+   passes nothing and is unchanged. */
+export function Assembly({ p, mark = false }: { p: number; mark?: boolean }) {
+  const iso = makeIso(ASSEMBLY_ISO.u, ASSEMBLY_ISO.ox, ASSEMBLY_ISO.oy);
   const a2 = ease(p - 1); // the layer arrives
   const d = ease(p - 2); // the layer seats; the company's Claude comes up
   const teamOn = p < 1.5 ? 1 : 0.62;
 
   const g: SlabGeometry = {
-    x0: -5.6,
-    x1: 2.0,
-    y0: -2.6,
-    y1: 2.6,
+    ...LAYER_XY,
     z0: lerp(3.9, BASE.z1, d),
     t: 0.4,
     gap: lerp(0.5, 0.05, d),
@@ -78,6 +99,21 @@ export function Assembly({ p }: { p: number }) {
       </g>
 
       <LayerSlab iso={iso} g={g} presence={a2} />
+      {mark && a2 > 0.001 && (
+        <path
+          d={layerMarkLines(iso, slabTop)
+            .map((l) =>
+              l.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join("")
+            )
+            .join("")}
+          fill="none"
+          stroke={GOLD}
+          strokeWidth={1}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity={a2}
+        />
+      )}
 
       {/* Drop lines: each workstream's work going into the layer. */}
       <g opacity={a2}>
