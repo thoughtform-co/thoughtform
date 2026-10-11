@@ -1,0 +1,653 @@
+/* The X-Bionic core lab (2026-10-11): the offering and the layer, rebuilt
+   from the reference sites, not from the house sheets. Brand tokens only:
+   the gold, the dawn and void ramps, PP Neue Montreal and PT Mono.
+
+   What the references measured (1280×720 and 1470×830) and this sheet
+   takes from them:
+   - TYPE DOES NOT SCALE with the window. Unsiloed sets its h2 at 48px and
+     its body at 16px at both widths; Rollups 54 and 14. So every size here
+     is a fixed rung, five of them: 46 · 22 · 17 · 15 · 12 (mono).
+   - A HEAD IS LARGE, REGULAR WEIGHT, TIGHT. 48/1.04, -0.02em, weight 400
+     or 500; a second clause in a dimmer ink instead of a second colour.
+   - ONE HOUSING, CELLS SHARE EDGES. A ruled rectangle cut by hairlines;
+     the air is inside the cells (24–32px), never between floating cards.
+   - THE DRAWING CARRIES THE MEANING, ONE HUE IN TINTS. Hairline line work,
+     square terminals, a dot or grid datum, one accent on the one object.
+   - LABELS ARE MONO CAPS AT 12, PROSE IS SANS AT 15–17 IN A DIM INK. */
+
+.xc-sec {
+  --xc-ink: rgba(var(--dawn-rgb), 0.94);
+  --xc-ink-2: rgba(var(--dawn-rgb), 0.66);
+  --xc-ink-3: rgba(var(--dawn-rgb), 0.44);
+  --xc-line: rgba(var(--dawn-rgb), 0.16);
+  --xc-line-2: rgba(var(--dawn-rgb), 0.3);
+  --xc-ground: rgba(var(--void-rgb), 0.9);
+  --xc-gold: var(--gold);
+  --xc-gold-ink: var(--gold-ink, #caa554);
+  --xc-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  --xc-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: 84px 56px;
+  color: var(--xc-ink);
+  font-family: var(--xc-sans);
+}
+
+.xc-wrap {
+  display: grid;
+  gap: 36px;
+  /* The head takes the drawing's width, so the two share one left edge. */
+  width: min(100%, calc((100svh - var(--xc-reserve, 300px)) * var(--w, 1000) / var(--h, 450)));
+  margin-inline: auto;
+}
+
+/* ── The head ─────────────────────────────────────────────────────────── */
+.xc-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: end;
+}
+.xc-eyebrow {
+  margin: 0 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--xc-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xc-ink-2);
+}
+.xc-eyebrow__mark {
+  width: 7px;
+  height: 7px;
+  background: var(--xc-gold);
+}
+.xc-route {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border: 1px solid var(--xc-line-2);
+  color: var(--xc-ink-3);
+}
+.xc-title {
+  margin: 0;
+  font-size: 46px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  color: var(--xc-ink);
+  text-wrap: balance;
+}
+.xc-title__dim {
+  color: var(--xc-ink-3);
+}
+.xc-lede {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--xc-ink-2);
+  text-wrap: pretty;
+}
+
+/* ── A figure: one coordinate space ───────────────────────────────────── */
+.xc-fig {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  /* One drawing unit in pixels: the words scale WITH the drawing, so the
+     composition is the same at every window and only its size changes. */
+  container-type: inline-size;
+  --u: calc(100cqw / var(--w));
+}
+.xc-fig__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.xc-fig > :not(svg) {
+  position: absolute;
+}
+
+/* line work */
+.xc-housing {
+  fill: rgba(var(--void-rgb), 0.55);
+  stroke: var(--xc-line-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.xc-rule {
+  stroke: var(--xc-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.xc-dot {
+  fill: rgba(var(--dawn-rgb), 0.16);
+}
+.xc-node {
+  fill: rgb(var(--void-rgb));
+  stroke: var(--xc-line-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.xc-node--quiet {
+  stroke: var(--xc-line);
+}
+.xc-trace {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.34);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.xc-trace--lit {
+  stroke: rgba(var(--gold-rgb), 0.75);
+}
+.xc-pin {
+  fill: rgba(var(--dawn-rgb), 0.6);
+}
+.xc-pin--lit {
+  fill: var(--xc-gold);
+}
+.xc-chip {
+  fill: rgba(var(--gold-rgb), 0.07);
+  stroke: var(--xc-gold);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+.xc-chip__rule {
+  stroke: rgba(var(--gold-rgb), 0.45);
+  vector-effect: non-scaling-stroke;
+}
+.xc-chip__seam {
+  stroke: rgba(var(--gold-rgb), 0.2);
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.xc-installed {
+  fill: rgba(var(--gold-rgb), 0.12);
+  stroke: rgba(var(--gold-rgb), 0.6);
+  vector-effect: non-scaling-stroke;
+}
+
+/* words in a figure */
+.xc-cellhead {
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xc-ink-2);
+  white-space: nowrap;
+}
+.xc-cellhead__n {
+  color: var(--xc-gold-ink);
+}
+.xc-nodetext {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding-inline: 14px;
+  box-sizing: border-box;
+}
+.xc-nodetext--head {
+  justify-content: center;
+}
+.xc-nodetext--center {
+  align-items: center;
+}
+.xc-nodetext__name {
+  font-size: max(14px, calc(15 * var(--u)));
+  line-height: 1.15;
+  color: var(--xc-ink);
+  white-space: nowrap;
+}
+.xc-nodetext__meta {
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xc-ink-3);
+  white-space: nowrap;
+}
+.xc-chiphead {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xc-gold-ink);
+}
+.xc-chiphead__r {
+  color: var(--xc-ink-3);
+}
+.xc-bank {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  align-items: center;
+}
+.xc-bank__name {
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xc-gold-ink);
+}
+.xc-bank__items {
+  display: grid;
+  gap: 2px;
+  font-size: max(14px, calc(15 * var(--u)));
+  line-height: 1.3;
+  color: var(--xc-ink);
+}
+.xc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: max(14px, calc(14 * var(--u)));
+  line-height: 1.35;
+  color: var(--xc-ink-2);
+}
+.xc-list li::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 10px 2px 0;
+  background: var(--xc-line-2);
+}
+.xc-installedtext {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  padding-inline: 12px;
+  box-sizing: border-box;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xc-gold-ink);
+}
+.xc-step {
+  display: grid;
+  gap: 6px;
+}
+.xc-step__t {
+  margin: 0;
+  font-size: max(16px, calc(17 * var(--u)));
+  line-height: 1.25;
+  font-weight: 400;
+  color: var(--xc-ink);
+}
+.xc-step__l {
+  margin: 0;
+  font-size: max(14px, calc(15 * var(--u)));
+  line-height: 1.45;
+  color: var(--xc-ink-2);
+  text-wrap: pretty;
+}
+
+/* ── O2 · the pinned three phases ─────────────────────────────────────── */
+.xc-runway {
+  display: block;
+  min-height: 0;
+  height: 300svh;
+  padding: 0;
+}
+.xc-runway[data-pin="on"] .xc-pin-frame {
+  position: fixed;
+}
+.xc-runway[data-pin="post"] .xc-pin-frame {
+  top: auto;
+  bottom: 0;
+}
+.xc-mark {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+}
+.xc-pin-frame {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: 72px 40px;
+  box-sizing: border-box;
+}
+.xc-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+.xc-split__fig .xc-fig {
+  width: min(100%, calc((100svh - 140px) * var(--w) / var(--h)));
+  margin-left: auto;
+}
+.xc-phases {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid var(--xc-line);
+}
+.xc-phase {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  column-gap: 8px;
+  padding-block: 16px;
+  border-bottom: 1px solid var(--xc-line);
+  color: var(--xc-ink-3);
+  transition: color 0.4s ease;
+}
+.xc-phase__n {
+  font-family: var(--xc-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding-top: 6px;
+}
+.xc-phase__t {
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.xc-phase__l {
+  grid-column: 2;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--xc-ink-2);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.45s ease,
+    opacity 0.45s ease,
+    margin 0.45s ease;
+}
+.xc-phase[data-on] {
+  color: var(--xc-ink);
+}
+.xc-phase[data-on] .xc-phase__n {
+  color: var(--xc-gold-ink);
+}
+.xc-phase[data-on] .xc-phase__l {
+  max-height: 5em;
+  opacity: 1;
+  margin-top: 6px;
+}
+.xc-runway [data-p] {
+  transition: opacity 0.5s ease;
+}
+.xc-runway[data-phase="1"] [data-p="2"],
+.xc-runway[data-phase="1"] [data-p="3"],
+.xc-runway[data-phase="2"] [data-p="3"] {
+  opacity: 0.12;
+}
+.xc-bankcol {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.xc-board--down .xc-nodetext {
+  padding-inline: 12px;
+}
+
+/* ── The layer's figures ──────────────────────────────────────────────── */
+.xc-grid {
+  stroke: rgba(var(--dawn-rgb), 0.1);
+  stroke-dasharray: 1 5;
+  vector-effect: non-scaling-stroke;
+}
+.xc-stepline {
+  fill: none;
+  stroke: var(--xc-gold);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.xc-stepmark {
+  fill: var(--xc-gold);
+}
+.xc-seg--make {
+  fill: rgba(var(--dawn-rgb), 0.14);
+}
+.xc-seg--check {
+  fill: rgba(var(--dawn-rgb), 0.36);
+}
+.xc-seg--decide {
+  fill: rgba(var(--dawn-rgb), 0.86);
+}
+.xc-cellhead--r {
+  justify-content: flex-end;
+  color: var(--xc-ink-3);
+}
+.xc-axis {
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xc-ink-3);
+  white-space: nowrap;
+  line-height: 18px;
+}
+.xc-axis--y {
+  text-align: right;
+}
+.xc-axis--x {
+  text-align: center;
+}
+.xc-axis--tag {
+  color: var(--xc-ink-3);
+}
+.xc-steptag {
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  color: var(--xc-gold-ink);
+}
+.xc-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xc-ink-2);
+}
+.xc-legend li::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 10px;
+}
+.xc-legend li[data-k="2"]::before {
+  background: rgba(var(--dawn-rgb), 0.86);
+}
+.xc-legend li[data-k="1"]::before {
+  background: rgba(var(--dawn-rgb), 0.36);
+}
+.xc-legend li[data-k="0"]::before {
+  background: rgba(var(--dawn-rgb), 0.14);
+}
+.xc-wrote {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+.xc-wrote__n {
+  display: flex;
+  gap: 10px;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xc-gold-ink);
+}
+.xc-wrote__n span {
+  color: var(--xc-ink-3);
+}
+.xc-wrote__t {
+  font-size: max(14px, calc(15 * var(--u)));
+  line-height: 1.3;
+  color: var(--xc-ink);
+}
+.xc-wrote__l {
+  font-size: max(13px, calc(14 * var(--u)));
+  line-height: 1.35;
+  color: var(--xc-ink-2);
+}
+
+.xc-wash {
+  fill: rgba(var(--dawn-rgb), 0.05);
+}
+.xc-axishead {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.34);
+  vector-effect: non-scaling-stroke;
+}
+.xc-colhead {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+.xc-colhead__t {
+  font-size: max(17px, calc(20 * var(--u)));
+  line-height: 1.1;
+  color: var(--xc-ink);
+}
+.xc-rung {
+  display: flex;
+  align-items: center;
+  font-size: max(14px, calc(15 * var(--u)));
+  color: var(--xc-ink);
+}
+.xc-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: max(14px, calc(15 * var(--u)));
+  line-height: 1.25;
+  color: var(--xc-ink-2);
+}
+.xc-cell[data-g="a"],
+.xc-cell[data-g="w"] {
+  color: var(--xc-ink);
+}
+.xc-g {
+  flex: none;
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+}
+.xc-g--team {
+  background: rgba(var(--dawn-rgb), 0.86);
+  transform: rotate(45deg) scale(0.86);
+}
+.xc-g--claude {
+  border: 1px solid rgba(var(--dawn-rgb), 0.86);
+  transform: rotate(45deg) scale(0.86);
+  background: linear-gradient(var(--xc-gold), var(--xc-gold)) center / 3px 3px no-repeat;
+}
+.xc-g--written {
+  border: 2px solid var(--xc-gold);
+}
+.xc-g--agent {
+  background: var(--xc-gold);
+}
+.xc-key {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xc-ink-2);
+}
+.xc-key li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.xc-callout {
+  fill: none;
+  stroke: var(--xc-gold);
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.xc-leader {
+  fill: none;
+  stroke: rgba(var(--gold-rgb), 0.6);
+  vector-effect: non-scaling-stroke;
+}
+.xc-iotag {
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  font-family: var(--xc-mono);
+  font-size: max(12px, calc(12 * var(--u)));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xc-ink-2);
+  white-space: nowrap;
+}
+.xc-detail {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+.xc-detail__what {
+  font-size: max(13px, calc(14 * var(--u)));
+  color: var(--xc-ink-3);
+}
+.xc-detail ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.xc-detail li {
+  display: grid;
+  gap: 2px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(var(--gold-rgb), 0.35);
+}
+.xc-detail__n {
+  font-size: max(15px, calc(17 * var(--u)));
+  line-height: 1.2;
+  color: var(--xc-ink);
+}
+.xc-detail__note {
+  font-size: max(13px, calc(14 * var(--u)));
+  line-height: 1.35;
+  color: var(--xc-ink-2);
+}
+.xc-colhead__t--dim {
+  color: var(--xc-ink-3);
+}
