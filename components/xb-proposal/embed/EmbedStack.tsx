@@ -9,15 +9,17 @@
    So the drawing is one pinned stage: the three plates start apart, the one
    in view centred and lit with its callouts, and they close into a single
    stack as Run arrives, the whole stack lit. No caption over the plates
-   (owner: "it's really creating dead space"); the stage is never clipped, a
-   plate leaves only by the frame's own edge. Top to bottom is upstream to
+   (owner: "it's really creating dead space"); the stage is never clipped or
+   faded, a plate leaves only by the frame's bottom edge, and the steps sit
+   in the stage's vertical middle, level with the plate in view. Top to
+   bottom is upstream to
    downstream: your team (green, people), the layer (gold, the kit's own
    LayerSlab, the mark etched on it), your agents (dawn, what runs).
 
    The instrument's anatomy (instrument-grammar.md), in the isometric plane:
-   every plate carries the house's single TR notch, and the agents' plate is
-   a minimal circuit board, one notched chip, four ribbons on 45° jogs to
-   four module plates, never a row of play buttons.
+   the agents' plate is a minimal circuit board, one chip, four ribbons on
+   45° jogs to four module plates, never a row of play buttons. The plates
+   carry no notch (owner: it read as "cutting off").
 
    One scroll reader (rAF-throttled) writes the plates' offsets and the
    stage's translate; React re-renders only when the step changes. Reduced
@@ -48,8 +50,16 @@ const NOTCH = 0;
 const FACE_MID = OY + S * 0.5 * U;
 /* The plates' spacing: apart while a step is read (room enough that the
    next plate rises in from below the frame, owner: "it should never be cut
-   off"), closed at Run. */
-const GAP = { open: 300, closed: 72 };
+   off"), closed at Run. The open gap is a CEILING: on a short stage it
+   shrinks to what fits above the centred plate, never below `min`. */
+const GAP = { open: 300, min: 170, closed: 72 };
+/* The highest ink on a plate (the team plate's upper callout) and the air
+   kept between it and the stage's top edge, both in drawing units. Nothing
+   rises past that line (owner, 2026-10-12: the steps sit in the middle "so
+   we don't have to fade out the top visualization"), so the stage needs no
+   mask: a plate leaves only by the frame's bottom edge. */
+const INK_TOP = 44;
+const AIR = 16;
 
 const GOLD = "var(--xb-gold)";
 const GREEN = "var(--es-green)";
@@ -410,22 +420,26 @@ function Callouts({ i }: { i: number }) {
 
 const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
-/* Where each step reads on the runway (its anchor): a plate is centred at
-   a third of the travel each, the stack closed at the end. */
-const TRAVEL_END = 0.7;
-const STEP_AT = [0, TRAVEL_END / 2, 0.97];
+/* Where each step reads on the runway (its anchor): Embed at the start,
+   Encode at the half, Run with the stack closed at the end. */
+const TRAVEL_END = 0.5;
+const STEP_AT = [0, TRAVEL_END, 0.97];
 
 /** The scroll's reading, CONTINUOUS (owner: "the diagrams … should scroll
     into view smoothly … it locks at different scroll positions"): every
     scroll tick moves the plates, with no plateau a reader has to scroll
-    through. The plates travel linearly to the last one, then close. */
-function read(p: number): { step: 0 | 1 | 2; gap: number; centre: number; stacked: boolean } {
-  const travel = 2 * seg(p, 0, TRAVEL_END);
-  const close = ease(seg(p, TRAVEL_END - 0.04, 1));
-  const gap = GAP.open - (GAP.open - GAP.closed) * close;
-  /* the plate in view sits centred; as they close, the stack's middle does */
-  const centre = travel + (1 - travel) * close;
-  const step = travel < 0.5 ? 0 : travel < 1.5 ? 1 : 2;
+    through. Two moves, end to end: the stack travels up until the layer is
+    centred, then it closes about the layer, which is what brings the agents'
+    plate up from the frame's bottom edge. The stack never travels past the
+    layer, so the team plate never rises past the stage's top. */
+function read(
+  p: number,
+  open: number
+): { step: 0 | 1 | 2; gap: number; centre: number; stacked: boolean } {
+  const centre = seg(p, 0, TRAVEL_END);
+  const close = ease(seg(p, TRAVEL_END, 1));
+  const gap = open - (open - GAP.closed) * close;
+  const step = centre < 0.5 ? 0 : close < 0.5 ? 1 : 2;
   return { step, gap, centre, stacked: close > 0.98 };
 }
 
@@ -455,13 +469,19 @@ export function EmbedStack() {
       const r = el.getBoundingClientRect();
       const vh = window.innerHeight;
       const p = clamp01(-r.top / Math.max(1, r.height - vh));
-      const st = read(p);
+      const col = s.parentElement!.getBoundingClientRect();
+      const k = col.width / VB_W;
+      /* half the stage, in drawing units: what the centred layer leaves
+         above it for the team plate */
+      const room = col.height / (2 * k) - (FACE_MID - INK_TOP) - AIR;
+      const st = read(p, Math.min(GAP.open, Math.max(GAP.min, room)));
       plates.current.forEach((g, i) =>
         g?.setAttribute("transform", `translate(0 ${(i * st.gap).toFixed(1)})`)
       );
-      const col = s.parentElement!.getBoundingClientRect();
-      const k = col.width / VB_W;
-      const ty = col.height * 0.5 - k * (FACE_MID + st.centre * st.gap);
+      /* the plate in view centred, unless that would lift the team plate's
+         ink past the stage's top; then the stack sits lower instead */
+      const centred = col.height * 0.5 - k * (FACE_MID + st.centre * st.gap);
+      const ty = Math.max(centred, k * (AIR - INK_TOP));
       s.style.transform = `translateY(${ty.toFixed(1)}px)`;
       if (st.step !== last.step || st.stacked !== last.stacked) {
         last = { step: st.step, stacked: st.stacked };

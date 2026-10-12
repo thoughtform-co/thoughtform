@@ -40,11 +40,10 @@
 
 /* ---- the steps, all three at once ---- */
 
-/* the steps sit at the top, right under the head (owner: "the embed encode
-   run can move upwards") */
+/* the steps sit in the stage's vertical middle, level with the plate in
+   view (owner, 2026-10-12: "move a bit down so it's in the middle") */
 .es-left {
-  align-self: start;
-  padding-top: clamp(36px, 6svh, 64px);
+  align-self: center;
 }
 .es-lines {
   display: grid;
@@ -122,14 +121,12 @@
   display: grid;
   min-height: 0;
 }
-/* A plate leaves by the frame's bottom edge; at the top it passes under
-   the held head on a soft fade, never a hard cut. */
+/* No mask and no clip: the reader keeps every plate below the stage's top
+   edge, so a plate leaves only by the frame's bottom edge. */
 .es-stage {
   position: relative;
   height: 100%;
   min-height: 0;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 72px);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 72px);
 }
 .es-svg {
   position: absolute;
