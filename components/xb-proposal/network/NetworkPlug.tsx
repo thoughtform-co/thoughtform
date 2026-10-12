@@ -109,7 +109,9 @@ const DEPTS: { name: string; side: "l" | "r"; y: number }[] = [
 /* the order they light: alternating sides, top down */
 const ORDER = [0, 3, 1, 4, 2, 5];
 /* a department is the Marketing frame collapsed to its band */
-const CARD = { w: 236, h: 36, l: 36, r: W - 36 - 236, cut: 12 };
+/* a department is the Marketing frame at a smaller size: the gold band with
+   its name, the body under it with what comes next, TR and BL cut */
+const CARD = { w: 236, h: 72, band: 30, l: 36, r: W - 36 - 236, cut: 12 };
 /* where each ribbon leaves the frame: three ports a side */
 const PORT_Y = [222, 294, 366];
 const WIRES = 8;
@@ -710,17 +712,49 @@ export function NetworkPlug() {
               ))}
             </g>
 
-            {/* the departments: the frame, collapsed to its band */}
+            {/* the departments: the Marketing frame at a smaller size */}
             {DEPTS.map((d, i) => {
               const x = d.side === "l" ? CARD.l : CARD.r;
+              const y0 = d.y - CARD.h / 2;
+              const xe = d.side === "l" ? x + CARD.w : x;
               return (
-                <polygon
+                <g
                   key={d.name}
                   className="xn-dept"
                   data-on={st.on(i) ? "" : undefined}
                   style={{ opacity: st.frame }}
-                  points={cutBox(x, d.y - CARD.h / 2, x + CARD.w, d.y + CARD.h / 2, CARD.cut)}
-                />
+                >
+                  <polygon
+                    className="xn-frame__body"
+                    points={cutBox(x, y0, x + CARD.w, y0 + CARD.h, CARD.cut)}
+                  />
+                  <polygon
+                    className="xn-frame__band"
+                    points={ptsOf([
+                      [x, y0],
+                      [x + CARD.w - CARD.cut, y0],
+                      [x + CARD.w, y0 + CARD.cut],
+                      [x + CARD.w, y0 + CARD.band],
+                      [x, y0 + CARD.band],
+                    ])}
+                  />
+                  <line
+                    className="xn-frame__rule"
+                    x1={x}
+                    x2={x + CARD.w}
+                    y1={y0 + CARD.band}
+                    y2={y0 + CARD.band}
+                  />
+                  {/* the ribbon's port, centred on the card's edge */}
+                  <rect
+                    className="xn-port"
+                    x={xe - 3}
+                    y={d.y - 3}
+                    width={6}
+                    height={6}
+                    opacity={st.rib(i) >= 1 ? 1 : 0.35}
+                  />
+                </g>
               );
             })}
 
@@ -794,14 +828,17 @@ export function NetworkPlug() {
                   key={d.name}
                   className="xn-band xn-band--dept"
                   data-on={on ? "" : undefined}
-                  style={{ ...at(x + 16, d.y), opacity: st.frame }}
+                  style={{ ...at(x + 16, d.y - CARD.h / 2 + CARD.band / 2), opacity: st.frame }}
                 >
                   {d.name}
                 </span>,
                 <span
                   key={`${d.name}-next`}
                   className="xn-next"
-                  style={{ ...at(x + 16, d.y + CARD.h / 2 + 16), opacity: on ? 1 : 0 }}
+                  style={{
+                    ...at(x + 16, d.y - CARD.h / 2 + CARD.band + (CARD.h - CARD.band) / 2),
+                    opacity: on ? 1 : 0,
+                  }}
                 >
                   Plugs in next
                 </span>,

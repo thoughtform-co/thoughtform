@@ -211,18 +211,16 @@
   color: var(--xb-text-2);
 }
 
-/* a department: the Marketing frame collapsed to its band */
-.xn-dept {
-  fill: color-mix(in srgb, var(--xb-gold) 7%, transparent);
-  stroke: color-mix(in srgb, var(--xb-gold) 28%, transparent);
-  stroke-width: 1;
-  transition:
-    fill 300ms ease,
-    stroke 300ms ease;
+/* a department: the Marketing frame at a smaller size, quiet until its
+   ribbon arrives */
+.xn-dept > polygon,
+.xn-dept > line {
+  opacity: 0.5;
+  transition: opacity 300ms ease;
 }
-.xn-dept[data-on] {
-  fill: color-mix(in srgb, var(--xb-gold) 16%, transparent);
-  stroke: color-mix(in srgb, var(--xb-gold) 55%, transparent);
+.xn-dept[data-on] > polygon,
+.xn-dept[data-on] > line {
+  opacity: 1;
 }
 .xn-band--dept {
   color: color-mix(in srgb, var(--xb-gold) 45%, transparent);
