@@ -158,3 +158,42 @@
 .pk-i__bar-row[data-lit] .pk-i__bar-v {
   color: var(--pk-ink);
 }
+
+/* ── round six, U1 (owner, 2026-10-12) ── */
+
+/* the live proposal's box: the band is 10vw a side up to 1200px wide, then
+   centred (measured on /arcs/x-bionic/proposal: 129px at 1280, 148px at
+   1470, 1200px wide at 1920 and 2560); the live card is at most 880 tall */
+.pk-stage:has(.pk-i) {
+  padding-inline: max(10vw, calc((100vw - 1200px) / 2));
+}
+.pk-stage:has(.pk-i) .pk-tag {
+  left: max(10vw, calc((100vw - 1200px) / 2));
+}
+.pk-stage:has(.pk-i) .pk-pick {
+  right: max(10vw, calc((100vw - 1200px) / 2));
+}
+.pk-h.pk-i {
+  min-height: min(calc(100svh - 128px - 8svh), 880px);
+}
+
+/* the right panel takes more of the width, so the left frames run shorter */
+.pk-i__body {
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+}
+
+/* Embed and Empower in green, the human's colour: they break the flow */
+.pk-i__big {
+  border-color: rgba(var(--pk-green-rgb), 0.45);
+}
+.pk-i__big .pk-c__tab {
+  border-color: rgba(var(--pk-green-rgb), 0.55);
+  background: rgba(var(--pk-green-rgb), 0.16);
+  color: var(--pk-green);
+}
+.pk-i__big::after {
+  background: rgba(var(--pk-green-rgb), 0.8);
+}
+.pk-i__big .pk-body {
+  color: var(--pk-ink);
+}
