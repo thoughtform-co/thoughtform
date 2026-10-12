@@ -16,6 +16,8 @@ export interface PlugStep {
   tone: StepTone;
   /** One line under the flow, at most 30 characters. */
   line: string;
+  /** The part of the flow the step's frame or tab names. */
+  frame: string;
   span: readonly [number, number];
 }
 
@@ -24,9 +26,10 @@ export const PLUG_STEPS: readonly PlugStep[] = [
     n: "01",
     id: "embed",
     step: "Embed",
-    key: "Your teams",
+    key: "Your team",
     tone: "green",
     line: "Inside your four workstreams",
+    frame: "Your team",
     span: [96, 448],
   },
   {
@@ -36,6 +39,7 @@ export const PLUG_STEPS: readonly PlugStep[] = [
     key: "The layer",
     tone: "gold",
     line: "How they work, written down",
+    frame: "The X-Bionic layer",
     span: [470, 730],
   },
   {
@@ -45,6 +49,7 @@ export const PLUG_STEPS: readonly PlugStep[] = [
     key: "Your agents",
     tone: "dawn",
     line: "In the tools you already use",
+    frame: "Claude Enterprise",
     span: [770, 1200],
   },
 ];

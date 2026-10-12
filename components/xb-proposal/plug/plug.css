@@ -28,12 +28,12 @@
   position: relative;
   align-self: center;
   justify-self: center;
-  margin: 0 0 64px;
+  margin: 0 0 48px;
   /* bound by the width AND the height the head and the step key leave */
   width: min(
     100%,
     calc(
-      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 236px) * 1200 / 460
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 210px) * 1200 / 460
     )
   );
   aspect-ratio: 1200 / 460;
@@ -106,7 +106,8 @@
 
 /* ---- words, seated in the frame's units ---- */
 
-.pl-fig > div {
+.pl-fig > div,
+.pl-fig > a {
   position: absolute;
   left: calc(var(--px) * 100%);
   top: calc(var(--py) * 100%);
@@ -151,39 +152,13 @@
 
 .pl-cap {
   transform: translateX(-50%);
-  display: grid;
-  justify-items: center;
-  gap: 0.35em;
   white-space: nowrap;
-}
-.pl-cap__key {
-  font-family: var(--xb-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--xb-gold);
-}
-.pl-cap__sub {
   font-family: var(--xb-sans);
   color: var(--xb-text-2);
 }
-
-.pl-ce {
-  transform: translateY(-50%);
-  width: calc(var(--w) * 100%);
-  display: flex;
-  align-items: center;
-  gap: 0.6em;
-  padding: 0.55em 0.7em;
-  background: var(--xb-ground);
-  border: 1px solid var(--xb-gold);
-  color: var(--xb-text);
-  font-family: var(--xb-sans);
-  white-space: nowrap;
-}
-
 .pl-card {
   transform: translateY(-50%);
-  width: calc((1200 - 944) / 1200 * 100cqw);
+  width: calc(var(--w) * 100%);
   display: flex;
   align-items: center;
   gap: 0.7em;
@@ -234,7 +209,7 @@
 }
 .pl-card[data-lit] .pl-card__title,
 .pl-card[data-lit] .pl-card__ico {
-  color: var(--xb-ground);
+  color: #0a0908;
 }
 .pl-card[data-lit] .pl-card__ico {
   border-color: rgb(10 9 8 / 0.3);
@@ -244,78 +219,88 @@
   color: rgb(10 9 8 / 0.62);
 }
 
-/* the three steps under the drawing: a bracket in the step's tone over the
-   region it covers, the step, one line. Each links to its step below. */
-.pl-fig > .pl-steps {
-  position: absolute;
-  font-size: max(12px, 1.05cqw);
-  left: 0;
-  right: 0;
-  top: calc(100% + 16px);
-  height: 3.6em;
+/* ---- the frames, their tabs, the footer ---- */
+
+.pl-frame {
+  fill: none;
+  stroke: var(--xb-line-2);
 }
-.pl-step {
-  --tone: var(--xb-text-3);
-  position: absolute;
-  left: calc(var(--x0) * 100%);
-  width: calc((var(--x1) - var(--x0)) * 100%);
-  display: grid;
-  justify-items: center;
-  gap: 0.25em;
-  padding-top: 0.6em;
-  border-top: 1px solid var(--tone);
+.pl-frame--team {
+  stroke: color-mix(in srgb, var(--pl-green) 55%, transparent);
+}
+.pl-frame--run {
+  stroke: var(--xb-line-2);
+  fill: rgb(235 227 214 / 0.02);
+}
+.pl-bus {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.75;
+}
+.pl-tap {
+  fill: var(--xb-gold);
+}
+
+.pl-tab {
+  --tone: var(--xb-text-2);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.45em 0.9em;
+  background: var(--xb-ground);
+  border: 1px solid var(--tone);
+  font-family: var(--xb-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
 }
-.pl-step::before,
-.pl-step::after {
-  content: "";
-  position: absolute;
-  top: -6px;
-  width: 1px;
-  height: 6px;
-  background: var(--tone);
+.pl-tab[data-align="center"] {
+  transform: translate(-50%, -50%);
 }
-.pl-step::before {
-  left: 0;
-}
-.pl-step::after {
-  right: 0;
-}
-.pl-step[data-tone="green"] {
+.pl-tab[data-tone="green"] {
   --tone: var(--pl-green);
 }
-.pl-step[data-tone="gold"] {
+.pl-tab[data-tone="gold"] {
   --tone: var(--xb-gold);
 }
-.pl-step[data-tone="dawn"] {
+.pl-tab[data-tone="dawn"] {
   --tone: var(--xb-text-2);
 }
-.pl-step__key {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6em;
-  font-family: var(--xb-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--xb-text);
-}
-.pl-step__key i {
+.pl-tab i {
   width: 7px;
   height: 7px;
   background: var(--tone);
 }
-.pl-step__line {
-  font-family: var(--xb-sans);
-  color: var(--xb-text-2);
+.pl-tab__n {
+  color: var(--xb-text-3);
 }
-.pl-step:hover .pl-step__line,
-.pl-step:focus-visible .pl-step__line {
+.pl-tab__name {
   color: var(--xb-text);
 }
-.pl-step:focus-visible {
-  outline: 1px solid var(--tone);
-  outline-offset: 4px;
+.pl-tab:hover,
+.pl-tab:focus-visible {
+  background: var(--xb-ground-2);
+  outline: none;
+}
+
+.pl-fig > .pl-foot {
+  position: absolute;
+  font-size: max(12px, 1.05cqw);
+  left: 0;
+  right: 0;
+  top: calc(100% + 18px);
+  margin: 0;
+  text-align: center;
+  font-family: var(--xb-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--xb-text-3);
+}
+.pl-foot span {
+  color: var(--xb-gold);
+  margin: 0 0.4em;
 }
 
 /* ---- arrival: once, on the stamp; the rest state is the drawing ---- */
