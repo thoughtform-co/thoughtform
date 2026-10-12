@@ -1,14 +1,14 @@
 ---
 paths:
   - "components/landing/v7/**"
-  - "app/(marketing)/**"
+  - "app/(marketing)/page.tsx"
   - "public/prototypes/v7/landing-v7-motion.html"
 description: Landing v7 compositing, layers, and brandmark journey
 ---
 
 # Rule: Landing v7
 
-When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you are in a **layered composite** (fixed gateway, sticky hero, opaque stations) — not a flat page.
+When editing files under `components/landing/v7/**` or `app/(marketing)/page.tsx`, you are in a **layered composite** (fixed gateway, sticky hero, opaque stations) — not a flat page.
 
 **Read first**
 

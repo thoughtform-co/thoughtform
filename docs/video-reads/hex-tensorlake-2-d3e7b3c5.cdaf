@@ -1,0 +1,51 @@
+--- CDAF/1.0
+video: HEX_Tensorlake-2.mp4
+sha256: d3e7b3c5c78f681170d4626fc3aafd771971fadacba1d51053200f7f0a09401d
+bytes: 7125238
+duration: 00:00:10.069
+resolution: 2560x1440
+fps: 60
+generator: gemini-3.1-pro-preview
+created: 2026-10-12T03:56:21Z
+detail: rich
+lang: en
+x-profile: reference
+x-source: I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard\Sections\HEX_Tensorlake-2.mp4
+---
+
+## Summary
+A screen recording of the Tensorlake website design. Useful as a reference for technical animated flowcharts, dark mode aesthetics, and grid-based section layouts.
+
+## Segments
+[00:00.0-00:03.9] Close-up animation of a node-based flowchart processing a user query.
+[00:04.0-00:09.9] View zooms out to reveal the hero section, then pulls back further to show a static collage of multiple website sections in a grid layout.
+
+## Transcript
+(no speech)
+
+## On-screen Text
+[00:00.0] USER: "WHAT IS NIKE'S CHINA EXPOSURE AND HOW HAS IT CHANGED?"
+[00:01.0] /APPLICATIONS/FINANCIAL_RESEARCH, AGENT:HTTP-ENDPOINT
+[00:01.5] TENSORLAKE, AGENT RUNTIME, AGENT HARNESS
+[00:02.5] [ANALYZING PERFORMANCE], GENERATED REPORT: NIKE'S CHINA REVENUE DECLINED...
+[00:04.0] The Engine for Agentic Work. Ship reliable, high-throughput agents without infrastructure drudgery.
+[00:06.0] Up-leveling Document Ingestion Beyond OCR.
+[00:08.0] Computers for LLMs. Fits Into Your Stack Seamlessly. Do more with Documents.
+
+## Site Log
+| Time range | URL read off the address bar | Site or product | On screen | Cursor points at | Quote | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| 00:00.0-00:09.9 | (none visible) | Tensorlake | Animated flowchart, website layout collage | (none) | (none spoken) | (none spoken) |
+
+## Properties
+Layout: Bento-box style grid layout for product features (00:04.0-00:09.9).
+Colors: Dark mode background with neon green accents and white text (00:00.0-00:09.9).
+Typography: Monospace fonts for technical diagrams, clean sans-serif for primary headers (00:00.0-00:09.9).
+Motion: Line-drawing and typing animations in the flowchart; smooth continuous zoom-out camera move (00:00.0-00:09.9).
+Diagrams: Terminal-inspired node flowcharts with connecting paths (00:00.0-00:04.0).
+
+## Synthesis
+The reference focuses on a developer-centric aesthetic, utilizing terminal-style animated flowcharts and a structured bento-box grid to visually explain complex system architectures.
+
+## Tags
+tensorlake.ai, HEX studio, dark mode, neon green, bento box layout, grid, animated flowcharts, technical design, monospace, terminal UI, UI reference

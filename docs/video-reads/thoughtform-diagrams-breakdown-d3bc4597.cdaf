@@ -1,0 +1,98 @@
+--- CDAF/1.0
+video: Thoughtform_Diagrams Breakdown.mp4
+sha256: d3bc4597fc95bf7f62cf243890b25bc7d1fc345fa8167d34b03c3ed530494481
+bytes: 103184781
+duration: 00:04:33.647
+resolution: 1282x720
+fps: 60
+generator: gemini-3.1-pro-preview
+created: 2026-10-12T04:10:06Z
+detail: rich
+lang: en
+x-profile: diagrams
+x-source: I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard\_Feedback\Thoughtform_Diagrams Breakdown.mp4
+---
+
+## Summary
+In this video, Vince Buyssens reviews visual references to guide AI agents in designing a cohesive diagram and UI system for Thoughtform's proposals and website. He uses Pinterest to showcase 2D terminal interfaces, clean mathematical visualizations, and isometric technical drawings, contrasting them with a local animated 3D hologram artifact to outline rules for when to use 2D versus 3D elements while maintaining a unified sci-fi aesthetic.
+
+## Segments
+[00:00.0-00:48.8] Vince is on a Pinterest board titled "INTERFACES 2 U", clicking on a cyan orbital diagram and then a green terminal interface pin.
+[00:48.8-01:29.8] The screen switches to a local HTML file displaying a rotating 3D holographic artifact with concentric rings and a waveform, which he pans and zooms.
+[01:29.8-03:51.6] Vince returns to Pinterest, scrolling and opening various diagram pins, including a vertical flowchart, a circular neon process visualization, and several isometric plots and technical drawings.
+[03:51.6-04:33.6] He switches away from Pinterest, briefly showing a Notion document next to an image, then the Atreides company website, and finally opening the Windows Start menu while finishing his thought.
+
+## Transcript
+[00:00.0] Vince: So, um, in the first video I gave feedback on the X-Bionic and the proposal templates.
+[00:06.0] Vince: Then I showed some references, and then here I'm gonna show you like what I mean with like diagrams and visual systems.
+[00:13.2] Vince: So I'm here on Pinterest, and like what I like about this one, this um Xenomorph alien interface from Weyland-Yutani.
+[00:22.0] Vince: It's like it's really built in a terminal interface.
+[00:25.5] Vince: And again, many of these references I'm sharing, they may be different types of styles, different types of information they're trying to convey.
+[00:32.4] Vince: So, but that's also the entire point, that I kind of like untangle all these different sources of inspiration so that we can really land on something good.
+[00:41.3] Vince: Because not every section needs to do the same, but it can't be like too discombobulated either.
+[00:46.4] Vince: Uh, because, switching briefly to here...
+[00:51.3] Vince: We made this, or we replicated this, it's a sort of 3D artifact inspired by Holo UI, and it looks super great, but this is like 3D.
+[01:00.3] Vince: Not everything has to be 3D.
+[01:03.2] Vince: At the same time, the 2D ones, they need to feel as part of the same design language.
+[01:09.1] Vince: So the way I think we build it now is that the center here of our artifact is a Thoughtform brand mark.
+[01:15.0] Vince: And then the left side would represent maybe upstream, and then the right side downstream.
+[01:20.1] Vince: Um, so, and I think with some simple animations we can really convey that.
+[01:24.7] Vince: But then, I think TensorLake had that good information architecture, but also cool diagrams.
+[01:30.1] Vince: So this third video is really about like, um, the diagrams.
+[01:36.5] Vince: Um... yeah, so I think this is an interesting one.
+[01:41.0] Vince: Talking about diagrams, like I think this is an actual diagram.
+[01:46.0] Vince: Um, this is also looking quite interesting because it's also something from a terminal interface.
+[01:53.0] Vince: Um... then this process visualization is super clean, it's more mathematical.
+[01:59.0] Vince: I think it's also something that we can like look at.
+[02:05.1] Vince: Um... at the same time, if I look at this what I just discovered, it's more like isometric.
+[02:12.7] Vince: Um... I think it's also an interesting thing.
+[02:18.0] Vince: Um, but again, like, I just love the aesthetic, but I'm, like, I wouldn't necessarily know how to implement it, but that's what I need your help with.
+[02:28.0] Vince: Um, and like these isometric holograms, I think it's also nice.
+[02:34.0] Vince: Uh, but maybe they don't need to be, like, as part of, like, a frame.
+[02:39.0] Vince: For example, the frame where we talk about creative strategy, creative production, etc., there we need little icons.
+[02:43.7] Vince: That shouldn't be like a 3D thing, right?
+[02:46.5] Vince: Should be more like a 2D thing.
+[02:50.0] Vince: Um, so maybe we need to use the 3D ones more sparingly, but I'll leave that up to you.
+[02:57.1] Vince: Um, let me find some other interesting references.
+[03:00.6] Vince: Um... yeah, I think another good one... let me scroll down a bit.
+[03:07.4] Vince: Um... is... hold on... yes, I think it's this one.
+[03:16.8] Vince: Because like if we look at our storytelling or leitmotif, it's navigation, and in navigation you have like technical manuals.
+[03:24.4] Vince: And I think having this, isometric 3D, we already have that, I think it could also be interesting.
+[03:32.4] Vince: Like the, um, that's also a recent realization: what we bring is like a thoughtform, that intelligence configuration, it's a thoughtform.
+[03:41.5] Vince: Form into thoughts.
+[03:43.6] Vince: Um, and then it's plugged into your organization like, uh, this.
+[03:48.0] Vince: I think the biggest challenge, like thinking about this, is like really understanding um like how we mar... or how we combine the 2D with the 3D, uh, one of course.
+[04:05.0] Vince: Mm... voila...
+
+## On-screen Text
+[00:00.0] URL: pinterest.com/thoughtform/interfaces-ui/
+[00:00.0] Pin title: Approach Mark Orbit
+[00:48.8] URL: file:///C:/Users/Vince/Downloads/Thoughtform%20-%20Holo%20UI/index.html
+[01:55.7] Pin title: Process — Melike Turgut
+[02:31.0] Pin text: DATA RULES THE UNIVERSE
+[03:15.8] Pin title: Space Vehicle Diagram - Space Vehicle - T-Shirt | TeePublic
+
+## Diagram Log
+[00:00.0-00:15.5] Pinterest. 2D orthographic. Cyan lines, arcs, concentric circles, small blocks. Orbital mechanics or spatial approach path. "APPROACH MARK ORBIT", coordinate numbers. Spherical grid reticle. Static. "So, um, in the first video I gave feedback on the exbionic and the proposal templates." (none spoken)
+[00:15.5-00:48.8] Pinterest. 2D orthographic. Green glowing lines, solid boxes, monospace text. System status or data readout. "W-Y", data blocks, numbers. Grid layout on dark screen. Static. "what I like about this one, this, um, Xenomorph alien interface from Wayland-Yutani... it's really built in a terminal interface." Likes that it is built in a terminal interface.
+[00:48.8-01:29.8] Local HTML file. 3D perspective. Concentric dashed rings, central topographic mass, trailing waveform. Brand mark (center), upstream (left), downstream (right). Small UI elements, numbers, axis labels. 3D space with a subtle background grid. Continuous rotation and wave animation. "it's like a sort of 3D artifact inspired by Holo UI, and it looks super great, but this is like 3D." Looks super great, but notes that not everything needs to be 3D.
+[01:41.9-01:55.7] Pinterest. 2D orthographic. Vertical flow lines, small circles, sharp angles. Process flow or system state. Status codes, numbers. Vertical axis flow. Static. "Talking about diagrams, like I think this is an actual diagram... this is also looking quite interesting because it's also something from a terminal interface." Looks interesting because it feels like a terminal interface.
+[01:55.7-02:08.5] Pinterest. 2D orthographic. Continuous sweeping curves. Mathematical process. (none visible). Circular boundary. Static. "this process visualization is super clean, it's more mathematical, I think it's also something that we can, like, look at." Super clean, wants to look at it as a reference.
+[02:08.5-02:29.0] Pinterest. Isometric 3D. Parallel cascading colored lines. Data series or spectrum. "45", "P005". Isometric grid planes. Static. "it's more like isometric... I think it's also an interesting thing... I wouldn't necessarily know how to implement it, but that's what I need your help with." Interesting, loves the aesthetic, but unsure how to implement it.
+[02:29.0-02:59.0] Pinterest. Isometric 3D. White grid box, gradient curved plane. Multi-variable data plot. "DATA RULES THE UNIVERSE", axis markers. 3D bounding box. Static. "like these isometric holograms, I think it's also nice. Uh, but maybe they don't need to be, like, as part of, like, a frame." Nice, but isometric 3D should be used sparingly and not for small icons.
+[03:15.8-03:49.0] Pinterest. Isometric 3D. Exploded mechanical rendering, green wireframe. Technical manual illustration of a space vehicle part. Pointer lines to components. Isometric projection. Static. "if we look at our storytelling or leitmotif, it's navigation, and in navigation you have like technical manuals. And I think having this, isometric 3D, we already have that, I think it could also be interesting." Interesting because it fits the technical manual leitmotif.
+
+## Rules
+2D diagrams must feel like part of the same design language as the 3D artifacts.
+The center of the main artifact represents the Thoughtform brand mark.
+The left side of the main artifact represents upstream data; the right side represents downstream data.
+Use simple animations to convey flow or meaning.
+3D elements should be used sparingly.
+Small UI icons inside frames must be 2D, not 3D.
+Designs should fit a terminal interface aesthetic or technical manual leitmotif.
+
+## Synthesis
+The desired diagram system is a cohesive blend of 2D and 3D elements inspired by retro-futuristic terminal interfaces and holographic data displays. The system uses a strict hierarchy: complex, large-scale visualizations and technical manual motifs can utilize 3D isometric or perspective wireframes, while smaller, functional UI elements and basic process flows must remain clean, 2D line art. The core visual language relies on glowing geometric primitives against dark backgrounds, anchored by a central brand identity ("thoughtform") that maps systemic flows from upstream to downstream. The overarching challenge is seamlessly integrating these 2D and 3D styles without causing visual discombobulation.
+
+## Tags
+Vince Buyssens, Thoughtform, Pinterest, UI design, diagram design, 2D, 3D, isometric, holograms, retro terminal, sci-fi interface, wireframe, data visualization, design language, visual system

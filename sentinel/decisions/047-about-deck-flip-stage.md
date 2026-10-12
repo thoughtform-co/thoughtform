@@ -522,7 +522,7 @@ brightness step against `__v`'s full dawn), and `.voidwalker__name em`
 (currently dead — no `<em>` in the name — touched for lockstep only, zero
 visual effect). Link hover (`.voidwalker__links a:hover`, border+color+bg)
 was deliberately LEFT gold — that is the sitewide interactive-affordance
-convention (CLAUDE.md "Grid Item Hover States"), not a body font color, and
+convention ([DIGEST.md](../DIGEST.md) "Grid Item Hover States", in CLAUDE.md until 2026-10-12), not a body font color, and
 this instruction was about the text.
 
 **2. One new accent hook, not a repurposed `em`/`strong`.** Since those two

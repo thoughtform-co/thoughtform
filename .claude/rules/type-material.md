@@ -1,3 +1,13 @@
+---
+paths:
+  - "app/styles/variables.css"
+  - "tests/lib/type-material-tokens.test.ts"
+  - "scripts/design-eval/mechanical.mjs"
+  - "lib/services-ring/ringType.ts"
+  - ".claude/skills/thoughtform-design/eval/rubric.md"
+description: The type ramps by role (ADR-092) — four tracking rungs and a weight ceiling on the root, and the ratchet that pins them
+---
+
 # Rule: the type ramps by role (ADR-092)
 
 Four tracking rungs and a weight ceiling, declared once on `:root`, read by every

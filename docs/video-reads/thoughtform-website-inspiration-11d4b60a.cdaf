@@ -1,0 +1,263 @@
+--- CDAF/1.0
+video: Thoughtform_Website Inspiration.mp4
+sha256: 11d4b60a692057f62329fac2173356b869710e9f6d4f6567c1001ee14778e891
+bytes: 232147008
+duration: 00:12:28.287
+resolution: 1282x720
+fps: 60
+generator: gemini-3.1-pro-preview
+created: 2026-10-12T04:08:10Z
+detail: rich
+lang: en
+x-profile: reference
+x-source: I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard\_Feedback\Thoughtform_Website Inspiration.mp4
+---
+
+## Summary
+Vince Buyssens reviews reference websites to guide the design of his agency's site and client proposals. He highlights preferred layouts, typography, and diagram styles, emphasizing clean, centered structures, straight corners, and isometric SVG visualizations.
+
+## Segments
+[00:00.0-02:25.0] Vince reviews Hex/Tensorlake, highlighting alignment, diagrams, and spacing.
+[02:25.0-05:00.0] Vince analyzes Unsiloed, praising its centered layout, straight corners, and sticky scroll isometric diagrams.
+[05:00.0-05:51.0] Vince looks at Rollups, noting its centered structure and breathing room.
+[05:51.0-06:31.0] Vince reviews Lighthouse, appreciating the layout but disliking rounded corners.
+[06:31.0-07:07.0] Vince examines Atomic Tessellator, focusing on isometric visuals and particle systems.
+[07:07.0-07:42.0] Vince looks at Cluster, specifically admiring a workflow diagram.
+[07:42.0-08:00.0] Vince briefly shows Enerblock, noting its info clustering.
+[08:00.0-08:39.0] Vince reviews Augustus, liking its stacked layout and blue diagrams.
+[08:39.0-08:59.0] Vince checks Prime Intellect, finding it dense but with good diagrams.
+[08:59.0-09:14.0] Vince looks at Euclid, pointing out centered elements.
+[09:14.0-09:51.0] Vince examines Spade, liking the visuals but not the background video diagrams.
+[09:51.0-10:18.0] Vince views Cofounder, appreciating the typography.
+[10:18.0-10:41.0] Vince reviews CCTP, liking its technical feel.
+[10:41.0-10:48.0] Vince briefly scrolls through Vite.
+[10:48.0-11:09.0] Vince looks at NoGood Studio, noting its centered creative layout.
+[11:09.0-11:21.0] Vince shows Dispatch, praising its technical aesthetic and fonts.
+[11:21.0-11:43.0] Vince briefly recaps previous sites.
+[11:43.0-12:28.2] Vince reviews Arrakis, highlighting its centered layout and visualizations.
+
+## Transcript
+[00:00.0] Vince: So now I'm going to take you through like a video, a loom of like very good references.
+[00:05.4] Vince: And again, um, that's a bit of a tricky thing.
+[00:10.5] Vince: Across all these different websites, there must be like an underlying pattern.
+[00:14.7] Vince: Even though they're all different, that makes it all look good.
+[00:17.0] Vince: I think that's easy to foundation of like UX design, design just in general.
+[00:21.7] Vince: But at the same time they're also different.
+[00:23.2] Vince: So I don't wanna Frankenstein stuff.
+[00:25.1] Vince: But I hope by recording this that you really understand like what I'm trying to get at.
+[00:30.0] Vince: So Hex is like a agency that's been doing like a lot of crazy branding.
+[00:35.3] Vince: And then the founder on X, formerly Twitter, has been posting screenshots.
+[00:39.4] Vince: And, uh, if you look at the previous commits, our Google Drive in our Thoughtform branding website and like UX, we have like a section, I think, um, about sections.
+[00:50.1] Vince: And there Tensorlake comes like back a lot.
+[00:53.3] Vince: And, um, like you've watched the first video where I reviewed the Thoughtform changes from ex bionic and the proposals.
+[01:04.2] Vince: Gave me anxiety, was like a lot of feedback.
+[01:05.9] Vince: But then when I look at this, it just looks good.
+[01:08.8] Vince: I mean, the way the text here is positioned, the way they have like these three dots here and then the text here and then just the spacing and the margin.
+[01:17.9] Vince: This just has so much breathing room.
+[01:20.1] Vince: Also, this left one, I really invite you to like, um, analyze this section and really extract the screenshots, because all these different frames, the diagrams that I've been mentioning, they fucking nailed it and that's what I want.
+[01:35.3] Vince: Also here they have like big text here.
+[01:38.2] Vince: They have like some visualizations here on the right side as well.
+[01:42.5] Vince: Um, here we also have these things.
+[01:46.3] Vince: Now, I'm not saying that I want these punch card aesthetics that like they have.
+[01:50.8] Vince: They have on the left side for some of their components like a punch card thing.
+[01:54.6] Vince: I don't want that. It is more about the flow.
+[01:56.9] Vince: Here also, I think what's also missing is like we have that beautiful tensor gold color whereas they have a green color.
+[02:04.0] Vince: I think we can really work with our colors a bit more.
+[02:07.9] Vince: Here that's like a modular system, something also looking at.
+[02:12.7] Vince: Um, like this is a very good inspiration.
+[02:18.4] Vince: Um, also in light mode that I feel like we can draw inspiration from.
+[02:22.5] Vince: So Hex Tensorlake good inspiration.
+[02:26.1] Vince: Then another one, and this is like a series of like four websites that actually have a similar structure as our Thoughtform website, in the sense that they all have their website and their section centered.
+[02:37.0] Vince: It's not full width screen.
+[02:38.4] Vince: Like for example, here it is canopy planets, that's something completely different.
+[02:43.1] Vince: That's like an anti pattern maybe I would say.
+[02:45.3] Vince: That's not what I want, no.
+[02:46.7] Vince: When I'm looking at like this, looks very nice.
+[02:50.2] Vince: Also, exactly the type of thing I want is like these isometric diagrams visualization, this is fucking great.
+[02:58.3] Vince: Um, not sure how it's built, SVG, whatever.
+[03:01.3] Vince: Thing is like um Opus 5.5 is very good at motion design, so maybe we can reuse that.
+[03:09.9] Vince: Um, maybe remotion or hyper frames or whatever.
+[03:14.3] Vince: Just but I think it's like SVG where we can um really build these type of things, not a copy of their style, but what we have.
+[03:23.7] Vince: Um, and then also here they have like these little diagrams.
+[03:28.1] Vince: The text is nicely aligned.
+[03:29.8] Vince: Note that they also use like straight corners.
+[03:32.4] Vince: They don't have like um rounded corners, which I love.
+[03:36.5] Vince: And you could say like hey, we have like a a notch, which is fine, but structurally we still use straight corners.
+[03:42.1] Vince: Also here how like all these things are like visualized.
+[03:46.5] Vince: Um, yeah, I think we can definitely draw inspiration from that.
+[03:49.4] Vince: Thing is though, like across all our sections we use like um an H1 on the left, paragraph on the right, like linear.
+[03:57.0] Vince: But maybe we can switch it around and every once in a while also play with something like this.
+[04:02.4] Vince: Like, um.
+[04:04.2] Vince: But then the absolute amazing piece is like this.
+[04:08.5] Vince: They have like a sticky here.
+[04:10.2] Vince: And then they basically show their flow.
+[04:13.2] Vince: And I think we can draw inspiration from this, from like hey, uh this is the team's knowledge, tacit knowledge.
+[04:22.3] Vince: We encoded it into like a substrate, like that with the evals and the skills etc.
+[04:28.2] Vince: And then we plug it into your um cloud enterprise.
+[04:32.3] Vince: That was specifically the ask of like ex bionic.
+[04:35.4] Vince: If you look at the, look at the um Whisper flow nodes, that was exactly what I meant.
+[04:40.8] Vince: So I think this is a very good reference.
+[04:43.0] Vince: It's like easy to parse through, etc, etc.
+[04:46.1] Vince: And I think understanding internalizing these principles, using like our armada evals, the silicon jungle types of stuff, I think we can really build a scalable uh brand system.
+[05:00.1] Vince: Another example centered is this one.
+[05:03.9] Vince: Now caveat is that they all use like these borders left and right.
+[05:09.9] Vince: Um, I think we can do that.
+[05:12.1] Vince: The difference with between like Unsiloed and like Rollups is that they also have a horizontal divider going through it.
+[05:19.4] Vince: We don't need that because we, that would kind of mess up with like our left and right rail.
+[05:24.4] Vince: But fundamentally, like when you scroll through this, it's just so easy to look at, everything has breathing room.
+[05:30.4] Vince: And I can imagine it also looks amazing on like uh mobile.
+[05:36.1] Vince: Um, I was actually looking for this website for a while, couldn't find it, cause I found that very interesting.
+[05:41.5] Vince: I think this Unsiloed is more like a North Star.
+[05:46.3] Vince: But I think here it's also like nice sections etc, a nice visualization.
+[05:50.8] Vince: That's what we want.
+[05:52.4] Vince: Um.
+[05:53.3] Vince: Another example where they have like the centered stuff, uh but let's ignore the horizontal divider is Lighthouse.
+[05:59.6] Vince: It's also reference I shared where they also have like nice placement between text.
+[06:04.5] Vince: Uh yes, they use rounded corners, but I think it doesn't really matter.
+[06:09.6] Vince: Um, also here a visual and then some sort of information here.
+[06:14.2] Vince: Now again, I'm not saying like hey copy all these things.
+[06:16.8] Vince: I want you to like really analyze every website, the code, what I explained, and then use this to build like different like scenarios, and so we can uh review different versions of that, those sections I mentioned on our websites we can iterate on.
+[06:33.4] Vince: I think Atomic Tessellator, I think it's also built by Hex.
+[06:37.7] Vince: Um, maybe not a big fan of like these forward slashes in the 0 but it's nice isometric visuals diagrams.
+[06:44.8] Vince: They have a particle system here, we also have that so I think we can draw inspiration from that.
+[06:50.5] Vince: Um.
+[06:51.5] Vince: Again, I would say when it comes to like a combination of information architecture, isometric diagrams and just general nice UI, I think the Unsiloed is a good reference.
+[07:04.5] Vince: Uh, but I think Lighthouse is also good.
+[07:06.0] Vince: Atomic Tessellator.
+[07:07.5] Vince: Uh, here another Get Cluster, they use the same same thing.
+[07:13.2] Vince: Um, I would say it's a bit more chaotic than I'm, than I would like.
+[07:18.1] Vince: They don't really have that many diagrams but I definitely like this flow here.
+[07:22.5] Vince: They have like an amazing flow where you can see like okay, these are all the tools, the sources, you have a cluster, and then you have like um what comes out of it.
+[07:31.7] Vince: I think it's a typical UX pattern where you have like three different phases.
+[07:36.5] Vince: Um.
+[07:37.7] Vince: But I like the Unsiloed vertical one, but we can play around with different options.
+[07:42.5] Vince: Um, this one is in between because they do have like stuff hugging the left and right borders.
+[07:51.2] Vince: But um again nice visual, you scroll through it.
+[07:55.3] Vince: Then information is also nicely clustered here, uh etc etc.
+[08:01.3] Vince: Built on Marble, I think it also follows a nice pattern where they have like also things nicely stacked.
+[08:08.5] Vince: I would say it's a bit more spread out but I think it's fine.
+[08:11.7] Vince: Uh, but I love how they use like their blue diagrams, maybe it's also SVG, to like visualize these things.
+[08:18.9] Vince: And I think here where it like changes, it's also interesting.
+[08:22.4] Vince: But again, going back to like Unsiloed, having those phases and see how they connect, I think that's uh nice.
+[08:28.9] Vince: Again, because I mentioned Unsiloed 5 times it has to be an exact copy.
+[08:32.4] Vince: But I'm just like expressing my uh emotion regarding all these things.
+[08:37.0] Vince: Um.
+[08:38.2] Vince: Then Prime Intellect, like uh it's less tranquil I would say.
+[08:44.2] Vince: But at the same time, they have like nice diagrams.
+[08:46.8] Vince: They've also information nicely split up.
+[08:50.0] Vince: It feels less like a one pager where you can easily scroll through.
+[08:53.3] Vince: This is more like dense I would say, not necessarily what I want, but you get the point.
+[08:59.8] Vince: Then Euclid, they also have like a diagram here.
+[09:03.4] Vince: Um, also stuff nicely centered there.
+[09:07.4] Vince: Um, yeah, not so much of a fan of this video with different screenshots.
+[09:12.7] Vince: Um, yeah.
+[09:15.1] Vince: And then Spade also has like um, I like these things.
+[09:20.6] Vince: But for me this feels less like diagrams and more like a background video, not really sure I like that.
+[09:27.7] Vince: Um.
+[09:28.8] Vince: Because that's also what you could do, you can just make videos, but I think videos, they're less pure than just using SVG or vectors to like really visualize the isometric stuff.
+[09:39.1] Vince: Uh these effects are nice I would say.
+[09:43.7] Vince: Um.
+[09:45.3] Vince: And just notched corner it's nice.
+[09:48.8] Vince: Uh visual some data readouts etc. I think it's uh interesting to look at.
+[09:54.6] Vince: Cofounder was also big inspiration.
+[09:57.6] Vince: Um, maybe it's a bit too small, a bit too much text.
+[10:00.5] Vince: Oh, I just noticed I zoomed out a bit.
+[10:03.2] Vince: Um, it feels a bit less, too similar each section.
+[10:07.6] Vince: But I like the way they use their font and it's subtle, uh, but again not sure if it's the best reference.
+[10:13.9] Vince: Um, but it looks very nice to look at, like the sections etc.
+[10:19.4] Vince: Um, then here, this is also maybe of a diff bit website, but when it comes to like having it feel more technical, having breathing room, this is nice.
+[10:28.2] Vince: Um, I don't like it has like 4 notches because it feels like a sort of post stamp or some sort of effect. I don't really like that.
+[10:35.3] Vince: But like visuals text etc, also a diagram here, um.
+[10:41.8] Vince: Then here also another website where everything is like centered.
+[10:47.3] Vince: Um.
+[10:48.5] Vince: And then here, that's a completely different one, but at the same time everything is also nicely centered.
+[10:52.9] Vince: It's more like a creative site where they really like highlight visuals because he's an illustrator, totally makes sense.
+[10:58.7] Vince: Um, but despite it being a bit asymmetrical, everything speaks for itself, yeah, you never feel like overwhelmed. It's more like it invites you to explore different things.
+[11:08.5] Vince: Um, here this was like a Framer template.
+[11:11.3] Vince: Not sure that we have to copy this, but this really feels like a technical website where you also have like fonts, you have like call to action here, etc.
+[11:21.1] Vince: Um, and then I think we've passed through like all the websites that I wanted to talked about.
+[11:27.4] Vince: I think the Tensorlake, uh, the way Hex presents it I think it's really nice.
+[11:32.4] Vince: The Unsiloed one, uh, are the biggest ones.
+[11:35.4] Vince: Um, and then also like Lighthouse, Atomic Tessellator.
+[11:41.7] Vince: Um, there's also one I forgot, it's called Arrakis Tech.
+[11:46.4] Vince: Arrakis, inspired by Dune.
+[11:48.2] Vince: There it's also nicely centered, going to save that to my UI UX folder.
+[11:53.6] Vince: Um, there you have like these nice things, visuals etc.
+[12:00.6] Vince: Uh, if I go to like Platform, already here.
+[12:04.6] Vince: Uh, voila. Also going at other sections.
+[12:07.7] Vince: They also have like these nice visualizations.
+[12:11.1] Vince: Uh, again, the point of this entire exercise is to build different variations of that specific section.
+[12:18.1] Vince: So that I can really land on something.
+[12:20.3] Vince: Now, what I haven't really shown yet is like those diagrams I was mentioning, but I will show that later.
+
+## On-screen Text
+[00:00.0] URL: hex.studio/work/tensorlake
+[00:01.3] Brand Identity, Website, Visual System
+[00:13.2] Get server-less runtime for agents and data ingestion
+[02:25.0] URL: unsiloed.ai
+[02:27.2] Document Layer for Enterprise AI
+[02:37.4] URL: canopyplanet.org
+[05:00.2] URL: rollups.com
+[05:03.1] Turn new investors into one line on the cap table
+[05:51.3] URL: joinlighthouse.com
+[05:53.3] Business Immigration for Frontier Talent
+[06:31.4] URL: atomictessellator.com
+[06:32.4] Critical minerals bottlenecks are national security bottlenecks
+[07:06.6] URL: getcluster.ai
+[07:07.7] Give your agents the tools to build pipeline
+[07:42.0] URL: enerblock.es
+[07:43.7] Industrialized technology for an evolving environment
+[08:00.0] URL: augustus.com
+[08:06.4] The Financial Stack of the Future
+[08:39.1] URL: primeintellect.ai
+[08:44.2] Own Your Intelligence
+[08:59.0] URL: euclid.com
+[09:00.3] Where projects take shape
+[09:14.0] URL: spade.com
+[09:16.1] The data & AI platform for modern finance
+[09:52.3] URL: cofounder.co
+[09:54.4] Cofounder is an agent orchestration platform
+[10:18.0] URL: cctp.tech
+[10:19.4] Results, Proven on Real Projects
+[10:41.0] URL: vitejs.dev
+[10:48.0] URL: nogood.studio
+[10:49.2] Illustration inspired by retro tech and fuelled by open web counterculture
+[11:09.0] URL: dispatch.co
+[11:15.5] Resolve tickets. Trigger actions.
+[11:44.1] Google Search: arrakis tech
+[11:45.3] URL: arrakis.tech
+[11:46.3] The AI OS for real-world operations
+
+## Site Log
+| Time range | URL | Site or product | On screen | Cursor points at | Quote | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| 00:00.0-02:25.0 | hex.studio/work/tensorlake | Tensorlake | Dark theme page with diagrams, text blocks | Code snippets, modular system diagram | "This just has so much breathing room." | TARGET |
+| 02:25.0-05:00.0 | unsiloed.ai | Unsiloed | Centered layout, isometric diagrams, sticky scroll | Isometric SVG diagrams, flow node sticky section | "exactly the type of thing I want is like these isometric diagrams" | TARGET |
+| 05:00.0-05:51.0 | rollups.com | Rollups | Green theme, centered layout, vertical borders | Cap table visualization | "everything has breathing room." | LIKE |
+| 05:51.0-06:31.0 | joinlighthouse.com | Lighthouse | Centered layout, typography, rounded elements | Evidence Checklist UI | "Yes, they use rounded corners, but I think it doesn't really matter." | LIKE |
+| 06:31.0-07:07.0 | atomictessellator.com | Atomic Tessellator | Dark theme, isometric grid visuals | Particle system visualization | "nice isometric visuals diagrams." | LIKE |
+| 07:07.0-07:42.0 | getcluster.ai | Cluster | Dark theme, agent workflow diagram | Workflow node connections | "I definitely like this flow here." | LIKE |
+| 07:42.0-08:00.0 | enerblock.es | Enerblock | Left/right border hugging layout, industrial imagery | Info clusters | "nice visual, you scroll through it." | LIKE |
+| 08:00.0-08:39.0 | augustus.com | Augustus | Stacked layout, blue architectural diagrams | Blue SVG diagrams | "I love how they use like their blue diagrams" | LIKE |
+| 08:39.0-08:59.0 | primeintellect.ai | Prime Intellect | Dark theme, dense information layout | Diagrams | "This is more like dense I would say, not necessarily what I want" | NEUTRAL |
+| 08:59.0-09:14.0 | euclid.com | Euclid | Centered layout, workflow UI screenshots | Video of UI screenshots | "not so much of a fan of this video with different screenshots." | NEUTRAL |
+| 09:14.0-09:51.0 | spade.com | Spade | Green/white theme, background video diagrams | Data readouts, notched corner UI | "feels less like diagrams and more like a background video" | NEUTRAL |
+| 09:51.0-10:18.0 | cofounder.co | Cofounder | Clean typography, subtle styling | Workflow sections | "It feels a bit less, too similar each section." | LIKE |
+| 10:18.0-10:41.0 | cctp.tech | CCTP | Dark theme, technical graphs | UI with 4 notched corners | "I don't like it has like 4 notches because it feels like a sort of post stamp" | LIKE |
+| 10:41.0-10:48.0 | vitejs.dev | Vite | Centered layout, code blocks | Charts | "everything is like centered." | LIKE |
+| 10:48.0-11:09.0 | nogood.studio | NoGood Studio | Centered layout, retro tech illustrations | Grid of illustrations | "it invites you to explore different things." | LIKE |
+| 11:09.0-11:21.0 | dispatch.co | Dispatch | Technical template, orange call to actions | Call to action button | "really feels like a technical website where you also have like fonts" | LIKE |
+| 11:43.0-12:28.2 | arrakis.tech | Arrakis | Centered layout, 3D layer diagrams | Isometric visualizations | "there you have like these nice things, visuals etc." | LIKE |
+
+## Properties
+*   **Layout**: Centered, constrained-width structures with left/right borders are highly preferred (Unsiloed, Lighthouse, Arrakis). Full-width sections are considered an anti-pattern.
+*   **Spacing**: Generous "breathing room" and clear margins between elements (Tensorlake, Rollups).
+*   **Corners**: Straight, sharp corners are favored over rounded ones or heavy notching (Unsiloed preferred over Lighthouse; CCTP's 4 notches disliked).
+*   **Diagrams**: Isometric SVG visualizations and clear flow/node diagrams are strongly desired to explain processes without relying on dense text or background videos (Unsiloed, Atomic Tessellator, Cluster, Augustus).
+*   **Typography & Aesthetic**: Clean, technical fonts and a structured, "un-siloed" aesthetic that feels cohesive but not monotonous (Dispatch, Cofounder).
+
+## Synthesis
+Vince desires a highly structured, technical aesthetic defined by centered layouts, ample breathing room, and straight corners. He strongly emphasizes the use of crisp, isometric SVG diagrams and clear node-based flow visualizations to explain complex processes, rejecting chaotic layouts or simple background videos.
+
+## Tags
+UI design, UX references, website layout, isometric diagrams, SVG visualization, straight corners, breathing room, centered design, tech websites, workflow diagrams, target, like, neutral

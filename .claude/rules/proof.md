@@ -1,3 +1,32 @@
+---
+paths:
+  - "lib/cases/**"
+  - "components/landing/home-v2/services/casefile/**"
+  - "lib/arcs/content/shared/**"
+  - "app/(internal)/test/field-log-lab/**"
+  - "app/(internal)/test/intelligence-map-lab/**"
+  - "app/(internal)/test/intelligence-config-lab/**"
+  - "app/(internal)/test/intelligence-substrate-lab/**"
+  - "app/(internal)/test/hud-panel-lab/**"
+  - "app/(internal)/test/client-stack-lab/**"
+  - "tests/lib/cases-registry.test.ts"
+  - "tests/lib/casefile-*.test.ts"
+  - "tests/lib/pda-*.test.ts"
+  - "tests/lib/map-projection.test.ts"
+  - "tests/lib/board-projection.test.ts"
+  - "tests/lib/proof-glyphs.test.ts"
+  - "tests/lib/substrate-lab-fit.test.ts"
+  - "tests/lib/config-lab-fit.test.ts"
+  - "tests/lib/services-proof-runway-lockstep.test.ts"
+  - "scripts/capture-casefile-rows.mjs"
+  - "scripts/capture-map-readings.mjs"
+  - "scripts/capture-config-lab.mjs"
+  - "scripts/capture-substrate-lab.mjs"
+  - "scripts/capture-hud-panel-lab.mjs"
+  - "scripts/capture-client-stack.mjs"
+description: The proof casefile and client cases — the case record, its confidentiality envelope, and the plates the proof cards mount (ADR-054/056/062-089)
+---
+
 # Rule: Proof casefile / client cases
 
 The client casefile is the corridor's **evidence beat** — one client's

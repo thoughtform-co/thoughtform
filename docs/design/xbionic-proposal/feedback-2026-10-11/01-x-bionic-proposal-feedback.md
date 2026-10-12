@@ -2,6 +2,8 @@
 
 Source: `I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard\_Feedback$src`, recorded by the owner on 2026-10-11. Read by Gemini 3.1 Pro (preview) through the Files API on the same day; the transcript is the model's hearing and may carry small errors. The owner's verdicts are the record; the model's synthesis is a reading of them.
 
+Also filed as a CDAF sidecar, the form agents read first: [docs/video-reads/thoughtform-x-bionic-proposal-feedback-e13a7495.cdaf](../../../video-reads/thoughtform-x-bionic-proposal-feedback-e13a7495.cdaf).
+
 Here is the detailed breakdown of the Loom video review by Vince Buyssens.
 
 ### 1. FULL TRANSCRIPT
