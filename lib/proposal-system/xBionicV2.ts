@@ -447,9 +447,10 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
     offer,
     ...(pinned ? [engine] : []),
     phases,
-    about,
     howWeWork,
     pricing,
+    /* the About sits just before the close since 12 October */
+    about,
     close,
   ];
 
