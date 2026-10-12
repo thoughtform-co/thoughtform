@@ -115,7 +115,7 @@ Skills live in [`.claude/skills/`](.claude/skills/) and load on demand — don't
 ## Conventions
 
 - Use TypeScript strictly
-- Follow existing code patterns
+- Follow existing code patterns when changing a shipped surface; a new composition starts from the brief ("New design starts from the brief", below)
 - Mobile-first responsive design
 - CSS variables for theming (--gold, --dawn, etc.)
 - Scroll-driven animations with progress values 0-1

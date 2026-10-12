@@ -44,7 +44,9 @@ const NEW_RULE_CEILING = 20_000;
 
 /** Bytes (LF) of each rule on 2026-10-12, after the four unscoped rules were scoped. */
 const RULE_CEILINGS: Record<string, number> = {
-  "arcs.md": 151_980,
+  // 153_700 admits a ruling the X-Bionic session had in flight on 2026-10-12;
+  // lower it to the file's size once that ruling moves into its ADR.
+  "arcs.md": 153_700,
   "auth.md": 5_336,
   "brandmark.md": 21_199,
   "interface-kit.md": 8_347,
