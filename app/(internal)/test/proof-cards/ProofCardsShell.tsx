@@ -139,6 +139,34 @@ export const BLOCKS = [
     label: "C7 · Results band",
     C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} phases scale band />,
   },
+  /* round eight: three finishing passes on 21, from the references */
+  {
+    id: "n-index",
+    n: "22",
+    short: "C8 index",
+    label: "C8 · Index (Unsiloed, Prime)",
+    C: ({ job }: { job: Job }) => (
+      <DirectionI job={job} ba={false} phases scale band refine="index" />
+    ),
+  },
+  {
+    id: "o-cards",
+    n: "23",
+    short: "C8 cards",
+    label: "C8 · Stat cards (Dispatch, Atomic)",
+    C: ({ job }: { job: Job }) => (
+      <DirectionI job={job} ba={false} phases scale band refine="cards" />
+    ),
+  },
+  {
+    id: "p-ledger",
+    n: "24",
+    short: "C8 ledger",
+    label: "C8 · Ledger (Prime, Euclid)",
+    C: ({ job }: { job: Job }) => (
+      <DirectionI job={job} ba={false} phases scale band refine="ledger" />
+    ),
+  },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

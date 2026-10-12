@@ -382,3 +382,164 @@
   color: var(--pk-ink);
   max-width: 34em;
 }
+
+/* ═══ U9: three finishing passes on block 21 (owner, 2026-10-12) ═══ */
+
+/* the band's header and the cells' glyphs exist for the stat-card pass */
+.pk-i__band-head,
+.pk-i__cell > .arc-lev__glyph {
+  display: none;
+}
+
+/* ── 22 · Index (Unsiloed's numbered cells, Prime Intellect's ruled
+   figures): every frame names itself on one quiet line, a small gold square
+   before its label and its index at the far right, no filled tab; the band's
+   cells keep counting. ── */
+.pk-i--r-index {
+  counter-reset: pkx;
+}
+.pk-i--r-index :is(.pk-i__brief, .pk-i__big, .pk-i__cell) {
+  counter-increment: pkx;
+}
+.pk-i--r-index .pk-i__words .pk-c__box {
+  padding-top: 14px;
+}
+.pk-i--r-index .pk-i__words .pk-c__box > .pk-c__tab {
+  position: static;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.pk-i--r-index .pk-i__words .pk-c__box > .pk-c__tab::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+}
+.pk-i--r-index .pk-i__words .pk-c__box > .pk-c__tab::after,
+.pk-i--r-index .pk-i__cell-k::after {
+  content: "[" counter(pkx) "]";
+  margin-left: auto;
+  letter-spacing: 0.06em;
+  color: var(--pk-ink-3);
+}
+.pk-i--r-index .pk-i__cell-k {
+  display: flex;
+}
+.pk-i--r-index .pk-i__brief {
+  border-color: var(--pk-line);
+}
+.pk-i--r-index .pk-i__band {
+  background: none;
+}
+
+/* ── 23 · Stat cards (Dispatch's numbered stat cards, Atomic Tessellator's
+   footer row): the band opens on a dot, its name and a hatched rule, and
+   each result is a card with the workstream's own glyph top right. ── */
+.pk-i--r-cards .pk-i__band {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  row-gap: 14px;
+}
+.pk-i--r-cards .pk-i__band-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: var(--pk-t-mono) / 1 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--pk-ink-2);
+}
+.pk-i--r-cards .pk-i__band-head i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pk-gold);
+}
+.pk-i--r-cards .pk-i__band-head span {
+  flex: 1 1 auto;
+  height: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(var(--pk-ink-rgb), 0.16) 0 1px,
+    transparent 1px 6px
+  );
+}
+.pk-i--r-cards .pk-i__cell {
+  position: relative;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--pk-line);
+  background: var(--pk-void);
+}
+.pk-i--r-cards .pk-i__cell > .arc-lev__glyph {
+  display: block;
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: auto;
+  height: 16px;
+}
+
+/* ── 24 · Ledger (Prime Intellect's ruled rows, Euclid's step list): the
+   words column turns from boxes into ruled rows, each key in a gutter on
+   the left and its words beside it; the band reads as two more rows. ── */
+.pk-i--r-ledger .pk-i__words .pk-c__box {
+  display: grid;
+  grid-template-columns: 8.4em minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 14px;
+  padding: 14px 0 14px 0;
+  border-width: 1px 0;
+  border-color: var(--pk-line);
+  background: none;
+}
+.pk-i--r-ledger .pk-i__words .pk-c__box > .pk-c__tab {
+  position: static;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.pk-i--r-ledger .pk-i__words .pk-c__box > .pk-c__tab::before {
+  content: "— ";
+  color: var(--pk-ink-3);
+}
+.pk-i--r-ledger .pk-i__flow .pk-c__box {
+  padding-left: 0;
+}
+.pk-i--r-ledger .pk-i__small {
+  border-width: 0 0 1px;
+  background: none;
+}
+.pk-i--r-ledger .pk-i__band {
+  background: none;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  padding-block: 0;
+}
+.pk-i--r-ledger .pk-i__cell {
+  grid-template-columns: 11em minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 18px;
+  padding: 16px 0;
+}
+.pk-i--r-ledger .pk-i__cell:first-of-type {
+  border-top: 0;
+}
+/* ledger: rows carry no side borders, so every rail offset loses its pixel */
+.pk-i--r-ledger .pk-i__big {
+  --pk-rx: -14px;
+}
+.pk-i--r-ledger .pk-i__small {
+  --pk-rx: -32px;
+}
+.pk-i--r-ledger .pk-i__cell {
+  grid-template-columns: 14em minmax(0, 1fr);
+}
+.pk-i--r-ledger .pk-i__cell-k {
+  white-space: nowrap;
+}
