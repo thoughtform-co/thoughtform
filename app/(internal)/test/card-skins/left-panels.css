@@ -37,11 +37,13 @@
    from the bottom of one part to the top of the next, through the gap */
 .pk-l--bus .pk-l__words > *:not(:first-child),
 .pk-l--group .pk-l__words > *:not(:first-child),
+.pk-l--arc .pk-l__words > *:not(:first-child),
 .pk-l--unified .pk-l__words > *:not(:first-child) {
   position: relative;
 }
 .pk-l--bus .pk-l__words > *:not(:first-child)::after,
 .pk-l--group .pk-l__words > *:not(:first-child)::after,
+.pk-l--arc .pk-l__words > *:not(:first-child)::after,
 .pk-l--unified .pk-l__words > .pk-l__unit::after {
   content: "";
   position: absolute;
@@ -53,6 +55,7 @@
 }
 .pk-l--bus .pk-l__words,
 .pk-l--group .pk-l__words,
+.pk-l--arc .pk-l__words,
 .pk-l--unified .pk-l__words {
   justify-content: center;
   gap: var(--pk-gap-v, 28px);
@@ -441,4 +444,68 @@
 }
 .pk-l--unified .pk-l__words > .pk-l__fan {
   margin-top: calc(-1 * var(--pk-gap-v));
+}
+
+/* ── arc (block 12): the vision's label form on every part, none filled ── */
+.pk-l .pk-l__arc-box {
+  padding: 32px 16px 16px;
+}
+.pk-l__arc-tab {
+  position: absolute;
+  top: 11px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 400 calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--pk-ink-2);
+}
+.pk-l__arc-tab i {
+  width: 5px;
+  height: 5px;
+  background: var(--pk-gold);
+}
+.pk-l__arc-box[data-kind="team"] .pk-l__arc-tab i {
+  background: var(--pk-green);
+}
+.pk-l__arc-box[data-kind="team"] .pk-l__arc-tab {
+  color: var(--pk-green);
+}
+.pk-l__arc-steps {
+  display: grid;
+}
+.pk-l__arc-steps li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 0;
+  font: 400 var(--pk-small) / 1.35 var(--pk-sans);
+  color: var(--pk-ink);
+}
+.pk-l__arc-steps li + li {
+  border-top: 1px dashed rgba(var(--pk-ink-rgb), 0.14);
+}
+.pk-l__arc-steps li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background: rgba(var(--pk-gold-rgb), 0.8);
+  transform: translateY(-2px);
+}
+.pk-l__arc-stack {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.pk-l__arc-tab--bare {
+  position: static;
+}
+.pk-l--arc .pk-l__words > .pk-l__arc-stack::after {
+  background: var(--pk-green);
+}
+.pk-l__arc-box .pk-body {
+  color: var(--pk-ink);
 }

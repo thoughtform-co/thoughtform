@@ -20,7 +20,7 @@ import { Figure } from "../proof-cards/RoundFour";
  *
  * Every word is the live record's (`X_BIONIC_JOBS`).
  */
-export type Panel = "spread" | "bus" | "group" | "curves" | "unified";
+export type Panel = "spread" | "bus" | "group" | "curves" | "unified" | "arc";
 
 export function LeftPanelCard({ job, panel }: { job: Job; panel: Panel }) {
   const d = disciplineOf(job.bucket);
@@ -40,11 +40,13 @@ export function LeftPanelCard({ job, panel }: { job: Job; panel: Panel }) {
       </header>
       <div className="pk-i__body">
         <div className="pk-l__words">
-          <div className="pk-c__box pk-i__brief pk-l__brief">
-            <p className="pk-c__tab">The brief</p>
-            <p className="pk-lede">{job.ask}</p>
-          </div>
-          {panel === "spread" || panel === "unified" ? null : (
+          {panel === "arc" ? null : (
+            <div className="pk-c__box pk-i__brief pk-l__brief">
+              <p className="pk-c__tab">The brief</p>
+              <p className="pk-lede">{job.ask}</p>
+            </div>
+          )}
+          {panel === "spread" || panel === "unified" || panel === "arc" ? null : (
             <div className="pk-c__box pk-i__big pk-l__embed">
               <p className="pk-c__tab">Embed</p>
               <p className="pk-body">{job.embed}</p>
@@ -55,6 +57,7 @@ export function LeftPanelCard({ job, panel }: { job: Job; panel: Panel }) {
           {panel === "group" ? <Group job={job} tools={tools} /> : null}
           {panel === "curves" ? <Curves job={job} tools={tools} /> : null}
           {panel === "unified" ? <Unified job={job} tools={tools} /> : null}
+          {panel === "arc" ? <ArcFlow job={job} tools={tools} /> : null}
         </div>
         <Figure job={job} wide ba={false} />
       </div>
@@ -229,6 +232,54 @@ function Unified({ job, tools }: { job: Job; tools: readonly string[] }) {
           <li key={t}>{t}</li>
         ))}
       </ul>
+    </>
+  );
+}
+
+/** Block 12 (owner, 2026-10-12, on 9): the card reads the Arc and ends on
+ *  the vision section's plug-in. 01 Navigate holds the brief, 02 Encode the
+ *  embed (green, the team's, as the vision's "Embed in your team"), 03 Build
+ *  what Claude did, 04 the stack it plugs into; every label in the vision
+ *  section's own form (a square, the number, the word), none filled. */
+function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
+  return (
+    <>
+      <div className="pk-c__box pk-l__arc-box">
+        <p className="pk-l__arc-tab">
+          <i />
+          01 · Navigate
+        </p>
+        <p className="pk-lede">{job.ask}</p>
+      </div>
+      <div className="pk-c__box pk-l__arc-box" data-kind="team">
+        <p className="pk-l__arc-tab">
+          <i />
+          02 · Encode
+        </p>
+        <p className="pk-body">{job.embed}</p>
+      </div>
+      <div className="pk-c__box pk-l__arc-box">
+        <p className="pk-l__arc-tab">
+          <i />
+          03 · Build with Claude
+        </p>
+        <ol className="pk-l__arc-steps" aria-label="Claude did">
+          {job.did.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ol>
+      </div>
+      <div className="pk-l__arc-stack">
+        <p className="pk-l__arc-tab pk-l__arc-tab--bare">
+          <i />
+          04 · Plug into {job.client}&apos;s stack
+        </p>
+        <ul className="pk-i__tools pk-l__tools" aria-label="Plugs into">
+          {tools.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      </div>
     </>
   );
 }
