@@ -1,28 +1,31 @@
 "use client";
 
-/* The zoom out (owner, 2026-10-12): the stack from "Embed, encode, run.",
-   the same three plates and nothing simplified, moves down into this
-   section, turns toward the front and draws back; a notched frame closes
-   round it, X-Bionic Marketing in the intelligence configuration's own
-   housing (TR and BL cut, the gold head band); and from that frame,
-   eight-wire circuit ribbons run out on both sides to the other
-   departments, which take the same layer next.
+/* The stack travels, then the view draws back (owner, 2026-10-12). The
+   closed stack that ends "Embed, encode, run." is not redrawn here: once that
+   section's pin lets go, its drawing is hidden and this one takes the stack
+   from the exact place, and at the exact size, it was left on screen, and
+   carries it down into this section. Pinned here, the stack turns to face
+   the reader and flattens into the three courses of one module (your team,
+   the layer, your agents, lettered on their fronts); a notched frame closes
+   round it, X-Bionic Marketing in the intelligence configuration's housing
+   (TR and BL cut, the gold head band); and eight-wire circuit ribbons run
+   out on both sides to the other departments, each drawn as that frame
+   collapsed to its band, with "Plugs in next" under it.
 
    The plates are EmbedStack's own drawing, copied with the projection made a
-   parameter: there they are drawn through the kit's fixed `makeIso`, here
-   through a true orthographic camera whose yaw and pitch run from that
-   isometric (45 and 35.26 degrees, at the same scale, so the first frame is
-   the stack as it left) toward the front, so the turn is a rotation of the
-   object, never a crossfade. The flat drawings on the plates (glyphs, rings,
-   the mark) ride the camera's own plane matrix.
+   parameter, drawn through a true orthographic camera whose yaw and pitch
+   run from that section's isometric (45 and 35.26 degrees, at its scale, so
+   the first frame is the stack as it left) to the front, so the turn is a
+   rotation of the object. As the plates go edge-on their faces become the
+   module's courses, which thicken to their rest.
 
    Every ribbon starts on the frame's edge and ends on its card's edge,
    computed from the same numbers that draw those edges, and every wire of a
    ribbon is the centre line offset with mitred corners, so the eight stay
    parallel through each 45-degree jog. Line work is SVG in a 1200 x 560
-   frame; every word is DOM seated in percent of it and sized in `cqw`, so
-   type and drawing scale together. One scroll reader; reduced motion reads
-   the last frame; `?netp=0..1` pins a moment for stills. */
+   frame; every word is DOM seated in percent of it and sized in `cqw`. One
+   scroll reader; reduced motion reads the last frame; `?netp=0..1` pins a
+   moment for stills. */
 
 import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
 
@@ -35,28 +38,33 @@ import { MastheadTitle } from "../Masthead";
 
 const W = 1200;
 const H = 560;
-/* EmbedStack's unit, and the camera scale that reproduces its isometric:
-   makeIso's x step is cos30 * u, a 45-degree yaw gives cos45 * U. */
+/* EmbedStack's unit and drawing, and the camera scale that reproduces its
+   isometric: makeIso's x step is cos30 * u, a 45-degree yaw gives cos45 * U */
 const U26 = 26;
 const U_ISO = U26 * Math.sqrt(1.5);
+const ES_VB_W = 700;
+const ES_OX = 350;
+const ES_OY = 70;
 const ISO_YAW = Math.PI / 4;
 const ISO_PITCH = Math.atan(1 / Math.SQRT2);
-/* where the turn ends: square to the reader, still looking down on the
-   plates so what is drawn on them reads */
-const END_PITCH = (38 * Math.PI) / 180;
-/* the zoom out */
-const END_K = 0.72;
 /* the closed stack's spacing there: 72 px a plate, in z */
 const GAP_Z = 72 / U26;
+/* the module at rest: each plate's highest point, the course it becomes,
+   the pitch between courses, and the size it is drawn at */
+const TOP_Z = [0.4, 1.08, 0.75];
+const COURSE_H = 1.0;
+const COURSE_GAP = 1.24;
+const END_K = 1.0;
 
 const TITLE = ["Marketing first,", "then every team."] as const;
+const COURSES = ["Your team", "The layer", "Your agents"] as const;
 
 /* -- the camera --------------------------------------------------------- */
 
-type Cam = { yaw: number; pitch: number; cx: number; cy: number; k: number };
+type Cam = { yaw: number; pitch: number; cx: number; cy: number; k: number; zc: number };
 
-/** An `Iso` for the camera, so the plates draw through it unchanged. The
-    stack's centre (4, 4, -GAP_Z) sits on (cx, cy); `dz` lifts one plate. */
+/** An `Iso` for the camera, so the plates draw through it unchanged: world
+    (4, 4, zc) lands on (cx, cy), and `dz` lifts one plate. */
 function camIso(c: Cam, dz: number): Iso {
   const u = U_ISO * c.k;
   const cy = Math.cos(c.yaw);
@@ -66,7 +74,7 @@ function camIso(c: Cam, dz: number): Iso {
   const p = (x: number, y: number, z: number): readonly [number, number] => {
     const X = x - 4;
     const Y = y - 4;
-    const Z = z + dz + GAP_Z - 0.4;
+    const Z = z + dz - c.zc;
     return [c.cx + u * (X * cy - Y * sy), c.cy + u * ((X * sy + Y * cy) * sp - Z * cp)];
   };
   const plane = (x: number, y: number, z: number, k: number) => {
@@ -76,38 +84,42 @@ function camIso(c: Cam, dz: number): Iso {
   return { u: U26 * c.k, p, plane };
 }
 
+/* each plate's lift: the closed stack's at the start, the module's at rest */
+const dzStart = (i: number) => -i * GAP_Z;
+const dzEnd = (i: number) => -i * COURSE_GAP - TOP_Z[i];
+/* the camera's centre height: the layer plate's top in the closed stack,
+   the module's middle at rest */
+const ZC_START = 0.4 - GAP_Z;
+const ZC_END = -(2 * COURSE_GAP + COURSE_H) / 2;
+
 /* -- the frame and the departments -------------------------------------- */
 
 type Pt = [number, number];
-const FR = { x0: 400, x1: 800, y0: 64, y1: 512, cut: 22, band: 36 };
-const STACK_AT: Pt = [600, 268];
-/* the plates open a little as they turn, so each reads on its own */
-const SPREAD = 1.85;
-const ENTER_AT: Pt = [600, 210];
+const FR = { x0: 400, x1: 800, y0: 136, y1: 452, cut: 22, band: 36 };
+const STACK_AT: Pt = [600, 312];
 
 const DEPTS: { name: string; side: "l" | "r"; y: number }[] = [
-  { name: "Product design", side: "l", y: 96 },
-  { name: "Sales", side: "l", y: 280 },
-  { name: "Customer care", side: "l", y: 464 },
-  { name: "Technology", side: "r", y: 96 },
-  { name: "Operations", side: "r", y: 280 },
-  { name: "Finance", side: "r", y: 464 },
+  { name: "Product design", side: "l", y: 150 },
+  { name: "Sales", side: "l", y: 294 },
+  { name: "Customer care", side: "l", y: 438 },
+  { name: "Technology", side: "r", y: 150 },
+  { name: "Operations", side: "r", y: 294 },
+  { name: "Finance", side: "r", y: 438 },
 ];
 /* the order they light: alternating sides, top down */
 const ORDER = [0, 3, 1, 4, 2, 5];
-const CARD = { w: 236, h: 68, l: 36, r: W - 36 - 236 };
+/* a department is the Marketing frame collapsed to its band */
+const CARD = { w: 236, h: 36, l: 36, r: W - 36 - 236, cut: 12 };
 /* where each ribbon leaves the frame: three ports a side */
-const PORT_Y = [160, 280, 400];
+const PORT_Y = [222, 294, 366];
 const WIRES = 8;
 const PITCH = 3.4;
 
 /** The centre line of a department's ribbon: out of the frame, a 45-degree
-    jog onto the card's centre line, in to the card's edge. The outer ribbons
-    turn first, so no two lanes cross. */
+    jog onto the card's centre line, in to the card's edge. */
 function ribbonLine(i: number): Pt[] {
   const d = DEPTS[i];
-  const k = i % 3;
-  const y0 = PORT_Y[k];
+  const y0 = PORT_Y[i % 3];
   const y1 = d.y;
   const dy = Math.abs(y1 - y0);
   const s = d.side === "l" ? -1 : 1;
@@ -149,43 +161,27 @@ function offsetLine(pts: Pt[], d: number): Pt[] {
 }
 const pathOf = (pts: Pt[]) =>
   pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`).join("");
+const ptsOf = (list: number[][]) => list.map((q) => q.join(",")).join(" ");
 
-function frameOutline() {
-  const { x0, x1, y0, y1, cut } = FR;
-  return [
+/** A box with its TR and BL corners cut, the configuration's housing. */
+const cutBox = (x0: number, y0: number, x1: number, y1: number, c: number) =>
+  ptsOf([
     [x0, y0],
-    [x1 - cut, y0],
-    [x1, y0 + cut],
+    [x1 - c, y0],
+    [x1, y0 + c],
     [x1, y1],
-    [x0 + cut, y1],
-    [x0, y1 - cut],
-  ]
-    .map((q) => q.join(","))
-    .join(" ");
-}
-function frameBand() {
-  const { x0, x1, y0, cut, band } = FR;
-  return [
-    [x0, y0],
-    [x1 - cut, y0],
-    [x1, y0 + cut],
-    [x1, y0 + band],
-    [x0, y0 + band],
-  ]
-    .map((q) => q.join(","))
-    .join(" ");
-}
-const cutCard = (x: number, y: number, w: number, h: number, c: number) =>
-  [
-    [x, y],
-    [x + w - c, y],
-    [x + w, y + c],
-    [x + w, y + h],
-    [x + c, y + h],
-    [x, y + h - c],
-  ]
-    .map((q) => q.join(","))
-    .join(" ");
+    [x0 + c, y1],
+    [x0, y1 - c],
+  ]);
+/** The frame's head band, its top-right corner cut with the frame's. */
+const frameBand = () =>
+  ptsOf([
+    [FR.x0, FR.y0],
+    [FR.x1 - FR.cut, FR.y0],
+    [FR.x1, FR.y0 + FR.cut],
+    [FR.x1, FR.y0 + FR.band],
+    [FR.x0, FR.y0 + FR.band],
+  ]);
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
@@ -197,12 +193,13 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const at = (x: number, y: number): CSSProperties =>
   ({ "--px": (x / W).toFixed(5), "--py": (y / H).toFixed(5) }) as CSSProperties;
 
+/** Everything the pinned scroll moves, from its reading `p`. */
 function moment(p: number) {
-  const ribAt = (n: number) => 0.46 + n * 0.07;
+  const ribAt = (n: number) => 0.5 + n * 0.065;
   return {
-    move: ease(seg(p, 0, 0.3)),
-    turn: ease(seg(p, 0.04, 0.32)),
-    frame: ease(seg(p, 0.3, 0.42)),
+    move: ease(seg(p, 0, 0.2)),
+    turn: ease(seg(p, 0.04, 0.34)),
+    frame: ease(seg(p, 0.32, 0.44)),
     rib: (i: number) => ease(seg(p, ribAt(ORDER.indexOf(i)), ribAt(ORDER.indexOf(i)) + 0.1)),
     on: (i: number) => p >= ribAt(ORDER.indexOf(i)) + 0.095,
   };
@@ -215,6 +212,7 @@ const NOTCH = 0;
 const GOLD = "var(--xb-gold)";
 const GREEN = "var(--es-green)";
 const DAWN = "var(--xb-text)";
+const TONES = [GREEN, GOLD, DAWN] as const;
 
 type P = readonly [number, number];
 const pts = (list: P[]) => list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
@@ -552,9 +550,25 @@ function AgentPlate({ iso }: { iso: Iso }) {
 
 const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 
+/** Where EmbedStack left its stack, in that drawing's units: the layer
+    plate's top centre, (4, 4, 0.4) through its makeIso, one closed gap down. */
+const ES_CENTRE: Pt = [ES_OX, ES_OY + 8 * 0.5 * U26 - 0.4 * U26 + 72];
+
+type Reading = {
+  /** the pinned scroll, 0..1 */
+  p: number;
+  /** the hand-over, 0 while the steps section still holds the stack, 1 once
+      this section is pinned */
+  q: number;
+  /** where the steps section left the stack, in this frame's units, and the
+      size it was drawn at; null when there is no steps section to take from */
+  from: { x: number; y: number; k: number } | null;
+};
+
 export function NetworkPlug() {
   const runway = useRef<HTMLDivElement>(null);
-  const [p, setP] = useState(0);
+  const fig = useRef<HTMLDivElement>(null);
+  const [r, setR] = useState<Reading>({ p: 0, q: 0, from: null });
 
   useEffect(() => {
     const fp = new URLSearchParams(window.location.search).get("netp");
@@ -565,16 +579,41 @@ export function NetworkPlug() {
           ? 1
           : null;
     const el = runway.current;
+    const box = fig.current;
+    const es = document.querySelector<HTMLElement>(".es");
+    const esSvg = es?.querySelector<SVGSVGElement>(".es-svg") ?? null;
+    const esPin = es?.querySelector<HTMLElement>(".es-pin") ?? null;
     let raf = 0;
     const read = () => {
       raf = 0;
-      if (fixedP !== null || !el) {
-        setP(fixedP ?? 1);
+      if (fixedP !== null || !el || !box) {
+        setR({ p: fixedP ?? 1, q: 1, from: null });
         return;
       }
-      const r = el.getBoundingClientRect();
+      const rr = el.getBoundingClientRect();
       const vh = document.documentElement.clientHeight;
-      setP(clamp01(-r.top / Math.max(1, r.height - vh)));
+      const p = clamp01(-rr.top / Math.max(1, rr.height - vh));
+      const q = clamp01(1 - rr.top / vh);
+      let from: Reading["from"] = null;
+      if (es && esSvg && esPin) {
+        const f = box.getBoundingClientRect();
+        const kF = f.width / W;
+        const s = esSvg.getBoundingClientRect();
+        const kES = s.width / ES_VB_W;
+        /* the steps section's pin has let go and is scrolling away: put the
+           stack back where it was pinned */
+        const lift = esPin.getBoundingClientRect().top;
+        from = {
+          x: (s.left + ES_CENTRE[0] * kES - f.left) / kF,
+          y: (s.top + ES_CENTRE[1] * kES - lift - f.top) / kF,
+          k: kES / kF,
+        };
+        /* the steps section's drawing steps aside the moment this one has
+           the stack */
+        if (q > 0) es.setAttribute("data-handed", "");
+        else es.removeAttribute("data-handed");
+      }
+      setR({ p, q, from });
     };
     const on = () => {
       if (!raf) raf = requestAnimationFrame(read);
@@ -589,29 +628,39 @@ export function NetworkPlug() {
       window.removeEventListener("scroll", on);
       window.removeEventListener("resize", on);
       if (raf) cancelAnimationFrame(raf);
+      es?.removeAttribute("data-handed");
     };
   }, []);
 
-  const st = moment(p);
+  const st = moment(r.p);
+  const travel = ease(r.q);
+  const k0 = r.from?.k ?? 1;
   const cam: Cam = {
     yaw: lerp(ISO_YAW, 0, st.turn),
-    pitch: lerp(ISO_PITCH, END_PITCH, st.turn),
-    cx: lerp(ENTER_AT[0], STACK_AT[0], st.move),
-    cy: lerp(ENTER_AT[1], STACK_AT[1], st.move),
-    k: lerp(1, END_K, st.move),
+    pitch: lerp(ISO_PITCH, 0, st.turn),
+    cx: r.from ? lerp(r.from.x, STACK_AT[0], travel) : STACK_AT[0],
+    cy: r.from ? lerp(r.from.y, STACK_AT[1], travel) : STACK_AT[1],
+    k: lerp(k0, END_K, st.turn),
+    zc: lerp(ZC_START, ZC_END, st.turn),
   };
+  const isos = [0, 1, 2].map((i) => camIso(cam, lerp(dzStart(i), dzEnd(i), st.turn)));
+  /* the plates go edge-on and become the courses, which thicken to rest */
+  const platesOut = 1 - seg(st.turn, 0.8, 0.97);
+  const coursesIn = seg(st.turn, 0.78, 0.92);
+  const th = lerp(0.4, COURSE_H, seg(st.turn, 0.82, 1));
+  const shown = r.q > 0 || !r.from;
   const offs = Array.from({ length: WIRES }, (_, k) => (k - (WIRES - 1) / 2) * PITCH);
 
   return (
     <div className="xn" ref={runway}>
       <div className="xn-pin">
         <MastheadTitle lines={TITLE} />
-        <div className="xn-fig">
+        <div className="xn-fig" ref={fig}>
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="xn-svg"
             role="img"
-            aria-label="The stack of three plates, your team, the layer and your agents, moves down, turns toward the front and draws back inside a notched frame: X-Bionic Marketing. From the frame, circuit ribbons run out on both sides to the departments that take the same layer next: product design, sales, customer care, technology, operations and finance."
+            aria-label="The stack of three plates, your team, the layer and your agents, travels down from the section above and turns to face the reader as one module of three courses, inside a notched frame: X-Bionic Marketing. From the frame, circuit ribbons run out on both sides to the departments that plug in next: product design, sales, customer care, technology, operations and finance."
           >
             {/* the ribbons, a faint lane first, under the frame's edge */}
             {DEPTS.map((d, i) => {
@@ -636,7 +685,10 @@ export function NetworkPlug() {
 
             {/* Marketing, in the configuration's housing */}
             <g style={{ opacity: st.frame }}>
-              <polygon points={frameOutline()} className="xn-frame__body" />
+              <polygon
+                points={cutBox(FR.x0, FR.y0, FR.x1, FR.y1, FR.cut)}
+                className="xn-frame__body"
+              />
               <polygon points={frameBand()} className="xn-frame__band" />
               <line
                 x1={FR.x0}
@@ -658,32 +710,51 @@ export function NetworkPlug() {
               ))}
             </g>
 
-            {/* the stack itself: bottom plate first, the upper sits in front */}
-            {[2, 1, 0].map((i) => {
-              const Plate = PLATES[i];
-              return <Plate key={i} iso={camIso(cam, -i * GAP_Z * lerp(1, SPREAD, st.turn))} />;
+            {/* the departments: the frame, collapsed to its band */}
+            {DEPTS.map((d, i) => {
+              const x = d.side === "l" ? CARD.l : CARD.r;
+              return (
+                <polygon
+                  key={d.name}
+                  className="xn-dept"
+                  data-on={st.on(i) ? "" : undefined}
+                  style={{ opacity: st.frame }}
+                  points={cutBox(x, d.y - CARD.h / 2, x + CARD.w, d.y + CARD.h / 2, CARD.cut)}
+                />
+              );
             })}
 
-            {/* the departments */}
-            {DEPTS.map((d, i) => (
-              <g
-                key={d.name}
-                className="xn-node xn-node--dept"
-                style={{ opacity: st.frame }}
-                data-on={st.on(i) ? "" : undefined}
-              >
-                <polygon
-                  className="xn-card"
-                  points={cutCard(
-                    d.side === "l" ? CARD.l : CARD.r,
-                    d.y - CARD.h / 2,
-                    CARD.w,
-                    CARD.h,
-                    10
-                  )}
-                />
+            {/* the stack itself, the steps section's own plates */}
+            {shown && platesOut > 0.01 && (
+              <g opacity={platesOut}>
+                {[2, 1, 0].map((i) => {
+                  const Plate = PLATES[i];
+                  return <Plate key={i} iso={isos[i]} />;
+                })}
               </g>
-            ))}
+            )}
+            {/* the courses they become */}
+            {shown && coursesIn > 0 && (
+              <g opacity={coursesIn}>
+                {[2, 1, 0].map((i) => {
+                  const pr = isos[i].p;
+                  const z1 = TOP_Z[i];
+                  const z0 = z1 - th;
+                  const front = [pr(0, S, z1), pr(S, S, z1), pr(S, S, z0), pr(0, S, z0)];
+                  const [fr] = pr(S, S, z1);
+                  const fy = pr(S, S, z1 - th / 2)[1];
+                  return (
+                    <g key={i} stroke={TONES[i]}>
+                      <polygon
+                        className="xn-face"
+                        points={front.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ")}
+                      />
+                      <line x1={fr - 30} x2={fr - 12} y1={fy} y2={fy} strokeOpacity={0.8} />
+                    </g>
+                  );
+                })}
+              </g>
+            )}
           </svg>
 
           {/* every word, seated in the frame */}
@@ -695,29 +766,46 @@ export function NetworkPlug() {
               X-Bionic &middot; Marketing
             </span>
             <span
-              className="xn-band xn-band--state"
-              style={{ ...at(FR.x1 - FR.cut - 12, FR.y0 + FR.band / 2), opacity: st.frame }}
+              className="xn-band xn-state"
+              style={{ ...at(FR.x0 + 18, FR.y1 - 26), opacity: st.frame }}
             >
               Run by your team
             </span>
-            {DEPTS.map((d, i) => {
-              const on = st.on(i);
-              return (
-                <div
-                  key={d.name}
-                  className="xn-label"
-                  data-on={on ? "" : undefined}
-                  style={{
-                    ...at((d.side === "l" ? CARD.l : CARD.r) + 22, d.y),
-                    opacity: st.frame,
-                  }}
-                >
-                  <span className="xn-name">{d.name}</span>
-                  <span className="xn-status" style={{ opacity: on ? 1 : 0 }}>
-                    Plugs in next
+            {shown &&
+              COURSES.map((c, i) => {
+                const pr = isos[i].p;
+                const [x, y] = pr(0, S, TOP_Z[i] - th / 2);
+                return (
+                  <span
+                    key={c}
+                    className="xn-course"
+                    data-tone={i}
+                    style={{ ...at(x + 16, y), opacity: seg(st.turn, 0.9, 1) }}
+                  >
+                    {c}
                   </span>
-                </div>
-              );
+                );
+              })}
+            {DEPTS.map((d, i) => {
+              const x = d.side === "l" ? CARD.l : CARD.r;
+              const on = st.on(i);
+              return [
+                <span
+                  key={d.name}
+                  className="xn-band xn-band--dept"
+                  data-on={on ? "" : undefined}
+                  style={{ ...at(x + 16, d.y), opacity: st.frame }}
+                >
+                  {d.name}
+                </span>,
+                <span
+                  key={`${d.name}-next`}
+                  className="xn-next"
+                  style={{ ...at(x + 16, d.y + CARD.h / 2 + 16), opacity: on ? 1 : 0 }}
+                >
+                  Plugs in next
+                </span>,
+              ];
             })}
           </div>
         </div>
