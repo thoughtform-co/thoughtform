@@ -18,3 +18,7 @@ Blocks 5 to 7 take 3C further: the rail and tabs in Tensor Gold, one notch top r
 ## Round three (owner, 2026-10-12)
 
 Blocks 8 and 9: 3C with its top bar back, the bar naming the client, the brief in a few words and the workstream. The brief below is one paragraph stating the problem; what it now allows answers it from the right, level with it and boxed alike. The time saved is round two's bars, its sentence gone. The steps open on the adoption half in green (embed with the team, empower them to run it), then what Claude did in gold: 8 in the owner's order (embed, empower, Claude), 9 with empower last, as the handover. The problem paragraphs, the short names and the embed and empower lines are lab copy in `practice.ts`, written from the record's roles and gate, for the owner to check.
+
+## Round four (owner, 2026-10-12, on 9)
+
+Blocks 10 to 12. 10 is 9 recentred with air, the gold rail starting on the brief box's bottom edge as 3C's did on the ask, and the top bar with no keys in one face in capitals: the client framed, the brief, the workstream with the vision's glyph. 11 puts every word on the left (the brief, the process, what it allows beside the time saved) and widens the visual on the right. 12 is 11 with the wide visual as two panes: the motion ad's two films, the review's sent-back and kept shots, the Drive unsorted in folders beside the map (the folders are an illustration and say so), the one-line ask beside the brief the skill wrote. At 1280×720, 11 and 12 fill the column with little air; they breathe at 1470×830.
