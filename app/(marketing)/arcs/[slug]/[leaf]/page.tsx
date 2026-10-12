@@ -46,6 +46,7 @@ import "@/components/arcs/leverage.css";
 // The stack job card (owner, 2026-10-12), `.arc-jstack*`-scoped. After
 // leverage.css, whose `.arc-case` frame it sits in.
 import "@/components/arcs/job-stack.css";
+import "@/components/arcs/proof-case.css";
 // The stack (the proposal system, 2026-10-10), `.stk*`-scoped: the layer the
 // team writes, drawn wherever a beat places it. After leverage.css, whose
 // `--lv-v` it reads, before theme.css.

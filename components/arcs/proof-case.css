@@ -1,0 +1,155 @@
+/* THE LOOP PROOF CARD IN THE STACK HOUSING (owner, 2026-10-12;
+   /test/loop-proof-lab B55). The housing is the job card's (`.arc-jstack*`,
+   job-stack.css, loaded before this sheet); this sheet adds only the arc of
+   four in the top bar, the claims on the rail, the 55/45 split and the
+   field's seat. Tokens only. */
+
+/* the left column carries the narrative; Loop's visuals need the rest (at a
+   wider left the tool drawing's columns overlap) */
+.arc-lpc__body {
+  grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
+}
+
+/* ── the arc of four: what came before quiet, this card lit, what follows
+   outlined; the record's own order ── */
+.arc-lpc__arc {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+.arc-lpc__arc li {
+  position: relative;
+  padding: 6px 9px;
+  border: 1px solid var(--arc-rule);
+  color: var(--arc-ink-40);
+}
+.arc-lpc__arc li + li {
+  margin-left: 18px;
+}
+.arc-lpc__arc li + li::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 18px;
+  height: 1px;
+  background: var(--arc-rule);
+}
+.arc-lpc__arc li[data-state="past"] {
+  color: var(--arc-ink-70);
+}
+.arc-lpc__arc li[data-state="past"] + li::before {
+  background: var(--js-rail);
+}
+.arc-lpc__arc li[data-state="now"] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast, var(--void));
+}
+
+/* ── a claim: its glyph in a cell, then its title and its sentence ── */
+.arc-lpc__claim {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid color-mix(in srgb, var(--dawn) 12%, transparent);
+  background: var(--arc-plate);
+}
+.arc-lpc__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+.arc-lpc__mark svg {
+  width: 21px;
+  height: 21px;
+}
+.arc-lpc__text {
+  display: grid;
+  gap: 3px;
+  padding: 10px 14px 11px;
+}
+.arc-lpc__claim-t {
+  font-size: var(--type-base);
+  line-height: 1.3;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-lpc__claim-d {
+  font-size: var(--js-small);
+  line-height: 1.4;
+  color: var(--arc-ink-70);
+  text-wrap: pretty;
+}
+
+/* ── the one visual: the proof card's own field, whole. The pile's slot is
+   unpinned and the card's housing dropped (this card is the housing);
+   nothing in proof-stack.css changes. ── */
+.arc-lpc__fig {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  margin: var(--js-pad);
+}
+.arc-lpc__fig > .pf-stack {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.arc-lpc__fig .pf-stack .pf-slot {
+  position: relative;
+  top: auto;
+  flex: 1 1 auto;
+  display: flex;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+}
+.arc-lpc__fig .pf-stack .pf-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+}
+.arc-lpc__fig .pf-stack .pf-card::before,
+.arc-lpc__fig .pf-stack .pf-card::after {
+  content: none;
+}
+.arc-lpc__fig .pf-stack .pf-card__body {
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+}
+.arc-lpc__fig .pf-stack .pf-card__field {
+  padding: 0;
+  opacity: 1;
+}
+/* four tool handles wrap to two rows of two rather than truncating */
+.arc-lpc__fig .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.arc-lpc__fig .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) .fl-con__stn {
+  flex: 1 1 40%;
+  min-height: 30px;
+}
+.arc-lpc__fig
+  .pf-card__tabs
+  .fl-con__rail:has(> .fl-con__stn:nth-child(4))
+  .fl-con__stn:nth-child(odd) {
+  margin-left: 0;
+}
+
+@media (max-width: 960px) {
+  .arc-lpc__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-lpc__arc {
+    display: none;
+  }
+}

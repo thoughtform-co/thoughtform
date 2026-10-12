@@ -265,7 +265,14 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       menuPrimary: true,
       line: { pre: "In 2024, Loop decided to go", em: "AI-first." },
     },
-    ...LOOP_PROOF_CARDS,
+    /* The four cards in the job cards' housing (owner, 2026-10-12, from
+       /test/loop-proof-lab B55): Pandora reads the same record and keeps the
+       homepage's folder card. */
+    ...LOOP_PROOF_CARDS.map((c) => ({
+      ...c,
+      layout: "case" as const,
+      arcBeats: LOOP_PROOF_CARDS.map((b) => ({ id: b.id, word: b.menuLabel ?? b.id })),
+    })),
     /* The return in the jobs' own housing (ADR-153 U5, owner 2026-10-10:
        it "looks different from the other sections … redesign what it
        returned at Loop … so they match the examples from Samako and

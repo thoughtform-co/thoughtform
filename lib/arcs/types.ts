@@ -754,6 +754,17 @@ export type ArcSection = ArcSectionBase &
         /** The band's phase ON THIS PAGE; `""` letters the client alone, as
          *  the workshop cuts do (ADR-143 U6). */
         phase?: string;
+        /**
+         * `"case"` draws the card in the job cards' stack housing (the X-Bionic
+         * proposal, owner 2026-10-12): the project and its four claims on one
+         * gold rail on the left, Loop's own visual on the right, the arc of
+         * four in the top bar. Absent, the homepage's folder card, which is
+         * what Pandora's page keeps.
+         */
+        layout?: "case";
+        /** The arc's beats in order, lettered in the case top bar; this
+         *  card's own beat is the one whose `id` is this section's. */
+        arcBeats?: readonly { id: string; word: string }[];
       }
     | {
         /**
