@@ -43,7 +43,7 @@
 }
 .pk-l--bus .pk-l__words > *:not(:first-child)::after,
 .pk-l--group .pk-l__words > *:not(:first-child)::after,
-.pk-l--arc .pk-l__words > *:not(:first-child)::after,
+.pk-l--arc .pk-l__words > .pk-l__arc-box:not(:first-child)::after,
 .pk-l--unified .pk-l__words > .pk-l__unit::after {
   content: "";
   position: absolute;
@@ -511,4 +511,62 @@
 }
 .pk-l__arc-steps li:last-child {
   padding-bottom: 0;
+}
+
+/* the tools after Tensorlake's diagram (Hex): the line from Build carries a
+   label chip, an arrow lands on the top edge of a dashed group, and the
+   tools sit inside it; nothing hangs off a tool's own edge */
+.pk-l__plugwrap {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
+.pk-l__plugwrap::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(-1 * var(--pk-gap-v));
+  height: calc(var(--pk-gap-v) + 100%);
+  max-height: calc(var(--pk-gap-v) + 52px);
+  width: 1px;
+  background: rgba(var(--pk-green-rgb), 0.7);
+}
+.pk-l__plug-label {
+  position: relative;
+  z-index: 1;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--pk-green-rgb), 0.6);
+  background: #0c0b0a;
+  font: calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--pk-green);
+}
+.pk-l__dash {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 12px;
+  border: 1px dashed rgba(var(--pk-green-rgb), 0.55);
+}
+.pk-l__dash::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 4px);
+  top: -6px;
+  border-top: 5px solid rgba(var(--pk-green-rgb), 0.85);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+.pk-l__dash li {
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--pk-green-rgb), 0.45);
+  background: rgba(var(--pk-green-rgb), 0.08);
+  font: calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pk-ink);
 }
