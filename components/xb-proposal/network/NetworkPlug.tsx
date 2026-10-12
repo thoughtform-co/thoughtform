@@ -283,21 +283,21 @@ export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const v = q.get("net");
-    if (v === "bus" || v === "hub" || v === "spine") setLayout(v);
     const fp = q.get("netp");
-    if (fp !== null) {
-      setP(clamp01(Number(fp)));
-      return;
-    }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setP(1);
-      return;
-    }
+    const fixedP =
+      fp !== null
+        ? clamp01(Number(fp))
+        : window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? 1
+          : null;
     const el = runway.current;
-    if (!el) return;
     let raf = 0;
     const read = () => {
       raf = 0;
+      if (fixedP !== null || !el) {
+        setP(fixedP ?? 1);
+        return;
+      }
       const r = el.getBoundingClientRect();
       const vh = document.documentElement.clientHeight;
       setP(clamp01(-r.top / Math.max(1, r.height - vh)));
@@ -305,10 +305,16 @@ export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
     const on = () => {
       if (!raf) raf = requestAnimationFrame(read);
     };
-    read();
+    /* the first reading, and the pinned layout, land on the next frame */
+    const first = requestAnimationFrame(() => {
+      if (v === "bus" || v === "hub" || v === "spine") setLayout(v);
+      read();
+    });
+    if (fixedP !== null) return () => cancelAnimationFrame(first);
     window.addEventListener("scroll", on, { passive: true });
     window.addEventListener("resize", on);
     return () => {
+      cancelAnimationFrame(first);
       window.removeEventListener("scroll", on);
       window.removeEventListener("resize", on);
       if (raf) cancelAnimationFrame(raf);
