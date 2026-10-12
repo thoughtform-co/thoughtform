@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 
-import { DirectionA, DirectionB, DirectionC, DirectionD, DirectionE } from "./Directions";
+import { DirectionA, DirectionB, DirectionC, DirectionD, DirectionE, DirectionF } from "./Directions";
 import type { Job } from "./parts";
 
 /**
@@ -21,6 +21,9 @@ export const BLOCKS = [
   { id: "e1-chain", n: "5", short: "C2 Chain", label: "C2 · Chain", C: ({ job }: { job: Job }) => <DirectionE job={job} viz="chain" /> },
   { id: "e2-bars", n: "6", short: "C2 Bars", label: "C2 · Bars", C: ({ job }: { job: Job }) => <DirectionE job={job} viz="bars" /> },
   { id: "e3-split", n: "7", short: "C2 Split", label: "C2 · Before and now", C: ({ job }: { job: Job }) => <DirectionE job={job} viz="split" /> },
+  /* round three: the top bar back, the brief as the problem, the bars */
+  { id: "f1-asked", n: "8", short: "C3", label: "C3 · Embed, empower, then Claude", C: ({ job }: { job: Job }) => <DirectionF job={job} order="asked" /> },
+  { id: "f2-handover", n: "9", short: "C3 hand", label: "C3 · Empower last, as the handover", C: ({ job }: { job: Job }) => <DirectionF job={job} order="handover" /> },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

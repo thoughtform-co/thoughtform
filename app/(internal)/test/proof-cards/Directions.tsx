@@ -386,3 +386,86 @@ function PracticeDrawing({ p, viz }: { p: Practice; viz: PracticeViz }) {
     </div>
   );
 }
+
+/* ── Round three (owner, 2026-10-12) ──────────────────────────────────
+   3C again with its top bar, the bar now naming the client, the brief in a
+   few words and the workstream. The brief below is one paragraph stating
+   the problem, and what it now allows answers it from the right, level with
+   it and boxed alike. The time saved is 6's bars, the sentence gone. The
+   steps open on the adoption half: embedding with the team (and handing
+   the system over, in one of two places), in green, the human's colour,
+   then what Claude did, in gold. */
+
+export type StepOrder = "asked" | "handover";
+
+export function DirectionF({ job, order }: { job: Job; order: StepOrder }) {
+  const p = PRACTICE[job.id];
+  const embed = { key: "embed", tab: "Embed", text: p.embed, human: true };
+  const empower = { key: "empower", tab: "Empower", text: p.empower, human: true };
+  const claude = job.did.map((d, i) => ({
+    key: d,
+    tab: `Claude ${i + 1}`,
+    text: d,
+    human: false,
+  }));
+  const steps =
+    order === "asked" ? [embed, empower, ...claude] : [embed, ...claude, empower];
+  return (
+    <article className="pk-card pk-e pk-f" aria-label={p.name}>
+      <header className="pk-f__head">
+        <dl className="pk-f__fields">
+          <div>
+            <dt>Client</dt>
+            <dd className="pk-f__client">{job.client}</dd>
+          </div>
+          <div className="pk-f__name">
+            <dt>Brief</dt>
+            <dd>{p.name}</dd>
+          </div>
+          <div>
+            <dt>Workstream</dt>
+            <dd>{workstreamOf(job)}</dd>
+          </div>
+        </dl>
+      </header>
+      <div className="pk-f__body">
+        <div className="pk-f__box pk-f__brief">
+          <p className="pk-f__tab">The brief</p>
+          <p className="pk-f__para">{p.problem}</p>
+        </div>
+        <ol className="pk-f__steps" aria-label="The work">
+          {steps.map((st) => (
+            <li key={st.key} className="pk-f__step" data-human={st.human || undefined}>
+              <span className="pk-f__step-tab">{st.tab}</span>
+              <span className="pk-f__step-text">{st.text}</span>
+            </li>
+          ))}
+        </ol>
+        <figure className="pk-c__fig pk-e__fig pk-f__fig" data-figure={job.figure.kind}>
+          <p className="pk-c__vert">
+            Fig. {two(job.n)} · {job.figure.caption}
+          </p>
+          <div className="pk-c__ev">
+            <i className="pk-c__x pk-c__x--tl" aria-hidden="true" />
+            <i className="pk-c__x pk-c__x--tr" aria-hidden="true" />
+            <i className="pk-c__x pk-c__x--bl" aria-hidden="true" />
+            <i className="pk-c__x pk-c__x--br" aria-hidden="true" />
+            <Evidence job={job} />
+          </div>
+        </figure>
+        <div className="pk-f__box pk-f__allows">
+          <p className="pk-f__tab">What it now allows</p>
+          <p className="pk-f__para">{job.result.allows}</p>
+        </div>
+        <div className="pk-f__box pk-f__saved">
+          <p className="pk-f__tab pk-f__tab--quiet">
+            {resultLabel(job)}
+            {job.result.label === "The return" ? null : " · estimated"}
+          </p>
+          <PracticeDrawing p={p} viz="bars" />
+        </div>
+      </div>
+      <Gate job={job} />
+    </article>
+  );
+}

@@ -17,6 +17,15 @@ export interface Practice {
   /** Before and now, for the side-by-side and the bars. */
   before: string;
   now: string;
+  /* round three (owner, 2026-10-12): the top bar names the job in a few
+     words; the brief is one paragraph that states the PROBLEM; the steps
+     open on the adoption half, embedding with the team and handing the
+     system to them, before what Claude did. ⚠ The embed and empower lines
+     are authored from the record's roles and gate, for the owner to check. */
+  name: string;
+  problem: string;
+  embed: string;
+  empower: string;
 }
 
 export const PRACTICE: Record<string, Practice> = {
@@ -27,6 +36,11 @@ export const PRACTICE: Record<string, Practice> = {
     down: "Films ready for the visual lead to choose",
     before: "A motion designer on each ad",
     now: "Cut from the brief, checked in three cold reads",
+    name: "A motion ad for the autumn sale",
+    problem:
+      "Samako needed a 15-second motion ad in Dutch for its autumn sale on paid social, from an open brief. Each motion ad meant a motion designer, and the product had to stay exactly as the photographer shot it.",
+    embed: "What a sale ad has to show, with the visual lead",
+    empower: "The visual lead chooses the film that runs",
   },
   "job-ops": {
     brief: "Map the 3.1 TB marketing Google Drive by what is in each file.",
@@ -35,6 +49,11 @@ export const PRACTICE: Record<string, Practice> = {
     down: "Shoots the team already owns, found and reused",
     before: "Weeks opening folders by hand",
     now: "Two days, the whole Drive read",
+    name: "Mapping the marketing Drive",
+    problem:
+      "Suri's marketing Google Drive holds 3.1 TB of shoots, statics and designs, and 78 % of the files read are tied to no campaign. Finding what the team already owned meant opening folder after folder.",
+    embed: "Where a search stalls, with the library owner",
+    empower: "The library owner checks the groups and keeps the map",
   },
   "job-review": {
     brief: "Catch the AI product renders that get the product wrong, before review.",
@@ -43,6 +62,11 @@ export const PRACTICE: Record<string, Practice> = {
     down: "Review starts from the unsure ones",
     before: "Every render checked by eye",
     now: "Only the flagged renders reach a person",
+    name: "A first pass on AI product renders",
+    problem:
+      "AI renders get the product subtly wrong: a part missing, the wrong colour, a re-lettered wordmark. Every render went to the creative director, the art director and the brand manager to be checked by eye.",
+    embed: "The errors the creative team catches by eye",
+    empower: "The visual lead checks the grading",
   },
   "job-strategy": {
     brief: "One brief format for every channel, complete before it reaches the studio.",
@@ -51,5 +75,10 @@ export const PRACTICE: Record<string, Practice> = {
     down: "The studio starts from a complete brief",
     before: "Chasing what a brief left out",
     now: "Twelve fields, one format, before the studio",
+    name: "One brief format for every channel",
+    problem:
+      "Briefs reached the studio in a different shape for every writer and every channel. The studio lead spent hours a week finding out what each brief had left out before the work could start.",
+    embed: "What a brief leaves out, with the strategists",
+    empower: "The strategist marks each brief ready",
   },
 };

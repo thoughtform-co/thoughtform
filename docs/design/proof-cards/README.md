@@ -14,3 +14,7 @@ Self-contained: `app/(internal)/test/proof-cards/` imports no arcs or landing st
 ## Round two, on 3C (owner, 2026-10-12)
 
 Blocks 5 to 7 take 3C further: the rail and tabs in Tensor Gold, one notch top right, no title (the left column opens on the client, a short descriptive brief and the workstream), and the right column split at its centre, as in 4D: what it now allows on top, the time saved below, drawn as the job in practice. Three ways to draw that half: 5 a chain (upstream, the job, downstream), 6 bars (before and now), 7 before and now side by side. The short briefs and the flow lines are lab copy in `practice.ts`, every fact the jobs record's own; they move into the record if a direction wins.
+
+## Round three (owner, 2026-10-12)
+
+Blocks 8 and 9: 3C with its top bar back, the bar naming the client, the brief in a few words and the workstream. The brief below is one paragraph stating the problem; what it now allows answers it from the right, level with it and boxed alike. The time saved is round two's bars, its sentence gone. The steps open on the adoption half in green (embed with the team, empower them to run it), then what Claude did in gold: 8 in the owner's order (embed, empower, Claude), 9 with empower last, as the handover. The problem paragraphs, the short names and the embed and empower lines are lab copy in `practice.ts`, written from the record's roles and gate, for the owner to check.
