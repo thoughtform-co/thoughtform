@@ -629,3 +629,88 @@
 .arc-jstack .arc-jstack__band {
   background: none;
 }
+
+/* ── the left panel reads the Arc (owner, 2026-10-12, /test/card-skins 12):
+   three framed steps, gold tabs top-left, one text size, centre lines
+   between them, the last onto a dashed group of tools ── */
+.arc-jstack__words--arc {
+  --js-v: clamp(22px, 3.2vh, 40px);
+  justify-content: center;
+  gap: var(--js-v);
+}
+.arc-jstack__words--arc > * {
+  position: relative;
+}
+.arc-jstack__words--arc > *:not(:first-child)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: var(--js-v);
+  background: var(--js-rail);
+}
+.arc-jstack__words--arc > .arc-jstack__dash::after {
+  background: var(--js-human);
+}
+.arc-jstack__step .arc-jstack__tab {
+  border-color: var(--js-gold-line);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  color: var(--gold);
+}
+.arc-jstack__text,
+.arc-jstack__steps li {
+  margin: 0;
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-jstack__steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-jstack__steps li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+}
+.arc-jstack__steps li:first-child {
+  padding-top: 0;
+}
+.arc-jstack__steps li:last-child {
+  padding-bottom: 0;
+}
+.arc-jstack__steps li + li {
+  border-top: 1px dashed color-mix(in srgb, var(--dawn) 14%, transparent);
+}
+.arc-jstack__steps li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background: color-mix(in srgb, var(--gold) 80%, transparent);
+  transform: translateY(-2px);
+}
+.arc-jstack__dash {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  align-self: center;
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed color-mix(in srgb, var(--case-person-text) 55%, transparent);
+  list-style: none;
+}
+.arc-jstack__dash li {
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--case-person-text) 45%, transparent);
+  background: color-mix(in srgb, var(--case-person-text) 8%, transparent);
+  font: 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90, var(--dawn));
+}

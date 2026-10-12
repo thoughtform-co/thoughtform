@@ -198,10 +198,11 @@ export function ArcJob({
  * on the left as one flow, the one figure on the right, a vertical rule
  * between them. The top bar is the client framed, the job's name and its
  * workstream with the vision's glyph, in one mono face in capitals. The
- * left reads the brief (the problem), then the work on one gold rail:
- * Embed (green, with the team), Solve it together (what Claude did, three
- * small steps), and a green tick straight into the tools it plugs into, no
- * box and no label. Under both panels the result as a band (block 23 of
+ * left reads the Arc (owner, 2026-10-12, /test/card-skins 12): 01
+ * Navigate (the brief, the problem), 02 Encode (with the team), 03 Build
+ * (what Claude did), each a framed box with its tab in the top-left corner,
+ * one text size, centre lines between them, and the last line onto a dashed
+ * group holding the tools it plugs into (after Hex's Tensorlake diagram). Under both panels the result as a band (block 23 of
  * the lab, after Dispatch's and Atomic Tessellator's stat rows): the time
  * saved as two bars and what it now allows, two cards on a soft gold
  * ground. No gate row: the record keeps it.
@@ -239,33 +240,30 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
             </span>
           </header>
           <div className="arc-jstack__body">
-            <div className="arc-jstack__words">
-              <div className="arc-jstack__box arc-jstack__box--gold">
-                <p className="arc-jstack__tab">The brief</p>
-                <p className="arc-jstack__para">{ask}</p>
+            <div className="arc-jstack__words arc-jstack__words--arc">
+              <div className="arc-jstack__box arc-jstack__step">
+                <p className="arc-jstack__tab">01 · Navigate</p>
+                <p className="arc-jstack__text">{ask}</p>
               </div>
-              <ol className="arc-jstack__flow" aria-label="The work">
-                <li className="arc-jstack__box arc-jstack__box--human">
-                  <p className="arc-jstack__tab">Embed</p>
-                  <p className="arc-jstack__line">{section.embed}</p>
-                </li>
-                <li className="arc-jstack__label">Solve it together</li>
-                {did.map((d, i) => (
-                  <li key={d} className="arc-jstack__small">
-                    <span className="arc-jstack__small-tab">Claude {i + 1}</span>
-                    <span className="arc-jstack__small-text">{d}</span>
-                  </li>
-                ))}
-                {section.scale?.tools.length ? (
-                  <li className="arc-jstack__plug">
-                    <ul className="arc-jstack__tools" aria-label="Plugs into">
-                      {section.scale.tools.map((t) => (
-                        <li key={t}>{t}</li>
-                      ))}
-                    </ul>
-                  </li>
-                ) : null}
-              </ol>
+              <div className="arc-jstack__box arc-jstack__step">
+                <p className="arc-jstack__tab">02 · Encode</p>
+                <p className="arc-jstack__text">{section.embed}</p>
+              </div>
+              <div className="arc-jstack__box arc-jstack__step">
+                <p className="arc-jstack__tab">03 · Build</p>
+                <ol className="arc-jstack__steps" aria-label="Claude did">
+                  {did.map((d) => (
+                    <li key={d}>{d}</li>
+                  ))}
+                </ol>
+              </div>
+              {section.scale?.tools.length ? (
+                <ul className="arc-jstack__dash" aria-label="Plugs into">
+                  {section.scale.tools.map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
             <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
               <div className="arc-case__frame arc-jstack__frame">
