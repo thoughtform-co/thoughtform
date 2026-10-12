@@ -1,0 +1,220 @@
+/* /test/proposition-flows: three ways the plug-in, the motion and the Arc sit
+   on one picture. Dark, like the proposition artifact. Green is people and
+   their work, gold the configuration, dawn what runs. */
+
+.pf-root {
+  --pf-green: #7a9e6a;
+  --pf-ink: rgba(var(--dawn-rgb), 0.86);
+  --pf-dim: rgba(var(--dawn-rgb), 0.56);
+  --pf-rule: rgba(var(--dawn-rgb), 0.16);
+  min-height: 100vh;
+  background: var(--void);
+  color: var(--pf-ink);
+  font-family: var(--font-pp-neue-montreal);
+  padding: 0 clamp(24px, 5vw, 96px);
+}
+
+.pf-block {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 24px;
+  padding: 56px 0 48px;
+  border-bottom: 1px solid var(--pf-rule);
+}
+.pf-block--map {
+  min-height: auto;
+  grid-template-rows: auto auto;
+  padding-bottom: 72px;
+}
+
+.pf-block__head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 48px;
+  align-items: end;
+}
+.pf-block__id {
+  grid-column: 1 / -1;
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink);
+  margin-bottom: 12px;
+}
+.pf-block__pick {
+  margin-left: 14px;
+  padding: 2px 8px;
+  border: 1px solid var(--gold-line);
+  color: var(--gold-ink);
+}
+.pf-block__title {
+  margin: 0;
+  font-size: clamp(28px, 2.6vw, 44px);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-display);
+  color: rgb(var(--dawn-rgb));
+}
+.pf-block__lede {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--pf-ink);
+  max-width: 60ch;
+}
+.pf-block__fig {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+.pf-svg {
+  width: 100%;
+  max-width: 1280px;
+  max-height: 70vh;
+}
+.pf-block__reads {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pf-dim);
+}
+.pf-block__reads li {
+  border-top: 1px solid var(--pf-rule);
+  padding-top: 10px;
+}
+
+/* The map */
+.pf-map {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-pt-mono);
+  font-size: 13px;
+  letter-spacing: var(--track-label);
+}
+.pf-map th,
+.pf-map td {
+  text-align: left;
+  padding: 12px 14px;
+  border-top: 1px solid var(--pf-rule);
+  font-weight: var(--weight-text);
+}
+.pf-map th {
+  color: var(--pf-dim);
+  width: 18%;
+}
+.pf-map td[data-col="0"] {
+  color: var(--pf-green);
+}
+.pf-map td[data-col="1"] {
+  color: var(--gold-ink);
+  text-align: center;
+}
+.pf-map td[data-col="2"] {
+  color: rgb(var(--dawn-rgb));
+  text-align: right;
+}
+.pf-map tr:last-child td {
+  opacity: 0.55;
+}
+
+/* The drawing */
+.pf-svg text {
+  font-family: var(--font-pt-mono);
+}
+.pf-arc {
+  font-size: 12px;
+  letter-spacing: var(--track-eyebrow);
+  fill: var(--pf-dim);
+}
+.pf-head {
+  font-family: var(--font-pp-neue-montreal) !important;
+  font-size: 20px;
+  fill: rgb(var(--dawn-rgb));
+}
+.pf-key {
+  font-size: 13px;
+  letter-spacing: var(--track-eyebrow);
+  fill: rgb(var(--dawn-rgb));
+}
+.pf-label {
+  font-size: 12px;
+  letter-spacing: var(--track-label);
+  fill: var(--pf-ink);
+}
+.pf-note {
+  font-size: 12px;
+  letter-spacing: var(--track-label);
+  fill: var(--pf-dim);
+}
+.pf-gold {
+  fill: var(--gold-ink);
+}
+.pf-green {
+  fill: var(--pf-green);
+}
+
+.pf-ring {
+  fill: rgba(var(--gold-rgb), 0.07);
+  stroke: var(--gold-line);
+  stroke-width: 1.2;
+}
+.pf-ring-outer {
+  fill: none;
+  stroke: var(--gold-line);
+  stroke-opacity: 0.4;
+  stroke-dasharray: 2 5;
+}
+.pf-mark path {
+  fill: var(--gold);
+}
+
+.pf-dia-team {
+  fill: var(--pf-green);
+}
+.pf-dia-run {
+  fill: var(--void);
+  stroke: rgb(var(--dawn-rgb));
+  stroke-width: 1.2;
+}
+
+.pf-line {
+  fill: none;
+  stroke-width: 1;
+}
+.pf-line--team {
+  stroke: var(--pf-green);
+}
+.pf-line--gold {
+  stroke: var(--gold-line);
+}
+.pf-line--run {
+  stroke: rgba(var(--dawn-rgb), 0.6);
+}
+.pf-arrowhead--team {
+  fill: var(--pf-green);
+}
+.pf-arrowhead--gold {
+  fill: var(--gold-line);
+}
+.pf-arrowhead--run {
+  fill: rgba(var(--dawn-rgb), 0.6);
+}
+
+.pf-bracket {
+  fill: none;
+  stroke: var(--gold-line);
+  stroke-opacity: 0.6;
+}
+
+.pf-plate {
+  fill: var(--void);
+  stroke: rgba(var(--dawn-rgb), 0.5);
+}
+.pf-plate--team {
+  stroke: var(--pf-green);
+}
