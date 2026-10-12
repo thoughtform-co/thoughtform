@@ -177,9 +177,9 @@ function Tab({
     >
       <i aria-hidden />
       <span className="pl-tab__n">
-        {st.n} · {st.step}
+        {st.n} · {st.flow[0]}
       </span>
-      <span className="pl-tab__name">{st.frame}</span>
+      <span className="pl-tab__name">{st.flow[1]}</span>
     </a>
   );
 }

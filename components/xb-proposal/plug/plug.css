@@ -131,11 +131,15 @@
   white-space: nowrap;
 }
 
+/* the layer's three parts: Tensor Gold edges and Tensor Gold text on the
+   ground (owner, 2026-10-12: "not a white or a Tensor Gold background, but
+   Tensor Gold edges and then Tensor Gold text") */
 .pl-part {
   transform: translate(-50%, -50%);
   padding: 0.3em 0.7em;
-  background: var(--xb-text);
-  color: var(--xb-ground);
+  background: var(--xb-ground);
+  border: 1px solid var(--xb-gold);
+  color: var(--xb-gold);
   font-family: var(--xb-sans);
   white-space: nowrap;
 }
@@ -187,22 +191,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* the lit card in Tensor Gold, edges and text, as the layer's parts are
+   (owner, 2026-10-12: "Review Posted can be Tensor Gold"), over a faint
+   gold wash so it still reads as the one lit */
 .pl-card[data-lit] {
-  background: var(--xb-text);
-  border-color: var(--xb-text);
+  background: color-mix(in srgb, var(--xb-gold) 8%, var(--xb-ground-2));
+  border-color: var(--xb-gold);
 }
 .pl-card[data-lit] .pl-card__title,
 .pl-card[data-lit] .pl-card__ico {
-  /* the lit card is inverse video: the ground's own colour, so the light
-     theme inverts it with the card */
-  color: var(--xb-ground);
+  color: var(--xb-gold);
 }
 .pl-card[data-lit] .pl-card__ico {
-  border-color: color-mix(in srgb, var(--xb-ground) 30%, transparent);
+  border-color: color-mix(in srgb, var(--xb-gold) 45%, transparent);
 }
 .pl-card[data-lit] .pl-card__sub,
 .pl-card[data-lit] .pl-card__title em {
-  color: color-mix(in srgb, var(--xb-ground) 62%, transparent);
+  color: color-mix(in srgb, var(--xb-gold) 72%, transparent);
 }
 
 /* ---- the frames, their tabs, the footer ---- */
