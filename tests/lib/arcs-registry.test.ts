@@ -2297,7 +2297,7 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
     const lines = arc!.sections.flatMap((s) => (s.kind === "interstitial" ? [s] : []));
     expect(lines.map((s) => arcTitleText(s.line))).toEqual([
       "This is how we got there at Loop Earplugs.",
-      "This is how we recently built intelligence configurations by making the team self-sufficient.",
+      "How we've made other brands self-sufficient with AI.",
       "And this is how we'll do it at X-Bionic.",
     ]);
     for (const s of lines) {

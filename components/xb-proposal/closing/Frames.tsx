@@ -35,7 +35,7 @@ const HEAD_WEEKS: MastheadCopy = {
   survey: {
     title: "XB / PLAN · 05",
     brief: "XB / BRIEF · 05",
-    state: "Phase one",
+    state: "First month",
     titleCoord: "0040 / 1180",
     briefCoord: "1460 / 0240",
   },
@@ -46,7 +46,7 @@ const HEAD_WHO: MastheadCopy = {
   survey: {
     title: "XB / CREW · 06",
     brief: "XB / BRIEF · 06",
-    state: "Phase one",
+    state: "First month",
     titleCoord: "0040 / 1420",
     briefCoord: "1460 / 0480",
   },
@@ -69,7 +69,7 @@ export function WeeksFrame() {
       <Masthead copy={HEAD_WEEKS} />
       <div className="xf-frame xf-frame--3">
         {groups.map((g, gi) => (
-          <article key={g.id} className="xf-cell xf-phase" data-later={gi === 2 || undefined}>
+          <article key={g.id} className="xf-cell xf-phase">
             <span className="xf-mono">{label(g.label)}</span>
             <Lead lead={`${g.blurb}.`} />
             <PhaseItems g={g} n={gi + 1} />

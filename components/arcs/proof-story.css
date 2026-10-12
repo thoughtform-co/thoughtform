@@ -5,7 +5,9 @@
 .arc-lps {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
-  column-gap: calc(var(--lat-pad-cell, 32px) * 1.6);
+  /* more air between the words and the visuals (owner, 2026-10-12: "spread
+     out the elements a bit") */
+  column-gap: calc(var(--lat-pad-cell, 32px) * 2.4);
   align-items: start;
 }
 
@@ -20,8 +22,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-xl, 40px);
-  padding-block: calc(var(--hud-margin, 48px) + 64px);
+  gap: clamp(28px, 5svh, 56px);
+  padding-block: calc(var(--hud-margin, 48px) + 40px);
 }
 .arc-lps__stack {
   display: grid;
@@ -46,39 +48,43 @@
     visibility 0s;
 }
 
+/* the type a step up and the air between the parts grown with the frame
+   (owner, 2026-10-12: "make the font sizes … a bit bigger, and maybe spread
+   out the elements"); each size is capped by the frame's height so the
+   column still fits a laptop screen */
 .arc-lps__text {
   display: grid;
   align-content: start;
-  gap: var(--space-lg, 24px);
-  max-width: 34rem;
+  gap: clamp(20px, 3.4svh, 36px);
+  max-width: 38rem;
 }
 .arc-lps__ws {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm, 8px);
   margin: 0;
-  font: 12px / 1 var(--font-pt-mono, "PT Mono", monospace);
+  font: 13px / 1 var(--font-pt-mono, "PT Mono", monospace);
   letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--gold);
 }
 .arc-lps__ws .arc-lev__glyph {
   width: auto;
-  height: 16px;
+  height: 18px;
 }
 .arc-lps__title {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: var(--type-2xl, var(--type-xl));
+  font-size: min(var(--type-display), 5.4svh);
   font-weight: var(--weight-text, 400);
-  line-height: 1.1;
+  line-height: 1.08;
   letter-spacing: var(--track-display);
   color: var(--arc-ink-90, var(--dawn));
   text-wrap: balance;
 }
 .arc-lps__lede {
   margin: 0;
-  font-size: var(--type-base);
+  font-size: min(var(--type-lg), 2.5svh);
   line-height: 1.5;
   color: var(--arc-ink-70);
   text-wrap: pretty;
@@ -95,12 +101,12 @@
 }
 .arc-lps__claims li {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr);
   align-items: center;
   gap: var(--space-sm, 8px);
-  padding: 13px 0;
+  padding: clamp(12px, 2.1svh, 20px) 0;
   border-bottom: 1px solid var(--arc-rule);
-  font-size: var(--type-base);
+  font-size: min(var(--type-lg), 2.5svh);
   line-height: 1.35;
   color: var(--arc-ink-90, var(--dawn));
 }
@@ -109,8 +115,8 @@
   align-items: center;
 }
 .arc-lps__icon svg {
-  width: 21px;
-  height: 21px;
+  width: 24px;
+  height: 24px;
 }
 
 /* the dashes: one per project, the one in view lit (augustus' own marker) */

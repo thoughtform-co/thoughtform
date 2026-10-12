@@ -781,7 +781,17 @@ export type ArcSection = ArcSectionBase &
          * each project's own visual scrolling past on the right. In order;
          * `track` is a `CaseTrack.id`, `title` the page's own line for it.
          */
-        story?: readonly { id: string; track: string; title?: string; workstream: string }[];
+        story?: readonly {
+          id: string;
+          track: string;
+          title?: string;
+          workstream: string;
+          /** The page's own words for some of the record's claims, keyed by
+           *  the record's claim title (the X-Bionic proposal, owner
+           *  2026-10-12). A key that names no claim throws: a rename that
+           *  misses is silent otherwise. The record stays as it is. */
+          retitle?: Readonly<Record<string, string>>;
+        }[];
       }
     | {
         /**

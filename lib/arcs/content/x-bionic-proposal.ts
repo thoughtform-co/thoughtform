@@ -9,6 +9,19 @@ import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
    really leads up to my role"): the films are production, the tools ops,
    the studio review, the layer creative technology, a fifth name beside the
    page's four disciplines. */
+/* The page's own words for some of Loop's claims (owner, 2026-10-12), keyed
+   by the record's claim title; the record, which the homepage and Pandora
+   read, stays as it is. */
+const LOOP_RETITLE: Record<string, Readonly<Record<string, string>>> = {
+  "atl-films": {
+    "Two 30-second masters": "Two 30-second full AI videos",
+    "One craft standard": "Same standard as live action",
+    "Ran beside live action": "Used as a business case by Google",
+  },
+  tooling: { "One substrate, four tools": "Four tools connected by one layer" },
+  "ai-transformation": { "Set the goal, let it run": "Knowledge shared across departments" },
+};
+
 const LOOP_WORKSTREAMS = [
   "Creative production",
   "Creative ops",
@@ -24,7 +37,7 @@ const LOOP_WORKSTREAMS = [
  * creative engine for paid social, whose job there is product education
  * (form, fit, function, materials across socks, base layers and trail
  * shoes), built inside the Claude Enterprise the company already runs and
- * owned by its team: a two-week phase one, then two days a quarter. The
+ * owned by its team: a first month across the marketing team (2026-10-12). The
  * company's AI champion and its investors read it for one thing above all,
  * WHAT PLUGS INTO CLAUDE ENTERPRISE, so the circuit beat says it plainly.
  *
@@ -46,7 +59,8 @@ const LOOP_WORKSTREAMS = [
  * colleague, no fee. One job a screen, in one template (`shared/jobs.ts`).
  *
  * ⚠ THE FEE IS THE DAY RATE AND THE SHAPE (owner, 2026-10-08, Pandora's
- * rule, ADR-133 U5): the rate, about ten days, two days a quarter. No total.
+ * rule, ADR-133 U5): the rate and about 14 days in the first month (owner,
+ * 2026-10-12: five on site, then about three a week remote). No total.
  */
 
 const DAY_RATE = 1000;
@@ -298,6 +312,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         track: c.track,
         title: c.title,
         workstream: LOOP_WORKSTREAMS[i],
+        ...(LOOP_RETITLE[c.track] ? { retitle: LOOP_RETITLE[c.track] } : {}),
       })),
     },
     /* What it returned at Loop came off the page on 2026-10-12 (owner: "we
@@ -315,8 +330,8 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       menuLabel: "Two brands",
       menuPrimary: true,
       line: {
-        pre: "This is how we recently built intelligence configurations by making the team",
-        em: "self-sufficient.",
+        pre: "How we've made other brands",
+        em: "self-sufficient with AI.",
       },
     },
     ...X_BIONIC_JOBS,
@@ -346,94 +361,95 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · the four weeks",
         title: { pre: "The four weeks." },
-        sub: "Phase one sets the engine up and runs it once on real work. Then Thoughtform comes back every quarter.",
+        sub: "Four weeks across the whole marketing team: one on site, then three remote. What gets built comes out of the work itself, and it compounds.",
       },
+      /* The first month across the whole department, never one voice or one
+         brand (owner, 2026-10-12: "it's across the entire marketing
+         department … I didn't know beforehand what the output would be, but
+         we just had a compounding effect very quickly"). Week one a sprint
+         on site, then a retro on the priorities, then the handover; the
+         quarterly commitment is a separate thing, not part of this
+         proposal. */
       groups: [
         {
           id: "w1",
-          label: "Phase one · week one",
-          blurb: "On site",
+          label: "Week one · on site",
+          blurb: "The sprint",
           items: [
             {
+              id: "w1-embed",
+              tag: "Embed",
+              name: "Five days inside the team",
+            },
+            {
               id: "w1-map",
-              tag: "Day one",
-              name: "How the work really runs",
+              tag: "Map",
+              name: "How production, ops, review and strategy run",
             },
             {
-              id: "w1-voice",
-              tag: "The voice",
-              name: "The product voice, written down first",
-            },
-            {
-              id: "w1-brief",
-              tag: "The brief",
-              name: "From campaign to platform",
+              id: "w1-run",
+              tag: "First runs",
+              name: "Claude on the team's own live work",
             },
           ],
           foot: {
             label: "Done when",
             lines: [
-              "The voice skill writes copy the copywriter keeps",
-              "A brief goes from idea to variants in Claude",
+              "Every workstream has run real work with Claude",
+              "The team knows where its time goes",
             ],
           },
         },
         {
           id: "w2",
-          label: "Phase one · week two",
-          blurb: "Remote",
+          label: "Weeks two and three · remote",
+          blurb: "The retro",
           items: [
             {
-              id: "w2-run",
-              tag: "One full run",
-              name: "One iteration, end to end",
+              id: "w2-retro",
+              tag: "Retro",
+              name: "What worked in week one, workstream by workstream",
             },
             {
-              id: "w2-review",
-              tag: "Review",
-              name: "The product designer's eye, as checks",
+              id: "w2-priorities",
+              tag: "Priorities",
+              name: "The workflows worth handing over",
             },
             {
-              id: "w2-handover",
-              tag: "Handover",
-              name: "In your Claude, in your repository",
+              id: "w2-build",
+              tag: "Build",
+              name: "Their skills and evals, written with their owners",
             },
           ],
           foot: {
             label: "Done when",
-            lines: [
-              "The team runs a second iteration on its own",
-              "Each skill has an owner who can change it",
-            ],
+            lines: ["Each priority has an owner", "Its skill runs on real work"],
           },
         },
         {
-          id: "quarterly",
-          label: "Then · every quarter",
-          blurb: "Two days",
+          id: "w4",
+          label: "Week four · remote",
+          blurb: "The handover",
           items: [
             {
-              id: "q-outside",
-              tag: "Inspiration",
-              name: "What changed out there",
+              id: "w4-own",
+              tag: "Self-sufficient",
+              name: "Which parts of the team now run on their own",
             },
             {
-              id: "q-upkeep",
-              tag: "Upkeep",
-              name: "The skills, brought up to date",
+              id: "w4-handover",
+              tag: "Handover",
+              name: "In your Claude, in your repository",
             },
             {
-              id: "q-next",
+              id: "w4-next",
               tag: "Next",
-              name: "The next workflows",
+              name: "Which departments to bring in next",
             },
           ],
           foot: {
-            label: "Alongside",
-            lines: [
-              "Introductions to paid social and creative strategy freelancers",
-              "Token budgets and return on ad cost creation, for leadership",
-            ],
+            label: "Done when",
+            lines: ["Each skill has an owner who can change it", "The next departments are named"],
           },
         },
       ],
@@ -453,7 +469,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         {
           id: "x-bionic",
           label: "From X-Bionic",
-          blurb: "What phase one asks of each.",
+          blurb: "What the first month asks of each.",
           items: [
             {
               id: "sponsor",
@@ -478,11 +494,11 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
             {
               id: "paid-social",
               name: "Paid social lead · runs it daily",
-              meta: "From phase one, if in place",
+              meta: "From week one, if in place",
             },
             {
               id: "copywriter",
-              name: "Copywriter · the voice, first",
+              name: "Copywriter · writes with Claude",
               meta: "Week one",
             },
           ],
@@ -490,12 +506,12 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         {
           id: "thoughtform",
           label: "From Thoughtform",
-          blurb: "On site, then beside the team.",
+          blurb: "One week on site, then three remote.",
           items: [
             {
               id: "vince",
               name: "Vince · AI and creative technology",
-              meta: "About ten days in phase one",
+              meta: "About 14 days in the first month",
             },
           ],
           sub: {
@@ -542,7 +558,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         title: { pre: "The fee." },
         sub: "One rate for every day on the work; what it returns is counted from your own ad accounts and your own Claude.",
       },
-      console: { name: "Terms", status: "Phase one" },
+      console: { name: "Terms", status: "First month" },
       rate: {
         label: "Day rate",
         value: eur(DAY_RATE),
@@ -550,10 +566,9 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         line: "On site or remote, invoiced on the days worked.",
       },
       shape: [
-        { label: "Phase one", value: "About 10 days" },
-        { label: "Week one", value: "On site" },
-        { label: "Week two", value: "Remote" },
-        { label: "Then", value: "2 days a quarter" },
+        { label: "First month", value: "About 14 days" },
+        { label: "Week one", value: "5 days on site" },
+        { label: "Weeks two to four", value: "About 3 days a week" },
       ],
       measures: {
         label: "What we measure",

@@ -48,8 +48,7 @@ import type { PsKnobs } from "./variants";
  * and the approach became the flow and the steps, `port: "plug"` and
  * `port: "steps"`, which an approach variant clears): the vision · the
  * approach · where it plugs in · "This is how we got there at Loop Earplugs." · the four
- * Loop cards · what it returned · "This is how we recently built
- * intelligence configurations by making the team self-sufficient." · the
+ * Loop cards · what it returned · "How we've made other brands self-sufficient with AI." · the
  * four jobs · "And this is how we'll do it at X-Bionic." · the engine · the
  * two weeks · the About · who takes part · the fee · the close.
  *

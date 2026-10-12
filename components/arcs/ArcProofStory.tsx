@@ -131,7 +131,13 @@ function Words({
   n,
   flow = false,
 }: {
-  beat: { id: string; title?: string; workstream: string; track: CaseTrack };
+  beat: {
+    id: string;
+    title?: string;
+    workstream: string;
+    track: CaseTrack;
+    retitle?: Readonly<Record<string, string>>;
+  };
   on: boolean;
   n: number;
   flow?: boolean;
@@ -139,6 +145,12 @@ function Words({
   const { track } = beat;
   const title = beat.title ?? track.arc?.title ?? track.project;
   const glyph = WORKSTREAM_GLYPH[beat.workstream.toLowerCase()] ?? "meter";
+  const blocks = track.blocks ?? [];
+  for (const key of Object.keys(beat.retitle ?? {})) {
+    if (!blocks.some((c) => c.title === key)) {
+      throw new Error(`[arc proof-story] "${beat.id}" retitles "${key}", which is no claim`);
+    }
+  }
   return (
     <div
       className={flow ? "arc-lps__text arc-lps__text--flow" : "arc-lps__text"}
@@ -153,12 +165,12 @@ function Words({
       <h2 className="arc-lps__title">{title}</h2>
       {track.card?.lede ? <p className="arc-lps__lede">{track.card.lede}</p> : null}
       <ul className="arc-lps__claims">
-        {(track.blocks ?? []).map((c) => (
+        {blocks.map((c) => (
           <li key={c.title}>
             <span className="arc-lps__icon" aria-hidden="true">
               {c.glyph ? <ProofGlyph name={c.glyph} /> : null}
             </span>
-            {c.title}
+            {beat.retitle?.[c.title] ?? c.title}
           </li>
         ))}
       </ul>
