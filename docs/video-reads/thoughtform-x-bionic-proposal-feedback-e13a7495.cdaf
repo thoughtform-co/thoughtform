@@ -4,135 +4,201 @@ sha256: e13a7495f5d227cc6c3465b6e6f03a126b4919aad0bea0364101e15968479d6e
 bytes: 114870218
 duration: 00:10:56.194
 resolution: 1282x720
+fps: 60
 generator: gemini-3.1-pro-preview
-created: 2026-10-11T12:00:00Z
+created: 2026-10-12T04:07:46Z
 detail: rich
 lang: en
 x-profile: feedback
 x-source: I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard\_Feedback\Thoughtform_X Bionic Proposal Feedback.mp4
-x-folded-from: docs/design/xbionic-proposal/feedback-2026-10-11/01-x-bionic-proposal-feedback.md
-x-segments: rebuilt from the read's own log; between-log spans point at the Transcript
-x-transcript-timing: model-heard, stamped per utterance
 ---
 
 ## Summary
-The owner's own Loom (Thoughtform_X Bionic Proposal Feedback.mp4, recorded 2026-10-11). The owner walks through the X-Bionic proposal page section by section (The Vision, The Approach, Longer Tasks) and gives a verdict on each object: keep the clean information architecture of the vision's configuration diagram; cut copy that reads like a quote; stop giving every section the same three-block structure; the approach diagram is low-res, badly typeset and wastes its space; replace the T-shirt mockup; no rounded shapes or doodle arrows; the narrative should explain the layer that is built and trained through adoption. Use it for any pass on the X-Bionic proposal or the proposal template.
+Vince Buyssens reviews a draft proposal webpage for X-Bionic, recorded on a local development server. He provides a detailed, section-by-section critique of the design, layout, typography, and narrative flow. His feedback focuses heavily on aligning the visuals with the brand system, improving information architecture, and effectively communicating the core proposition ("The Layer" and automation) through clear, professional diagrams rather than mismatched mockups.
 
 ## Segments
-[00:00.0-00:18.0] Between logged moments; the speaker talks over the screen (see Transcript).
-[00:18.0-00:36.0] The Vision; cursor on Left diagram ("Intelligence configuration". LIKE (Information architecture): "I like it because it was inspired by... Lighthouse etc., where we have like clean information architecture."
-[00:36.0-01:10.0] The Vision; cursor on Text below left diagram ("The layer...". CHANGE (Copy): "this feels like a glorified word quote, it doesn't really fit here."
-[01:10.0-02:16.0] The Vision; cursor on 2x2 grid on the righ. CHANGE (Section split): "every single section had like a three block structure. So I want something that looks unique."
-[02:16.0-02:47.0] The Approach; cursor on "Your layer" block in diagra. DISLIKE (Density): "it looks like very low res. And again, we're not optimally using the space"
-[02:47.0-03:09.0] The Approach; cursor on Text inside diagram ("Whatever is written down...". DISLIKE (Typography): "the way the text is placed, like, it's ugly... this looks like a children's drawing."
-[03:09.0-03:43.0] The Approach; cursor on T-shirt mocku. CHANGE (Image/mockup): "this feels like a shitty mockup."
-[03:43.0-04:12.0] Longer Tasks; cursor on Timeline diagra. DISLIKE (Brand system): "these rounded shapes, we shouldn't use them. Also this like, um, doodle arrow, it's not really part of our brand system."
-[04:12.0-05:00.0] The Vision / The Approach; cursor on Scrolling between Vision and Approac. CHANGE (Narrative): "we build a layer. And then here in that section, we should explain like that layer... which we will build and train through adoption."
-[05:00.0-05:36.0] The Vision; cursor on Left diagra. CHANGE (Diagram): "this should really be like an amazing cool diagram, uh, super clean information architecture"
-[05:36.0-06:10.0] Loop; cursor on Text: "IN 2024, LOOP DECIDED.... DISLIKE (Copy): "How does that relate to the previous section from like a storytelling point of view? Like from a grammar point of view this just comes out of nowhere."
-[06:10.0-06:50.0] What it returned at Loop; cursor on The four lane. NEUTRAL (Information architecture): "should we have a separate section or should we integrate it in here?"
-[06:50.0-07:15.0] What it returned at Loop; cursor on The four lane. CHANGE (Narrative): "now it feels just like a fourth card, whereas this should be like the culmination"
-[07:15.0-07:34.0] Job Card (Samako); cursor on Top left metadata ("Made in Claude", date. CHANGE (Copy): "Made in Claude, nobody fucking cares. 6 October, nobody fucking cares. The client is important."
-[07:34.0-07:43.0] Job Card (Samako); cursor on Top right ("Creative production". DISLIKE (Frame or housing): "took inspiration from one of our first sections but it doesn't look clean."
-[07:43.0-08:32.0] Job Card (Samako); cursor on Bullet points on the lef. CHANGE (Density): "this is so crammed together, the ask and Claude did."
-[08:32.0-09:23.0] Job Card (Suri); cursor on Large text ("0 FRAMES", "Op alles". DISLIKE (Typography): "it breaks down the sentences in different sections and then it just gives a fucking big font to like one part of it... That's not really like frontend best practices."
-[09:23.0-09:38.0] Job Card (Suri); cursor on Large text ("Weeks". CHANGE (Typography): "people see time saved and then they see weeks, big font, it just takes them out."
-[09:38.0-10:00.0] Job Card (Suri); cursor on Data tabl. CHANGE (Diagram): "we have an actual cluster, an actual visual map of these things, why can't we use it here?"
-[10:00.0-10:56.2] The Plugin; cursor on Plugin diagram and tex. CHANGE (Copy): "from a narrative proposition point of view, it doesn't say like anything, right?"
+[00:00.0-00:17.0] Intro and skipping the About section.
+[00:17.0-02:15.0] Critiquing the Intelligence Configuration section for layout and modularity.
+[02:15.0-03:40.0] Reviewing the Adoption and Automation section, disliking the low-res look and flow.
+[03:40.0-04:10.0] Reviewing the Upstream Time section, pointing out off-brand elements.
+[04:10.0-05:29.0] Proposing a new structure for explaining the core proposition and the Layer.
+[05:29.0-05:58.0] Discussing narrative flow into the Loop case study.
+[05:58.0-07:12.0] Reviewing Loop proof sections and reiterating core feedback.
+[07:12.0-09:19.0] Detailed critique of a specific ad card, focusing on AI patterns, typography, and layout.
+[09:19.0-09:43.0] Reviewing the marketing Drive card and its typography.
+[09:43.0-10:56.2] Concluding remarks on the Enterprise plugin and final summary of priorities.
 
 ## Transcript
-[00:00.0] Vince: So, this is the Loom where I will go through the thoughts for the websites. Um, so, so I think obviously the about section it's fine, that's like from our homepage. Um, but then here it begins. Like, this frame, the intelligence configuration, I like it because it was inspired by some of the other references, other websites I find interesting like Lighthouse etc., where we have like clean information architecture.
-[00:35.0] Vince: At the same time, I feel like we're not optimally using all the space here. And also this feels like a glorified word quote, it doesn't really fit here. I'm not sure how to express it, but I don't think it's best here. And then, the layer, that's what we bring as a unique thing, that encoded layer, which we plug into like their existing setup.
-[01:02.0] Vince: Um, but maybe, the models, that's actually already part of Claude Enterprise, but maybe what's missing is the team. And also one of the pieces of feedback I gave is that I don't want every section to look the same, because one of the patterns that really annoyed me was that every single section had like a three block structure.
-[01:23.0] Vince: So I want something that looks unique. At the same time, I want to build a system, I want it to be modular. Um, so I want when you scroll into the next section to really see that that component belongs to like the previous component. And for our website, we didn't choose to go full viewport width. Other websites do, we didn't, we really want to keep things centered, but that doesn't mean that we have to like, uh, not use the space properly.
-[01:52.0] Vince: So I think thinking about like the space here, um, and the alignment, like is this the best way we can do it? So I think the first order of business is really iterating on this specific section, different routes, and then seeing how we can already introduce the intelligence configuration, our node in the system. I think that would be interesting.
-[02:16.0] Vince: Then this. Like, you could say like, hey, we used the same block and then we use it here, but like, if you show this to like a client, a CFO, a CMO, like, they don't... I don't think it looks bad looking closely at it, but it looks like very low res. And again, we're not optimally using the space that we have here. Look at all the white space that we have between the hero one and then this.
-[02:43.0] Vince: And then, um, yeah, I think this can be bigger. And also the way the text is placed, like, it's ugly, it doesn't really feel good. And I understand because I specifically briefed you to use the particle system, but this looks like a children's drawing. I think here, tone of voice, the brief, it works, but here it really falls flat.
-[03:05.0] Vince: And why, yeah, I like the idea of product renders, tone of voice, the brief and then here, but I think this feels like a shitty mockup. So I really think that we can improve it. Uh, and also this flow, it's, it's really bad. Um, so thinking about using diagrams, proper diagrams using like maybe, we've recently installed a plugin to play around with some visualizations.
-[03:32.0] Vince: Um, an autonomy skill that we've used, maybe we can use that to really build like these cool flows and diagrams from scratch. Um, I think this here is something we took from previous pages, but this feels completely out of place in terms of design. Like these rounded shapes, we shouldn't use them. Also this like, um, doodle arrow, it's not really part of our brand system.
-[04:07.0] Vince: Because I was thinking about like, okay, how should we structure our proposal? I think first, we need to show like, okay, what we will do is, is sitting across creative production, creative ops, creative review, creative strategy. That's basically like where we plug in, we build a layer. And then here in that section, we should explain like that layer, that's that encoded substrate, that's the context, the evals, etc, etc, which we will build and train through adoption.
-[04:35.0] Vince: But again, this visual does not convey it at all. So that's why we completely need to like, um, rethink it. So these two sections, I think if we can't solve them, then the rest is kind of moot. At the same time, the rest already looks good. Don't get me wrong, the other sections I think they look fine, but it's just this. And the reason why it's also difficult is because this is the core proposition of what I have.
-[04:58.0] Vince: And the thing is on our homepage we have our arc, and um, I like the design language of the arc, but this is a proposal so it should be a bit more toned down. As in like, of course we will embrace our brand and I will keep the key visual that's part of my brand, but this should really be like an amazing cool diagram, uh, super clean information architecture where you feel like okay, this is the proposition and then this is the approach on how to get there.
-[05:29.0] Vince: Um, and then maybe this longer tasks section maybe we can skip. Um, and then immediately bring it into like Loop. But again, and I asked for this three times, like when you scroll through the sections: How adoption and automation connect, Longer tasks for Claude, Upstream time for your team, and then all of a sudden In 2024, Loop decided to go AI-first. How does that relate to the previous section from like a storytelling point of view? Like from a grammar point of view this just comes out of nowhere.
-[06:00.0] Vince: Um, and then we have like the different proof sections for Loop. And then what it returned at Loop. Um, the question is, should we have a separate section or should we integrate it in here? Maybe we should like redesign these cards, but again I want to do this piecemeal, I don't want to redesign everything. Um, at the same time, first the first sections I mentioned, but I'm already giving this as feedback.
-[06:27.0] Vince: Um, and then the narrative is like, we first introduce ourselves, our approach, how we do it, then we showcase the proof at Loop Earplugs, like okay, because that's the super important part. All of the things I've done at Loop converged, um, yeah, came together, culminated in like building that machine-readable layer. Uh, but now it feels just like a fourth card, whereas this should be like the culmination of like, um, animation, automation through adoption, or adoption through automation.
-[07:01.0] Vince: So I think again, this is coming from our homepage. I'm really open to completely redesigning it, but in a second phase. And then again, not sure if we need this. Um, and then we come here. Here, like, um, that's a typical AI pattern. Made in Claude, nobody fucking cares. 6 October, nobody fucking cares. The client is important. But the thing is, if we put everything in one line, so Samako, the client name before here, how would it look?
-[07:33.0] Vince: And then creative production, I know we took inspiration from one of our first sections but it doesn't look clean. Um, and then like, just looking from an information architecture point of view, like this is so crammed together, the ask and Claude did. I think this looks okay, not sure if we need the, the corners. And then also this text, it's slop, we don't need it.
-[07:57.0] Vince: And then the client's visual lead, choose between film A, not reviewed yet. What does that mean? Like, every piece of information should like, make total sense. And then here, what it now allows, product done by AI, zero frames. Like, again, what does this mean? If you look at a proposal, they say like, okay, they made a cool motion video with AI, which would have taken weeks before, uh, now done in a couple of minutes, it's amazing.
-[08:23.0] Vince: Here, um, it's allowing us to drive up creative variety, um, but the way these two things are like designed doesn't make sense. Why is this so big? And that's something that you usually do, that's something I notice that AI does, it breaks down the sentences in different sections and then it just gives a fucking big font to like one part of it and then a small one here. That's not really like frontend best practices.
-[08:52.0] Vince: You probably know more about brand systems than I do, about typography, you have like shadcn, you have like a lot of libraries that no, are not retro-futuristic, because as you know, um, our, um, design is different. Um, but a brand system is a brand system. And the thing about a brand system is that it should be able to encode, um, like whatever source of inspiration. So I think this applies here as well.
-[09:23.0] Vince: And then here, the marketing drive mapped and searchable by meaning. Like, time saved, weeks. Like, people see time saved and then they see weeks, big font, it just takes them out. So I think this needs to be made better. And then, like, we have an actual cluster, an actual visual map of these things, why can't we use it here?
-[09:48.0] Vince: Um, and yeah, creative review, sent back, kept, I like it, but again, this is just a general for, for everything here. Um, and then here, the plugin in your Claude Enterprise, like this looks visually nice. You could say like, hey Vincent, we have a nice diagram on the left and then text on the right. Again, but from a narrative proposition point of view, it doesn't say like anything, right?
-[10:13.0] Vince: So we can think about this later, uh, but I first really want to like source all the different resources that we have and really get like these two sections right. Which is like, we build that, um, layer into your organization across these different workstreams, and then we do that through like, uh, adoption and automation.
-[10:38.0] Vince: So this is the feedback for these two proposals. Um, like, I think the X-Bionic one, it's kind of the same. Um, because I thought the test proposal system would be different, but it's not, but it's fine. Um, so yeah, this is my first pass review of AI product renders.
+[00:00.0] Vince: So, this is a loom where I'll go through the thoughtform website.
+[00:06.0] Vince: So, I think obviously the about section it's fine. That's like from our homepage.
+[00:17.2] Vince: But then here it begins.
+[00:20.6] Vince: Like, this frame, the intelligence configuration, I like it because it was inspired by some of the other references, other websites I find interesting, like Lighthouse, etc., where we have like clean information architecture.
+[00:35.3] Vince: At the same time, I feel like we're not optimally using all the space here.
+[00:40.5] Vince: And also this feels like a glorified word quote.
+[00:45.3] Vince: It doesn't really fit here. Not sure how to express it, but I don't think it's best here.
+[00:51.6] Vince: And then the layer, that's what we bring as a unique thing, that encoded layer which we plug into like their existing setup.
+[01:01.3] Vince: But maybe the models, that's actually already part of Claude Enterprise, but maybe what's missing is the team.
+[01:10.5] Vince: And also one of the pieces of feedback I gave is that I don't want every section to look the same.
+[01:16.8] Vince: Because one of the patterns that really annoyed me was that every single section had like a three block structure.
+[01:23.7] Vince: So I want something that looks unique.
+[01:26.5] Vince: At the same time, I want to build a system. I want it to be modular.
+[01:32.4] Vince: So I want when you scroll into the next section to really see that that component belongs to like the previous component.
+[01:39.6] Vince: And for our website, we didn't choose to go full viewport width. Other websites do, we didn't.
+[01:45.6] Vince: We really want to keep things center, but that doesn't mean that we have to like not use the space properly.
+[01:53.0] Vince: So I think thinking about like the space here and the alignment, like is this the best way we can do it?
+[02:00.0] Vince: So I think the first order of business is really iterating on this specific section, different routes.
+[02:05.6] Vince: And then seeing how we can already introduce the intelligence configuration node in the system.
+[02:13.2] Vince: I think that would be interesting.
+[02:16.3] Vince: Then this, like you could say like hey we use the same block and then we use it here.
+[02:22.2] Vince: But like if you show this to like a client, a CFO, a CMO, like they don't...
+[02:30.4] Vince: I don't think it looks bad looking closer at it, but it looks like very low res.
+[02:35.6] Vince: And again, we're not optimally using the space that we have here.
+[02:38.2] Vince: Look at all the white space that we have between the hero one and then this.
+[02:42.5] Vince: And then, yeah, I think this can be bigger.
+[02:46.8] Vince: And also the way the text is placed, like it's ugly, it doesn't really feel good.
+[02:51.6] Vince: And I understand because I specifically briefed you to use the particle system, but this looks like a children's drawing.
+[02:59.2] Vince: I think here tone of voice the brief it works, but here it really falls flat.
+[03:04.2] Vince: And why, yeah, I like the idea of product render, tone of voice, the brief and then here.
+[03:10.0] Vince: But I think this feels like a shitty mockup.
+[03:12.3] Vince: So I really think that we can improve it.
+[03:14.6] Vince: And also this flow, it's really bad.
+[03:19.4] Vince: So thinking about using diagrams, proper diagrams using like maybe, we've recently installed a plugin to play around with some visualizations.
+[03:32.4] Vince: An autonomy skill that we've used, maybe we can use that to really build like these cool flows and diagrams from scratch.
+[03:42.5] Vince: I think this here is something we took from previous pages, but this feels completely out of place in terms of design.
+[03:51.0] Vince: Like these rounded shapes, we shouldn't use them.
+[03:53.3] Vince: Also this like doodle arrow, it's not really part of our brand system.
+[04:08.5] Vince: Because I was thinking about like okay how should we structure our proposal.
+[04:12.2] Vince: I think first we need to show like okay what we will do is sitting across creative production, creative ops, creative review, creative strategy.
+[04:19.5] Vince: And that's basically like where we plug in, we build a layer.
+[04:23.6] Vince: And then here, in that section, we should explain like that layer, that's that encoded sub-straight that's the context, the evals, etc., etc., which we will build and train through adoption.
+[04:35.0] Vince: But again, this visual does not convey it at all.
+[04:39.1] Vince: So that's why we completely need to like rethink it.
+[04:43.1] Vince: So these two sections, I think if we can't solve them, then the rest is kind of moot.
+[04:48.3] Vince: At the same time, the rest already looks good.
+[04:49.7] Vince: Don't get me wrong, the other sections I think they look fine.
+[04:52.4] Vince: But it's just this, and the reason why it's also difficult is because this is the core proposition of what I have.
+[04:58.5] Vince: And a thing is, on our homepage we have our arc and I like the design language of the arc, but this is a proposal so it should be a bit more toned down.
+[05:07.4] Vince: As in like, of course we will embrace our brand and I will keep the key visual, that's part of my brand, but this should really be like an amazing, cool diagram, super clean information architecture where you feel like, okay, this is the proposition.
+[05:24.0] Vince: And then this is the approach on how to get there.
+[05:29.6] Vince: And then maybe this longer tasks section, maybe we can skip.
+[05:35.2] Vince: And then immediately bring it into like Loop.
+[05:38.2] Vince: But again, and I asked for this three times, like when you scroll through the sections, how adoption and automation connect, longer task for Claude, upstream time for your team, and then all of a sudden, in 2024 Loop decided to go AI first.
+[05:51.5] Vince: How does that relate to the previous section from like a storytelling point of view?
+[05:55.7] Vince: Like from a grammar point of view, this just comes out of nowhere.
+[06:00.6] Vince: And then we have like the different proof sections for Loop.
+[06:04.6] Vince: And then what it returned at Loop.
+[06:07.7] Vince: The question is, should we have a separate section or should we integrate it in here?
+[06:11.8] Vince: Maybe we should like redesign these cards, but again I wanted to do this piecemeal, I don't want to redesign everything.
+[06:19.4] Vince: At the same time, first, the first sections I mentioned, but I'm already giving this as feedback.
+[06:27.2] Vince: And the narrative is like, we first introduce ourselves, our approach, how we do it, then we showcase the proof at Loop Earplugs, like okay, because that's the super important part, all of the things I've done at Loop converged, came together, culminated in like building that machine readable layer.
+[06:49.4] Vince: But now it feels just like a fourth card, whereas this should be like the culmination of like automation through adoption or adoption through automation.
+[07:01.3] Vince: So I think again this is coming from our homepage.
+[07:04.0] Vince: I'm really open to completely redesigning it, but in a second phase.
+[07:08.5] Vince: And then again, not sure if we need this.
+[07:14.3] Vince: And then we come here.
+[07:15.6] Vince: Here, like that's a typical AI pattern, made in Claude. Nobody fucking cares.
+[07:22.7] Vince: 6 October, nobody fucking cares. The client is important.
+[07:26.5] Vince: But thing is, if we put everything in one line so Samaco the client name before here, how would it look?
+[07:33.4] Vince: And then creative production, I know we took inspiration from one of our first sections, but it doesn't look clean.
+[07:41.3] Vince: And then, like, just looking from an information architecture point of view, like this is so crammed together.
+[07:48.3] Vince: The ask and Claude did, I think this looks okay.
+[07:51.3] Vince: Not sure if we need the corners.
+[07:54.0] Vince: And then also this text, it's slop, we don't need it.
+[07:57.6] Vince: And then the clients visual lead, choose between a... not reviewed yet, what does that mean?
+[08:02.3] Vince: Like every piece of information should like make total sense.
+[08:07.3] Vince: And then here, what it now allows, product run by AI 0 frames.
+[08:12.3] Vince: Like again, what does this mean?
+[08:14.2] Vince: If you look at a proposal, they say like okay, they made a cool motion video with AI, which would have taken weeks before.
+[08:20.1] Vince: Now done in a couple of minutes, that's amazing.
+[08:23.2] Vince: Here, it's allowing us to drive up creative variety.
+[08:31.4] Vince: But the way these two things are like designed doesn't make sense.
+[08:36.1] Vince: Why is this so big?
+[08:37.5] Vince: And that's something that you usually do, it's something I notice that AI does.
+[08:41.0] Vince: It breaks down the sentences in different sections and then it just gives a fucking big font to like one part of it and then a small one here.
+[08:49.5] Vince: That's not really like frontend best practices.
+[08:52.5] Vince: You probably know more about brand systems than I do about typography, you have like chatzen, you have like a lot of libraries that know are not retro futuristic, because as you know our design is different.
+[09:10.5] Vince: But a brand system is a brand system.
+[09:13.0] Vince: And the thing about a brand system is that it should be able to encode like whatever source of inspiration.
+[09:20.4] Vince: So I think this applies here as well.
+[09:23.0] Vince: And then here the marketing drive map and searchable by meaning.
+[09:25.8] Vince: Like time saved, weeks, like people see time saved and then they see weeks, big font, it just takes them out.
+[09:32.4] Vince: So I think this needs to be made better.
+[09:37.0] Vince: And then like we have an actual cluster, an actual visual map of these things, why can't we use it here?
+[09:48.3] Vince: And yeah, creative review, send back kept, I like it, but again this is just a general for everything here.
+[09:57.6] Vince: And then here, the plug-in in your Claude Enterprise.
+[10:01.0] Vince: Like this looks visually nice. You could say like, hey Vincent, we have a nice diagram on the left and then text on the right.
+[10:07.4] Vince: Again, but from a narrative proposition point of view, it doesn't say like anything, right?
+[10:13.2] Vince: So we can think about this later, but I first really want to like source all the different resources that we have and really get like these two sections right, which is like we build that layer into your organization across these different work streams and then we do that through like adoption and automation.
+[10:38.2] Vince: So this is the feedback for these two proposals.
+[10:43.0] Vince: Like I think the X-Bionic one, it's kind of the same.
+[10:47.3] Vince: Because I thought the test proposal system would be different, but it's not, but it's fine.
+[10:52.5] Vince: Um, so yeah, this is my...
+
+## On-screen Text
+[00:00.0] VINCE BUYSSENS
+[00:16.7] HOW INTELLIGENCE SHOULD TAKE PART IN THE WORK.
+[00:23.0] THE LAYER
+[01:13.0] Creative production, Creative ops, Creative review, Creative strategy
+[02:15.0] HOW ADOPTION AND AUTOMATION CONNECT.
+[03:40.0] LONGER TASKS FOR CLAUDE. UPSTREAM TIME FOR YOUR TEAM.
+[05:36.0] IN 2024, LOOP DECIDED TO GO AI-FIRST.
+[06:03.0] What it returned at Loop
+[06:10.0] We built the layer the agents run on
+[07:13.0] A 15-second motion ad for the autumn sale
+[07:18.0] MADE IN CLAUDE
+[07:21.0] 6 OCT 2024
+[07:44.0] THE ASK
+[07:46.0] CLAUDE DID
+[07:54.0] The client's visual lead
+[08:08.0] 0 frames
+[09:20.0] The marketing Drive, mapped and searchable by meaning
+[09:27.0] Weeks
+[09:43.0] A first-pass review of AI product renders
+[09:48.0] SENT BACK, KEPT
+[09:55.0] THE PLUGIN, IN YOUR CLAUDE ENTERPRISE.
 
 ## Screen Log
-| Time  | Section on Screen         | Cursor Points At / Circles                          | Quote                                                                                                                                                                    | Verdict | Design Property          |
-| :---- | :------------------------ | :-------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------ | :----------------------- |
-| 00:18 | The Vision                | Left diagram ("Intelligence configuration")         | "I like it because it was inspired by... Lighthouse etc., where we have like clean information architecture."                                                            | LIKE    | Information architecture |
-| 00:36 | The Vision                | Text below left diagram ("The layer...")            | "this feels like a glorified word quote, it doesn't really fit here."                                                                                                    | CHANGE  | Copy                     |
-| 01:10 | The Vision                | 2x2 grid on the right                               | "every single section had like a three block structure. So I want something that looks unique."                                                                          | CHANGE  | Section split            |
-| 02:16 | The Approach              | "Your layer" block in diagram                       | "it looks like very low res. And again, we're not optimally using the space"                                                                                             | DISLIKE | Density                  |
-| 02:47 | The Approach              | Text inside diagram ("Whatever is written down...") | "the way the text is placed, like, it's ugly... this looks like a children's drawing."                                                                                   | DISLIKE | Typography               |
-| 03:09 | The Approach              | T-shirt mockup                                      | "this feels like a shitty mockup."                                                                                                                                       | CHANGE  | Image/mockup             |
-| 03:43 | Longer Tasks              | Timeline diagram                                    | "these rounded shapes, we shouldn't use them. Also this like, um, doodle arrow, it's not really part of our brand system."                                               | DISLIKE | Brand system             |
-| 04:12 | The Vision / The Approach | Scrolling between Vision and Approach               | "we build a layer. And then here in that section, we should explain like that layer... which we will build and train through adoption."                                  | CHANGE  | Narrative                |
-| 05:00 | The Vision                | Left diagram                                        | "this should really be like an amazing cool diagram, uh, super clean information architecture"                                                                           | CHANGE  | Diagram                  |
-| 05:36 | Loop                      | Text: "IN 2024, LOOP DECIDED..."                    | "How does that relate to the previous section from like a storytelling point of view? Like from a grammar point of view this just comes out of nowhere."                 | DISLIKE | Copy                     |
-| 06:10 | What it returned at Loop  | The four lanes                                      | "should we have a separate section or should we integrate it in here?"                                                                                                   | NEUTRAL | Information architecture |
-| 06:50 | What it returned at Loop  | The four lanes                                      | "now it feels just like a fourth card, whereas this should be like the culmination"                                                                                      | CHANGE  | Narrative                |
-| 07:15 | Job Card (Samako)         | Top left metadata ("Made in Claude", date)          | "Made in Claude, nobody fucking cares. 6 October, nobody fucking cares. The client is important."                                                                        | CHANGE  | Copy                     |
-| 07:34 | Job Card (Samako)         | Top right ("Creative production")                   | "took inspiration from one of our first sections but it doesn't look clean."                                                                                             | DISLIKE | Frame or housing         |
-| 07:43 | Job Card (Samako)         | Bullet points on the left                           | "this is so crammed together, the ask and Claude did."                                                                                                                   | CHANGE  | Density                  |
-| 08:32 | Job Card (Suri)           | Large text ("0 FRAMES", "Op alles")                 | "it breaks down the sentences in different sections and then it just gives a fucking big font to like one part of it... That's not really like frontend best practices." | DISLIKE | Typography               |
-| 09:23 | Job Card (Suri)           | Large text ("Weeks")                                | "people see time saved and then they see weeks, big font, it just takes them out."                                                                                       | CHANGE  | Typography               |
-| 09:38 | Job Card (Suri)           | Data table                                          | "we have an actual cluster, an actual visual map of these things, why can't we use it here?"                                                                             | CHANGE  | Diagram                  |
-| 10:00 | The Plugin                | Plugin diagram and text                             | "from a narrative proposition point of view, it doesn't say like anything, right?"                                                                                       | CHANGE  | Copy                     |
+| Time | Section on screen | Cursor points at | Short quote | Verdict | Design property |
+| --- | --- | --- | --- | --- | --- |
+| 00:43.0 | HOW INTELLIGENCE SHOULD TAKE PART IN THE WORK. | "THE LAYER" text block | "glorified word quote... doesn't really fit here" | CHANGE | content structure |
+| 01:13.0 | HOW INTELLIGENCE SHOULD TAKE PART IN THE WORK. | 3-block grid layout | "don't want every section to look the same... three block structure" | CHANGE | layout variety |
+| 02:29.0 | HOW ADOPTION AND AUTOMATION CONNECT. | "THE LAYER" block | "they don't... it looks like very low res" | DISLIKE | resolution/fidelity |
+| 02:49.0 | HOW ADOPTION AND AUTOMATION CONNECT. | "PRODUCT RENDERS" text | "ugly, doesn't really feel good" | DISLIKE | typography/placement |
+| 02:59.0 | HOW ADOPTION AND AUTOMATION CONNECT. | Diagram tree | "looks like a children's drawing... feels like a shitty mockup" | DISLIKE | graphic style |
+| 03:51.0 | LONGER TASKS FOR CLAUDE. | Timeline | "rounded shapes we shouldn't use them... doodle arrow... not part of our brand system" | CHANGE | shape language |
+| 04:39.0 | HOW ADOPTION AND AUTOMATION CONNECT. | Entire visual | "this visual does not convey it at all... completely need to like rethink it" | CHANGE | visual storytelling |
+| 05:40.0 | IN 2024, LOOP DECIDED TO GO AI-FIRST. | Screen center | "how does that relate to the previous section... comes out of nowhere" | CHANGE | narrative flow |
+| 06:49.0 | We built the layer the agents run on | Entire section | "feels just like a fourth card, whereas this should be like the culmination" | CHANGE | visual hierarchy |
+| 07:17.0 | A 15-second motion ad for the autumn sale | "MADE IN CLAUDE" tag | "typical AI pattern... nobody fucking cares" | CHANGE | content/hierarchy |
+| 07:22.0 | A 15-second motion ad for the autumn sale | Date "6 OCT 2024" | "nobody fucking cares. The client is important." | CHANGE | content/hierarchy |
+| 07:41.0 | A 15-second motion ad for the autumn sale | "THE ASK" list | "is so crammed together" | CHANGE | spacing/density |
+| 07:54.0 | A 15-second motion ad for the autumn sale | Small footer text | "text, it's slop, we don't need it" | CHANGE | content filtering |
+| 08:38.0 | A 15-second motion ad for the autumn sale | "0 frames" text | "why is this so big... breaks down the sentences... not front-end best practices" | CHANGE | typography scaling |
+| 09:28.0 | The marketing Drive, mapped and searchable by meaning | "Weeks" text | "big font, it just takes them out... needs to be made better" | CHANGE | typography scaling |
+| 09:41.0 | The marketing Drive, mapped and searchable by meaning | Data list | "actual visual map of these things, why can't we use it here?" | CHANGE | data visualization |
+| 10:10.0 | THE PLUGIN, IN YOUR CLAUDE ENTERPRISE. | "THE PLUGIN" heading | "from a narrative proposition point of view, it doesn't say like anything" | CHANGE | narrative flow |
 
 ## Change Requests
-- **The Vision:** Remove the "glorified word quote" text under the intelligence configuration diagram.
-- **The Vision:** Redesign the 2x2 grid on the right so it is modular and doesn't repeat the same "three block structure" used elsewhere.
-- **The Approach:** Redesign the diagram to use the white space better and look higher resolution.
-- **The Approach:** Fix the text placement inside the diagram so it doesn't look like a "children's drawing".
-- **The Approach:** Replace the t-shirt image with a better, non-"shitty" mockup.
-- **The Approach:** Create proper diagrams from scratch, potentially using the new autonomy skill/plugin.
-- **Longer Tasks:** Remove the rounded shapes and doodle arrows, or skip this section entirely.
-- **Narrative Flow:** Rewrite the copy to clearly connect the 4 workstreams in "The Vision" to the encoded layer in "The Approach".
-- **Loop:** Rewrite the transition text ("In 2024, Loop decided...") so it connects grammatically and narratively to the previous section.
-- **What it returned at Loop:** Restructure this so it acts as the culmination of the Loop case study, rather than just a separate fourth card.
-- **Job Cards (General):** Remove irrelevant metadata like "Made in Claude" and the date.
-- **Job Cards (General):** Move the client name (e.g., Samako) to the front of the title line.
-- **Job Cards (Samako):** Un-cram the layout of the bullet points ("the ask" and "Claude did").
-- **Job Cards (Samako):** Remove the "slop" text at the bottom.
-- **Job Cards (Samako):** Clarify confusing copy like "choose between film A, not reviewed yet".
-- **Job Cards (Suri):** Stop using the AI-generated typography pattern of breaking sentences into huge and small fonts.
-- **Job Cards (Suri):** Remove the giant "Weeks" font that takes the user out of context.
-- **Job Cards (Suri):** Replace the text data table with an actual visual map/cluster diagram.
-- **The Plugin:** Rewrite the text on the right side to actually provide a narrative proposition.
+- [00:43.0] Remove or replace the glorified quote "The Layer" in the Intelligence Configuration section.
+- [01:13.0] Vary the layout structures; avoid repeating the three-block structure in every section.
+- [02:37.0] Utilize the white space better in the Adoption and Automation section.
+- [02:48.0] Improve text placement in the Adoption and Automation section.
+- [03:10.0] Redesign the flow diagram in Adoption and Automation; use proper diagrams instead of a "children's drawing" or "shitty mockup".
+- [03:51.0] Remove rounded shapes and doodle arrows from the timeline section to align with the brand system.
+- [04:39.0] Rethink the visual for explaining "The Layer" built through adoption to convey the concept clearly.
+- [05:55.0] Fix the narrative transition into the "Loop decided to go AI-first" section so it connects better to previous content.
+- [07:22.0] Remove the "Made in Claude" text and date; emphasize the client name instead.
+- [07:41.0] Improve spacing and information architecture in the ad card to prevent it from looking crammed.
+- [08:44.0] Stop breaking down sentences with arbitrarily large fonts (e.g., "0 frames", "Weeks"); follow standard typography practices.
+- [09:41.0] Use actual visual cluster maps where appropriate instead of just text lists.
+- [10:10.0] Add a narrative proposition to the "Plugin in your Claude Enterprise" section.
 
 ## Synthesis
-**Recurring properties he praises:**
+Vince Buyssens is looking for a more refined, brand-aligned, and narratively cohesive design for the proposal page. He strongly dislikes elements that feel out of place or low-fidelity, explicitly rejecting doodle arrows, rounded shapes, and "children's drawing" aesthetics in the diagrams. He is critical of poor space utilization, repetitive layout structures (like relying entirely on a 3-block grid), and sloppy typography practices, particularly the AI-generated pattern of breaking sentences apart with arbitrarily oversized fonts. 
 
-- Clean, structured information architecture (referencing Lighthouse).
-- The core conceptual proposition of building an "encoded layer" into the client's organization.
-- The visual design language of the "arc" from their homepage (wants it adapted cleanly for proposals).
-- High-quality, visually appealing diagrams (like the plugin diagram).
+His core requirement is a complete overhaul of how the central proposition—"The Layer" and its integration into workflows via adoption and automation—is communicated visually. He wants professional, clean information architecture and proper diagrams that clearly tell the story, viewing the current mockups as inadequate. 
 
-**Recurring properties he rejects:**
-
-- **Poor use of space/density:** He repeatedly points out areas that are either too crammed (bullet points) or have too much wasted white space (The Approach diagram).
-- **Off-brand visual elements:** He strongly dislikes elements that look like "children's drawings," doodle arrows, and rounded corners, stating they do not fit the brand system.
-- **AI-generated typography patterns:** He hates the trend of breaking a sentence apart and making one random word/phrase a massive font (e.g., "0 FRAMES", "Weeks", "Op alles").
-- **Repetitive layouts:** He is annoyed by the repeated use of a "three block structure" across different sections.
-- **Irrelevant metadata:** He explicitly rejects tags like "Made in Claude" and dates, emphasizing that the client name is what matters.
-
-**What the page must say or show that it does not yet:**
-
-- **A cohesive narrative thread:** The page currently feels like disjointed sections. It must explicitly explain how the four workstreams (Creative production, ops, review, strategy) plug into the "encoded layer," and how that layer is built through adoption and automation.
-- **Smooth transitions:** The jump into the Loop case study must make sense from a storytelling and grammatical perspective, rather than just appearing out of nowhere.
-- **Culmination of proof:** The "What it returned at Loop" section must feel like the ultimate payoff/culmination of the case study, not just an extra card tacked onto the end.
-- **Meaningful copy:** Every piece of text must make total sense to the reader (e.g., fixing confusing lines like "not reviewed yet") and offer a real narrative proposition (e.g., the Plugin section).
-- **Proper data visualization:** Where data exists (like the marketing drive), it must show an actual visual map or cluster, not just text.
+Furthermore, he emphasizes the importance of a smooth narrative flow between sections, noting that transitions currently feel abrupt or nonsensical. Finally, he wants generic UI patterns (like prominent "Made in Claude" stamps or irrelevant dates) removed in favor of highlighting the client and maintaining strict adherence to their own brand system. He views the first two core proposition sections as the highest priority to fix before tackling the rest of the page.
 
 ## Tags
-Loom, owner feedback, X-Bionic proposal, proposal template, the vision, the approach, information architecture, section split, density, typography, mockup, rounded shapes, doodle arrow, brand system, narrative, layer, adoption, CHANGE, DISLIKE, LIKE
+Vince Buyssens, Thoughtform, X-Bionic, proposal review, website design, UI/UX, brand system, information architecture, diagrams, typography, layout modularity, narrative flow, critique

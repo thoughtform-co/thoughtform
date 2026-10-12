@@ -94,7 +94,7 @@ One short paragraph: what this video is and what it is useful for.
 Chronological, contiguous, covering 00:00.0 to the end. One per line, exactly "[MM:SS.d-MM:SS.d] description". Describe what is on screen, what the cursor points at, camera or scroll movement, and any moment someone would cut on or cite.
 
 ## Transcript
-Every spoken word, one line per utterance: "[MM:SS.d] Speaker: words". Write (no speech) if silent.
+Verbatim and complete, never summarised: every spoken word, one line per sentence or two, "[MM:SS.d] Speaker: words", using the speaker's name when the context gives it. A ten-minute talk runs to well over a hundred lines. Write (no speech) if silent.
 
 ## On-screen Text
 Visible text that matters (titles, URLs in the address bar, labels, UI copy) with timestamps. Write (none) if there is none.
@@ -215,6 +215,7 @@ async function describe(file, prompt, model, key) {
       contents: [
         { parts: [{ file_data: { mime_type: file.mime, file_uri: file.uri } }, { text: prompt }] },
       ],
+      generationConfig: { maxOutputTokens: 32768 },
     }),
   });
   const json = await res.json();
