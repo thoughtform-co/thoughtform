@@ -1,0 +1,136 @@
+/* The proposal kit: the shape system, on the kit's own tokens (`.xb`), which
+   `xb-in-frame.css` re-reads from the site's so light reaches it.
+
+   THE LAW (owner, 2026-10-12): rings are instruments, connectors are
+   straight. Precise circles stay where they are an instrument; everything
+   that joins or holds is a level run, a plumb run, a 45-degree cut or a
+   square corner. No curve joins two things, no corner is rounded.
+
+   Two line weights, one dash ladder, three paints:
+     seam  var(--xb-line-2)   divides a region from its neighbour
+     rule  var(--xb-line)     rules within one
+     gold  the one lit thing: the layer and what leaves it
+     green people, and nothing else
+     dawn  everything that only runs */
+
+.xb {
+  /* the people's green, as the site's ink rung (dark #7a9e6a) */
+  --kit-green: var(--atreides-ink, #7a9e6a);
+  --kit-dash-fine: 1 5;
+  --kit-dash: 2 4;
+  --kit-dash-wide: 2 8;
+}
+
+/* ---- lines: every stroke is one device pixel at every size ---- */
+
+.kit-line,
+.kit-tick,
+.kit-bracket,
+.kit-cross,
+.kit-ring {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+.kit-line {
+  stroke: var(--xb-line-2);
+}
+.kit-line--rule {
+  stroke: var(--xb-line);
+}
+.kit-line--green {
+  stroke: var(--kit-green);
+  stroke-opacity: 0.8;
+}
+.kit-line--gold {
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.75;
+}
+.kit-line--bearing {
+  stroke-dasharray: var(--kit-dash-fine);
+}
+.kit-line--dash {
+  stroke-dasharray: var(--kit-dash);
+}
+
+.kit-tick {
+  stroke: var(--xb-line-2);
+}
+.kit-tick--minor {
+  stroke: var(--xb-line);
+}
+
+/* ---- the ring register: the only circles ---- */
+
+.kit-ring[data-tone="dawn"] {
+  stroke: var(--xb-text);
+}
+.kit-ring[data-tone="gold"] {
+  stroke: var(--xb-gold);
+}
+
+/* ---- marks ---- */
+
+.kit-tap {
+  fill: var(--xb-gold);
+}
+.kit-tap--green {
+  fill: var(--kit-green);
+}
+.kit-tap--dawn {
+  fill: var(--xb-text-2);
+}
+.kit-diamond {
+  fill: var(--xb-gold);
+}
+.kit-diamond--green {
+  fill: var(--kit-green);
+}
+.kit-diamond--open {
+  fill: var(--xb-ground);
+  stroke: var(--xb-gold);
+  vector-effect: non-scaling-stroke;
+}
+.kit-cross {
+  stroke: var(--xb-gold);
+}
+.kit-bracket {
+  stroke: var(--xb-line-2);
+}
+.kit-junction {
+  fill: var(--xb-ground);
+  stroke: var(--xb-gold);
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- words on a drawing: a tag is an edge and its text, never a fill ---- */
+
+.kit-tag {
+  display: inline-block;
+  padding: 0.3em 0.7em;
+  background: var(--xb-ground);
+  border: 1px solid var(--xb-line-2);
+  color: var(--xb-text);
+  font-family: var(--xb-sans);
+  white-space: nowrap;
+}
+.kit-tag--gold {
+  border-color: var(--xb-gold);
+  color: var(--xb-gold);
+}
+.kit-key {
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+  color: var(--xb-text-3);
+}
+.kit-key--eyebrow {
+  letter-spacing: var(--track-eyebrow, 0.15em);
+}
+
+/* ---- housings: a frame is square; one corner may be cut ---- */
+
+.kit-frame {
+  border: 1px solid var(--xb-line-2);
+  background: var(--xb-ground);
+}

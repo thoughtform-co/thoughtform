@@ -1,0 +1,141 @@
+/* The plug flow, three directions against production (`plug.css`), each on
+   the same figure box, the same tokens and the same words. Only what a
+   direction ADDS is styled here; chips, tags, cards, tabs, the bundle and
+   the bus are production's classes untouched. Lines and marks are the
+   kit's (`kit/kit.css`). */
+
+/* A static group arrives whole: a dashed line cannot draw on, and a mark
+   has no length to draw. Keyed on the stamp exactly as `.pl-draw` is, so
+   the rest state is the finished drawing. */
+.plv-fade {
+  transition: opacity 480ms ease var(--d, 0ms);
+}
+.pl[data-arrive]:not([data-in]) .plv-fade {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plv-fade {
+    transition: none;
+  }
+}
+
+/* The people's wires take the kit's green, which light re-derives; the
+   control's `--pl-green` is a literal. */
+.pl--trace,
+.pl--bearing,
+.pl--axis {
+  --pl-green: var(--kit-green);
+}
+
+/* Production's card stamp renders 11.3px at a 1200px figure (0.9em of
+   12.6); the round's floor is 12. */
+.pl--trace .pl-card__title em {
+  font-size: max(12px, 0.9em);
+}
+
+/* A bearing is read at a glance or not at all: the kit's dotted line, one
+   step closer set and at full strength. */
+.pl--bearing .kit-line--bearing {
+  stroke-dasharray: 1 4;
+  stroke-opacity: 1;
+}
+.pl--bearing .kit-line--green {
+  stroke-opacity: 1;
+}
+
+/* On an instrument the graduation is read, so it takes the seam's weight
+   and the cardinal stubs one step more; on a rail a minor tick stays quiet. */
+.pl-core .kit-tick--minor {
+  stroke: var(--xb-line-2);
+}
+.pl-core .kit-tick:not(.kit-tick--minor) {
+  stroke: var(--xb-text-3);
+}
+
+/* ---- F2 · the interfaces as one ruled readout ---- */
+
+.plv-read {
+  width: calc(var(--w) * 100%);
+  height: calc(var(--h) * 100%);
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  background: var(--xb-ground);
+  border: 1px solid var(--xb-line-2);
+  font-family: var(--xb-sans);
+}
+.plv-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  column-gap: 0.8em;
+  padding: 0 0.8em;
+  color: var(--xb-text);
+  white-space: nowrap;
+}
+.plv-row + .plv-row {
+  border-top: 1px solid var(--xb-line);
+}
+.plv-row__key,
+.plv-row__time,
+.plv-out__key {
+  font-family: var(--xb-mono);
+  font-size: max(12px, 0.88em);
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+  color: var(--xb-text-3);
+}
+.plv-row__time {
+  font-style: normal;
+}
+.plv-row__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* the one lit row: gold text and a gold bar on its own edge, over a faint
+   wash; never a gold border round the whole thing */
+.plv-row[data-lit] {
+  background: color-mix(in srgb, var(--xb-gold) 7%, var(--xb-ground));
+  box-shadow: inset 2px 0 0 var(--xb-gold);
+  color: var(--xb-gold);
+}
+.plv-row[data-lit] .plv-row__key,
+.plv-row[data-lit] .plv-row__time {
+  color: color-mix(in srgb, var(--xb-gold) 72%, transparent);
+}
+
+/* ---- F3 · an interface on the datum: two lines, the chip's width ---- */
+
+.plv-out {
+  transform: translateY(-50%);
+  width: calc(var(--w) * 100%);
+  display: grid;
+  gap: 0.3em;
+  padding: 0.5em 0.7em;
+  background: var(--xb-ground);
+  border: 1px solid var(--xb-line-2);
+  color: var(--xb-text);
+  font-family: var(--xb-sans);
+  white-space: nowrap;
+}
+.plv-out__key {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6em;
+}
+.plv-out__key em {
+  font-style: normal;
+}
+.plv-out__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.plv-out[data-lit] {
+  background: color-mix(in srgb, var(--xb-gold) 7%, var(--xb-ground));
+  box-shadow: inset 2px 0 0 var(--xb-gold);
+  color: var(--xb-gold);
+}
+.plv-out[data-lit] .plv-out__key {
+  color: color-mix(in srgb, var(--xb-gold) 72%, transparent);
+}

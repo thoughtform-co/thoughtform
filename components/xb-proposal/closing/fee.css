@@ -1,0 +1,110 @@
+/* The fee, three directions against the console (`ArcTerms`), in the framed
+   grammar of the closing run (`closing.css`, the `.xf` block). Everything a
+   direction shares with the four weeks and who takes part is THAT sheet's
+   class, untouched: the frame, its cells on shared edges, the mono key, the
+   lead, the numbered rows, the floor. Only what the fee adds is here, on
+   `.xfee`, in the frame's own tokens (`--xc-*`, `--xf-*`), which light
+   re-reads through `xb-in-frame.css`.
+
+   ⚠ EVERY OVERRIDE OF A FRAME CLASS WINS ON SPECIFICITY, NEVER ON ORDER
+   (`.xf-cell.xfee-…`, `.xf-frame.xfee-…`). The bundler emits this sheet
+   AHEAD of `closing.css` though the page imports it after (measured: rule
+   5165 against 5397 in one `page.css`), so a single-class override of
+   `.xf-cell` loses in silence. */
+
+/* An answer under its mono key, at the rows' reading size. */
+.xfee-v {
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.35;
+  color: var(--xc-ink);
+}
+
+/* A measure as a cell of the frame: the number, its name, its line, as a
+   list item letters them, the cell's own edges standing in for the rule. */
+.xf-cell.xfee-measure {
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 6px 0;
+}
+
+/* A term, or a ledger line, as a cell: the mono key, its answer under it,
+   set closer than a cell's title and its list are. */
+.xf-cell.xfee-term,
+.xf-cell.xfee-line {
+  margin: 0;
+  gap: 8px;
+  padding-block: 22px;
+}
+
+/* A mono key standing alone as a cell: the head of a group of cells. */
+.xf-cell.xfee-k {
+  margin: 0;
+  padding-block: 20px;
+}
+
+/* ── C1 · one frame: the weeks' three columns ───────────────────────────
+   The rate's cell runs the height of the measures; the measures' key heads
+   their two columns; the three terms close the frame, a cell a column, so
+   every plumb line runs from the frame's top to its floor. */
+.xf-frame.xfee-one {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto 1fr 1fr auto;
+}
+.xfee-one > .xf-cell.xfee-rate {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+.xfee-one > .xf-cell.xfee-k {
+  grid-column: 2 / span 2;
+  grid-row: 1;
+}
+
+/* ── C2 · one sheet ─────────────────────────────────────────────────────
+   Under the three phases, two ledger lines on the same three columns: the
+   days each stretch takes, then the month's days beside the rate. The sum
+   line is the sheet's one lit row: a wash, never a gold edge. */
+.xf-cell.xfee-span2 {
+  grid-column: span 2;
+}
+.xf-cell.xfee-sum {
+  background: var(--xc-wash);
+}
+.xfee-sum .xf-lead {
+  max-width: none;
+}
+.xfee-sum__line {
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.4;
+  color: var(--xc-ink-2);
+}
+/* the measures: a second, shorter frame under the sheet */
+.xf-frame.xfee-measures {
+  margin-top: clamp(20px, 2.4vw, 36px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.xf-cell.xfee-measures__head {
+  grid-column: 1 / -1;
+}
+.xfee-measures__head .xf-lead {
+  max-width: 60ch;
+}
+
+/* ── C3 · a matched pair ────────────────────────────────────────────────
+   The frame is who takes part's own (`.xf-who`); only the term's key is
+   stepped down inside its line, as a seat's duty is. */
+.xf-foot .xfee-pair__term > span {
+  color: var(--xc-ink-3);
+}
+
+@media (max-width: 960px) {
+  .xf-frame.xfee-one,
+  .xf-frame.xfee-measures {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  .xfee-one > .xf-cell.xfee-rate,
+  .xfee-one > .xf-cell.xfee-k,
+  .xf-cell.xfee-span2 {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}

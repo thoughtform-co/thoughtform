@@ -1,0 +1,168 @@
+/* The job card, three directions against production (`job-stack.css`).
+   Every rule is scoped by `[data-jv]` on the card, so production's card is
+   untouched; only what a direction ADDS or MOVES is here. Type sizes are
+   production's own. */
+
+/* ── J1 · ONE LADDER ────────────────────────────────────────────────
+   The tools take the steps' frame: the box, its double hairline and its
+   tab come from `.arc-jstack__box` / `.arc-jstack__tab` unchanged, and the
+   centre line above it is the same gold rail at the same length (the
+   column's own `> *:not(:first-child)::after`). The tab keeps the box's
+   neutral tone: Navigate, Encode, Build are the Arc's three and stay the
+   only gold tabs. */
+/* Production's centre lines start a pixel under the box above and run a
+   pixel into the box below (a `::after` is placed from the padding box).
+   Here each runs from one box's outer edge to the next one's, exactly. */
+.arc-jstack[data-jv="j1"] .arc-jstack__words--arc > *:not(:first-child)::after {
+  bottom: calc(100% + 1px);
+}
+.jv-toolbox__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jv-toolbox__list li {
+  padding: 6px 10px;
+  border: 1px solid var(--arc-rule);
+  background: color-mix(in srgb, var(--dawn) 4%, transparent);
+  font: 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90, var(--dawn));
+}
+
+/* ── J2 · THE SPLIT FOLLOWS THE FIGURE ──────────────────────────────
+   Three moves, one argument (the card is cut where its figure is):
+   1. the split takes the figure's aspect: a portrait film gives the words
+      the wider column, a landscape pair gives it to the figure;
+   2. the hairline and its four crosses sit on the evidence itself
+      (`.jv-hug`), not on the column's whole cell;
+   3. the result band takes the body's own columns with no gap of its own,
+      so its two cards meet on the rule above them. */
+.arc-jstack[data-jv="j2"] {
+  --jv-hug-pad: 14px;
+}
+@media (min-width: 961px) {
+  .arc-jstack[data-jv="j2"][data-jv-fig="clip"] :is(.arc-jstack__body, .arc-jstack__band) {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+  .arc-jstack[data-jv="j2"][data-jv-fig="pair"] :is(.arc-jstack__body, .arc-jstack__band) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .arc-jstack[data-jv="j2"] .arc-jstack__band {
+    column-gap: 0;
+    padding-inline: 0;
+  }
+  .arc-jstack[data-jv="j2"] .arc-jstack__band-head {
+    padding-inline: var(--js-pad);
+  }
+  /* the rule above is the words column's own right border, so its centre
+     sits half a pixel inside the column line: the gap takes that pixel */
+  .arc-jstack[data-jv="j2"] .arc-jstack__card:nth-of-type(1) {
+    margin: 0 calc(var(--js-pad) / 2 + 1px) 0 var(--js-pad);
+  }
+  .arc-jstack[data-jv="j2"] .arc-jstack__card:nth-of-type(2) {
+    margin: 0 var(--js-pad) 0 calc(var(--js-pad) / 2);
+  }
+}
+.arc-jstack[data-jv="j2"] .arc-jstack__frame {
+  border: 0;
+  background: none;
+}
+.jv-hug {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--dawn) 8%, transparent);
+  background: rgba(var(--void-deep-rgb), 0.6);
+}
+/* a film IS its frame: the hug's hairline is the film's edge */
+.jv-hug > .arc-case__clip {
+  height: calc(100cqh - 2px);
+  width: min(100cqw - 2px, (100cqh - 2px) * 9 / 16);
+  border: 0;
+}
+/* a pair and a map keep a margin inside the hairline, paid out of their
+   own size so the hug never outgrows the cell */
+.jv-hug > .arc-case__pair,
+.jv-hug > .arc-case__map {
+  margin: var(--jv-hug-pad);
+}
+.jv-hug > .arc-case__map {
+  width: calc(min(100cqw, 100cqh) - 2 * var(--jv-hug-pad) - 2px);
+}
+.jv-hug > .arc-case__pair {
+  --case-still: min(
+    (100cqw - var(--space-md) - 2 * var(--jv-hug-pad) - 2px) / 2,
+    100cqh - var(--space-2xl) - 2 * var(--jv-hug-pad) - 2px
+  );
+}
+/* a flowchart has no outline of its own to hug: it keeps the cell */
+.arc-jstack[data-jv-fig="flow"] .jv-hug,
+.arc-jstack[data-jv-fig="ledger"] .jv-hug {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── J3 · THE RESULT STRIP ──────────────────────────────────────────
+   One ruled strip across the card's foot: the result's name, Before, Now,
+   What it now allows, as four cells sharing their edges (the closing
+   frames' grammar). No head row, no framed cards, no padding round it:
+   the strip's top edge is the body's floor and its cells run to the
+   card's own edges. */
+.jv-strip {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr);
+  border-top: 1px solid var(--arc-rule);
+}
+.jv-strip__cell {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 18px var(--js-pad) 20px;
+}
+.jv-strip__cell + .jv-strip__cell {
+  border-left: 1px solid var(--arc-rule);
+}
+/* the result's name heads the strip on the keys' own line, its glyph under
+   it (production seats that glyph in the card's far corner) */
+.jv-strip__name .arc-jstack__card-k {
+  white-space: nowrap;
+}
+.jv-strip__name .arc-lev__glyph {
+  width: auto;
+  height: 16px;
+  justify-self: start;
+}
+/* the four keys share one line box, so they sit on one line across the strip */
+.jv-strip__cell .arc-jstack__bar-k {
+  line-height: 1.2;
+}
+.jv-strip__cell .arc-jstack__bar {
+  width: 7.5rem;
+}
+.jv-strip__cell .arc-jstack__bar[data-w="short"] {
+  width: calc(7.5rem * 0.26);
+}
+.jv-strip__cell[data-lit] .arc-jstack__bar-k {
+  color: var(--gold);
+}
+.jv-strip__cell[data-lit] .arc-jstack__bar-v {
+  color: var(--arc-ink-90, var(--dawn));
+}
+@media (max-width: 960px) {
+  .jv-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jv-strip__cell + .jv-strip__cell {
+    border-left: 0;
+    border-top: 1px solid var(--arc-rule);
+  }
+}

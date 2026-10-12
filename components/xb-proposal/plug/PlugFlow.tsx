@@ -32,8 +32,8 @@ import { MastheadTitle } from "../Masthead";
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 import { useArrive } from "../useArrive";
 
-const W = 1200;
-const H = 460;
+export const W = 1200;
+export const H = 460;
 const C = { x: 600, y: 230 };
 /* The two frames: your team on the left, Claude Enterprise on the right. */
 const LEFT = { x0: 12, x1: 408, y0: 24, y1: 436 };
@@ -51,10 +51,10 @@ const CARD_X = 840;
 const CARD_X1 = 1166;
 
 type Pt = [number, number];
-const at = (x: number, y: number): CSSProperties =>
+export const at = (x: number, y: number): CSSProperties =>
   ({ "--px": (x / W).toFixed(4), "--py": (y / H).toFixed(4) }) as CSSProperties;
 
-const TEAMS: { id: GlyphName; name: string; deg: number }[] = [
+export const TEAMS: { id: GlyphName; name: string; deg: number }[] = [
   { id: "strategy", name: "Creative strategy", deg: -28 },
   { id: "production", name: "Creative production", deg: -9.5 },
   { id: "review", name: "Creative review", deg: 9.5 },
@@ -66,7 +66,7 @@ const onArc = (deg: number): Pt => {
 };
 
 /* The layer's three parts, riding the second ring. */
-const PARTS: { name: string; deg: number; out: number }[] = [
+export const PARTS: { name: string; deg: number; out: number }[] = [
   { name: "Context", deg: -140, out: 30 },
   { name: "Skills", deg: -38, out: 30 },
   { name: "Evals", deg: 62, out: 30 },
@@ -76,7 +76,7 @@ const onRing = (deg: number, r: number): Pt => {
   return [C.x + r * Math.cos(a), C.y + r * Math.sin(a)];
 };
 
-const ICON: Record<string, string> = {
+export const ICON: Record<string, string> = {
   claude: "M12 3v18 M3 12h18 M5.6 5.6l12.8 12.8 M18.4 5.6L5.6 18.4",
   slack: "M9 3v18 M15 3v18 M3 9h18 M3 15h18",
   shopify: GLYPH.shopify,
@@ -85,7 +85,7 @@ const ICON: Record<string, string> = {
 
 /* What the team sees, in the tools they already use. Illustrative, and
    lettered as such: no figure here is a claim. */
-const CARDS: {
+export const CARDS: {
   icon: string;
   tool: string;
   title: string;
@@ -121,14 +121,14 @@ const CARD_Y = [96, 188, 280, 372];
 
 /* The head, in the homepage services masthead's grammar (owner: "it needs
    to be uniform"). */
-const TITLE = ["AI capability", "your teams own."] as const;
+export const TITLE = ["AI capability", "your teams own."] as const;
 
 const STEP = Object.fromEntries(PLUG_STEPS.map((s) => [s.id, s])) as Record<
   (typeof PLUG_STEPS)[number]["id"],
   (typeof PLUG_STEPS)[number]
 >;
 
-function Icon({ d }: { d: string }) {
+export function Icon({ d }: { d: string }) {
   return (
     <svg viewBox="0 0 24 24" className="pl-ico" aria-hidden>
       <path d={d} />
@@ -138,7 +138,7 @@ function Icon({ d }: { d: string }) {
 
 /** Three hairlines a few units apart: one bundle (Cluster's own line). Each
     its own path, so each draws on from its own start. */
-function Bundle({ x0, x1, y, d }: { x0: number; x1: number; y: number; d: string }) {
+export function Bundle({ x0, x1, y, d }: { x0: number; x1: number; y: number; d: string }) {
   return (
     <>
       {[-3, 0, 3].map((o) => (
@@ -156,7 +156,7 @@ function Bundle({ x0, x1, y, d }: { x0: number; x1: number; y: number; d: string
 
 /** A part's label: the step and the part it names, quiet, linking to the
     step below. */
-function Tab({
+export function Tab({
   id,
   x,
   y,

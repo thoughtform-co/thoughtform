@@ -1,0 +1,200 @@
+/* /test/proposal-kit: lab chrome only. Every drawn thing is the section's
+   own sheet; this file seats the sections, tags them and hides its own
+   chrome for a still. */
+
+.pkit-root {
+  --hero-lift: 1;
+  --hero-cover: 1;
+}
+
+/* One section per screen at least; a section that needs more grows. */
+.pkit-slot {
+  position: relative;
+  min-height: 100svh;
+}
+
+/* The tag sits in the top band's clear middle, between the corner bracket
+   and the nav readout. */
+.pkit-tag {
+  position: absolute;
+  z-index: 30;
+  top: 18px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 5px 10px;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.16);
+  background: rgb(var(--void-rgb, 10, 9, 8));
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.9);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pkit-tag b {
+  font-weight: 400;
+  color: var(--gold-ink, #caa554);
+}
+.pkit-tag span {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.55);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 13px;
+}
+.pkit-slot[data-control] .pkit-tag b {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.55);
+}
+
+.pkit-index {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  display: flex;
+  gap: 1px;
+  background: rgba(var(--dawn-rgb, 235, 227, 214), 0.16);
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.16);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: var(--track-label, 0.08em);
+  text-transform: uppercase;
+}
+.pkit-index a {
+  display: flex;
+  gap: 6px;
+  padding: 6px 9px;
+  background: rgb(var(--void-rgb, 10, 9, 8));
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pkit-index a:hover,
+.pkit-index a:focus-visible {
+  color: rgb(var(--dawn-rgb, 235, 227, 214));
+}
+.pkit-index b {
+  font-weight: 400;
+  color: var(--gold-ink, #caa554);
+}
+
+/* ---- Board S: the specimen. Groups stack; a group's cells share their
+   edges (one frame cut into cells, the closing frames' grammar). ---- */
+
+.pkit-spec {
+  display: grid;
+  gap: clamp(20px, 3vh, 36px);
+  align-self: center;
+}
+.pkit-spec__law {
+  margin: 0;
+  text-align: center;
+  font-family: var(--xb-sans);
+  font-size: clamp(16px, 1.25vw, 20px);
+  color: var(--xb-text-2);
+}
+.pkit-spec__groups {
+  display: grid;
+  gap: clamp(18px, 2.4vh, 28px);
+}
+.pkit-spec__head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.pkit-spec__rule {
+  font-family: var(--xb-sans);
+  font-size: 14px;
+  color: var(--xb-text-2);
+}
+.pkit-spec__cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  border-top: 1px solid var(--xb-line-2);
+  border-left: 1px solid var(--xb-line-2);
+}
+.pkit-spec__cell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  margin: 0;
+  border-right: 1px solid var(--xb-line-2);
+  border-bottom: 1px solid var(--xb-line-2);
+}
+.pkit-spec__draw {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 200 / 80;
+  border-bottom: 1px solid var(--xb-line);
+}
+.pkit-spec__svg {
+  width: 100%;
+  height: 100%;
+}
+.pkit-spec__box {
+  display: block;
+  width: 46%;
+  height: 52%;
+}
+.pkit-spec__cell figcaption {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 10px 12px 12px;
+}
+.pkit-spec__cell .kit-key {
+  color: var(--xb-text);
+}
+.pkit-spec__note {
+  font-family: var(--xb-sans);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--xb-text-2);
+}
+/* what the system leaves out: drawn, and struck through */
+.pkit-spec__group[data-out] .pkit-spec__draw {
+  position: relative;
+  opacity: 0.6;
+}
+.pkit-spec__group[data-out] .pkit-spec__draw::after {
+  content: "";
+  position: absolute;
+  inset: 50% 14% auto;
+  border-top: 1px solid var(--xb-gold);
+  rotate: -14deg;
+}
+.pkit-spec__found {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.pkit-spec__found dt {
+  margin-bottom: 4px;
+}
+.pkit-spec__found dd {
+  display: grid;
+  grid-template-columns: minmax(0, 22em) 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--xb-sans);
+  font-size: 14px;
+  color: var(--xb-text-2);
+}
+.pkit-spec__found dd span:last-child {
+  color: var(--xb-text);
+}
+.pkit-spec__found i {
+  height: 1px;
+  background: var(--xb-line-2);
+}
+
+.pkit-root[data-pkit-still] .pkit-tag,
+.pkit-root[data-pkit-still] .pkit-index {
+  display: none;
+}
