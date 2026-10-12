@@ -694,3 +694,294 @@
     display: none;
   }
 }
+
+/* ══ round two · the framed grammar (`.xf`) ═════════════════════════════
+   One hairline frame per section, cells on shared edges (primeintellect,
+   voidzero). Titles are sentences at reading size: the lead in full ink,
+   the rest a step down. Nothing in a frame is larger than 28px. */
+
+.xf {
+  --xf-edge: rgba(var(--dawn-rgb, 235, 227, 214), 0.14);
+  --xf-pad: clamp(24px, 2.2vw, 36px);
+}
+.xf-mono {
+  font-family: var(--xc-mono);
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--xc-ink-3);
+}
+.xf-gold {
+  color: var(--xc-gold);
+}
+
+/* the frame: an outer edge, each cell a top + left edge, the frame's own
+   edge masking the outermost ones so every line is one pixel */
+.xf-frame {
+  margin-top: var(--xc-gap-head);
+  display: grid;
+  border: 1px solid var(--xf-edge);
+  overflow: hidden;
+}
+.xf-frame > .xf-cell {
+  box-shadow:
+    -1px 0 0 var(--xf-edge),
+    0 -1px 0 var(--xf-edge);
+}
+.xf-cell {
+  min-width: 0;
+  padding: var(--xf-pad);
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.xf-lead {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(20px, 1.6vw, 26px);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--xc-ink);
+  max-width: 30ch;
+}
+.xf-lead > span {
+  color: var(--xc-ink-3);
+}
+.xf-lead--xl {
+  font-size: clamp(26px, 2.4vw, 38px);
+  max-width: 22ch;
+}
+
+/* numbered list: 1.1 + title, the line under it indented onto the title */
+.xf-list,
+.xf-rows {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  align-content: start;
+}
+.xf-list li {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  row-gap: 6px;
+  padding: 16px 0;
+  border-top: 1px solid var(--xf-edge);
+}
+.xf-list__n {
+  font-family: var(--xc-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--xc-ink-3);
+}
+.xf-list__t {
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.35;
+  color: var(--xc-ink);
+}
+.xf-list__d {
+  grid-column: 2;
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.4;
+  color: var(--xc-ink-2);
+}
+
+.xf-foot {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+.xf-foot ul {
+  align-content: start;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.4;
+  color: var(--xc-ink);
+}
+.xf-foot li {
+  position: relative;
+  padding-left: 18px;
+}
+.xf-foot li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--xc-gold);
+}
+[data-later] .xf-foot li::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--xc-ink-2);
+}
+
+/* D · three columns */
+.xf-frame--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto 1fr auto;
+}
+/* one row track per part across the three phases, so the feet share a line */
+.xf-phase {
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 18px;
+}
+.xf-phase .xf-mono:first-child {
+  color: var(--xc-gold);
+}
+.xf-phase[data-later] .xf-mono:first-child {
+  color: var(--xc-ink-3);
+}
+.xf-phase .xf-foot {
+  padding-top: 20px;
+  border-top: 1px solid var(--xf-edge);
+}
+
+/* E · index */
+.xf-index {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.xf-index__nav {
+  gap: 0;
+  padding: 0;
+}
+.xf-index__btn {
+  all: unset;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  padding: 22px var(--xf-pad);
+  border-bottom: 1px solid var(--xf-edge);
+  color: var(--xc-ink-3);
+}
+.xf-index__name {
+  font-family: var(--xc-sans);
+  font-size: clamp(18px, 1.35vw, 22px);
+}
+.xf-index__btn[aria-pressed="true"] {
+  color: var(--xc-ink);
+  background: var(--xc-wash);
+  box-shadow: inset 2px 0 0 var(--xc-gold);
+}
+.xf-index__btn[aria-pressed="true"] .xf-mono {
+  color: var(--xc-gold);
+}
+.xf-index__btn:focus-visible {
+  outline: 1px solid var(--xc-gold);
+  outline-offset: -1px;
+}
+.xf-index__foot {
+  background: var(--xc-wash);
+}
+
+/* who */
+.xf-who {
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+}
+.xf-rows li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px 0;
+  padding: 15px 0;
+  border-top: 1px solid var(--xf-edge);
+}
+.xf-rows__t {
+  font-size: clamp(16px, 1.15vw, 18px);
+  line-height: 1.35;
+}
+.xf-rows__t > span {
+  color: var(--xc-ink-3);
+}
+.xf-rows__m {
+  grid-column: 2;
+  color: var(--xc-ink-2);
+}
+.xf-who__tf .xf-foot {
+  margin-top: 8px;
+  padding: 20px var(--xf-pad) 0;
+  margin-inline: calc(-1 * var(--xf-pad));
+  border-top: 1px solid var(--xf-edge);
+}
+
+/* contact */
+.xf-contact .xf-frame {
+  margin-top: 0;
+}
+.xf-cf {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+}
+.xf-cf__lead {
+  gap: 24px;
+  padding-block: clamp(36px, 5svh, 64px);
+}
+.xf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.xf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  font-family: var(--xc-mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: var(--gold, #caa554);
+  color: #0a0908;
+}
+.xf-btn--ghost {
+  background: transparent;
+  color: var(--xc-ink);
+  box-shadow: inset 0 0 0 1px var(--xf-edge);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+.xf-btn--ghost:hover {
+  box-shadow: inset 0 0 0 1px var(--xc-gold);
+}
+.xf-cf__facts {
+  margin: 0;
+  align-content: center;
+  gap: 0;
+}
+.xf-cf__facts > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--xf-edge);
+}
+.xf-cf__facts > div:first-child {
+  border-top: 0;
+}
+.xf-cf__facts dd {
+  margin: 0;
+  font-size: clamp(16px, 1.15vw, 18px);
+}
+.xf-cf__sign {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-block: 16px;
+}
+
+@media (max-width: 960px) {
+  .xf-frame--3,
+  .xf-index,
+  .xf-who,
+  .xf-cf {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

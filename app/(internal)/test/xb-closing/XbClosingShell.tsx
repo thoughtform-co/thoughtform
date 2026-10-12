@@ -15,6 +15,12 @@ import {
   WhoGrid,
   WhoRoster,
 } from "@/components/xb-proposal/closing/Closing";
+import {
+  ContactFrame,
+  WeeksFrame,
+  WeeksIndex,
+  WhoFrame,
+} from "@/components/xb-proposal/closing/Frames";
 import { Ready } from "@/components/xb-proposal/Ready";
 
 import { HudFrame } from "../hud-panel-lab/HudFrame";
@@ -25,6 +31,10 @@ import { HudFrame } from "../hud-panel-lab/HudFrame";
  * id so a still is one `#id` away.
  */
 const SECTIONS = [
+  ["weeks-d", WeeksFrame],
+  ["weeks-e", WeeksIndex],
+  ["who-c", WhoFrame],
+  ["contact-c", ContactFrame],
   ["weeks-a", WeeksColumns],
   ["weeks-b", WeeksAxis],
   ["weeks-c", WeeksRows],
