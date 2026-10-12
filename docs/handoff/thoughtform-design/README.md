@@ -14,6 +14,8 @@ folder is the bridge. Read this file only; open the other two when you need them
    and curl the port before quoting a URL. This snapshot ages fast.
 4. Account setup differs per profile: [accounts.md](accounts.md).
 
+The claude.ai project's own memory, copied verbatim:
+[project-memory.md](project-memory.md). Read it before briefing design work.
 Do NOT load `CLAUDE.md`'s ADR index, `sentinel/`, `.claude/rules/` or the
 design-rulings memories into a new design task. ~450 KB of house rulings is why
 new work kept regressing into plates, consoles and 10px labels.
