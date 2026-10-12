@@ -1,4 +1,7 @@
-/* The three steps, one record for the two drawings that name them (owner,
+/* The three steps, one record for the two drawings that name them; named
+   for the Arc since 2026-10-12, Navigate · Encode · Build (owner: "let's
+   also use Navigate, Encode, Build … that way, it's harmonized"; the ids
+   stay as keys) (owner,
    2026-10-12: "your team, one layer, your stack, connect to embed, encode,
    and run"). The plug flow keys its three regions with them and links each
    to its step; the stack below walks them one at a time. Same names, same
@@ -27,11 +30,11 @@ export const PLUG_STEPS: readonly PlugStep[] = [
   {
     n: "01",
     id: "embed",
-    step: "Embed",
+    step: "Navigate",
     key: "Your team",
     tone: "green",
     line: "Inside your four workstreams",
-    flow: ["Embed in", "your team"],
+    flow: ["Navigate with", "your team"],
     span: [96, 448],
   },
   {
@@ -47,11 +50,11 @@ export const PLUG_STEPS: readonly PlugStep[] = [
   {
     n: "03",
     id: "run",
-    step: "Run",
+    step: "Build",
     key: "Your agents",
     tone: "dawn",
     line: "In the tools you already use",
-    flow: ["Plug into", "Claude Enterprise"],
+    flow: ["Build on", "Claude Enterprise"],
     span: [770, 1200],
   },
 ];

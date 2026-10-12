@@ -1546,7 +1546,7 @@ export type ArcSection = ArcSectionBase &
         opened?: ArcHandoffOpened;
         /**
          * The whole section as a block ported from /test/proposition-v2
-         * (owner, 2026-10-12): `steps` is embed, encode, run, the head and
+         * (owner, 2026-10-12): `steps` is navigate, encode, build, the head and
          * the steps held while the plates close into one stack. The steps,
          * the run and every figure above are not drawn. Opt-in; absent, the
          * section is byte-identical.

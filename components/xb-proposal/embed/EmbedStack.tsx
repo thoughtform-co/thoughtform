@@ -66,9 +66,9 @@ const GREEN = "var(--es-green)";
 const DAWN = "var(--xb-text)";
 
 const HEAD: MastheadCopy = {
-  lines: ["Embed, encode,", "run."],
+  lines: ["Navigate, encode,", "build."],
   brief:
-    "Thoughtform embeds in your team, encodes how it works into a layer your team owns, and your people run their own agents on it.",
+    "Your team learns Claude on its own work with Thoughtform, writes down how it works into a layer it owns, and hands that to its own agents.",
   survey: {
     title: "XB / STEPS · 02",
     brief: "XB / BRIEF · 02",
@@ -80,19 +80,19 @@ const HEAD: MastheadCopy = {
 
 type StepId = (typeof PLUG_STEPS)[number]["id"];
 const LINE: Record<StepId, string> = {
-  embed: "Embed in your team.",
-  encode: "Encode how it works.",
-  run: "Run your own agents.",
+  embed: "Learn with Claude in your own work.",
+  encode: "Write down how it works.",
+  run: "Hand it to your own agents.",
 };
 /* One sentence under each step, open under the step in view (owner,
    2026-10-12: "one sentence of explanation … revealed and then collapse
    open when you scroll through it"). Reduced motion lists all three open. */
 const BODY: Record<StepId, string> = {
   embed:
-    "Thoughtform works inside your four creative workstreams, on real briefs, in the tools your team already uses.",
+    "Thoughtform works inside your four creative workstreams while the team uses Claude on real briefs.",
   encode:
     "How each team works is written into a layer an agent can read: the context, the skills and the evals.",
-  run: "Each person runs their own agents on that layer, and the team reviews what comes back.",
+  run: "Each person hands the work to their own agents on that layer, and the team reviews what comes back.",
 };
 
 /* ── geometry helpers ──────────────────────────────────────────────────── */

@@ -198,7 +198,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       id: "adoption",
       kind: "handoff",
       menuLabel: "The approach",
-      // Embed, encode, run, from /test/proposition-v2 (owner, 2026-10-12).
+      // Navigate, encode, build, from /test/proposition-v2 (owner, 2026-10-12).
       // The head, the steps and the run below stay in the record and are not
       // drawn while this is set.
       port: "steps",
