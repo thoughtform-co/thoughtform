@@ -6,6 +6,7 @@ import { RailInstruments } from "@/components/landing/v7/rail-instruments/RailIn
 import { SettingsCluster } from "@/components/landing/v7/rail-instruments/SettingsCluster";
 import { RAIL_INSTRUMENTS } from "@/components/landing/v7/rail-instruments/flags";
 import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
+import { EmbedStack } from "@/components/xb-proposal/embed/EmbedStack";
 import { MotionPanels } from "@/components/xb-proposal/motion/MotionPanels";
 import { PlugFlow } from "@/components/xb-proposal/plug/PlugFlow";
 import { Ready } from "@/components/xb-proposal/Ready";
@@ -20,6 +21,8 @@ import { HudFrame } from "../hud-panel-lab/HudFrame";
  *      your workstreams → the layer → Claude Enterprise → your interfaces.
  *   2  Adoption to automation, as three ruled panels (unsiloed.ai's
  *      grammar), one gold thread through all three.
+ *   3  Embed · encode · run, one exploded stack read on the scroll
+ *      (griffin.com's grammar): a plate lit per step, a step rail.
  *
  * Both are kit components (`components/xb-proposal/plug`, `/motion`), so
  * the proposal page can mount them as they are.
@@ -50,6 +53,9 @@ export function PropositionV2Shell({ hudHtml, bodyClass }: { hudHtml: string; bo
       </section>
       <section className="xb pv-sec" id="motion">
         <MotionPanels />
+      </section>
+      <section className="xb pv-flow" id="embed">
+        <EmbedStack />
       </section>
     </div>
   );

@@ -33,4 +33,15 @@ for (const id of ["plug", "motion"]) {
   await p.screenshot({ path: `${OUT}/v2-${id}-${W}x${H}.png` });
   console.log(id, "small:", JSON.stringify(small));
 }
+/* the pinned stack: the intro, then each step */
+for (const [name, f] of [["intro", 0.05], ["s1", 0.33], ["s2", 0.6], ["s3", 0.88]]) {
+  await p.evaluate((f) => {
+    const el = document.querySelector("#embed .es");
+    const r = el.getBoundingClientRect();
+    window.scrollTo(0, r.top + scrollY + f * (r.height - innerHeight));
+  }, f);
+  await p.waitForTimeout(1400);
+  await p.screenshot({ path: `${OUT}/v2-embed-${name}-${W}x${H}.png` });
+  console.log("embed", name);
+}
 await b.close();

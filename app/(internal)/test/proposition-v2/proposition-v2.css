@@ -12,3 +12,10 @@
     var(--band-margin);
   background: transparent;
 }
+
+/* A pinned section brings its own runway; it only needs the frame's layer. */
+.pv-flow {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
