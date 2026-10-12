@@ -40,7 +40,7 @@ import { rung } from "./arcMotion";
  */
 /** The glyph each Loop workstream letters with, the job cards' own set;
  *  creative technology, new to this page, takes the meter. */
-const WORKSTREAM_GLYPH: Record<string, "frame" | "flow" | "check" | "meter"> = {
+export const WORKSTREAM_GLYPH: Record<string, "frame" | "flow" | "check" | "meter"> = {
   "creative production": "frame",
   "creative ops": "flow",
   "creative review": "check",

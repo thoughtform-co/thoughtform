@@ -761,10 +761,17 @@ export type ArcSection = ArcSectionBase &
          * four in the top bar. Absent, the homepage's folder card, which is
          * what Pandora's page keeps.
          */
-        layout?: "case";
+        layout?: "case" | "story";
         /** The arc's beats in order, lettered in the case top bar; this
          *  card's own beat is the one whose `id` is this section's. */
         arcBeats?: readonly { id: string; word: string }[];
+        /**
+         * `layout: "story"` (owner, 2026-10-12, after augustus.com): ONE
+         * section for every Loop project, the words sticky on the left and
+         * each project's own visual scrolling past on the right. In order;
+         * `track` is a `CaseTrack.id`, `title` the page's own line for it.
+         */
+        story?: readonly { id: string; track: string; title?: string; workstream: string }[];
       }
     | {
         /**

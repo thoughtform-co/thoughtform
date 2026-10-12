@@ -1,0 +1,230 @@
+/* LOOP AS ONE STORY (owner, 2026-10-12, after augustus.com). The words stick
+   on the left and change as each project's visual reaches the middle of the
+   screen; the visuals scroll on the right. No card housing. Tokens only. */
+
+.arc-lps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+  column-gap: calc(var(--lat-pad-cell, 32px) * 1.6);
+  align-items: start;
+}
+
+/* ── the words: one sticky column, the four texts in one cell ── */
+.arc-lps__words {
+  align-self: stretch;
+}
+.arc-lps__stick {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-xl, 40px);
+  padding-block: calc(var(--hud-margin, 48px) + 64px);
+}
+.arc-lps__stack {
+  display: grid;
+}
+.arc-lps__stack > .arc-lps__text {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition:
+    opacity 420ms cubic-bezier(0.65, 0, 0.35, 1),
+    transform 420ms cubic-bezier(0.65, 0, 0.35, 1),
+    visibility 0s linear 420ms;
+}
+.arc-lps__stack > .arc-lps__text[data-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 420ms cubic-bezier(0.65, 0, 0.35, 1) 80ms,
+    transform 420ms cubic-bezier(0.65, 0, 0.35, 1) 80ms,
+    visibility 0s;
+}
+
+.arc-lps__text {
+  display: grid;
+  align-content: start;
+  gap: var(--space-lg, 24px);
+  max-width: 34rem;
+}
+.arc-lps__ws {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  margin: 0;
+  font: 12px / 1 var(--font-pt-mono, "PT Mono", monospace);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.arc-lps__ws .arc-lev__glyph {
+  width: auto;
+  height: 16px;
+}
+.arc-lps__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-2xl, var(--type-xl));
+  font-weight: var(--weight-text, 400);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90, var(--dawn));
+  text-wrap: balance;
+}
+.arc-lps__lede {
+  margin: 0;
+  font-size: var(--type-base);
+  line-height: 1.5;
+  color: var(--arc-ink-70);
+  text-wrap: pretty;
+}
+
+/* the achievements: one short line each, its glyph before it */
+.arc-lps__claims {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--arc-rule);
+}
+.arc-lps__claims li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  padding: 13px 0;
+  border-bottom: 1px solid var(--arc-rule);
+  font-size: var(--type-base);
+  line-height: 1.35;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-lps__icon {
+  display: flex;
+  align-items: center;
+}
+.arc-lps__icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+/* the dashes: one per project, the one in view lit (augustus' own marker) */
+.arc-lps__dashes {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-lps__dashes li {
+  width: 22px;
+  height: 2px;
+  background: var(--arc-rule);
+  transition: background 300ms;
+}
+.arc-lps__dashes li[data-on] {
+  background: var(--gold);
+}
+
+/* ── the visuals: one per project, in a hairline frame, scrolling ── */
+.arc-lps__visuals {
+  display: grid;
+  gap: 18svh;
+  padding-block: 16svh 22svh;
+  border-left: 1px solid var(--arc-rule);
+  padding-left: calc(var(--lat-pad-cell, 32px) * 1.6);
+}
+.arc-lps__text--flow {
+  display: none;
+}
+.arc-lps__fig {
+  display: flex;
+  height: min(72svh, 680px);
+  min-height: 440px;
+  padding: var(--space-md, 16px);
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-plate);
+}
+.arc-lps__fig > .pf-stack {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.arc-lps__fig .pf-stack .pf-slot {
+  position: relative;
+  top: auto;
+  flex: 1 1 auto;
+  display: flex;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+}
+.arc-lps__fig .pf-stack .pf-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+}
+.arc-lps__fig .pf-stack .pf-card::before,
+.arc-lps__fig .pf-stack .pf-card::after {
+  content: none;
+}
+.arc-lps__fig .pf-stack .pf-card__body {
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+}
+.arc-lps__fig .pf-stack .pf-card__field {
+  padding: 0;
+  opacity: 1;
+}
+.arc-lps__fig .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.arc-lps__fig .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) .fl-con__stn {
+  flex: 1 1 40%;
+  min-height: 30px;
+}
+.arc-lps__fig
+  .pf-card__tabs
+  .fl-con__rail:has(> .fl-con__stn:nth-child(4))
+  .fl-con__stn:nth-child(odd) {
+  margin-left: 0;
+}
+
+/* ── the phone, and reduced motion: the words above their own visual ── */
+@media (max-width: 960px) {
+  .arc-lps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-lps__words {
+    display: none;
+  }
+  .arc-lps__visuals {
+    gap: var(--space-2xl, 64px);
+    padding: 0;
+    border-left: 0;
+  }
+  .arc-lps__text--flow {
+    display: grid;
+    margin-bottom: var(--space-lg, 24px);
+  }
+  .arc-lps__fig {
+    height: auto;
+    min-height: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arc-lps__stack > .arc-lps__text {
+    transition: none;
+    transform: none;
+  }
+}

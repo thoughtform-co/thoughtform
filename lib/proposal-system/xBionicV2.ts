@@ -1,6 +1,5 @@
 import { disciplineOf } from "@/lib/arcs/content/shared/disciplines";
 import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
-import { LOOP_PROOF_CARDS } from "@/lib/arcs/content/shared/loopProof";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import { THE_HORIZON_RECORD } from "@/lib/arcs/content/shared/workshopPractice";
 import {
@@ -437,7 +436,9 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const sections: ArcSection[] = [
     ...opening,
     proofLoop,
-    ...LOOP_PROOF_CARDS,
+    /* production's Loop beats by reference (one sticky story since
+       12 October, after augustus.com) */
+    ...PROD.sections.filter((s) => s.kind === "proof-card"),
     /* the return and the plugin left the page on 12 October; each comes
        back only in its own direction */
     ...(ledger ? [ret] : []),

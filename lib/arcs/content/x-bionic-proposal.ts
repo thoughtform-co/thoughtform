@@ -281,11 +281,25 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     /* The four cards in the job cards' housing (owner, 2026-10-12, from
        /test/loop-proof-lab B55): Pandora reads the same record and keeps the
        homepage's folder card. */
-    ...LOOP_PROOF_CARDS.map((c) => ({
-      ...c,
-      layout: "case" as const,
-      arcBeats: LOOP_PROOF_CARDS.map((b, i) => ({ id: b.id, word: LOOP_WORKSTREAMS[i] })),
-    })),
+    /* LOOP AS ONE STORY (owner, 2026-10-12, after augustus.com: "instead
+       of trying to wrap it into cards, we just leave the right side for
+       visuals"): the four projects in one section, the words sticky on the
+       left, each project's own visual scrolling past on the right. The
+       records are LOOP_PROOF_CARDS', read by reference; Pandora keeps the
+       four folder cards. */
+    {
+      id: "practice",
+      kind: "proof-card",
+      menuLabel: "The way there",
+      track: LOOP_PROOF_CARDS[0].track,
+      layout: "story" as const,
+      story: LOOP_PROOF_CARDS.map((c, i) => ({
+        id: c.id,
+        track: c.track,
+        title: c.title,
+        workstream: LOOP_WORKSTREAMS[i],
+      })),
+    },
     /* What it returned at Loop came off the page on 2026-10-12 (owner: "we
        already have that in the individual" cards); its record stays below
        as `X_BIONIC_RETURN`. */

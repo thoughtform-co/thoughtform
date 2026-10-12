@@ -12,6 +12,7 @@ import { getCase } from "@/lib/cases/registry";
 
 import { ArcBeat } from "./ArcBeat";
 import { ArcProofCase } from "./ArcProofCase";
+import { ArcProofStory } from "./ArcProofStory";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 
@@ -51,6 +52,7 @@ interface ArcProofCardProps {
  */
 export function ArcProofCard({ section, index, motion = "reveal" }: ArcProofCardProps) {
   if (section.layout === "case") return <ArcProofCase section={section} motion={motion} />;
+  if (section.layout === "story") return <ArcProofStory section={section} motion={motion} />;
   const def = getCase(PROOF_STACK_CASE);
   if (!def) throw new Error(`[arc proof-card] case "${PROOF_STACK_CASE}" is not in CASES`);
   const record = def.casefile.tracks.find((t) => t.id === section.track);
