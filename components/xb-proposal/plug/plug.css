@@ -27,8 +27,15 @@
 .pl-fig {
   position: relative;
   align-self: center;
-  margin: 0 0 32px;
-  width: min(100%, calc((100% - 0px)));
+  justify-self: center;
+  margin: 0 0 64px;
+  /* bound by the width AND the height the head and the step key leave */
+  width: min(
+    100%,
+    calc(
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 236px) * 1200 / 460
+    )
+  );
   aspect-ratio: 1200 / 460;
   container-type: inline-size;
   /* the dotted field Cluster's flow sits on */
@@ -237,21 +244,78 @@
   color: rgb(10 9 8 / 0.62);
 }
 
-.pl-fig > .pl-axis {
+/* the three steps under the drawing: a bracket in the step's tone over the
+   region it covers, the step, one line. Each links to its step below. */
+.pl-fig > .pl-steps {
+  position: absolute;
+  font-size: max(12px, 1.05cqw);
   left: 0;
   right: 0;
-  top: calc(100% + 14px);
-  height: 1.4em;
+  top: calc(100% + 16px);
+  height: 3.6em;
 }
-.pl-axis span {
+.pl-step {
+  --tone: var(--xb-text-3);
   position: absolute;
-  left: calc(var(--px) * 100%);
-  transform: translateX(-50%);
+  left: calc(var(--x0) * 100%);
+  width: calc((var(--x1) - var(--x0)) * 100%);
+  display: grid;
+  justify-items: center;
+  gap: 0.25em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--tone);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pl-step::before,
+.pl-step::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  width: 1px;
+  height: 6px;
+  background: var(--tone);
+}
+.pl-step::before {
+  left: 0;
+}
+.pl-step::after {
+  right: 0;
+}
+.pl-step[data-tone="green"] {
+  --tone: var(--pl-green);
+}
+.pl-step[data-tone="gold"] {
+  --tone: var(--xb-gold);
+}
+.pl-step[data-tone="dawn"] {
+  --tone: var(--xb-text-2);
+}
+.pl-step__key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
   font-family: var(--xb-mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--xb-text-3);
-  white-space: nowrap;
+  color: var(--xb-text);
+}
+.pl-step__key i {
+  width: 7px;
+  height: 7px;
+  background: var(--tone);
+}
+.pl-step__line {
+  font-family: var(--xb-sans);
+  color: var(--xb-text-2);
+}
+.pl-step:hover .pl-step__line,
+.pl-step:focus-visible .pl-step__line {
+  color: var(--xb-text);
+}
+.pl-step:focus-visible {
+  outline: 1px solid var(--tone);
+  outline-offset: 4px;
 }
 
 /* ---- arrival: once, on the stamp; the rest state is the drawing ---- */

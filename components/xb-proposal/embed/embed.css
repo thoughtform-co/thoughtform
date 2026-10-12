@@ -18,6 +18,17 @@
   --es-tone: var(--xb-text);
 }
 
+/* a step's anchor: placed at its scroll fraction of the runway (the pin is
+   100svh, the runway 420svh, so the travel is 320svh) */
+.es-anchor {
+  position: absolute;
+  left: 0;
+  top: calc(var(--at) * 320svh);
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
 .es-pin {
   position: sticky;
   top: 0;

@@ -21,6 +21,7 @@ import type { CSSProperties } from "react";
 import { BRANDMARK_PATHS, BRANDMARK_VIEWBOX } from "@/lib/brandmark/brandmarkPaths";
 
 import { GLYPH, type GlyphName } from "../glyphs";
+import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 import { useArrive } from "../useArrive";
 
 const W = 1200;
@@ -83,7 +84,7 @@ const CARDS: {
     icon: "claude",
     tool: "Claude",
     title: "Brief drafted",
-    sub: "Spring drop · three angles",
+    sub: "Three angles",
     time: "Now",
   },
   {
@@ -157,7 +158,7 @@ export function PlugFlow() {
         <p className="xb-body pl-lede">
           Your four creative workstreams feed one intelligence layer, built with the people who run
           them. Claude Enterprise runs it, and the work comes back through the tools your team
-          already uses.
+          already uses. Three steps get it there.
         </p>
       </header>
 
@@ -301,13 +302,31 @@ export function PlugFlow() {
           </div>
         ))}
 
-        {/* the four regions, named under the drawing */}
-        <div className="pl-axis" aria-hidden>
-          <span style={at(262, 0)}>Your teams</span>
-          <span style={at(C.x, 0)}>The layer</span>
-          <span style={at((CE.x0 + CE.x1) / 2, 0)}>Runs on</span>
-          <span style={at(CARD_X + 118, 0)}>Where it shows up</span>
-        </div>
+        {/* the three regions, keyed to the three steps below: a bracket
+            over the part of the drawing a step covers, and a link to it */}
+        <nav className="pl-steps" aria-label="The three steps">
+          {PLUG_STEPS.map((st) => (
+            <a
+              key={st.id}
+              href={`#${stepAnchor(st.id)}`}
+              className="pl-step pl-in"
+              data-tone={st.tone}
+              style={
+                {
+                  "--x0": (st.span[0] / W).toFixed(4),
+                  "--x1": (st.span[1] / W).toFixed(4),
+                  "--d": `${1800 + Number(st.n) * 90}ms`,
+                } as CSSProperties
+              }
+            >
+              <span className="pl-step__key">
+                <i aria-hidden />
+                {st.n} · {st.step}
+              </span>
+              <span className="pl-step__line">{st.line}</span>
+            </a>
+          ))}
+        </nav>
       </figure>
     </div>
   );

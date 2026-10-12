@@ -19,13 +19,14 @@
    transforms and attributes; React re-renders only when the step changes.
    Under reduced motion the section reads as three plain steps. */
 
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import { BRANDMARK_PATHS, BRANDMARK_VIEWBOX } from "@/lib/brandmark/brandmarkPaths";
 
 import { GLYPH, type GlyphName } from "../glyphs";
 import { boxFaces, clamp01, ease, makeIso, tint, type Box } from "../iso";
 import { LayerSlab } from "../LayerSlab";
+import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 
 const VB_W = 700;
 const VB_H = 940;
@@ -44,26 +45,25 @@ const DAWN = "var(--xb-text)";
 
 type Step = 0 | 1 | 2 | 3;
 
-const STEPS = [
-  {
-    key: "Your teams",
-    title: "Embed",
-    body: "Thoughtform works inside your four creative workstreams, on real briefs, statics and reviews, in the Claude Enterprise and the tools you already have.",
-    tone: "green",
-  },
-  {
-    key: "The layer",
-    title: "Encode",
-    body: "How each team works is written into a layer an agent can read: the context, the skills, the evals. Your team writes it with Thoughtform and keeps it after, self-sufficient.",
-    tone: "gold",
-  },
-  {
-    key: "Your agents",
-    title: "Run",
-    body: "Each person runs their own agents on that layer, in the tools they work in. The team reviews what comes back and spends its time upstream.",
-    tone: "dawn",
-  },
-] as const;
+/* The names and tones are the plug flow's (`PLUG_STEPS`, one record); only
+   the explanation lives here. */
+const BODY: Record<(typeof PLUG_STEPS)[number]["id"], string> = {
+  embed:
+    "Thoughtform works inside your four creative workstreams, on real briefs, statics and reviews, in the Claude Enterprise and the tools you already have.",
+  encode:
+    "How each team works is written into a layer an agent can read: the context, the skills, the evals. Your team writes it with Thoughtform and keeps it after, self-sufficient.",
+  run: "Each person runs their own agents on that layer, in the tools they work in. The team reviews what comes back and spends its time upstream.",
+};
+const STEPS = PLUG_STEPS.map((st) => ({
+  id: st.id,
+  key: st.key,
+  title: st.step,
+  tone: st.tone,
+  body: BODY[st.id],
+}));
+/* Where each step is fully open on the runway (the scroll fraction), for its
+   anchor: the plug flow's step links land here. */
+const STEP_AT = [0.33, 0.6, 0.88];
 
 const PLATE: Box = { x0: 0, x1: S, y0: 0, y1: S, z0: 0, z1: 0.4 };
 
@@ -349,6 +349,16 @@ export function EmbedStack() {
 
   return (
     <div className="es" ref={root} data-step={step}>
+      {/* one anchor per step on the runway, for the plug flow's links */}
+      {STEPS.map((st, i) => (
+        <span
+          key={st.id}
+          id={stepAnchor(st.id)}
+          className="es-anchor"
+          style={{ "--at": STEP_AT[i] } as CSSProperties}
+          aria-hidden
+        />
+      ))}
       <div className="es-pin">
         <div className="es-left">
           <span className="es-rail" aria-hidden />
@@ -356,7 +366,8 @@ export function EmbedStack() {
             {past.map(({ s, i }) => (
               <div key={s.key} className="es-row" data-tone={s.tone}>
                 <span className="es-node" />
-                <span className="es-n">0{i + 1}</span> {s.key.toUpperCase()}
+                <span className="es-n">0{i + 1}</span> {s.title.toUpperCase()} ·{" "}
+                {s.key.toUpperCase()}
               </div>
             ))}
           </div>
@@ -364,14 +375,15 @@ export function EmbedStack() {
           <div className="es-open" key={step}>
             {step === 0 ? (
               <>
-                <div className="xb-eyebrow">How it works</div>
+                <div className="xb-eyebrow">The flow, step by step</div>
                 <h2 className="xb-title">
                   Embed, encode,
                   <br />
                   <span>run.</span>
                 </h2>
                 <p className="xb-body es-body">
-                  Three steps, in this order, inside your teams and on the stack you already have.
+                  The three parts of the flow above, one at a time: your teams, the layer, your
+                  agents.
                 </p>
               </>
             ) : (
@@ -390,7 +402,8 @@ export function EmbedStack() {
             {(step === 0 ? STEPS.map((s, i) => ({ s, i })) : next).map(({ s, i }) => (
               <div key={s.key} className="es-row" data-tone={s.tone}>
                 <span className="es-node" />
-                <span className="es-n">0{i + 1}</span> {s.key.toUpperCase()}
+                <span className="es-n">0{i + 1}</span> {s.title.toUpperCase()} ·{" "}
+                {s.key.toUpperCase()}
               </div>
             ))}
           </div>
