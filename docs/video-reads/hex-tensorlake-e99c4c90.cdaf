@@ -1,0 +1,56 @@
+--- CDAF/1.0
+video: HEX-Tensorlake.mp4
+sha256: e99c4c90c46a09d57237927808dfc97ce44cdee68a8615cb6fff8e5c502202cb
+bytes: 4653083
+duration: 00:00:08.400
+resolution: 3840x2160
+fps: 60
+generator: gemini-3.1-pro-preview
+created: 2026-10-12T03:57:00Z
+detail: rich
+lang: en
+x-profile: reference
+x-source: I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard\Sections\HEX-Tensorlake.mp4
+---
+
+## Summary
+Screen recording of tensorlake.ai showcasing dark mode web design. Useful as a reference for retro-tech diagrams, grid layouts, and section transitions.
+
+## Segments
+[00:00.0-00:01.0] Code snippet and animated metric graphs on a dark grid.
+[00:01.0-00:02.0] API calls bar chart and storage metrics.
+[00:02.0-00:03.0] Animated vertical bars and dashed UI boxes.
+[00:03.0-00:04.0] Text layout next to feature checklist.
+[00:04.0-00:05.0] Site footer with link columns and bar animations.
+[00:05.0-00:06.0] Upward scroll revealing an "Agent Harness" flowchart diagram.
+[00:06.0-00:07.5] "Do more with Document AI" section featuring code blocks and feature grids.
+
+## Transcript
+[00:00.0-00:07.5] (no speech)
+
+## On-screen Text
+[00:00.0] tensorlake_functions.py, METRICS, EXPONENTIAL UPTIME, INGESTION
+[00:01.0] API CALLS, INGESTION STORAGE, LOOPS, INSTANT, TRIGGERS
+[00:02.0] [SDK MONITOR], [EXTRACTION]
+[00:03.0] A developers best friend when it comes to mertics, Unified Runtime for Agentic Applications
+[00:04.0] Ship AI Workflows Faster With Tensorlake, Pricing, Company, Developers, Resources
+[00:05.0] AGENT HARNESS, AGENT RUNTIME, SANDBOX, BROWSER TOOL
+[00:07.0] Do more with Document AI, DURABLE TIMERS, REPLAY FAILED REQUESTS, BATTERIES INCLUDED FOR AGENTS
+
+## Site Log
+| Time range | URL read off the address bar | Site or product | On screen | Cursor points at | Quote | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| 00:00.0-00:07.5 | (none) | Tensorlake | Webpage layouts and diagrams | (none) | (none spoken) | NEUTRAL |
+
+## Properties
+Color palette: Dark gray background, neon green and white accents (entire video).
+Typography: Monospaced fonts for headers and code blocks (entire video).
+Layout: Grid-based sections with stark borders (00:00.0, 00:07.0).
+Diagrams: Retro-tech flowchart styles with dashed lines (00:05.0).
+Motion: Scrolling vertical bars acting as transitions (00:02.0, 00:04.0).
+
+## Synthesis
+The video captures a highly technical, retro-terminal aesthetic. It highlights the use of grid backgrounds, neon-on-dark contrast, monospaced typography, and flowchart-style diagrams to communicate complex structures visually.
+
+## Tags
+tensorlake, web design, dark mode, retro-tech, monospaced font, grid layout, diagrams, data visualization, HEX studio
