@@ -4,33 +4,38 @@
 .es {
   --es-green: #7a9e6a;
   position: relative;
-  padding: var(--hud-rail-y-start, 96px) calc(var(--band-margin, 96px) + 36px) 0
-    var(--band-margin, 96px);
+  padding: 0 calc(var(--band-margin, 96px) + 36px) 0 var(--band-margin, 96px);
 }
 
 /* the runway the stage is pinned across; its anchors place the steps */
 .es-runway {
   position: relative;
-  height: 300svh;
-  margin-top: 0;
+  height: 260svh;
 }
 .es-anchor {
   position: absolute;
   left: 0;
-  top: calc(var(--at) * 200svh);
+  top: calc(var(--at) * 160svh);
   width: 1px;
   height: 1px;
   pointer-events: none;
 }
+/* the pinned stage: the head, then the steps beside the plates; the plates'
+   column runs to the frame's bottom edge, so a plate leaves by that edge */
 .es-pin {
   position: sticky;
   top: 0;
   height: 100svh;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding-top: var(--hud-rail-y-start, 96px);
+  box-sizing: border-box;
+}
+.es-body {
+  display: grid;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   gap: 48px;
-  padding: var(--hud-rail-y-start, 96px) 0 var(--hud-rail-y-end, 72px);
-  box-sizing: border-box;
+  min-height: 0;
 }
 
 /* ---- the steps, all three at once ---- */
@@ -39,7 +44,7 @@
    run can move upwards") */
 .es-left {
   align-self: start;
-  padding-top: clamp(8px, 2svh, 24px);
+  padding-top: clamp(36px, 6svh, 64px);
 }
 .es-lines {
   display: grid;
@@ -117,11 +122,14 @@
   display: grid;
   min-height: 0;
 }
-/* never clipped: a plate leaves only by the frame's own edge */
+/* A plate leaves by the frame's bottom edge; at the top it passes under
+   the held head on a soft fade, never a hard cut. */
 .es-stage {
   position: relative;
-  overflow: visible;
+  height: 100%;
   min-height: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 72px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 72px);
 }
 .es-svg {
   position: absolute;

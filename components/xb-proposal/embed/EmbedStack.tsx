@@ -42,7 +42,9 @@ const OX = 350;
 const OY = 70;
 const iso = makeIso(U, OX, OY);
 const S = 8;
-const NOTCH = 1.4;
+/* No notch on these plates (owner, 2026-10-12: the notched corners read as
+   "cutting off"). `NotchedBox` keeps the parameter, at 0. */
+const NOTCH = 0;
 const FACE_MID = OY + S * 0.5 * U;
 /* The plates' spacing: apart while a step is read (room enough that the
    next plate rises in from below the frame, owner: "it should never be cut
@@ -196,7 +198,7 @@ function LayerPlate() {
   const k = 3.2 / mk.h;
   return (
     <g>
-      <LayerSlab iso={iso} g={g} notch={NOTCH} />
+      <LayerSlab iso={iso} g={g} />
       <g transform={iso.plane(S / 2 - (mk.w * k) / 2, S / 2 - 1.6, top, k)}>
         {BRANDMARK_PATHS.map((d, i) => (
           <path key={i} d={d} fill={GOLD} fillOpacity={0.9} />
@@ -304,7 +306,7 @@ function AgentPlate() {
           />
         );
       })}
-      <NotchedBox b={CHIP} c={0.45} stroke={DAWN} side="var(--xb-ground-2)" />
+      <NotchedBox b={CHIP} stroke={DAWN} side="var(--xb-ground-2)" />
       <polygon
         points={quad(3.45, 3.45, 4.55, 4.55, CHIP.z1)}
         fill="none"
@@ -313,7 +315,7 @@ function AgentPlate() {
       />
       {MODULES.map((m, i) => (
         <g key={i}>
-          <NotchedBox b={m} c={0.32} stroke={DAWN} side="var(--xb-ground-2)" />
+          <NotchedBox b={m} stroke={DAWN} side="var(--xb-ground-2)" />
           <polygon
             points={quad(m.x0 + 0.35, m.y0 + 0.35, m.x1 - 0.35, m.y1 - 0.35, m.z1)}
             fill={tint("var(--xb-text)", 0.1)}
@@ -408,15 +410,22 @@ function Callouts({ i }: { i: number }) {
 
 const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
-/* Where each step reads on the runway (its anchor). */
-const STEP_AT = [0.12, 0.47, 0.92];
+/* Where each step reads on the runway (its anchor): a plate is centred at
+   a third of the travel each, the stack closed at the end. */
+const TRAVEL_END = 0.7;
+const STEP_AT = [0, TRAVEL_END / 2, 0.97];
 
+/** The scroll's reading, CONTINUOUS (owner: "the diagrams … should scroll
+    into view smoothly … it locks at different scroll positions"): every
+    scroll tick moves the plates, with no plateau a reader has to scroll
+    through. The plates travel linearly to the last one, then close. */
 function read(p: number): { step: 0 | 1 | 2; gap: number; centre: number; stacked: boolean } {
-  const step = p < 0.32 ? 0 : p < 0.66 ? 1 : 2;
-  const close = ease(seg(p, 0.7, 0.88));
+  const travel = 2 * seg(p, 0, TRAVEL_END);
+  const close = ease(seg(p, TRAVEL_END - 0.04, 1));
   const gap = GAP.open - (GAP.open - GAP.closed) * close;
-  /* the plate in view sits centred; once closed, the stack's middle does */
-  const centre = ease(seg(p, 0.24, 0.38)) + ease(seg(p, 0.56, 0.7)) - close;
+  /* the plate in view sits centred; as they close, the stack's middle does */
+  const centre = travel + (1 - travel) * close;
+  const step = travel < 0.5 ? 0 : travel < 1.5 ? 1 : 2;
   return { step, gap, centre, stacked: close > 0.98 };
 }
 
@@ -477,7 +486,6 @@ export function EmbedStack() {
 
   return (
     <div className="es" data-plain={plain ? "" : undefined}>
-      <Masthead copy={HEAD} />
       <div className="es-runway" ref={runway}>
         {/* one anchor per step on the runway, for the flow's labels */}
         {PLUG_STEPS.map((st, i) => (
@@ -490,54 +498,63 @@ export function EmbedStack() {
           />
         ))}
         <div className="es-pin">
-          <div className="es-left">
-            <ol className="es-lines">
-              {PLUG_STEPS.map((st, i) => (
-                <li key={st.id} data-on={plain || step === i ? "" : undefined} data-tone={st.tone}>
-                  <a href={`#${stepAnchor(st.id)}`}>
-                    <span className="es-n">
-                      <i aria-hidden />
-                      {st.n} · {st.step}
-                    </span>
-                    <span className="es-line">{LINE[st.id]}</span>
-                    {plain ? <span className="es-plaincap">{BODY[st.id]}</span> : null}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </div>
+          {/* the head and the steps hold still through the section (owner:
+              "once you enter … the title should remain static") */}
+          <Masthead copy={HEAD} />
+          <div className="es-body">
+            <div className="es-left">
+              <ol className="es-lines">
+                {PLUG_STEPS.map((st, i) => (
+                  <li
+                    key={st.id}
+                    data-on={plain || step === i ? "" : undefined}
+                    data-tone={st.tone}
+                  >
+                    <a href={`#${stepAnchor(st.id)}`}>
+                      <span className="es-n">
+                        <i aria-hidden />
+                        {st.n} · {st.step}
+                      </span>
+                      <span className="es-line">{LINE[st.id]}</span>
+                      {plain ? <span className="es-plaincap">{BODY[st.id]}</span> : null}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
 
-          <div className="es-right">
-            <div className="es-stage">
-              <svg
-                ref={svg}
-                viewBox={`0 0 ${VB_W} ${VB_H}`}
-                className="es-svg"
-                role="img"
-                aria-label="Three plates closing into one stack: your team, the layer, your agents"
-              >
-                {/* painted bottom plate first: the upper plate sits in front */}
-                {PLATES.map((Plate, i) => ({ Plate, i }))
-                  .reverse()
-                  .map(({ Plate, i }) => (
-                    <g
-                      key={i}
-                      ref={(g) => {
-                        plates.current[i] = g;
-                      }}
-                    >
-                      <g className="es-plate" data-on={lit(i) ? "" : undefined}>
-                        <Plate />
-                      </g>
+            <div className="es-right">
+              <div className="es-stage">
+                <svg
+                  ref={svg}
+                  viewBox={`0 0 ${VB_W} ${VB_H}`}
+                  className="es-svg"
+                  role="img"
+                  aria-label="Three plates closing into one stack: your team, the layer, your agents"
+                >
+                  {/* painted bottom plate first: the upper plate sits in front */}
+                  {PLATES.map((Plate, i) => ({ Plate, i }))
+                    .reverse()
+                    .map(({ Plate, i }) => (
                       <g
-                        className="es-call"
-                        data-on={!plain && step === i && (i === 2 || !stacked) ? "" : undefined}
+                        key={i}
+                        ref={(g) => {
+                          plates.current[i] = g;
+                        }}
                       >
-                        <Callouts i={i} />
+                        <g className="es-plate" data-on={lit(i) ? "" : undefined}>
+                          <Plate />
+                        </g>
+                        <g
+                          className="es-call"
+                          data-on={!plain && step === i && (i === 2 || !stacked) ? "" : undefined}
+                        >
+                          <Callouts i={i} />
+                        </g>
                       </g>
-                    </g>
-                  ))}
-              </svg>
+                    ))}
+                </svg>
+              </div>
             </div>
           </div>
         </div>
