@@ -7,16 +7,23 @@ import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 import type { Job } from "../proof-cards/parts";
 import { DirectionI } from "../proof-cards/RoundSix";
 
+import { LeftPanelCard, type Panel } from "./LeftPanels";
+
 type Skin = "flat" | "window" | "wash" | "glow" | "rule" | "inset";
 
 /** Six skins on block 23, one per numbered block; `?job=1..4` sets the job. */
-const BLOCKS: readonly { id: string; n: string; label: string; skin: Skin }[] = [
+const BLOCKS: readonly { id: string; n: string; label: string; skin?: Skin; panel?: Panel }[] = [
   { id: "flat", n: "1", label: "Flat (Tensorlake)", skin: "flat" },
   { id: "window", n: "2", label: "Window chrome (Hex)", skin: "window" },
   { id: "wash", n: "3", label: "Wash top and bottom", skin: "wash" },
   { id: "glow", n: "4", label: "Top glow (Lighthouse)", skin: "glow" },
   { id: "rule", n: "5", label: "Gold top rule (Hex)", skin: "rule" },
   { id: "inset", n: "6", label: "Double hairline (Hex)", skin: "inset" },
+  /* the left panel on 6, four ways (owner, 2026-10-12) */
+  { id: "l-spread", n: "7", label: "6 · Rail, spread", panel: "spread" },
+  { id: "l-bus", n: "8", label: "6 · Steps on a bus", panel: "bus" },
+  { id: "l-group", n: "9", label: "6 · Steps in a group box", panel: "group" },
+  { id: "l-curves", n: "10", label: "6 · Curves to a list", panel: "curves" },
 ];
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];
@@ -63,7 +70,11 @@ function Block({ block, start }: { block: (typeof BLOCKS)[number]; start: number
           </button>
         ))}
       </div>
-      <DirectionI job={JOBS[i]} ba={false} phases scale band refine="cards" skin={block.skin} />
+      {block.panel ? (
+        <LeftPanelCard job={JOBS[i]} panel={block.panel} />
+      ) : (
+        <DirectionI job={JOBS[i]} ba={false} phases scale band refine="cards" skin={block.skin} />
+      )}
     </section>
   );
 }

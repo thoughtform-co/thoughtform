@@ -1,0 +1,296 @@
+/* The left panel, four ways (owner, 2026-10-12). Every connector is a 1px
+   line; the panel spreads from the brief at its top to the tools at its
+   foot, so the air sits between the parts instead of around them. */
+
+.pk-l {
+  --pk-wire: rgba(var(--pk-gold-rgb), 0.6);
+}
+
+.pk-l .pk-l__words {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  min-width: 0;
+  padding: calc(var(--pk-pad) * 1.2) var(--pk-pad);
+  border-right: 1px solid var(--pk-line);
+}
+.pk-l .pk-l__words > * {
+  flex: 0 0 auto;
+}
+.pk-l .pk-i__body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+}
+.pk-l .pk-g__fig {
+  margin: var(--pk-pad);
+}
+.pk-l .pk-l__tools {
+  margin: 0;
+}
+.pk-l .pk-l__tools li {
+  border-color: rgba(var(--pk-green-rgb), 0.5);
+}
+
+/* centre connectors between the stacked parts (bus, group): a short line
+   from the bottom of one part to the top of the next, through the gap */
+.pk-l--bus .pk-l__words > *:not(:first-child),
+.pk-l--group .pk-l__words > *:not(:first-child) {
+  position: relative;
+}
+.pk-l--bus .pk-l__words > *:not(:first-child)::after,
+.pk-l--group .pk-l__words > *:not(:first-child)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: var(--pk-gap-v, 28px);
+  background: var(--pk-wire);
+}
+.pk-l--bus .pk-l__words,
+.pk-l--group .pk-l__words {
+  justify-content: center;
+  gap: var(--pk-gap-v, 28px);
+  --pk-gap-v: clamp(22px, 3.2vh, 40px);
+}
+
+/* ── spread: one rail from the brief's bottom edge to the tools, the steps
+   spread down the panel's height ── */
+.pk-l--spread .pk-l__words {
+  justify-content: flex-start;
+}
+.pk-l__rail {
+  position: relative;
+  flex: 1 1 auto !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: -28px;
+  padding: 28px 0 0 22px;
+}
+.pk-l__rail::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0;
+  bottom: var(--pk-rail-end, 11px);
+  width: 1px;
+  background: var(--pk-wire);
+}
+.pk-l__rail > li {
+  position: relative;
+  margin: 0;
+}
+.pk-l__rail > li::after {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 18px;
+  height: 1px;
+  background: var(--pk-wire);
+}
+.pk-l__rail > li::before {
+  display: none;
+}
+.pk-l__rail > .pk-l__embed::after,
+.pk-l__rail > .pk-l__rail-tools::after {
+  left: -18px;
+  width: 17px;
+  margin-left: 1px;
+  background: var(--pk-green);
+}
+.pk-l__rail > .pk-l__embed {
+  padding-bottom: 14px;
+}
+.pk-l__rail > .pk-l__embed::after {
+  left: -19px;
+}
+.pk-l__rail .pk-i__small {
+  margin-left: 0;
+}
+
+/* ── bus: the steps side by side, stems into one bus ── */
+.pk-l__busbox {
+  display: grid;
+  justify-items: center;
+}
+.pk-l__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.pk-l__cols li {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--pk-line);
+  background: #100f0e;
+}
+.pk-l__cols li::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 14px;
+  background: var(--pk-wire);
+}
+.pk-l__col-tab {
+  font: calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--pk-gold);
+}
+.pk-l__col-text {
+  font: 400 var(--pk-small) / 1.35 var(--pk-sans);
+  color: var(--pk-ink-2);
+}
+.pk-l__bus {
+  position: relative;
+  display: block;
+  width: calc(66.6% + 1px);
+  height: 30px;
+  margin-top: 14px;
+  border-top: 1px solid var(--pk-wire);
+}
+.pk-l__bus::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 30px;
+  background: var(--pk-green);
+}
+.pk-l--bus .pk-l__busbox .pk-l__tools {
+  justify-content: center;
+}
+
+/* ── group: one box with a filled header, square bullets, dashed rows ── */
+.pk-l__group {
+  border: 1px solid rgba(var(--pk-gold-rgb), 0.5);
+  background: #100f0e;
+}
+.pk-l__group-head {
+  padding: 6px 12px;
+  background: rgba(var(--pk-gold-rgb), 0.85);
+  font: calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #0c0b0a;
+}
+.pk-l__group ol {
+  display: grid;
+  padding: 4px 14px;
+}
+.pk-l__group li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  font: 400 var(--pk-small) / 1.35 var(--pk-sans);
+  color: var(--pk-ink);
+}
+.pk-l__group li + li {
+  border-top: 1px dashed rgba(var(--pk-ink-rgb), 0.14);
+}
+.pk-l__group li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background: var(--pk-gold);
+  transform: translateY(-2px);
+}
+.pk-l--group .pk-l__words > .pk-l__tools {
+  justify-content: center;
+}
+.pk-l--group .pk-l__words > .pk-l__tools::after {
+  background: var(--pk-green);
+}
+
+/* ── curves: the steps' curves converge on a node, one line to the list ── */
+.pk-l__curves {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(48px, 0.4fr) minmax(0, 0.8fr);
+  align-items: center;
+}
+.pk-l__steps {
+  display: grid;
+  gap: 10px;
+  grid-column: 1;
+}
+.pk-l__steps li {
+  display: grid;
+  gap: 5px;
+  padding: 9px 12px;
+  border: 1px solid var(--pk-line);
+  background: #100f0e;
+  font: 400 var(--pk-small) / 1.35 var(--pk-sans);
+  color: var(--pk-ink-2);
+}
+.pk-l__wires {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.pk-l__wires path {
+  fill: none;
+  stroke: var(--pk-wire);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.pk-l__node {
+  position: absolute;
+  left: calc(55.5% + 0.8 * 0px);
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--pk-gold);
+  display: none;
+}
+.pk-l__list {
+  grid-column: 3;
+  border: 1px solid rgba(var(--pk-green-rgb), 0.5);
+}
+.pk-l__list-head {
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(var(--pk-green-rgb), 0.5);
+  background: rgba(var(--pk-green-rgb), 0.14);
+  font: calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pk-green);
+}
+.pk-l__list ul {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+.pk-l__list li {
+  font: calc(var(--pk-t-mono) * 0.95) / 1.2 var(--pk-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pk-ink);
+}
+.pk-l__list li::before {
+  content: "└─ ";
+  color: rgba(var(--pk-ink-rgb), 0.35);
+}
+.pk-l--curves .pk-l__words {
+  justify-content: space-between;
+}
