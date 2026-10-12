@@ -206,19 +206,23 @@ function Unified({ job, tools }: { job: Job; tools: readonly string[] }) {
   return (
     <>
       <div className="pk-c__box pk-l__unit">
-        <p className="pk-c__tab">Embed and build</p>
-        <p className="pk-l__unit-embed">
-          <b>Embed</b>
-          {job.embed}
-        </p>
-        <ol className="pk-l__cols" aria-label="Claude did">
-          {job.did.map((t, i) => (
-            <li key={t}>
-              <span className="pk-l__col-tab">Claude {i + 1}</span>
-              <span className="pk-l__col-text">{t}</span>
-            </li>
-          ))}
-        </ol>
+        <section className="pk-l__part">
+          <p className="pk-l__part-tab" data-kind="embed">
+            Embed
+          </p>
+          <p className="pk-l__part-line">{job.embed}</p>
+        </section>
+        <section className="pk-l__part">
+          <p className="pk-l__part-tab">Build</p>
+          <ol className="pk-l__cols" aria-label="Claude did">
+            {job.did.map((t, i) => (
+              <li key={t}>
+                <span className="pk-l__col-tab">Claude {i + 1}</span>
+                <span className="pk-l__col-text">{t}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
       </div>
       <ul className="pk-l__fan" aria-label="Plugs into">
         {tools.map((t) => (
