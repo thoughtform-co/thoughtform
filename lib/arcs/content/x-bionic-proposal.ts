@@ -435,23 +435,6 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         },
       ],
     },
-    /* ── Who ─────────────────────────────────────────────────────────────
-       The homepage's About, beside who does the work (2026-10-11: the second
-       section is the equilibrium now; it stood first, owner: "a hero section
-       with the new key visuals and an About section"), its bio cut to two
-       paragraphs here (owner, 2026-10-09: "more concise"); the shared
-       record is the homepage's and stays whole. Its head is the record's
-       own: the page never speaks in the first person (owner, 2026-10-10). */
-    {
-      ...VINCE_ABOUT,
-      id: "about",
-      menuLabel: "About",
-      bio: [
-        "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
-        "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",
-      ],
-    },
-
     {
       id: "how-we-work",
       kind: "list-groups",
@@ -591,6 +574,24 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         { label: "Built", value: "Yours to keep" },
       ],
     },
+    /* ── About, at the foot (owner, 2026-10-12: "the About section should
+       be at the bottom"), the page's last read before the contact.
+       The homepage's About (2026-10-11: the second
+       section is the equilibrium now; it stood first, owner: "a hero section
+       with the new key visuals and an About section"), its bio cut to two
+       paragraphs here (owner, 2026-10-09: "more concise"); the shared
+       record is the homepage's and stays whole. Its head is the record's
+       own: the page never speaks in the first person (owner, 2026-10-10). */
+    {
+      ...VINCE_ABOUT,
+      id: "about",
+      menuLabel: "About",
+      bio: [
+        "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
+        "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",
+      ],
+    },
+
     {
       id: "close",
       kind: "close",

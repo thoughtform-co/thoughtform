@@ -1,0 +1,19 @@
+/* /test/xb-closing: each direction at least one screen between the rails,
+   on the band the proposal's heads use; it grows with its content. */
+.xcl-sec {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  min-height: 100svh;
+  display: grid;
+  padding: calc(var(--hud-rail-y-start) + 24px) var(--band-margin) calc(var(--hud-rail-y-end) + 24px);
+  background: transparent;
+}
+.xcl-sec > .xc {
+  align-self: center;
+}
+
+/* halyard's shell paints a fixed dark ground; the lab follows the theme */
+.hy-root.xcl-root {
+  background: rgb(var(--void-rgb, 10, 9, 8));
+}
