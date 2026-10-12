@@ -40,9 +40,47 @@ interface LayerSlabProps {
   etch?: boolean;
   /** How many strata are written yet, base first (section 2's growth). */
   count?: 1 | 2 | 3;
+  /** A notch at the top-right of every stratum (the house's single TR
+      notch, in the plane), in world units. 0, the default, is the slab every
+      other drawing draws, unchanged. */
+  notch?: number;
 }
 
-export function LayerSlab({ iso, g, presence = 1, etch = true, count = 3 }: LayerSlabProps) {
+/** A box's faces with its (x1, y0) corner notched: the top loses the corner,
+    the right face starts past the cut. The cut's own face is edge-on in this
+    projection, so the outline carries it. */
+function notchedFaces(iso: Iso, b: Box, c: number) {
+  if (c <= 0) return boxFaces(iso, b);
+  const { p } = iso;
+  const pts = (list: (readonly [number, number])[]) =>
+    list.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+  const f = boxFaces(iso, b);
+  return {
+    ...f,
+    top: pts([
+      p(b.x0, b.y0, b.z1),
+      p(b.x1 - c, b.y0, b.z1),
+      p(b.x1, b.y0 + c, b.z1),
+      p(b.x1, b.y1, b.z1),
+      p(b.x0, b.y1, b.z1),
+    ]),
+    right: pts([
+      p(b.x1, b.y0 + c, b.z1),
+      p(b.x1, b.y1, b.z1),
+      p(b.x1, b.y1, b.z0),
+      p(b.x1, b.y0 + c, b.z0),
+    ]),
+  };
+}
+
+export function LayerSlab({
+  iso,
+  g,
+  presence = 1,
+  etch = true,
+  count = 3,
+  notch = 0,
+}: LayerSlabProps) {
   const boxes = slabBoxes(g).slice(0, count);
   const ghost = 1 - presence;
   return (
@@ -61,7 +99,7 @@ export function LayerSlab({ iso, g, presence = 1, etch = true, count = 3 }: Laye
       {presence > 0.001 && (
         <g opacity={presence}>
           {boxes.map((b, i) => {
-            const f = boxFaces(iso, b);
+            const f = notchedFaces(iso, b, notch);
             const lift = 0.06 * i;
             return (
               <g key={STRATA[i].id}>
@@ -86,7 +124,7 @@ export function LayerSlab({ iso, g, presence = 1, etch = true, count = 3 }: Laye
               </g>
             );
           })}
-          {etch && <SlabEtch iso={iso} b={boxes[boxes.length - 1]} />}
+          {etch && <SlabEtch iso={iso} b={boxes[boxes.length - 1]} notch={notch} />}
         </g>
       )}
     </g>
@@ -95,7 +133,7 @@ export function LayerSlab({ iso, g, presence = 1, etch = true, count = 3 }: Laye
 
 /** A fine grid of cells on the top face: the layer reads as written,
     structured material rather than a blank lid. */
-function SlabEtch({ iso, b }: { iso: Iso; b: Box }) {
+function SlabEtch({ iso, b, notch = 0 }: { iso: Iso; b: Box; notch?: number }) {
   const lines: string[] = [];
   const inset = 0.35;
   const cols = Math.max(2, Math.round((b.x1 - b.x0) / 0.9));
@@ -106,14 +144,19 @@ function SlabEtch({ iso, b }: { iso: Iso; b: Box }) {
   const y1 = b.y1 - inset;
   for (let i = 0; i <= cols; i++) {
     const x = x0 + ((x1 - x0) * i) / cols;
-    const a = iso.p(x, y0, b.z1);
+    /* past the notch the line starts below the cut: y ≥ y0 + c − (x1 − x) */
+    const ys = notch > 0 ? Math.max(y0, b.y0 + notch - (b.x1 - x) + 0.2) : y0;
+    if (ys >= y1) continue;
+    const a = iso.p(x, ys, b.z1);
     const c = iso.p(x, y1, b.z1);
     lines.push(`M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${c[0].toFixed(1)} ${c[1].toFixed(1)}`);
   }
   for (let j = 0; j <= rows; j++) {
     const y = y0 + ((y1 - y0) * j) / rows;
+    const xe = notch > 0 ? Math.min(x1, b.x1 - notch + (y - b.y0) - 0.2) : x1;
+    if (xe <= x0) continue;
     const a = iso.p(x0, y, b.z1);
-    const c = iso.p(x1, y, b.z1);
+    const c = iso.p(xe, y, b.z1);
     lines.push(`M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${c[0].toFixed(1)} ${c[1].toFixed(1)}`);
   }
   return (

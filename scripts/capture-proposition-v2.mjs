@@ -33,19 +33,26 @@ for (const id of ["plug"]) {
   await p.screenshot({ path: `${OUT}/v2-${id}-${W}x${H}.png` });
   console.log(id, "small:", JSON.stringify(small));
 }
-/* each label in the flow lands on its own step, and that step is the one lit */
+/* each label in the flow lands on its own step */
 for (const [i, id] of ["embed", "encode", "run"].entries()) {
   await p.evaluate((id) => {
     const a = document.getElementById(`step-${id}`);
-    a.scrollIntoView({ block: "center" });
+    window.scrollTo(0, a.getBoundingClientRect().top + scrollY);
   }, id);
-  await p.waitForTimeout(900);
+  await p.waitForTimeout(1100);
   const on = await p.evaluate(() =>
-    [...document.querySelectorAll("#embed .es-part")].findIndex((el) => el.hasAttribute("data-on"))
+    [...document.querySelectorAll("#embed .es-lines li")].findIndex((el) => el.hasAttribute("data-on"))
   );
-  console.log(`link ${id} → part ${on + 1} lit (want ${i + 1})`);
+  console.log(`link ${id} → step ${on + 1} lit (want ${i + 1})`);
   await p.screenshot({ path: `${OUT}/v2-embed-${id}-${W}x${H}.png` });
 }
+/* the plates mid-close, between Encode and Run */
+await p.evaluate(() => {
+  const r = document.querySelector("#embed .es-runway").getBoundingClientRect();
+  window.scrollTo(0, r.top + scrollY + 0.78 * (r.height - innerHeight));
+});
+await p.waitForTimeout(900);
+await p.screenshot({ path: `${OUT}/v2-embed-closing-${W}x${H}.png` });
 /* the head of the steps section */
 await p.evaluate(() => {
   const el = document.getElementById("embed");

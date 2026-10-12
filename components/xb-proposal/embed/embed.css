@@ -1,27 +1,42 @@
-/* EmbedStack: unsiloed.ai's "how it works" on the kit's tokens. The steps
-   sticky on the left, the drawing scrolling past on the right, one gold
-   thread through the plates. No pin, no rail, no divider. */
+/* EmbedStack: the steps sticky on the left, the plates on the right closing
+   into one stack by Run. One pinned stage, no rail, no divider. */
 
 .es {
   --es-green: #7a9e6a;
   position: relative;
-  padding: var(--hud-rail-y-start, 96px) calc(var(--band-margin, 96px) + 36px)
-    var(--hud-rail-y-end, 72px) var(--band-margin, 96px);
+  padding: var(--hud-rail-y-start, 96px) calc(var(--band-margin, 96px) + 36px) 0
+    var(--band-margin, 96px);
 }
 
-.es-body {
+/* the runway the stage is pinned across; its anchors place the steps */
+.es-runway {
+  position: relative;
+  height: 300svh;
+  margin-top: clamp(24px, 4svh, 48px);
+}
+.es-anchor {
+  position: absolute;
+  left: 0;
+  top: calc(var(--at) * 200svh);
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.es-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
   display: grid;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   gap: 48px;
-  margin-top: clamp(56px, 9svh, 104px);
+  padding: var(--hud-rail-y-start, 96px) 0 var(--hud-rail-y-end, 72px);
+  box-sizing: border-box;
 }
 
 /* ---- the steps, all three at once ---- */
 
 .es-left {
-  position: sticky;
-  top: calc(var(--hud-rail-y-start, 96px) + 32px);
-  align-self: start;
+  align-self: center;
 }
 .es-lines {
   display: grid;
@@ -79,74 +94,72 @@
   line-height: 1.12;
   letter-spacing: -0.015em;
 }
-.es-lines a:hover .es-line,
-.es-lines a:focus-visible .es-line {
+.es-lines a:hover .es-line {
   color: var(--xb-text-2);
 }
 .es-lines li[data-on] a:hover .es-line {
   color: var(--xb-text);
 }
-
-/* ---- the drawing, scrolling past ---- */
-
-.es-right {
-  position: relative;
-  display: grid;
-  gap: clamp(24px, 6svh, 72px);
-  padding-bottom: 12svh;
-}
-/* the gold thread through the three plates, under their faces */
-.es-thread {
-  position: absolute;
-  left: 50%;
-  top: 14svh;
-  bottom: 18svh;
-  width: 0;
-  border-left: 1px dashed rgba(202, 165, 84, 0.55);
-}
-.es-part {
-  position: relative;
-  min-height: 72svh;
-  display: grid;
-  align-content: center;
-  gap: 18px;
-  scroll-margin-top: 12svh;
-}
-.es-cap {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  /* left of the thread, so it never runs through the words */
-  max-width: min(46ch, calc(50% - 32px));
+.es-plaincap {
+  max-width: 46ch;
   font-family: var(--xb-sans);
   font-size: 15px;
   line-height: 1.5;
-  color: var(--xb-text-3);
-  transition: color 360ms ease;
-}
-.es-part[data-on] .es-cap {
   color: var(--xb-text-2);
 }
-.es-svg {
+
+/* ---- the plates ---- */
+
+.es-right {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+.es-cap {
+  margin: 0;
+  max-width: 46ch;
+  min-height: 4.5em;
+  font-family: var(--xb-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--xb-text-2);
+  animation: es-cap-in 420ms ease;
+}
+@keyframes es-cap-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.es-stage {
   position: relative;
-  z-index: 1;
-  display: block;
+  overflow: hidden;
+  min-height: 0;
+}
+.es-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: auto;
   overflow: visible;
+  will-change: transform;
 }
 .es-plate {
-  opacity: 0.32;
+  opacity: 0.3;
   transition: opacity 420ms ease;
 }
-.es-part[data-on] .es-plate {
+.es-plate[data-on] {
   opacity: 1;
 }
 .es-call {
   opacity: 0;
   transition: opacity 360ms ease;
 }
-.es-part[data-on] .es-call {
+.es-call[data-on] {
   opacity: 1;
   transition-delay: 140ms;
 }
@@ -157,12 +170,24 @@
   fill: var(--xb-text-2);
 }
 
+/* ---- reduced motion: the closed stack, the steps listed ---- */
+
+.es[data-plain] .es-runway {
+  height: auto;
+}
+.es[data-plain] .es-pin {
+  position: relative;
+  height: 90svh;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .es-lines li,
   .es-n i,
-  .es-cap,
   .es-plate,
   .es-call {
     transition: none;
+  }
+  .es-cap {
+    animation: none;
   }
 }
