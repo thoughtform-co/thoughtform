@@ -11,6 +11,7 @@ import {
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 import { getCase } from "@/lib/cases/registry";
 
+import { Glyph } from "./ArcLeverage";
 import { ArcBeat } from "./ArcBeat";
 import { rung } from "./arcMotion";
 
@@ -37,6 +38,15 @@ import { rung } from "./arcMotion";
  * ⚠ SET BY `layout: "case"` ON THE PAGE, NEVER ON THE RECORD: Pandora's
  * proposal reads the same `LOOP_PROOF_CARDS` and keeps the folder card.
  */
+/** The glyph each Loop workstream letters with, the job cards' own set;
+ *  creative technology, new to this page, takes the meter. */
+const WORKSTREAM_GLYPH: Record<string, "frame" | "flow" | "check" | "meter"> = {
+  "creative production": "frame",
+  "creative ops": "flow",
+  "creative review": "check",
+  "creative technology": "meter",
+};
+
 export function ArcProofCase({
   section,
   motion = "reveal",
@@ -60,7 +70,10 @@ export function ArcProofCase({
     ? ({ "--pf-accent-rgb": client.accentRgb } as CSSProperties)
     : undefined;
   const beats = section.arcBeats ?? [];
-  const at = beats.findIndex((b) => b.id === section.id);
+  const word = beats.find((b) => b.id === section.id)?.word;
+  /* the card's workstream, as the job cards letter theirs: one label and
+     its glyph top right (owner, 2026-10-12) */
+  const ws = word ? { word, glyph: WORKSTREAM_GLYPH[word.toLowerCase()] ?? "meter" } : null;
   const titleId = `${section.id}-title`;
 
   return (
@@ -82,18 +95,11 @@ export function ArcProofCase({
         >
           <header className="arc-jstack__top">
             <span className="arc-jstack__client">{client.name}</span>
-            {beats.length ? (
-              <ol className="arc-lpc__arc" aria-label="Loop, in four workstreams">
-                {beats.map((b, k) => (
-                  <li
-                    key={b.id}
-                    data-state={k < at ? "past" : k === at ? "now" : "next"}
-                    {...(k === at ? { "aria-current": "step" as const } : null)}
-                  >
-                    {b.word}
-                  </li>
-                ))}
-              </ol>
+            {ws ? (
+              <span className="arc-jstack__ws">
+                <Glyph kind={ws.glyph} />
+                {ws.word}
+              </span>
             ) : null}
           </header>
           <div className="arc-jstack__body arc-lpc__body">
@@ -107,16 +113,19 @@ export function ArcProofCase({
                 <p className="arc-jstack__tab">{record.project}</p>
                 {lede ? <p className="arc-jstack__para">{lede}</p> : null}
               </div>
-              <ol className="arc-jstack__flow" aria-label="What it showed">
+              {/* the four claims in the left panel as the story's own cards
+                  (owner, 2026-10-12: a band at the foot read as a different
+                  flow): block 23's card, glyph top right, two by two */}
+              <ol className="arc-lpc__stats" aria-label="What it showed">
                 {claims.map((c) => (
-                  <li key={c.title} className="arc-lpc__claim">
-                    <span className="arc-lpc__mark" aria-hidden="true">
-                      {c.glyph ? <ProofGlyph name={c.glyph} /> : null}
-                    </span>
-                    <span className="arc-lpc__text">
-                      <span className="arc-lpc__claim-t">{c.title}</span>
-                      <span className="arc-lpc__claim-d">{c.desc}</span>
-                    </span>
+                  <li key={c.title} className="arc-jstack__card arc-lpc__stat">
+                    {c.glyph ? (
+                      <span className="arc-lpc__stat-glyph" aria-hidden="true">
+                        <ProofGlyph name={c.glyph} />
+                      </span>
+                    ) : null}
+                    <p className="arc-lpc__stat-t">{c.title}</p>
+                    <p className="arc-lpc__stat-d">{c.desc}</p>
                   </li>
                 ))}
               </ol>

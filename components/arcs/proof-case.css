@@ -1,26 +1,8 @@
 /* THE LOOP PROOF CARD IN THE STACK HOUSING (owner, 2026-10-12;
    /test/loop-proof-lab B55). The housing is the job card's (`.arc-jstack*`,
-   job-stack.css, loaded before this sheet); this sheet adds only the arc of
-   four in the top bar, the claims on the rail, the 55/45 split and the
-   field's seat. Tokens only. */
-
-/* the left column carries the narrative; Loop's visuals need the rest (at a
-   wider left the tool drawing's columns overlap) */
-.arc-lpc__body {
-  grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
-}
-
-/* ── the arc of four: what came before quiet, this card lit, what follows
-   outlined; the record's own order ── */
-.arc-lpc__arc {
-  display: flex;
-  align-items: center;
-  /* the title left the bar (2026-10-12), so the tabs hold its right end */
-  margin: 0 0 0 auto;
-  padding: 0;
-  list-style: none;
-  font-size: 12px;
-}
+   job-stack.css, loaded before this sheet); this sheet adds only the title,
+   the claims as cards in the left panel, the workstream's seat on the top
+   bar and the field's seat. Tokens only. */
 
 /* the card's title at the head of the left panel, the homepage proof card's
    own setting: the sans, sentence case, two lines at most */
@@ -36,70 +18,6 @@
   text-transform: none;
   white-space: normal;
   color: var(--arc-ink-90, var(--dawn));
-}
-.arc-lpc__arc li {
-  position: relative;
-  padding: 6px 9px;
-  border: 1px solid var(--arc-rule);
-  color: var(--arc-ink-40);
-}
-.arc-lpc__arc li + li {
-  margin-left: 18px;
-}
-.arc-lpc__arc li + li::before {
-  content: "";
-  position: absolute;
-  right: 100%;
-  top: 50%;
-  width: 18px;
-  height: 1px;
-  background: var(--arc-rule);
-}
-.arc-lpc__arc li[data-state="past"] {
-  color: var(--arc-ink-70);
-}
-.arc-lpc__arc li[data-state="past"] + li::before {
-  background: var(--js-rail);
-}
-.arc-lpc__arc li[data-state="now"] {
-  border-color: var(--gold);
-  background: var(--gold);
-  color: var(--gold-contrast, var(--void));
-}
-
-/* ── a claim: its glyph in a cell, then its title and its sentence ── */
-.arc-lpc__claim {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  align-items: stretch;
-  border: 1px solid color-mix(in srgb, var(--dawn) 12%, transparent);
-  background: var(--arc-plate);
-}
-.arc-lpc__mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-right: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
-}
-.arc-lpc__mark svg {
-  width: 21px;
-  height: 21px;
-}
-.arc-lpc__text {
-  display: grid;
-  gap: 3px;
-  padding: 10px 14px 11px;
-}
-.arc-lpc__claim-t {
-  font-size: var(--type-base);
-  line-height: 1.3;
-  color: var(--arc-ink-90, var(--dawn));
-}
-.arc-lpc__claim-d {
-  font-size: var(--js-small);
-  line-height: 1.4;
-  color: var(--arc-ink-70);
-  text-wrap: pretty;
 }
 
 /* ── the one visual: the proof card's own field, whole. The pile's slot is
@@ -166,11 +84,68 @@
   .arc-lpc__body {
     grid-template-columns: minmax(0, 1fr);
   }
-  .arc-lpc__arc {
-    display: none;
-  }
 }
 
 /* The frame's ring is the house edge, as the job cards draw it: a Tensor
    Gold ring tried on 2026-10-12 came off the same day (owner: "really not
    beautiful. Just make it subtle like the other cards"). */
+
+/* ── the card's workstream on the top bar, one label as the job cards set it ── */
+.arc-lpc .arc-jstack__ws {
+  margin-left: auto;
+}
+
+/* ── what it showed: the four claims in the left panel, block 23's card, two
+   by two (owner, 2026-10-12: the band at the foot read as a different flow) ── */
+.arc-lpc__body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.arc-lpc__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-lpc__stat {
+  gap: 8px;
+  padding: 16px 16px 18px;
+}
+.arc-lpc__stat-glyph {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+}
+.arc-lpc__stat-glyph svg {
+  width: 21px;
+  height: 21px;
+}
+.arc-lpc__stat-t {
+  margin: 0;
+  padding-right: 30px;
+  font-size: var(--type-base);
+  line-height: 1.3;
+  color: var(--arc-ink-90, var(--dawn));
+  text-wrap: balance;
+}
+.arc-lpc__stat-d {
+  margin: 0;
+  font-size: var(--js-small);
+  line-height: 1.4;
+  color: var(--arc-ink-70);
+  text-wrap: pretty;
+}
+@media (max-width: 960px) {
+  .arc-lpc__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* the visual keeps a floor with the band under it: Loop's drawings are sized
+   off their own box (the tools' wireframe collapses under ~400px), so the
+   card grows rather than the visual shrinking */
+.arc-lpc__fig {
+  min-height: clamp(400px, 50svh, 560px);
+}
