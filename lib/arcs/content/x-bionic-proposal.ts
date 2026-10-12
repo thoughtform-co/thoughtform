@@ -602,6 +602,9 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       ...VINCE_ABOUT,
       id: "about",
       menuLabel: "About",
+      // the homepage's whole orbit behind the portrait, on this page alone
+      // (owner, 2026-10-12: Pandora's About stays as sent)
+      orbitArt: "homepage",
       bio: [
         "Vince is a creative technologist. For over a decade he has worked where digital change meets creative teams: social media, online communities, now AI.",
         "Through Thoughtform he helps teams work with the intelligence they already have. He runs the same practice inside Loop Earplugs, leading AI adoption in its creative studio.",

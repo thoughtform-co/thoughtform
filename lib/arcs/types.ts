@@ -365,6 +365,10 @@ export type ArcSection = ArcSectionBase &
         bio: readonly string[];
         meta: readonly ArcMetaRow[];
         layout?: "orbit";
+        /** The drawing behind the orbit layout's portrait: absent, the About
+         *  drawing's rings; `"homepage"`, the homepage's whole orbit
+         *  (`AboutOrbitArt`), the X-Bionic proposal's since 2026-10-11. */
+        orbitArt?: "homepage";
       }
     | {
         /** Closing CTA band — doubles as the page footer. */
