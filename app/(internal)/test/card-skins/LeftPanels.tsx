@@ -260,8 +260,9 @@ function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
           ))}
         </ol>
       </div>
-      <div className="pk-l__arc-stack">
-        <ul className="pk-i__tools pk-l__tools" aria-label="Plugs into">
+      <div className="pk-l__plugwrap">
+        <span className="pk-l__plug-label">Plugs into</span>
+        <ul className="pk-l__dash" aria-label="Plugs into">
           {tools.map((t) => (
             <li key={t}>{t}</li>
           ))}
