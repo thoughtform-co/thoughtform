@@ -587,3 +587,140 @@
 .pk-i--r-cards .pk-i__cell {
   border-color: rgba(var(--pk-gold-rgb), 0.4);
 }
+
+/* ═══ U11, blocks 25 to 30: gradient and border skins on block 23 ═══ */
+
+/* shared: the head bar, the boxes and the band, as one set of hooks */
+
+/* 25 · Flat (Tensorlake): no gradient anywhere. Panels sit as a flat raised
+   surface on the ground, every edge a neutral hairline, gold only on text,
+   marks and the one lit step. */
+.pk-i--s-flat .pk-i__band {
+  background: rgba(var(--pk-ink-rgb), 0.025);
+}
+.pk-i--s-flat .pk-i__band-head span {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(var(--pk-ink-rgb), 0.12) 0 1px,
+    transparent 1px 6px
+  );
+}
+.pk-i--s-flat :is(.pk-i__brief, .pk-i__cell),
+.pk-i--r-cards.pk-i--s-flat .pk-i__cell {
+  border-color: rgba(var(--pk-ink-rgb), 0.1);
+  background: #121110;
+}
+.pk-i--s-flat .pk-i__brief .pk-c__tab {
+  border-color: rgba(var(--pk-ink-rgb), 0.12);
+  background: rgba(var(--pk-ink-rgb), 0.05);
+}
+
+/* 26 · Window chrome (Hex's Tensorlake panels): every frame gets a title
+   bar with three dots and a hairline under it; borders neutral; gold stays
+   on the label text. */
+.pk-i--s-window :is(.pk-i__brief, .pk-i__cell, .pk-i__big) {
+  border-color: rgba(var(--pk-ink-rgb), 0.12);
+  background:
+    linear-gradient(rgba(var(--pk-ink-rgb), 0.045), rgba(var(--pk-ink-rgb), 0.045)) top / 100% 26px
+      no-repeat,
+    #100f0e;
+}
+.pk-i--s-window :is(.pk-i__brief, .pk-i__cell)::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 26px;
+  height: 6px;
+  background: radial-gradient(circle, rgba(var(--pk-ink-rgb), 0.3) 2px, transparent 2.5px) 0 0 /
+    10px 6px repeat-x;
+}
+.pk-i--s-window .pk-c__box > .pk-c__tab,
+.pk-i--s-window .pk-i__cell-k {
+  border: 0;
+  background: none;
+}
+.pk-i--s-window .pk-i__cell > .arc-lev__glyph {
+  display: none;
+}
+.pk-i--s-window .pk-i__band {
+  background: none;
+}
+
+/* 27 · Header and band wash: the same soft gold wash bracketing the card,
+   top and bottom; the work between on the plain grid. */
+.pk-i--s-wash .pk-c__head {
+  background: linear-gradient(
+    180deg,
+    rgba(var(--pk-gold-rgb), 0.09),
+    rgba(var(--pk-gold-rgb), 0.03)
+  );
+}
+
+/* 28 · Top glow (Lighthouse): one soft gold light from the card's top edge,
+   fading out by the middle; borders neutral; the band flat. */
+.pk-i--s-glow {
+  background-image:
+    radial-gradient(120% 55% at 50% 0%, rgba(var(--pk-gold-rgb), 0.12), transparent 70%),
+    linear-gradient(rgba(var(--pk-ink-rgb), 0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--pk-ink-rgb), 0.032) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    24px 24px,
+    24px 24px;
+}
+.pk-i--s-glow .pk-i__band {
+  background: rgba(var(--pk-ink-rgb), 0.02);
+}
+.pk-i--s-glow .pk-i__cell,
+.pk-i--s-glow .pk-i__brief {
+  border-color: rgba(var(--pk-ink-rgb), 0.12);
+}
+
+/* 29 · Gold top rule, flat band (Hex): no wash; a 2px gold rule on the
+   card's top edge stopping at the notch, and the band a flat warm tint. */
+.pk-i--s-rule::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  width: calc(100% - var(--pk-ch));
+  height: 2px;
+  background: var(--pk-gold);
+}
+.pk-i--s-rule .pk-i__band {
+  background: rgba(var(--pk-gold-rgb), 0.05);
+}
+.pk-i--s-rule .pk-i__cell {
+  border-color: rgba(var(--pk-ink-rgb), 0.12);
+}
+
+/* 30 · Double hairline (Hex): every frame a hairline with a second one 4px
+   inside it, no colour on the edges; the band flat. */
+.pk-i--s-inset :is(.pk-i__brief, .pk-i__cell, .pk-i__big) {
+  border-color: rgba(var(--pk-ink-rgb), 0.14);
+  box-shadow:
+    inset 0 0 0 3px #0c0b0a,
+    inset 0 0 0 4px rgba(var(--pk-ink-rgb), 0.07);
+}
+.pk-i--s-inset .pk-i__band {
+  background: none;
+}
+
+/* the lab's band body ends the rail on the tools, as the live card does */
+.pk-i__plug {
+  --pk-rx: -14px;
+  display: flex;
+  align-items: center;
+}
+.pk-i__flow > .pk-i__plug::after {
+  width: 14px;
+  background: var(--pk-green);
+}
+.pk-i__plug .pk-i__tools {
+  margin-top: 0;
+}
+.pk-i__plug .pk-i__tools li {
+  border-color: rgba(var(--pk-green-rgb), 0.5);
+}

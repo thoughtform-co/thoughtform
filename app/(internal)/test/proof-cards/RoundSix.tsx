@@ -28,6 +28,7 @@ export function DirectionI({
   center = false,
   band = false,
   refine,
+  skin,
 }: {
   job: Job;
   /** Two panes (before and after) or the one visual. */
@@ -52,12 +53,15 @@ export function DirectionI({
   band?: boolean;
   /** U9 (owner, 2026-10-12, blocks 22 to 24): three finishing passes on 21. */
   refine?: "index" | "cards" | "ledger";
+  /** U11 (owner, 2026-10-12, blocks 25 to 30): gradient and border skins on
+   *  23, read off Tensorlake, Hex's Tensorlake page and Lighthouse. */
+  skin?: "flat" | "window" | "wash" | "glow" | "rule" | "inset";
 }) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
   return (
     <article
-      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}${band ? " pk-i--band" : ""}${refine ? ` pk-i--r-${refine}` : ""}`}
+      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}${band ? " pk-i--band" : ""}${refine ? ` pk-i--r-${refine}` : ""}${skin ? ` pk-i--s-${skin}` : ""}`}
       aria-label={p.name}
       style={left ? ({ "--pk-left": left } as React.CSSProperties) : undefined}
     >
@@ -214,7 +218,7 @@ function BandBody({ job, ba }: { job: Job; ba: boolean }) {
           <ol className="pk-i__flow" aria-label="The work">
             <li className="pk-c__box pk-i__big">
               <p className="pk-c__tab">Embed</p>
-              <p className="pk-body">{p.identify}</p>
+              <p className="pk-body">{job.embed}</p>
             </li>
             <li className="pk-i__label">Solve it together</li>
             {job.did.map((t, i) => (
@@ -223,9 +227,7 @@ function BandBody({ job, ba }: { job: Job; ba: boolean }) {
                 <span className="pk-i__small-text">{t}</span>
               </li>
             ))}
-            <li className="pk-c__box pk-i__big">
-              <p className="pk-c__tab">Scale</p>
-
+            <li className="pk-i__plug">
               <ul className="pk-i__tools" aria-label="Plugs into">
                 {job.scale?.tools.map((t) => (
                   <li key={t}>{t}</li>
