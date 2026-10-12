@@ -5,6 +5,7 @@ import "../proof-cards/proof-cards-c4.css";
 import "../proof-cards/proof-cards-c5.css";
 import "../proof-cards/proof-cards-c6.css";
 import "../proof-cards/proof-cards-c7.css";
+import "./left-panels.css";
 
 import { CardSkinsShell } from "./CardSkinsShell";
 
