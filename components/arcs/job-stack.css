@@ -189,7 +189,7 @@
 /* the label has no border, so its rail sits 1px further out to meet the
    boxed steps' rail (a ::before is placed from the padding box) */
 .arc-jstack__label {
-  --js-rx: -16px;
+  --js-rx: -14px;
 }
 /* Claude's three steps: smaller, set further in */
 .arc-jstack__small {
@@ -305,4 +305,23 @@
     flex-wrap: wrap;
     white-space: normal;
   }
+}
+
+/* the rail joins exactly: a boxed step's line runs through its own bottom
+   border (a ::before ends at the padding box, a pixel short), and the
+   unboxed label's line starts and ends on its own edges */
+.arc-jstack__flow > li::before {
+  bottom: -1px;
+}
+.arc-jstack__flow > li.arc-jstack__label::before {
+  top: calc(-1 * var(--js-step));
+  bottom: 0;
+}
+.arc-jstack__flow > li:last-child::before {
+  bottom: 50%;
+}
+/* a green tick starts beside the gold rail, never on it */
+.arc-jstack__flow > .arc-jstack__box--human::after {
+  left: calc(var(--js-rx, -15px) + 1px);
+  width: calc(-1 * var(--js-rx, -15px) - 1px);
 }
