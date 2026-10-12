@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 
-import { DirectionA, DirectionB, DirectionC, DirectionD } from "./Directions";
+import { DirectionA, DirectionB, DirectionC, DirectionD, DirectionE } from "./Directions";
 import type { Job } from "./parts";
 
 /**
@@ -17,6 +17,10 @@ export const BLOCKS = [
   { id: "b-extract", n: "2", short: "Extract", label: "B · Extract", C: DirectionB },
   { id: "c-stack", n: "3", short: "Stack", label: "C · Stack", C: DirectionC },
   { id: "d-spec", n: "4", short: "Spec", label: "D · Spec", C: DirectionD },
+  /* round two, on 3C: three ways to draw the time saved in practice */
+  { id: "e1-chain", n: "5", short: "C2 Chain", label: "C2 · Chain", C: ({ job }: { job: Job }) => <DirectionE job={job} viz="chain" /> },
+  { id: "e2-bars", n: "6", short: "C2 Bars", label: "C2 · Bars", C: ({ job }: { job: Job }) => <DirectionE job={job} viz="bars" /> },
+  { id: "e3-split", n: "7", short: "C2 Split", label: "C2 · Before and now", C: ({ job }: { job: Job }) => <DirectionE job={job} viz="split" /> },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

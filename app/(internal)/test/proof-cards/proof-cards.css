@@ -129,6 +129,7 @@
   background: var(--pk-void);
   color: var(--pk-ink-3);
   text-decoration: none;
+  white-space: nowrap;
 }
 .pk-index a span {
   color: var(--pk-gold);

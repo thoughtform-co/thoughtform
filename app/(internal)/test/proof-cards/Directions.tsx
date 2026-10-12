@@ -1,4 +1,5 @@
 import { Evidence, type Job, Key, Said, resultLabel, two, workstreamOf } from "./parts";
+import { PRACTICE, type Practice } from "./practice";
 
 /**
  * Four directions on one IA: the brief on the left (the ask, what Claude
@@ -264,5 +265,124 @@ function Gate({ job }: { job: Job }) {
       <span className="pk-gate__who">{job.gate.who}</span>
       {job.gate.line ? <span className="pk-gate__line">{job.gate.line}</span> : null}
     </p>
+  );
+}
+
+/* ── Round two (owner, 2026-10-12, on 3C) ─────────────────────────────
+   3C's stack, its rails and tabs in Tensor Gold; no title, so the left
+   column opens on the client, the brief and the workstream; one notch top
+   right; the right column split at its centre (4D's divider), what it now
+   allows on top and the time saved below, drawn as the job in practice.
+   Three ways to draw that half: */
+
+export type PracticeViz = "chain" | "bars" | "split";
+
+export function DirectionE({ job, viz }: { job: Job; viz: PracticeViz }) {
+  const p = PRACTICE[job.id];
+  return (
+    <article className="pk-card pk-e" data-viz={viz} aria-label={p.brief}>
+      <div className="pk-e__body">
+        <section className="pk-e__spec">
+          <dl className="pk-e__id">
+            <div>
+              <dt>Client</dt>
+              <dd className="pk-e__client">{job.client}</dd>
+            </div>
+            <div>
+              <dt>The brief</dt>
+              <dd className="pk-e__brief">{p.brief}</dd>
+            </div>
+            <div>
+              <dt>Workstream</dt>
+              <dd className="pk-e__ws">{workstreamOf(job)}</dd>
+            </div>
+          </dl>
+          <ol className="pk-e__steps" aria-label="Claude did">
+            {job.did.map((d, i) => (
+              <li key={d} className="pk-e__box">
+                <p className="pk-e__tab">Claude · {two(i + 1)}</p>
+                <p className="pk-body">{d}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+        <figure className="pk-c__fig pk-e__fig" data-figure={job.figure.kind}>
+          <p className="pk-c__vert">
+            Fig. {two(job.n)} · {job.figure.caption}
+          </p>
+          <div className="pk-c__ev">
+            <i className="pk-c__x pk-c__x--tl" aria-hidden="true" />
+            <i className="pk-c__x pk-c__x--tr" aria-hidden="true" />
+            <i className="pk-c__x pk-c__x--bl" aria-hidden="true" />
+            <i className="pk-c__x pk-c__x--br" aria-hidden="true" />
+            <Evidence job={job} />
+          </div>
+        </figure>
+        <section className="pk-e__ret">
+          <div className="pk-e__half pk-e__allows">
+            <p className="pk-e__tab pk-e__tab--flat">What it now allows</p>
+            <p className="pk-said">{job.result.allows}</p>
+          </div>
+          <div className="pk-e__half pk-e__saved">
+            <p className="pk-e__tab pk-e__tab--flat">{resultLabel(job)}</p>
+            <PracticeDrawing p={p} viz={viz} />
+            <p className="pk-e__said">
+              <Said title={job.result.said} />
+            </p>
+          </div>
+        </section>
+      </div>
+      <Gate job={job} />
+    </article>
+  );
+}
+
+function PracticeDrawing({ p, viz }: { p: Practice; viz: PracticeViz }) {
+  if (viz === "chain") {
+    return (
+      <ol className="pk-flow" aria-label="Upstream, the job, downstream">
+        <li>
+          <span>Upstream</span>
+          {p.up}
+        </li>
+        <li data-lit="true">
+          <span>The job</span>
+          {p.job}
+        </li>
+        <li>
+          <span>Downstream</span>
+          {p.down}
+        </li>
+      </ol>
+    );
+  }
+  if (viz === "bars") {
+    return (
+      <div className="pk-bars">
+        <div className="pk-bars__row">
+          <span className="pk-bars__k">Before</span>
+          <i className="pk-bars__bar" data-w="long" aria-hidden="true" />
+          <span className="pk-bars__v">{p.before}</span>
+        </div>
+        <div className="pk-bars__row" data-lit="true">
+          <span className="pk-bars__k">Now</span>
+          <i className="pk-bars__bar" data-w="short" aria-hidden="true" />
+          <span className="pk-bars__v">{p.now}</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="pk-split">
+      <div className="pk-split__side">
+        <span>Before</span>
+        {p.before}
+      </div>
+      <i className="pk-split__arrow" aria-hidden="true" />
+      <div className="pk-split__side" data-lit="true">
+        <span>Now</span>
+        {p.now}
+      </div>
+    </div>
   );
 }

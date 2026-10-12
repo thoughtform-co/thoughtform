@@ -10,3 +10,7 @@ The X-Bionic proposal's four other-client jobs (Samako and Suri, `lib/arcs/conte
 | 4 · D · Spec | a strict grid of cells, each keyed top left and indexed top right, the caption in a lifted cell | Unsiloed's stat and feature cells |
 
 Self-contained: `app/(internal)/test/proof-cards/` imports no arcs or landing stylesheet; the map is the live card's own `jobMap.ts` drawing. The card's box matches the live job card between the HUD rails. `stills/` holds every job in every direction at 1280×720 and 1470×830; the top-level sheets show the four jobs per direction.
+
+## Round two, on 3C (owner, 2026-10-12)
+
+Blocks 5 to 7 take 3C further: the rail and tabs in Tensor Gold, one notch top right, no title (the left column opens on the client, a short descriptive brief and the workstream), and the right column split at its centre, as in 4D: what it now allows on top, the time saved below, drawn as the job in practice. Three ways to draw that half: 5 a chain (upstream, the job, downstream), 6 bars (before and now), 7 before and now side by side. The short briefs and the flow lines are lab copy in `practice.ts`, every fact the jobs record's own; they move into the record if a direction wins.

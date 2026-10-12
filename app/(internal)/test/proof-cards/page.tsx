@@ -1,4 +1,5 @@
 import "./proof-cards.css";
+import "./proof-cards-c2.css";
 
 import { ProofCardsShell } from "./ProofCardsShell";
 
