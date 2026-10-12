@@ -1,0 +1,12 @@
+# Proof cards: four directions (2026-10-12)
+
+The X-Bionic proposal's four other-client jobs (Samako and Suri, `lib/arcs/content/shared/jobs.ts`), redrawn four ways at `/test/proof-cards`. The IA is held: the brief on the left (the ask, what Claude did), the evidence in the middle, the return on the right (the saving, what it now allows), the gate across the foot. The copy is the record's, read by reference. Each block has a job picker; `?job=1..4` sets the starting job.
+
+| Block | Direction | Read off |
+| --- | --- | --- |
+| 1 · A · Window | one housing, columns as cells with shared hairlines, the evidence in a titled window | Unsiloed's hero panels (`[ RAW INPUT ]` title bars, corner squares) |
+| 2 · B · Extract | three detached windows, the steps wired into the evidence and the evidence into the return | Unsiloed's Extract panel (1px wires, a square node at every weld) |
+| 3 · C · Stack | tabbed boxes down a rail on a fine grid, the figure labelled vertically | Hex's Tensorlake panels (tabbed code boxes, grid ground) |
+| 4 · D · Spec | a strict grid of cells, each keyed top left and indexed top right, the caption in a lifted cell | Unsiloed's stat and feature cells |
+
+Self-contained: `app/(internal)/test/proof-cards/` imports no arcs or landing stylesheet; the map is the live card's own `jobMap.ts` drawing. The card's box matches the live job card between the HUD rails. `stills/` holds every job in every direction at 1280×720 and 1470×830; the top-level sheets show the four jobs per direction.
