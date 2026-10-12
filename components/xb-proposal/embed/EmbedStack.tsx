@@ -29,6 +29,8 @@ import { GLYPH, type GlyphName } from "../glyphs";
 import { clamp01, ease, makeIso, tint, type Box } from "../iso";
 import { LayerSlab } from "../LayerSlab";
 import { Masthead, type MastheadCopy } from "../Masthead";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 
 const VB_W = 700;
@@ -420,17 +422,17 @@ export function EmbedStack() {
   const plates = useRef<(SVGGElement | null)[]>([]);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [stacked, setStacked] = useState(false);
-  const [plain, setPlain] = useState(false);
+  const plain = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => {
     const el = runway.current;
     const s = svg.current;
     if (!el || !s) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (plain) {
       plates.current.forEach((g, i) =>
         g?.setAttribute("transform", `translate(0 ${i * GAP.closed})`)
       );
-      setPlain(true);
+      s.style.transform = "";
       return;
     }
     let raf = 0;
@@ -465,7 +467,7 @@ export function EmbedStack() {
       window.removeEventListener("resize", on);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [plain]);
 
   const lit = (i: number) => plain || stacked || step === i;
 
