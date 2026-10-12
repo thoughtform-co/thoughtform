@@ -556,7 +556,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       head: {
         eyebrow: "X-Bionic · the fee",
         title: { pre: "The fee." },
-        sub: "One rate for every day on the work; what it returns is counted from your own ad accounts and your own Claude.",
+        sub: "One day rate for the work. What it returns is measured in X-Bionic's own results, across the whole marketing team.",
       },
       console: { name: "Terms", status: "First month" },
       rate: {
