@@ -615,3 +615,17 @@
 .arc-jstack__plug .arc-jstack__tools li {
   border-color: var(--js-human-line);
 }
+
+/* ── the double hairline (owner, 2026-10-12, /test/card-skins 6, after
+   Hex's Tensorlake panels): every frame a neutral hairline with a second
+   one 4px inside it; no colour on the edges, no wash on the band. ── */
+.arc-jstack .arc-jstack__box,
+.arc-jstack .arc-jstack__card {
+  border-color: color-mix(in srgb, var(--dawn) 14%, transparent);
+  box-shadow:
+    inset 0 0 0 3px rgba(var(--void-deep-rgb), 0.92),
+    inset 0 0 0 4px color-mix(in srgb, var(--dawn) 7%, transparent);
+}
+.arc-jstack .arc-jstack__band {
+  background: none;
+}
