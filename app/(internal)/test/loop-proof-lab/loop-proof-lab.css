@@ -1,0 +1,505 @@
+/* /test/loop-proof-lab — the job cards' language (/test/proof-cards, block 14
+   on) restated on this lab's own prefix, so the two labs move independently.
+   Dark only (the proposal is dark). The card's box is the live proposal's:
+   10vw a side up to 1200px wide, then centred; at most 880 tall. */
+
+.lp-root {
+  --lp-void: #0a0908;
+  --lp-ink-rgb: 235, 227, 214;
+  --lp-gold-rgb: 202, 165, 84;
+  --lp-green-rgb: 122, 158, 106;
+  --lp-ink: rgb(var(--lp-ink-rgb));
+  --lp-ink-2: rgba(var(--lp-ink-rgb), 0.72);
+  --lp-ink-3: rgba(var(--lp-ink-rgb), 0.5);
+  --lp-line: rgba(var(--lp-ink-rgb), 0.14);
+  --lp-line-2: rgba(var(--lp-ink-rgb), 0.08);
+  --lp-gold: rgb(var(--lp-gold-rgb));
+  --lp-rail: rgba(var(--lp-gold-rgb), 0.7);
+  --lp-mono: var(--font-pt-mono, "PT Mono", monospace);
+  --lp-sans: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+
+  --lp-pad: clamp(20px, 1.95vw, 30px);
+  --lp-g: clamp(16px, 1.45vw, 26px);
+  --lp-g2: 12px;
+  --lp-t-mono: clamp(10.5px, 0.8vw, 12px);
+  --lp-t-body: clamp(14px, 1.05vw, 16px);
+  --lp-t-lede: clamp(16px, 1.22vw, 19px);
+  --lp-small: clamp(12.5px, 0.92vw, 14px);
+  --lp-ch: 22px;
+  --lp-ch-in: calc(var(--lp-ch) - 0.586px);
+  --lp-side: max(10vw, calc((100vw - 1200px) / 2));
+
+  background: var(--lp-void);
+  color: var(--lp-ink);
+  font-family: var(--lp-sans);
+  min-height: 100svh;
+}
+
+.lp-root *,
+.lp-root *::before,
+.lp-root *::after {
+  box-sizing: border-box;
+}
+:where(.lp-root) :where(p, ol) {
+  margin: 0;
+  padding: 0;
+}
+:where(.lp-root) :where(ol) {
+  list-style: none;
+}
+
+/* ── the stage: grows with the card rather than squeezing its air ── */
+.lp-stage {
+  position: relative;
+  min-height: 100svh;
+  padding: 128px var(--lp-side) 8svh;
+  border-top: 1px solid var(--lp-line-2);
+}
+.lp-tag {
+  position: absolute;
+  top: 40px;
+  left: var(--lp-side);
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--lp-gold-rgb), 0.45);
+  font: 12px/1 var(--lp-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-gold);
+}
+.lp-pick {
+  position: absolute;
+  top: 40px;
+  right: var(--lp-side);
+  display: flex;
+  gap: 4px;
+}
+.lp-pick button {
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--lp-line);
+  background: none;
+  font: 11px/1 var(--lp-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+  cursor: pointer;
+}
+.lp-pick button[aria-selected="true"] {
+  border-color: rgba(var(--lp-ink-rgb), 0.5);
+  color: var(--lp-ink);
+}
+.lp-index {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 60;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+  font: 12px/1 var(--lp-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lp-index a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--lp-line);
+  background: var(--lp-void);
+  color: var(--lp-ink-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lp-index a span {
+  color: var(--lp-gold);
+}
+
+/* ── the card: one notch, top right; a ring on ::before, since a clip cuts a
+   border ── */
+.lp-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: min(calc(100svh - 128px - 8svh), 880px);
+  background-color: #0c0b0a;
+  background-image:
+    linear-gradient(rgba(var(--lp-ink-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--lp-ink-rgb), 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+  clip-path: polygon(0 0, calc(100% - var(--lp-ch)) 0, 100% var(--lp-ch), 100% 100%, 0 100%);
+}
+.lp-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--lp-line);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--lp-ch)) 0,
+    100% var(--lp-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    1px calc(100% - 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(100% - 1px) calc(var(--lp-ch-in) + 1px),
+    calc(100% - var(--lp-ch-in) - 1px) 1px,
+    1px 1px
+  );
+}
+
+/* ── the top bar: caps, one face ── */
+.lp-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--lp-pad) * 0.9);
+  padding: calc(var(--lp-pad) * 0.75) calc(var(--lp-pad) + var(--lp-ch)) calc(var(--lp-pad) * 0.75)
+    var(--lp-pad);
+  border-bottom: 1px solid var(--lp-line);
+  background: var(--lp-void);
+  font: clamp(12px, 0.92vw, 14px) / 1 var(--lp-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lp-head__client {
+  padding: 7px 10px;
+  border: 1px solid rgba(var(--lp-gold-rgb), 0.6);
+  color: var(--lp-gold);
+}
+.lp-head__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--lp-ink);
+}
+.lp-head__beat {
+  color: var(--lp-ink-2);
+}
+
+/* the arc of four: what came before is quiet, this card is lit, what follows
+   is outlined. It is the record's own order (`PROOF_STACK_ORDER`). */
+.lp-arc {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: calc(var(--lp-t-mono) * 0.95);
+}
+.lp-arc li {
+  display: flex;
+  align-items: center;
+  padding: 6px 9px;
+  border: 1px solid var(--lp-line);
+  color: var(--lp-ink-3);
+}
+.lp-arc li + li {
+  margin-left: 18px;
+  position: relative;
+}
+.lp-arc li + li::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 18px;
+  height: 1px;
+  background: var(--lp-line);
+}
+.lp-arc li[data-state="past"] {
+  color: var(--lp-ink-2);
+}
+.lp-arc li[data-state="past"] + li::before,
+.lp-arc li[data-state="now"]::before {
+  background: var(--lp-rail);
+}
+.lp-arc li[data-state="now"] {
+  border-color: var(--lp-gold);
+  background: var(--lp-gold);
+  color: var(--lp-void);
+}
+
+/* ── the body: words left, one visual right ── */
+.lp-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, var(--lp-left, 60%)) minmax(0, 1fr);
+  gap: calc(var(--lp-pad) * 1.2);
+  padding: var(--lp-pad);
+}
+.lp-words {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--lp-g);
+  min-width: 0;
+}
+
+/* the box, 3C's: the tab INSIDE the frame at its top-left corner */
+.lp-box {
+  position: relative;
+  padding: 30px 18px 16px;
+  border: 1px solid var(--lp-line);
+  background: var(--lp-void);
+}
+.lp-tab {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  padding: 5px 8px;
+  border: 1px solid var(--lp-line);
+  background: rgba(var(--lp-ink-rgb), 0.06);
+  font: 400 calc(var(--lp-t-mono) * 0.92) / 1 var(--lp-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--lp-ink-2);
+}
+.lp-box--lit {
+  border-color: rgba(var(--lp-gold-rgb), 0.5);
+}
+.lp-box--lit .lp-tab {
+  border-color: rgba(var(--lp-gold-rgb), 0.55);
+  background: rgba(var(--lp-gold-rgb), 0.16);
+  color: var(--lp-gold);
+}
+.lp-lede {
+  font: 400 var(--lp-t-lede) / 1.38 var(--lp-sans);
+  color: var(--lp-ink);
+  text-wrap: pretty;
+}
+
+/* ── the four claims: one unbroken rail from the box's bottom edge ── */
+.lp-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-g2);
+  padding-left: 22px;
+}
+.lp-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid var(--lp-line);
+  background: rgba(10, 9, 8, 0.88);
+}
+.lp-step::before {
+  content: "";
+  position: absolute;
+  left: -15px;
+  top: calc(-1 * var(--lp-g2) - 1px);
+  bottom: 0;
+  width: 1px;
+  background: var(--lp-rail);
+}
+.lp-step:first-child::before {
+  top: calc(-1 * var(--lp-g) - 1px);
+}
+.lp-step:last-child::before {
+  bottom: 50%;
+}
+.lp-step::after {
+  content: "";
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  width: 15px;
+  height: 1px;
+  background: var(--lp-rail);
+}
+.lp-step__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(var(--lp-gold-rgb), 0.3);
+}
+.lp-step__mark svg {
+  width: 21px;
+  height: 21px;
+}
+.lp-step__text {
+  display: grid;
+  gap: 3px;
+  padding: 10px 14px 11px;
+}
+.lp-step__title {
+  font: 400 var(--lp-t-body) / 1.3 var(--lp-sans);
+  color: var(--lp-ink);
+}
+.lp-step__desc {
+  font: 400 var(--lp-small) / 1.4 var(--lp-sans);
+  color: var(--lp-ink-2);
+  text-wrap: pretty;
+}
+
+/* ── the one visual: the proof card's own field, whole ── */
+.lp-fig {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.lp-fig > .pf-stack {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.lp-fig .pf-slot {
+  position: static;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  height: auto;
+  --pc-enter: 1;
+  --pc-cover: 0;
+  --pc-depth: 0;
+}
+
+/* The field is drawn by `ProofCard panel="field"`, whose sheet is the pile's:
+   unpin the slot, drop the card's own housing (this card is the housing),
+   and give the field the whole column. Nothing in proof-stack.css changes. */
+.lp-fig .pf-stack .pf-slot {
+  position: relative;
+  top: auto;
+  height: auto;
+  margin: 0;
+}
+.lp-fig .pf-stack .pf-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+}
+.lp-fig .pf-stack .pf-card::before,
+.lp-fig .pf-stack .pf-card::after {
+  content: none;
+}
+.lp-fig .pf-stack .pf-card__body {
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+}
+.lp-fig .pf-stack .pf-card__field {
+  padding: 0;
+  opacity: 1;
+}
+
+/* Four tool handles do not fit the narrower column on one row: they wrap to
+   two rows of two rather than truncating (the pile's rail at 1280×720 already
+   sits at the edge of the longest handle). */
+.lp-fig .pf-stack .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.lp-fig .pf-stack .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) .fl-con__stn {
+  flex: 1 1 40%;
+  min-height: 30px;
+}
+.lp-fig .pf-stack .pf-card__tabs .fl-con__rail:has(> .fl-con__stn:nth-child(4)) .fl-con__stn:nth-child(odd) {
+  margin-left: 0;
+}
+
+
+/* ── round two (owner, 2026-10-12): more air on the left, the workstreams
+   in the corner ── */
+.lp-root {
+  --lp-g: clamp(24px, 2vw, 34px);
+  --lp-g2: 16px;
+}
+.lp-body {
+  gap: calc(var(--lp-pad) * 1.6);
+  padding: calc(var(--lp-pad) * 1.2) var(--lp-pad);
+}
+.lp-box {
+  padding: 36px 22px 22px;
+}
+.lp-flow {
+  padding-left: 26px;
+}
+.lp-step::before,
+.lp-step::after {
+  left: -19px;
+}
+.lp-step::after {
+  width: 19px;
+}
+.lp-step {
+  grid-template-columns: 58px minmax(0, 1fr);
+}
+.lp-step__text {
+  gap: 5px;
+  padding: 15px 18px 16px;
+}
+.lp-step__desc {
+  line-height: 1.45;
+}
+
+.lp-ws {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--lp-ink-2);
+}
+.lp-ws--spans {
+  gap: 18px;
+}
+.lp-ws__one {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.lp-ws .arc-lev__glyph {
+  width: auto;
+  height: 18px;
+  overflow: visible;
+}
+.lp-root .arc-lev__glyph-grid,
+.lp-root .arc-lev__glyph-ink {
+  fill: none;
+  stroke: rgba(var(--lp-ink-rgb), 0.4);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.lp-root .arc-lev__glyph-grid {
+  stroke: rgba(var(--lp-ink-rgb), 0.22);
+}
+.lp-root .arc-lev__glyph-act {
+  fill: none;
+  stroke: var(--lp-gold);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.lp-root .arc-lev__glyph-dash {
+  stroke-dasharray: 3 3;
+}
+.lp-root .arc-lev__glyph-dot {
+  fill: var(--lp-gold);
+}
+
+/* ── the job card's final form (block 19, owner 2026-10-12): one vertical
+   divider between the two panels, the full height of the body ── */
+.lp-fig::before {
+  content: "";
+  position: absolute;
+  top: calc(-1.2 * var(--lp-pad));
+  bottom: calc(-1.2 * var(--lp-pad));
+  left: calc(-0.8 * var(--lp-pad) - 0.5px);
+  width: 1px;
+  background: var(--lp-line);
+}
+
+/* block 19's brief, one size down */
+.lp-box .lp-lede {
+  font-size: var(--lp-t-body);
+  line-height: 1.45;
+}
