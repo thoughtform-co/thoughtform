@@ -570,3 +570,16 @@
   text-transform: uppercase;
   color: var(--pk-ink);
 }
+
+/* U2 (owner, 2026-10-12): no label and no arrow; the line meets the dashed
+   group's top edge; Encode takes the same gold tab as the others */
+.pk-l__dash {
+  margin-top: 0;
+}
+.pk-l__dash::before {
+  display: none;
+}
+.pk-l__plugwrap::before {
+  height: var(--pk-gap-v);
+  max-height: none;
+}

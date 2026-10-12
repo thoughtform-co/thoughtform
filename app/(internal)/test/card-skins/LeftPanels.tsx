@@ -248,7 +248,7 @@ function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
         <p className="pk-c__tab pk-l__arc-tab">01 · Navigate</p>
         <p className="pk-body">{job.ask}</p>
       </div>
-      <div className="pk-c__box pk-l__arc-box" data-kind="team">
+      <div className="pk-c__box pk-l__arc-box">
         <p className="pk-c__tab pk-l__arc-tab">02 · Encode</p>
         <p className="pk-body">{job.embed}</p>
       </div>
@@ -261,7 +261,6 @@ function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
         </ol>
       </div>
       <div className="pk-l__plugwrap">
-        <span className="pk-l__plug-label">Plugs into</span>
         <ul className="pk-l__dash" aria-label="Plugs into">
           {tools.map((t) => (
             <li key={t}>{t}</li>
