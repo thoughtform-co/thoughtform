@@ -23,12 +23,17 @@ export function DirectionI({
   job,
   ba = true,
   left,
+  phases = false,
 }: {
   job: Job;
   /** Two panes (before and after) or the one visual. */
   ba?: boolean;
   /** The left column's share of the body, e.g. "55%"; 14 keeps its 42/58. */
   left?: string;
+  /** U3 (owner, 2026-10-12, on 15): no gate, a divider over the time saved,
+   *  and the steps in the vision's own words: embed to identify the
+   *  problem, solve it together, plug it into their system. */
+  phases?: boolean;
 }) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
@@ -55,8 +60,9 @@ export function DirectionI({
           <ol className="pk-i__flow" aria-label="The work">
             <li className="pk-c__box pk-i__big">
               <p className="pk-c__tab">Embed</p>
-              <p className="pk-body">{p.embed}</p>
+              <p className="pk-body">{phases ? p.identify : p.embed}</p>
             </li>
+            {phases ? <li className="pk-i__label">Solve it together</li> : null}
             {job.did.map((t, i) => (
               <li key={t} className="pk-i__small">
                 <span className="pk-i__small-tab">Claude {i + 1}</span>
@@ -64,14 +70,15 @@ export function DirectionI({
               </li>
             ))}
             <li className="pk-c__box pk-i__big">
-              <p className="pk-c__tab">Empower</p>
-              <p className="pk-body">{p.empower}</p>
+              <p className="pk-c__tab">{phases ? "Plug in" : "Empower"}</p>
+              <p className="pk-body">{phases ? p.plug : p.empower}</p>
             </li>
           </ol>
           <div className="pk-c__box pk-c__box--lit pk-i__allows">
             <p className="pk-c__tab">What it now allows</p>
             <p className="pk-lede">{job.result.allows}</p>
           </div>
+          {phases ? <hr className="pk-i__rule" /> : null}
           <div className="pk-c__box pk-i__saved">
             <p className="pk-c__tab">
               {resultLabel(job)}
@@ -93,11 +100,13 @@ export function DirectionI({
         </div>
         <Figure job={job} wide ba={ba} />
       </div>
-      <p className="pk-gate">
-        <span className="pk-gate__key">The gate</span>
-        <span className="pk-gate__who">{job.gate.who}</span>
-        {job.gate.line ? <span className="pk-gate__line">{job.gate.line}</span> : null}
-      </p>
+      {phases ? null : (
+        <p className="pk-gate">
+          <span className="pk-gate__key">The gate</span>
+          <span className="pk-gate__who">{job.gate.who}</span>
+          {job.gate.line ? <span className="pk-gate__line">{job.gate.line}</span> : null}
+        </p>
+      )}
     </article>
   );
 }

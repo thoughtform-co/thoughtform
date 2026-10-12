@@ -26,6 +26,9 @@ export interface Practice {
   problem: string;
   embed: string;
   empower: string;
+  /* U3: the vision's three moves, his words, no first person on the page */
+  identify: string;
+  plug: string;
 }
 
 export const PRACTICE: Record<string, Practice> = {
@@ -41,6 +44,8 @@ export const PRACTICE: Record<string, Practice> = {
       "Samako needed a 15-second autumn sale ad for paid social. Each one meant a motion designer, and the product had to stay as photographed.",
     embed: "What the ad must show, with the visual lead",
     empower: "The visual lead chooses the film that runs",
+    identify: "Identify the problem with the visual lead",
+    plug: "A skill, plugged into Samako's own system",
   },
   "job-ops": {
     brief: "Map the 3.1 TB marketing Google Drive by what is in each file.",
@@ -54,6 +59,8 @@ export const PRACTICE: Record<string, Practice> = {
       "Suri's 3.1 TB marketing Google Drive: 78 % of the files read tied to no campaign, found only by opening folder after folder.",
     embed: "Where a search stalls, with the library owner",
     empower: "The library owner checks and keeps the map",
+    identify: "Identify the problem with the library owner",
+    plug: "A skill, plugged into Suri's own system",
   },
   "job-review": {
     brief: "Catch the AI product renders that get the product wrong, before review.",
@@ -67,6 +74,8 @@ export const PRACTICE: Record<string, Practice> = {
       "AI renders get the product subtly wrong. Every render went to three people to be checked by eye.",
     embed: "The errors the creative team catches by eye",
     empower: "The visual lead checks the grading",
+    identify: "Identify the problem with the creative team",
+    plug: "A skill, plugged into Samako's own system",
   },
   "job-strategy": {
     brief: "One brief format for every channel, complete before it reaches the studio.",
@@ -80,5 +89,7 @@ export const PRACTICE: Record<string, Practice> = {
       "Every writer and channel sent the studio a different brief, and the studio lead spent hours finding what each left out.",
     embed: "What a brief leaves out, with the strategists",
     empower: "The strategist marks each brief ready",
+    identify: "Identify the problem with the strategists",
+    plug: "A skill, plugged into Suri's own system",
   },
 };

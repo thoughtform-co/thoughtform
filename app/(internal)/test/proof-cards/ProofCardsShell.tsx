@@ -36,7 +36,7 @@ export const BLOCKS = [
   /* round six: 12's layout harmonised with 3C */
   { id: "i-left", n: "14", short: "C6", label: "C6 · 12 on 3C", C: DirectionI },
   /* round six U2: one visual, the left column at 55, 60 and 65 % */
-  { id: "i55", n: "15", short: "C6 55", label: "C6 · One visual, left 55%", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="55%" /> },
+  { id: "i55", n: "15", short: "C6 55", label: "C6 · One visual, left 55%, three moves", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="55%" phases /> },
   { id: "i60", n: "16", short: "C6 60", label: "C6 · One visual, left 60%", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="60%" /> },
   { id: "i65", n: "17", short: "C6 65", label: "C6 · One visual, left 65%", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="65%" /> },
 ] as const;

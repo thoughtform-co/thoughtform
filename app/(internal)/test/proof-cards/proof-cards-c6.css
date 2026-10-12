@@ -209,3 +209,23 @@
   --pk-g: clamp(16px, 2.1vw, 40px);
   --pk-g2: clamp(12px, 0.85vw, 16px);
 }
+
+/* U3: the phase label on the rail before Claude's steps, and the plain
+   divider over the time saved */
+.pk-i__label {
+  --pk-rx: -15px;
+  padding: 2px 0 0 0;
+  font: calc(var(--pk-t-mono) * 0.92) / 1.2 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(var(--pk-gold-rgb), 0.85);
+}
+.pk-i__label::after {
+  display: none;
+}
+.pk-i__rule {
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--pk-line);
+}
