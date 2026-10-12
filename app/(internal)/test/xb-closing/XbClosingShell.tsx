@@ -17,6 +17,7 @@ import {
 } from "@/components/xb-proposal/closing/Closing";
 import {
   ContactFrame,
+  ContactPanel,
   WeeksFrame,
   WeeksIndex,
   WhoFrame,
@@ -35,6 +36,7 @@ const SECTIONS = [
   ["weeks-e", WeeksIndex],
   ["who-c", WhoFrame],
   ["contact-c", ContactFrame],
+  ["contact-d", ContactPanel],
   ["weeks-a", WeeksColumns],
   ["weeks-b", WeeksAxis],
   ["weeks-c", WeeksRows],

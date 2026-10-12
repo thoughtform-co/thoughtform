@@ -292,6 +292,10 @@ export type ArcSection = ArcSectionBase &
         layout: "stack" | "columns" | "plates" | "readout";
         groups: readonly ArcListGroup[];
         closing?: string;
+        /** The X-Bionic proposal's closing run (owner, 2026-10-12), drawn by
+         *  the kit (`components/xb-proposal/closing`): one hairline frame per
+         *  section. Opt-in; absent, the section is byte-identical. */
+        port?: "xb-weeks" | "xb-who";
       }
     | {
         /** Labelled rows — skill anatomy, invariants, freedom bands. */
@@ -369,6 +373,8 @@ export type ArcSection = ArcSectionBase &
         actions: readonly ArcAction[];
         footerLine?: string;
         signature?: string;
+        /** The kit's framed contact (`components/xb-proposal/closing`). */
+        port?: "xb-contact";
       }
     | {
         /**

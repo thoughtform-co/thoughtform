@@ -7,6 +7,7 @@ import { ArcBoard } from "./ArcBoard";
 import { ArcCards } from "./ArcCards";
 import { ArcChat } from "./ArcChat";
 import { ArcCircuit } from "./ArcCircuit";
+import { ArcClosingPort } from "./ArcClosingPorts";
 import { ArcClose } from "./ArcClose";
 import { ArcConfiguration } from "./ArcConfiguration";
 import { ArcCrew } from "./ArcCrew";
@@ -87,6 +88,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
     case "cards":
       return <ArcCards key={section.id} section={section} index={index} motion={motion} />;
     case "list-groups":
+      if (section.port)
+        return <ArcClosingPort key={section.id} id={section.id} port={section.port} motion={motion} />;
       return <ArcListGroups key={section.id} section={section} index={index} motion={motion} />;
     case "anatomy":
       return <ArcAnatomy key={section.id} section={section} index={index} motion={motion} />;
@@ -99,6 +102,8 @@ function renderSection(section: ArcSection, index: number, motion: ArcMotion) {
     case "portrait":
       return <ArcPortrait key={section.id} section={section} index={index} motion={motion} />;
     case "close":
+      if (section.port)
+        return <ArcClosingPort key={section.id} id={section.id} port={section.port} motion={motion} />;
       return <ArcClose key={section.id} section={section} motion={motion} />;
     case "dossier":
       return <ArcDossier key={section.id} section={section} index={index} motion={motion} />;

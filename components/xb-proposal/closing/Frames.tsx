@@ -1,5 +1,3 @@
-"use client";
-
 /* Round two of the closing run (owner, 2026-10-12: "I find the font sizes of
    the headers too dominant. I really want them to be in frames", pointing at
    primeintellect.ai and voidzero.dev). Each section is ONE hairline frame
@@ -7,12 +5,12 @@
    lead in full ink and the rest a step down; items are numbered 1.1, 1.2.
    Same sheet as round one (`closing.css`, the `.xf` block). */
 
-import { useState } from "react";
-
 import type { ArcListGroup } from "@/lib/arcs/types";
 import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
 
 import { Masthead, type MastheadCopy } from "../Masthead";
+import { Lead, PhaseFoot, PhaseItems, label } from "./parts";
+import { WeeksIndexBody } from "./WeeksIndex";
 
 function section(id: string) {
   const s = X_BIONIC_PROPOSAL_ARC.sections.find((x) => x.id === id);
@@ -59,50 +57,6 @@ function split(name: string): [string, string] {
   const i = name.indexOf(" · ");
   return i < 0 ? [name, ""] : [name.slice(0, i), cap(name.slice(i + 3))];
 }
-function label(l: string) {
-  const [a, b = ""] = l.split(" · ");
-  return `${a} · ${b}`;
-}
-
-/** A frame cell's title: the lead in full ink, the rest a step down. */
-function Lead({ lead, rest }: { lead: string; rest?: string }) {
-  return (
-    <h3 className="xf-lead">
-      {lead}
-      {rest && <span> {rest}</span>}
-    </h3>
-  );
-}
-
-function PhaseItems({ g, n }: { g: ArcListGroup; n: number }) {
-  return (
-    <ol className="xf-list">
-      {g.items.map((it, i) => (
-        <li key={it.id}>
-          <span className="xf-list__n">
-            {n}.{i + 1}
-          </span>
-          <span className="xf-list__t">{it.tag}</span>
-          <span className="xf-list__d">{it.name}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function PhaseFoot({ g }: { g: ArcListGroup }) {
-  if (!g.foot) return null;
-  return (
-    <div className="xf-foot">
-      <span className="xf-mono xf-gold">{g.foot.label}</span>
-      <ul>
-        {g.foot.lines.map((l) => (
-          <li key={l}>{l}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 /* ── the four weeks ───────────────────────────────────────────────────── */
 
@@ -122,43 +76,6 @@ export function WeeksFrame() {
             <PhaseFoot g={g} />
           </article>
         ))}
-      </div>
-    </div>
-  );
-}
-
-/** E · one frame, voidzero's index: the phases listed on the left, the
-    chosen one open beside it, done when in its own cell. */
-export function WeeksIndex() {
-  const groups = PHASES.groups ?? [];
-  const [on, setOn] = useState(0);
-  const g = groups[on];
-  return (
-    <div className="xc xf">
-      <Masthead copy={HEAD_WEEKS} />
-      <div className="xf-frame xf-index">
-        <nav className="xf-cell xf-index__nav" aria-label="Phases">
-          {groups.map((x, i) => (
-            <button
-              key={x.id}
-              type="button"
-              className="xf-index__btn"
-              aria-pressed={i === on}
-              onClick={() => setOn(i)}
-            >
-              <span className="xf-mono">{label(x.label)}</span>
-              <span className="xf-index__name">{x.blurb}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="xf-cell xf-index__body">
-          <span className="xf-mono">{label(g.label)}</span>
-          <Lead lead={`${g.blurb}.`} />
-          <PhaseItems g={g} n={on + 1} />
-        </div>
-        <div className="xf-cell xf-index__foot">
-          <PhaseFoot g={g} />
-        </div>
       </div>
     </div>
   );
@@ -261,6 +178,70 @@ export function ContactFrame() {
         </dl>
         <p className="xf-cell xf-mono xf-cf__sign">{CLOSE.footerLine}</p>
       </div>
+    </div>
+  );
+}
+
+/** E · one frame, voidzero's index: the phases listed on the left, the
+    chosen one open beside it, done when in its own cell. */
+export function WeeksIndex() {
+  return (
+    <div className="xc xf">
+      <Masthead copy={HEAD_WEEKS} />
+      <WeeksIndexBody groups={PHASES.groups ?? []} />
+    </div>
+  );
+}
+
+/** The contact, picked from round one and set in the masthead's own type
+    (owner, 2026-10-12: "it doesn't have to be such a big font … aligned
+    with the right panel"): the head on the left spans the card's height,
+    its designation on the card's top edge and its sentence on the floor. */
+export function ContactPanel() {
+  return (
+    <div className="xc xf xf-contact">
+      <div className="xf-cp">
+        <div className="xm xf-cp__head">
+          <div className="xm__lead">
+            <i className="xm__mark xm__mark--origin" aria-hidden />
+            <span className="xm__desig" aria-hidden>
+              XB / CONTACT · 08
+            </span>
+            <h2 className="xm__title" aria-label="Talk it through.">
+              <span aria-hidden>Talk it</span>
+              <span className="xm__em" aria-hidden>
+                through.
+              </span>
+            </h2>
+          </div>
+          <p className="xm__copy xf-cp__sub">{CLOSE.head.sub}</p>
+        </div>
+        <div className="xc-card">
+          <span className="xc-mono xc-card__k">Write to</span>
+          <a className="xc-card__mail" href={EMAIL}>
+            {ADDRESS}
+          </a>
+          <dl className="xc-card__rows">
+            <div>
+              <dt className="xc-mono">Who</dt>
+              <dd>Vince Buyssens</dd>
+            </div>
+            <div>
+              <dt className="xc-mono">Base</dt>
+              <dd>Antwerp, Belgium</dd>
+            </div>
+            <div>
+              <dt className="xc-mono">For</dt>
+              <dd>Ganesh, X-Bionic</dd>
+            </div>
+          </dl>
+          <a className="xc-btn" href={EMAIL}>
+            <span>Write to Vince</span>
+            <span aria-hidden>→</span>
+          </a>
+        </div>
+      </div>
+      <p className="xc-mono xc-sign">{CLOSE.footerLine}</p>
     </div>
   );
 }

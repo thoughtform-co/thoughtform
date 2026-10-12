@@ -985,3 +985,43 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ══ on the proposal (`ArcClosingPort`) ══════════════════════════════════
+   One screen at least, between the rails, on the band the heads use; the
+   section grows with its content. */
+.xb-in-frame.xc-sec {
+  box-sizing: border-box;
+  min-height: 100svh;
+  display: grid;
+  align-items: center;
+  padding: calc(var(--hud-rail-y-start) + 24px) var(--band-margin)
+    calc(var(--hud-rail-y-end) + 24px);
+}
+
+/* the contact panel: head left, card right, the head spanning the card's
+   height — designation on the card's top edge, sentence on its floor */
+.xf-cp {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: clamp(32px, 4vw, 80px);
+  align-items: stretch;
+}
+.xf-cp__head.xm {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: space-between;
+  gap: 24px;
+  margin-bottom: 0;
+}
+.xf-cp__sub {
+  color: var(--xc-ink-2);
+  max-width: 34ch;
+}
+.xf-contact .xc-sign {
+  margin-top: clamp(40px, 6svh, 72px);
+}
+@media (max-width: 960px) {
+  .xf-cp {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

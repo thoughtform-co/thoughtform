@@ -119,7 +119,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     curtain: true,
     actions: [
       { id: "read", label: "The vision", href: "#vision", primary: true },
-      { id: "plan", label: "The two weeks", href: "#phases" },
+      { id: "plan", label: "The four weeks", href: "#phases" },
     ],
   },
   meta: {
@@ -337,12 +337,15 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     {
       id: "phases",
       kind: "list-groups",
-      menuLabel: "The two weeks",
+      menuLabel: "The four weeks",
       menuPrimary: true,
       layout: "plates",
+      /* One hairline frame, three phases (owner, 2026-10-12: "it's 4
+         weeks"; "I really want them to be in frames"). */
+      port: "xb-weeks",
       head: {
-        eyebrow: "X-Bionic · the two weeks",
-        title: { pre: "The two weeks." },
+        eyebrow: "X-Bionic · the four weeks",
+        title: { pre: "The four weeks." },
         sub: "Phase one sets the engine up and runs it once on real work. Then Thoughtform comes back every quarter.",
       },
       groups: [
@@ -440,6 +443,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       kind: "list-groups",
       menuLabel: "Who takes part",
       layout: "columns",
+      port: "xb-who",
       head: {
         eyebrow: "X-Bionic · who takes part",
         title: { pre: "Who takes part." },
@@ -507,6 +511,18 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
                 id: "work",
                 tag: "Week one",
                 name: "Recent ads, their results, the best copy",
+              },
+              /* owner, 2026-10-12: "it's not just ads … brand guidelines,
+                 briefing flow" */
+              {
+                id: "brand",
+                tag: "Week one",
+                name: "The brand guidelines",
+              },
+              {
+                id: "briefing",
+                tag: "Week one",
+                name: "The briefing flow",
               },
             ],
           },
@@ -595,6 +611,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     {
       id: "close",
       kind: "close",
+      port: "xb-contact",
       head: {
         eyebrow: "X-Bionic",
         title: { pre: "Talk it", em: "through." },
