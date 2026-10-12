@@ -39,7 +39,10 @@ const RIGHT = { x0: 792, x1: 1188, y0: 24, y1: 436 };
 /* The arc the teams sit on: a circle centred off the left frame. */
 const ARC = { x: -176, y: 230, r: 330 };
 const CHIP_W = 200;
-const MERGE_X = 386;
+/* The bundles leave and enter through PORTS on the frames' edges, never
+   across a frame line (owner: the frames were "interjecting with the golden
+   lines"). */
+const MERGE_X = LEFT.x1;
 const RING = [130, 112, 96];
 const CORE = 64;
 const BUS_X = 818;
@@ -146,18 +149,27 @@ function Bundle({ x0, x1, y, d }: { x0: number; x1: number; y: number; d: string
   );
 }
 
+/** A port on a frame's edge: the bundle ends on it instead of crossing the
+    frame's line, which the port's own ground covers. */
+function Port({ x, y }: { x: number; y: number }) {
+  return (
+    <g className="pl-port">
+      <rect x={x - 6} y={y - 11} width={12} height={22} />
+      <path d={`M${x - 2} ${y - 5}V${y + 5} M${x + 2} ${y - 5}V${y + 5}`} />
+    </g>
+  );
+}
+
 /** A frame's tab: the step and the part it names, linking to the step. */
 function Tab({
   id,
   x,
   y,
-  align = "start",
   d,
 }: {
   id: (typeof PLUG_STEPS)[number]["id"];
   x: number;
   y: number;
-  align?: "start" | "center";
   d: string;
 }) {
   const st = STEP[id];
@@ -166,7 +178,6 @@ function Tab({
       href={`#${stepAnchor(id)}`}
       className="pl-tab pl-in"
       data-tone={st.tone}
-      data-align={align}
       style={{ ...at(x, y), "--d": d } as CSSProperties}
     >
       <i aria-hidden />
@@ -256,7 +267,8 @@ export function PlugFlow() {
               />
             );
           })}
-          <Bundle x0={MERGE_X} x1={C.x - RING[0]} y={C.y} d="620ms" />
+          <Bundle x0={MERGE_X + 6} x1={C.x - RING[0]} y={C.y} d="620ms" />
+          <Port x={LEFT.x1} y={C.y} />
 
           {/* the layer */}
           <g className="pl-core">
@@ -280,7 +292,17 @@ export function PlugFlow() {
 
           {/* out: one bundle into Claude Enterprise, onto a bus that feeds
               every interface */}
-          <Bundle x0={C.x + RING[0]} x1={BUS_X} y={C.y} d="1100ms" />
+          <Bundle x0={C.x + RING[0]} x1={RIGHT.x0 - 6} y={C.y} d="1100ms" />
+          <Port x={RIGHT.x0} y={C.y} />
+          <path
+            d={`M${RIGHT.x0 + 6} ${C.y}H${BUS_X}`}
+            className="pl-bus pl-draw"
+            style={{ "--d": "1250ms" } as CSSProperties}
+            pathLength={1}
+          />
+          {/* the layer's tab sits on the top line with the frames' tabs;
+              a hairline ties it down to the ring */}
+          <path d={`M${C.x} ${LEFT.y0 + 18}V${C.y - RING[0]}`} className="pl-tie" />
           <path
             d={`M${BUS_X} ${CARD_Y[0]}V${CARD_Y[3]}`}
             className="pl-bus pl-draw"
@@ -301,8 +323,10 @@ export function PlugFlow() {
         </svg>
 
         {/* words: DOM, seated in the frame's own units */}
-        <Tab id="embed" x={LEFT.x0 + 18} y={LEFT.y0} d="0ms" />
-        <Tab id="run" x={RIGHT.x0 + 18} y={RIGHT.y0} d="1200ms" />
+        {/* the three tabs, centred, on one line along the top */}
+        <Tab id="embed" x={(LEFT.x0 + LEFT.x1) / 2} y={LEFT.y0} d="0ms" />
+        <Tab id="encode" x={C.x} y={LEFT.y0} d="800ms" />
+        <Tab id="run" x={(RIGHT.x0 + RIGHT.x1) / 2} y={RIGHT.y0} d="1200ms" />
 
         {TEAMS.map((t, i) => {
           const [x, y] = onArc(t.deg);
@@ -332,14 +356,6 @@ export function PlugFlow() {
             </div>
           );
         })}
-
-        <Tab id="encode" x={C.x} y={C.y + RING[0] + 30} align="center" d="800ms" />
-        <div
-          className="pl-cap pl-in"
-          style={{ ...at(C.x, C.y + RING[0] + 52), "--d": "850ms" } as CSSProperties}
-        >
-          built by Thoughtform, with your team
-        </div>
 
         {CARDS.map((c, i) => (
           <div

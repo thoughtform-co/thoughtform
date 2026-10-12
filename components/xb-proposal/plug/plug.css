@@ -25,17 +25,19 @@
 }
 
 .pl-fig {
-  position: relative;
-  align-self: center;
-  justify-self: center;
-  margin: 0 0 48px;
-  /* bound by the width AND the height the head and the step key leave */
-  width: min(
-    100%,
+  /* wider than the band is allowed (owner): up to 72px past it each side,
+     bound by the height the head and the footer line leave */
+  --pl-w: min(
+    calc(100% + 144px),
     calc(
-      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 210px) * 1200 / 460
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 200px) * 1200 / 460
     )
   );
+  position: relative;
+  align-self: center;
+  justify-self: start;
+  width: var(--pl-w);
+  margin: 0 0 48px calc((100% - var(--pl-w)) / 2);
   aspect-ratio: 1200 / 460;
   container-type: inline-size;
   /* the dotted field Cluster's flow sits on */
@@ -150,12 +152,6 @@
   white-space: nowrap;
 }
 
-.pl-cap {
-  transform: translateX(-50%);
-  white-space: nowrap;
-  font-family: var(--xb-sans);
-  color: var(--xb-text-2);
-}
 .pl-card {
   transform: translateY(-50%);
   width: calc(var(--w) * 100%);
@@ -240,10 +236,25 @@
 .pl-tap {
   fill: var(--xb-gold);
 }
+.pl-port rect {
+  fill: var(--xb-ground);
+  stroke: var(--xb-gold);
+}
+.pl-port path {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.8;
+}
+.pl-tie {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.45;
+  stroke-dasharray: 2 4;
+}
 
 .pl-tab {
   --tone: var(--xb-text-2);
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   display: inline-flex;
   align-items: center;
   gap: 0.7em;
@@ -255,9 +266,6 @@
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
-}
-.pl-tab[data-align="center"] {
-  transform: translate(-50%, -50%);
 }
 .pl-tab[data-tone="green"] {
   --tone: var(--pl-green);
