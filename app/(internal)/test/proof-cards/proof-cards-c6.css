@@ -229,3 +229,31 @@
   border: 0;
   border-top: 1px solid var(--pk-line);
 }
+
+/* U4: Scale's line set as code; the brief and its answer one size down */
+.pk-i__code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font: var(--pk-small) / 1.3 var(--pk-mono);
+  color: var(--pk-ink-3);
+}
+.pk-i__code code {
+  padding: 3px 7px;
+  border: 1px solid rgba(var(--pk-green-rgb), 0.5);
+  background: rgba(var(--pk-green-rgb), 0.12);
+  font: inherit;
+  color: var(--pk-green);
+}
+.pk-i__code-to {
+  color: var(--pk-gold);
+}
+.pk-i__code-dest {
+  color: var(--pk-ink);
+}
+.pk-i--scale .pk-i__brief .pk-lede,
+.pk-i--scale .pk-i__allows .pk-lede {
+  font-size: var(--pk-t-body);
+  line-height: 1.45;
+}

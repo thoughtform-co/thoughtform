@@ -24,6 +24,7 @@ export function DirectionI({
   ba = true,
   left,
   phases = false,
+  scale = false,
 }: {
   job: Job;
   /** Two panes (before and after) or the one visual. */
@@ -34,12 +35,16 @@ export function DirectionI({
    *  and the steps in the vision's own words: embed to identify the
    *  problem, solve it together, plug it into their system. */
   phases?: boolean;
+  /** U4 (owner, 2026-10-12, on 18): every step open, the last step named
+   *  Scale with what plugs in set as code, the brief and its answer a size
+   *  smaller. */
+  scale?: boolean;
 }) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
   return (
     <article
-      className="pk-card pk-c pk-h pk-i"
+      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}`}
       aria-label={p.name}
       style={left ? ({ "--pk-left": left } as React.CSSProperties) : undefined}
     >
@@ -70,8 +75,16 @@ export function DirectionI({
               </li>
             ))}
             <li className="pk-c__box pk-i__big">
-              <p className="pk-c__tab">{phases ? "Plug in" : "Empower"}</p>
-              <p className="pk-body">{phases ? p.plug : p.empower}</p>
+              <p className="pk-c__tab">{scale ? "Scale" : phases ? "Plug in" : "Empower"}</p>
+              {scale ? (
+                <p className="pk-i__code">
+                  <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
+                  <code>tool</code> <span className="pk-i__code-to">→</span>{" "}
+                  <span className="pk-i__code-dest">{job.client}&apos;s own system</span>
+                </p>
+              ) : (
+                <p className="pk-body">{phases ? p.plug : p.empower}</p>
+              )}
             </li>
           </ol>
           <div className="pk-c__box pk-c__box--lit pk-i__allows">
