@@ -1,6 +1,7 @@
 import type { ArcMotion } from "@/lib/arcs/types";
 
 import { EmbedStack } from "@/components/xb-proposal/embed/EmbedStack";
+import { NetworkPlug } from "@/components/xb-proposal/network/NetworkPlug";
 import { PlugFlow } from "@/components/xb-proposal/plug/PlugFlow";
 
 import { ArcBeat } from "./ArcBeat";
@@ -49,6 +50,11 @@ export function ArcStepsPort({ id, motion = "reveal" }: { id: string; motion?: A
     >
       <div className="xb xb-in-frame">
         <EmbedStack />
+      </div>
+      {/* the stack turns frontal and plugs into the five workstreams (owner,
+          2026-10-12) */}
+      <div className="xb xb-in-frame">
+        <NetworkPlug />
       </div>
     </ArcBeat>
   );

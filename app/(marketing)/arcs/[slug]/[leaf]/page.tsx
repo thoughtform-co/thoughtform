@@ -80,6 +80,7 @@ import "@/components/xb-proposal/xb-in-frame.css";
 import "@/components/xb-proposal/masthead.css";
 import "@/components/xb-proposal/plug/plug.css";
 import "@/components/xb-proposal/embed/embed.css";
+import "@/components/xb-proposal/network/network.css";
 // The `equilibrium` kind (2026-10-11): the workshop opener's station, its
 // sheet scoped `.tw-root[data-tw-cut="v3"]`, inert on every other arc.
 import "@/app/(marketing)/arcs/thoughtform/workshop-v3/equilibrium.css";

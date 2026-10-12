@@ -1,0 +1,161 @@
+/* NetworkPlug: the closed stack turns frontal and wires out to the five
+   workstreams. One pinned stage on its own runway, on the kit's tokens
+   (`.xb`), so the proposal remaps them like every other kit drawing. Green is
+   people, gold the layer and every live wire, dawn what runs. Square
+   corners, no bloom. Every size in the frame is in frame units: `cqw` of a
+   1200-wide frame, so `calc(N * var(--u))` is N drawing units. */
+
+.xn {
+  --xn-green: #7a9e6a;
+  position: relative;
+  height: 320svh;
+  padding: 0 calc(var(--band-margin, 96px) + 36px) 0 var(--band-margin, 96px);
+}
+.xn-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 600px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(12px, 2.4vh, 32px);
+  padding: var(--hud-rail-y-start, 96px) 0 calc(var(--hud-rail-y-end, 72px) - 24px);
+}
+.xn-fig {
+  /* up to 72px past the band each side, bound by the height the title
+     leaves */
+  --xn-w: min(
+    calc(100% + 144px),
+    calc(
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 116px) * 1200 / 520
+    )
+  );
+  --u: calc(100cqw / 1200);
+  position: relative;
+  align-self: center;
+  width: var(--xn-w);
+  margin-left: calc((100% - var(--xn-w)) / 2);
+  aspect-ratio: 1200 / 520;
+  container-type: inline-size;
+  background-image: radial-gradient(var(--xb-line) 1px, transparent 1.2px);
+  background-size: 26px 26px;
+  background-position: center;
+}
+.xn-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* the module */
+.xn-top {
+  fill: var(--xb-ground);
+}
+.xn-face {
+  fill: var(--xb-ground-2);
+}
+.xn-ports rect {
+  fill: var(--xb-gold);
+}
+
+/* the wires: a faint dashed track, the live run drawn on in gold */
+.xn-track {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+.xn-wire {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-width: 1.25;
+  stroke-dasharray: 1 1;
+}
+
+/* the workstreams */
+.xn-card {
+  fill: var(--xb-ground);
+  stroke: var(--xb-line-2);
+  stroke-width: 1;
+  transition: stroke 300ms ease;
+}
+.xn-rule {
+  stroke: var(--xb-line);
+  stroke-width: 1;
+}
+.xn-node[data-on] .xn-card {
+  stroke: var(--xb-text-2);
+}
+.xn-node[data-first] .xn-card {
+  stroke: var(--xb-gold);
+}
+.xn-mini {
+  opacity: 0.2;
+  transition: opacity 300ms ease;
+}
+.xn-node[data-on] .xn-mini {
+  opacity: 1;
+}
+
+/* the words */
+.xn-words {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.xn-words > * {
+  position: absolute;
+  left: calc(var(--px) * 100%);
+  top: calc(var(--py) * 100%);
+}
+.xn-course {
+  transform: translateY(-50%);
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(11 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-2);
+  white-space: nowrap;
+}
+.xn-label {
+  display: grid;
+  gap: calc(4 * var(--u));
+  color: var(--xb-text-3);
+  transition: color 300ms ease;
+}
+.xn-label[data-on] {
+  color: var(--xb-text);
+}
+.xn-kick {
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(10.5 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-3);
+}
+.xn-name {
+  font-family: var(--xb-sans);
+  font-size: calc(21 * var(--u));
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.xn-status {
+  transform: translateY(-50%);
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(10.5 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-2);
+  white-space: nowrap;
+  transition: opacity 300ms ease;
+}
+.xn-status[data-first] {
+  color: var(--xb-gold);
+}
