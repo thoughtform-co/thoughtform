@@ -7,6 +7,8 @@
 
 ## Cycle A: post-incident capture checklist
 
+**Where a capture goes (2026-10-12).** A capture goes into the ADR it concerns or into a path-scoped rule in `.claude/rules/`, never into `CLAUDE.md`. Every capture names what it supersedes or retires. `CLAUDE.md` is an index with a 10 KB ceiling, and the rules may only shrink: each rule file has a recorded size ceiling that only comes down. `tests/lib/context-budget.test.ts` enforces both.
+
 Run after **any** code change, before merge/push. If **any** question is _yes_, do the _then_ line before the work is “done”.
 
 | #   | Question                                                                                                                 | If yes, then…                                                                                        |
