@@ -7,6 +7,7 @@ import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 import { DirectionA, DirectionB, DirectionC, DirectionD, DirectionE, DirectionF } from "./Directions";
 import type { Job } from "./parts";
 import { DirectionG } from "./RoundFour";
+import { DirectionH } from "./RoundFive";
 
 /**
  * /test/proof-cards: the four Suri and Samako jobs, one direction per
@@ -29,6 +30,8 @@ export const BLOCKS = [
   { id: "g1-mid", n: "10", short: "C4", label: "C4 · 9, recentred", C: ({ job }: { job: Job }) => <DirectionG job={job} layout="mid" /> },
   { id: "g2-left", n: "11", short: "C4 left", label: "C4 · Words left, wide visual", C: ({ job }: { job: Job }) => <DirectionG job={job} layout="left" /> },
   { id: "g3-ba", n: "12", short: "C4 B/A", label: "C4 · Words left, before and after", C: ({ job }: { job: Job }) => <DirectionG job={job} layout="left-ba" /> },
+  /* round five: 3C rebuilt with only the named changes */
+  { id: "h-stack", n: "13", short: "C5", label: "C5 · 3C, rebuilt", C: DirectionH },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

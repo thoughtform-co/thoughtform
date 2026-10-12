@@ -1,0 +1,215 @@
+/* C5: round five, 3C rebuilt with only the named changes (owner,
+   2026-10-12). Everything not restated here is 3C's own (.pk-c). The air is
+   3C's: no gap, padding or type below 3C's values. */
+
+.pk-h {
+  --pk-ch: 22px;
+  --pk-ch-in: calc(var(--pk-ch) - 0.586px);
+  --pk-small: clamp(12.5px, 0.92vw, 14px);
+  --pk-gold-line: rgba(var(--pk-gold-rgb), 0.7);
+  border: 0;
+  clip-path: polygon(0 0, calc(100% - var(--pk-ch)) 0, 100% var(--pk-ch), 100% 100%, 0 100%);
+}
+/* the frame's edge: a ring on ::before, since a clip cuts a border */
+.pk-h::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--pk-line);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--pk-ch)) 0,
+    100% var(--pk-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    1px calc(100% - 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(100% - 1px) calc(var(--pk-ch-in) + 1px),
+    calc(100% - var(--pk-ch-in) - 1px) 1px,
+    1px 1px
+  );
+}
+
+/* the stage grows with the card where five steps need more than a screen,
+   instead of the card's air shrinking */
+.pk-stage:has(.pk-h) {
+  height: auto;
+  min-height: 100svh;
+  padding: 128px 10vw 8svh;
+}
+.pk-h {
+  position: relative;
+  inset: auto;
+  min-height: calc(100svh - 128px - 8svh);
+}
+
+/* ── the top bar: 3C's, no keys, one face in capitals ── */
+.pk-h__head {
+  justify-content: flex-start;
+  gap: calc(var(--pk-pad) * 0.9);
+  padding-right: calc(var(--pk-pad) + var(--pk-ch));
+  font: clamp(12px, 0.92vw, 14px) / 1 var(--pk-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pk-h__client {
+  padding: 7px 10px;
+  border: 1px solid rgba(var(--pk-gold-rgb), 0.6);
+  color: var(--pk-gold);
+}
+.pk-h__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--pk-ink);
+}
+.pk-h__ws {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--pk-ink-2);
+}
+.pk-h__ws .arc-lev__glyph {
+  width: auto;
+  height: 18px;
+  overflow: visible;
+}
+
+/* ── the body: 3C's three columns; spacer rows centre the content, and the
+   brief and its answer share one row so they stand level ── */
+.pk-h__body {
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  row-gap: 0;
+}
+.pk-h__brief {
+  grid-column: 1;
+  grid-row: 2;
+}
+.pk-h__steps {
+  grid-column: 1;
+  grid-row: 3;
+}
+.pk-h__fig {
+  grid-column: 2;
+  grid-row: 1 / 5;
+}
+.pk-h__allows {
+  grid-column: 3;
+  grid-row: 2;
+}
+.pk-h__saved {
+  grid-column: 3;
+  grid-row: 3;
+  align-self: start;
+  margin-top: 22px;
+}
+
+/* the brief and its answer: one box style, gold edge and tab, one paragraph */
+.pk-h__brief,
+.pk-h__allows {
+  padding: 30px 18px 18px;
+  border-color: rgba(var(--pk-gold-rgb), 0.55);
+}
+.pk-h__brief .pk-c__tab,
+.pk-h__allows .pk-c__tab {
+  border-color: rgba(var(--pk-gold-rgb), 0.55);
+  background: rgba(var(--pk-gold-rgb), 0.16);
+  color: var(--pk-gold);
+}
+
+/* ── the steps: 3C's boxes and rail, every line and tab in Tensor Gold, the
+   rail welded to the brief box's bottom edge ── */
+.pk-h__steps {
+  margin-top: 0;
+  padding-top: 22px;
+  gap: 22px;
+}
+.pk-h__steps .pk-c__box {
+  border-color: var(--pk-line);
+}
+.pk-h__steps .pk-c__tab {
+  border-color: rgba(var(--pk-gold-rgb), 0.5);
+  background: rgba(var(--pk-gold-rgb), 0.12);
+  color: var(--pk-gold);
+}
+/* 3C's connector, redrawn so the vertical runs unbroken from the brief box
+   down to the last step and each step takes a tick off it */
+.pk-h__steps .pk-c__box::before {
+  top: -23px;
+  height: calc(100% + 23px - 50%);
+  background: var(--pk-gold-line);
+}
+.pk-h__steps .pk-c__box:first-child::before {
+  top: -23px;
+}
+.pk-h__steps .pk-c__box::after {
+  background: var(--pk-gold-line);
+}
+
+/* ── the right column: one flow under the answer ── */
+.pk-h__saved .pk-c__tab {
+  color: var(--pk-ink-2);
+}
+.pk-h__saved {
+  padding: 32px 18px 18px;
+}
+.pk-h__saved .pk-bars {
+  gap: 16px;
+}
+
+/* the tabs sit ON each box's top edge, as a legend, so a box's height is
+   its text and its own padding; the air BETWEEN boxes stays 3C's 22px */
+.pk-h .pk-c__box > .pk-c__tab {
+  top: -10px;
+  left: 12px;
+  line-height: 1;
+}
+.pk-h__brief,
+.pk-h__allows {
+  padding: 22px 18px 18px;
+}
+.pk-h__saved {
+  padding: 24px 18px 18px;
+}
+.pk-h__steps .pk-c__box {
+  padding: 17px 14px 12px;
+}
+.pk-h__steps {
+  padding-top: 26px;
+  gap: 24px;
+}
+.pk-h__steps .pk-c__box::before {
+  top: -27px;
+  height: calc(100% + 27px - 50%);
+}
+.pk-h__saved {
+  margin-top: 26px;
+}
+
+/* Claude's three steps in one box: three boxes on the rail, as 3C had */
+.pk-h__did {
+  display: grid;
+  gap: 8px;
+}
+.pk-h__did li {
+  display: grid;
+  grid-template-columns: 2.4em 1fr;
+  font: 400 var(--pk-t-body) / 1.4 var(--pk-sans);
+  color: var(--pk-ink-2);
+}
+.pk-h__did li span {
+  font: var(--pk-t-mono) / 1.9 var(--pk-mono);
+  color: var(--pk-gold);
+}
+
+/* the left column carries the most lines: a little more of the width */
+.pk-h__body {
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.98fr) minmax(0, 0.9fr);
+}

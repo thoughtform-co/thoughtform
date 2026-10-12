@@ -38,8 +38,8 @@ export const PRACTICE: Record<string, Practice> = {
     now: "Cut from the brief, checked in three cold reads",
     name: "A motion ad for the autumn sale",
     problem:
-      "Samako needed a 15-second motion ad in Dutch for its autumn sale on paid social, from an open brief. Each motion ad meant a motion designer, and the product had to stay exactly as the photographer shot it.",
-    embed: "What a sale ad has to show, with the visual lead",
+      "Samako needed a 15-second autumn sale ad for paid social. Each one meant a motion designer, and the product had to stay as photographed.",
+    embed: "What the ad must show, with the visual lead",
     empower: "The visual lead chooses the film that runs",
   },
   "job-ops": {
@@ -51,9 +51,9 @@ export const PRACTICE: Record<string, Practice> = {
     now: "Two days, the whole Drive read",
     name: "Mapping the marketing Drive",
     problem:
-      "Suri's marketing Google Drive holds 3.1 TB of shoots, statics and designs, and 78 % of the files read are tied to no campaign. Finding what the team already owned meant opening folder after folder.",
+      "Suri's 3.1 TB marketing Google Drive: 78 % of the files read tied to no campaign, found only by opening folder after folder.",
     embed: "Where a search stalls, with the library owner",
-    empower: "The library owner checks the groups and keeps the map",
+    empower: "The library owner checks and keeps the map",
   },
   "job-review": {
     brief: "Catch the AI product renders that get the product wrong, before review.",
@@ -64,7 +64,7 @@ export const PRACTICE: Record<string, Practice> = {
     now: "Only the flagged renders reach a person",
     name: "A first pass on AI product renders",
     problem:
-      "AI renders get the product subtly wrong: a part missing, the wrong colour, a re-lettered wordmark. Every render went to the creative director, the art director and the brand manager to be checked by eye.",
+      "AI renders get the product subtly wrong. Every render went to three people to be checked by eye.",
     embed: "The errors the creative team catches by eye",
     empower: "The visual lead checks the grading",
   },
@@ -77,7 +77,7 @@ export const PRACTICE: Record<string, Practice> = {
     now: "Twelve fields, one format, before the studio",
     name: "One brief format for every channel",
     problem:
-      "Briefs reached the studio in a different shape for every writer and every channel. The studio lead spent hours a week finding out what each brief had left out before the work could start.",
+      "Every writer and channel sent the studio a different brief, and the studio lead spent hours finding what each left out.",
     embed: "What a brief leaves out, with the strategists",
     empower: "The strategist marks each brief ready",
   },
