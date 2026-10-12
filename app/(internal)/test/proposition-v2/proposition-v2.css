@@ -1,0 +1,14 @@
+/* /test/proposition-v2: each section one screen between the HUD rails, on
+   the band the proposal's heads use. The kit's ground goes clear so the
+   frame's own ground shows. */
+
+.pv-sec {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  height: 100svh;
+  min-height: 640px;
+  padding: var(--hud-rail-y-start) calc(var(--band-margin) + 36px) var(--hud-rail-y-end)
+    var(--band-margin);
+  background: transparent;
+}

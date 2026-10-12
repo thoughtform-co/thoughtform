@@ -1,0 +1,197 @@
+/* MotionPanels: adoption to automation in three ruled cells, Unsiloed's
+   grammar on the kit's tokens. One gold thread runs through every drawing at
+   one height and crosses each border on a square. */
+
+.mo {
+  --mo-green: #7a9e6a;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: clamp(20px, 3.4vh, 40px);
+  height: 100%;
+}
+
+.mo-headline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: end;
+}
+.mo-headline .xb-eyebrow {
+  margin-bottom: 14px;
+}
+.mo-lede {
+  max-width: 52ch;
+}
+
+.mo-grid {
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--xb-line-2);
+}
+.mo-cell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+.mo-cell + .mo-cell {
+  border-left: 1px solid var(--xb-line-2);
+}
+.mo-cell__fig {
+  padding: clamp(10px, 2vh, 22px) clamp(10px, 1.2vw, 20px) 6px;
+}
+.mo-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.mo-cell__cap {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 18px clamp(14px, 1.6vw, 26px) 22px;
+  border-top: 1px solid var(--xb-line-2);
+  background: rgb(235 227 214 / 0.035);
+}
+.mo-cell__step {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--xb-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--xb-gold);
+}
+.mo-cell__arc {
+  color: var(--xb-text-3);
+}
+.mo-cell__title {
+  margin: 0;
+  font-family: var(--xb-sans);
+  font-size: clamp(20px, 1.6vw, 26px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--xb-text);
+}
+.mo-cell__body {
+  margin: 0;
+  font-family: var(--xb-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--xb-text-2);
+}
+
+/* ---- the drawings ---- */
+
+.mo-svg .mo-t {
+  font-family: var(--xb-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  fill: var(--xb-text);
+}
+.mo-svg .mo-t--sans {
+  font-family: var(--xb-sans);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.mo-svg .mo-t--dim {
+  fill: var(--xb-text-3);
+}
+.mo-svg .mo-t--gold {
+  fill: var(--xb-gold);
+}
+.mo-svg .mo-t--team {
+  fill: var(--mo-green);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+.mo-svg .mo-t--ground {
+  fill: var(--xb-ground);
+  letter-spacing: 0.12em;
+}
+
+.mo-box {
+  fill: var(--xb-ground);
+  stroke: var(--xb-line-2);
+}
+.mo-box--gold {
+  stroke: var(--xb-gold);
+  fill: rgb(202 165 84 / 0.06);
+}
+.mo-tab,
+.mo-head {
+  fill: var(--xb-ground-2);
+  stroke: var(--xb-line-2);
+}
+.mo-band {
+  fill: var(--xb-ground-2);
+  stroke: var(--xb-line-2);
+}
+.mo-bar {
+  fill: var(--xb-text);
+  fill-opacity: 0.22;
+}
+.mo-bar--t {
+  fill-opacity: 0.5;
+}
+.mo-bar--hit {
+  fill: var(--mo-green);
+  fill-opacity: 0.75;
+}
+.mo-note {
+  fill: var(--xb-ground);
+  stroke: var(--mo-green);
+}
+.mo-chip {
+  fill: var(--xb-gold);
+}
+.mo-wire {
+  fill: none;
+  stroke: var(--xb-line-2);
+}
+.mo-wire--team {
+  stroke: var(--mo-green);
+}
+.mo-wire--gold {
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.8;
+}
+.mo-thread {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-width: 1.5;
+}
+.mo-sq {
+  fill: var(--xb-gold);
+}
+
+/* ---- arrival: the thread draws left to right, once ---- */
+
+.mo-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 600ms cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0ms);
+}
+.mo[data-arrive]:not([data-in]) .mo-draw {
+  stroke-dashoffset: 1;
+}
+.mo-cell__fig {
+  transition: opacity 520ms ease;
+}
+.mo-cell:nth-child(2) .mo-cell__fig {
+  transition-delay: 600ms;
+}
+.mo-cell:nth-child(3) .mo-cell__fig {
+  transition-delay: 1200ms;
+}
+.mo[data-arrive]:not([data-in]) .mo-cell__fig {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mo-draw,
+  .mo-cell__fig {
+    transition: none;
+  }
+}
