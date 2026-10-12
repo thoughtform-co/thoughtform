@@ -12,6 +12,13 @@
 
 .xb-in-frame {
   --xb-ground: rgb(var(--void-rgb, 10, 9, 8));
+  /* the raised ground (a plate's side, a card): the kit's #11100e is the
+     void with 3.1 % of the ink in it, so light lifts the same step */
+  --xb-ground-2: color-mix(
+    in srgb,
+    rgb(var(--void-rgb, 10, 9, 8)) 96.9%,
+    rgb(var(--dawn-rgb, 235, 227, 214))
+  );
   --xb-text: rgb(var(--dawn-rgb, 235, 227, 214));
   --xb-text-2: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
   --xb-text-3: rgba(var(--dawn-rgb, 235, 227, 214), 0.4);
@@ -67,4 +74,14 @@
   min-height: 640px;
   padding: var(--hud-rail-y-start) calc(var(--band-margin) + 36px) var(--hud-rail-y-end)
     var(--band-margin);
+}
+
+/* On the proposal the plug flow is the first section after the hero, and
+   the flowing curtain (arcs.css, ADR-076) pads that section by the stage
+   pad and centres a band it holds. A kit section has no band to hold and
+   brings its own frame, so it takes neither. */
+.arc-root[data-arc-curtain] .arc-hero + .arc-section.arc-xb-port {
+  display: block;
+  min-height: 0;
+  padding-block: 0;
 }

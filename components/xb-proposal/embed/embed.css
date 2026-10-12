@@ -60,7 +60,9 @@
 }
 .es-lines li {
   --tone: var(--xb-text-3);
-  color: rgba(235, 227, 214, 0.3);
+  /* the ink at 30 %, through the token, so the light theme dims toward
+     its own ground */
+  color: color-mix(in srgb, var(--xb-text) 30%, transparent);
   transition: color 360ms ease;
 }
 .es-lines li[data-tone="green"] {

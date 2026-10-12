@@ -193,14 +193,16 @@
 }
 .pl-card[data-lit] .pl-card__title,
 .pl-card[data-lit] .pl-card__ico {
-  color: #0a0908;
+  /* the lit card is inverse video: the ground's own colour, so the light
+     theme inverts it with the card */
+  color: var(--xb-ground);
 }
 .pl-card[data-lit] .pl-card__ico {
-  border-color: rgb(10 9 8 / 0.3);
+  border-color: color-mix(in srgb, var(--xb-ground) 30%, transparent);
 }
 .pl-card[data-lit] .pl-card__sub,
 .pl-card[data-lit] .pl-card__title em {
-  color: rgb(10 9 8 / 0.62);
+  color: color-mix(in srgb, var(--xb-ground) 62%, transparent);
 }
 
 /* ---- the frames, their tabs, the footer ---- */
