@@ -8,7 +8,9 @@
 
    So the drawing is one pinned stage: the three plates start apart, the one
    in view centred and lit with its callouts, and they close into a single
-   stack as Run arrives, the whole stack lit. Top to bottom is upstream to
+   stack as Run arrives, the whole stack lit. No caption over the plates
+   (owner: "it's really creating dead space"); the stage is never clipped, a
+   plate leaves only by the frame's own edge. Top to bottom is upstream to
    downstream: your team (green, people), the layer (gold, the kit's own
    LayerSlab, the mark etched on it), your agents (dawn, what runs).
 
@@ -42,8 +44,10 @@ const iso = makeIso(U, OX, OY);
 const S = 8;
 const NOTCH = 1.4;
 const FACE_MID = OY + S * 0.5 * U;
-/* The plates' spacing: apart while a step is read, closed at Run. */
-const GAP = { open: 236, closed: 72 };
+/* The plates' spacing: apart while a step is read (room enough that the
+   next plate rises in from below the frame, owner: "it should never be cut
+   off"), closed at Run. */
+const GAP = { open: 300, closed: 72 };
 
 const GOLD = "var(--xb-gold)";
 const GREEN = "var(--es-green)";
@@ -504,11 +508,6 @@ export function EmbedStack() {
           </div>
 
           <div className="es-right">
-            {plain ? null : (
-              <p className="es-cap" key={step} aria-live="polite">
-                {BODY[PLUG_STEPS[step].id]}
-              </p>
-            )}
             <div className="es-stage">
               <svg
                 ref={svg}

@@ -12,7 +12,7 @@
 .es-runway {
   position: relative;
   height: 300svh;
-  margin-top: clamp(24px, 4svh, 48px);
+  margin-top: 0;
 }
 .es-anchor {
   position: absolute;
@@ -35,8 +35,11 @@
 
 /* ---- the steps, all three at once ---- */
 
+/* the steps sit at the top, right under the head (owner: "the embed encode
+   run can move upwards") */
 .es-left {
-  align-self: center;
+  align-self: start;
+  padding-top: clamp(8px, 2svh, 24px);
 }
 .es-lines {
   display: grid;
@@ -112,31 +115,12 @@
 
 .es-right {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
   min-height: 0;
 }
-.es-cap {
-  margin: 0;
-  max-width: 46ch;
-  min-height: 4.5em;
-  font-family: var(--xb-sans);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--xb-text-2);
-  animation: es-cap-in 420ms ease;
-}
-@keyframes es-cap-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+/* never clipped: a plate leaves only by the frame's own edge */
 .es-stage {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   min-height: 0;
 }
 .es-svg {
@@ -186,8 +170,5 @@
   .es-plate,
   .es-call {
     transition: none;
-  }
-  .es-cap {
-    animation: none;
   }
 }
