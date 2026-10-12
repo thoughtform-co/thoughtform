@@ -167,61 +167,7 @@ export const BLOCKS = [
       <DirectionI job={job} ba={false} phases scale band refine="ledger" />
     ),
   },
-  /* round nine: gradient and border skins on 23 */
-  {
-    id: "q-flat",
-    n: "25",
-    short: "C9 Flat",
-    label: "C9 · Flat surfaces (Tensorlake)",
-    C: ({ job }: { job: Job }) => (
-      <DirectionI job={job} ba={false} phases scale band refine="cards" skin="flat" />
-    ),
-  },
-  {
-    id: "r-window",
-    n: "26",
-    short: "C9 Window",
-    label: "C9 · Window chrome (Hex, Tensorlake)",
-    C: ({ job }: { job: Job }) => (
-      <DirectionI job={job} ba={false} phases scale band refine="cards" skin="window" />
-    ),
-  },
-  {
-    id: "s-wash",
-    n: "27",
-    short: "C9 Wash",
-    label: "C9 · Header and band wash",
-    C: ({ job }: { job: Job }) => (
-      <DirectionI job={job} ba={false} phases scale band refine="cards" skin="wash" />
-    ),
-  },
-  {
-    id: "t-glow",
-    n: "28",
-    short: "C9 Glow",
-    label: "C9 · Top glow (Lighthouse)",
-    C: ({ job }: { job: Job }) => (
-      <DirectionI job={job} ba={false} phases scale band refine="cards" skin="glow" />
-    ),
-  },
-  {
-    id: "u-rule",
-    n: "29",
-    short: "C9 Rule",
-    label: "C9 · Gold top rule, flat band (Hex)",
-    C: ({ job }: { job: Job }) => (
-      <DirectionI job={job} ba={false} phases scale band refine="cards" skin="rule" />
-    ),
-  },
-  {
-    id: "v-inset",
-    n: "30",
-    short: "C9 Inset",
-    label: "C9 · Double hairline (Hex)",
-    C: ({ job }: { job: Job }) => (
-      <DirectionI job={job} ba={false} phases scale band refine="cards" skin="inset" />
-    ),
-  },
+  /* round nine (skins on 23) lives at /test/card-skins */
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];
