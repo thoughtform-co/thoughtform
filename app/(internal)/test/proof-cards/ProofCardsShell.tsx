@@ -131,6 +131,14 @@ export const BLOCKS = [
     label: "C7 · Visual in the centre",
     C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} phases scale center />,
   },
+  /* round seven U3: the results in a band under both panels */
+  {
+    id: "m-band",
+    n: "21",
+    short: "C7 band",
+    label: "C7 · Results band",
+    C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} phases scale band />,
+  },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

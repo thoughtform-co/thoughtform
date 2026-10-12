@@ -26,6 +26,7 @@ export function DirectionI({
   phases = false,
   scale = false,
   center = false,
+  band = false,
 }: {
   job: Job;
   /** Two panes (before and after) or the one visual. */
@@ -44,12 +45,16 @@ export function DirectionI({
    *  and the steps on the left, what it now allows and the time saved on
    *  the right; everything else block 19's. */
   center?: boolean;
+  /** U8 (owner, 2026-10-12, block 21, after Atomic Tessellator's case
+   *  cards): the process left, the visual right, and the time saved and
+   *  what it now allows side by side in a quiet band under both. */
+  band?: boolean;
 }) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
   return (
     <article
-      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}`}
+      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}${band ? " pk-i--band" : ""}`}
       aria-label={p.name}
       style={left ? ({ "--pk-left": left } as React.CSSProperties) : undefined}
     >
@@ -61,7 +66,9 @@ export function DirectionI({
           {d.long}
         </span>
       </header>
-      {center ? (
+      {band ? (
+        <BandBody job={job} ba={ba} />
+      ) : center ? (
         <div className="pk-i__body pk-i__body--center">
           <div className="pk-i__words pk-i__words--left">
             <div className="pk-c__box pk-i__brief">
@@ -188,5 +195,67 @@ export function DirectionI({
         </p>
       )}
     </article>
+  );
+}
+
+function BandBody({ job, ba }: { job: Job; ba: boolean }) {
+  const p = PRACTICE[job.id];
+  return (
+    <>
+      <div className="pk-i__body">
+        <div className="pk-i__words">
+          <div className="pk-c__box pk-i__brief">
+            <p className="pk-c__tab">The brief</p>
+            <p className="pk-lede">{p.problem}</p>
+          </div>
+          <ol className="pk-i__flow" aria-label="The work">
+            <li className="pk-c__box pk-i__big">
+              <p className="pk-c__tab">Embed</p>
+              <p className="pk-body">{p.identify}</p>
+            </li>
+            <li className="pk-i__label">Solve it together</li>
+            {job.did.map((t, i) => (
+              <li key={t} className="pk-i__small">
+                <span className="pk-i__small-tab">Claude {i + 1}</span>
+                <span className="pk-i__small-text">{t}</span>
+              </li>
+            ))}
+            <li className="pk-c__box pk-i__big">
+              <p className="pk-c__tab">Scale</p>
+              <p className="pk-i__code">
+                <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
+                <code>tool</code> <span className="pk-i__code-to">→</span>{" "}
+                <span className="pk-i__code-dest">{job.client}&apos;s own system</span>
+              </p>
+            </li>
+          </ol>
+        </div>
+        <Figure job={job} wide ba={ba} />
+      </div>
+      <div className="pk-i__band">
+        <section className="pk-i__cell">
+          <p className="pk-i__cell-k">
+            {resultLabel(job)}
+            {job.result.label === "The return" ? null : " · estimated"}
+          </p>
+          <div className="pk-i__bars">
+            <p className="pk-i__bar-row">
+              <span className="pk-i__bar-k">Before</span>
+              <i className="pk-i__bar" data-w="long" aria-hidden="true" />
+              <span className="pk-i__bar-v">{p.before}</span>
+            </p>
+            <p className="pk-i__bar-row" data-lit="true">
+              <span className="pk-i__bar-k">Now</span>
+              <i className="pk-i__bar" data-w="short" aria-hidden="true" />
+              <span className="pk-i__bar-v">{p.now}</span>
+            </p>
+          </div>
+        </section>
+        <section className="pk-i__cell">
+          <p className="pk-i__cell-k">What it now allows</p>
+          <p className="pk-i__cell-v">{job.result.allows}</p>
+        </section>
+      </div>
+    </>
   );
 }

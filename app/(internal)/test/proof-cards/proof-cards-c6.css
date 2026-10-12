@@ -346,3 +346,39 @@
 .pk-i__flow > li:last-child::before {
   bottom: 50%;
 }
+
+/* U8, block 21: the results band (after Atomic Tessellator's case cards).
+   Under both panels, a quieter ground, two cells side by side, each with a
+   hairline over a mono label; no boxes, no tabs. */
+.pk-i--band .pk-i__body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.pk-i--band .pk-i__words {
+  justify-content: center;
+}
+.pk-i__band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--pk-pad);
+  padding: calc(var(--pk-pad) * 0.8) var(--pk-pad) var(--pk-pad);
+  border-top: 1px solid var(--pk-line);
+  background: rgba(var(--pk-ink-rgb), 0.03);
+}
+.pk-i__cell {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pk-line);
+}
+.pk-i__cell-k {
+  font: var(--pk-t-mono) / 1.2 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--pk-gold);
+}
+.pk-i__cell-v {
+  font: 400 var(--pk-t-body) / 1.45 var(--pk-sans);
+  color: var(--pk-ink);
+  max-width: 34em;
+}
