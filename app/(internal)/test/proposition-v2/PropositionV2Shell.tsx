@@ -18,12 +18,14 @@ import { HudFrame } from "../hud-panel-lab/HudFrame";
  *
  *   1  Where Thoughtform plugs in, as one flow (getcluster.ai's grammar):
  *      your workstreams → the layer → Claude Enterprise → your interfaces.
- *   2  Embed · encode · run, one exploded stack read on the scroll
- *      (griffin.com's grammar): a plate lit per step, a step rail. The
- *      flow's three regions are keyed to these steps and link to them
- *      (`plugSteps.ts`, one record for both). "Adoption becomes
- *      automation" (`motion/`) came off the page on the owner's word
- *      (2026-10-12); the component stays in the kit.
+ *   2  Embed · encode · run, read the way unsiloed.ai's "how it works"
+ *      reads: the three steps sticky on the left, one drawing scrolling past
+ *      on the right (2026-10-12; the Griffin pin before it is gone). The
+ *      flow's three labels link to the steps (`plugSteps.ts`, one record).
+ *
+ * Both heads are the homepage services masthead's grammar (`Masthead`).
+ * "Adoption becomes automation" (`motion/`) came off the page on the
+ * owner's word (2026-10-12); the component stays in the kit.
  *
  * Both are kit components (`components/xb-proposal/plug`, `/motion`), so
  * the proposal page can mount them as they are.

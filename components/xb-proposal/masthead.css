@@ -1,0 +1,148 @@
+/* The kit's section head: the services masthead's survey plate, copied
+   (services.css §Services masthead — M2 "survey plate" chrome). Same voice,
+   same furniture, same tokens; static, no decode. */
+
+.xm {
+  --xm-ink: rgba(var(--dawn-rgb, 235, 227, 214), 0.54); /* designations (text, 4.99:1) */
+  --xm-ink-faint: rgba(var(--dawn-rgb, 235, 227, 214), 0.22); /* coord stamps */
+  --xm-mark-dawn: rgba(var(--dawn-rgb, 235, 227, 214), 0.7); /* close mark */
+  --xm-state: var(--gold-70, rgba(202, 165, 84, 0.7));
+  --xm-label-rise: 34px;
+  --xm-coord-drop: 26px;
+  --xm-mark-out: 24px;
+  --xm-mark-rise: 26px;
+  --xm-mark-drop: 22px;
+  --xm-mark-arm: 18px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+  padding-top: var(--xm-label-rise);
+  margin-bottom: var(--xm-coord-drop);
+}
+
+.xm__lead,
+.xm__brief {
+  position: relative;
+}
+.xm__brief {
+  justify-self: end;
+  max-width: min(42ch, 34vw);
+}
+
+.xm__title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  display: grid;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb, 202, 165, 84), 0.18);
+}
+.xm__em {
+  color: var(--gold-ink, #caa554);
+  font-weight: 500;
+}
+
+.xm__copy {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--dawn, #ebe3d6);
+}
+
+.xm__grid {
+  position: absolute;
+  inset: -16px -22px;
+  z-index: 0;
+  background-image: radial-gradient(
+    rgba(var(--dawn-rgb, 235, 227, 214), 0.06) 1px,
+    transparent 1.2px
+  );
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  pointer-events: none;
+}
+
+.xm__desig,
+.xm__state {
+  position: absolute;
+  top: calc(-1 * var(--xm-label-rise));
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.xm__desig {
+  left: 0;
+  color: var(--xm-ink);
+}
+.xm__state {
+  right: 0;
+  letter-spacing: 0.2em;
+  color: var(--xm-state);
+}
+
+.xm__coord {
+  position: absolute;
+  top: calc(100% + var(--xm-coord-drop));
+  left: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--xm-ink-faint);
+  white-space: nowrap;
+}
+.xm__coord--r {
+  left: auto;
+  right: calc(var(--xm-mark-out) + 8px);
+}
+
+.xm__mark {
+  position: absolute;
+  width: var(--xm-mark-arm);
+  height: var(--xm-mark-arm);
+}
+.xm__mark::before,
+.xm__mark::after {
+  content: "";
+  position: absolute;
+  background: currentcolor;
+}
+.xm__mark::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+.xm__mark::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+.xm__mark--origin {
+  top: calc(-1 * var(--xm-mark-rise));
+  left: calc(-1 * var(--xm-mark-out));
+  transform: translate(-50%, -50%);
+  color: var(--gold, #caa554);
+}
+.xm__mark--close {
+  top: calc(100% + var(--xm-mark-drop));
+  right: calc(-1 * var(--xm-mark-out));
+  transform: translate(50%, -50%);
+  color: var(--xm-mark-dawn);
+}

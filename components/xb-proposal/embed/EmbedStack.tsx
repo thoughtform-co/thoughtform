@@ -1,52 +1,63 @@
 "use client";
 
-/* Embed · encode · run, as one exploded stack read on the scroll (owner,
-   2026-10-12, after griffin.com: "as you scroll through it, you can see
-   different parts appear and are being explained … 1. We embed in your team
-   using the stack that you have. 2. We encode their ways of working into a
-   machine-readable layer, making them self-sufficient. 3. People can run
-   their own agent").
+/* Embed · encode · run, read on the scroll the way unsiloed.ai's "how it
+   works" reads (owner, 2026-10-12: "this one is better, where we already show
+   the three parts, but then you just scroll through them"). It replaces the
+   Griffin pin: no pinned stage, no step rail, no vertical divider.
 
-   Griffin's grammar: a pinned stage. Left, a step rail: the open step is
-   centred and spelled out, the passed ones sit collapsed above it, the next
-   ones below. Right, one isometric stack, compact at first, then exploded,
-   travelling so the open step's plate sits in the middle, lit, with dotted
-   callouts on leaders; the other plates dim.
+   Left, all three steps at once, sticky, the one in view in full ink and the
+   others receding. Right, one long drawing that scrolls past: each step's
+   caption over its plate, the three plates on one gold thread, top to bottom
+   upstream to downstream. Your team (green, people), the layer (gold, the
+   kit's own LayerSlab with the mark etched on it), your agents (dawn, what
+   runs). The plate in view lights and letters its callouts; the others dim.
 
-   Top to bottom is upstream to downstream: your teams (green, people), the
-   layer (gold, the kit's own LayerSlab with the mark etched on it), your
-   agents (dawn, what runs). One scroll reader, rAF-throttled, writing
-   transforms and attributes; React re-renders only when the step changes.
-   Under reduced motion the section reads as three plain steps. */
+   One IntersectionObserver picks the step in view (a band at the middle of
+   the frame); no scroll listener, no writer. The head is the services
+   masthead's grammar, the same as the flow above it. */
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BRANDMARK_PATHS, BRANDMARK_VIEWBOX } from "@/lib/brandmark/brandmarkPaths";
 
 import { GLYPH, type GlyphName } from "../glyphs";
-import { boxFaces, clamp01, ease, makeIso, tint, type Box } from "../iso";
+import { boxFaces, makeIso, tint, type Box } from "../iso";
 import { LayerSlab } from "../LayerSlab";
+import { Masthead, type MastheadCopy } from "../Masthead";
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 
 const VB_W = 700;
-const VB_H = 940;
+const VB_H = 330;
 const U = 26;
 const OX = 350;
 const OY = 70;
 const iso = makeIso(U, OX, OY);
-/* A plate's footprint and the screen height of its top face's centre. */
 const S = 8;
-const FACE_MID = OY + S * 0.5 * U;
-const GAP = { compact: 70, open: 300 };
 
 const GOLD = "var(--xb-gold)";
 const GREEN = "var(--es-green)";
 const DAWN = "var(--xb-text)";
 
-type Step = 0 | 1 | 2 | 3;
+const HEAD: MastheadCopy = {
+  lines: ["Embed, encode,", "run."],
+  brief:
+    "Thoughtform embeds in your team, encodes how it works into a layer your team owns, and your people run their own agents on it.",
+  survey: {
+    title: "XB / STEPS · 02",
+    brief: "XB / BRIEF · 02",
+    state: "Live",
+    titleCoord: "0120 / 1180",
+    briefCoord: "1460 / 1180",
+  },
+};
 
-/* The names and tones are the plug flow's (`PLUG_STEPS`, one record); only
-   the explanation lives here. */
+/* The names and tones are the flow's (`PLUG_STEPS`, one record); the line
+   and the caption live here. */
+const LINE: Record<(typeof PLUG_STEPS)[number]["id"], string> = {
+  embed: "Embed in your team.",
+  encode: "Encode how it works.",
+  run: "Run your own agents.",
+};
 const BODY: Record<(typeof PLUG_STEPS)[number]["id"], string> = {
   embed:
     "Thoughtform works inside your four creative workstreams, on real briefs, statics and reviews, in the Claude Enterprise and the tools you already have.",
@@ -54,16 +65,6 @@ const BODY: Record<(typeof PLUG_STEPS)[number]["id"], string> = {
     "How each team works is written into a layer an agent can read: the context, the skills, the evals. Your team writes it with Thoughtform and keeps it after, self-sufficient.",
   run: "Each person runs their own agents on that layer, in the tools they work in. The team reviews what comes back and spends its time upstream.",
 };
-const STEPS = PLUG_STEPS.map((st) => ({
-  id: st.id,
-  key: st.key,
-  title: st.step,
-  tone: st.tone,
-  body: BODY[st.id],
-}));
-/* Where each step is fully open on the runway (the scroll fraction), for its
-   anchor: the plug flow's step links land here. */
-const STEP_AT = [0.33, 0.6, 0.88];
 
 const PLATE: Box = { x0: 0, x1: S, y0: 0, y1: S, z0: 0, z1: 0.4 };
 
@@ -284,170 +285,75 @@ function Callouts({ i }: { i: number }) {
 
 /* ── the section ───────────────────────────────────────────────────────── */
 
-const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
-
-/** The scroll's reading: which step is open, how far the stack has
-    exploded, and which plate sits at the middle (continuous). */
-function read(p: number): { step: Step; gap: number; centre: number } {
-  const step: Step = p < 0.2 ? 0 : p < 0.47 ? 1 : p < 0.73 ? 2 : 3;
-  const open = ease(seg(p, 0.08, 0.24));
-  const gap = GAP.compact + (GAP.open - GAP.compact) * open;
-  const centre = 1 - open + ease(seg(p, 0.42, 0.52)) + ease(seg(p, 0.68, 0.78));
-  return { step, gap, centre };
-}
+const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 
 export function EmbedStack() {
-  const root = useRef<HTMLDivElement>(null);
-  const svg = useRef<SVGSVGElement>(null);
-  const plates = useRef<(SVGGElement | null)[]>([]);
-  const [step, setStep] = useState<Step>(0);
-  const stepRef = useRef<Step>(0);
+  const parts = useRef<(HTMLElement | null)[]>([]);
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const el = root.current;
-    const s = svg.current;
-    if (!el || !s) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.setAttribute("data-static", "");
-      return;
-    }
-    let raf = 0;
-    const frame = () => {
-      raf = 0;
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const p = clamp01(-r.top / Math.max(1, r.height - vh));
-      const { step: st, gap, centre } = read(p);
-      plates.current.forEach((g, i) =>
-        g?.setAttribute("transform", `translate(0 ${(i * gap).toFixed(1)})`)
-      );
-      const col = s.parentElement!.getBoundingClientRect();
-      const k = col.width / VB_W;
-      const ty = col.height / 2 - k * (FACE_MID + centre * gap);
-      s.style.transform = `translateY(${ty.toFixed(1)}px)`;
-      el.style.setProperty("--es-fill", String(p));
-      if (st !== stepRef.current) {
-        stepRef.current = st;
-        setStep(st);
-      }
-    };
-    const on = () => {
-      if (!raf) raf = requestAnimationFrame(frame);
-    };
-    frame();
-    window.addEventListener("scroll", on, { passive: true });
-    window.addEventListener("resize", on);
-    return () => {
-      window.removeEventListener("scroll", on);
-      window.removeEventListener("resize", on);
-      if (raf) cancelAnimationFrame(raf);
-    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.i));
+        }
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
+    );
+    parts.current.forEach((p) => p && io.observe(p));
+    return () => io.disconnect();
   }, []);
 
-  const past = step === 0 ? [] : STEPS.slice(0, step - 1).map((s, i) => ({ s, i }));
-  const next = STEPS.map((s, i) => ({ s, i })).slice(step);
-
   return (
-    <div className="es" ref={root} data-step={step}>
-      {/* one anchor per step on the runway, for the plug flow's links */}
-      {STEPS.map((st, i) => (
-        <span
-          key={st.id}
-          id={stepAnchor(st.id)}
-          className="es-anchor"
-          style={{ "--at": STEP_AT[i] } as CSSProperties}
-          aria-hidden
-        />
-      ))}
-      <div className="es-pin">
+    <div className="es">
+      <Masthead copy={HEAD} />
+      <div className="es-body">
         <div className="es-left">
-          <span className="es-rail" aria-hidden />
-          <div className="es-past">
-            {past.map(({ s, i }) => (
-              <div key={s.key} className="es-row" data-tone={s.tone}>
-                <span className="es-node" />
-                <span className="es-n">0{i + 1}</span> {s.title.toUpperCase()} ·{" "}
-                {s.key.toUpperCase()}
-              </div>
+          <ol className="es-lines">
+            {PLUG_STEPS.map((st, i) => (
+              <li key={st.id} data-on={i === active ? "" : undefined} data-tone={st.tone}>
+                <a href={`#${stepAnchor(st.id)}`}>
+                  <span className="es-n">
+                    <i aria-hidden />
+                    {st.n} · {st.step}
+                  </span>
+                  <span className="es-line">{LINE[st.id]}</span>
+                </a>
+              </li>
             ))}
-          </div>
-
-          <div className="es-open" key={step}>
-            {step === 0 ? (
-              <>
-                <div className="xb-eyebrow">The flow, step by step</div>
-                <h2 className="xb-title">
-                  Embed, encode,
-                  <br />
-                  <span>run.</span>
-                </h2>
-                <p className="xb-body es-body">
-                  The three parts of the flow above, one at a time: your teams, the layer, your
-                  agents.
-                </p>
-              </>
-            ) : (
-              <div className="es-step" data-tone={STEPS[step - 1].tone}>
-                <span className="es-node es-node--open" />
-                <div className="es-key">
-                  <span className="es-n">0{step}</span> {STEPS[step - 1].key.toUpperCase()}
-                </div>
-                <h3 className="es-title">{STEPS[step - 1].title}</h3>
-                <p className="xb-body es-body">{STEPS[step - 1].body}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="es-next">
-            {(step === 0 ? STEPS.map((s, i) => ({ s, i })) : next).map(({ s, i }) => (
-              <div key={s.key} className="es-row" data-tone={s.tone}>
-                <span className="es-node" />
-                <span className="es-n">0{i + 1}</span> {s.title.toUpperCase()} ·{" "}
-                {s.key.toUpperCase()}
-              </div>
-            ))}
-          </div>
+          </ol>
         </div>
 
         <div className="es-right">
-          <svg
-            ref={svg}
-            viewBox={`0 0 ${VB_W} ${VB_H}`}
-            className="es-svg"
-            role="img"
-            aria-label="Three plates: your teams, the layer, your agents"
-          >
-            {/* painted bottom plate first: the upper plate sits in front */}
-            {[TeamPlate, LayerPlate, AgentPlate]
-              .map((Plate, i) => ({ Plate, i }))
-              .reverse()
-              .map(({ Plate, i }) => (
-                <g
-                  key={i}
-                  ref={(g) => {
-                    plates.current[i] = g;
-                  }}
-                >
-                  <g className="es-plate" data-on={step === 0 || step === i + 1 ? "" : undefined}>
+          <span className="es-thread" aria-hidden />
+          {PLUG_STEPS.map((st, i) => {
+            const Plate = PLATES[i];
+            return (
+              <section
+                key={st.id}
+                id={stepAnchor(st.id)}
+                ref={(el) => {
+                  parts.current[i] = el;
+                }}
+                data-i={i}
+                data-on={i === active ? "" : undefined}
+                className="es-part"
+                aria-label={`${st.n} ${st.step}: ${LINE[st.id]}`}
+              >
+                <p className="es-cap">{BODY[st.id]}</p>
+                <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="es-svg" aria-hidden>
+                  <g className="es-plate">
                     <Plate />
                   </g>
-                  <g className="es-call" data-on={step === i + 1 ? "" : undefined}>
+                  <g className="es-call">
                     <Callouts i={i} />
                   </g>
-                </g>
-              ))}
-          </svg>
+                </svg>
+              </section>
+            );
+          })}
         </div>
       </div>
-
-      {/* reduced motion and no JS: the three steps, plainly */}
-      <ol className="es-plain">
-        {STEPS.map((s, i) => (
-          <li key={s.key}>
-            <span className="es-n">0{i + 1}</span> {s.key} · <strong>{s.title}</strong>. {s.body}
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }

@@ -27,6 +27,7 @@ import type { CSSProperties } from "react";
 import { BRANDMARK_PATHS, BRANDMARK_VIEWBOX } from "@/lib/brandmark/brandmarkPaths";
 
 import { GLYPH, type GlyphName } from "../glyphs";
+import { Masthead, type MastheadCopy } from "../Masthead";
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 import { useArrive } from "../useArrive";
 
@@ -39,10 +40,9 @@ const RIGHT = { x0: 792, x1: 1188, y0: 24, y1: 436 };
 /* The arc the teams sit on: a circle centred off the left frame. */
 const ARC = { x: -176, y: 230, r: 330 };
 const CHIP_W = 200;
-/* The bundles leave and enter through PORTS on the frames' edges, never
-   across a frame line (owner: the frames were "interjecting with the golden
-   lines"). */
-const MERGE_X = LEFT.x1;
+/* The frames are gone (owner, 2026-10-12: "they're closing things in");
+   the two parts keep their extents for the clip and the labels. */
+const MERGE_X = LEFT.x1 - 20;
 const RING = [130, 112, 96];
 const CORE = 64;
 const BUS_X = 818;
@@ -118,6 +118,21 @@ const CARDS: {
 ];
 const CARD_Y = [96, 188, 280, 372];
 
+/* The head, in the homepage services masthead's grammar (owner: "it needs
+   to be uniform"). */
+const HEAD: MastheadCopy = {
+  lines: ["Your team, one layer,", "Claude Enterprise."],
+  brief:
+    "Your four creative workstreams feed one intelligence layer, built with the people who run them. It runs in your Claude Enterprise, and the work comes back through the tools your team already uses.",
+  survey: {
+    title: "XB / PLUG · 01",
+    brief: "XB / BRIEF · 01",
+    state: "Live",
+    titleCoord: "0120 / 0240",
+    briefCoord: "1460 / 0240",
+  },
+};
+
 const STEP = Object.fromEntries(PLUG_STEPS.map((s) => [s.id, s])) as Record<
   (typeof PLUG_STEPS)[number]["id"],
   (typeof PLUG_STEPS)[number]
@@ -149,18 +164,8 @@ function Bundle({ x0, x1, y, d }: { x0: number; x1: number; y: number; d: string
   );
 }
 
-/** A port on a frame's edge: the bundle ends on it instead of crossing the
-    frame's line, which the port's own ground covers. */
-function Port({ x, y }: { x: number; y: number }) {
-  return (
-    <g className="pl-port">
-      <rect x={x - 6} y={y - 11} width={12} height={22} />
-      <path d={`M${x - 2} ${y - 5}V${y + 5} M${x + 2} ${y - 5}V${y + 5}`} />
-    </g>
-  );
-}
-
-/** A frame's tab: the step and the part it names, linking to the step. */
+/** A part's label: the step and the part it names, quiet, linking to the
+    step below. */
 function Tab({
   id,
   x,
@@ -197,21 +202,7 @@ export function PlugFlow() {
 
   return (
     <div className="pl" ref={ref}>
-      <header className="pl-head">
-        <div>
-          <div className="xb-eyebrow">Where Thoughtform plugs in</div>
-          <h2 className="xb-title">
-            Your team, one layer,
-            <br />
-            <span>Claude Enterprise.</span>
-          </h2>
-        </div>
-        <p className="xb-body pl-lede">
-          Your four creative workstreams feed one intelligence layer, built with the people who run
-          them. It runs in your Claude Enterprise, and the work comes back through the tools your
-          team already uses. Three steps get it there.
-        </p>
-      </header>
+      <Masthead copy={HEAD} />
 
       <figure
         className="pl-fig"
@@ -219,29 +210,26 @@ export function PlugFlow() {
       >
         <svg viewBox={`0 0 ${W} ${H}`} className="pl-svg" aria-hidden>
           <defs>
-            <clipPath id="pl-left">
-              <rect x={LEFT.x0} y={LEFT.y0} width={LEFT.x1 - LEFT.x0} height={LEFT.y1 - LEFT.y0} />
-            </clipPath>
+            {/* the arc fades out at its ends: no frame to stop it any more */}
+            <linearGradient id="pl-arc-fade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity="0" />
+              <stop offset="0.22" stopColor="#fff" stopOpacity="1" />
+              <stop offset="0.78" stopColor="#fff" stopOpacity="1" />
+              <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            </linearGradient>
+            <mask id="pl-left" maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
+              <rect
+                x={0}
+                y={LEFT.y0}
+                width={LEFT.x1}
+                height={LEFT.y1 - LEFT.y0}
+                fill="url(#pl-arc-fade)"
+              />
+            </mask>
           </defs>
 
-          {/* the two frames */}
-          <rect
-            x={LEFT.x0}
-            y={LEFT.y0}
-            width={LEFT.x1 - LEFT.x0}
-            height={LEFT.y1 - LEFT.y0}
-            className="pl-frame pl-frame--team"
-          />
-          <rect
-            x={RIGHT.x0}
-            y={RIGHT.y0}
-            width={RIGHT.x1 - RIGHT.x0}
-            height={RIGHT.y1 - RIGHT.y0}
-            className="pl-frame pl-frame--run"
-          />
-
-          {/* the teams' arc, inside its frame */}
-          <g clipPath="url(#pl-left)">
+          {/* the teams' arc, faded at its ends */}
+          <g mask="url(#pl-left)">
             {[ARC.r - 44, ARC.r, ARC.r + 44].map((r, i) => (
               <circle
                 key={r}
@@ -267,8 +255,7 @@ export function PlugFlow() {
               />
             );
           })}
-          <Bundle x0={MERGE_X + 6} x1={C.x - RING[0]} y={C.y} d="620ms" />
-          <Port x={LEFT.x1} y={C.y} />
+          <Bundle x0={MERGE_X} x1={C.x - RING[0]} y={C.y} d="620ms" />
 
           {/* the layer */}
           <g className="pl-core">
@@ -292,14 +279,7 @@ export function PlugFlow() {
 
           {/* out: one bundle into Claude Enterprise, onto a bus that feeds
               every interface */}
-          <Bundle x0={C.x + RING[0]} x1={RIGHT.x0 - 6} y={C.y} d="1100ms" />
-          <Port x={RIGHT.x0} y={C.y} />
-          <path
-            d={`M${RIGHT.x0 + 6} ${C.y}H${BUS_X}`}
-            className="pl-bus pl-draw"
-            style={{ "--d": "1250ms" } as CSSProperties}
-            pathLength={1}
-          />
+          <Bundle x0={C.x + RING[0]} x1={BUS_X} y={C.y} d="1100ms" />
           {/* the layer's tab sits on the top line with the frames' tabs;
               a hairline ties it down to the ring */}
           <path d={`M${C.x} ${LEFT.y0 + 18}V${C.y - RING[0]}`} className="pl-tie" />

@@ -1,191 +1,154 @@
-/* EmbedStack: Griffin's pinned stage on the kit's tokens. Left the step rail,
-   right the stack on a dotted field behind one vertical rule. Each step has
-   its tone: green (people), gold (the layer), dawn (what runs). */
+/* EmbedStack: unsiloed.ai's "how it works" on the kit's tokens. The steps
+   sticky on the left, the drawing scrolling past on the right, one gold
+   thread through the plates. No pin, no rail, no divider. */
 
 .es {
   --es-green: #7a9e6a;
-  --es-tone: var(--xb-text-3);
   position: relative;
-  height: 420svh;
-}
-.es[data-step="1"] {
-  --es-tone: var(--es-green);
-}
-.es[data-step="2"] {
-  --es-tone: var(--xb-gold);
-}
-.es[data-step="3"] {
-  --es-tone: var(--xb-text);
+  padding: var(--hud-rail-y-start, 96px) calc(var(--band-margin, 96px) + 36px)
+    var(--hud-rail-y-end, 72px) var(--band-margin, 96px);
 }
 
-/* a step's anchor: placed at its scroll fraction of the runway (the pin is
-   100svh, the runway 420svh, so the travel is 320svh) */
-.es-anchor {
-  position: absolute;
-  left: 0;
-  top: calc(var(--at) * 320svh);
-  width: 1px;
-  height: 1px;
-  pointer-events: none;
-}
-
-.es-pin {
-  position: sticky;
-  top: 0;
-  height: 100svh;
+.es-body {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  padding: 0 calc(var(--band-margin, 96px) + 36px) 0 var(--band-margin, 96px);
-  box-sizing: border-box;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 48px;
+  margin-top: clamp(56px, 9svh, 104px);
 }
 
-/* ---- the step rail ---- */
+/* ---- the steps, all three at once ---- */
 
 .es-left {
-  position: relative;
+  position: sticky;
+  top: calc(var(--hud-rail-y-start, 96px) + 32px);
+  align-self: start;
+}
+.es-lines {
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
-  padding: var(--hud-rail-y-start, 96px) 48px var(--hud-rail-y-end, 72px) 40px;
+  gap: clamp(14px, 2.2svh, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.es-rail {
-  position: absolute;
-  left: 8px;
-  top: var(--hud-rail-y-start, 96px);
-  bottom: var(--hud-rail-y-end, 72px);
-  width: 1px;
-  background: var(--xb-line-2);
-}
-.es-rail::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 50%;
-  background: var(--es-tone);
-  transition: background 400ms ease;
-}
-.es-past,
-.es-next {
+.es-lines a {
   display: grid;
-  gap: 12px;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
 }
-.es-past {
-  align-content: start;
+.es-lines li {
+  --tone: var(--xb-text-3);
+  color: rgba(235, 227, 214, 0.3);
+  transition: color 360ms ease;
 }
-.es-next {
-  align-content: end;
+.es-lines li[data-tone="green"] {
+  --tone: var(--es-green);
 }
-.es-row {
-  position: relative;
-  font-family: var(--xb-mono);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  color: var(--xb-text-2);
+.es-lines li[data-tone="gold"] {
+  --tone: var(--xb-gold);
+}
+.es-lines li[data-tone="dawn"] {
+  --tone: var(--xb-text-2);
+}
+.es-lines li[data-on] {
+  color: var(--xb-text);
 }
 .es-n {
-  color: var(--xb-text-3);
-  margin-right: 6px;
-}
-.es-node {
-  position: absolute;
-  left: -36px;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  transform: translateY(-50%);
-  border: 1px solid var(--xb-line-2);
-  background: var(--xb-ground);
-  border-radius: 50%;
-}
-
-.es-open {
-  align-self: center;
-  animation: es-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.es-open .xb-eyebrow {
-  margin-bottom: 14px;
-}
-.es-step {
-  position: relative;
-  display: grid;
-  gap: 12px;
-}
-.es-node--open {
-  top: 10px;
-  left: -38px;
-  width: 13px;
-  height: 13px;
-  border: 0;
-  background: var(--es-tone);
-  box-shadow:
-    0 0 0 4px var(--xb-ground),
-    0 0 0 5px var(--es-tone);
-}
-.es-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
   font-family: var(--xb-mono);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  color: var(--xb-text);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--xb-text-3);
 }
-.es-key .es-n {
-  color: var(--es-tone);
+.es-n i {
+  width: 6px;
+  height: 6px;
+  background: var(--tone);
+  opacity: 0.4;
+  transition: opacity 360ms ease;
 }
-.es-title {
-  margin: 0;
+.es-lines li[data-on] .es-n i {
+  opacity: 1;
+}
+.es-line {
   font-family: var(--xb-sans);
-  font-weight: 400;
-  font-size: clamp(40px, 4vw, 60px);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-size: clamp(26px, 2.4vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+.es-lines a:hover .es-line,
+.es-lines a:focus-visible .es-line {
+  color: var(--xb-text-2);
+}
+.es-lines li[data-on] a:hover .es-line {
   color: var(--xb-text);
-}
-.es-body {
-  max-width: 34ch;
-}
-@keyframes es-rise {
-  from {
-    opacity: 0;
-    translate: 0 10px;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
 }
 
-/* ---- the stack ---- */
+/* ---- the drawing, scrolling past ---- */
 
 .es-right {
   position: relative;
-  overflow: hidden;
-  border-left: 1px solid var(--xb-line);
-  background-image: radial-gradient(var(--xb-line) 1px, transparent 1.2px);
-  background-size: 22px 22px;
+  display: grid;
+  gap: clamp(24px, 6svh, 72px);
+  padding-bottom: 12svh;
+}
+/* the gold thread through the three plates, under their faces */
+.es-thread {
+  position: absolute;
+  left: 50%;
+  top: 14svh;
+  bottom: 18svh;
+  width: 0;
+  border-left: 1px dashed rgba(202, 165, 84, 0.55);
+}
+.es-part {
+  position: relative;
+  min-height: 72svh;
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  scroll-margin-top: 12svh;
+}
+.es-cap {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  /* left of the thread, so it never runs through the words */
+  max-width: min(46ch, calc(50% - 32px));
+  font-family: var(--xb-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--xb-text-3);
+  transition: color 360ms ease;
+}
+.es-part[data-on] .es-cap {
+  color: var(--xb-text-2);
 }
 .es-svg {
-  position: absolute;
-  left: 0;
-  top: 0;
+  position: relative;
+  z-index: 1;
+  display: block;
   width: 100%;
   height: auto;
   overflow: visible;
-  will-change: transform;
 }
 .es-plate {
-  opacity: 0.26;
+  opacity: 0.32;
   transition: opacity 420ms ease;
 }
-.es-plate[data-on] {
+.es-part[data-on] .es-plate {
   opacity: 1;
 }
 .es-call {
   opacity: 0;
   transition: opacity 360ms ease;
 }
-.es-call[data-on] {
+.es-part[data-on] .es-call {
   opacity: 1;
-  transition-delay: 160ms;
+  transition-delay: 140ms;
 }
 .es-svg .es-callout {
   font-family: var(--xb-mono);
@@ -194,31 +157,12 @@
   fill: var(--xb-text-2);
 }
 
-/* ---- reduced motion, no JS: plain steps ---- */
-
-.es-plain {
-  display: none;
-}
-.es[data-static] {
-  height: auto;
-}
-.es[data-static] .es-pin {
-  display: none;
-}
-.es[data-static] .es-plain {
-  display: grid;
-  gap: 16px;
-  margin: 0;
-  padding: 96px var(--band-margin, 96px);
-  list-style: none;
-  font-family: var(--xb-sans);
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--xb-text-2);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .es-open {
-    animation: none;
+  .es-lines li,
+  .es-n i,
+  .es-cap,
+  .es-plate,
+  .es-call {
+    transition: none;
   }
 }

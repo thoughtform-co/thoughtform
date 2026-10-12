@@ -33,25 +33,24 @@ for (const id of ["plug"]) {
   await p.screenshot({ path: `${OUT}/v2-${id}-${W}x${H}.png` });
   console.log(id, "small:", JSON.stringify(small));
 }
-/* each step link under the flow lands on its own step in the stack */
+/* each label in the flow lands on its own step, and that step is the one lit */
 for (const [i, id] of ["embed", "encode", "run"].entries()) {
   await p.evaluate((id) => {
     const a = document.getElementById(`step-${id}`);
-    window.scrollTo(0, a.getBoundingClientRect().top + scrollY);
+    a.scrollIntoView({ block: "center" });
   }, id);
   await p.waitForTimeout(900);
-  const step = await p.evaluate(() => document.querySelector("#embed .es")?.getAttribute("data-step"));
-  console.log(`link ${id} → step ${step} (want ${i + 1})`);
+  const on = await p.evaluate(() =>
+    [...document.querySelectorAll("#embed .es-part")].findIndex((el) => el.hasAttribute("data-on"))
+  );
+  console.log(`link ${id} → part ${on + 1} lit (want ${i + 1})`);
+  await p.screenshot({ path: `${OUT}/v2-embed-${id}-${W}x${H}.png` });
 }
-/* the pinned stack: the intro, then each step */
-for (const [name, f] of [["intro", 0.05], ["s1", 0.33], ["s2", 0.6], ["s3", 0.88]]) {
-  await p.evaluate((f) => {
-    const el = document.querySelector("#embed .es");
-    const r = el.getBoundingClientRect();
-    window.scrollTo(0, r.top + scrollY + f * (r.height - innerHeight));
-  }, f);
-  await p.waitForTimeout(1400);
-  await p.screenshot({ path: `${OUT}/v2-embed-${name}-${W}x${H}.png` });
-  console.log("embed", name);
-}
+/* the head of the steps section */
+await p.evaluate(() => {
+  const el = document.getElementById("embed");
+  window.scrollTo(0, el.getBoundingClientRect().top + scrollY);
+});
+await p.waitForTimeout(900);
+await p.screenshot({ path: `${OUT}/v2-embed-head-${W}x${H}.png` });
 await b.close();

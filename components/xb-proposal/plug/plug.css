@@ -11,26 +11,13 @@
   height: 100%;
 }
 
-.pl-head {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: end;
-}
-.pl-head .xb-eyebrow {
-  margin-bottom: 14px;
-}
-.pl-lede {
-  max-width: 52ch;
-}
-
 .pl-fig {
   /* wider than the band is allowed (owner): up to 72px past it each side,
      bound by the height the head and the footer line leave */
   --pl-w: min(
     calc(100% + 144px),
     calc(
-      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 200px) * 1200 / 460
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 236px) * 1200 / 460
     )
   );
   position: relative;
@@ -217,17 +204,6 @@
 
 /* ---- the frames, their tabs, the footer ---- */
 
-.pl-frame {
-  fill: none;
-  stroke: var(--xb-line-2);
-}
-.pl-frame--team {
-  stroke: color-mix(in srgb, var(--pl-green) 55%, transparent);
-}
-.pl-frame--run {
-  stroke: var(--xb-line-2);
-  fill: rgb(235 227 214 / 0.02);
-}
 .pl-bus {
   fill: none;
   stroke: var(--xb-gold);
@@ -236,15 +212,6 @@
 .pl-tap {
   fill: var(--xb-gold);
 }
-.pl-port rect {
-  fill: var(--xb-ground);
-  stroke: var(--xb-gold);
-}
-.pl-port path {
-  fill: none;
-  stroke: var(--xb-gold);
-  stroke-opacity: 0.8;
-}
 .pl-tie {
   fill: none;
   stroke: var(--xb-gold);
@@ -252,17 +219,17 @@
   stroke-dasharray: 2 4;
 }
 
+/* A part's label: quiet type over its part, no box (owner: the framed tabs
+   were "closing things in"). The tone square carries which step it is. */
 .pl-tab {
-  --tone: var(--xb-text-2);
+  --tone: var(--xb-text-3);
   transform: translate(-50%, -50%);
   display: inline-flex;
   align-items: center;
   gap: 0.7em;
-  padding: 0.45em 0.9em;
-  background: var(--xb-ground);
-  border: 1px solid var(--tone);
+  padding: 0.3em 0.4em;
   font-family: var(--xb-mono);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
@@ -277,20 +244,23 @@
   --tone: var(--xb-text-2);
 }
 .pl-tab i {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background: var(--tone);
 }
 .pl-tab__n {
   color: var(--xb-text-3);
 }
 .pl-tab__name {
+  color: var(--xb-text-2);
+}
+.pl-tab:hover .pl-tab__name,
+.pl-tab:focus-visible .pl-tab__name {
   color: var(--xb-text);
 }
-.pl-tab:hover,
 .pl-tab:focus-visible {
-  background: var(--xb-ground-2);
-  outline: none;
+  outline: 1px solid var(--tone);
+  outline-offset: 2px;
 }
 
 .pl-fig > .pl-foot {
