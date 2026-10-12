@@ -373,3 +373,116 @@
   bottom: -6px;
   right: -6px;
 }
+
+/* ── the result band (lab block 23, owner 2026-10-12): under both panels,
+   a soft Tensor Gold ground; a dot, its name and a hatched rule; two cards,
+   each with its glyph top right ── */
+.arc-jstack__band {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-md) var(--js-pad);
+  padding: calc(var(--js-pad) * 0.8) var(--js-pad) var(--js-pad);
+  border-top: 1px solid var(--arc-rule);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold) 9%, transparent),
+    color-mix(in srgb, var(--gold) 3%, transparent)
+  );
+}
+.arc-jstack__band-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-70);
+}
+.arc-jstack__band-head i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.arc-jstack__band-head span {
+  flex: 1 1 auto;
+  height: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--gold) 30%, transparent) 0 1px,
+    transparent 1px 6px
+  );
+}
+.arc-jstack__card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--js-gold-line);
+  background: var(--arc-plate);
+}
+.arc-jstack__card > .arc-lev__glyph {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: auto;
+  height: 16px;
+}
+.arc-jstack__card-k {
+  margin: 0;
+  font: 11px / 1.2 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.arc-jstack__card-v {
+  margin: 0;
+  max-width: 34em;
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-90, var(--dawn));
+}
+
+/* the words column stands centred against the figure */
+.arc-jstack__words {
+  justify-content: center;
+}
+
+/* Scale: one plain sentence, then the tools it plugs into as small notes */
+.arc-jstack__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.arc-jstack__tools li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--arc-rule);
+  background: color-mix(in srgb, var(--dawn) 4%, transparent);
+  font: 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-jstack__tools li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  background: var(--js-human);
+}
+
+@media (max-width: 960px) {
+  .arc-jstack__band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

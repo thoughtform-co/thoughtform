@@ -82,6 +82,10 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     madeIn: "Claude Code",
     ask: "Samako needed a 15-second autumn sale ad for paid social. Each one meant a motion designer, and the product had to stay as photographed.",
     embed: "Identify the problem with the visual lead",
+    scale: {
+      line: "Each new sale brief runs through the same room, models and cold reads, straight to paid social.",
+      tools: ["Claude Code", "Kling", "Veo", "Ads Manager"],
+    },
     did: [
       "Drew the room once, for every shot",
       "Animated the scenes on three video models",
@@ -122,6 +126,10 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     madeIn: "Claude Code",
     ask: "Suri's 3.1 TB marketing Google Drive: 78 % of the files read tied to no campaign, found only by opening folder after folder.",
     embed: "Identify the problem with the library owner",
+    scale: {
+      line: "Briefing searches it for what a new concept can reuse; ads analysis traces a winning ad back to its files.",
+      tools: ["Claude", "Google Drive", "Monday", "Ads Manager"],
+    },
     did: [
       "Read 41,450 files with a vision model",
       "Grouped the files by what they show",
@@ -173,6 +181,10 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     madeIn: "Claude Code",
     ask: "AI renders get the product subtly wrong. Every render went to three people to be checked by eye.",
     embed: "Identify the problem with the creative team",
+    scale: {
+      line: "Every new batch of renders runs the same checks before it reaches the creative team.",
+      tools: ["Claude Code", "Image models", "Review board"],
+    },
     did: [
       "Wrote the product's own checks as evals",
       "Graded 18 shots on three models, blind",
@@ -220,6 +232,10 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     madeIn: "Cowork",
     ask: "Every writer and channel sent the studio a different brief, and the studio lead spent hours finding what each left out.",
     embed: "Identify the problem with the strategists",
+    scale: {
+      line: "Each brief lands on the Monday board in its channel's format, ready for the studio to pick up.",
+      tools: ["Cowork", "Monday", "The studio"],
+    },
     did: [
       "Asked for each missing field, one at a time",
       "Put every claim in brackets until approved",

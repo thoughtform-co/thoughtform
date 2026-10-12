@@ -201,8 +201,11 @@ export function ArcJob({
  * left reads the brief (the problem), then three moves on one gold rail:
  * Embed (green, with the team), Solve it together (what Claude did, three
  * small steps) and Scale (green, what plugs in, set as code); then what it
- * a rule from the frame's edge to the divider, the time saved as two bars,
- * then what it now allows (saved first, then what that opens up). No gate row: the record keeps it.
+ * and under both panels the result as a band (block 23 of the lab, after
+ * Dispatch's and Atomic Tessellator's stat rows): the time saved as two
+ * bars and what it now allows, two cards on a soft gold ground. Scale says
+ * in one sentence how the work plugs into the rest of the client's system,
+ * with the tools it plugs into as small notes. No gate row: the record keeps it.
  */
 function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: ArcMotion }) {
   const { n, title, bucket, ask, did, figure, result, client } = section;
@@ -256,36 +259,16 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
                 ))}
                 <li className="arc-jstack__box arc-jstack__box--human">
                   <p className="arc-jstack__tab">Scale</p>
-                  <p className="arc-jstack__code">
-                    <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
-                    <code>tool</code> <span className="arc-jstack__to">→</span>{" "}
-                    <span className="arc-jstack__dest">{client}&apos;s own system</span>
-                  </p>
+                  <p className="arc-jstack__line">{section.scale?.line}</p>
+                  {section.scale?.tools.length ? (
+                    <ul className="arc-jstack__tools" aria-label="Plugs into">
+                      {section.scale.tools.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </li>
               </ol>
-              <hr className="arc-jstack__rule" />
-              <div className="arc-jstack__box">
-                <p className="arc-jstack__tab">
-                  {saved}
-                  {estimated ? " · estimated" : null}
-                </p>
-                <div className="arc-jstack__bars">
-                  <p className="arc-jstack__bar-row">
-                    <span className="arc-jstack__bar-k">Before</span>
-                    <i className="arc-jstack__bar" data-w="long" aria-hidden="true" />
-                    <span className="arc-jstack__bar-v">{result.before}</span>
-                  </p>
-                  <p className="arc-jstack__bar-row" data-lit="true">
-                    <span className="arc-jstack__bar-k">Now</span>
-                    <i className="arc-jstack__bar" data-w="short" aria-hidden="true" />
-                    <span className="arc-jstack__bar-v">{result.now}</span>
-                  </p>
-                </div>
-              </div>
-              <div className="arc-jstack__box arc-jstack__box--gold">
-                <p className="arc-jstack__tab">{ALLOWS_LABEL}</p>
-                <p className="arc-jstack__para">{result.allows}</p>
-              </div>
             </div>
             <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
               <div className="arc-case__frame arc-jstack__frame">
@@ -299,6 +282,37 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
                 {figure.caption}
               </figcaption>
             </figure>
+          </div>
+          <div className="arc-jstack__band">
+            <p className="arc-jstack__band-head" aria-hidden="true">
+              <i />
+              The result
+              <span />
+            </p>
+            <section className="arc-jstack__card">
+              <Glyph kind="clock" />
+              <p className="arc-jstack__card-k">
+                {saved}
+                {estimated ? " · estimated" : null}
+              </p>
+              <div className="arc-jstack__bars">
+                <p className="arc-jstack__bar-row">
+                  <span className="arc-jstack__bar-k">Before</span>
+                  <i className="arc-jstack__bar" data-w="long" aria-hidden="true" />
+                  <span className="arc-jstack__bar-v">{result.before}</span>
+                </p>
+                <p className="arc-jstack__bar-row" data-lit="true">
+                  <span className="arc-jstack__bar-k">Now</span>
+                  <i className="arc-jstack__bar" data-w="short" aria-hidden="true" />
+                  <span className="arc-jstack__bar-v">{result.now}</span>
+                </p>
+              </div>
+            </section>
+            <section className="arc-jstack__card">
+              <Glyph kind={ws.glyph} />
+              <p className="arc-jstack__card-k">{ALLOWS_LABEL}</p>
+              <p className="arc-jstack__card-v">{result.allows}</p>
+            </section>
           </div>
         </article>
       </div>

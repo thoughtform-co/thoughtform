@@ -2069,6 +2069,15 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         if (s.top === "stack") {
           expect((s.embed ?? "").length, `${at}: the stack's embed step`).toBeGreaterThan(0);
           expect((s.embed ?? "").length, `${at}: embed`).toBeLessThanOrEqual(48);
+          /* Scale: one plain sentence and two to four tools as notes. */
+          expect((s.scale?.line ?? "").length, `${at}: scale`).toBeGreaterThan(0);
+          expect((s.scale?.line ?? "").length, `${at}: scale`).toBeLessThanOrEqual(110);
+          expect(s.scale?.line, `${at}: scale says something else`).not.toBe(s.result.allows);
+          expect((s.scale?.tools ?? []).length, `${at}: tools`).toBeGreaterThanOrEqual(2);
+          expect((s.scale?.tools ?? []).length, `${at}: tools`).toBeLessThanOrEqual(4);
+          for (const t of s.scale?.tools ?? []) {
+            expect(t.length, `${at}: "${t}"`).toBeLessThanOrEqual(16);
+          }
           for (const v of [s.result.before, s.result.now]) {
             expect((v ?? "").length, `${at}: the time saved's two bars`).toBeGreaterThan(0);
             expect((v ?? "").length, `${at}: "${v}"`).toBeLessThanOrEqual(48);

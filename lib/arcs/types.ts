@@ -1646,6 +1646,11 @@ export type ArcSection = ArcSectionBase &
         /** The `stack` card's first step (owner, 2026-10-12): embed with the
          *  team to identify the problem, one line, by role. ≤ 48. */
         embed?: string;
+        /** The `stack` card's last step, Scale (owner, 2026-10-12): how the
+         *  work plugs into the rest of the client's system, one plain
+         *  sentence (≤ 110) that never restates what it now allows, and the
+         *  tools it plugs into as small notes (2 to 4, ≤ 16 each). */
+        scale?: { line: string; tools: readonly string[] };
         /** The person who decided, by role (≤ 32), and, when the decision
          *  needs saying, what that person decides: one plain sentence in
          *  the client's own role words (≤ 80; owner 2026-10-11, "every

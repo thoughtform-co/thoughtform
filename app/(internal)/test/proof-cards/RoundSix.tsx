@@ -225,11 +225,12 @@ function BandBody({ job, ba }: { job: Job; ba: boolean }) {
             ))}
             <li className="pk-c__box pk-i__big">
               <p className="pk-c__tab">Scale</p>
-              <p className="pk-i__code">
-                <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
-                <code>tool</code> <span className="pk-i__code-to">→</span>{" "}
-                <span className="pk-i__code-dest">{job.client}&apos;s own system</span>
-              </p>
+              <p className="pk-body">{job.scale?.line}</p>
+              <ul className="pk-i__tools" aria-label="Plugs into">
+                {job.scale?.tools.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
             </li>
           </ol>
         </div>
