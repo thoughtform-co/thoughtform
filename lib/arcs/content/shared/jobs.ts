@@ -81,7 +81,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     date: "6 Oct 2026",
     madeIn: "Claude Code",
     ask: "Meta's algorithm rewards creative variety. Motion ads convert well but cost the most to make, so Samako made few of them.",
-    embed: "Identify the problem with the visual lead",
+    embed: "Mapped how a motion ad gets made, with the visual lead",
     scale: {
       tools: ["Claude Code", "Kling", "Veo", "Ads Manager"],
     },
@@ -124,7 +124,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     date: "8 to 9 Oct 2026",
     madeIn: "Claude Code",
     ask: "Suri's 3.1 TB marketing Google Drive: 78 % of the files read tied to no campaign, found only by opening folder after folder.",
-    embed: "Identify the problem with the library owner",
+    embed: "Mapped where searches stall, with the library owner",
     scale: {
       tools: ["Claude", "Google Drive", "Monday", "Ads Manager"],
     },
@@ -178,7 +178,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     date: "7 to 8 Oct 2026",
     madeIn: "Claude Code",
     ask: "AI renders get the product subtly wrong. Every render went to three people to be checked by eye.",
-    embed: "Identify the problem with the creative team",
+    embed: "Mapped what the creative team checks by eye",
     scale: {
       tools: ["Claude Code", "Image models", "Review board"],
     },
@@ -228,7 +228,7 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     date: "4 Oct 2026",
     madeIn: "Cowork",
     ask: "Every writer and channel sent the studio a different brief, and the studio lead spent hours finding what each left out.",
-    embed: "Identify the problem with the strategists",
+    embed: "Mapped what a brief leaves out, with the strategists",
     scale: {
       tools: ["Cowork", "Monday", "The studio"],
     },
