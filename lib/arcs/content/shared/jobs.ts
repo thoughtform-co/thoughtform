@@ -48,6 +48,14 @@ import { SURI_DRIVE_MAP } from "./suriDriveMap";
  * as a grain field. The four words on it are GENERIC by law, chosen on the
  * groups' own descriptions: never a product, a person or the client's term.
  *
+ * ⚠ THE STACK CARD (owner, 2026-10-12, /test/proof-cards block 19): every
+ * job draws as `top: "stack"`. Its `ask` states the PROBLEM, in a short
+ * paragraph; `embed` is the first of the three moves (embed to identify the
+ * problem, solve it together, scale it into the client's own system); the
+ * time saved draws as two bars, `result.before` and `result.now`, the owner's
+ * estimates as above. The gate and `said` stay on the record and are not
+ * drawn by the stack card.
+ *
  * ⚠ PEOPLE BY ROLE, NEVER BY NAME OR PRONOUN; no money; the films and
  * stills are the shared records' own objects, so a fix lands once.
  */
@@ -65,13 +73,15 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     id: "job-production",
     kind: "job",
     menuLabel: "Motion ad · Samako",
-    title: "A 15-second motion ad for the autumn sale",
+    title: "A motion ad for the autumn sale",
+    top: "stack",
     n: 1,
     bucket: "production",
     client: "Samako",
     date: "6 Oct 2026",
     madeIn: "Claude Code",
-    ask: "A short motion ad for the autumn sale, in Dutch, for paid social, from an open brief.",
+    ask: "Samako needed a 15-second autumn sale ad for paid social. Each one meant a motion designer, and the product had to stay as photographed.",
+    embed: "Identify the problem with the visual lead",
     did: [
       "Drew the room once, for every shot",
       "Animated the scenes on three video models",
@@ -88,6 +98,8 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "The return",
+      before: "A motion designer on each ad",
+      now: "Cut from the brief, checked in three cold reads",
       said: {
         pre: "A motion ad from an open brief, every product shot the photographer's own:",
         em: "no frame drawn by AI",
@@ -101,13 +113,15 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     id: "job-ops",
     kind: "job",
     menuLabel: "Drive map · Suri",
-    title: "The marketing Drive, mapped and searchable by meaning",
+    title: "Mapping the marketing Drive",
+    top: "stack",
     n: 2,
     bucket: "ops",
     client: "Suri",
     date: "8 to 9 Oct 2026",
     madeIn: "Claude Code",
-    ask: "Find what the team already owns across the marketing Drive, without opening every folder.",
+    ask: "Suri's 3.1 TB marketing Google Drive: 78 % of the files read tied to no campaign, found only by opening folder after folder.",
+    embed: "Identify the problem with the library owner",
     did: [
       "Read 41,450 files with a vision model",
       "Grouped the files by what they show",
@@ -136,6 +150,8 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "Time saved",
+      before: "Weeks opening folders by hand",
+      now: "Two days, the whole Drive read",
       said: {
         pre: "The whole marketing Drive mapped in two days, against",
         em: "weeks by hand",
@@ -148,13 +164,15 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     id: "job-review",
     kind: "job",
     menuLabel: "Renders · Samako",
-    title: "A first-pass review of AI product renders",
+    title: "A first pass on AI product renders",
+    top: "stack",
     n: 3,
     bucket: "review",
     client: "Samako",
     date: "7 to 8 Oct 2026",
     madeIn: "Claude Code",
-    ask: "Catch the AI renders that get the product wrong, before the creative team reviews them.",
+    ask: "AI renders get the product subtly wrong. Every render went to three people to be checked by eye.",
+    embed: "Identify the problem with the creative team",
     did: [
       "Wrote the product's own checks as evals",
       "Graded 18 shots on three models, blind",
@@ -178,6 +196,8 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "Time saved",
+      before: "Every render checked by eye",
+      now: "Only the flagged renders reach a person",
       said: {
         pre: "About",
         em: "two hours a week",
@@ -192,12 +212,14 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     kind: "job",
     menuLabel: "Briefs · Suri",
     title: "One brief format for every channel",
+    top: "stack",
     n: 4,
     bucket: "strategy",
     client: "Suri",
     date: "4 Oct 2026",
     madeIn: "Cowork",
-    ask: "Briefs that arrive complete and in one shape, whoever writes them.",
+    ask: "Every writer and channel sent the studio a different brief, and the studio lead spent hours finding what each left out.",
+    embed: "Identify the problem with the strategists",
     did: [
       "Asked for each missing field, one at a time",
       "Put every claim in brackets until approved",
@@ -220,6 +242,8 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "Time saved",
+      before: "Chasing what a brief left out",
+      now: "Twelve fields, one format, before the studio",
       said: {
         pre: "The studio lead gets",
         em: "hours a week",

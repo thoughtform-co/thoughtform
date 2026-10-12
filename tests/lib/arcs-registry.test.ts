@@ -2059,7 +2059,17 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.client.length, `${at}: client`).toBeLessThanOrEqual(20);
         expect(s.date.length, `${at}: date`).toBeLessThanOrEqual(16);
         expect(s.madeIn.length, `${at}: made in`).toBeLessThanOrEqual(20);
-        expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(110);
+        /* The stack card (owner, 2026-10-12): the ask states the problem
+           in a short paragraph, two lines in the card's left column. */
+        expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(s.top === "stack" ? 140 : 110);
+        if (s.top === "stack") {
+          expect((s.embed ?? "").length, `${at}: the stack's embed step`).toBeGreaterThan(0);
+          expect((s.embed ?? "").length, `${at}: embed`).toBeLessThanOrEqual(48);
+          for (const v of [s.result.before, s.result.now]) {
+            expect((v ?? "").length, `${at}: the time saved's two bars`).toBeGreaterThan(0);
+            expect((v ?? "").length, `${at}: "${v}"`).toBeLessThanOrEqual(48);
+          }
+        }
         for (const d of s.did) {
           expect(d.length, `${at}: "${d}" sets on one line`).toBeLessThanOrEqual(44);
           expect(d.length, `${at}: an empty step`).toBeGreaterThan(0);
@@ -2080,7 +2090,7 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         /* The head is U4's gold band, or the mark (the proposal system,
            ADR-155, a lab direction); U2's strip is retired with U4. And the
            return's line never restates its value's digits. */
-        if (s.top !== undefined) expect(["mark"], `${at}: top`).toContain(s.top);
+        if (s.top !== undefined) expect(["mark", "stack"], `${at}: top`).toContain(s.top);
         /* U4: the return reads in two steps, the saving and then what it
            allows, and neither line restates the number. */
         if (s.result.label !== undefined) {
