@@ -28,7 +28,7 @@
   --xn-w: min(
     calc(100% + 144px),
     calc(
-      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 116px) * 1200 / 520
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 108px) * 1200 / 560
     )
   );
   --u: calc(100cqw / 1200);
@@ -36,7 +36,7 @@
   align-self: center;
   width: var(--xn-w);
   margin-left: calc((100% - var(--xn-w)) / 2);
-  aspect-ratio: 1200 / 520;
+  aspect-ratio: 1200 / 560;
   container-type: inline-size;
   background-image: radial-gradient(var(--xb-line) 1px, transparent 1.2px);
   background-size: 26px 26px;
@@ -123,7 +123,8 @@
 }
 .xn-label {
   display: grid;
-  gap: calc(4 * var(--u));
+  gap: calc(5 * var(--u));
+  transform: translateY(-50%);
   color: var(--xb-text-3);
   transition: color 300ms ease;
 }
@@ -140,13 +141,12 @@
 }
 .xn-name {
   font-family: var(--xb-sans);
-  font-size: calc(21 * var(--u));
+  font-size: calc(19 * var(--u));
   line-height: 1.05;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 .xn-status {
-  transform: translateY(-50%);
   font-family: var(--xb-mono);
   font-size: max(10px, calc(10.5 * var(--u)));
   letter-spacing: 0.15em;
@@ -156,6 +156,49 @@
   white-space: nowrap;
   transition: opacity 300ms ease;
 }
-.xn-status[data-first] {
+.xn-label[data-first] .xn-status {
   color: var(--xb-gold);
+}
+
+/* Marketing: the configuration's housing, a notched frame with its gold
+   head band (the configuration panel's own) */
+.xn-frame__body {
+  fill: color-mix(in srgb, var(--xb-ground) 70%, transparent);
+  stroke: color-mix(in srgb, var(--xb-gold) 55%, transparent);
+  stroke-width: 1;
+}
+.xn-frame__band {
+  fill: color-mix(in srgb, var(--xb-gold) 16%, transparent);
+  stroke: none;
+}
+.xn-frame__rule {
+  stroke: color-mix(in srgb, var(--xb-gold) 40%, transparent);
+  stroke-width: 1;
+}
+.xn-band {
+  transform: translateY(-50%);
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(11 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-gold);
+  white-space: nowrap;
+}
+
+/* the ribbons: eight wires a lane, the circuit board's own */
+.xn-lane {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+}
+.xn-rib {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.7;
+  stroke-width: 1;
+  stroke-dasharray: 1 1;
+}
+.xn-node--dept[data-on] .xn-card {
+  stroke: var(--xb-gold);
 }

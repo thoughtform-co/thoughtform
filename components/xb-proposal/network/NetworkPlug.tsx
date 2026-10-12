@@ -1,45 +1,47 @@
 "use client";
 
-/* The stack plugs in (owner, 2026-10-12): after "Embed, encode, run." the
-   closed stack of three plates turns to face the reader, and the module it
-   becomes wires out to the five creative workstreams. The first one lights
-   with Thoughtform beside it; by the last frame all five are run by the team.
+/* The stack plugs in, and Marketing is only the first team (owner,
+   2026-10-12). After "Embed, encode, run." the closed stack of three plates
+   slides down into this section and turns to face the reader; the module it
+   becomes takes its seat inside a notched frame, X-Bionic's Marketing, in the
+   intelligence configuration's own housing (TR and BL cut, the gold head
+   band). There it wires out to the five creative workstreams: Production
+   first, with Thoughtform, then the rest, until all five are run by the team.
+   Then the frame's right edge sends eight-wire ribbons, the configuration
+   board's own circuit lanes, out to the departments that plug in next.
 
    One camera, one object. The plates are the steps section's own (8 units
    square, team green, layer gold, agents dawn, the closed stack's spacing at
    the same unit), projected by a true orthographic camera whose yaw and pitch
-   run from the isometric (45°, 35.26°: exactly the kit's `makeIso`) to 0, so
-   the turn is a rotation, never a crossfade. As it turns the plates thicken
-   into the three courses of one module, which then rises to its seat.
+   run from the isometric (45 and 35.26 degrees: exactly the kit's `makeIso`)
+   to 0, so the turn is a rotation, never a crossfade. As it turns the plates
+   thicken into the three courses of one module.
 
-   The wires leave the module's front edges computed from the same camera at
-   rest, so every line starts and ends on the edge it names. Line work is SVG
-   in a 1200 × 520 frame; every word is DOM seated in percent of the same
-   frame and sized in `cqw` of it, so type and drawing scale together. One
-   scroll reader; reduced motion reads the last frame. */
+   Every wire starts on the edge it leaves and ends on the edge it names,
+   computed from the same numbers that draw those edges. Line work is SVG in
+   a 1200 x 560 frame; every word is DOM seated in percent of the same frame
+   and sized in `cqw` of it, so type and drawing scale together. One scroll
+   reader; reduced motion reads the last frame; `?netp=0..1` pins a moment
+   for stills. */
 
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import { MastheadTitle } from "../Masthead";
 
-export type NetLayout = "bus" | "hub" | "spine";
-
 const W = 1200;
-const H = 520;
+const H = 560;
 const S = 8;
 /* The steps section's unit (u 26): the stack arrives at the size it left. */
 const SCALE = 26;
 const ISO_YAW = Math.PI / 4;
-const ISO_PITCH = Math.atan(1 / Math.SQRT2); // 35.26°
+const ISO_PITCH = Math.atan(1 / Math.SQRT2);
 /* The closed stack's spacing there (72 drawing px), and the module's. */
 const GAP0 = 72 / 26;
 const H0 = 0.4;
 const GAP1 = 1.24;
 const H1 = 1.0;
-const CENTRE: P = [600, 250];
-/* The module at rest is drawn larger than the stack it turned from: it is
-   the subject of this frame. */
-const ZOOM = 1.35;
+/* The module at rest is drawn a step larger than the stack it turned from. */
+const ZOOM = 1.2;
 
 const GREEN = "var(--xn-green)";
 const GOLD = "var(--xb-gold)";
@@ -47,17 +49,45 @@ const DAWN = "var(--xb-text)";
 const TONES = [GREEN, GOLD, DAWN] as const;
 const COURSE = ["Your team", "The layer", "Your agents"] as const;
 
-const TITLE = ["Every workstream,", "run by your team."] as const;
+const TITLE = ["Marketing first,", "then every team."] as const;
 
-/* The five workstreams, in the order they plug in. */
-const STREAMS = ["Production", "Ops", "Review", "Strategy", "Technology"] as const;
+type P = [number, number];
+
+/* -- the frame: X-Bionic's Marketing, in the configuration's housing ---- */
+
+const FR = { x0: 20, x1: 740, y0: 20, y1: 540, cut: 26, band: 38 };
+/* where the stack enters (top), where it turns, its seat in the frame */
+const ENTER: P = [380, 96];
+const TURN: P = [380, 290];
+const SEAT: P = [206, 300];
+
+/* The five workstreams, in the order they plug in: a column on the frame's
+   right, one trunk from the module. */
+const STREAMS = [
+  "Creative production",
+  "Creative ops",
+  "Creative review",
+  "Creative strategy",
+  "Creative technology",
+] as const;
+const CARD = { x: 456, w: 256, h: 64, gap: 18 };
+const CARD_Y = STREAMS.map(
+  (_, i) => 300 - (5 * CARD.h + 4 * CARD.gap) / 2 + i * (CARD.h + CARD.gap)
+);
+const TRUNK_X = 404;
+
+/* The departments that plug in next, outside the frame. */
+const DEPTS = ["Product design", "Technology", "Operations", "Sales"] as const;
+const DEPT = { x: 918, w: 262, h: 72 };
+const DEPT_Y = [92, 204, 316, 428];
+const RIB_Y0 = [240, 280, 320, 360];
+const RIB_JOG = [768, 820, 820, 768];
+const WIRES = 8;
+const PITCH = 3.4;
+
 const FIRST = "With Thoughtform";
 const OWNED = "Run by your team";
 
-const NODE_W = 200;
-const NODE_H = 88;
-
-type P = [number, number];
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
 const ease = (t: number) => {
@@ -65,11 +95,11 @@ const ease = (t: number) => {
   return c < 0.5 ? 4 * c * c * c : 1 - Math.pow(-2 * c + 2, 3) / 2;
 };
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const f = (n: number) => n.toFixed(1);
+const f = (n: number) => n.toFixed(2);
 const at = (x: number, y: number): CSSProperties =>
   ({ "--px": (x / W).toFixed(5), "--py": (y / H).toFixed(5) }) as CSSProperties;
 
-/* ── the camera ────────────────────────────────────────────────────────── */
+/* -- the camera --------------------------------------------------------- */
 
 type Cam = { yaw: number; pitch: number; cx: number; cy: number; zc: number; k: number };
 
@@ -85,7 +115,7 @@ function project(c: Cam, x: number, y: number, z: number): P {
     c.cy + u * ((X * sy + Y * cy) * Math.sin(c.pitch) - Z * Math.cos(c.pitch)),
   ];
 }
-const poly = (list: P[]) => list.map(([x, y]) => `${f(x)},${f(y)}`).join(" ");
+const poly = (list: P[]) => list.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
 
 /** The courses at turn `e`: each plate's top z, its thickness, the centre. */
 function courses(e: number) {
@@ -94,10 +124,8 @@ function courses(e: number) {
   return { h, tops: [0, -g, -2 * g], zc: (-2 * g - h) / 2 };
 }
 
-type ModBox = { l: number; r: number; t: number; b: number; mid: number; rows: number[] };
-
 /** The module's front at rest, from the same camera the turn ends on. */
-function restBox(seat: P): ModBox {
+function restBox(seat: P) {
   const { tops, h, zc } = courses(1);
   const cam: Cam = { yaw: 0, pitch: 0, cx: seat[0], cy: seat[1], zc, k: ZOOM };
   const [l, t] = project(cam, 0, S, tops[0]);
@@ -106,75 +134,68 @@ function restBox(seat: P): ModBox {
   return { l, r, t, b, mid: rows[1], rows };
 }
 
-/* ── the layouts: the module's seat, the nodes, the wires ─────────────── */
+/* -- the line work ------------------------------------------------------ */
 
-type Node = { x: number; y: number };
-type Layout = { seat: P; nodes: Node[]; wires: (m: ModBox, nodes: Node[]) => string[] };
+/** The frame's outline, TR and BL cut. */
+function frameOutline() {
+  const { x0, x1, y0, y1, cut } = FR;
+  return poly([
+    [x0, y0],
+    [x1 - cut, y0],
+    [x1, y0 + cut],
+    [x1, y1],
+    [x0 + cut, y1],
+    [x0, y1 - cut],
+  ]);
+}
+/** The head band, its top-right corner cut with the frame's. */
+function frameBand() {
+  const { x0, x1, y0, cut, band } = FR;
+  return poly([
+    [x0, y0],
+    [x1 - cut, y0],
+    [x1, y0 + cut],
+    [x1, y0 + band],
+    [x0, y0 + band],
+  ]);
+}
 
-const LAYOUTS: Record<NetLayout, Layout> = {
-  /* A: the module above, one bus under it, the five in a row */
-  bus: {
-    seat: [600, 132],
-    nodes: (() => {
-      const gap = 20;
-      const x0 = (W - (5 * NODE_W + 4 * gap)) / 2;
-      const row = [0, 1, 2, 3, 4].map((i) => ({ x: x0 + i * (NODE_W + gap), y: 392 }));
-      /* production under the module, the rest outward */
-      return [row[2], row[1], row[3], row[0], row[4]];
-    })(),
-    wires: (m, nodes) => nodes.map((n) => `M600 ${f(m.b)}V300H${f(n.x + NODE_W / 2)}V${f(n.y)}`),
-  },
-  /* B: the module at the centre, two either side, one under */
-  hub: {
-    seat: [600, 220],
-    nodes: [
-      { x: 40, y: 96 },
-      { x: W - 40 - NODE_W, y: 96 },
-      { x: 40, y: 300 },
-      { x: W - 40 - NODE_W, y: 300 },
-      { x: 600 - NODE_W / 2, y: 412 },
-    ],
-    wires: (m, nodes) =>
-      nodes.map((n, i) => {
-        const ny = n.y + NODE_H / 2;
-        if (i === 4) return `M600 ${f(m.b)}V${f(n.y)}`;
-        if (n.x < 600) return `M${f(m.l)} ${f(m.mid)}H330V${f(ny)}H${f(n.x + NODE_W)}`;
-        return `M${f(m.r)} ${f(m.mid)}H870V${f(ny)}H${f(n.x)}`;
-      }),
-  },
-  /* C: the module at the left, one spine, the five branching off it */
-  spine: {
-    seat: [160, 260],
-    nodes: [440, 595, 750, 905, 1060].map((cx, i) => ({
-      x: cx - NODE_W / 2,
-      y: i % 2 ? 330 : 102,
-    })),
-    wires: (m, nodes) =>
-      nodes.map((n) => {
-        const cx = n.x + NODE_W / 2;
-        const end = n.y > 260 ? n.y : n.y + NODE_H;
-        return `M${f(m.r)} ${f(m.mid)}H${f(cx)}V${f(end)}`;
-      }),
-  },
-};
+/** One wire of a ribbon: across, a 45-degree jog, across again. The wire at
+    offset `d` is the centre line offset by `d`, so its corners shift along
+    the bisector by d * tan(22.5deg) and every wire stays parallel to its
+    neighbours, at the same pitch on the diagonal as on the runs. */
+const TAN = Math.SQRT2 - 1;
+function ribbonWire(i: number, d: number) {
+  const y0 = RIB_Y0[i];
+  const y1 = DEPT_Y[i] + DEPT.h / 2;
+  const dir = Math.sign(y1 - y0);
+  const xa = RIB_JOG[i];
+  const xb = xa + Math.abs(y1 - y0);
+  return `M${FR.x1} ${f(y0 + d)}H${f(xa - dir * TAN * d)}L${f(xb + dir * TAN * d)} ${f(y1 + d)}H${DEPT.x}`;
+}
 
-/* ── the moment ────────────────────────────────────────────────────────── */
+/* -- the moment --------------------------------------------------------- */
 
-const WIRE_AT = 0.42;
-const WIRE_STEP = 0.07;
-const WIRE_LEN = 0.11;
 function moment(p: number) {
+  const wireAt = (i: number) => 0.4 + i * 0.045;
+  const ribAt = (i: number) => 0.7 + i * 0.05;
   return {
-    turn: ease(seg(p, 0.02, 0.3)),
-    rise: ease(seg(p, 0.3, 0.4)),
-    ports: seg(p, 0.38, 0.42),
-    wire: (i: number) => ease(seg(p, WIRE_AT + i * WIRE_STEP, WIRE_AT + i * WIRE_STEP + WIRE_LEN)),
-    on: (i: number) => p >= WIRE_AT + i * WIRE_STEP + WIRE_LEN - 0.005,
-    handed: p >= 0.9,
+    /* the stack slides down as it turns, then takes its seat */
+    drop: ease(seg(p, 0, 0.24)),
+    turn: ease(seg(p, 0.02, 0.28)),
+    seat: ease(seg(p, 0.28, 0.38)),
+    frame: ease(seg(p, 0.3, 0.4)),
+    labels: seg(p, 0.34, 0.4),
+    ports: seg(p, 0.38, 0.41),
+    wire: (i: number) => ease(seg(p, wireAt(i), wireAt(i) + 0.08)),
+    on: (i: number) => p >= wireAt(i) + 0.075,
+    handed: p >= 0.66,
+    rib: (i: number) => ease(seg(p, ribAt(i), ribAt(i) + 0.1)),
+    dept: (i: number) => p >= ribAt(i) + 0.095,
   };
 }
 
-/* ── the drawing ───────────────────────────────────────────────────────── */
+/* -- the drawing -------------------------------------------------------- */
 
 function Module({ seat, e }: { seat: P; e: number }) {
   const { tops, h, zc } = courses(e);
@@ -273,17 +294,22 @@ function Stack3({ x, y }: { x: number; y: number }) {
   );
 }
 
-export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
+const cutCard = (x: number, y: number, w: number, h: number, c: number) =>
+  poly([
+    [x, y],
+    [x + w - c, y],
+    [x + w, y + c],
+    [x + w, y + h],
+    [x + c, y + h],
+    [x, y + h - c],
+  ]);
+
+export function NetworkPlug() {
   const runway = useRef<HTMLDivElement>(null);
   const [p, setP] = useState(0);
-  const [layout, setLayout] = useState<NetLayout>(fixed);
 
-  /* `?net=bus|hub|spine` and `?netp=0..1` pin a layout and a moment, for
-     stills; reduced motion reads the last frame. */
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    const v = q.get("net");
-    const fp = q.get("netp");
+    const fp = new URLSearchParams(window.location.search).get("netp");
     const fixedP =
       fp !== null
         ? clamp01(Number(fp))
@@ -305,11 +331,8 @@ export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
     const on = () => {
       if (!raf) raf = requestAnimationFrame(read);
     };
-    /* the first reading, and the pinned layout, land on the next frame */
-    const first = requestAnimationFrame(() => {
-      if (v === "bus" || v === "hub" || v === "spine") setLayout(v);
-      read();
-    });
+    /* the first reading lands on the next frame */
+    const first = requestAnimationFrame(read);
     if (fixedP !== null) return () => cancelAnimationFrame(first);
     window.addEventListener("scroll", on, { passive: true });
     window.addEventListener("resize", on);
@@ -321,17 +344,23 @@ export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
     };
   }, []);
 
-  const L = LAYOUTS[layout];
-  const m = restBox(L.seat);
-  const wires = L.wires(m, L.nodes);
   const st = moment(p);
-  const seat: P = [lerp(CENTRE[0], L.seat[0], st.rise), lerp(CENTRE[1], L.seat[1], st.rise)];
-  const dy = seat[1] - L.seat[1];
-  const dx = seat[0] - L.seat[0];
-  const labels = seg(p, 0.3, 0.36);
+  const m = restBox(SEAT);
+  /* down while it turns, then across into its seat */
+  const pos: P =
+    st.seat > 0
+      ? [lerp(TURN[0], SEAT[0], st.seat), lerp(TURN[1], SEAT[1], st.seat)]
+      : [lerp(ENTER[0], TURN[0], st.drop), lerp(ENTER[1], TURN[1], st.drop)];
+  const dx = pos[0] - SEAT[0];
+  const dy = pos[1] - SEAT[1];
+  /* the module's wires: one trunk out of its right edge, a branch per card */
+  const wires = CARD_Y.map(
+    (y) => `M${f(m.r)} ${f(m.mid)}H${TRUNK_X}V${f(y + CARD.h / 2)}H${CARD.x}`
+  );
+  const offs = Array.from({ length: WIRES }, (_, k) => (k - (WIRES - 1) / 2) * PITCH);
 
   return (
-    <div className="xn" ref={runway} data-layout={layout}>
+    <div className="xn" ref={runway}>
       <div className="xn-pin">
         <MastheadTitle lines={TITLE} />
         <div className="xn-fig">
@@ -339,11 +368,56 @@ export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
             viewBox={`0 0 ${W} ${H}`}
             className="xn-svg"
             role="img"
-            aria-label="The stack of three plates turns to face the reader and becomes one module, which wires out to five creative workstreams: production, ops, review, strategy and technology. Production plugs in first, with Thoughtform; by the end all five are run by the team."
+            aria-label="The stack of three plates slides down and turns to face the reader, becoming one module inside X-Bionic's Marketing. It wires out to the five creative workstreams: production first with Thoughtform, then ops, review, strategy and technology, until all five are run by the team. From Marketing, circuit ribbons run out to the departments that take the same approach next: product design, technology, operations and sales."
           >
-            {/* the tracks the wires will run, faint from the start */}
+            {/* Marketing, in the configuration's housing */}
+            <g style={{ opacity: st.frame }}>
+              <polygon points={frameOutline()} className="xn-frame__body" />
+              <polygon points={frameBand()} className="xn-frame__band" />
+              <line
+                x1={FR.x0}
+                x2={FR.x1}
+                y1={FR.y0 + FR.band}
+                y2={FR.y0 + FR.band}
+                className="xn-frame__rule"
+              />
+            </g>
+
+            {/* the ribbons out of Marketing, a faint lane first */}
+            {DEPTS.map((d, i) => (
+              <g key={d} style={{ opacity: st.frame }}>
+                {offs.map((o) => (
+                  <path key={`t${o}`} d={ribbonWire(i, o)} className="xn-lane" />
+                ))}
+                {offs.map((o) => (
+                  <path
+                    key={`w${o}`}
+                    d={ribbonWire(i, o)}
+                    pathLength={1}
+                    className="xn-rib"
+                    style={{ strokeDashoffset: 1 - st.rib(i) }}
+                  />
+                ))}
+              </g>
+            ))}
+            {DEPTS.map((d, i) => (
+              <g
+                key={d}
+                className="xn-node xn-node--dept"
+                style={{ opacity: st.frame }}
+                data-on={st.dept(i) ? "" : undefined}
+              >
+                <polygon
+                  className="xn-card"
+                  points={cutCard(DEPT.x, DEPT_Y[i], DEPT.w, DEPT.h, 10)}
+                />
+                <Stack3 x={DEPT.x + 18} y={DEPT_Y[i] + 26} />
+              </g>
+            ))}
+
+            {/* the workstreams' wires, a faint track first */}
             {wires.map((d, i) => (
-              <path key={`t${i}`} d={d} className="xn-track" />
+              <path key={`t${i}`} d={d} className="xn-track" style={{ opacity: st.frame }} />
             ))}
             {wires.map((d, i) => (
               <path
@@ -354,65 +428,83 @@ export function NetworkPlug({ layout: fixed = "hub" }: { layout?: NetLayout }) {
                 style={{ strokeDashoffset: 1 - st.wire(i) }}
               />
             ))}
-            {L.nodes.map((n, i) => (
+            {STREAMS.map((s, i) => (
               <g
-                key={STREAMS[i]}
+                key={s}
                 className="xn-node"
+                style={{ opacity: st.frame }}
                 data-on={st.on(i) ? "" : undefined}
                 data-first={i === 0 && st.on(0) && !st.handed ? "" : undefined}
               >
-                <rect x={n.x} y={n.y} width={NODE_W} height={NODE_H} className="xn-card" />
-                <line x1={n.x} x2={n.x + NODE_W} y1={n.y + 58} y2={n.y + 58} className="xn-rule" />
-                <Stack3 x={n.x + 16} y={n.y + 19} />
+                <rect x={CARD.x} y={CARD_Y[i]} width={CARD.w} height={CARD.h} className="xn-card" />
+                <Stack3 x={CARD.x + 16} y={CARD_Y[i] + 22} />
               </g>
             ))}
-            <Module seat={seat} e={st.turn} />
-            <g className="xn-ports" opacity={st.ports}>
-              {wires.map((d, i) => {
-                const [, x, y] = /^M([\d.]+) ([\d.]+)/.exec(d)!;
-                return <rect key={i} x={+x - 3} y={+y - 3} width={6} height={6} />;
-              })}
+            <Module seat={pos} e={st.turn} />
+            <g className="xn-ports">
+              <rect x={m.r - 3} y={m.mid - 3} width={6} height={6} opacity={st.ports} />
+              {RIB_Y0.map((y, i) => (
+                <rect
+                  key={y}
+                  x={FR.x1 - 3}
+                  y={y - 3}
+                  width={6}
+                  height={6}
+                  opacity={st.rib(i) > 0 ? 1 : 0}
+                />
+              ))}
             </g>
           </svg>
 
           {/* every word, seated in the frame */}
           <div className="xn-words">
+            <span
+              className="xn-band"
+              style={{ ...at(FR.x0 + 20, FR.y0 + FR.band / 2), opacity: st.frame }}
+            >
+              X-Bionic &middot; Marketing
+            </span>
             {COURSE.map((c, i) => (
               <span
                 key={c}
                 className="xn-course"
-                data-tone={i}
-                style={{ ...at(m.l + 16 + dx, m.rows[i] + dy), opacity: labels }}
+                style={{ ...at(m.l + 14 + dx, m.rows[i] + dy), opacity: st.labels }}
               >
                 {c}
               </span>
             ))}
-            {L.nodes.map((n, i) => {
+            {STREAMS.map((s, i) => {
               const on = st.on(i);
+              const first = i === 0 && on && !st.handed;
               return (
                 <div
-                  key={STREAMS[i]}
+                  key={s}
                   className="xn-label"
                   data-on={on ? "" : undefined}
-                  data-first={i === 0 && on && !st.handed ? "" : undefined}
-                  style={at(n.x + 52, n.y + 15)}
+                  data-first={first ? "" : undefined}
+                  style={{ ...at(CARD.x + 50, CARD_Y[i] + CARD.h / 2), opacity: st.frame }}
                 >
-                  <span className="xn-kick">Creative</span>
-                  <span className="xn-name">{STREAMS[i]}</span>
+                  <span className="xn-name">{s}</span>
+                  <span className="xn-status" style={{ opacity: on ? 1 : 0 }}>
+                    {first ? FIRST : OWNED}
+                  </span>
                 </div>
               );
             })}
-            {L.nodes.map((n, i) => {
-              const on = st.on(i);
+            {DEPTS.map((d, i) => {
+              const on = st.dept(i);
               return (
-                <span
-                  key={`s${i}`}
-                  className="xn-status"
-                  data-first={i === 0 && on && !st.handed ? "" : undefined}
-                  style={{ ...at(n.x + 16, n.y + 73), opacity: on ? 1 : 0 }}
+                <div
+                  key={d}
+                  className="xn-label"
+                  data-on={on ? "" : undefined}
+                  style={{ ...at(DEPT.x + 54, DEPT_Y[i] + DEPT.h / 2), opacity: st.frame }}
                 >
-                  {i === 0 && !st.handed ? FIRST : OWNED}
-                </span>
+                  <span className="xn-name">{d}</span>
+                  <span className="xn-status" style={{ opacity: on ? 1 : 0 }}>
+                    Plugs in next
+                  </span>
+                </div>
               );
             })}
           </div>
