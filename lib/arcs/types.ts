@@ -1597,11 +1597,9 @@ export type ArcSection = ArcSectionBase &
         /** The `stack` card's first step (owner, 2026-10-12): embed with the
          *  team to identify the problem, one line, by role. ≤ 48. */
         embed?: string;
-        /** The `stack` card's last step, Scale (owner, 2026-10-12): how the
-         *  work plugs into the rest of the client's system, one plain
-         *  sentence (≤ 110) that never restates what it now allows, and the
-         *  tools it plugs into as small notes (2 to 4, ≤ 16 each). */
-        scale?: { line: string; tools: readonly string[] };
+        /** The `stack` card's last step, Scale (owner, 2026-10-12): the
+         *  tools the work plugs into, as small notes (2 to 4, ≤ 16 each). */
+        scale?: { tools: readonly string[] };
         /** The person who decided, by role (≤ 32), and, when the decision
          *  needs saying, what that person decides: one plain sentence in
          *  the client's own role words (≤ 80; owner 2026-10-11, "every
@@ -1719,6 +1717,15 @@ export type ArcJobFigure = { caption: string } &
     | { kind: "ledger"; rows: readonly ArcMetaRow[] }
     /** A mapped collection drawn as a grain field (`components/arcs/jobMap.ts`). */
     | { kind: "map"; map: ArcJobMap; labels?: readonly ArcJobMapLabel[] }
+    /** A run as a flowchart (owner, 2026-10-12, after Tensorlake's
+     *  diagrams): two to five steps down one line, each a key (≤ 16) and
+     *  one to three short notes (≤ 28), one step lit; an optional check
+     *  hangs off a step to the side. */
+    | {
+        kind: "flow";
+        steps: readonly { key: string; notes: readonly string[]; lit?: true }[];
+        check?: { at: number; key: string; note: string };
+      }
   );
 
 /* ── The leverage and the handoff (ADR-153) ─────────────────────── */

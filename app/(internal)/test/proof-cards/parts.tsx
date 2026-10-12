@@ -81,6 +81,18 @@ export function Evidence({ job }: { job: Job }) {
     );
   }
   if (figure.kind === "map") return <MapField job={job} figure={figure} />;
+  if (figure.kind === "flow") {
+    return (
+      <dl className="pk-ev pk-ev--ledger">
+        {figure.steps.map((st) => (
+          <div key={st.key}>
+            <dt>{st.key}</dt>
+            <dd>{st.notes.join(" · ")}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
   return (
     <dl className="pk-ev pk-ev--ledger">
       {figure.rows.map((r) => (

@@ -2065,10 +2065,7 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         if (s.top === "stack") {
           expect((s.embed ?? "").length, `${at}: the stack's embed step`).toBeGreaterThan(0);
           expect((s.embed ?? "").length, `${at}: embed`).toBeLessThanOrEqual(48);
-          /* Scale: one plain sentence and two to four tools as notes. */
-          expect((s.scale?.line ?? "").length, `${at}: scale`).toBeGreaterThan(0);
-          expect((s.scale?.line ?? "").length, `${at}: scale`).toBeLessThanOrEqual(110);
-          expect(s.scale?.line, `${at}: scale says something else`).not.toBe(s.result.allows);
+          /* Scale: two to four tools as notes. */
           expect((s.scale?.tools ?? []).length, `${at}: tools`).toBeGreaterThanOrEqual(2);
           expect((s.scale?.tools ?? []).length, `${at}: tools`).toBeLessThanOrEqual(4);
           for (const t of s.scale?.tools ?? []) {
@@ -2188,6 +2185,22 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
               r.label.length + r.value.length,
               `${at}: ${r.label} · ${r.value}`
             ).toBeLessThanOrEqual(32);
+          }
+        } else if (s.figure.kind === "flow") {
+          /* A run as a flowchart: two to five steps, one lit, short notes. */
+          const { steps, check } = s.figure;
+          expect(steps.length, `${at}: flow steps`).toBeGreaterThanOrEqual(2);
+          expect(steps.length, `${at}: flow steps`).toBeLessThanOrEqual(5);
+          expect(steps.filter((st) => st.lit).length, `${at}: one lit step`).toBe(1);
+          for (const st of steps) {
+            expect(st.key.length, `${at}: ${st.key}`).toBeLessThanOrEqual(16);
+            expect(st.notes.length, `${at}: ${st.key} notes`).toBeGreaterThanOrEqual(1);
+            expect(st.notes.length, `${at}: ${st.key} notes`).toBeLessThanOrEqual(3);
+            for (const n of st.notes) expect(n.length, `${at}: "${n}"`).toBeLessThanOrEqual(30);
+          }
+          if (check) {
+            expect(steps[check.at], `${at}: the check's step`).toBeTruthy();
+            expect(check.note.length, `${at}: check`).toBeLessThanOrEqual(30);
           }
         } else {
           /* U7: a mapped collection, reduced to counts and positions in a

@@ -259,7 +259,6 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
                 ))}
                 <li className="arc-jstack__box arc-jstack__box--human">
                   <p className="arc-jstack__tab">Scale</p>
-                  <p className="arc-jstack__line">{section.scale?.line}</p>
                   {section.scale?.tools.length ? (
                     <ul className="arc-jstack__tools" aria-label="Plugs into">
                       {section.scale.tools.map((t) => (
@@ -347,6 +346,9 @@ function Evidence({ figure, seed }: { figure: ArcJobFigure; seed: number }) {
   if (figure.kind === "map") {
     return <JobMap figure={figure} seed={seed} />;
   }
+  if (figure.kind === "flow") {
+    return <JobFlow figure={figure} />;
+  }
   return (
     <dl className="arc-case__ledger">
       {figure.rows.map((r) => (
@@ -428,5 +430,38 @@ function JobMap({
         </p>
       ))}
     </div>
+  );
+}
+
+/**
+ * A run as a flowchart (owner, 2026-10-12, after Tensorlake's diagrams):
+ * the steps down one line, each a mono key over its notes, one step lit in
+ * gold, the check hanging off its step to the side on a dashed leader. DOM
+ * only; the connectors are borders, so they stay crisp at any size.
+ */
+function JobFlow({ figure }: { figure: Extract<ArcJobFigure, { kind: "flow" }> }) {
+  const label = figure.steps.map((s) => s.key).join(", then ");
+  return (
+    <ol className="arc-case__flow" aria-label={label}>
+      {figure.steps.map((s, i) => (
+        <li key={s.key} className="arc-case__flow-step" data-lit={s.lit ? true : undefined}>
+          <p className="arc-case__flow-key">
+            <span>{two(i + 1)}</span>
+            {s.key}
+          </p>
+          <ul className="arc-case__flow-notes">
+            {s.notes.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+          {figure.check && figure.check.at === i ? (
+            <p className="arc-case__flow-check">
+              <b>{figure.check.key}</b>
+              {figure.check.note}
+            </p>
+          ) : null}
+        </li>
+      ))}
+    </ol>
   );
 }
