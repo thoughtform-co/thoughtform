@@ -25,7 +25,7 @@
    stage's translate; React re-renders only when the step changes. Reduced
    motion reads the closed stack, every step and caption listed. */
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
 
 import { BRANDMARK_PATHS, BRANDMARK_VIEWBOX } from "@/lib/brandmark/brandmarkPaths";
 
@@ -204,17 +204,92 @@ function TeamPlate() {
   );
 }
 
+/* The layer's face, after the flow's core above it (owner, 2026-10-12: "add
+   some circles, like diagrams, around the brand mark … make it look as if
+   the brand mark is engraved in it, with a bit more depth"). Three rings in
+   the plane round the mark, the middle one gold with the layer's three parts
+   on it (context, skills, evals), the outer one dashed; and the mark CUT into
+   the top course: its opening drawn as the lit far wall, its floor one depth
+   down and darker, clipped to the opening, so only the wall's upper edge
+   shows. The floor darkens toward black in both themes (a recess is a
+   shadow either way); the wall is the gold. */
+const MARK_H = 3.2;
+const CUT = 0.11;
+const RINGS = [2.25, 2.8, 3.35] as const;
+const PART_DEG = [-140, -38, 62];
+const WASH = "var(--gold, #caa554)";
+
 function LayerPlate() {
   const g = { x0: 0, x1: S, y0: 0, y1: S, z0: 0, t: 0.28, gap: 0.12 };
   const top = g.z0 + 2 * (g.t + g.gap) + g.t;
   const mk = BRANDMARK_VIEWBOX;
-  const k = 3.2 / mk.h;
+  const k = MARK_H / mk.h;
+  const mx = S / 2 - (mk.w * k) / 2;
+  const my = S / 2 - MARK_H / 2;
+  const at = (z: number) => iso.plane(mx, my, z, k);
+  const clip = `es-cut-${useId().replace(/:/g, "")}`;
+  const surface = tint(WASH, 0.28);
   return (
     <g>
       <LayerSlab iso={iso} g={g} />
-      <g transform={iso.plane(S / 2 - (mk.w * k) / 2, S / 2 - 1.6, top, k)}>
+      {/* the rings, in the plane, round the mark */}
+      <g transform={iso.plane(S / 2, S / 2, top, 1)}>
+        {RINGS.map((r, i) => (
+          <circle
+            key={r}
+            r={r}
+            fill="none"
+            stroke={GOLD}
+            strokeOpacity={i === 1 ? 0.85 : 0.4}
+            strokeDasharray={i === 2 ? "2 4" : undefined}
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        {PART_DEG.map((d) => {
+          const a = (d * Math.PI) / 180;
+          return (
+            <circle
+              key={d}
+              cx={RINGS[1] * Math.cos(a)}
+              cy={RINGS[1] * Math.sin(a)}
+              r={0.12}
+              fill={GOLD}
+            />
+          );
+        })}
+      </g>
+      {/* the mark, cut into the top course */}
+      <defs>
+        <clipPath id={clip}>
+          {BRANDMARK_PATHS.map((d, i) => (
+            <path key={i} d={d} transform={at(top)} />
+          ))}
+        </clipPath>
+      </defs>
+      <g transform={at(top)}>
         {BRANDMARK_PATHS.map((d, i) => (
-          <path key={i} d={d} fill={GOLD} fillOpacity={0.9} />
+          <path key={i} d={d} fill={tint(WASH, 0.72)} />
+        ))}
+      </g>
+      <g clipPath={`url(#${clip})`}>
+        <g transform={at(top - CUT)}>
+          {BRANDMARK_PATHS.map((d, i) => (
+            <path key={i} d={d} fill={`color-mix(in srgb, ${surface} 55%, #000)`} />
+          ))}
+        </g>
+      </g>
+      <g transform={at(top)}>
+        {BRANDMARK_PATHS.map((d, i) => (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke={GOLD}
+            strokeOpacity={0.55}
+            strokeWidth={0.75}
+            vectorEffect="non-scaling-stroke"
+          />
         ))}
       </g>
     </g>
