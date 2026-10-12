@@ -325,3 +325,51 @@
   left: calc(var(--js-rx, -15px) + 1px);
   width: calc(-1 * var(--js-rx, -15px) - 1px);
 }
+
+/* the card on 3C's fine grid (owner, 2026-10-12) */
+.arc-jstack {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--dawn) 3.2%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--dawn) 3.2%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+/* the visual in a hairline frame with a gold cross on each corner (3C),
+   in place of the house's corner ticks and dot ground */
+.arc-jstack__fig {
+  background: none;
+}
+.arc-jstack__frame {
+  border: 1px solid color-mix(in srgb, var(--dawn) 8%, transparent);
+  background: rgba(var(--void-deep-rgb), 0.6);
+}
+.arc-jstack__frame::before {
+  display: none;
+}
+.arc-jstack__x {
+  position: absolute;
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--gold), var(--gold)) center / 1px 100% no-repeat,
+    linear-gradient(var(--gold), var(--gold)) center / 100% 1px no-repeat;
+}
+.arc-jstack__x[data-corner="tl"] {
+  top: -6px;
+  left: -6px;
+}
+.arc-jstack__x[data-corner="tr"] {
+  top: -6px;
+  right: -6px;
+}
+.arc-jstack__x[data-corner="bl"] {
+  bottom: -6px;
+  left: -6px;
+}
+.arc-jstack__x[data-corner="br"] {
+  bottom: -6px;
+  right: -6px;
+}

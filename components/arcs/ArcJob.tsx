@@ -288,7 +288,10 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
               </div>
             </div>
             <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
-              <div className="arc-case__frame">
+              <div className="arc-case__frame arc-jstack__frame">
+                {(["tl", "tr", "bl", "br"] as const).map((c) => (
+                  <i key={c} className="arc-jstack__x" data-corner={c} aria-hidden="true" />
+                ))}
                 <Evidence figure={figure} seed={crewSeed(section.id)} />
               </div>
               <figcaption className="arc-case__caption">
