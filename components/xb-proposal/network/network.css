@@ -7,6 +7,7 @@
 
 .xn {
   --xn-green: #7a9e6a;
+  --es-green: #7a9e6a;
   position: relative;
   height: 320svh;
   padding: 0 calc(var(--band-margin, 96px) + 36px) 0 var(--band-margin, 96px);
@@ -201,4 +202,12 @@
 }
 .xn-node--dept[data-on] .xn-card {
   stroke: var(--xb-gold);
+}
+
+.xn-port {
+  fill: var(--xb-gold);
+}
+.xn-band--state {
+  transform: translate(-100%, -50%);
+  color: var(--xb-text-2);
 }
