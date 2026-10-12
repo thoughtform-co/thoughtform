@@ -1,6 +1,7 @@
 import type { ArcMotion } from "@/lib/arcs/types";
 
 import { EmbedStack } from "@/components/xb-proposal/embed/EmbedStack";
+import { NetworkPlug } from "@/components/xb-proposal/network/NetworkPlug";
 import { PlugFlow } from "@/components/xb-proposal/plug/PlugFlow";
 
 import { ArcBeat } from "./ArcBeat";
@@ -16,7 +17,7 @@ import { ArcBeat } from "./ArcBeat";
  *   `plug`  — the vision: "AI capability your teams own.", the team, the
  *             layer and Claude Enterprise as one flow, its three labels
  *             linking down to the steps;
- *   `steps` — the approach: embed, encode, run, the head and the steps
+ *   `steps` — the approach: navigate, encode, build, the head and the steps
  *             held while the plates close into one stack.
  *
  * Both read one record for the three steps (`plugSteps.ts`); the step
@@ -44,11 +45,16 @@ export function ArcStepsPort({ id, motion = "reveal" }: { id: string; motion?: A
       id={id}
       kind="handoff"
       className="arc-section arc-xb-port"
-      ariaLabel="Embed, encode, run"
+      ariaLabel="Navigate, encode, build"
       motion={motion}
     >
       <div className="xb xb-in-frame">
         <EmbedStack />
+      </div>
+      {/* the stack turns frontal and plugs into the five workstreams (owner,
+          2026-10-12) */}
+      <div className="xb xb-in-frame">
+        <NetworkPlug />
       </div>
     </ArcBeat>
   );

@@ -1,0 +1,248 @@
+/* NetworkPlug: the closed stack turns frontal and wires out to the five
+   workstreams. One pinned stage on its own runway, on the kit's tokens
+   (`.xb`), so the proposal remaps them like every other kit drawing. Green is
+   people, gold the layer and every live wire, dawn what runs. Square
+   corners, no bloom. Every size in the frame is in frame units: `cqw` of a
+   1200-wide frame, so `calc(N * var(--u))` is N drawing units. */
+
+.xn {
+  --xn-green: #7a9e6a;
+  --es-green: #7a9e6a;
+  position: relative;
+  height: 320svh;
+  padding: 0 calc(var(--band-margin, 96px) + 36px) 0 var(--band-margin, 96px);
+}
+.xn-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 600px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(12px, 2.4vh, 32px);
+  padding: var(--hud-rail-y-start, 96px) 0 calc(var(--hud-rail-y-end, 72px) - 24px);
+}
+.xn-fig {
+  /* up to 72px past the band each side, bound by the height the title
+     leaves */
+  --xn-w: min(
+    calc(100% + 144px),
+    calc(
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 108px) * 1200 / 560
+    )
+  );
+  --u: calc(100cqw / 1200);
+  position: relative;
+  align-self: center;
+  width: var(--xn-w);
+  margin-left: calc((100% - var(--xn-w)) / 2);
+  aspect-ratio: 1200 / 560;
+  container-type: inline-size;
+  background-image: radial-gradient(var(--xb-line) 1px, transparent 1.2px);
+  background-size: 26px 26px;
+  background-position: center;
+}
+.xn-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* the module */
+.xn-top {
+  fill: var(--xb-ground);
+}
+.xn-face {
+  fill: var(--xb-ground-2);
+}
+.xn-ports rect {
+  fill: var(--xb-gold);
+}
+
+/* the wires: a faint dashed track, the live run drawn on in gold */
+.xn-track {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+.xn-wire {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-width: 1.25;
+  stroke-dasharray: 1 1;
+}
+
+/* the workstreams */
+.xn-card {
+  fill: var(--xb-ground);
+  stroke: var(--xb-line-2);
+  stroke-width: 1;
+  transition: stroke 300ms ease;
+}
+.xn-rule {
+  stroke: var(--xb-line);
+  stroke-width: 1;
+}
+.xn-node[data-on] .xn-card {
+  stroke: var(--xb-text-2);
+}
+.xn-node[data-first] .xn-card {
+  stroke: var(--xb-gold);
+}
+.xn-mini {
+  opacity: 0.2;
+  transition: opacity 300ms ease;
+}
+.xn-node[data-on] .xn-mini {
+  opacity: 1;
+}
+
+/* the words */
+.xn-words {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.xn-words > * {
+  position: absolute;
+  left: calc(var(--px) * 100%);
+  top: calc(var(--py) * 100%);
+}
+.xn-course {
+  transform: translateY(-50%);
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(11 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-2);
+  white-space: nowrap;
+}
+.xn-label {
+  display: grid;
+  gap: calc(5 * var(--u));
+  transform: translateY(-50%);
+  color: var(--xb-text-3);
+  transition: color 300ms ease;
+}
+.xn-label[data-on] {
+  color: var(--xb-text);
+}
+.xn-kick {
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(10.5 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-3);
+}
+.xn-name {
+  font-family: var(--xb-sans);
+  font-size: calc(19 * var(--u));
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.xn-status {
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(10.5 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-2);
+  white-space: nowrap;
+  transition: opacity 300ms ease;
+}
+.xn-label[data-first] .xn-status {
+  color: var(--xb-gold);
+}
+
+/* Marketing: the configuration's housing, a notched frame with its gold
+   head band (the configuration panel's own) */
+.xn-frame__body {
+  fill: color-mix(in srgb, var(--xb-ground) 70%, transparent);
+  stroke: color-mix(in srgb, var(--xb-gold) 55%, transparent);
+  stroke-width: 1;
+}
+.xn-frame__band {
+  fill: color-mix(in srgb, var(--xb-gold) 16%, transparent);
+  stroke: none;
+}
+.xn-frame__rule {
+  stroke: color-mix(in srgb, var(--xb-gold) 40%, transparent);
+  stroke-width: 1;
+}
+.xn-band {
+  transform: translateY(-50%);
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(11 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-gold);
+  white-space: nowrap;
+}
+
+/* the ribbons: eight wires a lane, the circuit board's own */
+.xn-lane {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+}
+.xn-rib {
+  fill: none;
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.7;
+  stroke-width: 1;
+  stroke-dasharray: 1 1;
+}
+.xn-node--dept[data-on] .xn-card {
+  stroke: var(--xb-gold);
+}
+
+.xn-port {
+  fill: var(--xb-gold);
+}
+.xn-state {
+  color: var(--xb-text-2);
+}
+
+/* a department: the Marketing frame at a smaller size, quiet until its
+   ribbon arrives */
+.xn-dept > polygon,
+.xn-dept > line {
+  opacity: 0.5;
+  transition: opacity 300ms ease;
+}
+.xn-dept[data-on] > polygon,
+.xn-dept[data-on] > line {
+  opacity: 1;
+}
+.xn-band--dept {
+  color: color-mix(in srgb, var(--xb-gold) 45%, transparent);
+  transition: color 300ms ease;
+}
+.xn-band--dept[data-on] {
+  color: var(--xb-gold);
+}
+.xn-next {
+  transform: translateY(-50%);
+  font-family: var(--xb-mono);
+  font-size: max(10px, calc(10.5 * var(--u)));
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--xb-text-2);
+  white-space: nowrap;
+  transition: opacity 300ms ease;
+}
+
+/* the hand-over: once this section has the stack, the steps section's
+   drawing steps aside (this section draws it from the same place) */
+.es[data-handed] .es-svg {
+  visibility: hidden;
+}
