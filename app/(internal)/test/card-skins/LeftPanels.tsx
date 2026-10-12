@@ -20,7 +20,7 @@ import { Figure } from "../proof-cards/RoundFour";
  *
  * Every word is the live record's (`X_BIONIC_JOBS`).
  */
-export type Panel = "spread" | "bus" | "group" | "curves";
+export type Panel = "spread" | "bus" | "group" | "curves" | "unified";
 
 export function LeftPanelCard({ job, panel }: { job: Job; panel: Panel }) {
   const d = disciplineOf(job.bucket);
@@ -44,7 +44,7 @@ export function LeftPanelCard({ job, panel }: { job: Job; panel: Panel }) {
             <p className="pk-c__tab">The brief</p>
             <p className="pk-lede">{job.ask}</p>
           </div>
-          {panel === "spread" ? null : (
+          {panel === "spread" || panel === "unified" ? null : (
             <div className="pk-c__box pk-i__big pk-l__embed">
               <p className="pk-c__tab">Embed</p>
               <p className="pk-body">{job.embed}</p>
@@ -54,6 +54,7 @@ export function LeftPanelCard({ job, panel }: { job: Job; panel: Panel }) {
           {panel === "bus" ? <Bus job={job} tools={tools} /> : null}
           {panel === "group" ? <Group job={job} tools={tools} /> : null}
           {panel === "curves" ? <Curves job={job} tools={tools} /> : null}
+          {panel === "unified" ? <Unified job={job} tools={tools} /> : null}
         </div>
         <Figure job={job} wide ba={false} />
       </div>
@@ -194,5 +195,36 @@ function Curves({ job, tools }: { job: Job; tools: readonly string[] }) {
         </ul>
       </div>
     </div>
+  );
+}
+
+/** Block 11 (owner, 2026-10-12, on 8): adoption and automation in ONE
+ *  frame, "Embed and build": the embed line, then the three steps on the
+ *  bus inside it; from the frame one line drops to a bus with a stem into
+ *  every tool. */
+function Unified({ job, tools }: { job: Job; tools: readonly string[] }) {
+  return (
+    <>
+      <div className="pk-c__box pk-l__unit">
+        <p className="pk-c__tab">Embed and build</p>
+        <p className="pk-l__unit-embed">
+          <b>Embed</b>
+          {job.embed}
+        </p>
+        <ol className="pk-l__cols" aria-label="Claude did">
+          {job.did.map((t, i) => (
+            <li key={t}>
+              <span className="pk-l__col-tab">Claude {i + 1}</span>
+              <span className="pk-l__col-text">{t}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <ul className="pk-l__fan" aria-label="Plugs into">
+        {tools.map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+    </>
   );
 }

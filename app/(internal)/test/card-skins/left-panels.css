@@ -36,11 +36,13 @@
 /* centre connectors between the stacked parts (bus, group): a short line
    from the bottom of one part to the top of the next, through the gap */
 .pk-l--bus .pk-l__words > *:not(:first-child),
-.pk-l--group .pk-l__words > *:not(:first-child) {
+.pk-l--group .pk-l__words > *:not(:first-child),
+.pk-l--unified .pk-l__words > *:not(:first-child) {
   position: relative;
 }
 .pk-l--bus .pk-l__words > *:not(:first-child)::after,
-.pk-l--group .pk-l__words > *:not(:first-child)::after {
+.pk-l--group .pk-l__words > *:not(:first-child)::after,
+.pk-l--unified .pk-l__words > .pk-l__unit::after {
   content: "";
   position: absolute;
   left: 50%;
@@ -50,7 +52,8 @@
   background: var(--pk-wire);
 }
 .pk-l--bus .pk-l__words,
-.pk-l--group .pk-l__words {
+.pk-l--group .pk-l__words,
+.pk-l--unified .pk-l__words {
   justify-content: center;
   gap: var(--pk-gap-v, 28px);
   --pk-gap-v: clamp(22px, 3.2vh, 40px);
@@ -293,4 +296,107 @@
 }
 .pk-l--curves .pk-l__words {
   justify-content: space-between;
+}
+
+/* ── unified (block 11): one frame for embed and build ── */
+.pk-l .pk-l__unit {
+  display: grid;
+  gap: 16px;
+  padding: 30px 16px 16px;
+  border-color: rgba(var(--pk-green-rgb), 0.45);
+}
+.pk-l__unit > .pk-c__tab {
+  border-color: rgba(var(--pk-green-rgb), 0.55);
+  background: rgba(var(--pk-green-rgb), 0.16);
+  color: var(--pk-green);
+}
+.pk-l__unit-embed {
+  display: grid;
+  grid-template-columns: 6.4em minmax(0, 1fr);
+  align-items: baseline;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed rgba(var(--pk-ink-rgb), 0.14);
+  font: 400 var(--pk-t-body) / 1.4 var(--pk-sans);
+  color: var(--pk-ink);
+}
+.pk-l__unit-embed b {
+  font: 400 calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--pk-green);
+}
+.pk-l__unit .pk-l__cols li::after {
+  display: none;
+}
+/* the fan: one line from the frame down to a bus, a stem into every tool */
+.pk-l__fan {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 22px;
+}
+.pk-l__fan::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--fan-l, 12%);
+  right: var(--fan-r, 12%);
+  height: 0;
+  border-top: 1px solid rgba(var(--pk-green-rgb), 0.7);
+}
+.pk-l__fan li {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid rgba(var(--pk-green-rgb), 0.5);
+  background: rgba(var(--pk-ink-rgb), 0.04);
+  font: calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--pk-ink);
+}
+.pk-l__fan li::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: 22px;
+  background: rgba(var(--pk-green-rgb), 0.7);
+}
+.pk-l--unified .pk-l__words > .pk-l__fan::after {
+  display: none;
+}
+.pk-l--unified .pk-l__words > .pk-l__fan {
+  margin-top: calc(-1 * var(--pk-gap-v) + 22px);
+}
+.pk-l--unified .pk-l__words > .pk-l__fan::before {
+  top: 0;
+}
+.pk-l--unified .pk-l__unit::after {
+  background: var(--pk-wire);
+}
+/* the drop from the frame's bottom to the bus, then the stems */
+.pk-l--unified .pk-l__words > .pk-l__fan {
+  padding-top: 44px;
+}
+.pk-l--unified .pk-l__words > .pk-l__fan::before {
+  top: 22px;
+}
+.pk-l--unified .pk-l__words > .pk-l__fan::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: auto;
+  width: 1px;
+  height: 22px;
+  background: rgba(var(--pk-green-rgb), 0.7);
 }
