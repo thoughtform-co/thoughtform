@@ -153,3 +153,10 @@
     display: none;
   }
 }
+
+/* the frame's ring in Tensor Gold (owner, 2026-10-12: on the dark ground the
+   house edge blends into the background); `--gold-line` is gold's line rung,
+   re-derived for light in theme.css */
+.arc-lpc.arc-plate::before {
+  background: var(--gold-line, var(--gold));
+}
