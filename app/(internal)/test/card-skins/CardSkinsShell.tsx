@@ -24,6 +24,7 @@ const BLOCKS: readonly { id: string; n: string; label: string; skin?: Skin; pane
   { id: "l-bus", n: "8", label: "6 · Steps on a bus", panel: "bus" },
   { id: "l-group", n: "9", label: "6 · Steps in a group box", panel: "group" },
   { id: "l-curves", n: "10", label: "6 · Curves to a list", panel: "curves" },
+  { id: "l-unified", n: "11", label: "8 · Embed and build, one frame", panel: "unified" },
 ];
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];
