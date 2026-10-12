@@ -458,7 +458,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 10px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -484,5 +484,119 @@
 @media (max-width: 960px) {
   .arc-jstack__band {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── the flow figure (owner, 2026-10-12, after Tensorlake): steps down one
+   line, a key over its notes, one step lit, the check off to the side ── */
+.arc-case__flow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 26px;
+  width: min(100%, 440px);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.arc-case__flow::before {
+  content: "";
+  position: absolute;
+  left: 33%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--gold) 45%, transparent);
+}
+.arc-case__flow-step {
+  position: relative;
+  z-index: 1;
+  width: 66%;
+  margin: 0;
+  padding: 10px 14px 12px;
+  border: 1px dashed color-mix(in srgb, var(--dawn) 26%, transparent);
+  background: var(--arc-plate, #0a0908);
+  background-color: rgba(var(--void-deep-rgb), 0.92);
+}
+.arc-case__flow-step[data-lit] {
+  border: 1px solid var(--gold);
+  box-shadow:
+    inset 0 0 0 3px rgba(var(--void-deep-rgb), 0.92),
+    inset 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
+}
+.arc-case__flow-key {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 8px;
+  font: 11px / 1 var(--font-pt-mono, "PT Mono", monospace);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-case__flow-key span {
+  color: var(--gold);
+}
+.arc-case__flow-step[data-lit] .arc-case__flow-key {
+  color: var(--gold);
+}
+.arc-case__flow-notes {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: calc(var(--type-base) / 1.1);
+  line-height: 1.35;
+  color: var(--arc-ink-70);
+}
+.arc-case__flow-step[data-lit] .arc-case__flow-notes li::before {
+  content: "› ";
+  color: var(--gold);
+}
+.arc-case__flow-check {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 18px);
+  width: 120px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--case-person-text) 55%, transparent);
+  transform: translateY(-50%);
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-case__flow-check::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 18px;
+  border-top: 1px dashed color-mix(in srgb, var(--case-person-text) 70%, transparent);
+}
+.arc-case__flow-check b {
+  display: block;
+  margin-bottom: 4px;
+  font: 400 10px / 1 var(--font-pt-mono, "PT Mono", monospace);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--case-person-text);
+}
+/* a short frame (laptop heights) tightens the flow so it never spills */
+@container (max-height: 460px) {
+  .arc-case__flow {
+    gap: 12px;
+  }
+  .arc-case__flow-step {
+    padding: 6px 12px 8px;
+  }
+  .arc-case__flow-key {
+    margin-bottom: 5px;
+  }
+  .arc-case__flow-notes {
+    gap: 1px;
+    font-size: 12px;
+    line-height: 1.3;
   }
 }

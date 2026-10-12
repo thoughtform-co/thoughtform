@@ -80,16 +80,15 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     client: "Samako",
     date: "6 Oct 2026",
     madeIn: "Claude Code",
-    ask: "Samako needed a 15-second autumn sale ad for paid social. Each one meant a motion designer, and the product had to stay as photographed.",
+    ask: "Meta's algorithm rewards creative variety. Motion ads convert well but cost the most to make, so Samako made few of them.",
     embed: "Identify the problem with the visual lead",
     scale: {
-      line: "Each new sale brief runs through the same room, models and cold reads, straight to paid social.",
       tools: ["Claude Code", "Kling", "Veo", "Ads Manager"],
     },
     did: [
-      "Drew the room once, for every shot",
-      "Animated the scenes on three video models",
-      "Checked the cut in three cold reads",
+      "Wrote two story treatments from the brief",
+      "Animated the shots on Kling, Veo, Seedance",
+      "Composited the real product shot in code",
     ],
     gate: {
       who: "The client's visual lead",
@@ -102,15 +101,15 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     },
     result: {
       label: "The return",
-      before: "A motion designer on each ad",
-      now: "Cut from the brief, checked in three cold reads",
+      before: "Days of motion design for each ad",
+      now: "Two films from one brief, in a day",
       said: {
         pre: "A motion ad from an open brief, every product shot the photographer's own:",
         em: "no frame drawn by AI",
         post: ".",
       },
       allows:
-        "Motion ads for paid social without a motion designer on each one: a better return on ad creation cost.",
+        "Motion ads in the variety the algorithm rewards, at a cost that lets them run as variants.",
     },
   },
   {
@@ -127,7 +126,6 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ask: "Suri's 3.1 TB marketing Google Drive: 78 % of the files read tied to no campaign, found only by opening folder after folder.",
     embed: "Identify the problem with the library owner",
     scale: {
-      line: "Briefing searches it for what a new concept can reuse; ads analysis traces a winning ad back to its files.",
       tools: ["Claude", "Google Drive", "Monday", "Ads Manager"],
     },
     did: [
@@ -182,7 +180,6 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ask: "AI renders get the product subtly wrong. Every render went to three people to be checked by eye.",
     embed: "Identify the problem with the creative team",
     scale: {
-      line: "Every new batch of renders runs the same checks before it reaches the creative team.",
       tools: ["Claude Code", "Image models", "Review board"],
     },
     did: [
@@ -233,7 +230,6 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
     ask: "Every writer and channel sent the studio a different brief, and the studio lead spent hours finding what each left out.",
     embed: "Identify the problem with the strategists",
     scale: {
-      line: "Each brief lands on the Monday board in its channel's format, ready for the studio to pick up.",
       tools: ["Cowork", "Monday", "The studio"],
     },
     did: [
@@ -246,15 +242,22 @@ export const X_BIONIC_JOBS: readonly ArcSectionOf<"job">[] = [
       line: "Marks the brief ready; it lands on the board with its ad names.",
     },
     figure: {
-      kind: "ledger",
+      kind: "flow",
       caption: "The brief skill, run on 4 Oct",
-      rows: [
-        { label: "Fields", value: "12, in one format" },
-        { label: "Channel", value: "Formats and timing named" },
-        { label: "Approver", value: "Named in the brief" },
-        { label: "Status", value: "Ready, marked by a person" },
-        { label: "Check", value: "Waits for answers, 3 of 3" },
+      steps: [
+        { key: "The ask", notes: ["One line, from any channel"] },
+        {
+          key: "Brief skill",
+          notes: ["Asks for each missing field", "Brackets every claim", "Proposes the ad names"],
+          lit: true,
+        },
+        {
+          key: "The brief",
+          notes: ["12 fields, one format", "Channel formats and timing", "Approver named"],
+        },
+        { key: "Monday board", notes: ["Marked ready by the strategist"] },
       ],
+      check: { at: 1, key: "Check", note: "Waits for answers, 3 of 3" },
     },
     result: {
       label: "Time saved",
