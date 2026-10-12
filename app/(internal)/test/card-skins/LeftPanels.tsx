@@ -246,14 +246,14 @@ function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
     <>
       <div className="pk-c__box pk-l__arc-box">
         <p className="pk-c__tab pk-l__arc-tab">01 · Navigate</p>
-        <p className="pk-lede">{job.ask}</p>
+        <p className="pk-body">{job.ask}</p>
       </div>
       <div className="pk-c__box pk-l__arc-box" data-kind="team">
         <p className="pk-c__tab pk-l__arc-tab">02 · Encode</p>
         <p className="pk-body">{job.embed}</p>
       </div>
       <div className="pk-c__box pk-l__arc-box">
-        <p className="pk-c__tab pk-l__arc-tab">03 · Build with Claude</p>
+        <p className="pk-c__tab pk-l__arc-tab">03 · Build</p>
         <ol className="pk-l__arc-steps" aria-label="Claude did">
           {job.did.map((t) => (
             <li key={t}>{t}</li>
