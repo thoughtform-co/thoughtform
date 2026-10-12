@@ -96,10 +96,6 @@ export function DirectionI({
           </div>
           <Figure job={job} wide ba={ba} />
           <div className="pk-i__words pk-i__words--right">
-            <div className="pk-c__box pk-c__box--lit pk-i__allows">
-              <p className="pk-c__tab">What it now allows</p>
-              <p className="pk-lede">{job.result.allows}</p>
-            </div>
             {phases ? <hr className="pk-i__rule" /> : null}
             <div className="pk-c__box pk-i__saved">
               <p className="pk-c__tab">
@@ -119,6 +115,10 @@ export function DirectionI({
                 </p>
               </div>
             </div>
+          </div>
+          <div className="pk-c__box pk-c__box--lit pk-i__allows">
+            <p className="pk-c__tab">What it now allows</p>
+            <p className="pk-lede">{job.result.allows}</p>
           </div>
         </div>
       ) : (
@@ -153,10 +153,6 @@ export function DirectionI({
                 )}
               </li>
             </ol>
-            <div className="pk-c__box pk-c__box--lit pk-i__allows">
-              <p className="pk-c__tab">What it now allows</p>
-              <p className="pk-lede">{job.result.allows}</p>
-            </div>
             {phases ? <hr className="pk-i__rule" /> : null}
             <div className="pk-c__box pk-i__saved">
               <p className="pk-c__tab">
@@ -175,6 +171,10 @@ export function DirectionI({
                   <span className="pk-i__bar-v">{p.now}</span>
                 </p>
               </div>
+            </div>
+            <div className="pk-c__box pk-c__box--lit pk-i__allows">
+              <p className="pk-c__tab">What it now allows</p>
+              <p className="pk-lede">{job.result.allows}</p>
             </div>
           </div>
           <Figure job={job} wide ba={ba} />

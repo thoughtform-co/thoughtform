@@ -186,6 +186,11 @@
 .arc-jstack__label::after {
   display: none;
 }
+/* the label has no border, so its rail sits 1px further out to meet the
+   boxed steps' rail (a ::before is placed from the padding box) */
+.arc-jstack__label {
+  --js-rx: -16px;
+}
 /* Claude's three steps: smaller, set further in */
 .arc-jstack__small {
   --js-rx: -33px;

@@ -201,8 +201,8 @@ export function ArcJob({
  * left reads the brief (the problem), then three moves on one gold rail:
  * Embed (green, with the team), Solve it together (what Claude did, three
  * small steps) and Scale (green, what plugs in, set as code); then what it
- * now allows, a rule from the frame's edge to the divider, and the time
- * saved as two bars. No gate row: the record keeps it.
+ * a rule from the frame's edge to the divider, the time saved as two bars,
+ * then what it now allows (saved first, then what that opens up). No gate row: the record keeps it.
  */
 function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: ArcMotion }) {
   const { n, title, bucket, ask, did, figure, result, client } = section;
@@ -263,10 +263,6 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
                   </p>
                 </li>
               </ol>
-              <div className="arc-jstack__box arc-jstack__box--gold">
-                <p className="arc-jstack__tab">{ALLOWS_LABEL}</p>
-                <p className="arc-jstack__para">{result.allows}</p>
-              </div>
               <hr className="arc-jstack__rule" />
               <div className="arc-jstack__box">
                 <p className="arc-jstack__tab">
@@ -285,6 +281,10 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
                     <span className="arc-jstack__bar-v">{result.now}</span>
                   </p>
                 </div>
+              </div>
+              <div className="arc-jstack__box arc-jstack__box--gold">
+                <p className="arc-jstack__tab">{ALLOWS_LABEL}</p>
+                <p className="arc-jstack__para">{result.allows}</p>
               </div>
             </div>
             <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
