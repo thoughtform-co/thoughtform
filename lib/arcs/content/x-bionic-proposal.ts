@@ -4,6 +4,18 @@ import { X_BIONIC_JOBS } from "./shared/jobs";
 import { LOOP_PROOF_CARDS, LOOP_RETURN, VINCE_ABOUT } from "./shared/loopProof";
 import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 
+/* The Loop cards' four tabs, one workstream a card in the pile's order
+   (owner, 2026-10-12: "let's use the proper workstreams … that way, it
+   really leads up to my role"): the films are production, the tools ops,
+   the studio review, the layer creative technology, a fifth name beside the
+   page's four disciplines. */
+const LOOP_WORKSTREAMS = [
+  "Creative production",
+  "Creative ops",
+  "Creative review",
+  "Creative technology",
+] as const;
+
 /**
  * X-Bionic, the proposal, as an arc (ADR-098; the Pandora cut of the format,
  * ADR-128, without the corridor).
@@ -263,7 +275,8 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       variant: "callout",
       menuLabel: "Loop",
       menuPrimary: true,
-      line: { pre: "In 2024, Loop decided to go", em: "AI-first." },
+      // owner, 2026-10-12: was "In 2024, Loop decided to go AI-first."
+      line: { pre: "This is how we got there at", em: "Loop Earplugs." },
     },
     /* The four cards in the job cards' housing (owner, 2026-10-12, from
        /test/loop-proof-lab B55): Pandora reads the same record and keeps the
@@ -271,7 +284,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
     ...LOOP_PROOF_CARDS.map((c) => ({
       ...c,
       layout: "case" as const,
-      arcBeats: LOOP_PROOF_CARDS.map((b) => ({ id: b.id, word: b.menuLabel ?? b.id })),
+      arcBeats: LOOP_PROOF_CARDS.map((b, i) => ({ id: b.id, word: LOOP_WORKSTREAMS[i] })),
     })),
     /* What it returned at Loop came off the page on 2026-10-12 (owner: "we
        already have that in the individual" cards); its record stays below

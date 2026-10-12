@@ -20,11 +20,13 @@ import { rung } from "./arcMotion";
  * don't have to be exactly the same, because here we build up the
  * narrative"; /test/loop-proof-lab B55).
  *
- *   top    the stack card's: the client framed, the card's line, and on the
- *          right the arc of four with this card lit — the narrative the job
- *          cards do not need, since each of them stands alone
- *   left   the project in one gold-edged box (its lede), then its four
- *          claims as steps on the stack card's one gold rail
+ *   top    the stack card's: the client framed, and on the right the four
+ *          workstreams with this card's lit — the narrative the job cards do
+ *          not need, since each of them stands alone
+ *   left   the card's title, as the homepage's proof card sets it (owner,
+ *          2026-10-12: "not in the top bar but in the left panel"), the
+ *          project in one gold-edged box (its lede), then its four claims as
+ *          steps on the stack card's one gold rail
  *   right  ONE visual, Loop's own: the proof card's field, whole
  *
  * ⚠ THE HOUSING IS THE JOB CARD'S (`.arc-jstack*`, job-stack.css); only the
@@ -80,11 +82,8 @@ export function ArcProofCase({
         >
           <header className="arc-jstack__top">
             <span className="arc-jstack__client">{client.name}</span>
-            <h2 className="arc-jstack__name" id={titleId}>
-              {title}
-            </h2>
             {beats.length ? (
-              <ol className="arc-lpc__arc" aria-label="Loop, in four cards">
+              <ol className="arc-lpc__arc" aria-label="Loop, in four workstreams">
                 {beats.map((b, k) => (
                   <li
                     key={b.id}
@@ -99,6 +98,11 @@ export function ArcProofCase({
           </header>
           <div className="arc-jstack__body arc-lpc__body">
             <div className="arc-jstack__words">
+              {/* the title heads the left panel, as the homepage's proof card
+                  sets it (owner, 2026-10-12), not on the top bar */}
+              <h2 className="arc-lpc__title" id={titleId}>
+                {title}
+              </h2>
               <div className="arc-jstack__box arc-jstack__box--gold">
                 <p className="arc-jstack__tab">{record.project}</p>
                 {lede ? <p className="arc-jstack__para">{lede}</p> : null}

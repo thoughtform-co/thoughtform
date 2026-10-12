@@ -15,10 +15,27 @@
 .arc-lpc__arc {
   display: flex;
   align-items: center;
-  margin: 0;
+  /* the title left the bar (2026-10-12), so the tabs hold its right end */
+  margin: 0 0 0 auto;
   padding: 0;
   list-style: none;
-  font-size: 11px;
+  font-size: 12px;
+}
+
+/* the card's title at the head of the left panel, the homepage proof card's
+   own setting: the sans, sentence case, two lines at most */
+.arc-lpc__title {
+  /* the column's own gap spaces it from the box under it */
+  margin: 0;
+  text-wrap: balance;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-xl);
+  font-weight: var(--weight-text, 400);
+  line-height: 1.12;
+  letter-spacing: var(--track-display);
+  text-transform: none;
+  white-space: normal;
+  color: var(--arc-ink-90, var(--dawn));
 }
 .arc-lpc__arc li {
   position: relative;

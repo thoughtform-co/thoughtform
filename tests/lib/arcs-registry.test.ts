@@ -2274,7 +2274,7 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
     expect(arc, "the X-Bionic proposal is registered").toBeDefined();
     const lines = arc!.sections.flatMap((s) => (s.kind === "interstitial" ? [s] : []));
     expect(lines.map((s) => arcTitleText(s.line))).toEqual([
-      "In 2024, Loop decided to go AI-first.",
+      "This is how we got there at Loop Earplugs.",
       "This is how we recently built intelligence configurations by making the team self-sufficient.",
       "And this is how we'll do it at X-Bionic.",
     ]);
