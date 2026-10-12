@@ -1660,6 +1660,16 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
 
 ## The equilibrium on a proposal (2026-10-11, owner)
 
+- ⚠ **SINCE 2026-10-12 NO PAGE MOUNTS IT** (owner: the holo, S1 A and "adoption and
+  connect" come off; branch `lab/xb-offer-rebuild`, not main). X-Bionic opens on two kit
+  blocks from `/test/proposition-v2`, ported whole through `ArcFlowPorts.tsx`: the
+  vision is `port: "plug"` (`PlugFlow` under one centred title) and the approach is
+  `port: "steps"` on the handoff (`EmbedStack`, its own runway). Each section keeps its
+  record and draws none of it while the port is set; the lab composer clears `port` on
+  its approach variants. A kit section takes none of the curtain's first-section padding
+  (`xb-in-frame.css`), and the kit's tokens, `--xb-ground-2` included, are remapped
+  there so the light theme reaches it. Shot by `scripts/capture-xb-proposal-flow.mjs`.
+
 - **The `equilibrium` kind** = `{ title, labels: { upstream, encode, downstream }, plugInto? }`:
   the workshop opener's station (`equilibriumStationHtml`, ADR-143 U7 → U11) inside its own
   `.tw-root[data-tw-cut="v3"]` scope, its live hologram (`EquilibriumMount`, the workshop
