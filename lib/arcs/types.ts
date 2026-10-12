@@ -1465,9 +1465,11 @@ export type ArcSection = ArcSectionBase &
          * (owner, 2026-10-11: "port that S1A pin build verbatim"): `s1a` is
          * S1 A, the pinned build, mounted as the lab mounts it, text column,
          * drawing and pin. The console, its stack and its uses are not drawn.
-         * Opt-in; absent, the section is byte-identical.
+         * Opt-in; absent, the section is byte-identical. `plug` is the flow
+         * from /test/proposition-v2 (owner, 2026-10-12): "AI capability your
+         * teams own.", the team, the layer and Claude Enterprise as one flow.
          */
-        port?: "s1a";
+        port?: "s1a" | "plug";
       }
     | {
         /**
@@ -1524,6 +1526,14 @@ export type ArcSection = ArcSectionBase &
          * and evals in the right column. Opt-in, never set on production.
          */
         opened?: ArcHandoffOpened;
+        /**
+         * The whole section as a block ported from /test/proposition-v2
+         * (owner, 2026-10-12): `steps` is embed, encode, run, the head and
+         * the steps held while the plates close into one stack. The steps,
+         * the run and every figure above are not drawn. Opt-in; absent, the
+         * section is byte-identical.
+         */
+        port?: "steps";
       }
     | {
         /**

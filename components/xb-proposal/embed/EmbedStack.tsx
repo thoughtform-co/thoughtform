@@ -84,12 +84,15 @@ const LINE: Record<StepId, string> = {
   encode: "Encode how it works.",
   run: "Run your own agents.",
 };
+/* One sentence under each step, open under the step in view (owner,
+   2026-10-12: "one sentence of explanation … revealed and then collapse
+   open when you scroll through it"). Reduced motion lists all three open. */
 const BODY: Record<StepId, string> = {
   embed:
-    "Thoughtform works inside your four creative workstreams, on real briefs, statics and reviews, in the Claude Enterprise and the tools you already have.",
+    "Thoughtform works inside your four creative workstreams, on real briefs, in the tools your team already uses.",
   encode:
-    "How each team works is written into a layer an agent can read: the context, the skills, the evals. Your team writes it with Thoughtform and keeps it after, self-sufficient.",
-  run: "Each person runs their own agents on that layer, in the tools they work in. The team reviews what comes back and spends its time upstream.",
+    "How each team works is written into a layer an agent can read: the context, the skills and the evals.",
+  run: "Each person runs their own agents on that layer, and the team reviews what comes back.",
 };
 
 /* ── geometry helpers ──────────────────────────────────────────────────── */
@@ -536,7 +539,9 @@ export function EmbedStack() {
                         {st.n} · {st.step}
                       </span>
                       <span className="es-line">{LINE[st.id]}</span>
-                      {plain ? <span className="es-plaincap">{BODY[st.id]}</span> : null}
+                      <span className="es-say">
+                        <span className="es-say__in">{BODY[st.id]}</span>
+                      </span>
                     </a>
                   </li>
                 ))}

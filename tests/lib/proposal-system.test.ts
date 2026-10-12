@@ -125,11 +125,11 @@ describe("the proposal system lab", () => {
           expect(vision.bands).toBe(TOOL_AND_COLLABORATOR.bands);
           expect(vision.source).toBe(TOOL_AND_COLLABORATOR.source);
         }
-        /* The owner's order: the equilibrium (in the About's place since
-           11 October), the vision, the approach, where it plugs in, Loop,
-           two brands, X-Bionic. */
-        const order = ["one-motion", "vision", "approach"];
-        expect(ids.slice(0, 3)).toEqual(order);
+        /* The owner's order: the vision, the approach, where it plugs in,
+           Loop, two brands, X-Bionic (the equilibrium came off the page on
+           12 October). */
+        const order = ["vision", "approach"];
+        expect(ids.slice(0, 2)).toEqual(order);
         expect(ids.indexOf("plugs-in")).toBeLessThan(ids.indexOf("proof-loop"));
         expect(ids.indexOf("proof-loop")).toBeLessThan(ids.indexOf("return"));
         expect(ids.indexOf("return")).toBeLessThan(ids.indexOf("proof-brands"));

@@ -69,6 +69,12 @@ import "@/components/arcs/prompt-to-loop/prompt-to-loop.css";
 // its framing in the HUD. Both are `.xb*`-scoped, inert on every other arc.
 import "@/components/xb-proposal/xb.css";
 import "@/components/xb-proposal/xb-in-frame.css";
+// The X-Bionic vision and approach since 2026-10-12: the plug flow and the
+// steps from /test/proposition-v2, each sheet scoped to its own `.pl*` /
+// `.es*` / `.xm*` classes, inert on every other arc.
+import "@/components/xb-proposal/masthead.css";
+import "@/components/xb-proposal/plug/plug.css";
+import "@/components/xb-proposal/embed/embed.css";
 // The `equilibrium` kind (2026-10-11): the workshop opener's station, its
 // sheet scoped `.tw-root[data-tw-cut="v3"]`, inert on every other arc.
 import "@/app/(marketing)/arcs/thoughtform/workshop-v3/equilibrium.css";

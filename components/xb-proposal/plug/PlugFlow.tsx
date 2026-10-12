@@ -16,7 +16,8 @@
        Enterprise (owner: "it doesn't need a separate pill"), so the bundle
        enters the frame onto a bus that feeds the interfaces, as live cards,
        one lit.
-   A footer line reads the flow, after the operator page's substrate map.
+   The head is the title alone, centred (owner, 2026-10-12: "I just want
+   to have an H1, so no paragraph"), and no footer line reads the flow.
 
    The SVG draws the line work in a 1200 × 460 frame; every word is DOM,
    seated in percent of the same frame over a box that holds its aspect, so
@@ -27,7 +28,7 @@ import type { CSSProperties } from "react";
 import { BRANDMARK_PATHS, BRANDMARK_VIEWBOX } from "@/lib/brandmark/brandmarkPaths";
 
 import { GLYPH, type GlyphName } from "../glyphs";
-import { Masthead, type MastheadCopy } from "../Masthead";
+import { MastheadTitle } from "../Masthead";
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 import { useArrive } from "../useArrive";
 
@@ -120,18 +121,7 @@ const CARD_Y = [96, 188, 280, 372];
 
 /* The head, in the homepage services masthead's grammar (owner: "it needs
    to be uniform"). */
-const HEAD: MastheadCopy = {
-  lines: ["Your team, one layer,", "Claude Enterprise."],
-  brief:
-    "Your four creative workstreams feed one intelligence layer, built with the people who run them. It runs in your Claude Enterprise, and the work comes back through the tools your team already uses.",
-  survey: {
-    title: "XB / PLUG · 01",
-    brief: "XB / BRIEF · 01",
-    state: "Live",
-    titleCoord: "0120 / 0240",
-    briefCoord: "1460 / 0240",
-  },
-};
+const TITLE = ["AI capability", "your teams own."] as const;
 
 const STEP = Object.fromEntries(PLUG_STEPS.map((s) => [s.id, s])) as Record<
   (typeof PLUG_STEPS)[number]["id"],
@@ -202,7 +192,7 @@ export function PlugFlow() {
 
   return (
     <div className="pl" ref={ref}>
-      <Masthead copy={HEAD} />
+      <MastheadTitle lines={TITLE} />
 
       <figure
         className="pl-fig"
@@ -364,11 +354,6 @@ export function PlugFlow() {
             </span>
           </div>
         ))}
-
-        <p className="pl-foot pl-in" style={{ "--d": "1900ms" } as CSSProperties}>
-          The work stays with your team <span aria-hidden>→</span> the layer adds judgment{" "}
-          <span aria-hidden>→</span> Claude Enterprise runs it
-        </p>
       </figure>
     </div>
   );

@@ -116,28 +116,6 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       "A creative engine for paid social, built in X-Bionic's own Claude Enterprise and run by its team.",
   },
   sections: [
-    /* ── The equilibrium (owner, 2026-10-11) ───────────────────────────
-       Second on the page, where the About stood: "the second section
-       should not be the About section. It should actually be like that
-       Holo-inspired thing, but updated … less bloom … super slick". The
-       workshop opener's hologram with the bloom off: upstream (adoption),
-       the gate (the intelligence configuration, "what works upstream runs
-       downstream", his own line) and downstream (automation), one motion.
-       On the way down the gate's mark lifts out and plugs into the vision's
-       stack (`plugInto`). The About moved down, beside who does the work. */
-    {
-      id: "one-motion",
-      kind: "equilibrium",
-      menuLabel: "One motion",
-      title: "Adoption and automation, one motion.",
-      labels: {
-        upstream: { key: "Adoption", text: "The team's judgment, on real work" },
-        encode: { key: "Intelligence configuration", text: "What works upstream runs downstream" },
-        downstream: { key: "Automation", text: "Agents run what the team wrote down" },
-      },
-      plugInto: "vision",
-    },
-
     /* ── The vision (ADR-153) ──────────────────────────────────────────
        Rebuilt for a board (owner, 2026-10-08: "I don't know what people
        should be looking at"), then written as the proposal's own view
@@ -180,10 +158,11 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         label: "What Thoughtform adds",
         line: "The first layer, written with your team in your Claude and handed over with an owner per workstream.",
       },
-      // The section is S1 A, the pinned build, ported verbatim from the
-      // proposition artifact page (owner, 2026-10-11). The console's fields
+      // The section is the flow from /test/proposition-v2 (owner,
+      // 2026-10-12: "AI capability your teams own", in place of the
+      // equilibrium, S1 A and the approach's run). The console's fields
       // below stay in the record and are not drawn while this is set.
-      port: "s1a",
+      port: "plug",
       console: { name: "Intelligence configuration", status: "X-Bionic" },
       readout: [
         { label: "Models", value: "Shared" },
@@ -207,6 +186,10 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       id: "adoption",
       kind: "handoff",
       menuLabel: "The approach",
+      // Embed, encode, run, from /test/proposition-v2 (owner, 2026-10-12).
+      // The head, the steps and the run below stay in the record and are not
+      // drawn while this is set.
+      port: "steps",
       head: {
         eyebrow: "Thoughtform · the approach",
         title: { pre: "How adoption and", em: "automation connect." },

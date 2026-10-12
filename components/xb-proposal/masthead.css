@@ -22,6 +22,15 @@
   margin-bottom: var(--xm-coord-drop);
 }
 
+/* the title alone, centred, with none of the survey chrome above or below */
+.xm--title {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+  padding-top: 0;
+  margin-bottom: 0;
+}
+
 .xm__lead,
 .xm__brief {
   position: relative;

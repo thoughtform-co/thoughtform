@@ -40,9 +40,11 @@ import type { PsKnobs } from "./variants";
  * may carry the run (`ArcHandoff` draws `ArcConfigRun` whenever it is set),
  * so both clear it.
  *
- * ⚠ THE OWNER'S ORDER (10 October; 11 October the equilibrium took the
- * About's place, and the About moved beside who takes part): the
- * equilibrium · the vision · the approach · where it plugs in · "In 2024, Loop decided to go AI-first." · the four
+ * ⚠ THE OWNER'S ORDER (10 October; 11 October the About moved beside who
+ * takes part; 12 October the equilibrium came off the page and the vision
+ * and the approach became the flow and the steps, `port: "plug"` and
+ * `port: "steps"`, which an approach variant clears): the vision · the
+ * approach · where it plugs in · "In 2024, Loop decided to go AI-first." · the four
  * Loop cards · what it returned · "This is how we recently built
  * intelligence configurations by making the team self-sufficient." · the
  * four jobs · "And this is how we'll do it at X-Bionic." · the engine · the
@@ -112,7 +114,6 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
 
   /* ── The beats, each production's object or a spread of it ─────────── */
 
-  const equilibrium = sectionOf("one-motion", "equilibrium");
   const about = sectionOf("about", "portrait");
 
   const vision: ArcSectionOf<"spectrum"> = {
@@ -230,6 +231,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
         head: { ...prodAdoption.head, sub: WRITTEN_SUB },
         time: undefined,
         run: undefined,
+        port: undefined,
         figure: undefined,
         written: {
           layer: prodAdoption.run!.layer.label,
@@ -248,6 +250,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
           head: { ...prodAdoption.head, sub: WRITTEN_SUB },
           time: undefined,
           run: undefined,
+          port: undefined,
           figure: undefined,
           opened: {
             console: prodEngine.face!.console,
@@ -280,6 +283,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
             },
             time: undefined,
             run: undefined,
+            port: undefined,
             figure: {
               layer: "Your layer",
               host: "X-Bionic's Claude Enterprise",
@@ -317,6 +321,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
                 { ...prodAdoption.steps[2], label: "Automate" },
               ],
               run: undefined,
+              port: undefined,
               time: {
                 label: "Where your team's time goes",
                 note: "Illustrative",
@@ -421,8 +426,8 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const close = sectionOf("close", "close");
 
   const opening: ArcSection[] = narrative
-    ? [equilibrium, vision, approach, ...(upstream ? [upstream] : []), plugsIn]
-    : [equilibrium, plugsIn, approach, ...(upstream ? [upstream] : [])];
+    ? [vision, approach, ...(upstream ? [upstream] : []), plugsIn]
+    : [plugsIn, approach, ...(upstream ? [upstream] : [])];
 
   const sections: ArcSection[] = [
     ...opening,

@@ -16,6 +16,22 @@ export interface MastheadCopy {
   survey: { title: string; brief: string; state: string; titleCoord: string; briefCoord: string };
 }
 
+/** The masthead's title alone, centred: no brief, no survey chrome (owner,
+    2026-10-12, on the plug flow: "I just want to have an H1, so no
+    paragraph, and the H1 should be centered"). Same type, second line gold. */
+export function MastheadTitle({ lines }: { lines: readonly [string, string] }) {
+  return (
+    <header className="xm xm--title">
+      <h2 className="xm__title" aria-label={lines.join(" ")}>
+        <span aria-hidden>{lines[0]}</span>
+        <span className="xm__em" aria-hidden>
+          {lines[1]}
+        </span>
+      </h2>
+    </header>
+  );
+}
+
 export function Masthead({ copy }: { copy: MastheadCopy }) {
   return (
     <header className="xm">

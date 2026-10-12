@@ -4,6 +4,7 @@ import { ArcApproachOpened } from "./ArcApproachOpened";
 import { ArcApproachWritten } from "./ArcApproachWritten";
 import { ArcBeat } from "./ArcBeat";
 import { ArcConfigRun } from "./ArcConfigRun";
+import { ArcStepsPort } from "./ArcFlowPorts";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -33,6 +34,9 @@ interface ArcHandoffProps {
  */
 export function ArcHandoff({ section, index, motion = "reveal" }: ArcHandoffProps) {
   const { steps, time, figure, run, written, opened } = section;
+  /* Embed, encode, run, ported whole from /test/proposition-v2 (owner,
+     2026-10-12): the section is that block, not these plates. */
+  if (section.port === "steps") return <ArcStepsPort id={section.id} motion={motion} />;
   /* The two lab figures of 2026-10-11 are opt-in fields production never
      sets, dispatched exactly as the run is. */
   if (written) return <ArcApproachWritten section={section} index={index} motion={motion} />;

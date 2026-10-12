@@ -107,12 +107,31 @@
 .es-lines li[data-on] a:hover .es-line {
   color: var(--xb-text);
 }
-.es-plaincap {
-  max-width: 46ch;
+/* the step's one sentence: open under the step in view, folded under the
+   rest; the list is centred, so one opening as another folds holds it still */
+.es-say {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 520ms cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 360ms ease;
+}
+.es-say__in {
+  min-height: 0;
+  overflow: hidden;
+  max-width: 40ch;
   font-family: var(--xb-sans);
-  font-size: 15px;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
   line-height: 1.5;
   color: var(--xb-text-2);
+}
+.es-lines li[data-on] .es-say {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows 520ms cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 420ms ease 120ms;
 }
 
 /* ---- the plates ---- */
@@ -172,6 +191,8 @@
 @media (prefers-reduced-motion: reduce) {
   .es-lines li,
   .es-n i,
+  .es-say,
+  .es-lines li[data-on] .es-say,
   .es-plate,
   .es-call {
     transition: none;

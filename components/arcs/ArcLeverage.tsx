@@ -1,6 +1,7 @@
 import type { ArcLeverageUse, ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcPlugPort } from "./ArcFlowPorts";
 import { ArcOfferPort } from "./ArcOfferPort";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { ArcVision } from "./ArcVisionFigure";
@@ -36,6 +37,8 @@ export function ArcLeverage({ section, index, motion = "reveal" }: ArcLeveragePr
   /* S1 A, the pinned build, ported whole from /test/proposition-artifact
      (owner, 2026-10-11): the section is that block, not this console. */
   if (section.port === "s1a") return <ArcOfferPort id={section.id} motion={motion} />;
+  /* The flow from /test/proposition-v2 (owner, 2026-10-12). */
+  if (section.port === "plug") return <ArcPlugPort id={section.id} motion={motion} />;
   const { stack, note, uses, console: con, readout } = section;
   return (
     <ArcBeat

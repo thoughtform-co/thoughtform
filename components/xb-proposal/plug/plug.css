@@ -13,18 +13,19 @@
 
 .pl-fig {
   /* wider than the band is allowed (owner): up to 72px past it each side,
-     bound by the height the head and the footer line leave */
+     bound by the height the title leaves (no brief, no footer line since
+     2026-10-12) */
   --pl-w: min(
     calc(100% + 144px),
     calc(
-      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 236px) * 1200 / 460
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 168px) * 1200 / 460
     )
   );
   position: relative;
   align-self: center;
   justify-self: start;
   width: var(--pl-w);
-  margin: 0 0 48px calc((100% - var(--pl-w)) / 2);
+  margin: 0 0 0 calc((100% - var(--pl-w)) / 2);
   aspect-ratio: 1200 / 460;
   container-type: inline-size;
   /* the dotted field Cluster's flow sits on */
@@ -261,24 +262,6 @@
 .pl-tab:focus-visible {
   outline: 1px solid var(--tone);
   outline-offset: 2px;
-}
-
-.pl-fig > .pl-foot {
-  position: absolute;
-  font-size: max(12px, 1.05cqw);
-  left: 0;
-  right: 0;
-  top: calc(100% + 18px);
-  margin: 0;
-  text-align: center;
-  font-family: var(--xb-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--xb-text-3);
-}
-.pl-foot span {
-  color: var(--xb-gold);
-  margin: 0 0.4em;
 }
 
 /* ---- arrival: once, on the stamp; the rest state is the drawing ---- */

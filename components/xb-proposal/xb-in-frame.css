@@ -56,3 +56,15 @@
 .xb.xb-in-frame svg .xb-t-sans {
   font-size: 16px;
 }
+
+/* A kit section that is one screen on its own (the plug flow, 2026-10-12):
+   between the rails, on the band the proposal's heads use, as
+   /test/proposition-v2 seats it. A pinned kit section (the steps) brings its
+   own runway and its own band padding, so it takes the frame alone. */
+.xb-in-frame.xb-sec {
+  box-sizing: border-box;
+  height: 100svh;
+  min-height: 640px;
+  padding: var(--hud-rail-y-start) calc(var(--band-margin) + 36px) var(--hud-rail-y-end)
+    var(--band-margin);
+}
