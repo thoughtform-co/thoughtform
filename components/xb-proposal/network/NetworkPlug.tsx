@@ -10,7 +10,7 @@
    round it, X-Bionic Marketing in the intelligence configuration's housing
    (TR and BL cut, the gold head band); and eight-wire circuit ribbons run
    out on both sides to the other departments, each drawn as that frame
-   collapsed to its band, with "Plugs in next" under it.
+   collapsed to its band, with "Navigate next" under it: the next team starts its own turn of the Arc.
 
    The plates are EmbedStack's own drawing, copied with the projection made a
    parameter, drawn through a true orthographic camera whose yaw and pitch
@@ -57,7 +57,8 @@ const COURSE_GAP = 1.24;
 const END_K = 1.0;
 
 const TITLE = ["Marketing first,", "then every team."] as const;
-const COURSES = ["Your team", "The layer", "Your agents"] as const;
+/* each course is lettered with its step of the Arc and what it is */
+const COURSES = ["Navigate · your team", "Encode · the layer", "Build · your agents"] as const;
 
 /* -- the camera --------------------------------------------------------- */
 
@@ -662,7 +663,7 @@ export function NetworkPlug() {
             viewBox={`0 0 ${W} ${H}`}
             className="xn-svg"
             role="img"
-            aria-label="The stack of three plates, your team, the layer and your agents, travels down from the section above and turns to face the reader as one module of three courses, inside a notched frame: X-Bionic Marketing. From the frame, circuit ribbons run out on both sides to the departments that plug in next: product design, sales, customer care, technology, operations and finance."
+            aria-label="The stack of three plates, your team, the layer and your agents, travels down from the section above and turns to face the reader as one module of three courses, inside a notched frame: X-Bionic Marketing. From the frame, circuit ribbons run out on both sides to the departments that start their own Navigate next: product design, sales, customer care, technology, operations and finance."
           >
             {/* the ribbons, a faint lane first, under the frame's edge */}
             {DEPTS.map((d, i) => {
@@ -840,7 +841,7 @@ export function NetworkPlug() {
                     opacity: on ? 1 : 0,
                   }}
                 >
-                  Plugs in next
+                  Navigate next
                 </span>,
               ];
             })}
