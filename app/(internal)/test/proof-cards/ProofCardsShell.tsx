@@ -8,6 +8,7 @@ import { DirectionA, DirectionB, DirectionC, DirectionD, DirectionE, DirectionF 
 import type { Job } from "./parts";
 import { DirectionG } from "./RoundFour";
 import { DirectionH } from "./RoundFive";
+import { DirectionI } from "./RoundSix";
 
 /**
  * /test/proof-cards: the four Suri and Samako jobs, one direction per
@@ -32,6 +33,8 @@ export const BLOCKS = [
   { id: "g3-ba", n: "12", short: "C4 B/A", label: "C4 · Words left, before and after", C: ({ job }: { job: Job }) => <DirectionG job={job} layout="left-ba" /> },
   /* round five: 3C rebuilt with only the named changes */
   { id: "h-stack", n: "13", short: "C5", label: "C5 · 3C, rebuilt", C: DirectionH },
+  /* round six: 12's layout harmonised with 3C */
+  { id: "i-left", n: "14", short: "C6", label: "C6 · 12 on 3C", C: DirectionI },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

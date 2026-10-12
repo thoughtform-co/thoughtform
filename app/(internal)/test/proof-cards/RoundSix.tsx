@@ -1,0 +1,87 @@
+import { Glyph } from "@/components/arcs/ArcLeverage";
+import { disciplineOf } from "@/lib/arcs/content/shared/disciplines";
+
+import { type Job, resultLabel } from "./parts";
+import { PRACTICE } from "./practice";
+import { Figure } from "./RoundFour";
+
+/**
+ * Round six (owner, 2026-10-12): 12's information architecture (every word
+ * on the left, the wide before and after on the right) harmonised with 3C.
+ *
+ *   the boxes   3C's own: the tab INSIDE the frame at its top-left corner
+ *   the rail    one unbroken gold line from the brief box's bottom edge down
+ *               to the last step, a tick into every step
+ *   the steps   Embed and Empower as 3C's boxes; Claude 1 to 3 as smaller
+ *               intermediate steps between them, set further in
+ *   the foot    what it now allows, then the time saved, stacked vertically
+ *               under the steps, one flow
+ */
+export function DirectionI({ job }: { job: Job }) {
+  const p = PRACTICE[job.id];
+  const d = disciplineOf(job.bucket);
+  return (
+    <article className="pk-card pk-c pk-h pk-i" aria-label={p.name}>
+      <header className="pk-c__head pk-h__head">
+        <span className="pk-h__client">{job.client}</span>
+        <span className="pk-h__name">{p.name}</span>
+        <span className="pk-h__ws">
+          <Glyph kind={d.glyph} />
+          {d.long}
+        </span>
+      </header>
+      <div className="pk-i__body">
+        <div className="pk-i__words">
+          <div className="pk-c__box pk-i__brief">
+            <p className="pk-c__tab">The brief</p>
+            <p className="pk-lede">{p.problem}</p>
+          </div>
+          <ol className="pk-i__flow" aria-label="The work">
+            <li className="pk-c__box pk-i__big">
+              <p className="pk-c__tab">Embed</p>
+              <p className="pk-body">{p.embed}</p>
+            </li>
+            {job.did.map((t, i) => (
+              <li key={t} className="pk-i__small">
+                <span className="pk-i__small-tab">Claude {i + 1}</span>
+                <span className="pk-i__small-text">{t}</span>
+              </li>
+            ))}
+            <li className="pk-c__box pk-i__big">
+              <p className="pk-c__tab">Empower</p>
+              <p className="pk-body">{p.empower}</p>
+            </li>
+          </ol>
+          <div className="pk-c__box pk-c__box--lit pk-i__allows">
+            <p className="pk-c__tab">What it now allows</p>
+            <p className="pk-lede">{job.result.allows}</p>
+          </div>
+          <div className="pk-c__box pk-i__saved">
+            <p className="pk-c__tab">
+              {resultLabel(job)}
+              {job.result.label === "The return" ? null : " · estimated"}
+            </p>
+            <div className="pk-i__bars">
+              <p className="pk-i__bar-row">
+                <span className="pk-i__bar-k">Before</span>
+                <i className="pk-i__bar" data-w="long" aria-hidden="true" />
+                <span className="pk-i__bar-v">{p.before}</span>
+              </p>
+              <p className="pk-i__bar-row" data-lit="true">
+                <span className="pk-i__bar-k">Now</span>
+                <i className="pk-i__bar" data-w="short" aria-hidden="true" />
+                <span className="pk-i__bar-v">{p.now}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <Figure job={job} wide ba />
+      </div>
+      <p className="pk-gate">
+        <span className="pk-gate__key">The gate</span>
+        <span className="pk-gate__who">{job.gate.who}</span>
+        {job.gate.line ? <span className="pk-gate__line">{job.gate.line}</span> : null}
+      </p>
+    </article>
+  );
+}

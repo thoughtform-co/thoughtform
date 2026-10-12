@@ -26,3 +26,7 @@ Blocks 10 to 12. 10 is 9 recentred with air, the gold rail starting on the brief
 ## Round five (owner, 2026-10-12): 3C rebuilt
 
 Block 13 starts from 3C's own markup and spacing and changes only what the owner named: the caps top bar (client framed, the brief's name, the workstream with its glyph), the notch, the brief as one short paragraph stating the problem, Embed · Claude did (three lines in one box) · Empower on 3C's rail in Tensor Gold, welded to the brief box, and the right column as one flow (what it now allows, level with the brief and boxed the same, then the time saved as bars). New content was paid for by cutting copy, never by shrinking 3C's gaps; the tabs sit on their boxes' top edges. At 1280×720 the stage grows with the card instead of the spacing shrinking. `C5-vs-3C-1470x830.png` is the side-by-side.
+
+## Round six (owner, 2026-10-12): 12 on 3C
+
+Block 14: 12's IA (every word left, the wide before and after right) on 3C's styling. 3C's tabs are back inside the frames; one unbroken gold rail runs from the brief box's bottom edge down to the last step; Embed and Empower are 3C's boxes and Claude 1 to 3 are smaller intermediate steps set further in; what it now allows and the time saved stack vertically under the steps. It fits one screen with air at the owner's 1920×1247; at 1470×830 and 1280×720 the stage grows taller than the screen rather than the air shrinking.

@@ -119,7 +119,7 @@ function Bars({ p }: { p: Practice }) {
   );
 }
 
-function Figure({ job, wide, ba }: { job: Job; wide: boolean; ba: boolean }) {
+export function Figure({ job, wide, ba }: { job: Job; wide: boolean; ba: boolean }) {
   return (
     <figure className="pk-c__fig pk-e__fig pk-g__fig" data-figure={job.figure.kind} data-wide={wide || undefined}>
       <p className="pk-c__vert">
