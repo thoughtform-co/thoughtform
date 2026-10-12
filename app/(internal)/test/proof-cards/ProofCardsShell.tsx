@@ -9,6 +9,7 @@ import type { Job } from "./parts";
 import { DirectionG } from "./RoundFour";
 import { DirectionH } from "./RoundFive";
 import { DirectionI } from "./RoundSix";
+import { DirectionJ } from "./RoundSeven";
 
 /**
  * /test/proof-cards: the four Suri and Samako jobs, one direction per
@@ -39,6 +40,8 @@ export const BLOCKS = [
   { id: "i55", n: "15", short: "C6 55", label: "C6 · One visual, left 55%, three moves", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="55%" phases /> },
   { id: "i60", n: "16", short: "C6 60", label: "C6 · One visual, left 60%", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="60%" /> },
   { id: "i65", n: "17", short: "C6 65", label: "C6 · One visual, left 65%", C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="65%" /> },
+  /* round seven: 15, pinned, one step open at a time */
+  { id: "j-pin", n: "18", short: "C7 pin", label: "C7 · 15, pinned scroll-through", C: DirectionJ },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

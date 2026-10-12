@@ -30,3 +30,7 @@ Block 13 starts from 3C's own markup and spacing and changes only what the owner
 ## Round six (owner, 2026-10-12): 12 on 3C
 
 Block 14: 12's IA (every word left, the wide before and after right) on 3C's styling. 3C's tabs are back inside the frames; one unbroken gold rail runs from the brief box's bottom edge down to the last step; Embed and Empower are 3C's boxes and Claude 1 to 3 are smaller intermediate steps set further in; what it now allows and the time saved stack vertically under the steps. It fits one screen with air at the owner's 1920×1247; at 1470×830 and 1280×720 the stage grows taller than the screen rather than the air shrinking.
+
+## Round seven (owner, 2026-10-12): 15, pinned
+
+Block 18. The references keep their width and buy room with height (16 of 17 captured at 1470×830; atomictessellator blocked the capture): text columns 300 to 540px, pages 7 to 17 screens, and every process pinned with one step open at a time (Unsiloed, Euclid, Griffin, Dispatch). So block 15 pins in the proposal's 1200 × 880 box over four steps of scroll (70svh each): the brief stays open, and Embed, Solve it together (Claude 1 to 3), Plug in, then What it now allows with the time saved open in turn while the others fold to their tab line ("· done" once passed). The visual stays put. It fits one screen at 1280×720.
