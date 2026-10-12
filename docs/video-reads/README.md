@@ -3,9 +3,10 @@
 Every video this practice has paid a model to watch, as a
 [CDAF](https://github.com/UditAkhourii/cdaf) sidecar: a timestamped text account
 anchored to the exact file by size and SHA-256. Read these instead of
-re-watching. The protocol is the `cdaf` skill (`.claude/skills/cdaf/SKILL.md`);
-the tool is `scripts/video-read/cdaf.mjs`; `tests/lib/video-reads.test.ts`
-fails on a malformed file.
+re-watching. The protocol and the CLI are the `thoughtform:cdaf` skill in the
+Thoughtform plugin (`thoughtform-co/thoughtform-plugins`), which files new reads
+here when run from this repo; `tests/lib/video-reads.test.ts` fails on a
+malformed file.
 
 | read                                                                                                    | video                                                                          | profile   | what it is                                                                                                                              |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
