@@ -6,7 +6,11 @@ import { describe, expect, it } from "vitest";
 import { DISCIPLINE_ORDER } from "@/lib/arcs/content/shared/disciplines";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import { THE_HORIZON_RECORD } from "@/lib/arcs/content/shared/workshopPractice";
-import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
+import {
+  X_BIONIC_ENGINE,
+  X_BIONIC_PROPOSAL_ARC,
+  X_BIONIC_RETURN,
+} from "@/lib/arcs/content/x-bionic-proposal";
 import { PROPOSAL_COPY_BANS, PROPOSAL_VOICE_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import {
   PS_DEFAULTS,
@@ -26,7 +30,7 @@ import { xBionicV2 } from "@/lib/proposal-system/xBionicV2";
  */
 const PROD_IDS = X_BIONIC_PROPOSAL_ARC.sections.map((s) => s.id);
 const PROD_OPENERS = X_BIONIC_PROPOSAL_ARC.sections.filter((s) => s.kind === "interstitial");
-const PROD_RETURN = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "return");
+const PROD_RETURN = X_BIONIC_RETURN;
 const PROD_ADOPTION = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "adoption");
 const PROD_RUN = PROD_ADOPTION?.kind === "handoff" ? PROD_ADOPTION.run : undefined;
 
@@ -131,11 +135,9 @@ describe("the proposal system lab", () => {
         const order = ["vision", "approach"];
         expect(ids.slice(0, 2)).toEqual(order);
         expect(ids.indexOf("plugs-in")).toBeLessThan(ids.indexOf("proof-loop"));
-        expect(ids.indexOf("proof-loop")).toBeLessThan(ids.indexOf("return"));
-        expect(ids.indexOf("return")).toBeLessThan(ids.indexOf("proof-brands"));
+        expect(ids.indexOf("proof-loop")).toBeLessThan(ids.indexOf("proof-brands"));
         expect(ids.indexOf("proof-brands")).toBeLessThan(ids.indexOf("job-production"));
         expect(ids.indexOf("job-strategy")).toBeLessThan(ids.indexOf("offer"));
-        expect(ids.indexOf("offer")).toBeLessThan(ids.indexOf("engine"));
         /* Every production beat is still on the page, two of them renamed. */
         for (const id of PROD_IDS) {
           if (id === "upstream" && knobs.upstream === "off") continue;
@@ -144,8 +146,11 @@ describe("the proposal system lab", () => {
         }
       }
 
+      /* The return left the page on 12 October (owner: the cards already
+         carry it); it comes back only in its own direction. */
       const ret = arc.sections.find((s) => s.kind === "crew");
-      expect(ret).toBeTruthy();
+      if (knobs.return === "ledger") expect(ret).toBeTruthy();
+      else expect(ret, "the return is off the page").toBeUndefined();
       if (ret?.kind === "crew") {
         if (knobs.return === "ledger") {
           expect(ret.layout).toBe("returns");
@@ -267,8 +272,8 @@ describe("the proposal system lab", () => {
           }
           if (approach.opened) {
             const o = approach.opened;
-            const engine = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "engine");
-            if (engine?.kind !== "instrument" || !engine.face) throw new Error("the engine's face");
+            const engine = X_BIONIC_ENGINE;
+            if (!engine.face) throw new Error("the engine's face");
             expect(o.console, "the plugin's own console").toBe(engine.face.console);
             expect(o.connectors).toBe(engine.face.connectors);
             expect(o.lanes.map((l) => l.id)).toEqual([...DISCIPLINE_ORDER]);
@@ -306,8 +311,11 @@ describe("the proposal system lab", () => {
         expect(h.upstream).toBeUndefined();
       }
 
+      /* The plugin left the page on 12 October (owner: "remove that"); it
+         comes back only in its own direction. */
       const engine = arc.sections.find((s) => s.kind === "instrument");
-      expect(engine).toBeTruthy();
+      if (knobs.engine === "pinned") expect(engine).toBeTruthy();
+      else expect(engine, "the plugin is off the page").toBeUndefined();
       if (engine?.kind === "instrument") {
         /* A face and a pin never share a section: the face replaces the
            figure the pin lights. */
@@ -346,14 +354,15 @@ describe("the proposal system lab", () => {
       const ids = xBionicV2(knobs).sections.map((s) => s.id);
       /* Production holds no "Longer tasks" beat since 11 October; `lines`
          and `horizon` ADD one right after the approach. */
-      const expected =
-        knobs.upstream === "off"
-          ? PROD_IDS
-          : (() => {
-              const ids = [...PROD_IDS];
-              ids.splice(ids.indexOf("adoption") + 1, 0, "upstream");
-              return ids;
-            })();
+      /* Since 12 October the return and the plugin are off the page, and
+         their own directions ADD them back where they stood. */
+      const expected = (() => {
+        const ids = [...PROD_IDS];
+        if (knobs.upstream !== "off") ids.splice(ids.indexOf("adoption") + 1, 0, "upstream");
+        if (knobs.return === "ledger") ids.splice(ids.indexOf("proof-brands"), 0, "return");
+        if (knobs.engine === "pinned") ids.splice(ids.indexOf("offer") + 1, 0, "engine");
+        return ids;
+      })();
       expect(ids, label).toEqual(expected);
     }
   });

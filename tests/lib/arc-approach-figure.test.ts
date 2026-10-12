@@ -17,7 +17,7 @@ import { labelBoxes, labelCollisions } from "@/components/arcs/framing/iso";
 import { PLUG_VB, PLUG_VB_OPENED, pluginLayer } from "@/components/arcs/pluginLayer";
 import type { PlugDrawing } from "@/components/arcs/pluginLayer";
 import { PLATE, courseLines, tilesZ } from "@/components/arcs/stack/stackLayout";
-import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
+import { X_BIONIC_ENGINE, X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
 import { PS_DEFAULTS, PS_KNOB_LIST, knobsFor } from "@/lib/proposal-system/variants";
 import { xBionicV2 } from "@/lib/proposal-system/xBionicV2";
 
@@ -376,8 +376,8 @@ describe("the lane opened", () => {
   });
 
   it("leaves the plugin beat's own drawing untouched", () => {
-    const engine = X_BIONIC_PROPOSAL_ARC.sections.find((s) => s.id === "engine");
-    if (engine?.kind !== "instrument" || !engine.face) throw new Error("the engine's face");
+    const engine = X_BIONIC_ENGINE;
+    if (!engine.face) throw new Error("the engine's face");
     const prod = pluginLayer(engine.face.lanes, engine.face.connectors.length);
     expect(prod.vb).toEqual(PLUG_VB);
     expect(prod.opened).toBeUndefined();

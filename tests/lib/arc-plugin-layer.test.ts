@@ -5,6 +5,7 @@ import { ISO_ANGLE } from "@/components/arcs/framing/iso";
 import { PLUG_VB, pluginLayer } from "@/components/arcs/pluginLayer";
 import { SLAB_PATHS } from "@/components/arcs/stack/stackLayout";
 import type { PlugDrawing } from "@/components/arcs/pluginLayer";
+import { X_BIONIC_ENGINE } from "@/lib/arcs/content/x-bionic-proposal";
 import { ARCS } from "@/lib/arcs/registry";
 import type { ArcSectionOf } from "@/lib/arcs/types";
 
@@ -17,11 +18,16 @@ import type { ArcSectionOf } from "@/lib/arcs/types";
 
 type Faced = { slug: string; section: ArcSectionOf<"instrument"> };
 
-const FACED: Faced[] = ARCS.flatMap((arc) =>
-  arc.sections.flatMap((s) =>
-    s.kind === "instrument" && s.face ? [{ slug: arc.slug, section: s }] : []
-  )
-);
+/* The X-Bionic plugin left its page on 2026-10-12 and stays a record the
+   proposal system lab still draws, so it is walked with the pages. */
+const FACED: Faced[] = [
+  ...ARCS.flatMap((arc) =>
+    arc.sections.flatMap((s) =>
+      s.kind === "instrument" && s.face ? [{ slug: arc.slug, section: s }] : []
+    )
+  ),
+  ...(X_BIONIC_ENGINE.face ? [{ slug: "x-bionic-proposal", section: X_BIONIC_ENGINE }] : []),
+];
 
 /** Every point a path visits, control points included: M L C V H h v Z. */
 function pathPoints(d: string): [number, number][] {
@@ -75,7 +81,7 @@ const grainCount = (l: PlugDrawing["lanes"][number]) =>
   l.grains.reduce((n, g) => n + (g.d.match(/M/g)?.length ?? 0), 0);
 
 describe("the plugin's opened layer (ADR-153 U6)", () => {
-  it("is mounted on the X-Bionic proposal, so the walk below is not empty", () => {
+  it("walks the X-Bionic plugin record, so the walk below is not empty", () => {
     expect(FACED.map((f) => f.slug)).toContain("x-bionic-proposal");
   });
 

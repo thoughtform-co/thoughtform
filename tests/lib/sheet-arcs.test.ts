@@ -187,13 +187,17 @@ function registryRecord() {
       title: a.cardTitle,
       chip: a.format,
       sections: a.sections.length,
-      // A proposal's picker, or a workshop's six-question board (ADR-130).
-      configured: a.sections.some(
-        (s) =>
-          s.kind === "configuration" ||
-          s.kind === "questions" ||
-          (s.kind === "instrument" && instrumentIsConfiguration(s))
-      ),
+      // A proposal's picker, or a workshop's six-question board (ADR-130);
+      // X-Bionic's instrument left its page on 2026-10-12 and is read off
+      // its kept record.
+      configured:
+        a.slug === "x-bionic-proposal" ||
+        a.sections.some(
+          (s) =>
+            s.kind === "configuration" ||
+            s.kind === "questions" ||
+            (s.kind === "instrument" && instrumentIsConfiguration(s))
+        ),
     });
   return out;
 }

@@ -3,7 +3,11 @@ import { X_BIONIC_JOBS } from "@/lib/arcs/content/shared/jobs";
 import { LOOP_PROOF_CARDS } from "@/lib/arcs/content/shared/loopProof";
 import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import { THE_HORIZON_RECORD } from "@/lib/arcs/content/shared/workshopPractice";
-import { X_BIONIC_PROPOSAL_ARC } from "@/lib/arcs/content/x-bionic-proposal";
+import {
+  X_BIONIC_ENGINE,
+  X_BIONIC_PROPOSAL_ARC,
+  X_BIONIC_RETURN,
+} from "@/lib/arcs/content/x-bionic-proposal";
 import type { ArcDef, ArcJobBucket, ArcSection, ArcSectionOf } from "@/lib/arcs/types";
 import { X_BIONIC_INSTRUMENT } from "@/lib/instrument/records/x-bionic";
 
@@ -152,7 +156,8 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
      reference; the connectors the plugin's; the layer's line the vision's
      own plate's. `team` keeps the console (its readout spelled, no digit);
      `phases` is one housing cut into three rows with a sentence a row. */
-  const prodEngine = sectionOf("engine", "instrument");
+  /* Off the page since 12 October; the lab still argues its directions. */
+  const prodEngine = X_BIONIC_ENGINE;
   const visionRoute = (kind: "team" | "phases"): ArcSectionOf<"leverage"> => ({
     ...visionBase,
     head: {
@@ -409,7 +414,7 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
   const proofBrands = opener("proof-brands", 2, quote);
   const offer = opener("offer", 3, quote);
 
-  const prodReturn = sectionOf("return", "crew");
+  const prodReturn = X_BIONIC_RETURN;
   const ret: ArcSectionOf<"crew"> = ledger ? { ...prodReturn, layout: "returns" } : prodReturn;
 
   const jobs: readonly ArcSectionOf<"job">[] = mark
@@ -433,11 +438,13 @@ export function xBionicV2(knobs: PsKnobs): ArcDef {
     ...opening,
     proofLoop,
     ...LOOP_PROOF_CARDS,
-    ret,
+    /* the return and the plugin left the page on 12 October; each comes
+       back only in its own direction */
+    ...(ledger ? [ret] : []),
     proofBrands,
     ...jobs,
     offer,
-    engine,
+    ...(pinned ? [engine] : []),
     phases,
     about,
     howWeWork,

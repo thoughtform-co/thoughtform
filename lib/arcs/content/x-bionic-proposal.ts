@@ -1,4 +1,4 @@
-import type { ArcDef, ArcLeverageUse } from "../types";
+import type { ArcDef, ArcLeverageUse, ArcSectionOf } from "../types";
 
 import { X_BIONIC_JOBS } from "./shared/jobs";
 import { LOOP_PROOF_CARDS, LOOP_RETURN, VINCE_ABOUT } from "./shared/loopProof";
@@ -273,11 +273,9 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       layout: "case" as const,
       arcBeats: LOOP_PROOF_CARDS.map((b) => ({ id: b.id, word: b.menuLabel ?? b.id })),
     })),
-    /* The return in the jobs' own housing (ADR-153 U5, owner 2026-10-10:
-       it "looks different from the other sections … redesign what it
-       returned at Loop … so they match the examples from Samako and
-       Suri"): one card, a lane per workstream. Pandora keeps the circuit. */
-    { ...LOOP_RETURN, layout: "case" },
+    /* What it returned at Loop came off the page on 2026-10-12 (owner: "we
+       already have that in the individual" cards); its record stays below
+       as `X_BIONIC_RETURN`. */
 
     /* ── Two brands ────────────────────────────────────────────────────
        The second line, the owner's own sentence: Loop set the layer up,
@@ -307,39 +305,8 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       menuPrimary: true,
       line: { pre: "And this is how we'll do it at", em: "X-Bionic." },
     },
-    {
-      /* WHAT PLUGS INTO CLAUDE ENTERPRISE (the client's own lead on the
-         call: anything that links into their Claude Enterprise is what the
-         investors want to hear). The plugin drawn as the layer opened
-         (ADR-153 U6, owner 2026-10-10: "Layer opened"): the gold slab the
-         team writes, one lane per skill carrying the figure its
-         workstream's lane draws on the Loop return, X-Bionic's Claude
-         Enterprise as a plain slab under it. The words are the record's
-         (`org.workstreams`); the drawing is the `face`. */
-      id: "engine",
-      kind: "instrument",
-      menuLabel: "The plugin",
-      head: {
-        eyebrow: "X-Bionic · the plugin",
-        title: { pre: "The plugin,", em: "in your Claude Enterprise." },
-        sub: "One plugin in X-Bionic's own Claude Enterprise, with a skill for each workstream: the product voice, intake and naming, the pre-review, the brief and its variants. Each is written in phase one with the people who use it, checked by its own evals, and kept by them.",
-      },
-      record: X_BIONIC_INSTRUMENT,
-      altitude: "org",
-      face: {
-        kind: "layer",
-        console: { name: "Intelligence configuration", status: "X-Bionic" },
-        layer: "Your layer",
-        host: "X-Bionic's Claude Enterprise",
-        connectors: ["Shopify", "Analytics", "Ad accounts"],
-        lanes: LOOP_RETURN.rows.map((r) => ({
-          id: r.bucket ?? r.id,
-          output: r.output,
-          seed: r.id,
-          keepers: r.bucket === "production" ? 2 : r.bucket === "strategy" ? 1 : undefined,
-        })),
-      },
-    },
+    /* The plugin came off the page on 2026-10-12 (owner: "remove that");
+       its record stays below as `X_BIONIC_ENGINE`. */
     {
       id: "phases",
       kind: "list-groups",
@@ -617,4 +584,48 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
       signature: "Prepared for Ganesh, X-Bionic.",
     },
   ],
+};
+
+/* ── Off the page, kept as records (owner, 2026-10-12) ─────────────────
+   The plugin and what it returned at Loop left the page the same day the
+   flow and the steps arrived; the proposal system lab still composes them
+   for its `engine: pinned` and `return: ledger` directions. */
+
+/** What it returned at Loop, in the jobs' own housing (ADR-153 U5): one
+    card, a lane per workstream. Pandora keeps the circuit. */
+export const X_BIONIC_RETURN: ArcSectionOf<"crew"> = { ...LOOP_RETURN, layout: "case" };
+
+/** The plugin, in your Claude Enterprise. */
+export const X_BIONIC_ENGINE: ArcSectionOf<"instrument"> = {
+  /* WHAT PLUGS INTO CLAUDE ENTERPRISE (the client's own lead on the
+     call: anything that links into their Claude Enterprise is what the
+     investors want to hear). The plugin drawn as the layer opened
+     (ADR-153 U6, owner 2026-10-10: "Layer opened"): the gold slab the
+     team writes, one lane per skill carrying the figure its
+     workstream's lane draws on the Loop return, X-Bionic's Claude
+     Enterprise as a plain slab under it. The words are the record's
+     (`org.workstreams`); the drawing is the `face`. */
+  id: "engine",
+  kind: "instrument",
+  menuLabel: "The plugin",
+  head: {
+    eyebrow: "X-Bionic · the plugin",
+    title: { pre: "The plugin,", em: "in your Claude Enterprise." },
+    sub: "One plugin in X-Bionic's own Claude Enterprise, with a skill for each workstream: the product voice, intake and naming, the pre-review, the brief and its variants. Each is written in phase one with the people who use it, checked by its own evals, and kept by them.",
+  },
+  record: X_BIONIC_INSTRUMENT,
+  altitude: "org",
+  face: {
+    kind: "layer",
+    console: { name: "Intelligence configuration", status: "X-Bionic" },
+    layer: "Your layer",
+    host: "X-Bionic's Claude Enterprise",
+    connectors: ["Shopify", "Analytics", "Ad accounts"],
+    lanes: LOOP_RETURN.rows.map((r) => ({
+      id: r.bucket ?? r.id,
+      output: r.output,
+      seed: r.id,
+      keepers: r.bucket === "production" ? 2 : r.bucket === "strategy" ? 1 : undefined,
+    })),
+  },
 };

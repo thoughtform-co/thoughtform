@@ -54,6 +54,7 @@ import {
   SURI_WRONG_THREADS,
 } from "@/lib/arcs/content/shared/suriWork";
 import { ARCS, arcHrefs, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
+import { X_BIONIC_RETURN } from "@/lib/arcs/content/x-bionic-proposal";
 import { arcHref } from "@/lib/arcs/routes";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
 import { LIGHT_LOCKED_ROUTES } from "@/lib/theme/themeLock";
@@ -927,7 +928,10 @@ describe("arcs registry (ADR-052)", () => {
   it("a crew set as a case card heads each lane with its own workstream (ADR-153 U5)", () => {
     const BUCKETS = ["production", "ops", "review", "strategy"];
     let seen = 0;
-    for (const arc of ARCS) {
+    /* X-Bionic's return left the page on 2026-10-12 and stays a record the
+       proposal system lab still draws, so it is walked with the pages. */
+    const walked = [...ARCS, { slug: "x-bionic-proposal (record)", sections: [X_BIONIC_RETURN] }];
+    for (const arc of walked) {
       for (const section of arc.sections) {
         if (section.kind !== "crew") continue;
         const at = `${arc.slug}/${section.id}`;

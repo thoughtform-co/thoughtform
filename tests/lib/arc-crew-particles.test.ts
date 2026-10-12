@@ -8,6 +8,7 @@ import {
   personPath,
   type CrewParticles,
 } from "@/components/arcs/crewParticles";
+import { X_BIONIC_RETURN } from "@/lib/arcs/content/x-bionic-proposal";
 import { ARCS } from "@/lib/arcs/registry";
 import type { CrewOutput } from "@/lib/arcs/types";
 
@@ -101,7 +102,10 @@ describe("the crew's particles (ADR-153 U5)", () => {
 
   it("every case-card lane on a registered page draws inside its crop", () => {
     let lanes = 0;
-    for (const arc of ARCS) {
+    /* X-Bionic's return is off the page since 2026-10-12, a record the
+       proposal system lab still draws: walked with the pages. */
+    const walked = [...ARCS, { slug: "x-bionic-proposal (record)", sections: [X_BIONIC_RETURN] }];
+    for (const arc of walked) {
       for (const s of arc.sections) {
         if (s.kind !== "crew" || s.layout !== "case") continue;
         const seeds = s.rows.map((r) => crewSeed(r.id));

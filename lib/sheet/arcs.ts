@@ -34,6 +34,7 @@ import {
 } from "@/lib/arcs/clients";
 import type { ClientDef } from "@/lib/arcs/clients";
 import { TRINNY_BOARD, TRINNY_PHASES } from "@/lib/arcs/content/trinny-london-offer";
+import { X_BIONIC_ENGINE } from "@/lib/arcs/content/x-bionic-proposal";
 import { arcsOf, houseArcs } from "@/lib/arcs/registry";
 import { HOUSE_SLUG, arcHref, groupHref } from "@/lib/arcs/routes";
 import type { ArcDef, ArcKind } from "@/lib/arcs/types";
@@ -256,8 +257,15 @@ function arcConfiguration(arc: ArcDef): SheetConfiguration | null {
     if (s.kind === "instrument" && instrumentIsConfiguration(s))
       return configurationFromInstrument(s);
   }
-  return null;
+  return OFF_PAGE_CONFIGURATIONS[arc.slug]?.() ?? null;
 }
+
+/** An arc whose configuration section left its page but stays a record:
+ *  X-Bionic's plugin (2026-10-12, owner: "remove that"), whose instrument
+ *  still describes the engagement the log's dossier draws. */
+const OFF_PAGE_CONFIGURATIONS: Record<string, () => SheetConfiguration> = {
+  "x-bionic-proposal": () => configurationFromInstrument(X_BIONIC_ENGINE),
+};
 
 /** Every engagement on the overview exactly once, in LOG order: each client's
  *  pages and arcs in `CLIENTS` order, then the house formats, then the

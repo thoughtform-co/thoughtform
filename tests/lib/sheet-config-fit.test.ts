@@ -73,6 +73,8 @@ describe("the board is read off the proposal (ADR-118 U2)", () => {
           )
         ).map((a) => a.slug),
         "trinny-london-pitch",
+        /* its instrument left the page on 2026-10-12, read off the record */
+        "x-bionic-proposal",
       ].sort()
     );
     /* Plopsa left this list with ADR-130 (its picker became the six-question
