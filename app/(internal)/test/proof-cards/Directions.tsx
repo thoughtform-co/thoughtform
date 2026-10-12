@@ -408,8 +408,7 @@ export function DirectionF({ job, order }: { job: Job; order: StepOrder }) {
     text: d,
     human: false,
   }));
-  const steps =
-    order === "asked" ? [embed, empower, ...claude] : [embed, ...claude, empower];
+  const steps = order === "asked" ? [embed, empower, ...claude] : [embed, ...claude, empower];
   return (
     <article className="pk-card pk-e pk-f" aria-label={p.name}>
       <header className="pk-f__head">

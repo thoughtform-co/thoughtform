@@ -626,7 +626,11 @@
   left: 100%;
   width: calc(var(--pk-pad) + 1px + var(--pk-wire) * 2.4);
   height: 1px;
-  background: linear-gradient(90deg, rgba(var(--pk-gold-rgb), 0.15), rgba(var(--pk-gold-rgb), 0.85));
+  background: linear-gradient(
+    90deg,
+    rgba(var(--pk-gold-rgb), 0.15),
+    rgba(var(--pk-gold-rgb), 0.85)
+  );
 }
 .pk-b__did li::before {
   content: "";
@@ -640,7 +644,9 @@
 
 .pk-b__fig {
   border-color: rgba(var(--pk-gold-rgb), 0.8);
-  box-shadow: inset 0 0 0 4px var(--pk-void), inset 0 0 0 5px rgba(var(--pk-gold-rgb), 0.4);
+  box-shadow:
+    inset 0 0 0 4px var(--pk-void),
+    inset 0 0 0 5px rgba(var(--pk-gold-rgb), 0.4);
 }
 .pk-b__fig .pk-b__bar {
   border-bottom-color: rgba(var(--pk-gold-rgb), 0.4);

@@ -142,7 +142,11 @@
 }
 .pk-i__bar {
   height: 8px;
-  background: repeating-linear-gradient(90deg, rgba(var(--pk-ink-rgb), 0.35) 0 4px, transparent 4px 7px);
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(var(--pk-ink-rgb), 0.35) 0 4px,
+    transparent 4px 7px
+  );
 }
 .pk-i__bar[data-w="short"] {
   width: 26%;
@@ -256,4 +260,28 @@
 .pk-i--scale .pk-i__allows .pk-lede {
   font-size: var(--pk-t-body);
   line-height: 1.45;
+}
+
+/* U5: the chips go neutral (green belongs to the Scale tab alone); one
+   vertical divider between the panels, full height, and the rule over the
+   time saved runs from the card's left edge to it */
+.pk-i--scale .pk-i__code code {
+  border-color: var(--pk-line);
+  background: rgba(var(--pk-ink-rgb), 0.05);
+  color: var(--pk-ink);
+}
+.pk-i--scale .pk-i__body {
+  gap: 0;
+  padding: 0;
+}
+.pk-i--scale .pk-i__words {
+  padding: var(--pk-pad);
+  border-right: 1px solid var(--pk-line);
+}
+.pk-i--scale .pk-h__fig,
+.pk-i--scale .pk-g__fig {
+  margin: var(--pk-pad);
+}
+.pk-i--scale .pk-i__rule {
+  margin-inline: calc(-1 * var(--pk-pad));
 }

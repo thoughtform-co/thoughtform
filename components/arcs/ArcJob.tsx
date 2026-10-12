@@ -82,6 +82,7 @@ export function ArcJob({
   const titleId = `${section.id}-title`;
   const ws = JOB_BUCKETS.find((b) => b.id === bucket) ?? JOB_BUCKETS[0];
   const saved = result.label ?? RESULT_LABEL;
+  if (section.top === "stack") return <JobStack section={section} motion={motion} />;
   return (
     <ArcBeat
       id={section.id}
@@ -186,6 +187,116 @@ export function ArcJob({
             <span className="arc-case__who">{gate.who}</span>
             {gate.line ? <span className="arc-case__gate-line">{gate.line}</span> : null}
           </p>
+        </article>
+      </div>
+    </ArcBeat>
+  );
+}
+
+/**
+ * THE STACK CARD (owner, 2026-10-12, /test/proof-cards block 19): every word
+ * on the left as one flow, the one figure on the right, a vertical rule
+ * between them. The top bar is the client framed, the job's name and its
+ * workstream with the vision's glyph, in one mono face in capitals. The
+ * left reads the brief (the problem), then three moves on one gold rail:
+ * Embed (green, with the team), Solve it together (what Claude did, three
+ * small steps) and Scale (green, what plugs in, set as code); then what it
+ * now allows, a rule from the frame's edge to the divider, and the time
+ * saved as two bars. No gate row: the record keeps it.
+ */
+function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: ArcMotion }) {
+  const { n, title, bucket, ask, did, figure, result, client } = section;
+  const titleId = `${section.id}-title`;
+  const ws = disciplineOf(bucket);
+  const saved = result.label ?? RESULT_LABEL;
+  const estimated = saved === RESULT_LABEL;
+  return (
+    <ArcBeat
+      id={section.id}
+      kind="job"
+      className="arc-section arc-sec arc-sec--job"
+      ariaLabel={section.ariaLabel ?? title}
+      motion={motion}
+    >
+      <div className="arc-band">
+        <article
+          className="arc-lev arc-case arc-plate arc-reveal arc-jstack"
+          data-job-bucket={bucket}
+          data-job-head="stack"
+          aria-labelledby={titleId}
+          {...rung(motion, 0.1)}
+        >
+          <header className="arc-jstack__top">
+            <span className="arc-jstack__client">{client}</span>
+            <h2 className="arc-jstack__name" id={titleId}>
+              {title}
+            </h2>
+            <span className="arc-jstack__ws">
+              <Glyph kind={ws.glyph} />
+              {ws.long}
+            </span>
+          </header>
+          <div className="arc-jstack__body">
+            <div className="arc-jstack__words">
+              <div className="arc-jstack__box arc-jstack__box--gold">
+                <p className="arc-jstack__tab">The brief</p>
+                <p className="arc-jstack__para">{ask}</p>
+              </div>
+              <ol className="arc-jstack__flow" aria-label="The work">
+                <li className="arc-jstack__box arc-jstack__box--human">
+                  <p className="arc-jstack__tab">Embed</p>
+                  <p className="arc-jstack__line">{section.embed}</p>
+                </li>
+                <li className="arc-jstack__label">Solve it together</li>
+                {did.map((d, i) => (
+                  <li key={d} className="arc-jstack__small">
+                    <span className="arc-jstack__small-tab">Claude {i + 1}</span>
+                    <span className="arc-jstack__small-text">{d}</span>
+                  </li>
+                ))}
+                <li className="arc-jstack__box arc-jstack__box--human">
+                  <p className="arc-jstack__tab">Scale</p>
+                  <p className="arc-jstack__code">
+                    <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
+                    <code>tool</code> <span className="arc-jstack__to">→</span>{" "}
+                    <span className="arc-jstack__dest">{client}&apos;s own system</span>
+                  </p>
+                </li>
+              </ol>
+              <div className="arc-jstack__box arc-jstack__box--gold">
+                <p className="arc-jstack__tab">{ALLOWS_LABEL}</p>
+                <p className="arc-jstack__para">{result.allows}</p>
+              </div>
+              <hr className="arc-jstack__rule" />
+              <div className="arc-jstack__box">
+                <p className="arc-jstack__tab">
+                  {saved}
+                  {estimated ? " · estimated" : null}
+                </p>
+                <div className="arc-jstack__bars">
+                  <p className="arc-jstack__bar-row">
+                    <span className="arc-jstack__bar-k">Before</span>
+                    <i className="arc-jstack__bar" data-w="long" aria-hidden="true" />
+                    <span className="arc-jstack__bar-v">{result.before}</span>
+                  </p>
+                  <p className="arc-jstack__bar-row" data-lit="true">
+                    <span className="arc-jstack__bar-k">Now</span>
+                    <i className="arc-jstack__bar" data-w="short" aria-hidden="true" />
+                    <span className="arc-jstack__bar-v">{result.now}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
+              <div className="arc-case__frame">
+                <Evidence figure={figure} seed={crewSeed(section.id)} />
+              </div>
+              <figcaption className="arc-case__caption">
+                <span className="arc-case__fig-n">Fig. {two(n)}</span>
+                {figure.caption}
+              </figcaption>
+            </figure>
+          </div>
         </article>
       </div>
     </ArcBeat>

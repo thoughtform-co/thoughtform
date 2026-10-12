@@ -107,7 +107,7 @@ describe("the proposal system lab", () => {
         expect(j.n, `${j.id}: n`).toBe(i + 1);
         expect(j.result.said?.em?.length ?? 0, `${j.id}: said`).toBeLessThanOrEqual(24);
         if (knobs.jobHead === "mark") expect(j.top).toBe("mark");
-        else expect(j.top).toBeUndefined();
+        else expect(j.top).toBe("stack");
       });
       /* One vocabulary in one order: the jobs and the engine's tiles run
          in the disciplines' order on every composition. */

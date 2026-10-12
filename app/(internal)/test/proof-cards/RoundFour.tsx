@@ -121,7 +121,11 @@ function Bars({ p }: { p: Practice }) {
 
 export function Figure({ job, wide, ba }: { job: Job; wide: boolean; ba: boolean }) {
   return (
-    <figure className="pk-c__fig pk-e__fig pk-g__fig" data-figure={job.figure.kind} data-wide={wide || undefined}>
+    <figure
+      className="pk-c__fig pk-e__fig pk-g__fig"
+      data-figure={job.figure.kind}
+      data-wide={wide || undefined}
+    >
       <p className="pk-c__vert">
         Fig. {two(job.n)} · {job.figure.caption}
       </p>
@@ -146,11 +150,20 @@ function BeforeAfter({ job }: { job: Job }) {
   const f = job.figure;
   const p = PRACTICE[job.id];
   if (f.kind === "clip") {
-    const a = SAMAKO_AUTUMN_FILM.film;
+    const a = SAMAKO_AUTUMN_FILM.film ?? f.clip;
     return (
       <div className="pk-ev pk-ba">
         <Pane label="Film A">
-          <video src={a.src} poster={a.poster} aria-label={a.alt} autoPlay muted loop playsInline preload="metadata" />
+          <video
+            src={a.src}
+            poster={a.poster}
+            aria-label={a.alt}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          />
         </Pane>
         <Pane label="Film B" lit>
           <video
@@ -236,7 +249,12 @@ function Pane({
 function Folders() {
   const folders = Array.from({ length: 12 }, (_, i) => i);
   return (
-    <svg className="pk-ba__folders" viewBox="0 0 240 240" role="img" aria-label="Files in folders, unsorted">
+    <svg
+      className="pk-ba__folders"
+      viewBox="0 0 240 240"
+      role="img"
+      aria-label="Files in folders, unsorted"
+    >
       {folders.map((i) => {
         const x = 12 + (i % 3) * 76;
         const y = 14 + Math.floor(i / 3) * 56;

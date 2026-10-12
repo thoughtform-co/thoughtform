@@ -75,7 +75,11 @@ export function DirectionJ({ job }: { job: Job }) {
                 <p className="pk-lede">{p.problem}</p>
               </div>
               <ol className="pk-i__flow pk-j__flow" aria-label="The work">
-                <li className="pk-c__box pk-i__big pk-j__step" data-open={open(0)} data-done={done(0)}>
+                <li
+                  className="pk-c__box pk-i__big pk-j__step"
+                  data-open={open(0)}
+                  data-done={done(0)}
+                >
                   <p className="pk-c__tab">Embed</p>
                   <div className="pk-j__fold">
                     <div>
@@ -83,7 +87,11 @@ export function DirectionJ({ job }: { job: Job }) {
                     </div>
                   </div>
                 </li>
-                <li className="pk-c__box pk-j__step pk-j__solve" data-open={open(1)} data-done={done(1)}>
+                <li
+                  className="pk-c__box pk-j__step pk-j__solve"
+                  data-open={open(1)}
+                  data-done={done(1)}
+                >
                   <p className="pk-c__tab">Solve it together</p>
                   <div className="pk-j__fold">
                     <div>
@@ -98,7 +106,11 @@ export function DirectionJ({ job }: { job: Job }) {
                     </div>
                   </div>
                 </li>
-                <li className="pk-c__box pk-i__big pk-j__step" data-open={open(2)} data-done={done(2)}>
+                <li
+                  className="pk-c__box pk-i__big pk-j__step"
+                  data-open={open(2)}
+                  data-done={done(2)}
+                >
                   <p className="pk-c__tab">Plug in</p>
                   <div className="pk-j__fold">
                     <div>

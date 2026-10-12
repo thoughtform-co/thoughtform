@@ -1576,7 +1576,7 @@ export type ArcSection = ArcSectionBase &
          * until U4 and is retired with it. (`top`, not `head`: every other
          * kind's `head` is an `ArcHead`.)
          */
-        top?: "mark";
+        top?: "mark" | "stack";
         /** The job's concrete title, sentence case, set in the frame's top
          *  row (U2: the job carries its own title; no head above it), e.g.
          *  "A Black Friday teaser, cut from raw footage". ≤ 56. */
@@ -1594,6 +1594,9 @@ export type ArcSection = ArcSectionBase &
         ask: string;
         /** What Claude did, three lines, one line each. ≤ 44 each. */
         did: readonly [string, string, string];
+        /** The `stack` card's first step (owner, 2026-10-12): embed with the
+         *  team to identify the problem, one line, by role. ≤ 48. */
+        embed?: string;
         /** The person who decided, by role (≤ 32), and, when the decision
          *  needs saying, what that person decides: one plain sentence in
          *  the client's own role words (≤ 80; owner 2026-10-11, "every
@@ -1634,6 +1637,10 @@ export type ArcJobBucket = "strategy" | "production" | "ops" | "review";
 export interface ArcJobResult {
   /** What the number is, mono, e.g. "Time saved". ≤ 20. Absent ⇒ "Time saved". */
   label?: string;
+  /** The `stack` card's time saved as two bars (owner, 2026-10-12): how the
+   *  work ran before, and now. ≤ 40 each; both or neither. */
+  before?: string;
+  now?: string;
   /** The return as one sentence, the figure its `em` (≤ 24; the whole ≤ 110
    *  as it reads). A job carries this since U7. */
   said?: ArcTitle;

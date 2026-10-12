@@ -1,0 +1,303 @@
+/* THE STACK CARD (owner, 2026-10-12): the job card as /test/proof-cards
+   block 19 drew it. Lives inside `.arc-case.arc-plate` (the frame, its one
+   notch and the fill rhythm stay the house's); everything here is
+   `.arc-jstack__*` so the Loop return card, which shares `.arc-case`, is
+   untouched. Tokens only. Loaded after leverage.css. */
+
+.arc-jstack {
+  --js-pad: var(--lat-pad-cell);
+  --js-gap: clamp(16px, 2.4vw, 44px);
+  --js-step: clamp(10px, 0.85vw, 16px);
+  --js-mono: var(--font-pt-mono, "PT Mono", monospace);
+  --js-gold-line: color-mix(in srgb, var(--gold) 55%, transparent);
+  --js-gold-wash: color-mix(in srgb, var(--gold) 14%, transparent);
+  --js-human: var(--case-person-text);
+  --js-human-line: color-mix(in srgb, var(--case-person-text) 50%, transparent);
+  --js-human-wash: color-mix(in srgb, var(--case-person-text) 14%, transparent);
+  --js-rail: color-mix(in srgb, var(--gold) 70%, transparent);
+  --js-small: var(--arc-job-small, calc(var(--type-base) / 1.1));
+}
+
+/* ── the top bar: one face, capitals ── */
+.arc-jstack__top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--lv-v, var(--space-md)) calc(var(--js-pad) + var(--arc-plate-ch))
+    var(--lv-v, var(--space-md)) var(--js-pad);
+  border-bottom: 1px solid var(--arc-rule);
+  font-family: var(--js-mono);
+  font-size: var(--type-sm, 13px);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.arc-jstack__client {
+  padding: 6px 10px;
+  border: 1px solid var(--js-gold-line);
+  color: var(--gold);
+}
+.arc-jstack__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-jstack__ws {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--arc-ink-70);
+}
+.arc-jstack__ws .arc-lev__glyph {
+  width: auto;
+  height: 18px;
+  align-self: center;
+}
+
+/* ── the body: words left, the one figure right, a full-height rule ── */
+.arc-jstack__body {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.arc-jstack__words {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--js-gap);
+  min-width: 0;
+  padding: var(--js-pad);
+  border-right: 1px solid var(--arc-rule);
+}
+.arc-jstack__words > * {
+  flex: 0 0 auto;
+}
+.arc-jstack__fig {
+  margin: var(--js-pad);
+}
+
+/* the boxes: a hairline frame, the tab inside it at the top-left corner */
+.arc-jstack__box {
+  position: relative;
+  margin: 0;
+  padding: 28px 16px 14px;
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-plate);
+  list-style: none;
+}
+.arc-jstack__tab {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  margin: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--arc-rule);
+  background: color-mix(in srgb, var(--dawn) 6%, transparent);
+  font: 400 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-70);
+}
+.arc-jstack__box--gold {
+  border-color: var(--js-gold-line);
+}
+.arc-jstack__box--gold .arc-jstack__tab {
+  border-color: var(--js-gold-line);
+  background: var(--js-gold-wash);
+  color: var(--gold);
+}
+.arc-jstack__box--human {
+  border-color: var(--js-human-line);
+}
+.arc-jstack__box--human .arc-jstack__tab {
+  border-color: var(--js-human-line);
+  background: var(--js-human-wash);
+  color: var(--js-human);
+}
+.arc-jstack__para {
+  margin: 0;
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-90, var(--dawn));
+  text-wrap: pretty;
+}
+.arc-jstack__line {
+  margin: 0;
+  font-size: var(--js-small);
+  line-height: 1.4;
+  color: var(--arc-ink-90, var(--dawn));
+}
+
+/* ── the flow: one unbroken gold rail from the brief box down ── */
+.arc-jstack__flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--js-step);
+  margin: 0;
+  padding: 0 0 0 22px;
+  list-style: none;
+}
+.arc-jstack__flow > li {
+  position: relative;
+}
+.arc-jstack__flow > li::before {
+  content: "";
+  position: absolute;
+  left: var(--js-rx, -15px);
+  top: calc(-1 * var(--js-step) - 1px);
+  bottom: 0;
+  width: 1px;
+  background: var(--js-rail);
+}
+.arc-jstack__flow > li:first-child::before {
+  top: calc(-1 * var(--js-gap) - 1px);
+}
+.arc-jstack__flow > li:last-child::before {
+  bottom: 50%;
+}
+.arc-jstack__flow > li::after {
+  content: "";
+  position: absolute;
+  left: var(--js-rx, -15px);
+  top: 50%;
+  width: calc(-1 * var(--js-rx, -15px));
+  height: 1px;
+  background: var(--js-rail);
+}
+.arc-jstack__flow > .arc-jstack__box--human::after {
+  background: var(--js-human);
+}
+.arc-jstack__label {
+  font: 11px / 1.2 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.arc-jstack__label::after {
+  display: none;
+}
+/* Claude's three steps: smaller, set further in */
+.arc-jstack__small {
+  --js-rx: -33px;
+  display: grid;
+  grid-template-columns: 6.6em minmax(0, 1fr);
+  margin-left: 18px;
+  border: 1px solid color-mix(in srgb, var(--dawn) 8%, transparent);
+  background: var(--arc-plate);
+}
+.arc-jstack__small-tab {
+  display: flex;
+  align-items: center;
+  padding: 0 9px;
+  border-right: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  font: 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.arc-jstack__small-text {
+  padding: 7px 12px;
+  font-size: var(--js-small);
+  line-height: 1.35;
+  color: var(--arc-ink-70);
+}
+
+/* Scale: what plugs in, set as code; neutral chips, the tab is the green */
+.arc-jstack__code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font: var(--js-small) / 1.3 var(--js-mono);
+  color: var(--arc-ink-40);
+}
+.arc-jstack__code code {
+  padding: 3px 7px;
+  border: 1px solid var(--arc-rule);
+  background: color-mix(in srgb, var(--dawn) 5%, transparent);
+  font: inherit;
+  color: var(--arc-ink-90, var(--dawn));
+}
+.arc-jstack__to {
+  color: var(--gold);
+}
+.arc-jstack__dest {
+  color: var(--arc-ink-90, var(--dawn));
+}
+
+/* the rule over the time saved: from the frame's left edge to the divider */
+.arc-jstack__rule {
+  height: 0;
+  margin: 0 calc(-1 * var(--js-pad));
+  border: 0;
+  border-top: 1px solid var(--arc-rule);
+}
+
+/* the time saved: before long and dashed, now short and gold */
+.arc-jstack__bars {
+  display: grid;
+  gap: 10px;
+}
+.arc-jstack__bar-row {
+  display: grid;
+  grid-template-columns: 4.4em 7.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.arc-jstack__bar-k {
+  font: 11px / 1 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-jstack__bar {
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--dawn) 35%, transparent) 0 4px,
+    transparent 4px 7px
+  );
+}
+.arc-jstack__bar[data-w="short"] {
+  width: 26%;
+  background: var(--gold);
+}
+.arc-jstack__bar-v {
+  font-size: var(--js-small);
+  line-height: 1.3;
+  color: var(--arc-ink-70);
+}
+.arc-jstack__bar-row[data-lit] .arc-jstack__bar-k {
+  color: var(--gold);
+}
+.arc-jstack__bar-row[data-lit] .arc-jstack__bar-v {
+  color: var(--arc-ink-90, var(--dawn));
+}
+
+/* below the card's two-column width the words stack over the figure */
+@media (max-width: 960px) {
+  .arc-jstack__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-jstack__words {
+    border-right: 0;
+    border-bottom: 1px solid var(--arc-rule);
+  }
+  .arc-jstack__top {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+}
