@@ -571,7 +571,7 @@ export const X_BIONIC_PROPOSAL_ARC: ArcDef = {
         { label: "Weeks two to four", value: "About 3 days a week" },
       ],
       measures: {
-        label: "What we measure",
+        label: "How we suggest what to measure",
         items: [
           {
             id: "roac",
