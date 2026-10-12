@@ -27,6 +27,7 @@ export function DirectionI({
   scale = false,
   center = false,
   band = false,
+  refine,
 }: {
   job: Job;
   /** Two panes (before and after) or the one visual. */
@@ -49,12 +50,14 @@ export function DirectionI({
    *  cards): the process left, the visual right, and the time saved and
    *  what it now allows side by side in a quiet band under both. */
   band?: boolean;
+  /** U9 (owner, 2026-10-12, blocks 22 to 24): three finishing passes on 21. */
+  refine?: "index" | "cards" | "ledger";
 }) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
   return (
     <article
-      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}${band ? " pk-i--band" : ""}`}
+      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}${band ? " pk-i--band" : ""}${refine ? ` pk-i--r-${refine}` : ""}`}
       aria-label={p.name}
       style={left ? ({ "--pk-left": left } as React.CSSProperties) : undefined}
     >
@@ -233,7 +236,13 @@ function BandBody({ job, ba }: { job: Job; ba: boolean }) {
         <Figure job={job} wide ba={ba} />
       </div>
       <div className="pk-i__band">
+        <p className="pk-i__band-head" aria-hidden="true">
+          <i />
+          The result
+          <span />
+        </p>
         <section className="pk-i__cell">
+          <Glyph kind="clock" />
           <p className="pk-i__cell-k">
             {resultLabel(job)}
             {job.result.label === "The return" ? null : " · estimated"}
@@ -252,6 +261,7 @@ function BandBody({ job, ba }: { job: Job; ba: boolean }) {
           </div>
         </section>
         <section className="pk-i__cell">
+          <Glyph kind={disciplineOf(job.bucket).glyph} />
           <p className="pk-i__cell-k">What it now allows</p>
           <p className="pk-i__cell-v">{job.result.allows}</p>
         </section>
