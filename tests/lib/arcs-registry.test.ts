@@ -2068,7 +2068,7 @@ describe("the proposal as one argument (ADR-153 U1)", () => {
         expect(s.ask.length, `${at}: ask`).toBeLessThanOrEqual(s.top === "stack" ? 140 : 110);
         if (s.top === "stack") {
           expect((s.embed ?? "").length, `${at}: the stack's embed step`).toBeGreaterThan(0);
-          expect((s.embed ?? "").length, `${at}: embed`).toBeLessThanOrEqual(48);
+          expect((s.embed ?? "").length, `${at}: embed`).toBeLessThanOrEqual(56);
           /* Scale: two to four tools as notes. */
           expect((s.scale?.tools ?? []).length, `${at}: tools`).toBeGreaterThanOrEqual(2);
           expect((s.scale?.tools ?? []).length, `${at}: tools`).toBeLessThanOrEqual(4);

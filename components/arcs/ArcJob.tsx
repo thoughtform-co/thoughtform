@@ -198,14 +198,13 @@ export function ArcJob({
  * on the left as one flow, the one figure on the right, a vertical rule
  * between them. The top bar is the client framed, the job's name and its
  * workstream with the vision's glyph, in one mono face in capitals. The
- * left reads the brief (the problem), then three moves on one gold rail:
+ * left reads the brief (the problem), then the work on one gold rail:
  * Embed (green, with the team), Solve it together (what Claude did, three
- * small steps) and Scale (green, what plugs in, set as code); then what it
- * and under both panels the result as a band (block 23 of the lab, after
- * Dispatch's and Atomic Tessellator's stat rows): the time saved as two
- * bars and what it now allows, two cards on a soft gold ground. Scale says
- * in one sentence how the work plugs into the rest of the client's system,
- * with the tools it plugs into as small notes. No gate row: the record keeps it.
+ * small steps), and a green tick straight into the tools it plugs into, no
+ * box and no label. Under both panels the result as a band (block 23 of
+ * the lab, after Dispatch's and Atomic Tessellator's stat rows): the time
+ * saved as two bars and what it now allows, two cards on a soft gold
+ * ground. No gate row: the record keeps it.
  */
 function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: ArcMotion }) {
   const { n, title, bucket, ask, did, figure, result, client } = section;
@@ -257,16 +256,15 @@ function JobStack({ section, motion }: { section: ArcSectionOf<"job">; motion: A
                     <span className="arc-jstack__small-text">{d}</span>
                   </li>
                 ))}
-                <li className="arc-jstack__box arc-jstack__box--human">
-                  <p className="arc-jstack__tab">Scale</p>
-                  {section.scale?.tools.length ? (
+                {section.scale?.tools.length ? (
+                  <li className="arc-jstack__plug">
                     <ul className="arc-jstack__tools" aria-label="Plugs into">
                       {section.scale.tools.map((t) => (
                         <li key={t}>{t}</li>
                       ))}
                     </ul>
-                  ) : null}
-                </li>
+                  </li>
+                ) : null}
               </ol>
             </div>
             <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
