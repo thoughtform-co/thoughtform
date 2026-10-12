@@ -450,27 +450,14 @@
 .pk-l .pk-l__arc-box {
   padding: 32px 16px 16px;
 }
-.pk-l__arc-tab {
-  position: absolute;
-  top: 11px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font: 400 calc(var(--pk-t-mono) * 0.92) / 1 var(--pk-mono);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--pk-ink-2);
-}
-.pk-l__arc-tab i {
-  width: 5px;
-  height: 5px;
-  background: var(--pk-gold);
-}
-.pk-l__arc-box[data-kind="team"] .pk-l__arc-tab i {
-  background: var(--pk-green);
+.pk-l .pk-l__arc-tab {
+  border-color: rgba(var(--pk-gold-rgb), 0.5);
+  background: rgba(var(--pk-gold-rgb), 0.12);
+  color: var(--pk-gold);
 }
 .pk-l__arc-box[data-kind="team"] .pk-l__arc-tab {
+  border-color: rgba(var(--pk-green-rgb), 0.55);
+  background: rgba(var(--pk-green-rgb), 0.16);
   color: var(--pk-green);
 }
 .pk-l__arc-steps {

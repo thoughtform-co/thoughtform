@@ -240,29 +240,20 @@ function Unified({ job, tools }: { job: Job; tools: readonly string[] }) {
  *  the vision section's plug-in. 01 Navigate holds the brief, 02 Encode the
  *  embed (green, the team's, as the vision's "Embed in your team"), 03 Build
  *  what Claude did, 04 the stack it plugs into; every label in the vision
- *  section's own form (a square, the number, the word), none filled. */
+ *  tab in its top-left corner, as the other cards' tabs. */
 function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
   return (
     <>
       <div className="pk-c__box pk-l__arc-box">
-        <p className="pk-l__arc-tab">
-          <i />
-          01 · Navigate
-        </p>
+        <p className="pk-c__tab pk-l__arc-tab">01 · Navigate</p>
         <p className="pk-lede">{job.ask}</p>
       </div>
       <div className="pk-c__box pk-l__arc-box" data-kind="team">
-        <p className="pk-l__arc-tab">
-          <i />
-          02 · Encode
-        </p>
+        <p className="pk-c__tab pk-l__arc-tab">02 · Encode</p>
         <p className="pk-body">{job.embed}</p>
       </div>
       <div className="pk-c__box pk-l__arc-box">
-        <p className="pk-l__arc-tab">
-          <i />
-          03 · Build with Claude
-        </p>
+        <p className="pk-c__tab pk-l__arc-tab">03 · Build with Claude</p>
         <ol className="pk-l__arc-steps" aria-label="Claude did">
           {job.did.map((t) => (
             <li key={t}>{t}</li>
@@ -270,10 +261,6 @@ function ArcFlow({ job, tools }: { job: Job; tools: readonly string[] }) {
         </ol>
       </div>
       <div className="pk-l__arc-stack">
-        <p className="pk-l__arc-tab pk-l__arc-tab--bare">
-          <i />
-          04 · Plug into {job.client}&apos;s stack
-        </p>
         <ul className="pk-i__tools pk-l__tools" aria-label="Plugs into">
           {tools.map((t) => (
             <li key={t}>{t}</li>
