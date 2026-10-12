@@ -197,3 +197,15 @@
 .pk-i__big .pk-body {
   color: var(--pk-ink);
 }
+
+/* U2: one visual, the left column's share set per block (55 / 60 / 65 %) */
+.pk-i[style*="--pk-left"] .pk-i__body {
+  grid-template-columns: minmax(0, var(--pk-left)) minmax(0, 1fr);
+}
+
+/* U2: more air between the left column's items, spent out of the slack the
+   1200 × 880 box leaves at 1920×1247 */
+.pk-i {
+  --pk-g: clamp(16px, 2.1vw, 40px);
+  --pk-g2: clamp(12px, 0.85vw, 16px);
+}

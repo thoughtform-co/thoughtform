@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { Glyph } from "@/components/arcs/ArcLeverage";
 import { disciplineOf } from "@/lib/arcs/content/shared/disciplines";
 
@@ -17,11 +19,25 @@ import { Figure } from "./RoundFour";
  *   the foot    what it now allows, then the time saved, stacked vertically
  *               under the steps, one flow
  */
-export function DirectionI({ job }: { job: Job }) {
+export function DirectionI({
+  job,
+  ba = true,
+  left,
+}: {
+  job: Job;
+  /** Two panes (before and after) or the one visual. */
+  ba?: boolean;
+  /** The left column's share of the body, e.g. "55%"; 14 keeps its 42/58. */
+  left?: string;
+}) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
   return (
-    <article className="pk-card pk-c pk-h pk-i" aria-label={p.name}>
+    <article
+      className="pk-card pk-c pk-h pk-i"
+      aria-label={p.name}
+      style={left ? ({ "--pk-left": left } as React.CSSProperties) : undefined}
+    >
       <header className="pk-c__head pk-h__head">
         <span className="pk-h__client">{job.client}</span>
         <span className="pk-h__name">{p.name}</span>
@@ -75,7 +91,7 @@ export function DirectionI({ job }: { job: Job }) {
             </div>
           </div>
         </div>
-        <Figure job={job} wide ba />
+        <Figure job={job} wide ba={ba} />
       </div>
       <p className="pk-gate">
         <span className="pk-gate__key">The gate</span>
