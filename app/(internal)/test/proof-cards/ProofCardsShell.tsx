@@ -123,6 +123,14 @@ export const BLOCKS = [
     label: "C7 · All open, Scale as code",
     C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} left="55%" phases scale />,
   },
+  /* round seven U2: the visual in the centre */
+  {
+    id: "l-center",
+    n: "20",
+    short: "C7 centre",
+    label: "C7 · Visual in the centre",
+    C: ({ job }: { job: Job }) => <DirectionI job={job} ba={false} phases scale center />,
+  },
 ] as const;
 
 const JOBS = X_BIONIC_JOBS as readonly Job[];

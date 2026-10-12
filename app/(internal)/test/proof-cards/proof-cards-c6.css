@@ -285,3 +285,46 @@
 .pk-i--scale .pk-i__rule {
   margin-inline: calc(-1 * var(--pk-pad));
 }
+
+/* U6, block 20: the visual in the centre. Three columns behind two
+   full-height rules; the rule over the time saved spans the right column
+   from its divider to the card's edge. */
+.pk-i--center .pk-i__body--center {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr) minmax(0, 0.82fr);
+}
+.pk-i--center .pk-i__words--right {
+  border-right: 0;
+  border-left: 1px solid var(--pk-line);
+}
+/* in the narrower right column each bar row sets its words under its bar */
+.pk-i--center .pk-i__bar-row {
+  grid-template-columns: 4.4em minmax(0, 1fr);
+  row-gap: 6px;
+}
+.pk-i--center .pk-i__bar-v {
+  grid-column: 2;
+}
+.pk-i--center .pk-i__bars {
+  gap: 14px;
+}
+.pk-i--center .pk-i__body--center {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr) minmax(0, 0.85fr);
+}
+/* the centre column is narrow: the film fits whole, the pair stacks */
+.pk-i--center .pk-ev--clip video {
+  object-fit: contain;
+}
+.pk-i--center .pk-ev--pair {
+  flex-direction: column;
+  gap: 12px;
+}
+.pk-i--center .pk-still {
+  width: min(78cqw, calc(50cqh - 3.6em));
+}
+.pk-i--center .pk-still__v {
+  min-height: 0;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 6px;
+}

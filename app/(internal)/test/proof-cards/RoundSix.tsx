@@ -25,6 +25,7 @@ export function DirectionI({
   left,
   phases = false,
   scale = false,
+  center = false,
 }: {
   job: Job;
   /** Two panes (before and after) or the one visual. */
@@ -39,12 +40,16 @@ export function DirectionI({
    *  Scale with what plugs in set as code, the brief and its answer a size
    *  smaller. */
   scale?: boolean;
+  /** U6 (owner, 2026-10-12, block 20): the visual in the CENTRE, the brief
+   *  and the steps on the left, what it now allows and the time saved on
+   *  the right; everything else block 19's. */
+  center?: boolean;
 }) {
   const p = PRACTICE[job.id];
   const d = disciplineOf(job.bucket);
   return (
     <article
-      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}`}
+      className={`pk-card pk-c pk-h pk-i${scale ? " pk-i--scale" : ""}${center ? " pk-i--center" : ""}`}
       aria-label={p.name}
       style={left ? ({ "--pk-left": left } as React.CSSProperties) : undefined}
     >
@@ -56,63 +61,125 @@ export function DirectionI({
           {d.long}
         </span>
       </header>
-      <div className="pk-i__body">
-        <div className="pk-i__words">
-          <div className="pk-c__box pk-i__brief">
-            <p className="pk-c__tab">The brief</p>
-            <p className="pk-lede">{p.problem}</p>
-          </div>
-          <ol className="pk-i__flow" aria-label="The work">
-            <li className="pk-c__box pk-i__big">
-              <p className="pk-c__tab">Embed</p>
-              <p className="pk-body">{phases ? p.identify : p.embed}</p>
-            </li>
-            {phases ? <li className="pk-i__label">Solve it together</li> : null}
-            {job.did.map((t, i) => (
-              <li key={t} className="pk-i__small">
-                <span className="pk-i__small-tab">Claude {i + 1}</span>
-                <span className="pk-i__small-text">{t}</span>
+      {center ? (
+        <div className="pk-i__body pk-i__body--center">
+          <div className="pk-i__words pk-i__words--left">
+            <div className="pk-c__box pk-i__brief">
+              <p className="pk-c__tab">The brief</p>
+              <p className="pk-lede">{p.problem}</p>
+            </div>
+            <ol className="pk-i__flow" aria-label="The work">
+              <li className="pk-c__box pk-i__big">
+                <p className="pk-c__tab">Embed</p>
+                <p className="pk-body">{phases ? p.identify : p.embed}</p>
               </li>
-            ))}
-            <li className="pk-c__box pk-i__big">
-              <p className="pk-c__tab">{scale ? "Scale" : phases ? "Plug in" : "Empower"}</p>
-              {scale ? (
-                <p className="pk-i__code">
-                  <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
-                  <code>tool</code> <span className="pk-i__code-to">→</span>{" "}
-                  <span className="pk-i__code-dest">{job.client}&apos;s own system</span>
-                </p>
-              ) : (
-                <p className="pk-body">{phases ? p.plug : p.empower}</p>
-              )}
-            </li>
-          </ol>
-          <div className="pk-c__box pk-c__box--lit pk-i__allows">
-            <p className="pk-c__tab">What it now allows</p>
-            <p className="pk-lede">{job.result.allows}</p>
+              {phases ? <li className="pk-i__label">Solve it together</li> : null}
+              {job.did.map((t, i) => (
+                <li key={t} className="pk-i__small">
+                  <span className="pk-i__small-tab">Claude {i + 1}</span>
+                  <span className="pk-i__small-text">{t}</span>
+                </li>
+              ))}
+              <li className="pk-c__box pk-i__big">
+                <p className="pk-c__tab">{scale ? "Scale" : phases ? "Plug in" : "Empower"}</p>
+                {scale ? (
+                  <p className="pk-i__code">
+                    <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
+                    <code>tool</code> <span className="pk-i__code-to">→</span>{" "}
+                    <span className="pk-i__code-dest">{job.client}&apos;s own system</span>
+                  </p>
+                ) : (
+                  <p className="pk-body">{phases ? p.plug : p.empower}</p>
+                )}
+              </li>
+            </ol>
           </div>
-          {phases ? <hr className="pk-i__rule" /> : null}
-          <div className="pk-c__box pk-i__saved">
-            <p className="pk-c__tab">
-              {resultLabel(job)}
-              {job.result.label === "The return" ? null : " · estimated"}
-            </p>
-            <div className="pk-i__bars">
-              <p className="pk-i__bar-row">
-                <span className="pk-i__bar-k">Before</span>
-                <i className="pk-i__bar" data-w="long" aria-hidden="true" />
-                <span className="pk-i__bar-v">{p.before}</span>
+          <Figure job={job} wide ba={ba} />
+          <div className="pk-i__words pk-i__words--right">
+            <div className="pk-c__box pk-c__box--lit pk-i__allows">
+              <p className="pk-c__tab">What it now allows</p>
+              <p className="pk-lede">{job.result.allows}</p>
+            </div>
+            {phases ? <hr className="pk-i__rule" /> : null}
+            <div className="pk-c__box pk-i__saved">
+              <p className="pk-c__tab">
+                {resultLabel(job)}
+                {job.result.label === "The return" ? null : " · estimated"}
               </p>
-              <p className="pk-i__bar-row" data-lit="true">
-                <span className="pk-i__bar-k">Now</span>
-                <i className="pk-i__bar" data-w="short" aria-hidden="true" />
-                <span className="pk-i__bar-v">{p.now}</span>
-              </p>
+              <div className="pk-i__bars">
+                <p className="pk-i__bar-row">
+                  <span className="pk-i__bar-k">Before</span>
+                  <i className="pk-i__bar" data-w="long" aria-hidden="true" />
+                  <span className="pk-i__bar-v">{p.before}</span>
+                </p>
+                <p className="pk-i__bar-row" data-lit="true">
+                  <span className="pk-i__bar-k">Now</span>
+                  <i className="pk-i__bar" data-w="short" aria-hidden="true" />
+                  <span className="pk-i__bar-v">{p.now}</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
-        <Figure job={job} wide ba={ba} />
-      </div>
+      ) : (
+        <div className="pk-i__body">
+          <div className="pk-i__words">
+            <div className="pk-c__box pk-i__brief">
+              <p className="pk-c__tab">The brief</p>
+              <p className="pk-lede">{p.problem}</p>
+            </div>
+            <ol className="pk-i__flow" aria-label="The work">
+              <li className="pk-c__box pk-i__big">
+                <p className="pk-c__tab">Embed</p>
+                <p className="pk-body">{phases ? p.identify : p.embed}</p>
+              </li>
+              {phases ? <li className="pk-i__label">Solve it together</li> : null}
+              {job.did.map((t, i) => (
+                <li key={t} className="pk-i__small">
+                  <span className="pk-i__small-tab">Claude {i + 1}</span>
+                  <span className="pk-i__small-text">{t}</span>
+                </li>
+              ))}
+              <li className="pk-c__box pk-i__big">
+                <p className="pk-c__tab">{scale ? "Scale" : phases ? "Plug in" : "Empower"}</p>
+                {scale ? (
+                  <p className="pk-i__code">
+                    <code>skill</code> <span>+</span> <code>evals</code> <span>+</span>{" "}
+                    <code>tool</code> <span className="pk-i__code-to">→</span>{" "}
+                    <span className="pk-i__code-dest">{job.client}&apos;s own system</span>
+                  </p>
+                ) : (
+                  <p className="pk-body">{phases ? p.plug : p.empower}</p>
+                )}
+              </li>
+            </ol>
+            <div className="pk-c__box pk-c__box--lit pk-i__allows">
+              <p className="pk-c__tab">What it now allows</p>
+              <p className="pk-lede">{job.result.allows}</p>
+            </div>
+            {phases ? <hr className="pk-i__rule" /> : null}
+            <div className="pk-c__box pk-i__saved">
+              <p className="pk-c__tab">
+                {resultLabel(job)}
+                {job.result.label === "The return" ? null : " · estimated"}
+              </p>
+              <div className="pk-i__bars">
+                <p className="pk-i__bar-row">
+                  <span className="pk-i__bar-k">Before</span>
+                  <i className="pk-i__bar" data-w="long" aria-hidden="true" />
+                  <span className="pk-i__bar-v">{p.before}</span>
+                </p>
+                <p className="pk-i__bar-row" data-lit="true">
+                  <span className="pk-i__bar-k">Now</span>
+                  <i className="pk-i__bar" data-w="short" aria-hidden="true" />
+                  <span className="pk-i__bar-v">{p.now}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <Figure job={job} wide ba={ba} />
+        </div>
+      )}
       {phases ? null : (
         <p className="pk-gate">
           <span className="pk-gate__key">The gate</span>
