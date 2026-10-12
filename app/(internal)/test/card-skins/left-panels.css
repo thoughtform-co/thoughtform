@@ -496,3 +496,19 @@
 .pk-l__arc-box .pk-body {
   color: var(--pk-ink);
 }
+
+/* one text size in all three boxes: Encode's (owner, 2026-10-12) */
+.pk-l__arc-box .pk-body,
+.pk-l__arc-steps li {
+  font: 400 var(--pk-t-body) / 1.45 var(--pk-sans);
+  color: var(--pk-ink);
+}
+.pk-l__arc-steps li {
+  padding: 10px 0;
+}
+.pk-l__arc-steps li:first-child {
+  padding-top: 0;
+}
+.pk-l__arc-steps li:last-child {
+  padding-bottom: 0;
+}
