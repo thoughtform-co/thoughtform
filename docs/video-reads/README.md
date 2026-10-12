@@ -16,6 +16,7 @@ malformed file.
 | [hex-tensorlake-e99c4c90](hex-tensorlake-e99c4c90.cdaf)                                                 | `00_UI Moodboard\Sections\HEX-Tensorlake.mp4` (0:08)                           | reference | Silent scroll through tensorlake.ai's sections and diagrams                                                                             |
 | [hex-tensorlake-2-d3e7b3c5](hex-tensorlake-2-d3e7b3c5.cdaf)                                             | `00_UI Moodboard\Sections\HEX_Tensorlake-2.mp4` (0:10)                         | reference | Silent zoom-out from Tensorlake's hero diagram to its design canvas                                                                     |
 | [particle-card-system-51e64a67](particle-card-system-51e64a67.cdaf)                                     | `00_UI Moodboard\Particle Systems\Particle Card System.mp4` (0:05)             | reference | Silent loop of a particle card in orange and green                                                                                      |
+| [226ae64e-cards-1-1-v1-2160p-a6d4e79c](226ae64e-cards-1-1-v1-2160p-a6d4e79c.cdaf)                       | `226ae64e-cards_1-1_v1_2160p.mp4` (0:03), a chat upload                        | diagrams  | Silent loop of wireframe cards on orthogonal connectors, a document-AI flow                                                             |
 
 `00_UI Moodboard` is `I:\My Drive\01_Thoughtform Branding\10_Websites\00_UI Moodboard`.
 Add a row when you add a read.

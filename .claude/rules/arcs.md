@@ -1660,15 +1660,8 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
 
 ## The equilibrium on a proposal (2026-10-11, owner)
 
-- ⚠ **SINCE 2026-10-12 NO PAGE MOUNTS IT** (owner: the holo, S1 A and "adoption and
-  connect" come off; branch `lab/xb-offer-rebuild`, not main). X-Bionic opens on two kit
-  blocks from `/test/proposition-v2`, ported whole through `ArcFlowPorts.tsx`: the
-  vision is `port: "plug"` (`PlugFlow` under one centred title) and the approach is
-  `port: "steps"` on the handoff (`EmbedStack`, its own runway). Each section keeps its
-  record and draws none of it while the port is set; the lab composer clears `port` on
-  its approach variants. A kit section takes none of the curtain's first-section padding
-  (`xb-in-frame.css`), and the kit's tokens, `--xb-ground-2` included, are remapped
-  there so the light theme reaches it. Shot by `scripts/capture-xb-proposal-flow.mjs`.
+- ⚠ **SINCE 2026-10-12 NO PAGE MOUNTS IT**: X-Bionic opens on the kit's plug flow and
+  steps instead (`port: "plug"` / `"steps"`, `ArcFlowPorts.tsx`; records kept).
 
 - **The `equilibrium` kind** = `{ title, labels: { upstream, encode, downstream }, plugInto? }`:
   the workshop opener's station (`equilibriumStationHtml`, ADR-143 U7 → U11) inside its own
@@ -1677,17 +1670,11 @@ Cycle B when adding a section kind or surface; Cycle A after fixes.
   slick"). The title is the beat's accessible name only (the opener letters no head). The
   generic route imports `equilibrium.css` and `components/arcs/equilibrium-beat.css` (figure
   62svh, words at 12px and up, the lit tracker bedded on the ground so a leader passes
-  behind it). On X-Bionic it is the second section, `one-motion`, in the About's old place.
-- ⚠ **`plugInto` IS A HAND-OFF, AND ONLY OVER THE LIVE HOLOGRAM.** `ArcEquilibriumIsland`
-  flies the gate's ring and brandmark (the rest pose, `eqProject`) point for point onto the
-  target section's S1 A layer slot (`Assembly`'s `LAYER_XY` at z 6.1, its live screen CTM),
-  measured every scroll event; the scene stops drawing its own mark while lifted
-  (`eqLiftRef`, three-free, on the doctrine's pure list). It HOLDS on the slot as the stage
-  pins and hands over as the layer arrives (`1 − a2`, the drawing's own clock off the same
-  runway), and the drawing lays the same mark on the layer (`Assembly` `mark`, threaded as
-  `OfferPinned` `layerMark`; the lab passes neither and is unchanged). Off the live
-  hologram (static, phone, reduced motion) the carrier never shows, or the mark would be on
-  screen twice. Shot headed by `scripts/capture-xb-equilibrium.mjs`.
+  behind it).
+- ⚠ **`plugInto` IS A HAND-OFF, ONLY OVER THE LIVE HOLOGRAM**: `ArcEquilibriumIsland`
+  flies the gate's ring and mark onto the target's S1 A layer slot (`eqLiftRef`), holds,
+  then hands over to `Assembly`'s own `mark`; static, phone and reduced motion never
+  show the carrier. Shot by `scripts/capture-xb-equilibrium.mjs`.
 
 ## The proposal system (ADR-155)
 
