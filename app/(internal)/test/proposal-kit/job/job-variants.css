@@ -166,3 +166,167 @@
     border-top: 1px solid var(--arc-rule);
   }
 }
+
+/* ══ ROUND 02 · THE LEFT PANEL, THREE WAYS QUIETER ══════════════════
+   Owner, 2026-10-13: "clean variants of the left panel … I love the flow,
+   but I feel we can make it more minimalistic." Each changes the left panel
+   alone; the order stays Navigate, Encode, Build, then the tools, and every
+   word is the record's. Shared by all three: a key is 12px (production's
+   tab is 11), gold that is READ takes the ink rung so light keeps it, and
+   the tools are neutral (the kit: green is people, and nothing else). */
+
+.jl-key {
+  margin: 0;
+  font: 400 12px / 1.2 var(--js-mono);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-ink, var(--gold));
+}
+.jl-key--quiet {
+  color: var(--arc-ink-60);
+}
+/* Build's three lines, plain: no bullet, no dashed rule */
+.jl-lines {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jl-lines li {
+  margin: 0;
+  font-size: var(--type-base);
+  line-height: 1.45;
+  color: var(--arc-ink-90, var(--dawn));
+}
+/* the tools as names on one mono line */
+.jl-names {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 12px / 1.5 var(--js-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-70);
+}
+.jl-names li + li::before {
+  content: "·";
+  margin: 0 0.7em;
+  color: var(--arc-ink-50);
+}
+
+/* A quieter panel is a shorter one, and the card's height is its left
+   panel's: left alone, the figure beside it shrinks with it, and on the
+   Drive map (job 2) the four corner labels then print through each other
+   (measured: 8px between two of them at 1470×830). So the body keeps a
+   floor that gives the FIGURE's cell 408px whatever the padding is, the
+   height at which those labels keep 27px, as they do on L3. The figure
+   stays near the size it ships at (435px at 1470×830), on every job, so
+   the four cards stay one height. L3 needs no floor: it is production's
+   height. */
+.arc-jstack:is([data-jv="l1"], [data-jv="l2"]) .arc-jstack__body {
+  min-height: calc(408px + 2 * var(--js-pad));
+}
+
+/* ── L1 · TYPE ONLY ─────────────────────────────────────────────────
+   No frame, no line, no connector: the air between steps is the divider,
+   so it is wider than production's gap, and each key sits close on its
+   own words. */
+.arc-jstack[data-jv="l1"] .jl-type {
+  gap: clamp(30px, 4.4vh, 52px);
+}
+.jl-step {
+  display: grid;
+  gap: 10px;
+}
+
+/* ── L2 · RULED ROWS ────────────────────────────────────────────────
+   The four weeks' grammar: the panel is four cells sharing their edges.
+   Each hairline runs from the card's left edge to the column rule, so it
+   closes at both ends; the rows share the panel's height, their words
+   centred; the key sits in a gutter on its first line's baseline. */
+.arc-jstack[data-jv="l2"] .jl-rows {
+  justify-content: stretch;
+  gap: 0;
+  padding: 0;
+}
+.arc-jstack[data-jv="l2"] .jl-row {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  column-gap: 16px;
+  align-content: center;
+  align-items: baseline;
+  padding: 22px var(--js-pad);
+}
+.arc-jstack[data-jv="l2"] .jl-row + .jl-row {
+  border-top: 1px solid var(--arc-rule);
+}
+
+/* ── L3 · HALF THE INK ──────────────────────────────────────────────
+   Production's own markup, the ink taken down:
+   1. one hairline per box (the second, inner one goes);
+   2. the tab is plain gold text in the box's top-left corner: no wash, no
+      border (inside the frame, never across its edge);
+   3. Build's lines lose their dashed rules and keep their marks;
+   4. the tools are plain names in a plain row: no dashed group, no chips;
+   5. the centre lines stay, all in the one gold, and meet their boxes
+      exactly (production's start a pixel under one box and run a pixel
+      into the next). */
+.arc-jstack[data-jv="l3"] .arc-jstack__box {
+  padding-top: 34px;
+  box-shadow: none;
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__step .arc-jstack__tab {
+  top: 12px;
+  left: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--gold-ink, var(--gold));
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__steps li + li {
+  border-top: 0;
+}
+/* the dashed rule each gap was paying for is gone, so the gap is the
+   lines' own: one gap of 10px where rule and padding made 21 */
+.arc-jstack[data-jv="l3"] .arc-jstack__steps li {
+  padding-block: 5px;
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__steps li:first-child {
+  padding-top: 0;
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__steps li:last-child {
+  padding-bottom: 0;
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__words--arc > *:not(:first-child)::after {
+  bottom: calc(100% + 1px);
+}
+/* the names have no frame to meet: the line ends on their row's top edge */
+.arc-jstack[data-jv="l3"] .arc-jstack__words--arc > .arc-jstack__dash::after {
+  bottom: 100%;
+  background: var(--js-rail);
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__dash {
+  gap: 0;
+  padding: 12px 0 0;
+  border: 0;
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__dash li {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--arc-ink-70);
+}
+.arc-jstack[data-jv="l3"] .arc-jstack__dash li + li::before {
+  content: "·";
+  margin: 0 0.7em;
+  color: var(--arc-ink-50);
+}

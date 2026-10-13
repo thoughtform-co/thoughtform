@@ -85,3 +85,56 @@ node scripts/capture-proposal-kit.mjs --port 3019 --board flow --sizes 1470x830 
 The gate fails a still for text under 12px, a rail crossing or two labels printing through each other, and reports whether a section fits one screen. In this round 34 of 90 stills fail it, every one on text under 12px and none on a crossing or an overlap: the three controls with the findings above, and the three job directions, which keep production's 11px labels because type size was not their argument.
 
 The repo keeps the contact sheets and the 1470×830 stills; the other sizes are one command away.
+
+---
+
+# Round 02 (2026-10-13)
+
+Two things from the owner's read of round 01.
+
+## The stack travels across three sections
+
+Reference: arrakis.tech/platform, one isometric stack centred under the title with an index on its left and names on its right. Ours is the stack the Navigate, Encode, Build section already draws, so one artifact now runs through three sections.
+
+The copy of the proposal it lives on (internal, not reachable on thoughtform.co):
+
+```
+http://localhost:3019/test/proposal-travel
+```
+
+- **Section 1, "AI capability your teams own."** (`components/xb-proposal/stack/StackHero.tsx`): the stack closed and centred in four corner brackets; `01` `02` `03` with a small plate mark each on the left; "Navigate with your team", "Encode your context", "Build on Claude Enterprise" on the right, each level with the plate it names and linking to its step. The layer's row is the one lit.
+- **Into Navigate, Encode, Build**: the stack leaves its brackets, travels to the right-hand seat and arrives **opened**, which is that section's own state at the top of its pin. From there it closes as it does on the proposal, then hands over to "Marketing first, then every team." as it does on the proposal.
+- How: the receiving section draws the stack out of its own box at the donor's measured seat and the donor's drawing is hidden, the same mechanism `NetworkPlug` uses one section later. The maths is `stack/travel.ts`; `EmbedStack` takes an opt-in `arrive` prop.
+
+Measured:
+
+- **The seam where the stack lifts off**: at rest against a hair into the arrival, the three plates agree to 0.06px in place and 0.01px in size while the page moved 3.3px.
+- **The seam where it lands**: the last frame of the arrival against the pin, identical to 0.01px.
+- **From the pin onward the copy is the proposal**: the stage, the drawing's transform, every plate's offset, lit state and painted box agree to 0.001px at p = 0, 0.5 and 1. A pixel diff still shows faint anti-aliasing differences inside the drawing only (one extra group around the plates on the copy); the "Marketing first" stills are pixel-identical.
+- **The sent page did not change**: its stills at every stop from the pin onward are pixel-identical before and after the edits. The edits to shipped files are an opt-in prop on `EmbedStack.tsx` (absent on the proposal) and one `export` in `NetworkPlug.tsx`.
+
+One thing added beyond the ask: on the copy, the steps' brief paragraph comes in late (over the last fifth of the arrival). It rises through the stack's path, and without that the stack travelled across it.
+
+Stills: `round-02/travel/` (ten stops, three viewports, both themes). Re-shoot with `node scripts/capture-proposal-travel.mjs --port 3019 --page travel`; `--page production` shoots the sent page at the same stops and `--diff <dirA> <dirB>` compares two shoots.
+
+## The job card's left panel, three quieter directions
+
+On `http://localhost:3019/test/proposal-kit?b=job`, right after the control. Each changes the left panel only.
+
+|                     | what it argues                                                                                                                                    | read                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| L1 · Type only      | no frames, no lines: a gold mono key over each step's words, the tools as one mono line                                                           | the most minimal; floats a little in a tall cell                                          |
+| **L2 · Ruled rows** | the four weeks' grammar: a hairline between steps, the key in a gutter, the tools as the last row                                                 | **recommended**: the same grammar as the closing frames, and its lines close at both ends |
+| L3 · Half the ink   | production's structure with one hairline per box, the tab as plain gold text, the tools as plain names; connectors meet their boxes within 0.34px | the safe step from production                                                             |
+
+In all three the tools are neutral (green is people and nothing else) and every new label is 12px.
+
+L1 and L2 hold the body at a minimum height so the figure does not shrink when the left panel does; with it they end 17px past the fold at 1470×830, where production ends 44px past.
+
+Stills: `round-02/job/` and `round-02/contact-job-*.png`.
+
+## Not done in round 02
+
+- Nothing below 961px was looked at.
+- Reduced motion shows the closed stack in section 1 and again in the steps; no travel.
+- The copy's top-right readout and the menu are the proposal's own; nothing about them changed.

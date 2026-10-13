@@ -551,7 +551,7 @@ function AgentPlate({ iso }: { iso: Iso }) {
 
 /* -- the section -------------------------------------------------------- */
 
-const PLATES = [TeamPlate, LayerPlate, AgentPlate];
+export const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 
 /** Where EmbedStack left its stack, in that drawing's units: the layer
     plate's top centre, (4, 4, 0.4) through its makeIso, one closed gap down. */

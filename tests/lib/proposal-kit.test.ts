@@ -13,6 +13,7 @@ import {
   pathOf,
   type Pt,
 } from "@/components/xb-proposal/kit/trace";
+import { arrivalQ, arrive, HERO_BOX, poseIn, STACK } from "@/components/xb-proposal/stack/travel";
 import {
   AXIS,
   BEARING,
@@ -235,5 +236,77 @@ describe("a bearing", () => {
   it("stops on the rim it is aimed at", () => {
     const [, tip] = bearing([0, 0], [100, 0], 30);
     expect(tip).toEqual([70, 0]);
+  });
+});
+
+/* Round 02: the stack travels from "AI capability your teams own." into
+   Navigate, Encode, Build. The receiver draws it; these hold the two seams. */
+describe("the stack's arrival", () => {
+  const from = { x: 735, y: 420, k: 1.18 };
+  const to = { x: 972, y: 540, k: 0.92 };
+  const open = 300;
+
+  it("reads its clock off the runway: 0 at the screen's bottom, 1 at the pin", () => {
+    expect(arrivalQ(830, 830)).toBe(0);
+    expect(arrivalQ(1200, 830)).toBe(0);
+    expect(arrivalQ(415, 830)).toBe(0.5);
+    expect(arrivalQ(0, 830)).toBe(1);
+    expect(arrivalQ(-300, 830)).toBe(1);
+  });
+
+  it("starts as the donor's stack: closed, at the donor's seat and scale", () => {
+    const a = arrive(0, from, to, open);
+    expect(a.gap).toBe(STACK.closed);
+    expect(a.seat).toEqual(from);
+  });
+
+  it("ends as the steps' own top-of-pin state: opened, at its own seat", () => {
+    const a = arrive(1, from, to, open);
+    expect(a.gap).toBe(open);
+    expect(a.seat).toEqual(to);
+    // at its own seat the pose is the identity, so nothing after it changes
+    const pose = poseIn(
+      a.seat,
+      { x: to.x - STACK.ref[0] * to.k, y: to.y - STACK.ref[1] * to.k },
+      to.k
+    );
+    expect(pose.s).toBe(1);
+    expect(Math.abs(pose.tx)).toBeLessThan(1e-9);
+    expect(Math.abs(pose.ty)).toBeLessThan(1e-9);
+  });
+
+  it("only ever opens and only ever approaches on the way", () => {
+    let last = arrive(0, from, to, open);
+    for (let q = 0.05; q <= 1.0001; q += 0.05) {
+      const a = arrive(q, from, to, open);
+      expect(a.gap).toBeGreaterThanOrEqual(last.gap);
+      expect(a.seat.x).toBeGreaterThanOrEqual(last.seat.x);
+      expect(a.seat.y).toBeGreaterThanOrEqual(last.seat.y);
+      expect(a.seat.k).toBeLessThanOrEqual(last.seat.k);
+      last = a;
+    }
+  });
+
+  it("puts the reference point on the seat it is given", () => {
+    const origin = { x: 640, y: 210 };
+    const k = 0.92;
+    const seat = arrive(0.4, from, to, open).seat;
+    const { s, tx, ty } = poseIn(seat, origin, k);
+    // the reference point through translate(tx ty) scale(s), then the drawing's own origin and scale
+    expect(origin.x + (tx + s * STACK.ref[0]) * k).toBeCloseTo(seat.x, 9);
+    expect(origin.y + (ty + s * STACK.ref[1]) * k).toBeCloseTo(seat.y, 9);
+    expect(s * k).toBeCloseTo(seat.k, 9);
+  });
+
+  it("the donor's crop holds the whole closed stack, with air", () => {
+    // a plate's top diamond spans 8 units each way through the projection
+    const half = 8 * Math.cos(Math.PI / 6) * STACK.unit;
+    expect(HERO_BOX.x).toBeLessThan(STACK.ox - half);
+    expect(HERO_BOX.x + HERO_BOX.w).toBeGreaterThan(STACK.ox + half);
+    expect(HERO_BOX.y).toBeLessThan(STACK.oy - 1.2 * STACK.unit);
+    // the lowest plate's floor: its near corner, two closed pitches down
+    expect(HERO_BOX.y + HERO_BOX.h).toBeGreaterThan(STACK.oy + 8 * STACK.unit + 2 * STACK.closed);
+    // the reference point is the team plate's top-face centre
+    expect(STACK.ref).toEqual([STACK.ox, STACK.oy + 4 * STACK.unit]);
   });
 });

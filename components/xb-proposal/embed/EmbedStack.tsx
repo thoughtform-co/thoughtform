@@ -36,6 +36,7 @@ import { Masthead, type MastheadCopy } from "../Masthead";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
+import { arrivalQ, arrive as arriveAt, HERO_BOX, poseIn, STACK } from "../stack/travel";
 
 const VB_W = 700;
 const VB_H = 760;
@@ -521,12 +522,27 @@ function read(
   return { step, gap, centre, stacked: close > 0.98 };
 }
 
-export function EmbedStack() {
+/* How far into the arrival the stack keeps the donor's lighting (every
+   plate lit, no callouts) before it takes this section's own. */
+const ARRIVE_LIT = 0.82;
+/* The head's brief rises through the stack's path while the stack travels,
+   so on the arrival it comes in late, once the stack has cleared it. */
+const BRIEF_IN = 0.78;
+
+/**
+ * `arrive` (opt-in, the stack-first page): the stack is handed in from the
+ * section above (`StackHero`), closed, and arrives here OPENED, which is this
+ * section's own state at the top of its pin (`stack/travel.ts`). Absent, the
+ * section is exactly as the proposal ships it.
+ */
+export function EmbedStack({ arrive = false }: { arrive?: boolean } = {}) {
   const runway = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
+  const travel = useRef<SVGGElement>(null);
   const plates = useRef<(SVGGElement | null)[]>([]);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [stacked, setStacked] = useState(false);
+  const [arriving, setArriving] = useState(false);
   const plain = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => {
@@ -541,7 +557,7 @@ export function EmbedStack() {
       return;
     }
     let raf = 0;
-    let last = { step: -1, stacked: false };
+    let last = { step: -1, stacked: false, arriving: false };
     const frame = () => {
       raf = 0;
       const r = el.getBoundingClientRect();
@@ -552,17 +568,66 @@ export function EmbedStack() {
       /* half the stage, in drawing units: what the centred layer leaves
          above it for the team plate */
       const room = col.height / (2 * k) - (FACE_MID - INK_TOP) - AIR;
-      const st = read(p, Math.min(GAP.open, Math.max(GAP.min, room)));
-      plates.current.forEach((g, i) =>
-        g?.setAttribute("transform", `translate(0 ${(i * st.gap).toFixed(1)})`)
-      );
+      const open = Math.min(GAP.open, Math.max(GAP.min, room));
+      const st = read(p, open);
       /* the plate in view centred, unless that would lift the team plate's
          ink past the stage's top; then the stack sits lower instead */
       const centred = col.height * 0.5 - k * (FACE_MID + st.centre * st.gap);
       const ty = Math.max(centred, k * (AIR - INK_TOP));
+      let gap = st.gap;
+      if (arrive) {
+        /* THE ARRIVAL. While the runway rises through the screen this
+           section draws the stack out of its own box, from the donor's seat
+           to its own, and the donor's drawing is hidden: two drawings matched
+           at the seam, as `NetworkPlug` takes the stack one section later. */
+        const q = arrivalQ(r.top, vh);
+        const donor = document.querySelector<HTMLElement>(".sh");
+        const dsvg = donor?.querySelector<SVGSVGElement>(".sh-svg") ?? null;
+        if (q > 0 && q < 1 && donor && dsvg) {
+          const d = dsvg.getBoundingClientRect();
+          const kH = d.width / HERO_BOX.w;
+          /* the donor's seat where it stood when the hand-over began: the
+             page has scrolled `vh - r.top` since */
+          const from = {
+            x: d.left + (STACK.ref[0] - HERO_BOX.x) * kH,
+            y: d.top + (vh - r.top) + (STACK.ref[1] - HERO_BOX.y) * kH,
+            k: kH,
+          };
+          /* this section's own seat at the top of its pin */
+          const to = {
+            x: col.left + STACK.ref[0] * k,
+            y: col.top - r.top + ty + STACK.ref[1] * k,
+            k,
+          };
+          const a = arriveAt(q, from, to, open);
+          gap = a.gap;
+          const pose = poseIn(a.seat, { x: col.left, y: col.top + ty }, k);
+          /* on an inner group, never on the svg: `NetworkPlug` reads the
+             svg's own width for its scale */
+          travel.current?.setAttribute(
+            "transform",
+            `translate(${pose.tx.toFixed(2)} ${pose.ty.toFixed(2)}) scale(${pose.s.toFixed(4)})`
+          );
+          donor.setAttribute("data-handed", "");
+        } else {
+          travel.current?.removeAttribute("transform");
+          donor?.removeAttribute("data-handed");
+        }
+        const root = el.parentElement;
+        if (q < 1) root?.style.setProperty("--es-brief", seg(q, BRIEF_IN, 1).toFixed(3));
+        else root?.style.removeProperty("--es-brief");
+        const donorLit = q < ARRIVE_LIT;
+        if (donorLit !== last.arriving) {
+          last.arriving = donorLit;
+          setArriving(donorLit);
+        }
+      }
+      plates.current.forEach((g, i) =>
+        g?.setAttribute("transform", `translate(0 ${(i * gap).toFixed(1)})`)
+      );
       s.style.transform = `translateY(${ty.toFixed(1)}px)`;
       if (st.step !== last.step || st.stacked !== last.stacked) {
-        last = { step: st.step, stacked: st.stacked };
+        last = { ...last, step: st.step, stacked: st.stacked };
         setStep(st.step);
         setStacked(st.stacked);
       }
@@ -578,9 +643,30 @@ export function EmbedStack() {
       window.removeEventListener("resize", on);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [plain]);
+  }, [plain, arrive]);
 
-  const lit = (i: number) => plain || stacked || step === i;
+  const lit = (i: number) => plain || stacked || arriving || step === i;
+  /* painted bottom plate first: the upper plate sits in front */
+  const drawn = PLATES.map((Plate, i) => ({ Plate, i }))
+    .reverse()
+    .map(({ Plate, i }) => (
+      <g
+        key={i}
+        ref={(g) => {
+          plates.current[i] = g;
+        }}
+      >
+        <g className="es-plate" data-on={lit(i) ? "" : undefined}>
+          <Plate />
+        </g>
+        <g
+          className="es-call"
+          data-on={!plain && !arriving && step === i && (i === 2 || !stacked) ? "" : undefined}
+        >
+          <Callouts i={i} />
+        </g>
+      </g>
+    ));
 
   return (
     <div className="es" data-plain={plain ? "" : undefined}>
@@ -632,27 +718,7 @@ export function EmbedStack() {
                   role="img"
                   aria-label="Three plates closing into one stack: your team, the layer, your agents"
                 >
-                  {/* painted bottom plate first: the upper plate sits in front */}
-                  {PLATES.map((Plate, i) => ({ Plate, i }))
-                    .reverse()
-                    .map(({ Plate, i }) => (
-                      <g
-                        key={i}
-                        ref={(g) => {
-                          plates.current[i] = g;
-                        }}
-                      >
-                        <g className="es-plate" data-on={lit(i) ? "" : undefined}>
-                          <Plate />
-                        </g>
-                        <g
-                          className="es-call"
-                          data-on={!plain && step === i && (i === 2 || !stacked) ? "" : undefined}
-                        >
-                          <Callouts i={i} />
-                        </g>
-                      </g>
-                    ))}
+                  {arrive ? <g ref={travel}>{drawn}</g> : drawn}
                 </svg>
               </div>
             </div>

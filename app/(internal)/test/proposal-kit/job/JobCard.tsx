@@ -8,10 +8,12 @@ import type { ArcSectionOf } from "@/lib/arcs/types";
 
 import { Evidence, two } from "./Evidence";
 
-export type JobVariant = "j1" | "j2" | "j3";
+export type JobVariant = "j1" | "j2" | "j3" | "l1" | "l2" | "l3";
 
-/* Chrome, never content: the fourth box's tab on J1. */
+/* Chrome, never content: the tools' key (J1's fourth tab, L2's last row). */
 const TOOLS_LABEL = "Tools";
+/* The three steps' keys, production's own tab words. */
+const KEYS = ["01 · Navigate", "02 · Encode", "03 · Build"] as const;
 
 /**
  * The job card, three directions against production. This is `JobStack`
@@ -28,6 +30,19 @@ const TOOLS_LABEL = "Tools";
  *   j3  THE RESULT STRIP. The result is one ruled strip of cells sharing
  *       edges across the card's foot, where it is a headed band of two
  *       framed cards.
+ *
+ * Round 02 (owner, 2026-10-13: "clean variants of the left panel … I love
+ * the flow, but I feel we can make it more minimalistic"). Three more, each
+ * changing the LEFT PANEL only; the header bar, the figure and the result
+ * band are production's:
+ *
+ *   l1  TYPE ONLY. No frames, no lines: each step is its key in gold text
+ *       over its words, separated by air; the tools are one mono line.
+ *   l2  RULED ROWS. The four weeks' grammar: the panel is four cells sharing
+ *       their edges, one hairline between each, the key in a gutter.
+ *   l3  HALF THE INK. Production's own markup: one hairline per box, the
+ *       tab as plain gold text, the tools as plain names; the centre lines
+ *       stay and meet their boxes exactly.
  *
  * Every word is the record's, by reference. Server, no state, DOM only.
  */
@@ -48,6 +63,30 @@ export function JobCard({
     <i key={c} className="arc-jstack__x" data-corner={c} aria-hidden="true" />
   ));
   const evidence = <Evidence figure={figure} seed={crewSeed(section.id)} />;
+  /* the two quiet panels letter Build as plain lines and the tools as names */
+  const lines = (
+    <ol key="did" className="jl-lines" aria-label="Claude did">
+      {did.map((d) => (
+        <li key={d}>{d}</li>
+      ))}
+    </ol>
+  );
+  const names = (
+    <ul className="jl-names" aria-label="Plugs into">
+      {tools.map((t) => (
+        <li key={t}>{t}</li>
+      ))}
+    </ul>
+  );
+  const words = [
+    <p key="ask" className="arc-jstack__text">
+      {ask}
+    </p>,
+    <p key="embed" className="arc-jstack__text">
+      {section.embed}
+    </p>,
+    lines,
+  ];
 
   return (
     <ArcBeat
@@ -78,43 +117,72 @@ export function JobCard({
             </span>
           </header>
           <div className="arc-jstack__body">
-            <div className="arc-jstack__words arc-jstack__words--arc">
-              <div className="arc-jstack__box arc-jstack__step">
-                <p className="arc-jstack__tab">01 · Navigate</p>
-                <p className="arc-jstack__text">{ask}</p>
+            {variant === "l1" ? (
+              /* L1: a key over its words, three times, then the names */
+              <div className="arc-jstack__words jl-type">
+                {KEYS.map((k, i) => (
+                  <div key={k} className="jl-step">
+                    <p className="jl-key">{k}</p>
+                    {words[i]}
+                  </div>
+                ))}
+                {tools.length ? names : null}
               </div>
-              <div className="arc-jstack__box arc-jstack__step">
-                <p className="arc-jstack__tab">02 · Encode</p>
-                <p className="arc-jstack__text">{section.embed}</p>
+            ) : variant === "l2" ? (
+              /* L2: four cells sharing their edges, the key in a gutter */
+              <div className="arc-jstack__words jl-rows">
+                {KEYS.map((k, i) => (
+                  <div key={k} className="jl-row">
+                    <p className="jl-key">{k}</p>
+                    {words[i]}
+                  </div>
+                ))}
+                {tools.length ? (
+                  <div className="jl-row">
+                    <p className="jl-key jl-key--quiet">{TOOLS_LABEL}</p>
+                    {names}
+                  </div>
+                ) : null}
               </div>
-              <div className="arc-jstack__box arc-jstack__step">
-                <p className="arc-jstack__tab">03 · Build</p>
-                <ol className="arc-jstack__steps" aria-label="Claude did">
-                  {did.map((d) => (
-                    <li key={d}>{d}</li>
-                  ))}
-                </ol>
-              </div>
-              {tools.length ? (
-                variant === "j1" ? (
-                  /* J1: the tools in the steps' own frame */
-                  <div className="arc-jstack__box jv-toolbox">
-                    <p className="arc-jstack__tab">{TOOLS_LABEL}</p>
-                    <ul className="jv-toolbox__list" aria-label="Plugs into">
+            ) : (
+              <div className="arc-jstack__words arc-jstack__words--arc">
+                <div className="arc-jstack__box arc-jstack__step">
+                  <p className="arc-jstack__tab">01 · Navigate</p>
+                  <p className="arc-jstack__text">{ask}</p>
+                </div>
+                <div className="arc-jstack__box arc-jstack__step">
+                  <p className="arc-jstack__tab">02 · Encode</p>
+                  <p className="arc-jstack__text">{section.embed}</p>
+                </div>
+                <div className="arc-jstack__box arc-jstack__step">
+                  <p className="arc-jstack__tab">03 · Build</p>
+                  <ol className="arc-jstack__steps" aria-label="Claude did">
+                    {did.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ol>
+                </div>
+                {tools.length ? (
+                  variant === "j1" ? (
+                    /* J1: the tools in the steps' own frame */
+                    <div className="arc-jstack__box jv-toolbox">
+                      <p className="arc-jstack__tab">{TOOLS_LABEL}</p>
+                      <ul className="jv-toolbox__list" aria-label="Plugs into">
+                        {tools.map((t) => (
+                          <li key={t}>{t}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <ul className="arc-jstack__dash" aria-label="Plugs into">
                       {tools.map((t) => (
                         <li key={t}>{t}</li>
                       ))}
                     </ul>
-                  </div>
-                ) : (
-                  <ul className="arc-jstack__dash" aria-label="Plugs into">
-                    {tools.map((t) => (
-                      <li key={t}>{t}</li>
-                    ))}
-                  </ul>
-                )
-              ) : null}
-            </div>
+                  )
+                ) : null}
+              </div>
+            )}
             <figure className="arc-case__fig arc-jstack__fig" data-job-figure={figure.kind}>
               <div className="arc-case__frame arc-jstack__frame">
                 {variant === "j2" ? (
