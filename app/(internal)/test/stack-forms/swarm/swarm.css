@@ -1,0 +1,166 @@
+/* Swarm: this direction's own sheet. Every class here starts sfs-.
+   The drawing is one canvas of square dots; this sheet seats it and sets
+   the few words that stand beside it. */
+
+.sfs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.sfs-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  /* a dot is a whole device pixel: never smoothed */
+  image-rendering: pixelated;
+}
+
+.sfs-words {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--sf-mono);
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sf-ink-3);
+}
+
+/* a plate's name, to the right of it, level with its corner */
+.sfs-name,
+.sfs-holds {
+  --tone: var(--sf-bone);
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+.sfs-name[data-tone="green"],
+.sfs-holds[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfs-name[data-tone="gold"],
+.sfs-holds[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+.sfs-name {
+  display: grid;
+  transform: translateY(-50%);
+}
+.sfs-name__step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--tone);
+}
+/* the tone, as a dot */
+.sfs-name__step i {
+  width: 5px;
+  height: 5px;
+  background: var(--tone);
+}
+.sfs-name__what {
+  color: var(--sf-ink-2);
+}
+.sfs-name__count b {
+  font-weight: 400;
+  color: var(--sf-ink-2);
+}
+
+/* what it holds, to the left, set against the same corner */
+.sfs-holds {
+  transform: translate(-100%, -50%);
+  text-align: right;
+}
+.sfs-holds li:first-child {
+  color: var(--sf-ink-2);
+}
+
+/* what the drawing itself measures to */
+.sfs-read {
+  position: absolute;
+  left: 28px;
+  bottom: 24px;
+  display: grid;
+  margin: 0;
+}
+.sfs-read div {
+  display: grid;
+  grid-template-columns: 9ch auto;
+}
+.sfs-read dt {
+  color: var(--sf-ink-3);
+}
+.sfs-read dd {
+  margin: 0;
+  color: var(--sf-ink-2);
+  text-transform: none;
+}
+.sfs-read dd[data-sfs-fact="dots"] {
+  color: var(--sf-bone);
+}
+
+/* on a narrow screen the lists of what a plate holds give way to the stack */
+@media (max-width: 960px) {
+  .sfs-holds {
+    display: none;
+  }
+}
+
+/* ---- S4·B, banded: the sphere's own tags ---- */
+
+/* a plate's step in an outlined tag, as the homepage letters the sphere:
+   its left edge stands where the dotted run from the plate ends */
+.sfs-tag {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+.sfs-tag__box {
+  padding: 3px 9px 2px;
+  border: 1px solid color-mix(in srgb, var(--sf-gold) 55%, transparent);
+  background: color-mix(in srgb, var(--sf-gold) 7%, var(--sf-void));
+  color: var(--sf-gold);
+  letter-spacing: 0.14em;
+}
+.sfs-tag__name {
+  color: var(--sf-ink-3);
+}
+
+/* the one figure it states: the dots it is made of */
+.sfs-total {
+  position: absolute;
+  left: 28px;
+  bottom: 24px;
+  margin: 0;
+  color: var(--sf-ink-3);
+}
+.sfs-total b {
+  font-weight: 400;
+  color: var(--sf-ink-2);
+}
+
+/* ---- S4·C, quiet: three plain labels ---- */
+
+.sfs-plain {
+  position: absolute;
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  color: var(--sf-ink-3);
+}
+.sfs-plain span:nth-child(2) {
+  color: var(--sf-ink-2);
+}
+/* the layer's label takes the layer's tone: it is the one lit */
+.sfs-plain[data-lit] span:nth-child(-n + 2) {
+  color: var(--sf-gold);
+}

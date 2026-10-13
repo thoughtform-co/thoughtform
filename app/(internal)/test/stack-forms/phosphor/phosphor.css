@@ -1,0 +1,159 @@
+/* Phosphor: this direction's own sheet. Every class here starts sfx-.
+
+   One face, one size, one grid: PT Mono at 15px advances exactly 9px, on a
+   16px line, so a character is a 9 x 16 cell and nothing is ever between
+   cells. Light is a property of each glyph (a tight halo), never of the
+   panel: there is no bezel, no screen edge, no vignette. */
+
+.sfx {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.sfx-grid {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  font-family: var(--sf-mono);
+  font-size: 15px;
+  line-height: 16px;
+  letter-spacing: 0;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  font-feature-settings:
+    "liga" 0,
+    "calt" 0;
+  white-space: pre;
+  text-align: left;
+  color: var(--sf-ink-3);
+  background: none;
+  overflow: visible;
+  cursor: default;
+  user-select: none;
+  /* its own layer, so the glyphs are set in grey levels: sub-pixel type
+     would fringe every hairline in blue and orange */
+  transform: translateZ(0);
+}
+.sfx-row {
+  height: 16px;
+}
+
+/* a faint raster: the last two px of every row sit a little darker, so rows
+   of blocks read as rows. Still; it never rolls. */
+.sfx-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 14px,
+    color-mix(in srgb, var(--sf-void) 46%, transparent) 14px 16px
+  );
+  pointer-events: none;
+}
+
+/* ---- tone and level: sfx-t<tone><level> ----
+   tone 0 the team's green, 1 the layer's gold, 2 the agents' bone;
+   level 0 dim, 1 plain, 2 hot (a whiter core and a wider halo). */
+
+.sfx-t00 {
+  color: color-mix(in srgb, var(--sf-green) 52%, var(--sf-void));
+}
+.sfx-t01 {
+  color: var(--sf-green);
+  text-shadow: 0 0 5px color-mix(in srgb, var(--sf-green) 40%, transparent);
+}
+.sfx-t02 {
+  color: color-mix(in srgb, var(--sf-green) 70%, var(--sf-bone));
+  text-shadow:
+    0 0 4px color-mix(in srgb, var(--sf-green) 75%, transparent),
+    0 0 12px color-mix(in srgb, var(--sf-green) 30%, transparent);
+}
+
+.sfx-t10 {
+  color: color-mix(in srgb, var(--sf-gold) 50%, var(--sf-void));
+}
+.sfx-t11 {
+  color: var(--sf-gold);
+  text-shadow: 0 0 5px color-mix(in srgb, var(--sf-gold) 45%, transparent);
+}
+.sfx-t12 {
+  color: color-mix(in srgb, var(--sf-gold) 62%, var(--sf-bone));
+  text-shadow:
+    0 0 4px color-mix(in srgb, var(--sf-gold) 85%, transparent),
+    0 0 14px color-mix(in srgb, var(--sf-gold) 38%, transparent);
+}
+
+.sfx-t20 {
+  color: color-mix(in srgb, var(--sf-bone) 34%, var(--sf-void));
+}
+.sfx-t21 {
+  color: color-mix(in srgb, var(--sf-bone) 72%, var(--sf-void));
+  text-shadow: 0 0 5px color-mix(in srgb, var(--sf-bone) 22%, transparent);
+}
+.sfx-t22 {
+  color: var(--sf-bone);
+  text-shadow:
+    0 0 4px color-mix(in srgb, var(--sf-bone) 55%, transparent),
+    0 0 12px color-mix(in srgb, var(--sf-bone) 20%, transparent);
+}
+
+/* ---- the cursor: the one thing that moves ---- */
+
+.sfx-cursor {
+  color: var(--sf-gold);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--sf-gold) 70%, transparent);
+}
+.sfx[data-motion="run"] .sfx-cursor {
+  animation: sfx-blink 1.2s steps(1, end) infinite;
+}
+@keyframes sfx-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+/* a still, a held slot and a reader who asked for less motion all see the
+   cursor lit and at rest (the site's global rule would otherwise run an
+   endless animation in 0.01ms steps) */
+.sf-root[data-sf-still] .sfx-cursor,
+.sfx[data-motion="hold"] .sfx-cursor {
+  animation: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfx .sfx-cursor {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+/* ---- S5·B, written: sfx-b<tone><level> is the same tone and level in the
+   bold weight (PT Mono Bold keeps the 0.6em advance, so the grid holds).
+   Only the layer is set in it: what was written down, densest and lit. ---- */
+
+.sfx-b10,
+.sfx-b11,
+.sfx-b12 {
+  font-weight: 700;
+}
+.sfx-b10 {
+  color: color-mix(in srgb, var(--sf-gold) 50%, var(--sf-void));
+}
+.sfx-b11 {
+  color: var(--sf-gold);
+  text-shadow: 0 0 4px color-mix(in srgb, var(--sf-gold) 38%, transparent);
+}
+.sfx-b12 {
+  color: color-mix(in srgb, var(--sf-gold) 45%, var(--sf-bone));
+  text-shadow:
+    0 0 3px color-mix(in srgb, var(--sf-gold) 90%, transparent),
+    0 0 10px color-mix(in srgb, var(--sf-gold) 40%, transparent);
+}

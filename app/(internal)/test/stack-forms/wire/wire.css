@@ -1,0 +1,364 @@
+/* S1 · Wire: this direction's own sheet. Every class here starts sfw-.
+   Bone line on the dark ground; each plate's content in its own tone; the
+   layer is the one washed in. */
+
+/* the sheet: 1600 x 1000, as large as its stage allows, centred */
+.sfw {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  aspect-ratio: 16 / 10;
+  max-width: 100%;
+  max-height: 100%;
+  container-type: inline-size;
+}
+.sfw-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.sfw-svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- the sheet's own marks ---- */
+
+.sfw-field {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 9%, transparent);
+  stroke-width: 1;
+}
+.sfw-ghost {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 36%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+}
+.sfw-plumb {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-gold) 80%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 6 5;
+}
+.sfw-cross {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 78%, transparent);
+  stroke-width: 1;
+}
+.sfw-cross--ghost {
+  stroke: color-mix(in srgb, var(--sf-bone) 40%, transparent);
+}
+
+/* ---- a plate ---- */
+
+.sfw-plate {
+  --tone: var(--sf-bone);
+}
+.sfw-plate[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfw-plate[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+
+/* a leaf: the ground, almost opaque, so what lies under it ghosts through */
+.sfw-sheet {
+  fill: color-mix(in srgb, var(--sf-void) 82%, transparent);
+  stroke: none;
+}
+.sfw-sheet--top {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--tone) 10%, var(--sf-void)) 88%, transparent);
+}
+/* the layer's lower leaves carry a little of its wash, so three leaves read */
+.sfw-plate[data-lit] .sfw-sheet {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--sf-gold) 13%, var(--sf-void)) 92%, transparent);
+}
+.sfw-plate[data-lit] .sfw-sheet--top {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--sf-gold) 30%, var(--sf-void)) 92%, transparent);
+}
+.sfw-near,
+.sfw-far,
+.sfw-guide {
+  fill: none;
+  stroke-width: 1;
+}
+.sfw-near {
+  stroke: color-mix(in srgb, var(--tone) 92%, transparent);
+  stroke-width: 1.25;
+}
+.sfw-far {
+  stroke: color-mix(in srgb, var(--tone) 60%, transparent);
+  stroke-dasharray: 5 4;
+}
+.sfw-guide {
+  stroke: color-mix(in srgb, var(--sf-bone) 30%, transparent);
+}
+
+/* what it holds */
+.sfw-part {
+  fill: color-mix(in srgb, var(--tone) 13%, transparent);
+  stroke: color-mix(in srgb, var(--tone) 88%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.sfw-part--chip {
+  fill: color-mix(in srgb, var(--tone) 20%, transparent);
+  stroke-dasharray: none;
+}
+.sfw-tick,
+.sfw-rule,
+.sfw-trace {
+  fill: none;
+  stroke: color-mix(in srgb, var(--tone) 65%, transparent);
+  stroke-width: 1;
+}
+.sfw-trace {
+  stroke-dasharray: 2 4;
+}
+.sfw-pierce {
+  fill: var(--sf-void);
+  stroke: var(--sf-gold);
+  stroke-width: 1;
+}
+.sfw-plate[data-lit] .sfw-pierce {
+  fill: var(--sf-gold);
+}
+.sfw-leader {
+  fill: none;
+  stroke: color-mix(in srgb, var(--tone) 55%, transparent);
+  stroke-width: 1;
+}
+
+/* ---- the readout band across the layer ---- */
+
+.sfw-band {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--sf-gold) 16%, var(--sf-void)) 90%, transparent);
+  stroke: color-mix(in srgb, var(--sf-gold) 70%, transparent);
+  stroke-width: 1;
+}
+.sfw-cross--band {
+  stroke: var(--sf-gold);
+}
+.sfw-meter {
+  fill: color-mix(in srgb, var(--sf-gold) 22%, transparent);
+}
+.sfw-meter[data-on] {
+  fill: var(--sf-gold);
+}
+
+/* ---- the words: DOM, seated in percent of the sheet ---- */
+
+.sfw-words {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--sf-mono);
+  font-size: max(12px, 0.82cqw);
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sf-ink-2);
+}
+.sfw-words > * {
+  position: absolute;
+  left: calc(var(--px) * 100%);
+  top: calc(var(--py) * 100%);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sfw-tag {
+  --tone: var(--sf-bone);
+  display: grid;
+  gap: 0.3em;
+  /* its first line sits on the leader */
+  transform: translateY(-0.65em);
+}
+.sfw-tag[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfw-tag[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+.sfw-tag__n {
+  color: var(--sf-ink-3);
+}
+.sfw-tag__n b {
+  font-weight: 400;
+  color: var(--tone);
+}
+.sfw-tag__name {
+  font-family: var(--sf-sans);
+  font-size: 1.5em;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sf-bone);
+}
+.sfw-tag__name::first-letter {
+  text-transform: uppercase;
+}
+/* what a plate holds: a short list, set against its leader's end */
+.sfw-holds {
+  display: grid;
+  gap: 0.3em;
+  padding: 0;
+  list-style: none;
+  text-align: right;
+  transform: translate(-100%, -0.65em);
+  color: var(--sf-ink-2);
+}
+
+.sfw-band__l,
+.sfw-band__r {
+  transform: translateY(-50%);
+  color: var(--sf-gold);
+}
+.sfw-band__r {
+  transform: translate(-100%, -50%);
+}
+
+.sfw-block {
+  display: grid;
+  gap: 0.35em;
+  transform: translateY(-100%);
+}
+.sfw-block > div {
+  display: grid;
+  grid-template-columns: 7ch auto;
+  gap: 1.5ch;
+}
+.sfw-block dt {
+  color: var(--sf-ink-3);
+}
+.sfw-block dd {
+  margin: 0;
+  color: var(--sf-bone);
+}
+
+/* ================================================================== */
+/* S1·B · Wire, bare: dashes, crosses, one wash (classes start sfwb-)  */
+/* ================================================================== */
+
+.sfwb-plate {
+  --tone: var(--sf-bone);
+  /* a bare plate is drawn in bone; its tone shows only in its lettering
+     and its cube */
+  --mark: var(--sf-bone);
+}
+.sfwb-plate[data-tone="green"] {
+  --mark: var(--sf-green);
+}
+.sfwb-plate[data-lit] {
+  --tone: var(--sf-gold);
+  --mark: var(--sf-gold);
+}
+
+.sfwb-sheet {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--sf-bone) 7%, var(--sf-void)) 84%, transparent);
+  stroke: color-mix(in srgb, var(--tone) 62%, transparent);
+  stroke-width: 1;
+}
+.sfwb-wall {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--sf-bone) 11%, var(--sf-void)) 90%, transparent);
+  stroke: color-mix(in srgb, var(--tone) 62%, transparent);
+  stroke-width: 1;
+}
+.sfwb-plate[data-lit] .sfwb-sheet {
+  fill: color-mix(in srgb, color-mix(in srgb, var(--sf-gold) 30%, var(--sf-void)) 92%, transparent);
+  stroke: var(--sf-gold);
+}
+/* the layer's edge is the one solid band on the sheet, lettered dark */
+.sfwb-plate[data-lit] .sfwb-wall {
+  fill: color-mix(in srgb, var(--sf-gold) 86%, var(--sf-void));
+  stroke: var(--sf-gold);
+}
+/* grey-level type: on a skewed wall, sub-pixel type fringes in colour */
+.sfwb .sfw-svg {
+  transform: translateZ(0);
+}
+.sfwb-outer,
+.sfwb-inner {
+  fill: none;
+  stroke-width: 1;
+}
+.sfwb-outer {
+  stroke: color-mix(in srgb, var(--tone) 58%, transparent);
+  stroke-dasharray: 5 4;
+}
+.sfwb-inner {
+  stroke: color-mix(in srgb, var(--tone) 40%, transparent);
+  stroke-dasharray: 2 5;
+}
+.sfwb-cross {
+  fill: none;
+  stroke: color-mix(in srgb, var(--tone) 85%, transparent);
+  stroke-width: 1;
+}
+.sfwb-cross--gold {
+  stroke: var(--sf-gold);
+}
+
+/* lettering on a plate's own edge */
+.sfwb-letter {
+  font-family: var(--sf-mono);
+  letter-spacing: 0.1em;
+  fill: color-mix(in srgb, var(--sf-bone) 62%, transparent);
+}
+.sfwb-letter--tag {
+  fill: var(--mark);
+}
+.sfwb-plate[data-lit] .sfwb-letter {
+  fill: var(--sf-void);
+}
+
+/* the cube on its middle: the layer's is the one solid thing */
+.sfwb-cube {
+  stroke: color-mix(in srgb, var(--mark) 80%, transparent);
+  stroke-width: 1;
+  fill: color-mix(in srgb, var(--mark) 12%, var(--sf-void));
+}
+.sfwb-plate[data-lit] .sfwb-cube--t {
+  fill: var(--sf-gold);
+}
+.sfwb-plate[data-lit] .sfwb-cube--l {
+  fill: color-mix(in srgb, var(--sf-gold) 74%, var(--sf-void));
+}
+.sfwb-plate[data-lit] .sfwb-cube--r {
+  fill: color-mix(in srgb, var(--sf-gold) 52%, var(--sf-void));
+}
+
+.sfwb-ghost {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 30%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+}
+.sfwb-plumb {
+  fill: none;
+  stroke: var(--sf-gold);
+  stroke-width: 1;
+  stroke-dasharray: 6 5;
+}
+
+/* the readout band behind the stack */
+.sfwb-band {
+  stroke: color-mix(in srgb, var(--sf-gold) 55%, transparent);
+  stroke-width: 1;
+}
+.sfwb-meter {
+  fill: color-mix(in srgb, var(--sf-gold) 24%, transparent);
+}
+.sfwb-meter[data-on] {
+  fill: var(--sf-gold);
+}
+.sfwb-band__l,
+.sfwb-band__r {
+  transform: translateY(-50%);
+  color: var(--sf-gold);
+}
+.sfwb-band__r {
+  transform: translate(-100%, -50%);
+}

@@ -1,0 +1,64 @@
+/* Print: this direction's own sheet. Every class here starts sfp-.
+   Flat ink only: no stroke on a solid, no blur, no gradient. */
+
+.sfp text {
+  font-family: var(--sf-mono);
+  fill: var(--sf-bone);
+}
+
+/* type set along a wall, in the ground's black */
+.sfp .sfp-wall {
+  font-family: "SF Haas", var(--sf-sans);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  fill: var(--sf-void);
+}
+
+/* the title band's step, knocked out of the black */
+.sfp .sfp-band {
+  font-family: "SF Haas", var(--sf-sans);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* the column of labels */
+.sfp .sfp-step {
+  font-family: "SF Haas", var(--sf-sans);
+  font-weight: 700;
+  font-size: 40px;
+  letter-spacing: 0.02em;
+}
+.sfp .sfp-name {
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  fill: var(--sf-ink-2);
+}
+.sfp .sfp-hold {
+  font-family: var(--sf-sans);
+  font-size: 15px;
+  fill: var(--sf-ink-2);
+}
+
+/* the ruled height and pitch */
+.sfp .sfp-rule {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-anchor: middle;
+}
+.sfp .sfp-rule--gold {
+  fill: var(--sf-gold);
+}
+
+/* the code plate: black on bone */
+.sfp .sfp-code {
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  fill: var(--sf-void);
+  white-space: pre;
+}
+.sfp .sfp-code--head {
+  font-family: "SF Haas", var(--sf-sans);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: 0.12em;
+}

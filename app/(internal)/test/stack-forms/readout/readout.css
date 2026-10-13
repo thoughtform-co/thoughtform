@@ -1,0 +1,269 @@
+/* Readout: this direction's own sheet. Every class here starts sfr-.
+
+   A display, so paint is state. Four tones and their mixes with the ground:
+   bone for the frame's furniture and for a module that holds nothing, the
+   plate's own tone for what it holds, gold for the frame and the lit layer,
+   and bone at full strength for the one module that marks the pose.
+   Lengths are the drawing's own units (the SVG is 1600 wide; at the owner's
+   1920 one unit is 1.2px, so 13.5 here is 16px on his screen). */
+
+.sfr-root {
+  --sfr-tone: var(--sf-bone);
+  --sfr-quiet: color-mix(in srgb, var(--sf-bone) 38%, var(--sf-void));
+}
+.sfr-root [data-tone="green"] {
+  --sfr-tone: var(--sf-green);
+}
+.sfr-root [data-tone="gold"] {
+  --sfr-tone: var(--sf-gold);
+}
+.sfr-root [data-tone="bone"] {
+  --sfr-tone: color-mix(in srgb, var(--sf-bone) 84%, var(--sf-void));
+}
+
+/* ---- lettering ---- */
+
+.sfr-t {
+  font-family: var(--sf-mono);
+  font-size: 13.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* the grotesk, bold, pressed to six tenths of its width in the markup */
+.sfr-tight {
+  font-family: "SF Haas", var(--sf-sans);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.sfr-ink {
+  fill: var(--sf-bone);
+}
+.sfr-ink-2 {
+  fill: var(--sf-ink-2);
+}
+.sfr-ink-3 {
+  fill: color-mix(in srgb, var(--sf-bone) 46%, var(--sf-void));
+}
+.sfr-gold {
+  fill: var(--sf-gold);
+}
+.sfr-tone {
+  fill: var(--sfr-tone);
+}
+
+/* ---- the frame ---- */
+
+.sfr-dot {
+  fill: color-mix(in srgb, var(--sf-bone) 22%, var(--sf-void));
+}
+.sfr-frame {
+  fill: none;
+  stroke: var(--sf-gold);
+  stroke-width: 1.25;
+}
+/* the hairline's heat, without a filter: a wide faint stroke under it */
+.sfr-frame__halo {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-gold) 16%, transparent);
+  stroke-width: 7;
+}
+.sfr-tick {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 46%, var(--sf-void));
+  stroke-width: 1;
+}
+.sfr-pip {
+  fill: var(--sf-gold);
+}
+.sfr-tab {
+  fill: color-mix(in srgb, var(--sf-gold) 14%, var(--sf-void));
+  stroke: var(--sf-gold);
+  stroke-width: 1.25;
+}
+.sfr-tab__seg {
+  opacity: 0.55;
+}
+.sfr-tab__seg--lit {
+  opacity: 1;
+}
+/* a plate of the frame's own: one corner cut, one step notched */
+.sfr-chip {
+  fill: color-mix(in srgb, var(--sf-bone) 4%, var(--sf-void));
+  stroke: color-mix(in srgb, var(--sf-bone) 40%, var(--sf-void));
+  stroke-width: 1;
+}
+
+/* ---- a module ---- */
+
+.sfr-mod__body {
+  fill: color-mix(in srgb, var(--sf-bone) 7%, var(--sf-void));
+  stroke: var(--sfr-quiet);
+  stroke-width: 1;
+}
+.sfr-mod__bar {
+  fill: none;
+  stroke: var(--sfr-quiet);
+  stroke-width: 1;
+}
+.sfr-mod__joint {
+  fill: var(--sf-void);
+  stroke: var(--sfr-quiet);
+  stroke-width: 1;
+}
+/* held: the plate's tone, solid; its joints and bar cut out of it */
+.sfr-mod[data-state="held"] .sfr-mod__body {
+  fill: var(--sfr-tone);
+  stroke: var(--sfr-tone);
+}
+.sfr-mod[data-state="rail"] .sfr-mod__body {
+  fill: color-mix(in srgb, var(--sfr-tone) 32%, var(--sf-void));
+  stroke: color-mix(in srgb, var(--sfr-tone) 80%, var(--sf-void));
+}
+.sfr-mod[data-state="lit"] .sfr-mod__body {
+  fill: var(--sf-gold);
+  stroke: var(--sf-gold);
+}
+.sfr-mod[data-state="held"] .sfr-mod__bar,
+.sfr-mod[data-state="lit"] .sfr-mod__bar {
+  stroke: var(--sf-void);
+  stroke-width: 1.5;
+}
+.sfr-mod[data-state="held"] .sfr-mod__joint,
+.sfr-mod[data-state="lit"] .sfr-mod__joint {
+  stroke: var(--sf-void);
+}
+.sfr-mod[data-state="rail"] .sfr-mod__bar,
+.sfr-mod[data-state="rail"] .sfr-mod__joint {
+  stroke: color-mix(in srgb, var(--sfr-tone) 80%, var(--sf-void));
+}
+/* the one module that marks the pose */
+.sfr-mod.sfr-mod--sel .sfr-mod__body {
+  fill: var(--sf-bone);
+  stroke: var(--sf-bone);
+}
+
+/* ---- a plate ---- */
+
+.sfr-plate__mask {
+  fill: var(--sf-void);
+}
+.sfr-plate__wall {
+  fill: color-mix(in srgb, var(--sfr-tone) 9%, var(--sf-void));
+  stroke: color-mix(in srgb, var(--sfr-tone) 62%, var(--sf-void));
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.sfr-plate__wall--far {
+  fill: color-mix(in srgb, var(--sfr-tone) 5%, var(--sf-void));
+}
+.sfr-plate__top {
+  fill: color-mix(in srgb, var(--sfr-tone) 4%, var(--sf-void));
+  stroke: color-mix(in srgb, var(--sfr-tone) 78%, var(--sf-void));
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.sfr-wire {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 58%, var(--sf-void));
+  stroke-width: 1.25;
+}
+/* what stands on the board: small solids in the board's tone, a mark cut
+   into each top, the chip on its pins */
+.sfr-part__top {
+  fill: var(--sfr-tone);
+  stroke: var(--sfr-tone);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.sfr-part__wall {
+  fill: color-mix(in srgb, var(--sfr-tone) 44%, var(--sf-void));
+  stroke: color-mix(in srgb, var(--sfr-tone) 70%, var(--sf-void));
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.sfr-part__wall--far {
+  fill: color-mix(in srgb, var(--sfr-tone) 28%, var(--sf-void));
+}
+.sfr-part__mark {
+  fill: none;
+  stroke: var(--sf-void);
+  stroke-width: 1.5;
+}
+.sfr-part__pin {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sfr-tone) 62%, var(--sf-void));
+  stroke-width: 1;
+}
+
+/* the lit group, and only it, glows */
+.sfr-lit {
+  filter: drop-shadow(0 0 2.5px color-mix(in srgb, var(--sf-gold) 70%, transparent))
+    drop-shadow(0 0 11px color-mix(in srgb, var(--sf-gold) 34%, transparent));
+}
+
+/* ---- what leaves a plate, and what crosses a gap ---- */
+
+.sfr-lead,
+.sfr-bus {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sfr-tone) 78%, var(--sf-void));
+  stroke-width: 1;
+}
+.sfr-end {
+  fill: var(--sfr-tone);
+}
+/* a post is a scale, not an edge: dashed and quiet, its ticks carry it */
+.sfr-post {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sf-bone) 30%, var(--sf-void));
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+}
+.sfr-drop {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sfr-tone) 85%, var(--sf-void));
+  stroke-width: 1;
+}
+
+/* ---- the registers and the plans ---- */
+
+.sfr-reg__bracket {
+  fill: none;
+  stroke: color-mix(in srgb, var(--sfr-tone) 55%, var(--sf-void));
+  stroke-width: 1;
+}
+.sfr-plan__frame {
+  fill: color-mix(in srgb, var(--sfr-tone) 3%, var(--sf-void));
+  stroke: color-mix(in srgb, var(--sfr-tone) 50%, var(--sf-void));
+  stroke-width: 1;
+}
+
+/* ---- motion: two things beat, and only while the slot is live ---- */
+
+@keyframes sfr-beat {
+  0%,
+  62% {
+    opacity: 1;
+  }
+  63%,
+  100% {
+    opacity: 0.4;
+  }
+}
+.sfr-root[data-sfr-motion="run"] .sfr-tab__seg--lit,
+.sfr-root[data-sfr-motion="run"] .sfr-plate .sfr-mod--sel .sfr-mod__body {
+  animation: sfr-beat 2.4s steps(1, end) infinite;
+}
+/* a still, and a reader who asked for less motion, get the rest frame (the
+   site shortens every animation to 0.01ms under that preference, which makes
+   an endless one strobe) */
+.sf-root[data-sf-still] .sfr-root *,
+.sfr-root[data-sfr-motion="hold"] * {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfr-root * {
+    animation: none !important;
+  }
+}
