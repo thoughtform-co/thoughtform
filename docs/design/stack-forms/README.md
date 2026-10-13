@@ -6,7 +6,7 @@ Different drawings of the three-plate stack (your team, the layer, your agents),
 http://localhost:3019/test/stack-forms
 ```
 
-`?v=<id>` shows one drawing alone, `?open=0..1` sets the pose (0 closed, 1 opened), `?still=1` hides the page's chrome and stops motion. The slider on the page is the one control: whichever drawing is picked has to close and open on the proposal.
+`?v=<id>` shows one drawing alone (`?v=<id>,<id>` a few, `?of=<id>` a direction with its iterations), `?open=0..1` sets the pose (0 closed, 1 opened), `?still=1` hides the page's chrome and stops motion. The slider on the page is the one control: whichever drawing is picked has to close and open on the proposal.
 
 ## Why
 
@@ -64,6 +64,20 @@ Two readings these are built on. He asked for S4's colours and motion back, so w
 
 Stills: `round-03/`, with one sheet that sets each family side by side (S4, S4·B, S4·D over S5, S5·B, S5·C).
 
+## Round 04: three more of S4
+
+The owner (2026-10-13): "i still like S4 Swarm … the best; can you make some iterations?" Three, each S4 with one thing changed. All keep S4's three tones and its motion.
+
+|                          | id        | What changed                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S4·E Swarm, clear**    | `swarm-e` | Less. S4's own plates, the same dots on the same pixels. Gone: the field of dots behind it, the three left-hand lists and every leader, the per-plate counts, and the facts block but for one line. Falls only at the two side corners, against open ground, and none when the stack is closed. 4 200 dots.                                                     |
+| **S4·F Swarm, fine**     | `swarm-f` | More. A 5 × 3 px lattice in place of 9 × 5, and 17 605 dots in the three plates against S4's 4 200. The layer has a real falloff from its white-hot core; the team's workstreams are dense stippled clouds; the agents' board is a fine surface with modules as grids. The standing dots are painted once to a sprite a plate, so a frame costs less than S4's. |
+| **S4·G Swarm, halftone** | `swarm-g` | Dot size carries the form. Every site of one lattice holds a dot and none moves; only its size changes, from 1px to 8px. The layer is the light, the four workstreams are four swells, the chip and modules the large dots. Motion is size only: the workstreams breathe in turn, a ring of size leaves the layer's core, a pulse runs each trace. 5 853 dots.  |
+
+The page also takes `?v=<id>,<id>` to show a few drawings together and `?of=<id>` for a direction with all its iterations, and a single drawing's view links to its family.
+
+Stills: `round-04/`, with a sheet of S4 beside the three.
+
 ## Checked
 
 - By eye at 1920×1247 in three poses (closed, half, opened), then at 1470×830 and 1280×720 half open: every drawing reads as three stacked plates.
@@ -79,6 +93,9 @@ Stills: `round-03/`, with one sheet that sets each family side by side (S4, S4·
 - **Motion was judged from measurements and stills,** not by watching: S4's falling dots are the thing to look at live.
 - **S4·D's falling dots are the thing to watch.** They fall in formation, but green files cross the gold layer's wings, and fully opened there are 32 drops a gap. `FALL.streams` and `FALL.drops` at the top of `swarm/tones.ts` thin them. At 1280×720 the four workstreams merge into one green mass.
 - **S5·C falls back to lists at smaller sizes.** At 1470×830 the workstream outlines go and the names stand alone; at 1280×720 each workstream is a `+` and the names move to the list. Tool names shorten to two letters at both. A tool whose frame is partly behind the layer is drawn without its name. Seen small, it is as faint as S4·B.
+- **S4·F shows fewer dots on the page than in its still.** Inside the page's chrome the lattice drops a step (13 887 dots at 1920×1247). At 1280×720 it is 5 600, since S4 already uses the finest lattice there. It aliases in a reduced contact sheet: judge it at full size.
+- **S4·G bands at 1280×720,** where only four dot sizes fit, and its 1px floor dots leave the corners of the team and the agents dark from a distance. Closed, the layer's core is under the team, as in S4.
+- **S4·E is not seated larger than S4:** the stack's size is set by the opened pose.
 - Dark only. Nothing below 961px was looked at. Nothing is wired into the travelling proposal copy; that follows a pick.
 
 - **S4·B and S4·C are the dimmest drawings on the page.** Seen small, beside the others, they nearly disappear. That is the brief ("more minimalistic") taken at its word, and it sits close to what the owner called "too boring" in his hologram notes. Their brightness is one number each.

@@ -1,0 +1,51 @@
+/* S4·F · SWARM, FINE: its own rules, under its own prefix (sfsf-). The canvas
+   and the words' box are Swarm's (`swarm.css`); these are the few words. */
+
+/* a plate's name, off its right corner where its row of dots ends */
+.sfsf-name {
+  --tone: var(--sf-bone);
+  position: absolute;
+  display: flex;
+  gap: 12px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+.sfsf-name[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfsf-name[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+.sfsf-name__step {
+  color: var(--tone);
+}
+.sfsf-name__what {
+  color: var(--sf-ink-3);
+}
+
+/* the one line of figures: what it is made of */
+.sfsf-total {
+  position: absolute;
+  left: 28px;
+  bottom: 24px;
+  display: flex;
+  gap: 22px;
+  margin: 0;
+  color: var(--sf-ink-3);
+}
+.sfsf-total b {
+  font-weight: 400;
+  color: var(--sf-bone);
+}
+.sfsf-total i {
+  font-style: normal;
+  color: var(--sf-ink-2);
+  text-transform: none;
+}
+
+/* on a narrow screen the names give way to the stack */
+@media (max-width: 960px) {
+  .sfsf-name {
+    display: none;
+  }
+}

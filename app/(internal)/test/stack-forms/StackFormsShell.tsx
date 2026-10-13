@@ -54,7 +54,8 @@ export function StackFormsShell({
   open0,
   still,
 }: {
-  only: Form["id"] | null;
+  /** The drawings to show; none named means all of them. */
+  only: Form["id"][];
   open0: number;
   still: boolean;
 }) {
@@ -76,7 +77,11 @@ export function StackFormsShell({
     window.history.replaceState(null, "", url);
   };
 
-  const shown = FORMS.filter((f) => !only || f.id === only);
+  const some = only.length > 0;
+  const shown = FORMS.filter((f) => !some || only.includes(f.id));
+  /* the direction the first drawing shown belongs to, for the family link */
+  const head = some ? (shown[0]?.of ?? shown[0]?.id) : undefined;
+  const family = FORMS.filter((f) => f.id === head || f.of === head);
   const facts = factsOf(poseAt(open));
 
   return (
@@ -87,13 +92,16 @@ export function StackFormsShell({
           {FORMS.map((f) => (
             <a
               key={f.id}
-              href={only ? `?v=${f.id}` : `#${f.id}`}
-              data-on={only === f.id ? "" : undefined}
+              href={some ? `?v=${f.id}` : `#${f.id}`}
+              data-on={some && only.includes(f.id) ? "" : undefined}
             >
               {f.of ? f.code : `${f.code} ${f.name}`}
             </a>
           ))}
-          {only && <a href="?">All</a>}
+          {head && family.length > 1 && shown.length < family.length && (
+            <a href={`?of=${head}`}>Its family</a>
+          )}
+          {some && <a href="?">All</a>}
         </span>
         <label className="sf-bar__open">
           <span>Closed</span>

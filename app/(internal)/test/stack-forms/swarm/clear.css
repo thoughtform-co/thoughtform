@@ -1,0 +1,44 @@
+/* S4·E · SWARM, CLEAR: its own rules, under its own prefix (sfse-). The
+   canvas and the words' box are Swarm's (`swarm.css`); this sets the one
+   name a plate keeps and the one figure the drawing states. */
+
+/* a plate's name: one line, level with its side corner */
+.sfse-name {
+  --tone: var(--sf-bone);
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  color: var(--sf-ink-3);
+}
+.sfse-name[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfse-name[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+/* the tone, as a dot */
+.sfse-name i {
+  width: 5px;
+  height: 5px;
+  background: var(--tone);
+}
+.sfse-name__step {
+  color: var(--tone);
+}
+
+/* the dots the three plates are made of */
+.sfse-total {
+  position: absolute;
+  left: 28px;
+  bottom: 24px;
+  margin: 0;
+  color: var(--sf-ink-3);
+}
+.sfse-total b {
+  font-weight: 400;
+  color: var(--sf-ink-2);
+}

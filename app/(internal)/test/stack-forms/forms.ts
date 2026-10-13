@@ -12,7 +12,11 @@
 
    Round three, on his read of round two (2026-10-13): S4·B "but use the
    colors like S4 Swarm … but with the animations" (S4·D); S5·B "needs not
-   the 'evals' as a material; more minimalistic" (S5·C). */
+   the 'evals' as a material; more minimalistic" (S5·C).
+
+   Round four (2026-10-13): "i still like S4 Swarm … the best; can you make
+   some iterations?" Three, each S4 with one thing changed: less of it
+   (S4·E), more of it (S4·F), and its dot size doing the work (S4·G). */
 
 import type { ComponentType } from "react";
 
@@ -24,6 +28,9 @@ import { Print } from "./print/Print";
 import { Readout } from "./readout/Readout";
 import { Swarm } from "./swarm/Swarm";
 import { SwarmBands } from "./swarm/SwarmBands";
+import { SwarmClear } from "./swarm/SwarmClear";
+import { SwarmFine } from "./swarm/SwarmFine";
+import { SwarmHalftone } from "./swarm/SwarmHalftone";
 import { SwarmQuiet } from "./swarm/SwarmQuiet";
 import { SwarmTones } from "./swarm/SwarmTones";
 import { Wire } from "./wire/Wire";
@@ -38,6 +45,9 @@ export type FormId =
   | "swarm-b"
   | "swarm-c"
   | "swarm-d"
+  | "swarm-e"
+  | "swarm-f"
+  | "swarm-g"
   | "phosphor"
   | "phosphor-b"
   | "phosphor-c";
@@ -133,6 +143,36 @@ export const FORMS: readonly Form[] = [
     note: "The banded order with S4's own colours and motion: green, gold and bone, and dots that travel.",
     after: "The Arc sphere, dot matrices",
     C: SwarmTones,
+  },
+  {
+    id: "swarm-e",
+    code: "S4·E",
+    name: "Swarm, clear",
+    of: "swarm",
+    made: "S4, and nothing beside it",
+    note: "S4 as it is, with everything that is not the stack taken away.",
+    after: "Dot matrices",
+    C: SwarmClear,
+  },
+  {
+    id: "swarm-f",
+    code: "S4·F",
+    name: "Swarm, fine",
+    of: "swarm",
+    made: "S4, in far more and finer dots",
+    note: "A finer lattice and a larger stack: the plates stop being dotted outlines and become lit surfaces.",
+    after: "Dot matrices, the Arc sphere",
+    C: SwarmFine,
+  },
+  {
+    id: "swarm-g",
+    code: "S4·G",
+    name: "Swarm, halftone",
+    of: "swarm",
+    made: "One lattice, the dots sized by light",
+    note: "Every dot keeps its place and only its size changes: the stack as a lit object in halftone.",
+    after: "Dot matrices, print halftone",
+    C: SwarmHalftone,
   },
   {
     id: "phosphor",

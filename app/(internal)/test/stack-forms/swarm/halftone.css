@@ -1,0 +1,36 @@
+/* S4·G · SWARM, HALFTONE: its own rules, under its own prefix (sfsh-).
+   The drawing is one canvas; these set the three labels and the one fact. */
+
+/* a plate's name, at the end of its run of pinpoints, level with its corner */
+.sfsh-label {
+  --tone: var(--sf-bone);
+  position: absolute;
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  color: var(--sf-ink-3);
+}
+.sfsh-label[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfsh-label[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+.sfsh-label__step {
+  color: var(--tone);
+}
+
+/* the one thing it states: how many dots, and how large they run */
+.sfsh-fact {
+  position: absolute;
+  left: 28px;
+  bottom: 24px;
+  margin: 0;
+  color: var(--sf-ink-3);
+}
+.sfsh-fact b {
+  font-weight: 400;
+  color: var(--sf-ink-2);
+}
