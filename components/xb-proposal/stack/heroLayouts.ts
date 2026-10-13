@@ -8,9 +8,10 @@
    its right corner edge. A plate's corner edge is plumb in this projection,
    so a level line meets it square on.
 
-     FLOW   the proposal's own left and right return beside a smaller stack:
-            the team's bus runs into the team's plate, the agents' plate runs
-            out to the tools' bus, the layer is tied to its tab.
+     FLOW   the proposal's own flow, whole, round a smaller stack: the
+            team's bus runs into the team's plate, the agents' plate runs
+            out to the tools' bus, the layer is tied to its tab on one side
+            and letters its three parts on the other.
      INDEX  the index and the names of round 02, each on a line to its plate. */
 
 import { C30 } from "../iso";
@@ -43,10 +44,12 @@ export const PORTS: readonly Port[] = DEPTH.map((depth, i) => {
 /* ------------------------------------------------------------------ */
 
 const F = {
-  /** The stack's box, in the frame's units: a fifth less than the round 02
-      opening drew it (measured 436px against 560 at 1920 wide, 397 against
-      500 at 1470), which leaves a gutter a side for a line to be seen in. */
-  side: 400,
+  /** The stack's box, in the frame's units (owner, 2026-10-13, twice: "the
+      artifact in the middle … maybe we can make it a bit smaller"): its ink
+      is as tall as the two columns beside it and a little wider than the
+      ringed hub it replaces, which leaves a gutter a side wide enough for a
+      line to be seen in and for the layer's three parts to sit on one. */
+  side: 360,
   /** Both columns: as wide as each other, a stub off their bus (the stub is
       production's, 22), the same margin off the frame's edge. */
   col: 284,
@@ -59,6 +62,10 @@ const F = {
   /** The layer's tie: where it leaves its tab's line, and its 45-degree cut. */
   tieX0: 760,
   cut: 16,
+  /** The layer's three parts on its drop: the first tag's middle below the
+      drop's turn, then the pitch between tags. */
+  partsLead: 28,
+  partsPitch: 40,
 };
 
 function flow() {
@@ -78,8 +85,13 @@ function flow() {
   const busOut = cardX0 - F.stub;
   const half = F.junction / 2;
   const [team, layer, agents] = ports;
-  /* the tie runs plumb down the middle of the gutter the way out leaves free */
+  /* the layer's two lines each run plumb down the middle of a gutter: the
+     tie on the right, above the way out; the drop on the left, below the
+     way in. So the gold turns about the centre as the flow does. */
   const tieX = Math.round((layer.right[0] + busOut) / 2);
+  const dropX = Math.round((layer.left[0] + busIn) / 2);
+  const dropY = layer.left[1] + F.cut;
+  const parts = [0, 1, 2].map((n) => [dropX, dropY + F.partsLead + n * F.partsPitch] as Pt);
 
   return {
     k,
@@ -131,6 +143,11 @@ function flow() {
       [tieX - F.cut, layer.right[1]],
       layer.right,
     ] as Pt[],
+    /** The layer's drop: out of its plate's other edge, down the gutter,
+        ending in the last of its parts. */
+    drop: [layer.left, [dropX + F.cut, layer.left[1]], [dropX, dropY], parts[2]] as Pt[],
+    /** Context, Skills, Evals: three tags on the drop, each centred on it. */
+    parts,
     /* each tab centred over what it heads, as production seats them */
     tabs: { team: chipX0 + F.col / 2, layer: HUB[0], run: cardX0 + F.col / 2, y: TAB_Y },
   };

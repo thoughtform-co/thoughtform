@@ -5,16 +5,22 @@
    and right sides. Let's make a combination where you can really see the
    lines connecting to the different parts of the stack").
 
-   The proposal's flow with the stack where its ringed hub was, and smaller
-   than the opening first drew it. What each line says:
+   Asked again the same day, more plainly: "integrate Navigate with your
+   team, built on Claude Enterprise, and all these things into that new AI
+   capability your team owns … the artifact in the middle … maybe we can
+   make it a bit smaller".
+
+   So: the proposal's flow, whole, with the stack where its ringed hub was,
+   no larger than it needs to be. What each line says:
      · left, your team: the four workstreams on one bus, which runs level
        into the TEAM's plate, the stack's top;
-     · the layer, the middle plate: tied to its tab by one quiet line down
-       the gutter the way out leaves free;
+     · the layer, the middle plate: tied to its tab by one gold line down
+       the right-hand gutter, and lettering its three parts (context,
+       skills, evals) on a second down the left;
      · right, Claude Enterprise: the AGENTS' plate, the stack's bottom, runs
        level out onto the bus that feeds the tools.
-   In high on the left, out low on the right: the figure turns onto itself
-   about its centre.
+   In high on the left, out low on the right, the gold the other way round:
+   the figure turns onto itself about its centre.
 
    The chips, the cards, the tabs and every word are production's, by
    reference (`PlugFlow`, `plugShared`); the geometry is `heroLayouts.ts`.
@@ -27,7 +33,7 @@ import { Junction, Tap } from "../kit/marks";
 import { pathOf } from "../kit/trace";
 import { MastheadTitle } from "../Masthead";
 import { CARDS, H, Tab, TITLE, W } from "../plug/PlugFlow";
-import { Cards, Chips, delay, Draw, FIG_LABEL } from "../plug/plugShared";
+import { Cards, Chips, delay, Draw, FIG_LABEL, PartTags } from "../plug/plugShared";
 import { useArrive } from "../useArrive";
 
 import { ClosedStack } from "./ClosedStack";
@@ -84,6 +90,8 @@ export function StackFlow() {
             <g className="shf-fade" style={delay(900)}>
               <path d={pathOf(L.tie)} className="shf-tie" />
               <Tap at={layer.right} size={5} />
+              <path d={pathOf(L.drop)} className="shf-tie" />
+              <Tap at={layer.left} size={5} />
             </g>
 
             <Draw pts={L.runOut} className="shf-run" d={1000} />
@@ -118,6 +126,10 @@ export function StackFlow() {
         <Tab id="run" x={L.tabs.run} y={L.tabs.y} d="1200ms" />
 
         <Chips seats={L.chips} />
+        {/* the layer's parts, on its drop; they let go with it */}
+        <div className="shf-parts">
+          <PartTags seats={L.parts} />
+        </div>
         <Cards x0={L.cards.x0} x1={L.cards.x1} rows={L.cards.rows} />
       </figure>
     </div>

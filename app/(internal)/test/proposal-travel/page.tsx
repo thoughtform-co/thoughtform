@@ -62,9 +62,9 @@ type Query = Record<string, string | string[] | undefined>;
  * wrappers `ArcFlowPorts` gives them on the proposal; the rest go through
  * `ArcSectionRenderer` untouched, offset so each keeps its own index.
  *
- * The opening has two figures, both the same donor to the arrival:
- *   (default)     the flow through the stack: the team and the tools beside it
- *   ?hero=index   a number and a name a plate, each on a line to it
+ * The opening, the same donor to the arrival either way:
+ *   (default)     the proposal's flow, the stack where its ringed hub was
+ *   ?hero=index   the other reading, kept for now: a number and a name a plate
  */
 export default async function ProposalTravelRoute({
   searchParams,

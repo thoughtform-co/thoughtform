@@ -34,7 +34,8 @@
    within the first twenty-fifth of the way (`--sh-away` is the arrival's
    clock; absent, they are simply there) */
 .sh-leads,
-.shf-port {
+.shf-port,
+.shf-parts > div {
   opacity: calc(1 - var(--sh-away, 0) * 25);
 }
 
@@ -58,6 +59,19 @@
 .shf-stage {
   width: calc(var(--s) * 100%);
   aspect-ratio: 1;
+}
+
+/* the layer's parts: a wrapper with no box of its own, so each tag is still
+   seated by the frame's own rule (its font size restated, the rule being
+   for the frame's direct children) */
+.shf-parts {
+  display: contents;
+}
+.shf-parts > div {
+  position: absolute;
+  left: calc(var(--px) * 100%);
+  top: calc(var(--py) * 100%);
+  font-size: max(12px, 1.05cqw);
 }
 
 /* a chip as wide as a card: two columns of one width */

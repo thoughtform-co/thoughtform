@@ -143,41 +143,47 @@ Stills: `round-02/job/` and `round-02/contact-job-*.png`.
 
 # Round 03 (2026-10-13)
 
-The owner's read of the stack-first opening: "I like the travel but I think we can make it a bit smaller. I think we lost the context from the left and right sides. Let's make a combination where you can really see the lines connecting to the different parts of the stack."
+The owner's read of the stack-first opening, in two messages:
 
-Two figures answer it, on the same copy of the proposal. Both are the same donor to the arrival, so the travel is the one he liked; nothing after section 1 changed.
+> I like the travel but I think we can make it a bit smaller. I think we lost the context from the left and right sides. Let's make a combination where you can really see the lines connecting to the different parts of the stack.
+
+> I was wondering whether we can integrate Navigate with your team, built on Claude Enterprise, and all these things into that new AI capability your team owns … the artifact in the middle of the encode. Maybe we can make it a bit smaller.
+
+So the opening is the sent page's flow, whole, with the stack where its ringed hub was. It lives on the copy of the proposal, not on the sent page:
 
 ```
 http://localhost:3019/test/proposal-travel
-http://localhost:3019/test/proposal-travel?hero=index
 ```
 
-## H1 · The flow through the stack (the default)
+## The flow through the stack
 
-`components/xb-proposal/stack/StackFlow.tsx`. Read as: the left and the right of the sent page's flow are the context that went missing. They return beside the stack, which takes the place of the ringed hub.
+`components/xb-proposal/stack/StackFlow.tsx`, geometry in `stack/heroLayouts.ts`.
 
-- **Left, your team**: the four workstreams on one bus, which runs level into the **team's plate**, the stack's top.
-- **The layer**: the middle plate, tied to its tab by one gold line down the gutter the way out leaves free.
-- **Right, Claude Enterprise**: the **agents' plate**, the stack's bottom, runs level out onto the bus that feeds the four tool cards.
-- In high on the left, out low on the right: the two runs and their junctions turn onto each other about the frame's centre.
-- The chips, the cards, the tabs and every word are production's, by reference. The chips are as wide as the cards here, so the two columns are one width.
+- **Left, "01 · Navigate with your team"**: the four workstreams on one bus, which runs level into the **team's plate**, the stack's top.
+- **Centre, "02 · Encode your context"**: the **layer's plate**, the middle one. One gold line ties it to its tab down the right-hand gutter; a second leaves its other edge and letters its three parts, Context, Skills, Evals, down the left-hand one.
+- **Right, "03 · Build on Claude Enterprise"**: the **agents' plate**, the stack's bottom, runs level out onto the bus that feeds the four tool cards.
+- The flow comes in high on the left and leaves low on the right; the gold goes the other way round. The figure turns onto itself about its centre.
+- The tabs, the chips, the tags, the cards and every word are production's, by reference. Against production: every connector is straight (the kit's law), the chips are as wide as the cards so the two columns are one width, and the rows are closer so the columns stand no taller than the stack.
 
-## H2 · Index and names (`?hero=index`)
-
-`StackHero.tsx`, round 02's figure. Read as: the numbers and the names were too far from the stack to belong to it. Each row now sits on a level line to the plate it names, in that plate's tone, and the two brackets that held the columns are gone.
+The travel is round 02's: the stack is the same donor to the arrival, and nothing after section 1 changed.
 
 ## Measured
 
-- **Smaller**: the stack's box is 436px against 560 at 1920×1247 and 397 against 500 at 1470×830 in H1 (a fifth less); 440 and 420 in H2.
-- **The lines meet the plates**: every line ends on the middle of its plate's corner edge within 0.07px, both figures, at 1280×720, 1470×830 and 1920×1247. A plate's corner edge is plumb in this projection, so a level line meets it square on (`stack/heroLayouts.ts`, held by `tests/lib/proposal-kit.test.ts`).
+- **Smaller**: the stack's box is 392px against 560 at 1920×1247 and 358 against 500 at 1470×830. Its ink is a little wider than the ringed hub it replaces.
+- **The lines meet the plates**: all four lines that touch the stack end on the middle of their plate's corner edge within 0.04px, at 1280×720, 1470×830 and 1920×1247. A plate's corner edge is plumb in this projection, so a level line meets it square on (held by `tests/lib/proposal-kit.test.ts`).
+- **The three tags** sit centred on their line within 0.06px and clear both the team's bus and the stack by 14px at 1280×720, 22px at 1470×830 and 25px at 1920×1247.
 - **The sent page did not change**: its stills from the pin onward are pixel-identical to round 02's baseline. The one edit to a shipped file is three lines inside `EmbedStack`'s opt-in arrival.
 
-One thing added beyond the ask: the lines that touch the stack let go as it leaves. The stack holds its place on screen while section 1 scrolls away, so a line left standing would point at nothing; they are gone within the first twenty-fifth of the way and back when the reader returns.
+One thing added beyond the ask: the lines and tags that touch the stack let go as it leaves. The stack holds its place on screen while section 1 scrolls away, so a line left standing would point at nothing; they are gone within the first twenty-fifth of the way and back when the reader returns.
 
-Stills: `round-03/flow/` and `round-03/index/` (section 1 at rest, the arrival at a quarter, a half and three quarters, the pin; three viewports, both themes). Re-shoot with `node scripts/capture-proposal-travel.mjs --port 3019 --page travel --out <dir>`, adding `--hero index` for H2.
+Stills: `round-03/flow/` (section 1 at rest, the arrival at a quarter, a half and three quarters, the pin; three viewports, both themes). Re-shoot with `node scripts/capture-proposal-travel.mjs --port 3019 --page travel --out <dir>`.
+
+## The other reading, kept for now
+
+`?hero=index` on the same page is round 02's figure with a level line from each number and each name to the plate it names (`StackHero.tsx`). It was built before the second message made the ask plain; it is not what was asked and goes when the opening is ported. Stills in `round-03/index/`.
 
 ## Not done in round 03
 
-- The layer's three parts (Context, Skills, Evals) are not lettered in H1; the sent page's flow letters them on its rings.
-- Nothing below 961px was looked at, in either figure.
+- Nothing below 961px was looked at.
 - At 1280×720 the tab over the tools is wider than its column by 25px a side (it is at the 12px floor there).
+- Nothing was ported to the sent page.

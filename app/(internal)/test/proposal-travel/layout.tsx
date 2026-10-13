@@ -15,10 +15,11 @@ import type { ReactNode } from "react";
  * team." as it does on the proposal. Every other section is the proposal's
  * own record, by reference.
  *
- * The opening has two figures (owner, same day: "a combination where you can
- * really see the lines connecting to the different parts of the stack"): the
- * proposal's flow with the stack where its hub was (`StackFlow`, the
- * default), and a number and a name a plate (`StackHero`, `?hero=index`).
+ * The opening is the proposal's own flow with the stack where its ringed hub
+ * was (`StackFlow`; owner, same day: "integrate Navigate with your team,
+ * built on Claude Enterprise, and all these things into that new AI
+ * capability your team owns"). `?hero=index` keeps the other reading for
+ * now: a number and a name a plate (`StackHero`).
  *
  * Internal-only: the sent page, its record and its listing are untouched.
  */

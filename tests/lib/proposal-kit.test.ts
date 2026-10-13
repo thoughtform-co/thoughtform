@@ -351,6 +351,28 @@ describe("the opening's lines", () => {
     }
   });
 
+  it("the flow: the layer letters its three parts down the gutter the way in leaves free", () => {
+    const [team, layer] = FLOW.ports;
+    expect(isStraight(FLOW.drop)).toBe(true);
+    expect(pathOf(FLOW.drop)).not.toMatch(/[CQSA]/);
+    expect(FLOW.drop[0]).toEqual(layer.left);
+    // below the way in, between the team's bus and the stack
+    expect(Math.min(...FLOW.drop.map((p) => p[1]))).toBeGreaterThan(team.left[1]);
+    for (const p of FLOW.drop.slice(1)) {
+      expect(p[0]).toBeGreaterThan(FLOW.team.bus[0][0]);
+      expect(p[0]).toBeLessThan(layer.left[0]);
+    }
+    // three tags, each centred on the drop's plumb run, the last where it ends
+    expect(FLOW.parts).toHaveLength(3);
+    const x = FLOW.drop.at(-1)![0];
+    for (const p of FLOW.parts) expect(p[0]).toBe(x);
+    expect(FLOW.parts[2]).toEqual(FLOW.drop.at(-1));
+    expect(FLOW.parts[0][1]).toBeGreaterThan(FLOW.drop[2][1]);
+    // and the gold turns about the centre as the flow does: tie right, drop left
+    const tieX = Math.max(...FLOW.tie.map((p) => p[0]));
+    expect(tieX + x).toBe(2 * HUB[0]);
+  });
+
   it("the flow: each run leaves or meets its bus at a junction on the bus", () => {
     const half = FLOW.team.junction.size / 2;
     expect(FLOW.team.junction.at[0]).toBe(FLOW.team.bus[0][0]);
