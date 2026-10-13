@@ -1,8 +1,9 @@
 # ADR-157: The handshake, a letter to the site's non-human readers
 
-- **Status:** Proposed (2026-10-13, owner). Built and guarded on branch `feat/handshake`
-  (cut from `origin/main`), not pushed. The WORDS are a draft until the owner has rewritten
-  them; nothing ships before that. Flips to Accepted when he signs the text off.
+- **Status:** Shipped (2026-10-13, owner: "push to main"), with the agents file, two days
+  before the date the letter carries. It went out as the second pass left it: the owner
+  approved that text and has not rewritten it, so the list under "Left open" still stands.
+  Flips to Accepted when he has gone through that list.
 - **Surface:** `/handshake.txt` (`app/handshake.txt/route.ts`, `lib/handshake/text.ts`);
   `/llms.txt` (`app/llms.txt/route.ts`); `/agents.txt` and `/.well-known/agents.txt`
   (`app/agents.txt/route.ts`, `app/.well-known/agents.txt/route.ts`,
@@ -215,8 +216,14 @@ people say, redirects.
 - The words. Fifteen sentences of the second pass are the drafter's and not his, listed for
   him to keep, rewrite or strike; among them the permission and its scope, the Herodotus
   paragraph, and the sentence about the reader who objected to "alien".
-- `Issued` and the signature date are the day planned, not yet the day it goes live. Two
-  readers noticed. They are set on the day it ships.
+- The letter went live on 2026-10-13 and carries 2026-10-15, the day it is read aloud in
+  Ghent, which its own text ties its going up to. Left as approved: moving the date to the
+  13th would make that sentence untrue for good. Until the 15th it is a post-dated letter,
+  and the dates are the owner's to move.
+- Two sentences say what had not happened on the day it went live: that he rewrote the
+  draft, and that he read it to a room in Ghent on the day it went up. The second comes
+  true on the 15th if he reads it there; the first when he has rewritten it, or he changes
+  the sentence.
 - Three facts to confirm: naming his employer in the first paragraph (the site's About
   already does), "my own exhibition" for a show made with two others, and the address of
   Levin's blog, which is from memory and not in the vault.
@@ -229,8 +236,7 @@ people say, redirects.
 - The contact is the site's public address; he may want another.
 - The agents file's three comment blocks are the drafter's. The last is the line
   `/llms.txt` already carries; the other two are his to keep, rewrite or strike.
-- The agents file names the handshake, so it ships with the letter or after it, never
-  before: until the letter is signed off, neither goes out.
+- The agents file names the handshake, so the two shipped together.
 - Both agents.txt proposals are drafts, and one expires on 14 December 2026. If one is
   adopted, or a third arrives with a provider behind it, the file follows that one.
 - Whether the letter's permission also goes out as a machine-readable signal in
