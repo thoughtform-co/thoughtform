@@ -1,6 +1,7 @@
 import type { ArcDef } from "../types";
 
 import { HAND_IT_TO_AN_AGENT } from "./shared/handItToAnAgent";
+import { ITP_WALL_CAPTION, ITP_WALL_MEDIA } from "./shared/in-the-pocket";
 import {
   TOM_ANCHOR_IMAGE,
   TOM_BENCH_EXAMPLE,
@@ -266,16 +267,9 @@ export const AP_HOGESCHOOL_ARC: ArcDef = {
         title: { pre: "Nine sectors,", em: "one world." },
         sub: "In The Pocket asked for one hero image per sector, from finance to public transport. The same two references anchored every draw, so nine briefs came back as one place.",
       },
-      media: {
-        type: "image",
-        src: "/arcs/ap-hogeschool/itp-nine-sectors-wall.webp",
-        alt: "A wall of nine In The Pocket sector heroes in one look, the retail hero at the centre: finance, government, health, insurance, public transport, social secretariats, telco and utilities around it",
-      },
-      caption: {
-        label: "Nine briefs, one look",
-        meta: "Nine sector heroes, signed off in August for the September campaign",
-        sourceLabel: "In The Pocket · AI readiness",
-      },
+      /* A shared record since the UX meetup talk shows the same wall (ADR-156). */
+      media: ITP_WALL_MEDIA,
+      caption: ITP_WALL_CAPTION,
     },
     /* 12 · The anchor (`two-anchors`) is REPLACED by the Prompt to Loop
        breakdown (ADR-141 U3, owner 2026-10-02): thirteen slides the tail

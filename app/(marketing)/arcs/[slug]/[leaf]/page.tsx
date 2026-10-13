@@ -132,6 +132,7 @@ const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "thoughtform-workshop-v3",
   "ap-hogeschool-lecture",
   "suri-lunch-and-learn",
+  "thoughtform-ux-meetup",
 ]);
 
 export function generateStaticParams() {

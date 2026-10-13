@@ -17,6 +17,7 @@ import { THOUGHTFORM_WORKSHOP_ARC } from "./content/thoughtform-workshop";
 import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "./content/thoughtform-workshop-v3";
 import { THOUGHTFORM_ARMADA_ARC } from "./content/thoughtform-armada";
+import { UX_MEETUP_ARC } from "./content/ux-meetup";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
@@ -69,6 +70,9 @@ export const ARCS: readonly ArcDef[] = [
      Loop as its worked example and the economics after its bill. The
      template the next presentations are cut from. */
   THOUGHTFORM_WORKSHOP_V3_ARC,
+  /* A talk cut from it (ADR-156): v3's spine, then a tail for a room of
+     designers at the UX meetup of 15 October. */
+  UX_MEETUP_ARC,
   /* Its technical companion (ADR-146): one piece of work through the
      machinery, from the configuration to the next team. */
   THOUGHTFORM_ARMADA_ARC,

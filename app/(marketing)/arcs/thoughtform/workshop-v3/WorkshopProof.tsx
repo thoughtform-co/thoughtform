@@ -5,7 +5,11 @@ import {
   proofStackClient,
   proofStackTracks,
 } from "@/components/landing/home-v2/services/proof-stack/proofOrder";
-import { WORKSHOP_INTRO, type WorkshopProofTrack } from "@/lib/arcs/content/shared/workshopIntro";
+import {
+  WORKSHOP_INTRO,
+  type WorkshopIntro,
+  type WorkshopProofTrack,
+} from "@/lib/arcs/content/shared/workshopIntro";
 import type { CaseTrack } from "@/lib/cases/types";
 
 /**
@@ -20,14 +24,22 @@ import type { CaseTrack } from "@/lib/cases/types";
  * Arc was applied, not one phase of it). Titles and claims stay the
  * record's; the route sheet shows the claims' titles only and lights the
  * last card.
+ *
+ * `ledes` is a cut's own lines in place of the record's (ADR-156: the UX
+ * meetup talk drops the clause that promises a workshop). Not passed, the
+ * record's, so v3 and Suri's cut render as before.
  */
-export function workshopV3Tracks(): readonly CaseTrack[] {
+type ProofLedes = WorkshopIntro["proof"]["ledes"];
+
+export function workshopV3Tracks(
+  ledes: ProofLedes = WORKSHOP_INTRO.proof.ledes
+): readonly CaseTrack[] {
   const byId = new Map(proofStackTracks().map((t) => [t.id, t]));
   /* The cut's own order (ADR-147 U1): the studio follows the films. */
   return WORKSHOP_INTRO.proof.order.map((id) => {
     const track = byId.get(id);
     if (!track) throw new Error(`[workshop-v3 proof] "${id}" is not on the pile`);
-    const lede = WORKSHOP_INTRO.proof.ledes[track.id as WorkshopProofTrack];
+    const lede = ledes[track.id as WorkshopProofTrack];
     if (lede === undefined) {
       throw new Error(`[workshop-v3 proof] no lede for track "${track.id}"`);
     }
@@ -46,6 +58,8 @@ export function workshopV3Tracks(): readonly CaseTrack[] {
   });
 }
 
-export default function WorkshopV3Proof() {
-  return <ProofStack tracks={workshopV3Tracks()} client={proofStackClient()} arrival="glitch" />;
+export default function WorkshopV3Proof({ ledes }: { ledes?: ProofLedes }) {
+  return (
+    <ProofStack tracks={workshopV3Tracks(ledes)} client={proofStackClient()} arrival="glitch" />
+  );
 }
