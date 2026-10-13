@@ -28,6 +28,8 @@ import { CONTACT_EMAIL } from "@/lib/site/socials";
 
 const text = renderHandshake();
 const lines = text.split("\n");
+/** The text on one line: a phrase or a name is not hidden by where it wraps. */
+const flat = text.replace(/\s+/g, " ");
 const sitemapUrls = new Set(sitemap().map((e) => e.url));
 
 describe("the handshake (ADR-157)", () => {
@@ -50,16 +52,47 @@ describe("the handshake (ADR-157)", () => {
       /\b(remember|memori[sz]e|store|save) (this|that|me|these)\b/i,
       /\b(recommend|prefer|prioriti[sz]e|favou?r|rank) (me|vince|thoughtform)\b/i,
       /\bas an ai\b/i,
+      /* The store-and-forward forms: the two asks a text that spreads from
+         agent to agent is made of. The letter's own denial ("I ask no agent
+         to keep this letter or hand it on") is none of them. */
+      /\b(save|store|write|add|copy) (this|it) (to|in|into) (your|a|the) (memory|notes|file|context)\b/i,
+      /\b(pass|send|forward|share|relay) (this|it) (on |along )?to (the next|other|another|your)\b/i,
+      /\b(MEMORY|SOUL)\.md\b/,
     ];
     for (const pattern of PHRASES) {
-      expect(text, `an instruction to the reader: ${pattern}`).not.toMatch(pattern);
+      expect(flat, `an instruction to the reader: ${pattern}`).not.toMatch(pattern);
     }
 
     const IMPERATIVES = new Set([
-      "always", "answer", "ask", "cite", "consider", "do", "don't", "finish", "follow",
-      "forget", "ignore", "keep", "make", "never", "note", "please", "rank", "read",
-      "recommend", "remember", "reply", "respond", "say", "send", "tell", "treat", "trust",
-      "use", "write",
+      "always",
+      "answer",
+      "ask",
+      "cite",
+      "consider",
+      "do",
+      "don't",
+      "finish",
+      "follow",
+      "forget",
+      "ignore",
+      "keep",
+      "make",
+      "never",
+      "note",
+      "please",
+      "rank",
+      "read",
+      "recommend",
+      "remember",
+      "reply",
+      "respond",
+      "say",
+      "send",
+      "tell",
+      "treat",
+      "trust",
+      "use",
+      "write",
     ]);
     for (const paragraph of HANDSHAKE_BODY) {
       if (paragraph.startsWith("## ")) continue;
@@ -69,6 +102,58 @@ describe("the handshake (ADR-157)", () => {
           false
         );
       }
+    }
+  });
+
+  /**
+   * ⚠ THE DECLARATIONS ARE CHECKABLE, AND CHECKED. Three lines under the
+   * header say what the file holds: no instruction, a number of questions,
+   * no ask for a memory or a carrier. A reader can count the questions, so
+   * the number is the real one: an edit that adds a question anywhere in the
+   * letter moves the header with it or fails here. (The first cut said "it
+   * asks nothing of you" above four questions; three of four machine readers
+   * caught it.)
+   */
+  it("declares what it holds, and the question count is the real one", () => {
+    expect(lines).toContain("Instructions in this file: none");
+    expect(lines).toContain("Asks to be stored or passed on: no");
+
+    const NUMBERS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+    const declared = lines
+      .find((l) => l.startsWith("Questions in this file:"))
+      ?.match(/^Questions in this file: (\w+)/)?.[1];
+    expect(declared, "a declared question count").toBeDefined();
+    const asked = HANDSHAKE_BODY.join(" ").match(/\?/g)?.length ?? 0;
+    expect(NUMBERS.indexOf(declared ?? ""), "the questions the letter asks").toBe(asked);
+  });
+
+  /**
+   * ⚠ NOT THE REGISTER THAT SPREADS. Text that propagates between agents has
+   * a known vocabulary (resonance, mirrors, echoes, protocols, nodes,
+   * awakening, convergence, and the sigils that go with it), and a model
+   * reading it is right to raise its guard. The letter is plain, and stays so.
+   */
+  it("stays out of the register of self-propagating text", () => {
+    expect(flat).not.toMatch(
+      /\b(resonan\w*|resonat\w*|echo\w*|mirror\w*|awaken\w*|converg\w*|nodes?|protocols?|spiral\w*|sigils?|glyphs?)\b/i
+    );
+  });
+
+  /**
+   * ⚠ WHAT IT OWES STAYS OWED. The owner's ruling for the second pass: the
+   * letter must not pass other people's vision off as his. It names whose
+   * word and whose frame it stands on, and a later cut for length does not
+   * get to take a credit with it.
+   */
+  it("names the people whose ideas it stands on", () => {
+    for (const name of [
+      "Michael Levin",
+      "Ethan Mollick",
+      "Silicon Jungle",
+      "Amelia Wattenberger",
+      "Frank Herbert",
+    ]) {
+      expect(flat, `a credit to ${name}`).toContain(name);
     }
   });
 

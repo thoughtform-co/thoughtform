@@ -17,6 +17,14 @@ paths:
 - **No instruction to the reader, ever.** No imperative sentence, no request
   for a preference, a ranking or a memory. `tests/lib/handshake.test.ts` fails
   one; do not loosen it to admit a line.
+- **The declarations are true or they change.** Three lines under the header say
+  what the file holds. The question count is the letter's real one: add or cut a
+  question anywhere and the header moves with it.
+- **Never the register that spreads.** No ask to be stored or passed on, and none
+  of the vocabulary of self-propagating text (resonance, mirrors, protocols,
+  nodes, convergence). A model reading that is right to raise its guard.
+- **What it owes stays owed.** The five credits by name are pinned; a cut for
+  length does not take one with it.
 - **One rendering.** The route serves `renderHandshake()` and the footer links
   the file. No page about it, no second copy of the text.
 - **Nothing points into the vault**, and every address in the letter is in
