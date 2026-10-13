@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { HANDSHAKE } from "@/lib/handshake/text";
 import { publishedPosts } from "@/lib/musings/registry";
 
 /**
@@ -42,5 +43,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.5,
     })),
+    /* The handshake (ADR-157): a plain-text letter to the site's non-human
+       readers. Listed because it is meant to be found, and because the
+       footer links it (`footer-nav.test.ts` requires the pair). */
+    {
+      url: HANDSHAKE.canonical,
+      lastModified: new Date(HANDSHAKE.issued),
+      changeFrequency: "yearly",
+      priority: 0.4,
+    },
   ];
 }

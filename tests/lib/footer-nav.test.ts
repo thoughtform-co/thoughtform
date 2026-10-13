@@ -54,11 +54,13 @@ describe("the footer's link grid (ADR-105 U2)", () => {
     }
   });
 
+  /* An internal path may end in `.txt` since ADR-157: the handshake is linked
+     as the file it is, never as a page about it. */
   it("every href is a root-relative anchor, an internal path, a mailto, or absolute https", () => {
     for (const link of published.flatMap((c) => c.links)) {
       expect(
         /^\/#[a-z0-9-]+$/i.test(link.href) ||
-          /^\/[a-z0-9\-/]*$/i.test(link.href) ||
+          /^\/[a-z0-9\-/]*(\.txt)?$/i.test(link.href) ||
           link.href.startsWith("mailto:") ||
           link.href.startsWith("https://"),
         `${link.label} -> ${link.href}`

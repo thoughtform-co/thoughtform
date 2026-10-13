@@ -74,6 +74,8 @@ const nextConfig = {
     "/musings": ["./content/musings/**"],
     "/musings/[slug]": ["./content/musings/**"],
     "/sitemap.xml": ["./content/musings/**"],
+    // The models' index (ADR-157) lists the published musings too.
+    "/llms.txt": ["./content/musings/**"],
   },
   ...(exportMode
     ? {

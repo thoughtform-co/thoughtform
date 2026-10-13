@@ -134,6 +134,10 @@ const AUTHORED: readonly FooterColumn[] = [
       social("linkedin") ?? { label: "LinkedIn", href: null },
       social("x") ?? { label: "X", href: null },
       { label: "Email", href: `mailto:${CONTACT_EMAIL}` },
+      /* The handshake (ADR-157): the letter to the site's non-human readers,
+         linked where a person can see it too. The file itself, never a page
+         about it: one rendering, the same bytes for both readers. */
+      { label: "Handshake", href: "/handshake.txt" },
     ],
   },
   {
