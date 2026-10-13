@@ -20,6 +20,16 @@
    the tool's name inside. Three kinds of writing: loose letters, dense
    running words, ruled frames. "blocks" (S5) is untouched by it.
 
+   A third, "spare" (S5·C; owner, 2026-10-13, on S5·B: "needs not the 'evals'
+   as a material; more minimalistic"), fills no face at all. Every plate is
+   its outline. The team is four outlined workstreams, each named once. The
+   layer is a ruled page: lines of writing with the words left out, lying on
+   it in the plate's own perspective, and its three strata are three edges
+   down its walls. The agents are the written setting's ruled frames on a
+   quieter board. Beside the stack: a line a plate, the layer's three holds
+   set once, the pose and the count. No ladder. The other two settings are
+   untouched by it.
+
    The frame is stated in CELLS: a plate's x runs three columns right and one
    row down, its y three columns left and one row down, z two rows up. With a
    9 x 16 px cell that is 30.6 degrees, the proposal's isometric to within a
@@ -52,9 +62,11 @@ export const CELL = { w: 9, h: 16 } as const;
 export const GLYPHS = "·¯-_=:.+%x─│┌┐└┘├┤░▒▓█";
 /** The written setting's: the same, less the four shade blocks, plus a bar. */
 export const GLYPHS_WRITTEN = "·¯-_=:.+%x|─│┌┐└┘├┤";
+/** The spare setting's: strokes, rules, a cross and a colon. */
+export const GLYPHS_SPARE = "¯-_:+─│┌┐└┘├";
 
-/** "blocks" is S5; "written" is S5·B. */
-export type Setting = "blocks" | "written";
+/** "blocks" is S5; "written" is S5·B; "spare" is S5·C. */
+export type Setting = "blocks" | "written" | "spare";
 
 /** green, gold, bone: the three plates' tones. */
 type Tone = 0 | 1 | 2;
@@ -181,6 +193,7 @@ export function rasterise(
   setting: Setting = "blocks"
 ): Raster | null {
   const written = setting === "written";
+  const spare = setting === "spare";
   const seated = seat(cols, rows);
   if (!seated) return null;
   const { f, b } = seated;
@@ -223,6 +236,8 @@ export function rasterise(
       /* a sliver of a lower stratum's top shows between the layer's strata:
          it is wall */
       const wall = h.face !== "top" || (h.plate === 1 && h.z < plate.top - 0.01);
+      /* spare: no face is filled */
+      if (spare) continue;
       if (written) {
         if (h.plate === 0) {
           /* the team as S5 sets it, its walls ruled instead of shaded */
@@ -305,7 +320,7 @@ export function rasterise(
       put(c, r, frac < 1 / 3 ? "¯" : frac < 2 / 3 ? "-" : "_", plate as Tone, 2);
     }
   };
-  {
+  if (!spare) {
     const pf = plateFrame(f, pose, 0);
     const z = PLATES[0].top;
     const k = [
@@ -325,14 +340,110 @@ export function rasterise(
     edge(project(pf, 0, 0, z), project(pf, SIDE, 0, z), 1);
   }
 
+  /* -- spare: the team and the layer as outlines, the layer a ruled page -- */
+
+  if (spare) {
+    /* a stroke a column along a line, as `edge` sets them, at any level.
+       `onTop` keeps it to the plate's own top face (what lies on a plate);
+       otherwise it may also stand on the bare ground beside the plate (an
+       outline), and only a plate in front hides it */
+    const lies = (h: Hit | null, plate: 0 | 1) =>
+      !!h && h.plate === plate && h.face === "top" && h.z >= PLATES[plate].top - 0.01;
+    const stroke = (a: Pt, e: Pt, plate: 0 | 1, level: Level, onTop = false, bold = false) => {
+      const [x0, x1] = a[0] < e[0] ? [a[0], e[0]] : [e[0], a[0]];
+      for (let c = Math.ceil(x0 - 0.5); c + 0.5 <= x1; c++) {
+        /* a hair down, so a line that runs exactly along a third of a row
+           takes the same stroke in every column */
+        const y = a[1] + ((e[1] - a[1]) * (c + 0.5 - a[0])) / (e[0] - a[0]) + 1e-6;
+        const r = Math.floor(y);
+        if (!inside(c, r)) continue;
+        const h = hits[at(c, r)];
+        if (onTop ? !lies(h, plate) : h && h.plate !== plate) continue;
+        put(c, r, "¯-_"[Math.min(2, Math.floor((y - r) * 3))], plate, level, bold);
+      }
+    };
+    /* the lower plate first: where two outlines share a bare cell, the
+       upper one is in front */
+    for (const i of [1, 0] as const) {
+      const pf = plateFrame(f, pose, i);
+      const plate = PLATES[i];
+      const top = plate.top;
+      const at3 = (x: number, y: number, z: number) => project(pf, x, y, z);
+      /* the two near edges at a height: down the left wall, down the right */
+      const near = (z: number, left: Level, right: Level, bold = false) => {
+        stroke(at3(0, SIDE, z), at3(SIDE, SIDE, z), i, left, false, bold);
+        stroke(at3(SIDE, SIDE, z), at3(SIDE, 0, z), i, right, false, bold);
+      };
+      /* a plate is a sheet: one outline. The layer is three, so under its
+         outline come its floor and the edge of each stratum below the top
+         one: the strata are told apart by these edges and by nothing else */
+      if (plate.body.length > 1) {
+        near(0, 0, 0);
+        for (const solid of plate.body.slice(0, -1)) near(solid.z1, 1, 0);
+      }
+      const lit: Level = plate.lit ? 2 : 1;
+      stroke(at3(0, SIDE, top), at3(0, 0, top), i, lit, false, plate.lit);
+      stroke(at3(0, 0, top), at3(SIDE, 0, top), i, lit, false, plate.lit);
+      near(top, lit, lit, plate.lit);
+
+      if (i === 0) {
+        /* each workstream an outline, to be named inside it; under seven
+           rows tall four of them are a tangle, and the name stands alone */
+        for (const ft of plate.features) {
+          if (ft.kind !== "tile") continue;
+          const { x0, x1, y0, y1 } = ft.box;
+          if ((x1 - x0) * 2 * b < 7) continue;
+          const k = [at3(x0, y0, top), at3(x1, y0, top), at3(x1, y1, top), at3(x0, y1, top)];
+          for (let n = 0; n < 4; n++) stroke(k[n], k[(n + 1) % 4], 0, 0, true);
+        }
+      } else {
+        /* the page: lines of writing with the words left out. A rule across
+           every other row, each word a run of it and each space a bare cell;
+           a line starts a margin in from the plate's edge and ends where it
+           ends, a few of them short. Laid out on the whole face, whatever
+           the plate above hides, so opening the stack uncovers the same
+           page. */
+        const [cx, cy] = at3(SIDE / 2, SIDE / 2, top);
+        const mid = Math.floor(cy);
+        const margin = Math.max(2, Math.round(2.5 * b));
+        for (let r = Math.ceil(cy - SIDE * b); r <= Math.floor(cy + SIDE * b); r++) {
+          const j = r - mid;
+          if (j % 2 !== 0) continue;
+          const half = 3 * (SIDE * b - Math.abs(r + 0.5 - cy)) - margin;
+          const c0 = Math.ceil(cx - half - 0.5);
+          const width = Math.floor(cx + half - 0.5) - c0 + 1;
+          if (width < 12) continue;
+          const short = hash2(j, 3, 7) < 0.3;
+          const len = Math.round(
+            width * (short ? 0.4 + 0.25 * hash2(j, 1, 7) : 0.84 + 0.16 * hash2(j, 2, 7))
+          );
+          for (let n = 0, w = 0; len - n >= 2; w++) {
+            const run = Math.min(len - n, 3 + Math.floor(hash2(j, w, 11) * 8));
+            /* the part of a word the plate above leaves in sight; under
+               three cells of it would be a stray mark, and is not set */
+            const seen: number[] = [];
+            for (let k = 0; k < run; k++) {
+              const c = c0 + n + k;
+              if (inside(c, r) && lies(hits[at(c, r)], 1)) seen.push(c);
+            }
+            if (seen.length >= 3) for (const c of seen) put(c, r, "─", 1, 1);
+            n += run + 1 + (hash2(j, w, 13) < 0.2 ? 1 : 0);
+          }
+        }
+      }
+    }
+  }
+
   /* each workstream's name across the middle of its block, where it fits */
+  let teamNamed = false;
   {
     const pf = plateFrame(f, pose, 0);
     const tiles = PLATES[0].features.filter((ft) => ft.kind === "tile");
     /* a tile's middle row is its widest: six columns a unit of its side */
     const room = Math.floor((tiles[0].box.x1 - tiles[0].box.x0) * 6 * b) - 3;
     const names = tiles.map((ft) => ft.label.replace(/^Creative /, "").toUpperCase());
-    if (Math.max(...names.map((n) => n.length)) + 2 <= room)
+    teamNamed = Math.max(...names.map((n) => n.length)) + 2 <= room;
+    if (teamNamed)
       tiles.forEach((ft, i) => {
         const mid = project(
           pf,
@@ -348,10 +459,25 @@ export function rasterise(
           if (h && h.plate === 0 && h.face === "top") put(c0 + n, r, s[n], 0, 2);
         }
       });
+    else if (spare)
+      /* spare, too small to name them here: a cross where each one is, and
+         their names in the list beside the plate */
+      for (const ft of tiles) {
+        const mid = project(
+          pf,
+          (ft.box.x0 + ft.box.x1) / 2,
+          (ft.box.y0 + ft.box.y1) / 2,
+          PLATES[0].top
+        );
+        const [c, r] = [Math.floor(mid[0]), Math.floor(mid[1])];
+        const h = inside(c, r) ? hits[at(c, r)] : null;
+        if (h && h.plate === 0 && h.face === "top") put(c, r, "+", 0, 2);
+      }
   }
 
   /* -- the agents' board: its rim and its traces, in box-drawing -------- */
 
+  let toolsNamed = false;
   {
     const pf = plateFrame(f, pose, 2);
     const plate = PLATES[2];
@@ -370,7 +496,9 @@ export function rasterise(
         if (h && h.plate !== 2) return;
         if (onBoard) {
           if (!h || h.face !== "top" || featureAt(plate, h.x, h.y)) return;
-        } else if (h && h.face !== "top") return;
+        } else if (h && h.face !== "top" && !spare) return;
+        /* (spare leaves the board's wall bare, so its rim may stand on it:
+           the near edges run whole) */
         put(c, r, joint(prev, cur, next), 2, level);
       });
     };
@@ -382,12 +510,12 @@ export function rasterise(
         [0, SIDE],
       ],
       true,
-      1,
+      spare ? 0 : 1,
       false
     );
-    for (const tr of plate.traces) lay(tr.pts, false, 1, true);
+    for (const tr of plate.traces) lay(tr.pts, false, spare ? 0 : 1, true);
 
-    if (written) {
+    if (written || spare) {
       /* the chip and the four modules as ruled frames, each tool's name
          inside where every one of them fits, else two letters of it */
       const parts = plate.features.filter((ft) => ft.kind === "chip" || ft.kind === "module");
@@ -415,6 +543,7 @@ export function rasterise(
         const words = linesOf(ft);
         return words.every((w, n) => w.length <= roomAt(ft, rowOf(n, words.length)));
       });
+      toolsNamed = named;
       for (const ft of parts) {
         /* short of room, two letters each: a name's first two, or the
            initials of a name of two words, so no two frames read alike */
@@ -449,7 +578,25 @@ export function rasterise(
 
   /* -- what crosses the gaps: a dotted column from plate to plate -------- */
 
-  {
+  if (spare) {
+    /* two of them, plumb under the plates' outer corners: one stack */
+    const edges = [Math.round(ox - SIDE * 3 * b), Math.round(ox + SIDE * 3 * b) - 1];
+    for (const i of [0, 1] as const) {
+      const under = PLATES[i + 1];
+      const from = Math.floor(project(plateFrame(f, pose, i), 0, SIDE, 0)[1]) + 1;
+      const to = Math.floor(
+        project(
+          plateFrame(f, pose, (i + 1) as 1 | 2),
+          0,
+          SIDE,
+          under.body[under.body.length - 1].z1
+        )[1]
+      );
+      for (let r = from; r < to; r++)
+        for (const c of edges)
+          if (inside(c, r) && !hits[at(c, r)] && ch[at(c, r)] === " ") put(c, r, ":", i, 0);
+    }
+  } else {
     const every = Math.max(4, Math.round(6 * b));
     for (let c = Math.max(0, Math.floor(box.x0)); c <= Math.min(cols - 1, Math.ceil(box.x1)); c++) {
       if ((((c - ox) % every) + every) % every !== 0) continue;
@@ -474,7 +621,7 @@ export function rasterise(
   const floors = [0, 1, 2].map((i) =>
     Math.floor(project(plateFrame(f, pose, i as 0 | 1 | 2), 0, SIDE, 0)[1])
   );
-  {
+  if (!spare) {
     const corner = Math.round(ox - SIDE * 3 * b);
     const lc = corner - 5;
     /* a rung every unit of height, where a unit is a whole number of rows */
@@ -498,6 +645,9 @@ export function rasterise(
     const pitchRows = floors[1] - floors[0];
     const longest = Math.max(...PLATES.map((p) => p.holds.length));
     const lists = pitchRows - 1 >= 1 + longest && floors[2] + longest + 1 < rows;
+    /* spare: what a plate holds is set once. The team's and the agents' are
+       on the plates, so they are listed only when they did not fit there */
+    const onPlate = [teamNamed, false, toolsNamed];
     PLATES.forEach((plate, i) => {
       const tone = i as Tone;
       const r = floors[i];
@@ -509,8 +659,8 @@ export function rasterise(
       c += plate.step.length + 2;
       type(c, r, plate.name, tone, 1);
       c += plate.name.length + 2;
-      type(c, r, String(plate.holds.length), tone, 2);
-      if (lists)
+      if (!spare) type(c, r, String(plate.holds.length), tone, 2);
+      if (lists && !(spare && onPlate[i]))
         plate.holds.forEach((held, n) => {
           type(col + 3, r + 1 + n, n === plate.holds.length - 1 ? "└" : "├", tone, 0);
           type(col + 5, r + 1 + n, held, tone, 1);
@@ -526,13 +676,15 @@ export function rasterise(
   let cursor: [number, number] = [fc, fr];
   {
     const facts = factsOf(truth);
-    const lines: [string, string][] = [
-      ["STACK", `${facts.plates} plates  ${facts.side} x ${facts.side}`],
-      ["OPEN", `${facts.openPct} %`],
-      ["PITCH", `${facts.pitch.toFixed(2)} u`],
-      ["HEIGHT", `${facts.height.toFixed(2)} u`],
-      ["GRID", `${cols} x ${rows}`],
-    ];
+    const lines: [string, string][] = spare
+      ? [["OPEN", `${facts.openPct} %`]]
+      : [
+          ["STACK", `${facts.plates} plates  ${facts.side} x ${facts.side}`],
+          ["OPEN", `${facts.openPct} %`],
+          ["PITCH", `${facts.pitch.toFixed(2)} u`],
+          ["HEIGHT", `${facts.height.toFixed(2)} u`],
+          ["GRID", `${cols} x ${rows}`],
+        ];
     lines.forEach(([k, v], n) => {
       type(fc, fr + n, k, 2, 0);
       type(fc + 8, fr + n, v, 2, 1);
@@ -552,7 +704,7 @@ export function rasterise(
     cursor = [fc, row + 2];
   }
   /* the cursor is the one cell that may blink; it counts as lit */
-  ch[at(cursor[0], cursor[1])] = written ? "_" : "█";
+  ch[at(cursor[0], cursor[1])] = setting === "blocks" ? "█" : "_";
   st[at(cursor[0], cursor[1])] = 255;
 
   /* -- runs of one style a row ------------------------------------------- */

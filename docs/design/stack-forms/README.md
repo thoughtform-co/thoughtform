@@ -22,7 +22,7 @@ A self-contained lab, as the repo rules for new design: its own tokens, its own 
 - One folder a direction (`wire/`, `print/`, `readout/`, `swarm/`, `phosphor/`), each with its own stylesheet and class prefix. An iteration lives in its direction's folder.
 - **The honesty rule.** These manners lean on dense telemetry, so every number and word on screen is true: a plate's index and name, what it holds, the stack's geometry, the live `open` value, a real count of dots or characters. No invented serials.
 - No WebGL: the repo's lint cap has no headroom. The dot drawings are Canvas 2D on a whole-pixel lattice, deterministic, so a still is repeatable.
-- `node scripts/capture-stack-forms.mjs --port 3019 [--only …] [--open 0,0.5,1] [--sizes …] [--sheet] [--twice]` shoots the stills in `round-01/` (all nine drawings unless `--only` names some).
+- `node scripts/capture-stack-forms.mjs --port 3019 [--only …] [--open 0,0.5,1] [--sizes …] [--sheet] [--twice]` shoots the stills in `round-01/` (every drawing unless `--only` names some; `--out` names another folder).
 
 ## Round 01: five directions
 
@@ -51,6 +51,19 @@ My read of "Christmas decoration": green, gold and white together, a glittering 
 
 S2 and S3 were not touched in round 02.
 
+## Round 03: two more
+
+The owner's read of round 02 (2026-10-13): "S4·B Swarm, banded but use the colors like S4 Swarm … but with the animations", and of S5·B: "i think this needs not the 'evals' as a material; more minimalistic."
+
+|                                  | id           | What changed                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S4·D Swarm, banded, in tones** | `swarm-d`    | S4·B's order (dots in rows, a whole edge to every plate, the axis with arrowheads, outlined tags) in S4's colours: the team green, the layer gold with a white-hot core, the agents bone. S4's motion, kept to the rows: the team's rows sway and one larger dot walks each lane, dots fall off the two front edges in files, a file of gold dots goes down the axis, runners step along the agents' traces. The layer does not move. |
+| **S5·C Phosphor, spare**         | `phosphor-c` | Nothing is filled. Each plate is its outline. The team is four outlined workstreams, each named once. The layer is a ruled page: gold rules of uneven length, lines of writing with the words left out; context, skills and evals are set once, in the list beside it. The agents are ruled frames with the tool's name inside. About half the characters of S5·B (1 279 against 2 420, half open at 1920×1247).                      |
+
+Two readings these are built on. He asked for S4's colours and motion back, so what read as "Christmas" in S4 is taken to be the random scatter, the glitter and the starfield: S4·D has none of the three. And "not the evals as a material" is taken to mean the layer should not be textured with its own words.
+
+Stills: `round-03/`, with one sheet that sets each family side by side (S4, S4·B, S4·D over S5, S5·B, S5·C).
+
 ## Checked
 
 - By eye at 1920×1247 in three poses (closed, half, opened), then at 1470×830 and 1280×720 half open: every drawing reads as three stacked plates.
@@ -64,6 +77,8 @@ S2 and S3 were not touched in round 02.
 - **S5 and S5·B, closed:** the drawing fills about half the frame, and S5·B's layer has a softer outline than S5's blocks.
 - **S5·B:** tool names give way to two letters below the largest size, and a name is not set where the layer covers part of it.
 - **Motion was judged from measurements and stills,** not by watching: S4's falling dots are the thing to look at live.
+- **S4·D's falling dots are the thing to watch.** They fall in formation, but green files cross the gold layer's wings, and fully opened there are 32 drops a gap. `FALL.streams` and `FALL.drops` at the top of `swarm/tones.ts` thin them. At 1280×720 the four workstreams merge into one green mass.
+- **S5·C falls back to lists at smaller sizes.** At 1470×830 the workstream outlines go and the names stand alone; at 1280×720 each workstream is a `+` and the names move to the list. Tool names shorten to two letters at both. A tool whose frame is partly behind the layer is drawn without its name. Seen small, it is as faint as S4·B.
 - Dark only. Nothing below 961px was looked at. Nothing is wired into the travelling proposal copy; that follows a pick.
 
 - **S4·B and S4·C are the dimmest drawings on the page.** Seen small, beside the others, they nearly disappear. That is the brief ("more minimalistic") taken at its word, and it sits close to what the owner called "too boring" in his hologram notes. Their brightness is one number each.

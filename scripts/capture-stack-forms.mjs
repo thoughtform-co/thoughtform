@@ -7,7 +7,7 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-stack-forms.mjs --port 3019
- *     [--only wire,wire-b,print,…]         some of them (default: all nine)
+ *     [--only wire,wire-b,print,…]         some of them (default: all of them)
  *     [--open 0,0.5,1]                     the poses (0 closed, 1 opened)
  *     [--sizes 1920x1247,1470x830,1280x720]
  *     [--dpr 1]
@@ -29,7 +29,10 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3019");
 const OUT = argOf("--out", "docs/design/stack-forms/round-01");
-const ONLY = argOf("--only", "wire,wire-b,print,readout,swarm,swarm-b,swarm-c,phosphor,phosphor-b")
+const ONLY = argOf(
+  "--only",
+  "wire,wire-b,print,readout,swarm,swarm-b,swarm-c,swarm-d,phosphor,phosphor-b,phosphor-c"
+)
   .split(",")
   .filter(Boolean);
 const OPEN = argOf("--open", "0,0.5,1").split(",").map(Number);

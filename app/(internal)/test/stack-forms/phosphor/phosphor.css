@@ -157,3 +157,11 @@
     0 0 3px color-mix(in srgb, var(--sf-gold) 90%, transparent),
     0 0 10px color-mix(in srgb, var(--sf-gold) 40%, transparent);
 }
+
+/* ---- S5·C, spare: everything is a stroke or a rule, and a third of them
+   sit on the last two px of their row, so the raster that darkens those two
+   px is left off: it would dim one stroke in three. ---- */
+
+.sfx--s .sfx-grid::after {
+  content: none;
+}

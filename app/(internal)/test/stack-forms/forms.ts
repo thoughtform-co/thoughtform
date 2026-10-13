@@ -8,18 +8,24 @@
    minimalistic"; S5 "the middle panel looks a bit too much like Lego"; and
    of all of them, "it would be amazing if it would fit the aesthetic of our
    Arc 3D thing on our homepage"). An iteration sits right after the
-   direction it comes from and carries its code with a letter. */
+   direction it comes from and carries its code with a letter.
+
+   Round three, on his read of round two (2026-10-13): S4·B "but use the
+   colors like S4 Swarm … but with the animations" (S4·D); S5·B "needs not
+   the 'evals' as a material; more minimalistic" (S5·C). */
 
 import type { ComponentType } from "react";
 
 import type { FormProps } from "./model";
 import { Phosphor } from "./phosphor/Phosphor";
+import { PhosphorSpare } from "./phosphor/PhosphorSpare";
 import { PhosphorWritten } from "./phosphor/PhosphorWritten";
 import { Print } from "./print/Print";
 import { Readout } from "./readout/Readout";
 import { Swarm } from "./swarm/Swarm";
 import { SwarmBands } from "./swarm/SwarmBands";
 import { SwarmQuiet } from "./swarm/SwarmQuiet";
+import { SwarmTones } from "./swarm/SwarmTones";
 import { Wire } from "./wire/Wire";
 import { WireBare } from "./wire/WireBare";
 
@@ -31,8 +37,10 @@ export type FormId =
   | "swarm"
   | "swarm-b"
   | "swarm-c"
+  | "swarm-d"
   | "phosphor"
-  | "phosphor-b";
+  | "phosphor-b"
+  | "phosphor-c";
 
 export interface Form {
   id: FormId;
@@ -117,6 +125,16 @@ export const FORMS: readonly Form[] = [
     C: SwarmQuiet,
   },
   {
+    id: "swarm-d",
+    code: "S4·D",
+    name: "Swarm, banded, in tones",
+    of: "swarm",
+    made: "Rows of dots, three tones, moving",
+    note: "The banded order with S4's own colours and motion: green, gold and bone, and dots that travel.",
+    after: "The Arc sphere, dot matrices",
+    C: SwarmTones,
+  },
+  {
     id: "phosphor",
     code: "S5",
     name: "Phosphor",
@@ -134,6 +152,16 @@ export const FORMS: readonly Form[] = [
     note: "The layer is what was written down, so it is set in words, not in bricks.",
     after: "Retro terminals",
     C: PhosphorWritten,
+  },
+  {
+    id: "phosphor-c",
+    code: "S5·C",
+    name: "Phosphor, spare",
+    of: "phosphor",
+    made: "Few characters",
+    note: "The layer is no longer filled with its own words: each plate is set with the least type that still reads.",
+    after: "Retro terminals",
+    C: PhosphorSpare,
   },
 ];
 

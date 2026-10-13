@@ -17,8 +17,8 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  * Drawings of the three-plate stack: five directions, and the iterations on
  * three of them (an iteration's id is its direction's with a letter).
  *
- *   ?v=wire|wire-b|print|readout|swarm|swarm-b|swarm-c|phosphor|phosphor-b
- *                                          one drawing alone
+ *   ?v=wire|wire-b|print|readout|swarm|swarm-b|swarm-c|swarm-d|
+ *      phosphor|phosphor-b|phosphor-c      one drawing alone
  *   ?open=0..1                             the pose (0 closed, 1 opened; default 0.5)
  *   ?still=1                               no chrome, no motion (the capture's)
  */

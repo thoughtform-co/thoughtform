@@ -164,3 +164,31 @@
 .sfs-plain[data-lit] span:nth-child(-n + 2) {
   color: var(--sf-gold);
 }
+
+/* ---- S4·D, banded in tones: the same tags, each in its plate's tone ---- */
+
+.sfst-tag {
+  --tone: var(--sf-bone);
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+.sfst-tag[data-tone="green"] {
+  --tone: var(--sf-green);
+}
+.sfst-tag[data-tone="gold"] {
+  --tone: var(--sf-gold);
+}
+.sfst-tag__box {
+  padding: 3px 9px 2px;
+  border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
+  background: color-mix(in srgb, var(--tone) 7%, var(--sf-void));
+  color: var(--tone);
+  letter-spacing: 0.14em;
+}
+.sfst-tag__name {
+  color: var(--sf-ink-3);
+}
