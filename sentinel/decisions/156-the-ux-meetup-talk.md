@@ -1,8 +1,8 @@
 # ADR-156: The UX meetup talk is a cut of the workshop's third house cut
 
-- **Status:** Proposed (2026-10-13, owner). Built and guarded on branch `feat/arcs-ux-meetup`
-  (cut from `origin/main`), not pushed; flips to Accepted once the owner has read the page
-  live, which is Thursday 15 October in the room.
+- **Status:** Shipped (2026-10-13, owner: "push to main"), two days before the talk, as the
+  first cut stood. Flips to Accepted once the owner has read the page live, which is
+  Thursday 15 October in the room.
 - **Surface:** `/arcs/thoughtform/ux-meetup` (an OWN ROUTE,
   `app/(marketing)/arcs/thoughtform/ux-meetup/**`, `lib/arcs/content/ux-meetup.ts`); the new
   shared record `lib/arcs/content/shared/in-the-pocket.ts` and `ap-hogeschool.ts` reading it;
@@ -68,8 +68,8 @@ nowhere else.
   also a file in its folder was put to him and he chose the page.
 - **No station is dropped.** A talk that wanted hero, About and the Arc alone would fork the
   prototype, the sheet and the root class together (ADR-139). First cut keeps the spine.
-- **The closing beat does not point at the handshake yet.** It joins the tail only if the
-  owner has signed off that file's words (ADR-157).
+- **The closing beat does not point at the handshake.** That file went live the same day
+  (ADR-157); whether the talk ends on it is the owner's call and is not built.
 
 ## Verification
 
