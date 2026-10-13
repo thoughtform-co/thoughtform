@@ -19,7 +19,6 @@ import {
 import { MUSINGS_COPY_BANS } from "@/lib/musings/copyLaw";
 import { publishedPosts } from "@/lib/musings/registry";
 import { footerColumns } from "@/lib/site/footer-nav";
-import { CONTACT_EMAIL } from "@/lib/site/socials";
 
 /**
  * The handshake's guard (ADR-157).
@@ -169,8 +168,8 @@ describe("the handshake (ADR-157)", () => {
 
   /**
    * ⚠ WHAT IT SAYS ABOUT ITSELF IS TRUE. The header is read off the module,
-   * the contact is the site's public address, the canonical address is the
-   * route, and the route serves exactly this text.
+   * the contact is his own address (his ruling, 2026-10-13), the canonical
+   * address is the route, and the route serves exactly this text.
    */
   it("serves one text, and its header fields are the record's", async () => {
     const field = (key: string) =>
@@ -182,7 +181,7 @@ describe("the handshake (ADR-157)", () => {
     expect(field("Version")).toBe(String(HANDSHAKE.version));
     expect(field("Canonical")).toBe(HANDSHAKE.canonical);
     expect(field("Contact")).toBe(HANDSHAKE.contact);
-    expect(HANDSHAKE.contact, "the site's own public address").toBe(CONTACT_EMAIL);
+    expect(HANDSHAKE.contact, "his own address, by his ruling").toBe("vince@thoughtform.co");
     expect(HANDSHAKE.canonical).toBe("https://thoughtform.co/handshake.txt");
     expect(HANDSHAKE.issued).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -334,13 +333,13 @@ describe("the agents file (ADR-157)", () => {
 
   /**
    * ⚠ EVERY FIELD IS A RECORD THE SITE ALREADY KEEPS. The contact is the
-   * public address, the description is the line `/llms.txt` carries, the
+   * one the handshake gives, the description is the line `/llms.txt` carries, the
    * handshake is the handshake's own canonical address, and every address in
    * the file is the site's: a page the sitemap lists, or one of the machine
    * files at the root.
    */
   it("restates the site's records, and points only at what is public", async () => {
-    expect(values("Site-Contact")).toEqual([CONTACT_EMAIL]);
+    expect(values("Site-Contact")).toEqual([HANDSHAKE.contact]);
     expect(values("Handshake")).toEqual([HANDSHAKE.canonical]);
     expect(values("Canonical")).toEqual([AGENTS_TXT.canonical]);
     const index = await getLlms().text();

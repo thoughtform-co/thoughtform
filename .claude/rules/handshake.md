@@ -34,6 +34,8 @@ paths:
   `app/sitemap.ts`.
 - **`/llms.txt` lists what the sitemap lists**, and reads the musings by path:
   its row in `next.config.mjs` `outputFileTracingIncludes` stays.
+- **The contact is the owner's own address** (his ruling, 2026-10-13), in the
+  letter and in the agents file. Not the footer's mailbox.
 - **`/agents.txt` restates and never decides.** Its closed paths are
   `app/robots.ts`; its contact, description, sitemap and handshake address are
   the site's records, and the test holds each. Change the record, then the file.

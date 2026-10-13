@@ -35,8 +35,8 @@ export const HANDSHAKE = {
   /** ISO date. The day it was first read aloud, at the UX Gent meetup. */
   issued: "2026-10-15",
   canonical: "https://thoughtform.co/handshake.txt",
-  /** The site's public address (`lib/site/socials.ts`), restated: zero imports. */
-  contact: "hello@thoughtform.co",
+  /** His own address, by his ruling (2026-10-13): the one who signs answers. */
+  contact: "vince@thoughtform.co",
 } as const;
 
 const HEADER: readonly (readonly [string, string])[] = [

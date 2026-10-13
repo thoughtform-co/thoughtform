@@ -43,8 +43,8 @@ const SITE = "https://thoughtform.co";
 const DESCRIPTION =
   "Vince Buyssens' practice in Antwerp. AI isn't software to command, but an intelligence to navigate; Thoughtform helps teams build that relationship.";
 
-/** `lib/site/socials.ts` `CONTACT_EMAIL`, restated. */
-const CONTACT = "hello@thoughtform.co";
+/** `lib/handshake/text.ts` `HANDSHAKE.contact`, restated. */
+const CONTACT = "vince@thoughtform.co";
 
 /** `app/robots.ts`, restated in its order. */
 const DISALLOW: readonly string[] = ["/prototypes/", "/admin", "/orrery", "/astrogation", "/api/"];

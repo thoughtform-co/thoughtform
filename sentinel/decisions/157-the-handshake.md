@@ -62,6 +62,12 @@ a line naming the handshake. `robots.ts` is untouched; it already allows every c
 second version gives the first a URL of its own; until there is one, the file says nothing
 about earlier versions.
 
+**The contact is his own address.** Owner, 2026-10-13: "contact is vince@thoughtform.co".
+The first two days it carried the footer's mailbox, which was the drafter's choice. The
+letter is signed by one person and that person answers it; the agents file restates the
+letter's address. The footer's mailbox (`CONTACT_EMAIL`) is a different record and did not
+move. Changed before the date the letter carries, so it is still version 1.
+
 ## The second pass (2026-10-13): read against its sources, and by its readers
 
 The owner, on the first cut: the format is in good shape; go back to the vault, the canon,
@@ -144,7 +150,7 @@ early; no convergence" and advises waiting. What is settled sits around it: `rob
 (RFC 9309) and the sitemap, and, less so, `/llms.txt`.
 
 **What it holds.** The draft's header and site fields (name, address, the site's own line
-as `/llms.txt` has it, the public contact). Four keys of its own that say where the other
+as `/llms.txt` has it, the letter's contact). Four keys of its own that say where the other
 files are: `Canonical`, `Sitemap`, `Llms-Txt` and `Handshake`, with one sentence on what the
 handshake is, the sentence `/llms.txt` already carries. `Allow: /` and the closed paths of
 `app/robots.ts`, restated in their order. One bare `Agent: *`: no agent is named, so none is
@@ -233,7 +239,8 @@ people say, redirects.
   his word.
 - If he rewrites more than a line or two, one more cold read before it ships, so that what
   the letter says about how it was made stays true.
-- The contact is the site's public address; he may want another.
+- The footer and the sessions page still answer on `hello@thoughtform.co`. Whether the
+  site has one address or two is his to say.
 - The agents file's three comment blocks are the drafter's. The last is the line
   `/llms.txt` already carries; the other two are his to keep, rewrite or strike.
 - The agents file names the handshake, so the two shipped together.
