@@ -10,10 +10,15 @@ import type { ReactNode } from "react";
  *
  * The whole proposal through the real arc shell. Only its first two sections
  * are drawn here by hand: "AI capability your teams own." opens on the closed
- * stack (`StackHero`), which arrives opened in Navigate, Encode, Build and
- * closes there as it does on the proposal, then hands over to "Marketing
- * first, then every team." as it does on the proposal. Every other section is
- * the proposal's own record, by reference.
+ * stack, which arrives opened in Navigate, Encode, Build and closes there as
+ * it does on the proposal, then hands over to "Marketing first, then every
+ * team." as it does on the proposal. Every other section is the proposal's
+ * own record, by reference.
+ *
+ * The opening has two figures (owner, same day: "a combination where you can
+ * really see the lines connecting to the different parts of the stack"): the
+ * proposal's flow with the stack where its hub was (`StackFlow`, the
+ * default), and a number and a name a plate (`StackHero`, `?hero=index`).
  *
  * Internal-only: the sent page, its record and its listing are untouched.
  */

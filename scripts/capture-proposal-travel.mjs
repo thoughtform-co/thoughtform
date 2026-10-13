@@ -15,6 +15,7 @@
  *   node scripts/capture-proposal-travel.mjs --port 3019 --page travel
  *     [--sizes 1280x720,1470x830,1920x1247] [--themes dark,light]
  *     [--out docs/design/proposal-kit/round-02/travel] [--only arrive-50,pin]
+ *     [--hero index]   the opening's other figure (the copy only)
  */
 
 import { chromium } from "@playwright/test";
@@ -95,10 +96,11 @@ const SIZES = argOf("--sizes", "1280x720,1470x830,1920x1247")
   .split(",")
   .map((s) => s.split("x").map(Number));
 const THEMES = argOf("--themes", "dark,light").split(",");
+const HERO = argOf("--hero", "");
 const URL =
   PAGE === "production"
     ? `http://localhost:${PORT}/arcs/x-bionic/proposal`
-    : `http://localhost:${PORT}/test/proposal-travel`;
+    : `http://localhost:${PORT}/test/proposal-travel${HERO ? `?hero=${HERO}` : ""}`;
 
 /* Each stop is [name, section, t]: for `arrive`, t is q (0 when the runway's
    top is at the screen's bottom, 1 when it pins); for a pinned section, t is

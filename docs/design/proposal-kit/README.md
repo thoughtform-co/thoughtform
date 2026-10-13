@@ -138,3 +138,46 @@ Stills: `round-02/job/` and `round-02/contact-job-*.png`.
 - Nothing below 961px was looked at.
 - Reduced motion shows the closed stack in section 1 and again in the steps; no travel.
 - The copy's top-right readout and the menu are the proposal's own; nothing about them changed.
+
+---
+
+# Round 03 (2026-10-13)
+
+The owner's read of the stack-first opening: "I like the travel but I think we can make it a bit smaller. I think we lost the context from the left and right sides. Let's make a combination where you can really see the lines connecting to the different parts of the stack."
+
+Two figures answer it, on the same copy of the proposal. Both are the same donor to the arrival, so the travel is the one he liked; nothing after section 1 changed.
+
+```
+http://localhost:3019/test/proposal-travel
+http://localhost:3019/test/proposal-travel?hero=index
+```
+
+## H1 · The flow through the stack (the default)
+
+`components/xb-proposal/stack/StackFlow.tsx`. Read as: the left and the right of the sent page's flow are the context that went missing. They return beside the stack, which takes the place of the ringed hub.
+
+- **Left, your team**: the four workstreams on one bus, which runs level into the **team's plate**, the stack's top.
+- **The layer**: the middle plate, tied to its tab by one gold line down the gutter the way out leaves free.
+- **Right, Claude Enterprise**: the **agents' plate**, the stack's bottom, runs level out onto the bus that feeds the four tool cards.
+- In high on the left, out low on the right: the two runs and their junctions turn onto each other about the frame's centre.
+- The chips, the cards, the tabs and every word are production's, by reference. The chips are as wide as the cards here, so the two columns are one width.
+
+## H2 · Index and names (`?hero=index`)
+
+`StackHero.tsx`, round 02's figure. Read as: the numbers and the names were too far from the stack to belong to it. Each row now sits on a level line to the plate it names, in that plate's tone, and the two brackets that held the columns are gone.
+
+## Measured
+
+- **Smaller**: the stack's box is 436px against 560 at 1920×1247 and 397 against 500 at 1470×830 in H1 (a fifth less); 440 and 420 in H2.
+- **The lines meet the plates**: every line ends on the middle of its plate's corner edge within 0.07px, both figures, at 1280×720, 1470×830 and 1920×1247. A plate's corner edge is plumb in this projection, so a level line meets it square on (`stack/heroLayouts.ts`, held by `tests/lib/proposal-kit.test.ts`).
+- **The sent page did not change**: its stills from the pin onward are pixel-identical to round 02's baseline. The one edit to a shipped file is three lines inside `EmbedStack`'s opt-in arrival.
+
+One thing added beyond the ask: the lines that touch the stack let go as it leaves. The stack holds its place on screen while section 1 scrolls away, so a line left standing would point at nothing; they are gone within the first twenty-fifth of the way and back when the reader returns.
+
+Stills: `round-03/flow/` and `round-03/index/` (section 1 at rest, the arrival at a quarter, a half and three quarters, the pin; three viewports, both themes). Re-shoot with `node scripts/capture-proposal-travel.mjs --port 3019 --page travel --out <dir>`, adding `--hero index` for H2.
+
+## Not done in round 03
+
+- The layer's three parts (Context, Skills, Evals) are not lettered in H1; the sent page's flow letters them on its rings.
+- Nothing below 961px was looked at, in either figure.
+- At 1280×720 the tab over the tools is wider than its column by 25px a side (it is at the 12px floor there).

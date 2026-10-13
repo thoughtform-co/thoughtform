@@ -6,34 +6,35 @@
    intelligence artifact to travel consistently across three sections").
 
    One figure under the title: the three plates of the steps below, closed
-   into one stack and centred in four corner brackets; an index on its left
-   and the three names on its right, each level with the plate it names and
-   linking to its step. The layer is the one lit row.
+   into one stack and centred in four corner brackets; a number on its left
+   and a name on its right for each plate, both on a level line to the plate
+   they name (owner, same day: "you can really see the lines connecting to
+   the different parts of the stack"). The layer is the one lit row. Each
+   name links to its step.
 
-   The plates are the ones `NetworkPlug` draws (the copy that takes its
-   projection as a parameter), through `EmbedStack`'s own projection, so the
-   stack here is the stack there. This section is the DONOR of the arrival:
-   it holds still and reads no scroll; the steps' section draws the stack on
-   its way down and stamps `data-handed` here while it does
-   (`stack/travel.ts`). Nothing idles. */
+   Everything but the title is seated in the stack's own units, over the
+   donor's crop (`heroLayouts.ts`), so a line and the plate it meets cannot
+   drift. The stack is the arrival's donor (`ClosedStack`); the lines let go
+   as it leaves (`--sh-away`, written by the steps' section). Nothing
+   idles. */
 
 import type { CSSProperties } from "react";
 
-import { makeIso } from "../iso";
+import { pathOf, type Pt } from "../kit/trace";
 import { MastheadTitle } from "../Masthead";
-import { PLATES } from "../network/NetworkPlug";
 import { TITLE } from "../plug/PlugFlow";
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 
-import { HERO_BOX, STACK } from "./travel";
+import { ClosedStack } from "./ClosedStack";
+import { inCrop, INDEX as L, PORTS } from "./heroLayouts";
+import { HERO_BOX } from "./travel";
 
-const iso = makeIso(STACK.unit, STACK.ox, STACK.oy);
-
-/* The first and the last plate's top-face centres, as fractions of the
-   figure's height: a column's three rows are spread between exactly these,
-   so each row is level with the plate it names. */
-const at = (i: number) => (STACK.ref[1] + i * STACK.closed - HERO_BOX.y) / HERO_BOX.h;
-const ROWS = { "--y0": at(0).toFixed(4), "--y2": at(2).toFixed(4) } as CSSProperties;
+const seat = (p: Pt) => {
+  const [x, y] = inCrop(p);
+  return { "--px": x.toFixed(4), "--py": y.toFixed(4) } as CSSProperties;
+};
+/** A line's end on a plate: a small square in the plate's own tone. */
+const TAP = 5;
 
 export function StackHero() {
   return (
@@ -44,10 +45,33 @@ export function StackHero() {
         className="sh-fig"
         aria-label="One stack of three plates: your team, the layer it writes, and the agents that run on it"
       >
-        <div className="sh-side" aria-hidden>
-          <ol className="sh-col sh-index" style={ROWS}>
-            {PLUG_STEPS.map((st) => (
-              <li key={st.id} data-tone={st.tone}>
+        <div className="sh-seat">
+          <div className="sh-stage">
+            {(["tl", "tr", "br", "bl"] as const).map((c) => (
+              <i key={c} className="sh-corner" data-c={c} aria-hidden />
+            ))}
+            <ClosedStack />
+          </div>
+
+          <svg
+            viewBox={`${HERO_BOX.x} ${HERO_BOX.y} ${HERO_BOX.w} ${HERO_BOX.h}`}
+            className="sh-leads"
+            aria-hidden
+          >
+            {L.leads.map((l, i) => (
+              <g key={i} data-tone={PLUG_STEPS[i].tone}>
+                <path d={pathOf(l.left)} />
+                <path d={pathOf(l.right)} />
+                {[PORTS[i].left, PORTS[i].right].map(([x, y], n) => (
+                  <rect key={n} x={x - TAP / 2} y={y - TAP / 2} width={TAP} height={TAP} />
+                ))}
+              </g>
+            ))}
+          </svg>
+
+          <ol className="sh-col sh-index" aria-hidden>
+            {PLUG_STEPS.map((st, i) => (
+              <li key={st.id} data-tone={st.tone} style={seat(L.index[i])}>
                 <svg viewBox="0 0 34 20" className="sh-mini">
                   <path d="M17 1.5L32.5 10L17 18.5L1.5 10Z" />
                 </svg>
@@ -55,33 +79,15 @@ export function StackHero() {
               </li>
             ))}
           </ol>
-        </div>
 
-        <div className="sh-stage">
-          {(["tl", "tr", "br", "bl"] as const).map((c) => (
-            <i key={c} className="sh-corner" data-c={c} aria-hidden />
-          ))}
-          <svg
-            viewBox={`${HERO_BOX.x} ${HERO_BOX.y} ${HERO_BOX.w} ${HERO_BOX.h}`}
-            className="sh-svg"
-            role="img"
-            aria-label="Three plates closed into one stack"
-          >
-            {/* painted bottom plate first: the upper plate sits in front */}
-            {PLATES.map((Plate, i) => ({ Plate, i }))
-              .reverse()
-              .map(({ Plate, i }) => (
-                <g key={i} transform={`translate(0 ${i * STACK.closed})`}>
-                  <Plate iso={iso} />
-                </g>
-              ))}
-          </svg>
-        </div>
-
-        <div className="sh-side">
-          <ol className="sh-col sh-names" style={ROWS}>
-            {PLUG_STEPS.map((st) => (
-              <li key={st.id} data-tone={st.tone} data-lit={st.tone === "gold" ? "" : undefined}>
+          <ol className="sh-col sh-names">
+            {PLUG_STEPS.map((st, i) => (
+              <li
+                key={st.id}
+                data-tone={st.tone}
+                data-lit={st.tone === "gold" ? "" : undefined}
+                style={seat(L.names[i])}
+              >
                 <a href={`#${stepAnchor(st.id)}`}>
                   <span>{st.flow[0]}</span> <b>{st.flow[1]}</b>
                 </a>

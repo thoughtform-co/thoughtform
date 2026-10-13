@@ -1,36 +1,22 @@
-/* StackHero: the title, then one figure: the closed stack centred in four
-   corner brackets, an index on its left, the three names on its right, each
-   row level with the plate it names. On the kit's tokens (`.xb`), which the
-   proposal re-reads from the site's (`xb-in-frame.css`). */
+/* The stack-first opening, both figures: the title, then the closed stack
+   and what is tied to it. On the kit's tokens (`.xb`), which the proposal
+   re-reads from the site's (`xb-in-frame.css`).
+
+     .sh    the root of either figure, and the arrival's donor
+     .shf   StackFlow: the proposal's flow, the stack where its hub was
+     the rest   StackHero: a number and a name a plate */
 
 .sh {
   /* the plates' green, as `.es` and `.xn` name it */
   --es-green: var(--atreides-ink, #7a9e6a);
-  /* the figure's height: what the title leaves, never more than this */
-  --sh-h: 560px;
+  /* the stack's box in StackHero: what the title leaves, never more */
+  --sh-h: 440px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: clamp(20px, 3.4vh, 40px);
   height: 100%;
 }
 
-.sh-fig {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  column-gap: clamp(28px, 5vw, 96px);
-  align-items: center;
-  min-height: 0;
-  height: 100%;
-  margin: 0;
-}
-
-/* ---- the stack: a square as tall as the figure, the drawing its crop ---- */
-
-.sh-stage {
-  position: relative;
-  height: min(100%, var(--sh-h));
-  aspect-ratio: 1;
-}
 .sh-svg {
   position: absolute;
   inset: 0;
@@ -43,12 +29,100 @@
 .sh[data-handed] .sh-svg {
   visibility: hidden;
 }
+/* and the lines that touch the stack let go of it at once: the stack holds
+   its place on screen while this section scrolls away, so they are gone
+   within the first twenty-fifth of the way (`--sh-away` is the arrival's
+   clock; absent, they are simply there) */
+.sh-leads,
+.shf-port {
+  opacity: calc(1 - var(--sh-away, 0) * 25);
+}
 
 /* On this page the steps' head rises through the stack's path while the
    stack travels down, so its brief comes in once the stack has cleared it
    (`EmbedStack` writes the clock; without it the brief is simply there). */
 .es .xm__brief {
   opacity: var(--es-brief, 1);
+}
+
+/* ================================================================== */
+/* StackFlow: the proposal's frame (`plug.css`), the stack in its box  */
+/* ================================================================== */
+
+.shf {
+  /* the people's green follows the theme here, as the plate it runs into */
+  --pl-green: var(--es-green);
+}
+
+/* the stack's box, seated by the frame's own rule for a `div` */
+.shf-stage {
+  width: calc(var(--s) * 100%);
+  aspect-ratio: 1;
+}
+
+/* a chip as wide as a card: two columns of one width */
+.shf .pl-chip {
+  width: calc(var(--shf-col) * 100cqw);
+}
+
+.shf-team,
+.shf-run,
+.shf-tie {
+  fill: none;
+  stroke-width: 1;
+}
+.shf-team {
+  stroke: var(--pl-green);
+  stroke-opacity: 0.8;
+}
+.shf-run {
+  stroke: var(--xb-text-2);
+}
+/* the layer's tie: one gold hairline from its tab to its plate */
+.shf-tie {
+  stroke: var(--xb-gold);
+  stroke-opacity: 0.75;
+}
+.shf .kit-junction.shf-junction--team {
+  stroke: var(--pl-green);
+}
+.shf .kit-junction.shf-junction--run {
+  stroke: var(--xb-text-2);
+}
+
+.shf-fade {
+  transition: opacity 480ms ease var(--d, 0ms);
+}
+.pl[data-arrive]:not([data-in]) .shf-fade {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shf-fade {
+    transition: none;
+  }
+}
+
+/* ================================================================== */
+/* StackHero: the stack in four brackets, a number and a name a plate  */
+/* ================================================================== */
+
+.sh-fig {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+}
+
+/* the donor's crop on screen: everything in the figure is seated in it */
+.sh-seat {
+  position: relative;
+  height: min(84%, var(--sh-h));
+  aspect-ratio: 1;
+}
+.sh-stage {
+  position: absolute;
+  inset: 0;
 }
 
 /* four corner brackets: framed, but not a housing */
@@ -83,43 +157,57 @@
   border-left-width: 1px;
 }
 
-/* ---- the two columns ---- */
-
-/* a side is as tall as the stage, so a fraction of it is a fraction of the
-   drawing */
-.sh-side {
-  position: relative;
-  height: min(100%, var(--sh-h));
+/* the lines: one a side for each plate, in the plate's own tone, ending on
+   its corner edge in a small square */
+.sh-leads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.sh-leads g {
+  --tone: var(--xb-text-2);
+}
+.sh-leads g[data-tone="green"] {
+  --tone: var(--es-green);
+}
+.sh-leads g[data-tone="gold"] {
+  --tone: var(--xb-gold);
+}
+.sh-leads path {
+  fill: none;
+  stroke: var(--tone);
+  stroke-opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+.sh-leads rect {
+  fill: var(--tone);
 }
 
-/* A column's three rows are spread between the first and the last plate's
-   own heights (`--y0`, `--y2`), so each sits level with the plate it names.
-   One bracket holds the column, open toward the stack. */
+/* ---- the two columns: each row on its plate's own line ---- */
+
 .sh-col {
-  --row: 20px;
-  --reach: 16px;
-  position: absolute;
-  top: calc(var(--y0) * 100% - var(--row) / 2);
-  bottom: calc((1 - var(--y2)) * 100% - var(--row) / 2);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   margin: 0;
   padding: 0;
   list-style: none;
   font-family: var(--xb-mono);
   font-size: 12px;
-  line-height: var(--row);
+  line-height: 20px;
   letter-spacing: var(--track-eyebrow, 0.15em);
   text-transform: uppercase;
   color: var(--xb-text-3);
 }
 .sh-col li {
   --tone: var(--xb-text-2);
+  position: absolute;
+  left: calc(var(--px) * 100%);
+  top: calc(var(--py) * 100%);
   display: flex;
   align-items: center;
   gap: 14px;
-  height: var(--row);
+  height: 20px;
   white-space: nowrap;
 }
 .sh-col li[data-tone="green"] {
@@ -128,22 +216,9 @@
 .sh-col li[data-tone="gold"] {
   --tone: var(--xb-gold);
 }
-.sh-col::after {
-  content: "";
-  position: absolute;
-  top: calc(-1 * var(--reach));
-  bottom: calc(-1 * var(--reach));
-  width: 8px;
-  border: 1px solid var(--xb-line-2);
-}
 
-.sh-index {
-  left: 0;
-  padding-right: 26px;
-}
-.sh-index::after {
-  right: 0;
-  border-left: 0;
+.sh-index li {
+  transform: translate(-100%, -50%);
 }
 .sh-mini {
   width: 34px;
@@ -154,13 +229,8 @@
   stroke-width: 1;
 }
 
-.sh-names {
-  right: 0;
-  padding-left: 26px;
-}
-.sh-names::after {
-  left: 0;
-  border-right: 0;
+.sh-names li {
+  transform: translate(0, -50%);
 }
 .sh-names a {
   color: inherit;
@@ -183,30 +253,35 @@
   outline-offset: 4px;
 }
 
-/* below the frame tier the names sit under the figure as three plain rows */
+/* below the frame tier the names sit under the stack as three plain rows */
 @media (max-width: 960px) {
   .sh-fig {
-    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+  .sh-seat {
+    display: grid;
     justify-items: center;
     row-gap: 20px;
+    width: min(100%, 360px);
     height: auto;
-  }
-  .sh-side[aria-hidden] {
-    display: none;
+    aspect-ratio: auto;
   }
   .sh-stage {
-    height: auto;
-    width: min(100%, 360px);
+    position: relative;
+    inset: auto;
+    width: 100%;
+    aspect-ratio: 1;
   }
-  .sh-side {
-    height: auto;
+  .sh-leads,
+  .sh-index {
+    display: none;
   }
-  .sh-col {
-    position: static;
+  .sh-names {
+    display: grid;
     gap: 10px;
-    padding: 0;
   }
-  .sh-col::after {
-    content: none;
+  .sh-names li {
+    position: static;
+    transform: none;
   }
 }

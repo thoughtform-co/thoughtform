@@ -609,9 +609,13 @@ export function EmbedStack({ arrive = false }: { arrive?: boolean } = {}) {
             `translate(${pose.tx.toFixed(2)} ${pose.ty.toFixed(2)}) scale(${pose.s.toFixed(4)})`
           );
           donor.setAttribute("data-handed", "");
+          /* the arrival's clock, for the donor's own lines: the stack holds
+             its place on screen while the page leaves, so they let go at once */
+          donor.style.setProperty("--sh-away", q.toFixed(4));
         } else {
           travel.current?.removeAttribute("transform");
           donor?.removeAttribute("data-handed");
+          donor?.style.removeProperty("--sh-away");
         }
         const root = el.parentElement;
         if (q < 1) root?.style.setProperty("--es-brief", seg(q, BRIEF_IN, 1).toFixed(3));

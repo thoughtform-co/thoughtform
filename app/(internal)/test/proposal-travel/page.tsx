@@ -4,6 +4,7 @@ import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { ArcShell } from "@/components/arcs/ArcShell";
 import { EmbedStack } from "@/components/xb-proposal/embed/EmbedStack";
 import { NetworkPlug } from "@/components/xb-proposal/network/NetworkPlug";
+import { StackFlow } from "@/components/xb-proposal/stack/StackFlow";
 import { StackHero } from "@/components/xb-proposal/stack/StackHero";
 import { getClient } from "@/lib/arcs/clients";
 import { X_BIONIC_PROPOSAL_ARC as PROD } from "@/lib/arcs/content/x-bionic-proposal";
@@ -11,7 +12,8 @@ import { sliceV7Sections } from "@/lib/v7-parse";
 
 /* ⚠ STYLESHEET ORDER IS LOAD-BEARING: the arc leaf route's chain VERBATIM
    (`app/(marketing)/arcs/[slug]/[leaf]/page.tsx`), so this page's cascade is
-   the proposal's; then the one sheet this copy adds. */
+   the proposal's; then the two sheets this copy adds (the kit's marks and
+   the opening's own). */
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
@@ -44,6 +46,7 @@ import "@/components/sheet/sheet.css";
 import "@/components/landing/v7/site-footer/site-footer.css";
 import "@/components/landing/v7/theme.css";
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";
+import "@/components/xb-proposal/kit/kit.css";
 import "@/components/xb-proposal/stack/stack-hero.css";
 
 /* The two sections this copy draws itself, by the ids the proposal gives
@@ -51,13 +54,24 @@ import "@/components/xb-proposal/stack/stack-hero.css";
    them is the proposal's own record. */
 const DRAWN = ["vision", "adoption"] as const;
 
+type Query = Record<string, string | string[] | undefined>;
+
 /**
  * A SERVER route, mounted exactly as the proposal's is: the shell, the hero,
  * then the sections. The first two are the kit's components inside the
  * wrappers `ArcFlowPorts` gives them on the proposal; the rest go through
  * `ArcSectionRenderer` untouched, offset so each keeps its own index.
+ *
+ * The opening has two figures, both the same donor to the arrival:
+ *   (default)     the flow through the stack: the team and the tools beside it
+ *   ?hero=index   a number and a name a plate, each on a line to it
  */
-export default function ProposalTravelRoute() {
+export default async function ProposalTravelRoute({
+  searchParams,
+}: {
+  searchParams: Promise<Query>;
+}) {
+  const hero = (await searchParams).hero === "index" ? "index" : "flow";
   if (PROD.sections[0].id !== DRAWN[0] || PROD.sections[1].id !== DRAWN[1]) {
     throw new Error("proposal-travel: the proposal no longer opens on the vision and the approach");
   }
@@ -86,7 +100,7 @@ export default function ProposalTravelRoute() {
     >
       <ArcHero hero={PROD.hero} />
 
-      {/* 1 · the vision, opened on the closed stack */}
+      {/* 1 · the vision, opened on the closed stack and what is tied to it */}
       <ArcBeat
         id="vision"
         kind="leverage"
@@ -95,7 +109,7 @@ export default function ProposalTravelRoute() {
         motion={motion}
       >
         <div className="xb xb-in-frame xb-sec">
-          <StackHero />
+          {hero === "index" ? <StackHero /> : <StackFlow />}
         </div>
       </ArcBeat>
 

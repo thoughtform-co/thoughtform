@@ -13,6 +13,8 @@ import {
   pathOf,
   type Pt,
 } from "@/components/xb-proposal/kit/trace";
+import { makeIso } from "@/components/xb-proposal/iso";
+import { DEPTH, FLOW, INDEX, PORTS } from "@/components/xb-proposal/stack/heroLayouts";
 import { arrivalQ, arrive, HERO_BOX, poseIn, STACK } from "@/components/xb-proposal/stack/travel";
 import {
   AXIS,
@@ -308,5 +310,93 @@ describe("the stack's arrival", () => {
     expect(HERO_BOX.y + HERO_BOX.h).toBeGreaterThan(STACK.oy + 8 * STACK.unit + 2 * STACK.closed);
     // the reference point is the team plate's top-face centre
     expect(STACK.ref).toEqual([STACK.ox, STACK.oy + 4 * STACK.unit]);
+  });
+});
+
+/* Round 03: the opening's lines end on the plates. A plate's corner edge is
+   plumb in this projection, so a level line meets it square on; these hold
+   that every line that claims a plate lands on the middle of its edge. */
+describe("the opening's lines", () => {
+  const iso = makeIso(STACK.unit, STACK.ox, STACK.oy);
+  const level = (pts: readonly Pt[]) => pts.every((p) => p[1] === pts[0][1]);
+
+  it("a port is the middle of its plate's corner edge, through the projection", () => {
+    DEPTH.forEach((depth, i) => {
+      const drop = i * STACK.closed;
+      // the left corner is (0, 8), the right (8, 0); the edge runs the plate's depth
+      const [lx, lFloor] = iso.p(0, 8, 0);
+      const [rx, rTop] = iso.p(8, 0, depth);
+      expect(PORTS[i].left[0]).toBeCloseTo(lx, 9);
+      expect(PORTS[i].right[0]).toBeCloseTo(rx, 9);
+      const mid = (lFloor + iso.p(0, 8, depth)[1]) / 2 + drop;
+      expect(PORTS[i].left[1]).toBeCloseTo(mid, 9);
+      expect(PORTS[i].right[1]).toBeCloseTo((rTop + iso.p(8, 0, 0)[1]) / 2 + drop, 9);
+    });
+  });
+
+  it("the flow: in on the team's plate, out of the agents', the layer tied to its tab", () => {
+    const [team, layer, agents] = FLOW.ports;
+    expect(level(FLOW.runIn)).toBe(true);
+    expect(FLOW.runIn.at(-1)).toEqual(team.left);
+    expect(level(FLOW.runOut)).toBe(true);
+    expect(FLOW.runOut[0]).toEqual(agents.right);
+    expect(isStraight(FLOW.tie)).toBe(true);
+    expect(FLOW.tie.at(-1)).toEqual(layer.right);
+    expect(pathOf(FLOW.tie)).not.toMatch(/[CQSA]/);
+    // the tie comes down the gutter the way out leaves free, and stops above it
+    expect(Math.max(...FLOW.tie.map((p) => p[1]))).toBeLessThan(agents.right[1]);
+    for (const p of FLOW.tie.slice(1, -1)) {
+      expect(p[0]).toBeGreaterThan(layer.right[0]);
+      expect(p[0]).toBeLessThan(FLOW.tools.bus[0][0]);
+    }
+  });
+
+  it("the flow: each run leaves or meets its bus at a junction on the bus", () => {
+    const half = FLOW.team.junction.size / 2;
+    expect(FLOW.team.junction.at[0]).toBe(FLOW.team.bus[0][0]);
+    expect(FLOW.runIn[0]).toEqual([FLOW.team.junction.at[0] + half, FLOW.team.junction.at[1]]);
+    expect(FLOW.tools.junction.at[0]).toBe(FLOW.tools.bus[0][0]);
+    expect(FLOW.runOut.at(-1)).toEqual([
+      FLOW.tools.junction.at[0] - half,
+      FLOW.tools.junction.at[1],
+    ]);
+    // a junction sits on its bus, between two rows, clear of both taps
+    for (const side of [FLOW.team, FLOW.tools]) {
+      const y = side.junction.at[1];
+      expect(y).toBeGreaterThan(side.bus[0][1]);
+      expect(y).toBeLessThan(side.bus[1][1]);
+      for (const row of FLOW.rows) expect(Math.abs(row - y)).toBeGreaterThan(half + 3 + 6);
+    }
+  });
+
+  it("the flow turns onto itself about the frame's middle", () => {
+    const turn = (p: Pt): Pt => [2 * HUB[0] - p[0], 2 * HUB[1] - p[1]];
+    const [team, , agents] = FLOW.ports;
+    const [tx, ty] = turn(team.left);
+    expect(agents.right[0]).toBeCloseTo(tx, 9);
+    expect(agents.right[1]).toBeCloseTo(ty, 9);
+    const [jx, jy] = turn(FLOW.team.junction.at);
+    expect(FLOW.tools.junction.at[0]).toBeCloseTo(jx, 9);
+    expect(FLOW.tools.junction.at[1]).toBeCloseTo(jy, 9);
+    // two columns of one width, the same margin off the frame
+    expect(FLOW.chips[0].x).toBe(FRAME.w - FLOW.cards.x1);
+    expect(FLOW.cards.x1 - FLOW.cards.x0).toBe(FLOW.col);
+    // and the stack's box stays inside the frame, under the tabs' line
+    expect(FLOW.box.y).toBeGreaterThan(0);
+    expect(FLOW.box.y + FLOW.box.side).toBeLessThan(FRAME.h);
+  });
+
+  it("the index: a level line a side for each plate, ending on its port", () => {
+    INDEX.leads.forEach((l, i) => {
+      expect(level(l.left)).toBe(true);
+      expect(level(l.right)).toBe(true);
+      expect(l.left.at(-1)).toEqual(PORTS[i].left);
+      expect(l.right[0]).toEqual(PORTS[i].right);
+      // the words sit on the line's own level, past its outer end
+      expect(INDEX.index[i][1]).toBe(PORTS[i].left[1]);
+      expect(INDEX.index[i][0]).toBeLessThan(l.left[0][0]);
+      expect(INDEX.names[i][1]).toBe(PORTS[i].right[1]);
+      expect(INDEX.names[i][0]).toBeGreaterThan(l.right[1][0]);
+    });
   });
 });
