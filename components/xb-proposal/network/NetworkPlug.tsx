@@ -36,37 +36,41 @@ import { tint, type Box, type Iso } from "../iso";
 import { LayerSlab } from "../LayerSlab";
 import { MastheadTitle } from "../Masthead";
 
-const W = 1200;
-const H = 560;
+export const W = 1200;
+export const H = 560;
 /* EmbedStack's unit and drawing, and the camera scale that reproduces its
    isometric: makeIso's x step is cos30 * u, a 45-degree yaw gives cos45 * U */
 const U26 = 26;
 const U_ISO = U26 * Math.sqrt(1.5);
-const ES_VB_W = 700;
+export const ES_VB_W = 700;
 const ES_OX = 350;
 const ES_OY = 70;
-const ISO_YAW = Math.PI / 4;
-const ISO_PITCH = Math.atan(1 / Math.SQRT2);
+export const ISO_YAW = Math.PI / 4;
+export const ISO_PITCH = Math.atan(1 / Math.SQRT2);
 /* the closed stack's spacing there: 72 px a plate, in z */
 const GAP_Z = 72 / U26;
 /* the module at rest: each plate's highest point, the course it becomes,
    the pitch between courses, and the size it is drawn at */
-const TOP_Z = [0.4, 1.08, 0.75];
-const COURSE_H = 1.0;
-const COURSE_GAP = 1.24;
-const END_K = 1.0;
+export const TOP_Z = [0.4, 1.08, 0.75];
+export const COURSE_H = 1.0;
+export const COURSE_GAP = 1.24;
+export const END_K = 1.0;
 
-const TITLE = ["Marketing first,", "then every team."] as const;
+export const TITLE = ["Marketing first,", "then every team."] as const;
 /* each course is lettered with its step of the Arc and what it is */
-const COURSES = ["Navigate · your team", "Encode · the layer", "Build · your agents"] as const;
+export const COURSES = [
+  "Navigate · your team",
+  "Encode · the layer",
+  "Build · your agents",
+] as const;
 
 /* -- the camera --------------------------------------------------------- */
 
-type Cam = { yaw: number; pitch: number; cx: number; cy: number; k: number; zc: number };
+export type Cam = { yaw: number; pitch: number; cx: number; cy: number; k: number; zc: number };
 
 /** An `Iso` for the camera, so the plates draw through it unchanged: world
     (4, 4, zc) lands on (cx, cy), and `dz` lifts one plate. */
-function camIso(c: Cam, dz: number): Iso {
+export function camIso(c: Cam, dz: number): Iso {
   const u = U_ISO * c.k;
   const cy = Math.cos(c.yaw);
   const sy = Math.sin(c.yaw);
@@ -86,20 +90,20 @@ function camIso(c: Cam, dz: number): Iso {
 }
 
 /* each plate's lift: the closed stack's at the start, the module's at rest */
-const dzStart = (i: number) => -i * GAP_Z;
-const dzEnd = (i: number) => -i * COURSE_GAP - TOP_Z[i];
+export const dzStart = (i: number) => -i * GAP_Z;
+export const dzEnd = (i: number) => -i * COURSE_GAP - TOP_Z[i];
 /* the camera's centre height: the layer plate's top in the closed stack,
    the module's middle at rest */
-const ZC_START = 0.4 - GAP_Z;
-const ZC_END = -(2 * COURSE_GAP + COURSE_H) / 2;
+export const ZC_START = 0.4 - GAP_Z;
+export const ZC_END = -(2 * COURSE_GAP + COURSE_H) / 2;
 
 /* -- the frame and the departments -------------------------------------- */
 
 type Pt = [number, number];
-const FR = { x0: 400, x1: 800, y0: 136, y1: 452, cut: 22, band: 36 };
-const STACK_AT: Pt = [600, 312];
+export const FR = { x0: 400, x1: 800, y0: 136, y1: 452, cut: 22, band: 36 };
+export const STACK_AT: Pt = [600, 312];
 
-const DEPTS: { name: string; side: "l" | "r"; y: number }[] = [
+export const DEPTS: { name: string; side: "l" | "r"; y: number }[] = [
   { name: "Product design", side: "l", y: 150 },
   { name: "Sales", side: "l", y: 294 },
   { name: "Customer care", side: "l", y: 438 },
@@ -143,7 +147,7 @@ function ribbonLine(i: number): Pt[] {
 }
 
 /** A polyline offset by `d` with mitred corners. */
-function offsetLine(pts: Pt[], d: number): Pt[] {
+export function offsetLine(pts: Pt[], d: number): Pt[] {
   const n = (a: Pt, b: Pt): Pt => {
     const dx = b[0] - a[0];
     const dy = b[1] - a[1];
@@ -162,12 +166,12 @@ function offsetLine(pts: Pt[], d: number): Pt[] {
     return [p[0] + (prev[0] + next[0]) * k, p[1] + (prev[1] + next[1]) * k];
   });
 }
-const pathOf = (pts: Pt[]) =>
+export const pathOf = (pts: Pt[]) =>
   pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`).join("");
-const ptsOf = (list: number[][]) => list.map((q) => q.join(",")).join(" ");
+export const ptsOf = (list: number[][]) => list.map((q) => q.join(",")).join(" ");
 
 /** A box with its TR and BL corners cut, the configuration's housing. */
-const cutBox = (x0: number, y0: number, x1: number, y1: number, c: number) =>
+export const cutBox = (x0: number, y0: number, x1: number, y1: number, c: number) =>
   ptsOf([
     [x0, y0],
     [x1 - c, y0],
@@ -186,14 +190,14 @@ const frameBand = () =>
     [FR.x0, FR.y0 + FR.band],
   ]);
 
-const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
-const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
-const ease = (t: number) => {
+export const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
+export const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
+export const ease = (t: number) => {
   const c = clamp01(t);
   return c < 0.5 ? 4 * c * c * c : 1 - Math.pow(-2 * c + 2, 3) / 2;
 };
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const at = (x: number, y: number): CSSProperties =>
+export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+export const at = (x: number, y: number): CSSProperties =>
   ({ "--px": (x / W).toFixed(5), "--py": (y / H).toFixed(5) }) as CSSProperties;
 
 /** Everything the pinned scroll moves, from its reading `p`. */
@@ -210,12 +214,12 @@ function moment(p: number) {
 
 /* -- EmbedStack's plates, the projection a parameter -------------------- */
 
-const S = 8;
+export const S = 8;
 const NOTCH = 0;
 const GOLD = "var(--xb-gold)";
 const GREEN = "var(--es-green)";
 const DAWN = "var(--xb-text)";
-const TONES = [GREEN, GOLD, DAWN] as const;
+export const TONES = [GREEN, GOLD, DAWN] as const;
 
 type P = readonly [number, number];
 const pts = (list: P[]) => list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
@@ -555,7 +559,7 @@ export const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 
 /** Where EmbedStack left its stack, in that drawing's units: the layer
     plate's top centre, (4, 4, 0.4) through its makeIso, one closed gap down. */
-const ES_CENTRE: Pt = [ES_OX, ES_OY + 8 * 0.5 * U26 - 0.4 * U26 + 72];
+export const ES_CENTRE: Pt = [ES_OX, ES_OY + 8 * 0.5 * U26 - 0.4 * U26 + 72];
 
 type Reading = {
   /** the pinned scroll, 0..1 */

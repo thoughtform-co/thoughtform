@@ -14,6 +14,17 @@ import {
   type Pt,
 } from "@/components/xb-proposal/kit/trace";
 import { makeIso } from "@/components/xb-proposal/iso";
+import {
+  HOUSING,
+  MARKETING,
+  NODE,
+  ORG_FRAME,
+  portOf,
+  RIBBON,
+  ROUTES,
+  SEATS,
+  TURNS,
+} from "@/components/xb-proposal/network/orgLayout";
 import { DEPTH, FLOW, INDEX, PORTS } from "@/components/xb-proposal/stack/heroLayouts";
 import { arrivalQ, arrive, HERO_BOX, poseIn, STACK } from "@/components/xb-proposal/stack/travel";
 import {
@@ -420,5 +431,123 @@ describe("the opening's lines", () => {
       expect(INDEX.names[i][1]).toBe(PORTS[i].right[1]);
       expect(INDEX.names[i][0]).toBeGreaterThan(l.right[1][0]);
     });
+  });
+});
+
+/* Round 04: "Marketing first, then every team." drawn back to the
+   organisation. Seven nodes of one size in one housing, a ribbon from
+   Marketing to each of the other six. These hold that the ribbons are the
+   kit's (level, plumb, 45 degrees), land where they claim to, and pass
+   through nothing; and that nothing in the placement mirrors anything. */
+describe("the organisation, drawn back", () => {
+  type Rect = { x0: number; y0: number; x1: number; y1: number };
+  const rectOf = (x: number, y: number): Rect => ({ x0: x, y0: y, x1: x + NODE.w, y1: y + NODE.h });
+  const marketing = rectOf(MARKETING.x, MARKETING.y);
+  const teams = SEATS.map((s) => rectOf(s.x, s.y));
+  const half = ((RIBBON.wires - 1) * RIBBON.pitch) / 2;
+  /** Points every two units along a polyline, with how far along each is. */
+  const walk = (pts: readonly Pt[]) => {
+    const out: { p: Pt; at: number }[] = [];
+    let run = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1];
+      const [bx, by] = pts[i];
+      const len = Math.hypot(bx - ax, by - ay);
+      for (let d = 0; d < len; d += 2)
+        out.push({ p: [ax + ((bx - ax) * d) / len, ay + ((by - ay) * d) / len], at: run + d });
+      run += len;
+    }
+    out.push({ p: pts[pts.length - 1], at: run });
+    return out;
+  };
+  const inside = (p: Pt, r: Rect, grow: number) =>
+    p[0] > r.x0 - grow && p[0] < r.x1 + grow && p[1] > r.y0 - grow && p[1] < r.y1 + grow;
+
+  it("seven nodes of one size sit inside the housing, under its band, clear of each other", () => {
+    expect(SEATS).toHaveLength(6);
+    const all = [marketing, ...teams];
+    for (const r of all) {
+      expect(r.x0).toBeGreaterThan(HOUSING.x0);
+      expect(r.x1).toBeLessThan(HOUSING.x1);
+      expect(r.y0).toBeGreaterThan(HOUSING.y0 + HOUSING.band);
+      expect(r.y1).toBeLessThan(HOUSING.y1);
+    }
+    for (let a = 0; a < all.length; a++)
+      for (let b = a + 1; b < all.length; b++) {
+        const apart =
+          all[a].x1 + 40 <= all[b].x0 ||
+          all[b].x1 + 40 <= all[a].x0 ||
+          all[a].y1 + 40 <= all[b].y0 ||
+          all[b].y1 + 40 <= all[a].y0;
+        expect(apart, `nodes ${a} and ${b}`).toBe(true);
+      }
+    expect(HOUSING.x1).toBeLessThanOrEqual(ORG_FRAME.w);
+    expect(HOUSING.y1).toBeLessThanOrEqual(ORG_FRAME.h);
+  });
+
+  it("nothing in the placement mirrors anything: no two rows level, no pair across the middle", () => {
+    const tops = [MARKETING.y, ...SEATS.map((s) => s.y)];
+    for (let a = 0; a < tops.length; a++)
+      for (let b = a + 1; b < tops.length; b++)
+        expect(Math.abs(tops[a] - tops[b])).toBeGreaterThanOrEqual(12);
+    const mids = [marketing, ...teams].map((r) => [(r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2]);
+    const axis = ORG_FRAME.w / 2;
+    for (const [ax, ay] of mids)
+      for (const [bx, by] of mids)
+        if (ax < axis && bx > axis)
+          expect(Math.abs(ax + bx - 2 * axis) < 8 && Math.abs(ay - by) < 8).toBe(false);
+    // and Marketing is off the middle both ways
+    expect(Math.abs(mids[0][0] - axis)).toBeGreaterThan(NODE.w / 2);
+  });
+
+  it("each ribbon is straight, leaves Marketing's edge under its band and lands on its team's band", () => {
+    expect(ROUTES).toHaveLength(SEATS.length);
+    ROUTES.forEach((line, i) => {
+      expect(isStraight(line), SEATS[i].name).toBe(true);
+      expect(pathOf(line)).not.toMatch(/[CQSA]/);
+      const [sx, sy] = line[0];
+      expect([marketing.x0, marketing.x1]).toContain(sx);
+      expect(sy).toBeGreaterThan(marketing.y0 + NODE.band + half);
+      expect(sy).toBeLessThan(marketing.y1 - NODE.cut - half);
+      expect(line.at(-1)).toEqual(portOf(SEATS[i]));
+      // the port is on the band, so it is there before the node has grown
+      expect(line.at(-1)![1]).toBe(SEATS[i].y + NODE.band / 2);
+      // it leaves and arrives level, square on to both edges
+      expect(line[1][1]).toBe(sy);
+      expect(line.at(-2)![1]).toBe(line.at(-1)![1]);
+    });
+  });
+
+  it("no ribbon passes through a node, and no two ribbons touch", () => {
+    const walks = ROUTES.map((line) => walk(line));
+    walks.forEach((w, i) => {
+      const end = w[w.length - 1].at;
+      // clear of every node by a ribbon's half width and a little air, but
+      // for the run out of Marketing's edge and the run into its own team's
+      const air = half + 4;
+      for (const { p, at } of w) {
+        if (at > air + 1)
+          expect(inside(p, marketing, air), `${SEATS[i].name} in Marketing`).toBe(false);
+        teams.forEach((r, j) => {
+          if (j === i && at > end - air - 1) return;
+          expect(inside(p, r, air), `${SEATS[i].name} in ${SEATS[j].name}`).toBe(false);
+        });
+      }
+    });
+    for (let a = 0; a < walks.length; a++)
+      for (let b = a + 1; b < walks.length; b++) {
+        let near = Infinity;
+        for (const { p } of walks[a])
+          for (const { p: q } of walks[b])
+            near = Math.min(near, Math.hypot(p[0] - q[0], p[1] - q[1]));
+        // two ribbons' widths never meet: a gap of at least a third of one
+        expect(near, `${SEATS[a].name} and ${SEATS[b].name}`).toBeGreaterThanOrEqual(
+          2 * half + (2 * half) / 3
+        );
+      }
+  });
+
+  it("every team takes its turn once", () => {
+    expect([...TURNS].sort()).toEqual([0, 1, 2, 3, 4, 5]);
   });
 });

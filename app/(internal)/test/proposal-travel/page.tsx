@@ -3,6 +3,7 @@ import { ArcHero } from "@/components/arcs/ArcHero";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { ArcShell } from "@/components/arcs/ArcShell";
 import { EmbedStack } from "@/components/xb-proposal/embed/EmbedStack";
+import { NetworkOrg } from "@/components/xb-proposal/network/NetworkOrg";
 import { NetworkPlug } from "@/components/xb-proposal/network/NetworkPlug";
 import { StackFlow } from "@/components/xb-proposal/stack/StackFlow";
 import { StackHero } from "@/components/xb-proposal/stack/StackHero";
@@ -12,8 +13,8 @@ import { sliceV7Sections } from "@/lib/v7-parse";
 
 /* ⚠ STYLESHEET ORDER IS LOAD-BEARING: the arc leaf route's chain VERBATIM
    (`app/(marketing)/arcs/[slug]/[leaf]/page.tsx`), so this page's cascade is
-   the proposal's; then the two sheets this copy adds (the kit's marks and
-   the opening's own). */
+   the proposal's; then the sheets this copy adds (the kit's marks, the
+   opening's own and the drawn-back network's). */
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
@@ -48,6 +49,7 @@ import "@/components/landing/v7/theme.css";
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 import "@/components/xb-proposal/kit/kit.css";
 import "@/components/xb-proposal/stack/stack-hero.css";
+import "@/components/xb-proposal/network/network-org.css";
 
 /* The two sections this copy draws itself, by the ids the proposal gives
    them (the hero's actions and the menu anchor on both). Everything after
@@ -65,13 +67,19 @@ type Query = Record<string, string | string[] | undefined>;
  * The opening, the same donor to the arrival either way:
  *   (default)     the proposal's flow, the stack where its ringed hub was
  *   ?hero=index   the other reading, kept for now: a number and a name a plate
+ *
+ * "Marketing first, then every team.":
+ *   (default)     the view draws back to the organisation (`NetworkOrg`)
+ *   ?net=sent     the section as the proposal has it (`NetworkPlug`)
  */
 export default async function ProposalTravelRoute({
   searchParams,
 }: {
   searchParams: Promise<Query>;
 }) {
-  const hero = (await searchParams).hero === "index" ? "index" : "flow";
+  const q = await searchParams;
+  const hero = q.hero === "index" ? "index" : "flow";
+  const Network = q.net === "sent" ? NetworkPlug : NetworkOrg;
   if (PROD.sections[0].id !== DRAWN[0] || PROD.sections[1].id !== DRAWN[1]) {
     throw new Error("proposal-travel: the proposal no longer opens on the vision and the approach");
   }
@@ -125,7 +133,7 @@ export default async function ProposalTravelRoute({
           <EmbedStack arrive />
         </div>
         <div className="xb xb-in-frame">
-          <NetworkPlug />
+          <Network />
         </div>
       </ArcBeat>
 

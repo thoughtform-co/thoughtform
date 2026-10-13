@@ -187,3 +187,49 @@ Stills: `round-03/flow/` (section 1 at rest, the arrival at a quarter, a half an
 - Nothing below 961px was looked at.
 - At 1280×720 the tab over the tools is wider than its column by 25px a side (it is at the 12px floor there).
 - Nothing was ported to the sent page.
+
+---
+
+# Round 04 (2026-10-13)
+
+The owner, on "Marketing first, then every team.":
+
+> it's important that we zoom out and see a full network of nodes in a different workstream. Maybe Marketing can then collapse and we see the other ones grow. Maybe they can also move up a bit because now they're super symmetrically connected. I think we can really play around with the placement and showcase how it's a smaller part of a bigger organizational node
+
+On the copy of the proposal the section now draws back to the organisation (`components/xb-proposal/network/NetworkOrg.tsx`, geometry in `network/orgLayout.ts`). `?net=sent` on the same page shows the section as the proposal has it, for comparison.
+
+```
+http://localhost:3019/test/proposal-travel
+http://localhost:3019/test/proposal-travel?net=sent
+```
+
+## What happens, in the order the scroll plays it
+
+1. **As on the proposal**: the stack is taken from the steps' section, turns to face the reader and becomes the three courses of one module; the "X-Bionic · Marketing" housing closes round it. This act is `NetworkPlug`'s own, by reference.
+2. **The view draws back.** Marketing's module shrinks to a node and moves off the middle. The camera pulls back about it, so the organisation's housing and the six other teams come into the frame from outside it. "X-Bionic" leaves Marketing's band for the housing's.
+3. **Then every team.** A ribbon runs from Marketing to each team in turn. As it lands, the team's node grows from its band into the same module: three courses, empty but the first, with "Navigate next" under them.
+
+At the end Marketing is one node of seven, all one size, inside one housing: the smaller part of the bigger one.
+
+## The placement
+
+Four columns whose rows do not line up; Marketing left of the middle and above it. No two nodes are level and none mirrors another across the middle (both held by `tests/lib/proposal-kit.test.ts`). The ribbons are the kit's: level and plumb runs with 45-degree cuts, through the gutters and the one lane the columns leave. The seats are six lines of data in `orgLayout.ts`, so a different placement is a small change.
+
+## Checked
+
+- Every ribbon leaves Marketing's edge under its band, lands on the middle of its team's band, passes through no node and comes no nearer another ribbon than a third of a ribbon's width (tests).
+- Stills at 1280×720, 1470×830 and 1920×1247, dark and light, at five moments: `round-04/network/`.
+- New words are 12px or larger; "Run by your team" fits its node at 1280×720 with 6px to spare.
+- **The sent page did not change**: its stills of this section are pixel-identical to round 02's baseline. The edit to `NetworkPlug.tsx` is `export` keywords, and one line the formatter wrapped because of one.
+
+## Decisions taken without asking, to be confirmed
+
+- **Copy**: the housing is lettered "X-Bionic" and Marketing's node "Marketing", where the proposal's one frame reads "X-Bionic · Marketing". No other word is new.
+- **A team's node**: three empty courses with the first in the people's green, under the proposal's own "Navigate next".
+- **The runway** is 430svh against the proposal's 320svh, for the extra act.
+- **Ribbons** are five wires at a pitch of 3 against the proposal's eight at 3.4, the view having drawn back.
+
+## Not done in round 04
+
+- Nothing below 961px was looked at.
+- The order the teams take their turn is alternating sides, near then far; it claims nothing about X-Bionic.

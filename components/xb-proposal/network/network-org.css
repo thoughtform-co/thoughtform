@@ -1,0 +1,52 @@
+/* NetworkOrg: "Marketing first, then every team." drawn back to the
+   organisation. Everything it shares with `NetworkPlug` is `network.css`'s;
+   this sheet holds only what the drawn-back view adds. */
+
+/* one more act than the proposal's section, so a longer runway */
+.xn.xno {
+  height: 430svh;
+}
+
+/* the world the camera pulls back through: its hairlines stay hairlines at
+   every zoom (the ribbons are left out: a draw-on run reads `pathLength`,
+   which a non-scaling stroke ignores, and they only draw once the zoom is
+   done) */
+.xno-world .xn-frame__body,
+.xno-world .xn-frame__rule,
+.xno-world .xn-lane,
+.xno-world .xno-slot {
+  vector-effect: non-scaling-stroke;
+}
+
+/* the organisation's housing holds the network, so it carries no wash of
+   its own: the field shows through it */
+.xno-housing {
+  fill: none;
+}
+
+/* a team's three courses, empty: the module's own bars, quiet. The first
+   takes the people's green once the team's ribbon has landed. */
+.xno-slot {
+  fill: var(--xb-ground-2);
+  stroke-width: 1;
+  stroke-opacity: 0.4;
+  transition:
+    stroke-opacity 300ms ease,
+    fill 300ms ease;
+}
+.xn-dept[data-on] .xno-slot[data-first] {
+  fill: color-mix(in srgb, var(--es-green) 16%, var(--xb-ground-2));
+  stroke-opacity: 1;
+}
+
+/* words new to this view: never under 12px */
+.xno-word.xn-band,
+.xno-word.xn-next {
+  font-size: max(12px, calc(11 * var(--u)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xno-slot {
+    transition: none;
+  }
+}

@@ -118,7 +118,10 @@ const STOPS = [
   ["net-arrive", "xn-arrive", 0.5],
   ["net-00", "xn", 0],
   ["net-20", "xn", 0.2],
+  ["net-35", "xn", 0.35],
   ["net-45", "xn", 0.45],
+  ["net-50", "xn", 0.5],
+  ["net-60", "xn", 0.6],
   ["net-80", "xn", 0.8],
   ["net-100", "xn", 1],
 ].filter(([name]) => !ONLY.length || ONLY.includes(name));
