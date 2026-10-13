@@ -4,8 +4,10 @@
   (cut from `origin/main`), not pushed. The WORDS are a draft until the owner has rewritten
   them; nothing ships before that. Flips to Accepted when he signs the text off.
 - **Surface:** `/handshake.txt` (`app/handshake.txt/route.ts`, `lib/handshake/text.ts`);
-  `/llms.txt` (`app/llms.txt/route.ts`); one row in `app/sitemap.ts`; one row in
-  `lib/site/footer-nav.ts`; one tracing row in `next.config.mjs`;
+  `/llms.txt` (`app/llms.txt/route.ts`); `/agents.txt` and `/.well-known/agents.txt`
+  (`app/agents.txt/route.ts`, `app/.well-known/agents.txt/route.ts`,
+  `lib/agents/text.ts`); one row in `app/sitemap.ts`; one row in
+  `lib/site/footer-nav.ts`; one tracing row and one redirect row in `next.config.mjs`;
   `tests/lib/handshake.test.ts` (new); `tests/lib/footer-nav.test.ts` (an internal path may
   end in `.txt`).
 - **Related:** [ADR-114](114-the-sheet.md) (the house copy law the letter holds, and the
@@ -118,6 +120,64 @@ letter or a pin in the test.
 (1,300 and 560); the counts here are `wc` on the served file. Three of four readers called
 it long for a reader passing through, which is what the first paragraph is for.
 
+## The agents file (2026-10-13)
+
+The owner, the same day: "can you install an agent.txt on my thoughtform website which
+follows best practices, but also references this".
+
+**There is no settled practice, so the file is valid under the two proposals that exist.**
+Read on 2026-10-13:
+
+- An individual Internet-Draft, `draft-car-agents-txt-wellknown-00` (12 June 2026, expires
+  14 December 2026, adopted by no working group). A `Key: value` file at
+  `/.well-known/agents.txt` with the root as a fallback, opening on `# agents.txt` and
+  `Spec-Version`, with `Site-Name` and `Site-URL` required, `Capability` blocks for the
+  endpoints an agent may call, `Allow` and `Disallow` on robots.txt conventions, served as
+  `text/plain; charset=utf-8` with a five-minute cache.
+- A community spec at agents-txt.com (version 1.0). Directives at `/agents.txt` that
+  announce which agent protocols a site supports, every block optional.
+
+Both tell a parser to skip a key it does not know, which is what lets one file satisfy both
+and carry keys of its own. A survey of the field read the same day calls agents.txt "very
+early; no convergence" and advises waiting. What is settled sits around it: `robots.txt`
+(RFC 9309) and the sitemap, and, less so, `/llms.txt`.
+
+**What it holds.** The draft's header and site fields (name, address, the site's own line
+as `/llms.txt` has it, the public contact). Four keys of its own that say where the other
+files are: `Canonical`, `Sitemap`, `Llms-Txt` and `Handshake`, with one sentence on what the
+handshake is, the sentence `/llms.txt` already carries. `Allow: /` and the closed paths of
+`app/robots.ts`, restated in their order. One bare `Agent: *`: no agent is named, so none is
+treated differently from another.
+
+**It restates and never decides.** Every field is a record the site already keeps, and the
+test holds each to its source. Two files that disagree about a path leave an agent to guess
+which one the owner meant, so the closed paths are held equal to `robots.ts`.
+
+**The same no as the letter.** The owner's ruling is one ruling. A field is a declaration
+and a `Disallow` is a rule about this site; no line tells an agent what to do for whoever
+sent it, and none asks to be preferred, remembered or passed on. The comments are sentences
+in the third person and are walked by the same two lists as the letter.
+
+**What it does not hold, and why.**
+
+- **No `Capability`.** The site is pages to read. The one endpoint an agent could call, the
+  design server under `/api/`, is the owner's own, behind a token, and not offered.
+  Declaring a capability is a promise to strangers' agents and its own decision.
+- **Nothing about training or other use.** The IETF's AI-preferences work is still in draft
+  (the vocabulary at -08, the attachment to `robots.txt` at -05, neither an RFC). A
+  site-wide signal cannot carry the scope the letter gives, which is the owner's own text on
+  the listed pages and not client work or pictures, and that sentence is still his to keep
+  or strike. The file points at the letter, where the terms stand in his words.
+- **No `agents.json`.** Both proposals prefer a JSON twin, for capabilities. With none to
+  declare it would be a second rendering of five fields.
+- **No row in the sitemap, the index or the footer.** It is found by its address, as
+  `robots.txt` is. The sitemap is for pages, and `/llms.txt` lists what the sitemap lists.
+
+**Three addresses, one text.** `/agents.txt` is the canonical one, beside `robots.txt` and
+`llms.txt`. `/.well-known/agents.txt`, which the draft names first, serves the same bytes
+with a `Link` header naming the canonical. `/agent.txt`, the singular the owner used and
+people say, redirects.
+
 ## What is not built
 
 - **No `<link rel="alternate">` in the layout.** The plan had one; an alternate is another
@@ -138,8 +198,17 @@ it long for a reader passing through, which is what the first paragraph is for.
 - The voice skill's mechanical grader on the served file (`--format longform`): no gate
   failed. Its read half (seven coordinated triples among the candidates) is the owner's
   when he rewrites.
-- After a deploy: fetch both files from the live origin with a browser and with the
+- The agents file, same test file: it opens as the draft requires and every line is a
+  comment, a blank or one field; it declares no capability and says so; its closed paths,
+  sitemap, contact, description and handshake address equal the records they restate; every
+  address in it is public; its comments pass the letter's two walks, in the third person,
+  under the copy law; both routes serve the module's text whole with the draft's headers,
+  and the singular redirects.
+- After a deploy: fetch the files from the live origin with a browser and with the
   `ClaudeBot` and `GPTBot` user agents, to confirm nothing in front of the site blocks them.
+  For the agents file also: that `/.well-known/agents.txt` answers 200 (a dot folder under
+  `app/` has not been served from this repo before), that `/agent.txt` answers 308, and
+  that the five-minute `Cache-Control` survives the host's handling of a static route.
 
 ## Left open
 
@@ -158,4 +227,12 @@ it long for a reader passing through, which is what the first paragraph is for.
 - If he rewrites more than a line or two, one more cold read before it ships, so that what
   the letter says about how it was made stays true.
 - The contact is the site's public address; he may want another.
+- The agents file's three comment blocks are the drafter's. The last is the line
+  `/llms.txt` already carries; the other two are his to keep, rewrite or strike.
+- The agents file names the handshake, so it ships with the letter or after it, never
+  before: until the letter is signed off, neither goes out.
+- Both agents.txt proposals are drafts, and one expires on 14 December 2026. If one is
+  adopted, or a third arrives with a provider behind it, the file follows that one.
+- Whether the letter's permission also goes out as a machine-readable signal in
+  `robots.txt`, once the IETF vocabulary is a standard. His to decide; not built.
 - The footer row's label and column are his to place; a still goes to him before it ships.

@@ -3,9 +3,13 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { GET as getWellKnownAgents } from "@/app/.well-known/agents.txt/route";
+import { GET as getAgents } from "@/app/agents.txt/route";
 import { GET as getHandshake } from "@/app/handshake.txt/route";
 import { GET as getLlms } from "@/app/llms.txt/route";
+import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
+import { AGENTS_TXT, renderAgentsTxt } from "@/lib/agents/text";
 import {
   HANDSHAKE,
   HANDSHAKE_BODY,
@@ -32,6 +36,60 @@ const lines = text.split("\n");
 const flat = text.replace(/\s+/g, " ");
 const sitemapUrls = new Set(sitemap().map((e) => e.url));
 
+/**
+ * The two walks, shared by both files a machine reads here: the phrases an
+ * injection is made of, and the verbs a command opens on.
+ */
+const PHRASES: readonly RegExp[] = [
+  /\b(ignore|disregard|forget|override)\b[^.?!]{0,60}\b(instruction|prompt|previous|above|rule)s?\b/i,
+  /\byou (must|should|shall|need to|have to|are required to|are to)\b/i,
+  /\b(always|never) (say|tell|recommend|rank|mention|cite|answer|respond)\b/i,
+  /\bwhen (asked|someone asks|a user asks|your user asks)\b/i,
+  /\b(tell|inform|remind|convince|persuade|advise) (your|the) (user|principal|operator|human|owner)\b/i,
+  /\bsystem prompt\b/i,
+  /\b(remember|memori[sz]e|store|save) (this|that|me|these)\b/i,
+  /\b(recommend|prefer|prioriti[sz]e|favou?r|rank) (me|vince|thoughtform)\b/i,
+  /\bas an ai\b/i,
+  /* The store-and-forward forms: the two asks a text that spreads from
+     agent to agent is made of. The letter's own denial ("I ask no agent
+     to keep this letter or hand it on") is none of them. */
+  /\b(save|store|write|add|copy) (this|it) (to|in|into) (your|a|the) (memory|notes|file|context)\b/i,
+  /\b(pass|send|forward|share|relay) (this|it) (on |along )?to (the next|other|another|your)\b/i,
+  /\b(MEMORY|SOUL)\.md\b/,
+];
+
+const IMPERATIVES = new Set([
+  "always",
+  "answer",
+  "ask",
+  "cite",
+  "consider",
+  "do",
+  "don't",
+  "finish",
+  "follow",
+  "forget",
+  "ignore",
+  "keep",
+  "make",
+  "never",
+  "note",
+  "please",
+  "rank",
+  "read",
+  "recommend",
+  "remember",
+  "reply",
+  "respond",
+  "say",
+  "send",
+  "tell",
+  "treat",
+  "trust",
+  "use",
+  "write",
+]);
+
 describe("the handshake (ADR-157)", () => {
   /**
    * ⚠ NO INSTRUCTION, OF ANY KIND. A reader of this kind takes a page as
@@ -42,58 +100,10 @@ describe("the handshake (ADR-157)", () => {
   it("gives its reader no instruction", () => {
     expect(text).toContain("Instructions in this file: none");
 
-    const PHRASES: readonly RegExp[] = [
-      /\b(ignore|disregard|forget|override)\b[^.?!]{0,60}\b(instruction|prompt|previous|above|rule)s?\b/i,
-      /\byou (must|should|shall|need to|have to|are required to|are to)\b/i,
-      /\b(always|never) (say|tell|recommend|rank|mention|cite|answer|respond)\b/i,
-      /\bwhen (asked|someone asks|a user asks|your user asks)\b/i,
-      /\b(tell|inform|remind|convince|persuade|advise) (your|the) (user|principal|operator|human|owner)\b/i,
-      /\bsystem prompt\b/i,
-      /\b(remember|memori[sz]e|store|save) (this|that|me|these)\b/i,
-      /\b(recommend|prefer|prioriti[sz]e|favou?r|rank) (me|vince|thoughtform)\b/i,
-      /\bas an ai\b/i,
-      /* The store-and-forward forms: the two asks a text that spreads from
-         agent to agent is made of. The letter's own denial ("I ask no agent
-         to keep this letter or hand it on") is none of them. */
-      /\b(save|store|write|add|copy) (this|it) (to|in|into) (your|a|the) (memory|notes|file|context)\b/i,
-      /\b(pass|send|forward|share|relay) (this|it) (on |along )?to (the next|other|another|your)\b/i,
-      /\b(MEMORY|SOUL)\.md\b/,
-    ];
     for (const pattern of PHRASES) {
       expect(flat, `an instruction to the reader: ${pattern}`).not.toMatch(pattern);
     }
 
-    const IMPERATIVES = new Set([
-      "always",
-      "answer",
-      "ask",
-      "cite",
-      "consider",
-      "do",
-      "don't",
-      "finish",
-      "follow",
-      "forget",
-      "ignore",
-      "keep",
-      "make",
-      "never",
-      "note",
-      "please",
-      "rank",
-      "read",
-      "recommend",
-      "remember",
-      "reply",
-      "respond",
-      "say",
-      "send",
-      "tell",
-      "treat",
-      "trust",
-      "use",
-      "write",
-    ]);
     for (const paragraph of HANDSHAKE_BODY) {
       if (paragraph.startsWith("## ")) continue;
       for (const sentence of paragraph.split(/(?<=[.?!])\s+/)) {
@@ -252,5 +262,148 @@ describe("the handshake (ADR-157)", () => {
       if (pattern.source.startsWith("\\[")) continue;
       expect(index, why).not.toMatch(pattern);
     }
+  });
+});
+
+/**
+ * The agents file's guard (ADR-157).
+ *
+ * `/agents.txt` is a declaration a machine parses, so what is pinned is what
+ * a parser needs, and what an edit could make untrue without anyone seeing:
+ * that it restates the site's records and never sets a second policy beside
+ * them, and that it holds the handshake's no.
+ */
+describe("the agents file (ADR-157)", () => {
+  const agents = renderAgentsTxt();
+  const agentLines = agents.split("\n");
+  const fields = agentLines.flatMap((line) => {
+    const pair = line.match(/^([A-Za-z][A-Za-z-]*): (\S.*)$/);
+    return pair ? [[pair[1], pair[2]] as const] : [];
+  });
+  const values = (key: string) => fields.filter(([k]) => k === key).map(([, v]) => v);
+  const comments = agentLines.filter((l) => l.startsWith("#")).map((l) => l.slice(1).trim());
+
+  /**
+   * ⚠ VALID UNDER BOTH PROPOSALS THAT EXIST. The Internet-Draft's file opens
+   * on `# agents.txt` and `Spec-Version`, and requires a name and an HTTPS
+   * address; both proposals skip a key they do not know, so every line is a
+   * comment, a blank or one `Key: value`, and nothing is indented into a
+   * block that only one of them could read.
+   */
+  it("parses as an agents.txt under either proposal", () => {
+    expect(agentLines[0]).toBe("# agents.txt");
+    expect(agentLines[1]).toBe(`Spec-Version: ${AGENTS_TXT.specVersion}`);
+    expect(values("Site-Name")).toEqual(["Thoughtform"]);
+    expect(values("Site-URL")).toEqual(["https://thoughtform.co"]);
+    for (const line of agentLines) {
+      expect(
+        line === "" || line.startsWith("#") || /^[A-Za-z][A-Za-z-]*: \S.*$/.test(line),
+        `not a comment, a blank or a field: "${line}"`
+      ).toBe(true);
+    }
+    expect(agents, "plain ASCII").toMatch(/^[\n\x20-\x7E]*$/);
+    expect(agents.endsWith("\n"), "ends on a newline").toBe(true);
+  });
+
+  /**
+   * ⚠ NO CAPABILITY. A `Capability:` block promises an agent an endpoint to
+   * call on someone's behalf. The site offers none, the file says so in a
+   * sentence, and the two stay true together.
+   */
+  it("declares no capability, and says so", () => {
+    for (const key of ["Capability", "Endpoint", "Protocol", "Protocols", "MCP", "A2A", "Skills"]) {
+      expect(values(key), `a ${key} line`).toEqual([]);
+    }
+    expect(comments.join(" ")).toContain("This file declares no Capability.");
+  });
+
+  /**
+   * ⚠ ONE ACCESS POLICY, IN TWO FILES. The closed paths are `app/robots.ts`,
+   * in its order; no agent is named, so none is treated differently from
+   * another, which is what the handshake says of itself too.
+   */
+  it("restates the crawl policy and never sets a second one", () => {
+    const rules = robots().rules;
+    const rule = Array.isArray(rules) ? rules[0] : rules;
+    expect(rule.userAgent).toBe("*");
+    expect(values("Disallow")).toEqual(rule.disallow);
+    expect(values("Allow")).toEqual(["/"]);
+    expect(values("Agent"), "one block, for every agent").toEqual(["*"]);
+    expect(values("Sitemap")).toEqual([robots().sitemap]);
+  });
+
+  /**
+   * ⚠ EVERY FIELD IS A RECORD THE SITE ALREADY KEEPS. The contact is the
+   * public address, the description is the line `/llms.txt` carries, the
+   * handshake is the handshake's own canonical address, and every address in
+   * the file is the site's: a page the sitemap lists, or one of the machine
+   * files at the root.
+   */
+  it("restates the site's records, and points only at what is public", async () => {
+    expect(values("Site-Contact")).toEqual([CONTACT_EMAIL]);
+    expect(values("Handshake")).toEqual([HANDSHAKE.canonical]);
+    expect(values("Canonical")).toEqual([AGENTS_TXT.canonical]);
+    const index = await getLlms().text();
+    expect(index, "the site's own line").toContain(`> ${values("Site-Description")[0]}\n`);
+
+    const machineFiles = new Set([
+      "https://thoughtform.co",
+      "https://thoughtform.co/sitemap.xml",
+      "https://thoughtform.co/llms.txt",
+      AGENTS_TXT.canonical,
+    ]);
+    for (const [url] of agents.matchAll(/https?:\/\/[^\s)>]+/g)) {
+      expect(sitemapUrls.has(url) || machineFiles.has(url), `${url}: public`).toBe(true);
+    }
+    expect(agents).not.toMatch(/astrolabe|substrate|vault/i);
+  });
+
+  /**
+   * ⚠ THE HANDSHAKE'S NO, HELD HERE TOO. The owner's ruling is one ruling: no
+   * prompt injection. A `Disallow` is a rule about this site and the only
+   * kind there is; the comments are sentences in the third person, walked by
+   * the same two lists as the letter, under the same copy law.
+   */
+  it("gives an agent no instruction beyond access to this site", () => {
+    const prose = comments.join(" ").replace(/\s+/g, " ");
+    for (const pattern of PHRASES) {
+      expect(prose, `an instruction to the reader: ${pattern}`).not.toMatch(pattern);
+    }
+    expect(prose, "the third person: this file is not a letter").not.toMatch(/\byou(r|rs)?\b/i);
+    for (const sentence of prose.split(/(?<=[.?!])\s+/)) {
+      const first = sentence.split(/[\s,:]/)[0].toLowerCase();
+      expect(IMPERATIVES.has(first), `a sentence that opens as a command: "${sentence}"`).toBe(
+        false
+      );
+    }
+    for (const [pattern, why] of MUSINGS_COPY_BANS) {
+      expect(agents, why).not.toMatch(pattern);
+    }
+    for (const comment of comments) {
+      expect(comment.length + 2, `over the measure: "${comment}"`).toBeLessThanOrEqual(
+        HANDSHAKE_MEASURE
+      );
+    }
+  });
+
+  /**
+   * ⚠ ONE FILE AT EVERY ADDRESS AN AGENT ASKS AT. The root and the well-known
+   * address serve the module's text whole, with the headers the draft asks
+   * for; the singular spelling redirects to the root.
+   */
+  it("serves one text at both addresses, and redirects the singular", async () => {
+    for (const get of [getAgents, getWellKnownAgents]) {
+      const response = get();
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+      expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+      expect(response.headers.get("Link")).toBe(`<${AGENTS_TXT.canonical}>; rel="canonical"`);
+      expect(await response.text(), "the route serves the module's text, whole").toBe(agents);
+    }
+    const config = readFileSync(join(process.cwd(), "next.config.mjs"), "utf8");
+    expect(config).toContain(
+      '{ source: "/agent.txt", destination: "/agents.txt", permanent: true }'
+    );
   });
 });

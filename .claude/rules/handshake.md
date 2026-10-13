@@ -1,8 +1,11 @@
 ---
 paths:
   - "lib/handshake/**"
+  - "lib/agents/**"
   - "app/handshake.txt/**"
   - "app/llms.txt/**"
+  - "app/agents.txt/**"
+  - "app/.well-known/**"
   - "tests/lib/handshake.test.ts"
 ---
 
@@ -31,3 +34,11 @@ paths:
   `app/sitemap.ts`.
 - **`/llms.txt` lists what the sitemap lists**, and reads the musings by path:
   its row in `next.config.mjs` `outputFileTracingIncludes` stays.
+- **`/agents.txt` restates and never decides.** Its closed paths are
+  `app/robots.ts`; its contact, description, sitemap and handshake address are
+  the site's records, and the test holds each. Change the record, then the file.
+- **`/agents.txt` declares no `Capability`.** Adding one promises strangers'
+  agents an endpoint to call, and is a decision with an ADR.
+- **The agents file holds the letter's no.** Its comments are third-person
+  sentences under the same two walks: no command, no ask to be preferred,
+  remembered or passed on. `/.well-known/agents.txt` serves the same bytes.
