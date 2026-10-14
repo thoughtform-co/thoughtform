@@ -20,6 +20,9 @@ export function measure(track: HTMLElement): Metrics | null {
   const q = (sel: string) => document.querySelector<HTMLElement>(sel);
   const flowStage = q(".psw .shf-stage");
   const flowFig = q(".psw .shf .pl-fig");
+  /* the opening's hold: its runway, and the screen that stays put in it */
+  const hold = q(".psw-hold");
+  const flowPin = hold?.querySelector<HTMLElement>(":scope > .xb-sec") ?? null;
   const es = q(".psw .es-runway");
   const esPin = q(".psw .es-pin");
   const esStage = q(".psw .es-stage");
@@ -35,9 +38,9 @@ export function measure(track: HTMLElement): Metrics | null {
   const xnBox = xn.getBoundingClientRect();
   const esTop = esBox.top + y;
   const xnTop = xnBox.top + y;
-  /* the canvas starts a screen above the steps' runway: where the first hop
-     begins, with the opening at rest */
-  const top = esTop - vh;
+  /* the canvas starts where the opening comes to rest: at the top of its
+     hold, or, on a page without one, a screen above the steps' runway */
+  const top = hold ? hold.getBoundingClientRect().top + y : esTop - vh;
   const atRest = (el: HTMLElement): Box => {
     const r = el.getBoundingClientRect();
     return { x: r.left - left, y: r.top + y - top, w: r.width, h: r.height };
@@ -54,21 +57,21 @@ export function measure(track: HTMLElement): Metrics | null {
   return {
     vh,
     dpr: dprNow(),
-    runways: { esTop, esH: esBox.height, xnTop, xnH: xnBox.height },
-    flowStage: atRest(flowStage),
-    flowFig: atRest(flowFig),
+    runways: { top, esTop, esH: esBox.height, xnTop, xnH: xnBox.height },
+    flowStage: flowPin ? inPin(flowStage, flowPin) : atRest(flowStage),
+    flowFig: flowPin ? inPin(flowFig, flowPin) : atRest(flowFig),
     esStage: inPin(esStage, esPin),
     xnFig: inPin(xnFig, xnPin),
   };
 }
 
 /** Where the track has to stand in its section for the canvas to hold from
-    the first hop's start to the network's last screen: its top and height
-    in px, against the section's own top. */
+    the opening's rest to the network's last screen: its top and height in
+    px, against the section's own top. */
 export function trackBox(track: HTMLElement, m: Metrics): { top: number; height: number } {
   const parent = track.offsetParent as HTMLElement | null;
   const parentTop = (parent?.getBoundingClientRect().top ?? 0) + window.scrollY;
-  const top = m.runways.esTop - m.vh;
+  const top = m.runways.top ?? m.runways.esTop - m.vh;
   return { top: top - parentTop, height: m.runways.xnTop + m.runways.xnH - top };
 }
 

@@ -6,7 +6,8 @@
    opening's files. Every number of the page's geometry is read from the
    module that owns it, never restated. */
 
-import { C30 } from "@/components/xb-proposal/iso";
+import { GAP, TRAVEL_END } from "@/components/xb-proposal/embed/EmbedStack";
+import { C30, ease } from "@/components/xb-proposal/iso";
 import { U_FRONT } from "@/components/xb-proposal/network/NetworkOrg";
 import {
   COURSE_GAP,
@@ -30,7 +31,7 @@ import { CARDS, W as FLOW_W } from "@/components/xb-proposal/plug/PlugFlow";
 import { FLOW } from "@/components/xb-proposal/stack/heroLayouts";
 import { HERO_BOX, STACK } from "@/components/xb-proposal/stack/travel";
 
-import { PLATES } from "../../stack-forms/model";
+import { PLATES, seg } from "../../stack-forms/model";
 import { type Falls, wingFalls } from "../../stack-forms/swarm/clear";
 import {
   buildScene,
@@ -89,6 +90,10 @@ export interface World extends Stage {
   dots: number;
 }
 
+/** The steps' stage: the air kept under the section's head, CSS px, and how
+    much of what is left the opened stack may take. */
+const STAGE = { air: 28, fill: 0.94 };
+
 /** Half a part's tag, in the flow's frame units, with a little air. */
 const TAG = { w: 44, h: 19 };
 
@@ -122,16 +127,32 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
     m.flowStage.y + (STACK.ref[1] + STACK.closed - HERO_BOX.y) * kA,
     STACK.closed
   );
+  /* -- the steps' seat. The section's own drawing lets a plate rise in from
+        below the frame. Here the whole opened stack stands inside the stage
+        (owner, 2026-10-14: "move the layers and text on the left a bit up so
+        everything is within the viewport"): the gap is what the stage has
+        room for, never past the section's own, the stack is centred in the
+        stage and holds still while the first two steps are read, and it
+        closes about its middle plate on the section's own clock ----------- */
   const steps = (p1: number) => stepsAt(p1, m.esStage.w, m.esStage.h);
+  /* a plate from its back corner to its front one, and the team's own
+     thickness above its floor */
+  const plateH = 2 * L.m * row;
+  const overTop = tops[0] * row;
+  const stageTop = (m.esStage.y + STAGE.air) * dpr;
+  const stageH = Math.max(0, (m.esStage.h - STAGE.air) * dpr);
+  const closedLift = kOf(L, STACK.closed / STACK.unit) * row;
+  const openMost = kOf(L, GAP.open / STACK.unit) * row;
+  const room = (stageH * STAGE.fill - plateH - overTop) / 2;
+  const openLift = Math.round(Math.max(closedLift, Math.min(openMost, room)) / row) * row;
   const seatB = (p1: number) => {
-    const r = steps(p1);
+    const close = ease(seg(p1, TRAVEL_END, 1));
+    const lift = Math.round((openLift - (openLift - closedLift) * close) / row) * row;
     return {
-      ...seatAt(
-        m.esStage.x + STACK.ref[0] * r.k,
-        m.esStage.y + r.ty + (STACK.ref[1] + r.gap) * r.k,
-        r.gap
-      ),
-      level: r.level,
+      ox: Math.round((m.esStage.x + m.esStage.w / 2) * dpr),
+      oy: Math.round(stageTop + stageH / 2 - L.m * row + overTop / 2),
+      lift: [-lift, 0, lift] as [number, number, number],
+      level: steps(p1).level,
     };
   };
 

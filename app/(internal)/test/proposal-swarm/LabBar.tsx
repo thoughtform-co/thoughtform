@@ -14,8 +14,8 @@ import { GRAINS } from "./engine/lattice";
 
 /** Screens a second. */
 const PACE = 0.42;
-/** The opening holds this long before the stack leaves, seconds. */
-const HOLD = 0.9;
+/** A breath before the page starts to move, seconds. */
+const HOLD = 0.3;
 
 export function LabBar({ fly, n }: { fly: Fly; n?: number }) {
   const [playing, setPlaying] = useState(false);
@@ -42,7 +42,11 @@ export function LabBar({ fly, n }: { fly: Fly; n?: number }) {
     const xn = document.querySelector<HTMLElement>(".psw .xn");
     if (!es || !xn) return;
     const vh = window.innerHeight;
-    const from = es.getBoundingClientRect().top + window.scrollY - vh;
+    /* from where the opening comes to rest: the top of its hold */
+    const hold = document.querySelector<HTMLElement>(".psw-hold");
+    const from =
+      (hold ? hold.getBoundingClientRect().top : es.getBoundingClientRect().top - vh) +
+      window.scrollY;
     const xnBox = xn.getBoundingClientRect();
     const to = xnBox.top + window.scrollY + xnBox.height - vh;
     const span = (to - from) / (vh * PACE);

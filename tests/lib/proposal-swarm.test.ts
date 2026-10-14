@@ -41,8 +41,9 @@ const P = W.pool;
 const R = METRICS.runways;
 const at = (y: number) => clocksAt(y, METRICS.vh, R);
 const Y = (name: (typeof STOPS)[number]) => stopY(name, METRICS.vh, R);
-/* a hair, in px of scroll: enough to be inside a hop, too little to move a dot */
-const HAIR = 1e-6;
+/* a hair, in px of scroll: past the pixel a clock settles within, so inside
+   the hop, and too little to move a dot */
+const HAIR = 1.5;
 
 describe("the lattice", () => {
   it("is the grain S4·E was picked at wherever that seats, and the next one where it does not", () => {
@@ -82,6 +83,15 @@ describe("the clocks", () => {
     expect(last.p2).toBe(1);
   });
 
+  it("is at rest within a pixel of a rest, and in the hop past it", () => {
+    expect(at(Y("opening") + 0.6).q1).toBe(0);
+    expect(at(Y("navigate") - 0.6).q1).toBe(1);
+    expect(at(Y("stacked") - 0.6).p1).toBe(1);
+    expect(at(Y("stacked") + 0.6).q2).toBe(0);
+    expect(at(Y("opening") + HAIR).q1).toBeGreaterThan(0);
+    expect(at(Y("navigate") - HAIR).q1).toBeLessThan(1);
+  });
+
   it("names its stops in the order the scroll reaches them", () => {
     const ys = STOPS.map(Y);
     for (let i = 1; i < ys.length; i++) expect(ys[i]).toBeGreaterThanOrEqual(ys[i - 1]);
@@ -93,7 +103,7 @@ describe("the clocks", () => {
 
   it("ends each hop as its last dot lands", () => {
     for (const spec of [HOP1, HOP2])
-      expect(spec.lead[2] + spec.spread + spec.jitter + spec.dur).toBeCloseTo(1, 9);
+      expect(Math.max(...spec.lead) + spec.spread + spec.jitter + spec.dur).toBeCloseTo(1, 9);
   });
 });
 
@@ -172,6 +182,25 @@ describe("a hop", () => {
       expect(last.F.x[d]).toBe(W.big.x[d]);
       expect(last.F.y[d]).toBe(W.big.y[d]);
     }
+  });
+
+  it("builds the stack from the ground up on the way into the steps", () => {
+    const [team, layer, agents] = HOP1.lead;
+    expect(agents).toBeLessThan(layer);
+    expect(layer).toBeLessThan(team);
+  });
+
+  it("stands the whole opened stack inside the steps' stage", () => {
+    const B = W.seatB(0);
+    const row = W.L.b * W.L.g;
+    const top = B.oy + B.lift[0] - W.thick[0] * row;
+    const bottom = B.oy + B.lift[2] + 2 * W.L.m * row;
+    expect(top).toBeGreaterThanOrEqual(METRICS.esStage.y * METRICS.dpr);
+    expect(bottom).toBeLessThanOrEqual((METRICS.esStage.y + METRICS.esStage.h) * METRICS.dpr);
+    /* and it closes about its middle plate, which does not move */
+    expect(W.seatB(1).oy).toBe(B.oy);
+    expect(W.seatB(1).lift[1]).toBe(0);
+    expect(Math.abs(W.seatB(1).lift[0])).toBeLessThan(Math.abs(B.lift[0]));
   });
 
   it("marches only level, plumb or at 45 degrees", () => {

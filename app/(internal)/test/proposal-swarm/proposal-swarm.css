@@ -39,6 +39,50 @@
   .psw .xn-fig {
     background-image: none;
   }
+  /* the organisation's own frame, its band and its name (owner,
+     2026-10-14: "we don't need the X Bionic Frame"): the seven teams stand
+     on the page itself. A team's own frame is inside `.xn-dept`, untouched. */
+  .psw .xno-world > .xno-housing,
+  .psw .xno-world > .xn-frame__band,
+  .psw .xno-world > .xn-frame__rule,
+  .psw .xno-org-name {
+    visibility: hidden;
+  }
+
+  /* ---- the opening holds ---- */
+
+  /* On the travelling copy the opening is one screen and the stack leaves
+     the moment that screen has arrived, so it is only ever seen whole
+     with the hero still above it (owner, 2026-10-14). Here it has a runway:
+     the screen stays put, everything tied to the stack, for this much
+     scroll, and the stack leaves after. */
+  .psw-hold {
+    height: calc(max(100svh, 640px) + 60svh);
+    /* a whole pixel where the browser can round, so the steps below start
+       on one */
+    height: calc(max(100svh, 640px) + round(60svh, 1px));
+  }
+  .psw-hold > .xb-sec {
+    position: sticky;
+    top: 0;
+  }
+
+  /* ---- the steps: the stack and the three steps in one box ---- */
+
+  /* The section runs its plates' column to the frame's bottom edge, for a
+     plate to leave by. Here the whole opened stack stands in view, so the
+     column stops above the frame's foot, and the steps, centred beside
+     it, come up with it. */
+  .psw .es-body {
+    padding-bottom: max(72px, 8.5svh);
+  }
+  /* The head's brief rises through the place the team's plate lands in,
+     and that plate now stands higher and lands last. The section brings
+     the brief in over the last fifth of the arrival (`--es-brief`); here
+     it waits for the last tenth, once the plate is down. */
+  .psw .es .xm__brief {
+    opacity: calc((var(--es-brief, 1) - 0.55) / 0.45);
+  }
 }
 
 /* ---- 2 · the canvas ---- */

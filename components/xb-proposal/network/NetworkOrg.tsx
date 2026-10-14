@@ -467,7 +467,7 @@ export function NetworkOrg() {
               Marketing
             </span>
             <span
-              className="xn-band xno-word"
+              className="xn-band xno-word xno-org-name"
               style={{
                 ...at(...seen(HOUSING.x0 + 18, HOUSING.y0 + HOUSING.band / 2)),
                 opacity: seg(z, 0.7, 1),

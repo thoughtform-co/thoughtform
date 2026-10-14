@@ -28,6 +28,8 @@ import { clamp01, seg } from "../../stack-forms/model";
 
 /** The two runways, in document px. */
 export interface Runways {
+  /** Where the opening comes to rest and holds; absent, it does not hold. */
+  top?: number;
   esTop: number;
   esH: number;
   xnTop: number;
@@ -41,12 +43,20 @@ export interface Clocks {
   p2: number;
 }
 
+/** A clock within a pixel of scroll of either end is at that end. The
+    runways are set in `svh`, so where one section hands over to the next is
+    seldom a whole pixel, and a page can only be scrolled to one: without
+    this a reader stopped on a rest would be a hair into the hop beside it. */
+const settle = (t: number, px: number) => (t * px < 1 ? 0 : (1 - t) * px < 1 ? 1 : t);
+
 export function clocksAt(y: number, vh: number, r: Runways): Clocks {
+  const esRun = Math.max(1, r.esH - vh);
+  const xnRun = Math.max(1, r.xnH - vh);
   return {
-    q1: clamp01(1 - (r.esTop - y) / vh),
-    p1: clamp01((y - r.esTop) / Math.max(1, r.esH - vh)),
-    q2: clamp01(1 - (r.xnTop - y) / vh),
-    p2: clamp01((y - r.xnTop) / Math.max(1, r.xnH - vh)),
+    q1: settle(clamp01(1 - (r.esTop - y) / vh), vh),
+    p1: settle(clamp01((y - r.esTop) / esRun), esRun),
+    q2: settle(clamp01(1 - (r.xnTop - y) / vh), vh),
+    p2: settle(clamp01((y - r.xnTop) / xnRun), xnRun),
   };
 }
 
@@ -124,6 +134,7 @@ export const TURN_LEN = T.draw + T.grow;
 /* -- stops, for stills and for the play button ---------------------------------- */
 
 export const STOPS = [
+  "arrive",
   "opening",
   "hop1-20",
   "hop1-40",
@@ -154,6 +165,8 @@ export function stopY(name: Stop, vh: number, r: Runways): number {
   const hop2 = (q: number) => r.xnTop - vh * (1 - q);
   const xn = (p: number) => r.xnTop + p * (r.xnH - vh);
   switch (name) {
+    case "arrive":
+      return r.top ?? hop1(0);
     case "opening":
       return hop1(0);
     case "hop1-20":

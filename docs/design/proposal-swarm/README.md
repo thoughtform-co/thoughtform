@@ -90,3 +90,61 @@ Stills: `round-01/` (the 20 stops in march; three hop frames in drift and two in
 - **Below 961 px, and for a reader who asks for less motion,** the lab's sheet hides nothing and no canvas mounts: the page is the travelling copy.
 - **1280×720:** the stack is 240 px and the four workstreams begin to merge.
 - Nothing is ported to the travelling copy or to the sent page. That follows a pick.
+
+---
+
+# Round 02 (2026-10-14)
+
+The owner's read of round 01 ("looks sick, push to main"), then four notes on the live page.
+
+## The opening holds
+
+> the artifact in the second section starts moving downwards a bit too soon … its 'equilibrium' position where everything nice aligned is happening when the hero section is still into view; shouldn't happen.
+
+On the travelling copy the opening is one screen, and the stack leaves the moment that screen has arrived. So the figure was only ever whole while the hero was still above it. Here the opening now has a runway of its own: the screen stays put, every file tied to the stack, for 60 % of a screen of scroll, and the stack leaves after. The canvas's track starts with that hold, so nothing is moved by script while it lasts.
+
+The page is 60 % of a screen longer than the travelling copy for it.
+
+## The stack is built from the ground up
+
+> it doesn't make sense that the first layer (the green one) moves down first; it should be bottom, middle and THEN the first layer.
+
+On the way into the steps the agents' plate leaves first and lands first, then the layer, and the team last. The team's plate is the one lit when the hop ends, and it is the last thing to arrive.
+
+## The steps fit the screen
+
+> I feel we can move the layers and text on the left a bit up so everything is within the viewport of the third section
+
+The section's own drawing lets a plate rise in from below the frame, so on a screen about 970 px tall the layer sat at the fold and the agents under it. Here the whole opened stack stands inside the stage:
+
+- the gap between plates is what the stage has room for, never more than the section's own;
+- the stack is centred in the stage and holds still while the first two steps are read, then closes about its middle plate on the section's own clock;
+- the plates' column stops above the frame's foot, and the three steps, centred beside it, come up with it.
+
+The head's brief rises through the place the team's plate now lands in, so on this page it waits for the last tenth of the arrival.
+
+## No frame round the organisation
+
+> we don't need the X Bionic Frame
+
+The organisation's housing, its band and its name are hidden on this page. The seven teams stand on the page itself. A team's own frame is untouched.
+
+## Also
+
+- **A team's dots no longer cross its name.** They left the ribbon's end level, along the band, over the lettering. They now go plumb down the node's edge first, then level along their row.
+- **A rest holds to the pixel.** The runways are set in `svh`, so where one section hands over to the next is seldom a whole pixel, and a page can only be scrolled to one. A clock within a pixel of scroll of either end is now at that end.
+- A new stop, `arrive`: where the opening comes to rest. Play starts there.
+
+## Checked
+
+- The travelling copy's 36 stills are identical to round 01's baseline. The one edit outside the lab is a class name on the organisation's name in `NetworkOrg.tsx`.
+- The 12 changed stops shot twice at 1920×1247 are byte-identical. Four were also shot at 1976×966, the size of the owner's window in his screenshots.
+- Three guard tests added, 25 in all: the first hop sends the bottom plate first; the whole opened stack is inside the steps' stage and closes about a middle plate that does not move; a clock is at rest within a pixel of a rest.
+
+Stills: `round-02/`.
+
+## Known, and not fixed in round 02
+
+- **The gap is tighter on a short screen.** At 1976×966 the opened plates stand about 180 px apart, a little less than a plate is tall, so each plate's front corner reaches the next one's back corner.
+- **The hold is one number,** 60 % of a screen, in `proposal-swarm.css`. It was not tuned by eye on the owner's screen.
+- Everything under "Known, and not fixed" in round 01 still stands, but for the organisation's frame.

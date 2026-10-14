@@ -123,7 +123,8 @@ export default async function ProposalSwarmRoute({
     >
       <ArcHero hero={PROD.hero} />
 
-      {/* 1 · the vision: the flow, the stack where its hub was */}
+      {/* 1 · the vision: the flow, the stack where its hub was; it holds a
+          stretch of scroll at rest before the stack leaves */}
       <ArcBeat
         id="vision"
         kind="leverage"
@@ -131,8 +132,10 @@ export default async function ProposalSwarmRoute({
         ariaLabel="AI capability your teams own"
         motion={motion}
       >
-        <div className="xb xb-in-frame xb-sec psw">
-          <StackFlow />
+        <div className="psw-hold">
+          <div className="xb xb-in-frame xb-sec psw">
+            <StackFlow />
+          </div>
         </div>
       </ArcBeat>
 

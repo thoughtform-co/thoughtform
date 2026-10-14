@@ -55,7 +55,10 @@ export interface HopSpec {
 }
 
 /* both end at 1 exactly: the last dot of the last plate lands as the hop does */
-export const HOP1: HopSpec = { lead: [0.05, 0.13, 0.21], spread: 0.26, jitter: 0.03, dur: 0.5 };
+/* the first hop builds the stack from the ground up: the agents leave first
+   and land first, then the layer, and the team last (owner, 2026-10-14:
+   "it should be bottom, middle and THEN the first layer") */
+export const HOP1: HopSpec = { lead: [0.21, 0.13, 0.05], spread: 0.26, jitter: 0.03, dur: 0.5 };
 export const HOP2: HopSpec = { lead: [0, 0.08, 0.16], spread: 0.3, jitter: 0.04, dur: 0.5 };
 const DRIFT_DUR = 0.55;
 
@@ -455,8 +458,9 @@ function network(S: Stage, F: Frame, p2: number) {
       continue;
     }
     /* on its way to a team: out of its cell to the ribbon's start (plumb,
-       then level), along its wire, and off the ribbon's end into its seat
-       (level, then plumb) */
+       then level), along its wire, and off the ribbon's end into its seat:
+       plumb down the node's own edge, then level along its row, so no dot
+       crosses the team's name on the band */
     const lane = O.lanes[team][O.wire[d]];
     const nx = N.x[d];
     const ny = N.y[d];
@@ -488,12 +492,12 @@ function network(S: Stage, F: Frame, p2: number) {
       at[1] = ey;
     } else if (off <= 0) {
       along(lane, onLane, at);
-    } else if (off <= inX) {
-      at[0] = tip[0] + Math.sign(tx - tip[0]) * off;
-      at[1] = tip[1];
+    } else if (off <= inY) {
+      at[0] = tip[0];
+      at[1] = tip[1] + Math.sign(ty - tip[1]) * off;
     } else {
-      at[0] = tx;
-      at[1] = tip[1] + Math.sign(ty - tip[1]) * (off - inX);
+      at[0] = tip[0] + Math.sign(tx - tip[0]) * (off - inY);
+      at[1] = ty;
     }
     F.x[d] = Math.round(at[0]);
     F.y[d] = Math.round(at[1]);
