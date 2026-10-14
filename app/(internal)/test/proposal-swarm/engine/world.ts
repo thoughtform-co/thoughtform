@@ -200,7 +200,7 @@ export function buildWorld(m: Metrics, o: { n?: number; mark?: Mark } = {}): Wor
   /* each dot's place on its plate in three dimensions: what the mark is set
      by, what a dot's cell in its bar is, and what the turn turns */
   const place = placeOf(pool, L, tops, blocks);
-  setMark(pool, place, L.m, L.n, tops[1], o.mark ?? "lit");
+  setMark(pool, place, L.m, L.n, tops[1], o.mark ?? "engrave");
   const cells = placeCells(pool, grid, place.i, place.j);
   const sizes = scene.sizes;
   const big = barTargets(

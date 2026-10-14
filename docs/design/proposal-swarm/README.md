@@ -10,7 +10,7 @@ http://localhost:3021/test/proposal-swarm
 
 - `?fly=fall|march|drift|rigid|scan` is how the dots fly into the steps (fall); into the network the stack turns, whichever (round 06).
 - `?n=3|4` holds the grain, sites a unit (absent: the one that fits).
-- `?mark=lit|cut` sets the Thoughtform mark on the layer in white dots, or leaves it out of a lit disc (lit; round 07).
+- `?mark=engrave|lit|cut` cuts the Thoughtform mark into the layer's gold, sets it in white dots, or leaves it out of a lit disc (engrave; round 09).
 - `?at=<stop>` opens on a named stop; `?still=1` stops the clock and hides the bar, for a shoot.
 - The bar at the foot of the page has the same switches, and **Play**, which scrolls the whole act at one pace.
 
@@ -324,3 +324,29 @@ The section faded its courses out over the first fifth of the draw-back. Here ea
 - Below 961 px, where no canvas mounts and the page is otherwise the travelling copy, the frame still comes on at the new moment, with its name typed.
 - The title still rises through the turning stack.
 - Judged from stills and stop-by-stop reads, not on the owner's screen.
+
+# Round 09 (2026-10-14): the mark, engraved
+
+> I don't like the Thoughtform brand mark. It looks like something a child made, like some crocheting or something. That's really bad so make it more subtle. No black borders. It should look engraved, so there's a bit more depth to it.
+
+`?mark=engrave`, now the default. The black border was round seven's ring of clear sites round every stroke; the crochet was the mark in white dots strung on the lattice.
+
+- **The groove is sunk.** Every site of the mark takes the layer's dimmest gold at the smallest size: a dark channel in the plate, never a hole.
+- **Its far edge catches the light.** Lit from the top left of the screen, the cut's edge below and right of each stroke faces the light. Those sites, just off the mark, take the layer's brightest gold one size up. Nothing else round the mark changes.
+- **Only the layer's own golds.** No white dot on the layer; every site keeps its place, so at rest the layer is still S4·E's dots on S4·E's pixels.
+
+Why not walls inside the groove: at this grain the strokes are about a site wide (the plate is 33 sites a side), too narrow for a groove to hold a lit wall and a shaded one. A first pass that tried it read as a faint darker ring and nothing more.
+
+`lit` (round seven) and `cut` stay on the switch, after it.
+
+## Checked
+
+- 51 guard tests. New: no white dot on the layer, the groove and the lip both there; off the mark no site is darker than the field (no ring); every lit site has the groove within a site on its light side; `lit` still sets its white dots.
+- The 12 stills of `round-09/` (six stops at 1976×966 and 1920×1247: the opening, the three steps, two frames of the turn) are byte-identical shot twice; one more of `encode` in the light theme.
+- `tsc` clean, ESLint with no warning on the lab. Nothing outside the lab changed.
+
+## Known, and not fixed in round 09
+
+- **Light theme:** dimmer is paler there, so the groove reads as a pale channel with a stronger gold edge below it. It was not tuned, as the theme never has been.
+- **The mark is the brandmark only,** without the wordmark, and its thinnest strokes are a site wide.
+- Judged from stills, not on the owner's screen.

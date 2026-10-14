@@ -10,7 +10,7 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-proposal-swarm.mjs --port 3021
- *     [--fly fall|march|drift|rigid|scan] [--n 3|4] [--mark lit|cut]
+ *     [--fly fall|march|drift|rigid|scan] [--n 3|4] [--mark engrave|lit|cut]
  *     [--sizes 1280x720,1470x830,1920x1247] [--themes dark,light]
  *     [--out docs/design/proposal-swarm/round-01] [--only opening,hop1-40]
  *     [--twice]
@@ -41,7 +41,7 @@ const TWICE = args.includes("--twice");
 const query = new URLSearchParams({ still: "1" });
 if (FLY !== "fall") query.set("fly", FLY);
 if (N) query.set("n", N);
-if (MARK && MARK !== "lit") query.set("mark", MARK);
+if (MARK && MARK !== "engrave") query.set("mark", MARK);
 const URL = `http://localhost:${PORT}/test/proposal-swarm?${query}`;
 
 async function shoot(browser, dir) {
@@ -92,7 +92,7 @@ async function shoot(browser, dir) {
         );
         // long enough for the corner readout to finish decoding the section's name
         await page.waitForTimeout(900);
-        const file = `${name}-${FLY}${N ? `-n${N}` : ""}${MARK && MARK !== "lit" ? `-${MARK}` : ""}-${w}x${h}${theme === "light" ? "-light" : ""}.png`;
+        const file = `${name}-${FLY}${N ? `-n${N}` : ""}${MARK && MARK !== "engrave" ? `-${MARK}` : ""}-${w}x${h}${theme === "light" ? "-light" : ""}.png`;
         await page.screenshot({ path: path.join(dir, file) });
         shot.push(file);
         console.log(`· ${file}`);

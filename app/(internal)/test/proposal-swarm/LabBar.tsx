@@ -32,7 +32,7 @@ export function LabBar({ fly, n, mark }: { fly: Fly; n?: number; mark: Mark }) {
     const q = new URLSearchParams();
     if (f !== "fall") q.set("fly", f);
     if (grain) q.set("n", String(grain));
-    if (k !== "lit") q.set("mark", k);
+    if (k !== "engrave") q.set("mark", k);
     const s = q.toString();
     return s ? `?${s}` : "?";
   };

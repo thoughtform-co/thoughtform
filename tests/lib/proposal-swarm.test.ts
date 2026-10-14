@@ -30,6 +30,11 @@ import {
   TURN,
 } from "@/app/(internal)/test/proposal-swarm/engine/flight";
 import { SHOW } from "@/app/(internal)/test/proposal-swarm/engine/formations";
+import {
+  engraved,
+  lightOf,
+  markCover,
+} from "@/app/(internal)/test/proposal-swarm/engine/mark";
 import { pickLattice, plateWidth } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
 import { rowAt } from "@/app/(internal)/test/proposal-swarm/engine/pool";
 import { buildWorld, type Metrics } from "@/app/(internal)/test/proposal-swarm/engine/world";
@@ -477,16 +482,62 @@ describe("the turn into the network", () => {
 });
 
 describe("the Thoughtform mark", () => {
-  it("is set on the layer's top in white dots, where S4·E had its rings", () => {
+  const m = W.L.m;
+  const cover = markCover(m);
+  const light = lightOf(m);
+  const on = (i: number, j: number) =>
+    i >= 0 && j >= 0 && i <= m && j <= m && cover[i * (m + 1) + j] >= 0.34;
+  const FIELD = [1, STYLE.layer] as const;
+
+  it("is cut into the layer's gold: no white dot, the groove sunk, its lip lit", () => {
     let hot = 0;
+    let groove = 0;
+    let lip = 0;
     for (let d = 0; d < P.own; d++) {
-      if (P.style[d] !== STYLE.layerHot) continue;
-      expect(P.plate[d]).toBe(1);
+      if (P.plate[d] !== 1) continue;
+      if (P.style[d] === STYLE.layerHot) hot++;
+      if (P.style[d] === STYLE.layerDim && P.tier[d] === 0) groove++;
+      if (P.style[d] === STYLE.layerLit && P.tier[d] === 3) lip++;
+    }
+    expect(hot).toBe(0);
+    expect(groove).toBeGreaterThan(150);
+    expect(lip).toBeGreaterThan(30);
+    /* and every dot stays on its own pixel: only its look is the mark's */
+    expect(P.own).toBe(W.scene.plates.reduce((sum, p) => sum + p.dots, 0));
+  });
+
+  it("puts no dark ring round it: off the mark, no site is darker than the field", () => {
+    for (let i = 1; i < m; i++)
+      for (let j = 1; j < m; j++) {
+        if (on(i, j)) continue;
+        const [, style] = engraved(false, light(i, j), FIELD);
+        expect([STYLE.layer, STYLE.layerLit]).toContain(style);
+      }
+  });
+
+  it("lights only the far edge of a cut: a lip has the groove on its light side", () => {
+    let lips = 0;
+    for (let i = 1; i < m; i++)
+      for (let j = 1; j < m; j++) {
+        if (on(i, j)) continue;
+        const [, style] = engraved(false, light(i, j), FIELD);
+        if (style !== STYLE.layerLit) continue;
+        lips++;
+        /* the light comes from less i: the groove is there, within a site */
+        expect(on(i - 1, j) || on(i - 1, j - 1) || on(i - 1, j + 1)).toBe(true);
+      }
+    expect(lips).toBeGreaterThan(30);
+  });
+
+  it("sets the mark in white dots when it is lit", () => {
+    const lit = buildWorld(METRICS, { mark: "lit" });
+    let hot = 0;
+    for (let d = 0; d < lit.pool.own; d++) {
+      if (lit.pool.style[d] !== STYLE.layerHot) continue;
+      expect(lit.pool.plate[d]).toBe(1);
       hot++;
     }
     expect(hot).toBeGreaterThan(60);
-    /* and every dot stays on its own pixel: only its look is the mark's */
-    expect(P.own).toBe(W.scene.plates.reduce((sum, p) => sum + p.dots, 0));
   });
 
   it("is left out of a lit disc when it is cut", () => {

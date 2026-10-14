@@ -74,8 +74,9 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  *   ?fly=fall|march|drift|rigid|scan   how the dots go into the steps (fall);
  *                            into the network the stack turns, whichever
  *   ?n=3|4                   sites a unit, held (absent: the lattice that fits)
- *   ?mark=lit|cut            the Thoughtform mark on the layer: in white
- *                            dots, or left out of a lit disc (lit)
+ *   ?mark=engrave|lit|cut    the Thoughtform mark on the layer: cut into
+ *                            the gold, in white dots, or left out of a lit
+ *                            disc (engrave)
  *   ?at=<stop>               open on a named stop (`engine/clocks.ts`)
  *   ?still=1                 nothing rides the clock and the bar is off: a still
  */
@@ -92,7 +93,7 @@ export default async function ProposalSwarmRoute({
   const n = (GRAINS as readonly number[]).includes(grain) ? grain : undefined;
   const mark = (MARKS as readonly string[]).includes(one(q.mark) ?? "")
     ? (one(q.mark) as Mark)
-    : "lit";
+    : "engrave";
   const at = (STOPS as readonly string[]).includes(one(q.at) ?? "")
     ? (one(q.at) as Stop)
     : undefined;
