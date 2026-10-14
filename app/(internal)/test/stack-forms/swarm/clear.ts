@@ -57,7 +57,7 @@ const DROP = [
 ] as const;
 const TRAIL = DROP[DROP.length - 1][0];
 
-interface Falls {
+export interface Falls {
   count: number;
   x: Int32Array;
   /** Where each stream comes out from under the upper plate, and where the
@@ -73,7 +73,11 @@ interface Falls {
 }
 
 /** The streams of one gap, a wing each side, nearest the side corner first. */
-function wingFalls(L: Lattice, seed: number, landing: (i: number, j: number) => number): Falls {
+export function wingFalls(
+  L: Lattice,
+  seed: number,
+  landing: (i: number, j: number) => number
+): Falls {
   const streams = PER_WING * 2;
   const n = streams * DROPS;
   const f: Falls = {
@@ -122,7 +126,7 @@ const perWing = (L: Lattice, gapPx: number) => {
 
 /** Paint a gap's drops, each advanced by `dt` seconds (0 holds it at rest).
     `gapPx` is the clear height between the two plates at their side corner. */
-function drawFalls(
+export function drawFalls(
   ctx: Ctx,
   S: Scene,
   f: Falls,
@@ -189,7 +193,7 @@ function mask(ctx: Ctx, poly: Int32Array, dy: number) {
 
 /** The runners on the agents' traces: a bright dot stepping site to site out
     of the chip, two dimmer ones behind it. */
-function drawRunners(ctx: Ctx, S: Scene, runners: Runner[], dy: number, t: number) {
+export function drawRunners(ctx: Ctx, S: Scene, runners: Runner[], dy: number, t: number) {
   const tail = [
     [0, 3, STYLE.agentsHot],
     [1, 2, STYLE.agentsLit],
@@ -211,7 +215,7 @@ function drawRunners(ctx: Ctx, S: Scene, runners: Runner[], dy: number, t: numbe
 const GOLD = [1, 3, 5].map((at) => parseInt(HEX.gold.slice(at, at + 2), 16));
 
 /** The layer's halo: gold light on its top face, densest at the core. */
-function halo(ctx: Ctx, S: Scene, dy: number) {
+export function halo(ctx: Ctx, S: Scene, dy: number) {
   const { L } = S;
   const mid = L.m / 2;
   const cx = px(L, mid, mid);

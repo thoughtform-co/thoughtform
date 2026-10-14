@@ -87,24 +87,24 @@ if (SEATS.some((s, i) => s.name !== DEPTS[i]?.name)) {
 }
 
 /* the frontal camera's unit at scale 1: `camIso`'s own */
-const U_FRONT = 26 * Math.sqrt(1.5);
+export const U_FRONT = 26 * Math.sqrt(1.5);
 /* a course at node size, and the three of them */
-const BAR = {
+export const BAR = {
   w: S * U_FRONT * NODE_K,
   h: COURSE_H * U_FRONT * NODE_K,
   pitch: COURSE_GAP * U_FRONT * NODE_K,
 };
-const BARS_H = 2 * BAR.pitch + BAR.h;
+export const BARS_H = 2 * BAR.pitch + BAR.h;
 
 /* the big frame's middle and Marketing's node's: what the camera pulls back
    about, and how far (the frame's width over a node's) */
-const FRAME_MID: Pt = [(FR.x0 + FR.x1) / 2, (FR.y0 + FR.y1) / 2];
-const NODE_MID: Pt = [MARKETING.x + NODE.w / 2, MARKETING.y + NODE.h / 2];
-const Z0 = (FR.x1 - FR.x0) / NODE.w;
+export const FRAME_MID: Pt = [(FR.x0 + FR.x1) / 2, (FR.y0 + FR.y1) / 2];
+export const NODE_MID: Pt = [MARKETING.x + NODE.w / 2, MARKETING.y + NODE.h / 2];
+export const Z0 = (FR.x1 - FR.x0) / NODE.w;
 
 /* -- the scroll's four acts ---------------------------------------------- */
 
-const T = {
+export const T = {
   turn: [0.03, 0.27],
   frame: [0.25, 0.34],
   /* a beat on the finished module, then the view draws back */
@@ -115,7 +115,7 @@ const T = {
   grow: 0.045,
 } as const;
 
-function moment(p: number) {
+export function moment(p: number) {
   const from = (i: number) => T.ribs + (TURNS as readonly number[]).indexOf(i) * T.step;
   return {
     turn: ease(seg(p, T.turn[0], T.turn[1])),
@@ -408,7 +408,7 @@ export function NetworkOrg() {
 
             {/* the stack itself, the steps section's own plates */}
             {shown && platesOut > 0.01 && (
-              <g opacity={platesOut}>
+              <g opacity={platesOut} className="xno-plates">
                 {[2, 1, 0].map((i) => {
                   const Plate = PLATES[i];
                   return <Plate key={i} iso={isos[i]} />;
@@ -417,7 +417,7 @@ export function NetworkOrg() {
             )}
             {/* the courses they become */}
             {shown && coursesIn > 0 && (
-              <g opacity={coursesIn}>
+              <g opacity={coursesIn} className="xno-courses">
                 {[2, 1, 0].map((i) => {
                   const pr = isos[i].p;
                   const z1 = TOP_Z[i];

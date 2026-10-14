@@ -589,8 +589,14 @@ function bedPop(L: Lattice): Pop {
   return pack(out);
 }
 
-export function buildScene(w: number, h: number, dpr: number): Scene {
-  const L = fitLattice(w, h, dpr);
+export function buildScene(
+  w: number,
+  h: number,
+  dpr: number,
+  /** A lattice to build on; absent, the one that fits the canvas. */
+  on?: Lattice
+): Scene {
+  const L = on ?? fitLattice(w, h, dpr);
   const all: Cells = { ...WHOLE, i1: L.m, j1: L.m };
   const agents = agentsPop(L);
   const tops = PLATES.map((p) => kOf(L, p.body[p.body.length - 1].z1));

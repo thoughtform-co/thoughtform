@@ -53,14 +53,14 @@ const FACE_MID = OY + S * 0.5 * U;
    next plate rises in from below the frame, owner: "it should never be cut
    off"), closed at Run. The open gap is a CEILING: on a short stage it
    shrinks to what fits above the centred plate, never below `min`. */
-const GAP = { open: 300, min: 170, closed: 72 };
+export const GAP = { open: 300, min: 170, closed: 72 };
 /* The highest ink on a plate (the team plate's upper callout) and the air
    kept between it and the stage's top edge, both in drawing units. Nothing
    rises past that line (owner, 2026-10-12: the steps sit in the middle "so
    we don't have to fade out the top visualization"), so the stage needs no
    mask: a plate leaves only by the frame's bottom edge. */
-const INK_TOP = 44;
-const AIR = 16;
+export const INK_TOP = 44;
+export const AIR = 16;
 
 const GOLD = "var(--xb-gold)";
 const GREEN = "var(--es-green)";
@@ -437,7 +437,7 @@ type Callout = {
   y: number;
 };
 
-const CALLOUTS: Callout[][] = [
+export const CALLOUTS: Callout[][] = [
   [
     { side: "l", lines: ["THE STACK", "YOU HAVE"], at: [0.75, 5.6, 0.4], y: 150 },
     { side: "r", lines: ["FOUR", "WORKSTREAMS"], at: [5.9, 3.2, 0.4], y: -10 },
@@ -501,7 +501,7 @@ const PLATES = [TeamPlate, LayerPlate, AgentPlate];
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
 /* Where each step reads on the runway (its anchor): Embed at the start,
    Encode at the half, Run with the stack closed at the end. */
-const TRAVEL_END = 0.5;
+export const TRAVEL_END = 0.5;
 const STEP_AT = [0, TRAVEL_END, 0.97];
 
 /** The scroll's reading, CONTINUOUS (owner: "the diagrams … should scroll
@@ -511,7 +511,7 @@ const STEP_AT = [0, TRAVEL_END, 0.97];
     centred, then it closes about the layer, which is what brings the agents'
     plate up from the frame's bottom edge. The stack never travels past the
     layer, so the team plate never rises past the stage's top. */
-function read(
+export function read(
   p: number,
   open: number
 ): { step: 0 | 1 | 2; gap: number; centre: number; stacked: boolean } {
@@ -524,7 +524,7 @@ function read(
 
 /* How far into the arrival the stack keeps the donor's lighting (every
    plate lit, no callouts) before it takes this section's own. */
-const ARRIVE_LIT = 0.82;
+export const ARRIVE_LIT = 0.82;
 /* The head's brief rises through the stack's path while the stack travels,
    so on the arrival it comes in late, once the stack has cleared it. */
 const BRIEF_IN = 0.78;
