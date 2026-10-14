@@ -70,7 +70,8 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  * a class to their wrappers (`psw`, for its sheet) and the swarm's canvas as
  * the second beat's first child.
  *
- *   ?fly=fall|march|drift|rigid|scan   how the dots go between sections (fall)
+ *   ?fly=fall|march|drift|rigid|scan   how the dots go into the steps (fall);
+ *                            into the network the stack turns, whichever
  *   ?n=3|4                   sites a unit, held (absent: the lattice that fits)
  *   ?at=<stop>               open on a named stop (`engine/clocks.ts`)
  *   ?still=1                 nothing rides the clock and the bar is off: a still

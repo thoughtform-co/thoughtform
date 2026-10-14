@@ -17,11 +17,11 @@
    FLIGHT). Both are painted from one frame, in one order, with the same
    silhouettes, so a dot leaving is hidden behind a plate still standing. */
 
-import { drawFalls, drawRunners, halo } from "../../stack-forms/swarm/clear";
-import { hash2 } from "../../stack-forms/model";
+import { drawFalls, drawRunners, type Falls, halo } from "../../stack-forms/swarm/clear";
+import { HEX, hash2 } from "../../stack-forms/model";
 import { STYLE } from "../../stack-forms/swarm/dots";
 
-import type { Frame } from "./flight";
+import type { Frame, Glow, Seat } from "./flight";
 import { along, SHOW } from "./formations";
 import { DIM, paletteOf, type Tones } from "./palette";
 import { inGap, stationAt } from "./traces";
@@ -40,9 +40,49 @@ export interface Paint {
   tLast: number;
   palette: string[];
   key: string;
+  /** Whether each gap was raining last frame, the team's gap first; null
+      before the first frame. */
+  rain: [boolean, boolean] | null;
 }
 
-export const newPaint = (tones: Tones): Paint => ({ tones, tLast: 0, palette: [], key: "" });
+export const newPaint = (tones: Tones): Paint => ({
+  tones,
+  tLast: 0,
+  palette: [],
+  key: "",
+  rain: null,
+});
+
+/** A gap's rain starts again from the top: every drop is put back one whole
+    way, so the gap fills as rain does, a drop at a time out from under the
+    upper plate, and is the rain it is at rest a way later. Without this a
+    gap was full of drops the frame it began (owner, 2026-10-14: "they just
+    appear out of nowhere"). */
+function restart(f: Falls) {
+  for (let q = 0; q < f.count; q++) f.prog[q] = (((f.prog[q] % 1) + 1) % 1) - 1;
+}
+
+const GOLD = [1, 3, 5].map((at) => parseInt(HEX.gold.slice(at, at + 2), 16));
+
+/** The layer's light on a turning stack: S4·E's halo (`swarm/clear.ts`),
+    drawn in the plane of the layer's top face as the camera has it. */
+function glow(ctx: Ctx, g: Glow, alpha: number) {
+  if (alpha <= 0 || g.reach <= 0) return;
+  const [r, gr, b] = GOLD;
+  ctx.save();
+  ctx.translate(g.x, g.y);
+  ctx.transform(g.plane[0], g.plane[1], g.plane[2], g.plane[3], 0, 0);
+  ctx.globalAlpha = alpha;
+  const light = ctx.createRadialGradient(0, 0, 0, 0, 0, g.reach);
+  light.addColorStop(0, `rgba(${r}, ${gr}, ${b}, 0.34)`);
+  light.addColorStop(0.35, `rgba(${r}, ${gr}, ${b}, 0.14)`);
+  light.addColorStop(1, `rgba(${r}, ${gr}, ${b}, 0)`);
+  ctx.fillStyle = light;
+  ctx.beginPath();
+  ctx.arc(0, 0, g.reach, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
 
 const lit = (level: number) => DIM + (1 - DIM) * level;
 
@@ -205,7 +245,34 @@ function draw(
     paint();
     ctx.restore();
   };
-  const masks = (plate: 0 | 1 | 2, poly: Int32Array, wholeOnly: boolean) => {
+  /* what falls between two plates: on the whole stack, or, while the hop
+     still brings the rest, on the plates already landed in the steps */
+  const rain: { seat: Seat; y: number; on: readonly [number, number] } | null = whole
+    ? { seat: whole, y: wholeY, on: [1, 1] }
+    : F.rain && layer !== "seat"
+      ? { seat: F.rain.seat, y: F.rain.seat.oy, on: F.rain.on }
+      : null;
+  const fall = (gap: 0 | 1, level: number, style: number) => {
+    if (!rain) return;
+    const alpha = lit(level) * rain.on[gap];
+    if (alpha <= 0) return;
+    const { lift } = rain.seat;
+    ctx.save();
+    ctx.translate(rain.seat.ox, rain.y);
+    ctx.globalAlpha = alpha;
+    drawFalls(
+      ctx,
+      S,
+      W.falls[gap],
+      lift[gap],
+      lift[gap + 1],
+      lift[gap + 1] - lift[gap] - W.thick[gap + 1] * row,
+      style,
+      dt
+    );
+    ctx.restore();
+  };
+  const masks = (n: number, plate: 0 | 1 | 2, poly: Int32Array, wholeOnly: boolean) => {
     for (const m of F.masks) {
       if (layer === "seat" && !m.home) continue;
       const a = m.alpha[plate];
@@ -213,6 +280,12 @@ function draw(
       /* a solid on the board hides what is behind it only while its plate
          stands whole */
       if (wholeOnly ? a < 0.999 || band : a <= 0) continue;
+      if (m.poly) {
+        /* a silhouette of its own, on the canvas as it is: a turning plate */
+        const own = m.poly[n];
+        if (own) cut(ctx, own, 0, 0, a);
+        continue;
+      }
       const dy = m.home ? home : 0;
       if (band) {
         ctx.save();
@@ -230,23 +303,11 @@ function draw(
   W.pool.segs.forEach((seg, n) => {
     if (seg.block) {
       /* a solid on the board hides the board behind it, while it stands */
-      masks(2, seg.mask, true);
+      masks(n, 2, seg.mask, true);
     } else if (seg.plate === 1 && !layerDone) {
       layerDone = true;
-      if (whole)
-        inSeat(lit(F.level[1]), () =>
-          drawFalls(
-            ctx,
-            S,
-            W.falls[1],
-            whole.lift[1],
-            whole.lift[2],
-            whole.lift[2] - whole.lift[1] - W.thick[2] * row,
-            STYLE.fallGold,
-            dt
-          )
-        );
-      masks(1, seg.mask, false);
+      fall(1, F.level[1], STYLE.fallGold);
+      masks(n, 1, seg.mask, false);
       /* the layer's own light, on the layer it stands on */
       for (const m of F.masks) {
         if (layer === "seat" ? !m.home : layer === "flight" && m.home) continue;
@@ -257,22 +318,12 @@ function draw(
         halo(ctx, S, m.lift[1]);
         ctx.restore();
       }
+      /* and on a turning stack, in the plane of its top face */
+      if (F.glow && layer !== "seat") glow(ctx, F.glow, F.glow.alpha * lit(F.level[1]));
     } else if (seg.plate === 0 && !teamDone) {
       teamDone = true;
-      if (whole)
-        inSeat(lit(F.level[0]), () =>
-          drawFalls(
-            ctx,
-            S,
-            W.falls[0],
-            whole.lift[0],
-            whole.lift[1],
-            whole.lift[1] - whole.lift[0] - W.thick[1] * row,
-            STYLE.fallGreen,
-            dt
-          )
-        );
-      masks(0, seg.mask, false);
+      fall(0, F.level[0], STYLE.fallGreen);
+      masks(n, 0, seg.mask, false);
     }
     dots(ctx, F, palette, seg.from, seg.to, layer);
     /* the runners on the agents' traces, over the bare board and under
@@ -290,7 +341,8 @@ function draw(
  * One frame onto the canvas that holds still (`flight`) and the opening's
  * own (`seat`); both are `w` by `h`. On a page without the second, the one
  * canvas takes everything. What falls is drawn by one layer only, the one
- * the whole stack stands on, so both may be handed the frame's own step.
+ * the whole stack stands on (or, while it lands, the one that holds still),
+ * so both may be handed the frame's own step.
  */
 export function paint(
   flight: Ctx,
@@ -309,6 +361,16 @@ export function paint(
     P.key = key;
     P.palette = paletteOf(F.level, P.tones);
   }
+  /* a gap that begins to rain starts from the top; one already raining when
+     the page opens is the rain it is at rest, and so is every gap of a still
+     (its clock stands at 0, so a restarted gap would stay empty) */
+  const raining: [boolean, boolean] = [
+    !!F.whole || (F.rain?.on[0] ?? 0) > 0,
+    !!F.whole || (F.rain?.on[1] ?? 0) > 0,
+  ];
+  if (P.rain && t > 0)
+    for (const gap of [0, 1] as const) if (raining[gap] && !P.rain[gap]) restart(W.falls[gap]);
+  P.rain = raining;
   for (const ctx of seat ? [seat, flight] : [flight]) {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";

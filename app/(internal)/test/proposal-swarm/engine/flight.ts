@@ -7,12 +7,15 @@
      HOP 1         it leaves, plate by plate, and prints itself opened in the
                    steps' seat (B)
      the steps     the stack on the section's own clock: it travels, closes
-     HOP 2         the three plates re-seat as three level bars
+     HOP 2         the closed stack turns to face the reader as one object
+                   and its plates settle into three level bars (`turn.ts`)
      the network   the bars shrink to Marketing's node as the view draws
                    back, then dots leave along each team's lane
 
-   A HOP is never one move of the whole, and how it goes is the page's one
-   switch:
+   The first hop is never one move of the whole, and how it goes is the
+   page's one switch. The second is the turn, whichever way the first went
+   (owner, 2026-10-14: "I don't think we need that particle transition
+   because we get a frontal view"):
 
      fall    each plate falls whole, mostly downward, the bottom plate first,
              what stands on the agents' board ahead of it, a few dots
@@ -34,6 +37,7 @@
 import { type Clocks, arriveLight, hop2T, networkAt, TURN_LEN, turnOf } from "./clocks";
 import { along, type Org, SHOW, type Targets } from "./formations";
 import { type Pool, rowAt } from "./pool";
+import { hullOf, lensAt, project, topPlane, type Turn } from "./turn";
 import { STYLE } from "../../stack-forms/swarm/dots";
 
 const STYLE_LIT = { team: STYLE.teamLit, layer: STYLE.layerLit, agents: STYLE.agentsLit } as const;
@@ -75,11 +79,11 @@ export interface HopSpec {
   first: "h" | "v";
 }
 
-/* both end at 1 exactly: the last dot of the last plate lands as the hop does */
+/* it ends at 1 exactly: the last dot of the last plate lands as the hop does */
 /* the first hop builds the stack from the ground up: the agents leave first
    and land first, then the layer, and the team last (owner, 2026-10-14:
-   "it should be bottom, middle and THEN the first layer"). In both hops the
-   first plate's first row is off the moment the hop begins. */
+   "it should be bottom, middle and THEN the first layer"). The first
+   plate's first row is off the moment the hop begins. */
 /* The first hop marches plumb first: a dot drops out of the stack, as
    S4·E's own drops do, and then files level along its row into its seat.
    Level first, it would cross the tool cards, which stand beside the
@@ -90,13 +94,6 @@ export const HOP1: HopSpec = {
   jitter: 0.03,
   dur: 0.55,
   first: "v",
-};
-export const HOP2: HopSpec = {
-  lead: [0, 0.07, 0.14],
-  spread: 0.28,
-  jitter: 0.03,
-  dur: 0.55,
-  first: "h",
 };
 const DRIFT_DUR = 0.55;
 
@@ -117,10 +114,8 @@ const DRIFT_DUR = 0.55;
    middle of the fall, so it leaves straight down and settles straight down. */
 
 export const FALL = {
-  /** When each plate starts, team first: into the steps the bottom plate
-      first; into the network the top one. */
+  /** When each plate starts, team first: the bottom plate first. */
   lead1: [0.34, 0.17, 0] as const,
-  lead2: [0, 0.12, 0.24] as const,
   /** What stands on the agents' board (the nodes) drops first, one after
       another over this much; the board itself follows by `board`. */
   nodes: 0.03,
@@ -419,6 +414,29 @@ export interface Standing extends Seat {
   band?: ([number, number] | null)[];
   /** How much of each plate stands here, 0..1: its light follows it. */
   share: [number, number, number];
+  /** A silhouette of its own for each of the pool's segments, on the
+      canvas as it is (the seat's offsets are not added); null for none.
+      Absent, each segment's own, in the seat. */
+  poly?: (Int32Array | null)[];
+}
+
+/** Where what falls between the plates is shown while the stack is still
+    landing: the seat, and how far each gap's rain has come on, the team's
+    gap first. */
+export interface Rain {
+  seat: Seat;
+  on: [number, number];
+}
+
+/** The layer's light on a turning stack: the middle of its top face, the
+    plane of that face as a canvas transform, the light's reach on the plate
+    in sites, and how much of it is left. */
+export interface Glow {
+  x: number;
+  y: number;
+  plane: [number, number, number, number];
+  reach: number;
+  alpha: number;
 }
 
 export interface Frame {
@@ -450,6 +468,10 @@ export interface Frame {
   /** A falling dot's two trailing dots, x1 y1 x2 y2 a dot; NaN for none. */
   trail: Float32Array;
   trails: boolean;
+  /** What falls between the plates, before the stack stands whole. */
+  rain: Rain | null;
+  /** The layer's light while the stack turns. */
+  glow: Glow | null;
 }
 
 export function newFrame(n: number): Frame {
@@ -471,6 +493,8 @@ export function newFrame(n: number): Frame {
     home: false,
     trail: new Float32Array(n * 4).fill(NaN),
     trails: false,
+    rain: null,
+    glow: null,
   };
 }
 
@@ -490,11 +514,12 @@ export interface Stage {
   big: Targets;
   node: Targets;
   org: Org;
-  /** A dot's turn within its plate on the second hop. */
-  rank2: Float32Array;
-  /** The scan's order for each hop. */
+  /** 1 for the one dot a bar's cell shows (`formations.ts`). */
+  resident: Uint8Array;
+  /** The scan's order for the first hop. */
   scan1: Scan;
-  scan2: Scan;
+  /** The second hop: the stack's turn to face the reader. */
+  turn: Turn;
   /** One site step of the lattice, across and down, device px. */
   step: readonly [number, number];
 }
@@ -547,28 +572,14 @@ function masksOf(
   S: Stage,
   F: Frame,
   from: Seat,
-  to: Seat | null,
+  to: Seat,
   T: number,
   fly: Fly,
   spec: HopSpec,
   home: boolean,
   scan: Scan
 ) {
-  if (fly === "scan" && !to) {
-    /* the second hop sends the bars' rows, each gathered from all over a
-       plate, so a plate thins everywhere at once: its silhouette fades
-       over the time its dots are leaving */
-    const gone = scan.plates.map(([a, b]) => 1 - seg(T, a, b + 0.02));
-    if (gone.some((v) => v > 0))
-      F.masks.push({
-        ...from,
-        home,
-        alpha: [gone[0], gone[1], gone[2]],
-        share: [gone[0], gone[1], gone[2]],
-      });
-    return;
-  }
-  if (fly === "rigid" && to) {
+  if (fly === "rigid") {
     const e = ease(clamp01(T));
     F.masks.push({
       ox: Math.round(lerp(from.ox, to.ox, e)),
@@ -588,8 +599,7 @@ function masksOf(
     const come = seg(T, 0.72, 1);
     if (gone > 0)
       F.masks.push({ ...from, home, alpha: [gone, gone, gone], share: [gone, gone, gone] });
-    if (to && come > 0)
-      F.masks.push({ ...to, alpha: [come, come, come], share: [come, come, come] });
+    if (come > 0) F.masks.push({ ...to, alpha: [come, come, come], share: [come, come, come] });
     return;
   }
   const pad = S.sizes[S.sizes.length - 1];
@@ -600,9 +610,7 @@ function masksOf(
     band: [null, null, null],
     share: [0, 0, 0],
   };
-  const landed: Standing | null = to
-    ? { ...to, alpha: [0, 0, 0], band: [null, null, null], share: [0, 0, 0] }
-    : null;
+  const landed: Standing = { ...to, alpha: [0, 0, 0], band: [null, null, null], share: [0, 0, 0] };
   for (const p of [0, 1, 2]) {
     /* the rank whose dot is starting now, and the rank whose dot has landed;
        a scan's rows are a plate's ranks in the same order, top first */
@@ -623,14 +631,14 @@ function masksOf(
       left.band![p] =
         gone > 0 ? [from.oy + from.lift[p] + rowAt(S.pool, p, gone) - pad, FAR] : null;
     }
-    if (landed && to && come > 0) {
+    if (come > 0) {
       landed.alpha[p] = 1;
       landed.share[p] = come;
       landed.band![p] = come < 1 ? [-FAR, to.oy + to.lift[p] + rowAt(S.pool, p, come) + pad] : null;
     }
   }
   if (left.alpha.some((v) => v > 0)) F.masks.push(left);
-  if (landed && landed.alpha.some((v) => v > 0)) F.masks.push(landed);
+  if (landed.alpha.some((v) => v > 0)) F.masks.push(landed);
 }
 
 /** A falling dot's trailing dots, behind it on its own way. */
@@ -728,55 +736,6 @@ function fall1(S: Stage, F: Frame, T: number, t: number) {
   if (home.alpha.some((v) => v > 0)) F.masks.push(home);
 }
 
-/** The second hop as a fall: the top plate first, each plate's dots taking
-    their places in the bars. */
-function fall2(S: Stage, F: Frame, T: number, t: number) {
-  const P = S.pool;
-  const B = S.seatB(1);
-  const G = S.big;
-  F.trails = true;
-  for (let d = 0; d < P.count; d++) {
-    F.trail[d * 4] = NaN;
-    F.trail[d * 4 + 2] = NaN;
-    if (P.host[d] >= 0) {
-      F.show[d] = SHOW.no;
-      continue;
-    }
-    const p = P.plate[d];
-    const e = clamp01((T - fallStart(P, d, FALL.lead2)) / FALL.dur);
-    const ax = B.ox + P.lx[d];
-    const ay = B.oy + P.ly[d] + B.lift[p];
-    fallTo(ax, ay, G.x[d], G.y[d], e, at);
-    const amp = P.amp[d];
-    if (amp > 0 && e < 0.5) {
-      const still = (1 - 2 * e) * (1 - 2 * e);
-      const a = P.phase[d] + P.rate[d] * t;
-      at[0] += amp * still * Math.cos(a);
-      at[1] += amp * still * S.squash * Math.sin(a);
-    }
-    F.x[d] = Math.round(at[0]);
-    F.y[d] = Math.round(at[1]);
-    F.size[d] = Math.round(lerp(S.sizes[P.tier[d]], G.size[d], e));
-    F.style[d] = e < 0.5 ? P.style[d] : G.style[d];
-    if (G.show[d] === SHOW.window) {
-      F.show[d] = SHOW.window;
-      F.alpha[d] = 1 - seg(e, 0.55, 0.95);
-    } else F.show[d] = SHOW.yes;
-    trailOf(F, d, e, trails(P, d), ax, ay, G.x[d], G.y[d]);
-  }
-  /* a plate stands whole until its body leaves; then it is becoming a bar,
-     and what hid the dots behind it lets go */
-  const gone = [0, 1, 2].map(
-    (p) => 1 - seg(T, bodyStart(FALL.lead2, p), bodyStart(FALL.lead2, p) + 0.08)
-  );
-  if (gone.some((v) => v > 0))
-    F.masks.push({
-      ...B,
-      alpha: [gone[0], gone[1], gone[2]],
-      share: [gone[0], gone[1], gone[2]],
-    });
-}
-
 function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
   const P = S.pool;
   const A = S.seatA;
@@ -855,61 +814,118 @@ function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
   masksOf(S, F, A, B, T, fly, HOP1, true, S.scan1);
 }
 
-function hop2(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
+/* -- what falls, while the stack lands --------------------------------------------- */
+
+/** When a plate's body has landed in the steps, on the first hop's clock. */
+function landed1(S: Stage, fly: Fly, p: number): number {
+  switch (fly) {
+    case "fall":
+      return bodyStart(FALL.lead1, p) + FALL.dur;
+    case "march":
+      return HOP1.lead[p] + HOP1.spread + HOP1.jitter + HOP1.dur;
+    case "scan":
+      return S.scan1.plates[p][1] + S.scan1.dur;
+    default:
+      return 1;
+  }
+}
+
+/** How long a gap's rain takes to come on, on the hop's clock. */
+const RAIN_IN = 0.04;
+
+/** The owner, 2026-10-14: "the data raindrops can appear a bit sooner
+    because now they just appear out of nowhere." They fell only once the
+    whole stack stood in the steps, so the hop's last frame had none and the
+    next a gap full of them. A gap's rain now comes on as soon as both its
+    plates have landed (in the fall, the layer's gap well before the team
+    arrives), and the painter starts it from the top (`paint.ts`). */
+function rainOf(S: Stage, T: number, fly: Fly): Rain | null {
+  const on = [0, 1].map((g) => {
+    const from = Math.max(landed1(S, fly, g), landed1(S, fly, g + 1));
+    return seg(T, from, from + RAIN_IN);
+  });
+  return on[0] > 0 || on[1] > 0 ? { seat: S.seatB(0), on: [on[0], on[1]] } : null;
+}
+
+/* -- the turn ---------------------------------------------------------------------- */
+
+/** The second hop's timing, on its own clock. The stack turns over the first
+    `end` of it, on `flow`: under way the moment the steps let go (eased in,
+    it would stand still while its section scrolled away, the dead space of
+    round three), settling as it faces the reader. Each dot takes its cell
+    in its bar over
+    `settle`, which begins before the turn has ended, so the two read as one
+    move; what a turned plate hides, and the layer's light, let go over
+    `let`. */
+export const TURN = {
+  end: 0.74,
+  settle: [0.6, 1] as const,
+  let: [0.62, 0.8] as const,
+  /** As a plate goes edge-on, its rows from back to front close up into
+      strokes. A bar shows one dot a cell and holds the rest unseen under
+      it, so those others fade over this, and the plate face on is the
+      bar's own grid by the time the bars take it. */
+  thin: [0.42, 0.6] as const,
+} as const;
+
+/** The layer's light on its top face, as a share of the plate's side: S4·E's
+    halo reaches 0.62 of the plate's width on screen (`swarm/clear.ts`), and
+    the plate is wider on screen than its side by the root of two. */
+const GLOW_REACH = 0.62 / Math.SQRT2;
+
+/** The second hop: the closed stack turns to face the reader as one object,
+    crossing to the bars' place, and each dot then takes its cell. */
+function turn2(S: Stage, F: Frame, T: number, t: number) {
   const P = S.pool;
-  const B = S.seatB(1);
+  const R = S.turn;
   const G = S.big;
+  const e = flow(seg(T, 0, TURN.end));
+  const V = lensAt(R, e);
+  const k = smooth(seg(T, TURN.settle[0], TURN.settle[1]));
+  /* the others in a cell: on the bar they stand under the one it shows,
+     on its pixel, so they come back unseen once the bars hold them */
+  const other = 1 - seg(T, TURN.thin[0], TURN.thin[1]);
   for (let d = 0; d < P.count; d++) {
     if (P.host[d] >= 0) {
       F.show[d] = SHOW.no;
       continue;
     }
-    const p = P.plate[d];
-    const scan = fly === "scan";
-    const e = scan
-      ? clamp01((T - S.scan2.start[d]) / S.scan2.dur)
-      : dotT(T, p, S.rank2[d], P.h[d], fly, HOP2);
-    if (scan)
-      scanTo(
-        B.ox + P.lx[d],
-        B.oy + P.ly[d] + B.lift[p],
-        G.x[d],
-        G.y[d],
-        e,
-        S.step[0],
-        S.step[1],
-        at
-      );
-    else
-      moveTo(B.ox + P.lx[d], B.oy + P.ly[d] + B.lift[p], G.x[d], G.y[d], e, fly, P.h[d], S.cut, at);
+    project(V, R, P.plate[d], R.i[d], R.j[d], R.k[d], at);
     const amp = P.amp[d];
-    if (amp > 0 && e < 0.5 && (!scan || e <= 0)) {
-      /* the team's drift lets go as a dot leaves; a bar holds still. A
-         scanned row lets go of it at once: it travels rigid */
-      const still = (1 - 2 * e) * (1 - 2 * e);
+    if (amp > 0 && e < 1) {
+      /* the team's drift lets go as the plate turns */
+      const still = (1 - e) * (1 - e);
       const a = P.phase[d] + P.rate[d] * t;
       at[0] += amp * still * Math.cos(a);
       at[1] += amp * still * S.squash * Math.sin(a);
     }
-    F.x[d] = Math.round(at[0]);
-    F.y[d] = Math.round(at[1]);
-    F.size[d] = Math.round(lerp(S.sizes[P.tier[d]], G.size[d], e));
-    F.style[d] = scan
-      ? e <= 0
-        ? P.style[d]
-        : e < 1
-          ? WRITING[p]
-          : G.style[d]
-      : e < 0.5
-        ? P.style[d]
-        : G.style[d];
-    /* a dot bound for a word's place is let go as it lands */
-    if (G.show[d] === SHOW.window) {
+    F.x[d] = Math.round(lerp(at[0], G.x[d], k));
+    F.y[d] = Math.round(lerp(at[1], G.y[d], k));
+    F.size[d] = Math.round(lerp(S.sizes[P.tier[d]], G.size[d], k));
+    F.style[d] = k < 0.5 ? P.style[d] : G.style[d];
+    /* a dot bound for a word's place is let go as it settles */
+    const word = G.show[d] === SHOW.window ? 1 - seg(k, 0.55, 0.95) : 1;
+    const seen = S.resident[d] ? word : Math.min(word, other);
+    if (seen < 1) {
       F.show[d] = SHOW.window;
-      F.alpha[d] = 1 - seg(e, 0.55, 0.95);
+      F.alpha[d] = seen;
     } else F.show[d] = SHOW.yes;
   }
-  masksOf(S, F, B, null, T, fly, HOP2, false, S.scan2);
+  /* each plate, and each solid on the agents' board, hides what is behind
+     it through the same lens, until the bars take the dots */
+  const hold = 1 - seg(T, TURN.let[0], TURN.let[1]);
+  if (hold <= 0) return;
+  const pad = Math.round(1.5 * S.step[1]);
+  F.masks.push({
+    ox: 0,
+    oy: 0,
+    lift: [0, 0, 0],
+    alpha: [hold, hold, hold],
+    share: [0, 0, 0],
+    poly: R.boxes.map((b) => (b ? hullOf(V, R, b, pad) : null)),
+  });
+  project(V, R, 1, R.m / 2, R.m / 2, R.tall[1], at);
+  F.glow = { x: at[0], y: at[1], plane: topPlane(V), reach: GLOW_REACH * R.m, alpha: hold };
 }
 
 /** The share of a team's turn its last dot starts at, and how long one walks. */
@@ -1013,6 +1029,8 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
   F.ride = 0;
   F.home = false;
   F.trails = false;
+  F.rain = null;
+  F.glow = null;
   F.walked.fill(0);
   if (c.q2 <= 0) {
     if (c.q1 <= 0) {
@@ -1023,6 +1041,7 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
       F.reel = seg(c.q1, 0, 0.06);
       if (fly === "fall") fall1(S, F, c.q1, t);
       else hop1(S, F, c.q1, t, fly);
+      F.rain = rainOf(S, c.q1, fly);
       const lit = arriveLight(c.q1);
       const own = S.seatB(0).level;
       F.level = [lerp(own[0], 1, lit), lerp(own[1], 1, lit), lerp(own[2], 1, lit)];
@@ -1040,8 +1059,7 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
   const T2 = hop2T(c);
   if (T2 < 1) {
     F.state = "hop2";
-    if (fly === "fall") fall2(S, F, T2, t);
-    else hop2(S, F, T2, t, fly);
+    turn2(S, F, T2, t);
   } else {
     F.state = "network";
     network(S, F, c.p2);

@@ -48,6 +48,7 @@ import { assignCells, barTargets, gridOf, orgTargets, type Rect } from "./format
 import { latticeAt, type Pick, pickLattice, plateWidth, poseOfGap } from "./lattice";
 import { buildPool } from "./pool";
 import { buildTraces, type Traces } from "./traces";
+import { buildTurn } from "./turn";
 
 type Pt = readonly [number, number];
 
@@ -210,14 +211,13 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
       sides: SEATS.map((s) => s.side),
     }
   );
-  /* the scan's order. The first hop sends the bottom plate first, each
-     plate's rows top of the screen first; the second sends the bars'
-     rows top first, so each bar is written as a terminal writes a page. */
+  /* the scan's order: the bottom plate first, each plate's rows top of the
+     screen first */
   const BOTTOM_FIRST = [2, 1, 0];
   const scan1 = scanOf(pool, (d) => BOTTOM_FIRST[pool.plate[d]] * 1e6 + pool.ly[d]);
-  const scan2 = scanOf(pool, (d) => big.y[d]);
-  const rank2 = new Float32Array(pool.count);
-  for (let d = 0; d < pool.count; d++) rank2[d] = (cells.cell[d] % grid.cols) / (grid.cols - 1);
+  /* the turn into the network: from the closed stack the steps leave, to
+     the three plates face on over the big bars */
+  const turn = buildTurn(pool, L, tops, blocks, seatB(1), bigRects);
 
   /* -- the opening's files, in the flow's own frame ------------------------------ */
   const fu = (m.flowFig.w / FLOW_W) * dpr;
@@ -282,9 +282,9 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
     big,
     node,
     org,
-    rank2,
+    resident: cells.resident,
     scan1,
-    scan2,
+    turn,
     step: [L.a * L.g, L.b * L.g],
     traces,
     steps,

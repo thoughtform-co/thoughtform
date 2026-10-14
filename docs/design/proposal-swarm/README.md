@@ -8,7 +8,7 @@ http://localhost:3021/test/proposal-swarm
 
 (The port is this lab's worktree's, `C:\wtd` on branch `lab/proposal-swarm`; read it off the running server.)
 
-- `?fly=march|drift|rigid` is how the dots fly between sections (march).
+- `?fly=fall|march|drift|rigid|scan` is how the dots fly into the steps (fall); into the network the stack turns, whichever (round 06).
 - `?n=3|4` holds the grain, sites a unit (absent: the one that fits).
 - `?at=<stop>` opens on a named stop; `?still=1` stops the clock and hides the bar, for a shoot.
 - The bar at the foot of the page has the same switches, and **Play**, which scrolls the whole act at one pace.
@@ -203,3 +203,39 @@ Into the network the same fall, team first; there each plate's dots take their c
 - The live Play run at 1976×966: every state in order, 59 frames a second, no page error.
 - The 22 stills of `round-05/` (eleven stops at 1976×966 and 1920×1247) are byte-identical shot twice.
 - Nothing outside the lab changed in rounds 04 and 05.
+
+# Round 06 (2026-10-14): the stack turns into the network, and the rain comes on as it lands
+
+> I think the data raindrops can appear a bit sooner because now they just appear out of nowhere. When you scroll into the Marketing First and Every Team section, I don't think we need that particle transition because we get a frontal view, so they stack. I think the three stacks should stack and then rotate a bit on the x-axis and a bit on the z-axis so they come toward you. That creates an elegant transition to their final position.
+
+## The second hop is a turn
+
+`engine/turn.ts`. The closed stack the steps leave turns as one object through a true orthographic camera: yaw from the lattice's 45 degrees to none, pitch from the lattice's own (its sine is b over a) to a few degrees. Meanwhile it crosses from the steps' column to the bars' place, and its plates part to the courses' pitch. That is the network section's own turn (`NetworkOrg`, `camIso`), played by the dots.
+
+- **Every dot keeps its place on its plate in three dimensions.** On screen x is i − j and y is i + j − k, so a dot is read back as standing on its box's top; one that reads as past the box's front edge hangs on the wall below it. Each solid on the agents' board is its own box. So the turn's first frame is the stack as it stood, to the pixel.
+- **It is under way at once and settles face on** (`flow`, the lab's own ease). Eased in, it would stand still while its section scrolled away: round three's dead space.
+- **What hides what turns with it.** Each plate and each solid hides what is behind it by its own silhouette through the same camera (the hull of its eight corners), and the layer's light is drawn in the plane of its top face.
+- **It ends face on, each plate over its bar,** a site to a column of the bar, pitched just far enough that the layer's top and front span the bar's rows.
+- **As a plate goes edge-on it thins to the bar's grid.** Nearly edge-on, a plate's rows from back to front close up into strokes. A bar shows one dot per cell and keeps the rest unseen under it, so those others fade as the plate goes edge-on (`TURN.thin`). Face on, the plate is the bar's own grid, and the dots take their cells over the last of the hop. The others come back unseen, on their cell's pixel, once the bars hold them.
+
+The turn is the second hop whatever `?fly` says. The switch now governs the first hop only. The particle second hop (`fall2`, the four modes' `hop2`, `HOP2`, the second scan) is gone; it is in the history at `17cd2e52`.
+
+## The rain comes on as the plates land
+
+What falls between the plates fell only once the whole stack stood in the steps. So the hop's last frame had none, and the next had a gap full of drops already halfway down. Now:
+
+- **A gap's rain comes on as soon as both its plates have landed,** still inside the hop: in the fall, the layer's gap from 0.69 of it, the team's from 0.86 (`rainOf`).
+- **It starts from the top.** Every drop is put back one whole way, so the gap fills as rain does, a drop at a time out from under the upper plate, and is the rain it is at rest one way later (`restart` in `paint.ts`). A gap already raining when the page opens, and every gap of a still, is the rain at rest.
+
+## Checked
+
+- 40 guard tests. New ones: mid-turn every dot stands inside its own plate's turned silhouette; the stack has moved more than 20 px a twentieth of a screen into the hop; each plate is a diamond as it leaves the steps and a level bar over its own bar as the network pins; it thins to one dot per cell; the turn is the same in all five modes; the rain is off at `hop1-40`, on in the layer's gap only at `hop1-80`, on in both just before the steps pin.
+- The live rain shot over three seconds from the end of the hop: the gaps fill from under the plates.
+- The 16 stills of `round-06/` (eight stops at 1976×966 and 1920×1247) are byte-identical shot twice.
+- `tsc` clean, ESLint with no warning on the lab. Nothing outside the lab changed.
+
+## Known, and not fixed in round 06
+
+- **The title still rises through the stack** on the way in, now a turning object rather than a cloud.
+- **The runners and the rain stop when the hop begins.** By then the stack is closed and the gaps are shut, so the rain has already stopped; the agents' runners go out with the first frame of the turn.
+- **Judged from stills and a 16-frame sequence,** not on the owner's screen.

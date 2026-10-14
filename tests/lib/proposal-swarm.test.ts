@@ -5,9 +5,9 @@ import {
   FALL,
   fallStart,
   FLIES,
+  type Frame,
   frameAt,
   HOP1,
-  HOP2,
   marchRoute,
   newFrame,
   scanRoute,
@@ -104,9 +104,8 @@ describe("the clocks", () => {
     expect(at(Y("every-team")).p2).toBe(1);
   });
 
-  it("ends each hop as its last dot lands", () => {
-    for (const spec of [HOP1, HOP2])
-      expect(Math.max(...spec.lead) + spec.spread + spec.jitter + spec.dur).toBeCloseTo(1, 9);
+  it("ends the first hop as its last dot lands", () => {
+    expect(Math.max(...HOP1.lead) + HOP1.spread + HOP1.jitter + HOP1.dur).toBeCloseTo(1, 9);
   });
 });
 
@@ -308,7 +307,6 @@ describe("a hop", () => {
 
   it("marches only level, plumb or at 45 degrees", () => {
     const B0 = W.seatB(0);
-    const B1 = W.seatB(1);
     for (let d = 0; d < P.own; d += 7) {
       const p = P.plate[d];
       const first = marchRoute(
@@ -319,14 +317,6 @@ describe("a hop", () => {
         W.cut,
         HOP1.first
       );
-      const second = marchRoute(
-        B1.ox + P.lx[d],
-        B1.oy + P.ly[d] + B1.lift[p],
-        W.big.x[d],
-        W.big.y[d],
-        W.cut,
-        HOP2.first
-      );
       expect(isStraight(first, 1e-6)).toBe(true);
       expect(
         isStraight(
@@ -334,7 +324,6 @@ describe("a hop", () => {
           1e-6
         )
       ).toBe(true);
-      expect(isStraight(second, 1e-6)).toBe(true);
     }
   });
 
@@ -356,6 +345,134 @@ describe("a hop", () => {
     const rigid = shot(Y("hop1-40"), "rigid").F;
     expect(rigid.masks).toHaveLength(1);
     expect(rigid.masks[0].alpha).toEqual([1, 1, 1]);
+  });
+});
+
+describe("the turn into the network", () => {
+  /** The silhouettes a turning stack hides with, a segment each. */
+  const polys = (F: Frame) => F.masks.find((m) => m.poly)?.poly ?? null;
+  /** Inside a convex polygon, or on its edge. */
+  const inPoly = (poly: Int32Array, x: number, y: number) => {
+    let sign = 0;
+    const n = poly.length / 2;
+    for (let q = 0; q < n; q++) {
+      const ax = poly[q * 2];
+      const ay = poly[q * 2 + 1];
+      const bx = poly[((q + 1) % n) * 2];
+      const by = poly[((q + 1) % n) * 2 + 1];
+      const c = Math.sign((bx - ax) * (y - ay) - (by - ay) * (x - ax));
+      if (c === 0) continue;
+      if (sign === 0) sign = c;
+      else if (c !== sign) return false;
+    }
+    return true;
+  };
+  const extent = (poly: Int32Array) => {
+    const xs = poly.filter((_, q) => q % 2 === 0);
+    const ys = poly.filter((_, q) => q % 2 === 1);
+    return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+  };
+  const middle = (poly: Int32Array) => {
+    const xs = poly.filter((_, q) => q % 2 === 0);
+    const ys = poly.filter((_, q) => q % 2 === 1);
+    return [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2];
+  };
+  /** Each plate's own segment, team first. */
+  const plateSeg = [0, 1, 2].map((p) =>
+    P.segs.findIndex((s) => !s.block && s.plate === p && s.from < P.own)
+  );
+
+  it("turns the stack as one object: mid-turn every dot stands on its own plate", () => {
+    for (const stop of ["hop2-25", "hop2-50"] as const) {
+      const { F } = shot(Y(stop), "fall");
+      expect(F.state).toBe("hop2");
+      const own = polys(F);
+      expect(own).not.toBeNull();
+      let checked = 0;
+      P.segs.forEach((seg, n) => {
+        const poly = own![n];
+        if (!poly) return;
+        for (let d = seg.from; d < seg.to; d++) {
+          /* a dot that drifts is off its site by its drift */
+          if (P.amp[d] > 0) continue;
+          expect(inPoly(poly, F.x[d], F.y[d])).toBe(true);
+          checked++;
+        }
+      });
+      expect(checked).toBeGreaterThan(2000);
+    }
+  });
+
+  it("leaves at once: the stack is turning a twentieth of a screen in", () => {
+    const rest = shot(Y("stacked"), "fall").F;
+    const early = shot(Y("stacked") + 0.05 * METRICS.vh, "fall").F;
+    expect(early.state).toBe("hop2");
+    let furthest = 0;
+    for (let d = 0; d < P.own; d++)
+      furthest = Math.max(
+        furthest,
+        Math.abs(early.x[d] - rest.x[d]),
+        Math.abs(early.y[d] - rest.y[d])
+      );
+    expect(furthest).toBeGreaterThan(20);
+  });
+
+  it("faces the reader by the time the network pins, each plate over its bar", () => {
+    const start = polys(shot(Y("stacked") + HAIR, "fall").F)!;
+    const pinned = polys(shot(R.xnTop, "fall").F)!;
+    for (const p of [0, 1, 2]) {
+      /* a diamond as it leaves the steps, a level bar as the network pins */
+      const a = extent(start[plateSeg[p]]!);
+      const b = extent(pinned[plateSeg[p]]!);
+      expect(a.h / a.w).toBeGreaterThan(0.5);
+      expect(b.h / b.w).toBeLessThan(0.25);
+      /* and its middle is its bar's */
+      let x = 0;
+      let y = 0;
+      let n = 0;
+      for (let d = 0; d < P.own; d++) {
+        if (P.plate[d] !== p) continue;
+        x += W.big.x[d];
+        y += W.big.y[d];
+        n++;
+      }
+      const [mx, my] = middle(pinned[plateSeg[p]]!);
+      expect(Math.abs(mx - x / n)).toBeLessThan(6);
+      expect(Math.abs(my - y / n)).toBeLessThan(6);
+    }
+  });
+
+  it("thins each plate to its bar's grid as it goes edge-on", () => {
+    const F = shot(Y("hop2-75"), "fall").F;
+    expect(F.state).toBe("hop2");
+    let shown = 0;
+    for (let d = 0; d < P.own; d++) {
+      const seen = F.show[d] === SHOW.yes || (F.show[d] === SHOW.window && F.alpha[d] > 0.01);
+      /* the others in a cell are let go; the one a cell shows is not, but
+         where a course's words will be lettered */
+      if (!W.resident[d]) expect(seen).toBe(false);
+      else if (seen) shown++;
+    }
+    expect(shown).toBeGreaterThan(300);
+  });
+
+  it("is the same turn whichever way the dots came into the steps", () => {
+    const fall = shot(Y("hop2-25"), "fall").rows;
+    for (const fly of FLIES) expect(shot(Y("hop2-25"), fly).rows).toEqual(fall);
+  });
+});
+
+describe("what falls between the plates", () => {
+  it("comes on as the plates land, before the hop has ended", () => {
+    expect(shot(Y("hop1-40"), "fall").F.rain).toBeNull();
+    /* the layer has landed on the agents; the team is still on its way */
+    const late = shot(Y("hop1-80"), "fall").F;
+    expect(late.state).toBe("hop1");
+    expect(late.rain?.on).toEqual([0, 1]);
+    /* both gaps, a little before the steps pin */
+    const arriving = shot(Y("navigate") - 0.03 * METRICS.vh, "fall").F;
+    expect(arriving.state).toBe("hop1");
+    expect(arriving.rain?.on).toEqual([1, 1]);
   });
 });
 
