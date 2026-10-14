@@ -1,0 +1,198 @@
+/* /test/proposal-swarm: the lab's own sheet. Every class here starts psw.
+
+   The page is the travelling copy of the proposal (`/test/proposal-travel`),
+   mounted as it is. This sheet does two things to it and nothing else:
+
+     1. under `.psw`, a class only this page's wrappers carry, it hides what
+        the three sections DRAW (the stack, the connectors, the ribbons, the
+        dotted fields) and leaves every word, chip, card and housing;
+     2. it lays the swarm's canvas over them.
+
+   A global sheet outlives a client navigation, which is why nothing here
+   reaches a bare kit class. */
+
+/* ---- 1 · what the sections draw, hidden; never laid out differently ---- */
+
+/* The frame tier and up, for a reader who has not asked for less motion:
+   the same test the canvas mounts on (`SwarmAct`). Below either the page is
+   the travelling copy, drawings and all. `visibility` keeps every box, so
+   the words seated against a drawing stay where they are. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  /* the opening: the closed stack, and every line tied to it */
+  .psw .sh-svg,
+  .psw .pl-svg,
+  /* the steps: the three plates and their callouts */
+  .psw .es-svg,
+  /* the network: the plates as they turn, the courses they become, the
+     lanes, the ribbons, each team's three slots and the ribbons' ends */
+  .psw .xno-plates,
+  .psw .xno-courses,
+  .psw .xn-lane,
+  .psw .xn-rib,
+  .psw .xno-slot,
+  .psw .xn-port {
+    visibility: hidden;
+  }
+  /* the dotted field behind two of the figures: S4·E took its own bed of
+     dots away, and a second lattice under this one reads as noise */
+  .psw .pl-fig,
+  .psw .xn-fig {
+    background-image: none;
+  }
+}
+
+/* ---- 2 · the canvas ---- */
+
+/* The track: this section's first child, from a screen above it (where the
+   first hop begins) to its end (where the network lets go). `SwarmAct` sets
+   the two numbers from the page once it has measured it; these are what
+   they come to on a page whose sections are one screen each. Above the kit
+   blocks (`.xb-in-frame`, 2), so a housing's wash never dims a dot; under
+   the hero and the frame's own chrome. */
+.psw-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -100svh;
+  bottom: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.psw-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+.psw-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  /* a dot is a whole device pixel: never smoothed */
+  image-rendering: pixelated;
+}
+
+/* ---- the steps' six phrases, beside the plate they speak of ---- */
+
+.psw-words {
+  position: absolute;
+  inset: 0;
+}
+.psw-word {
+  --tone: rgb(var(--dawn-rgb, 235, 227, 214));
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transition: opacity 360ms ease;
+}
+.psw-word[data-on] {
+  opacity: 1;
+  transition-delay: 140ms;
+}
+.psw-word[data-tone="green"] {
+  --tone: var(--atreides-ink, #7a9e6a);
+}
+.psw-word[data-tone="gold"] {
+  --tone: var(--gold-ink, #caa554);
+}
+/* the section's own callout type (`.es-callout`), as words on the page */
+.psw-word__in {
+  display: block;
+  font-family: "XB Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 19px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+}
+.psw-word[data-side="l"] .psw-word__in {
+  transform: translate(-100%, -50%);
+  text-align: right;
+}
+.psw-word[data-side="r"] .psw-word__in {
+  transform: translate(0, -50%);
+}
+.psw-word__in i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin-bottom: 6px;
+  background: var(--tone);
+}
+.psw-word[data-side="l"] .psw-word__in i {
+  margin-left: auto;
+}
+
+/* ---- the lab's bar ---- */
+
+.psw-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 60;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 8px 14px;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.16);
+  background: rgba(var(--void-rgb, 10, 9, 8), 0.92);
+  font-family: "XB Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.4);
+}
+.psw-bar__title {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+}
+.psw-bar__set {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.psw-bar b {
+  font-weight: 400;
+}
+.psw-bar a,
+.psw-bar button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-decoration: none;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+  cursor: pointer;
+}
+.psw-bar a:hover,
+.psw-bar button:hover {
+  color: rgb(var(--dawn-rgb, 235, 227, 214));
+}
+.psw-bar a[data-on],
+.psw-bar button[data-on] {
+  color: var(--gold-ink, #caa554);
+}
+.psw-bar button {
+  padding: 2px 10px;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.28);
+}
+.psw-bar a:focus-visible,
+.psw-bar button:focus-visible {
+  outline: 1px solid var(--gold-ink, #caa554);
+  outline-offset: 3px;
+}
+.psw-bar output:empty {
+  display: none;
+}
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .psw-bar {
+    display: none;
+  }
+}
