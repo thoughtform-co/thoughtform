@@ -115,11 +115,11 @@ export const T = {
   grow: 0.045,
 } as const;
 
-export function moment(p: number) {
+export function moment(p: number, frame: readonly [number, number] = T.frame) {
   const from = (i: number) => T.ribs + (TURNS as readonly number[]).indexOf(i) * T.step;
   return {
     turn: ease(seg(p, T.turn[0], T.turn[1])),
-    frame: ease(seg(p, T.frame[0], T.frame[1])),
+    frame: ease(seg(p, frame[0], frame[1])),
     zoom: ease(seg(p, T.zoom[0], T.zoom[1])),
     rib: (i: number) => ease(seg(p, from(i), from(i) + T.draw)),
     grow: (i: number) => ease(seg(p, from(i) + T.draw - 0.01, from(i) + T.draw + T.grow)),
@@ -133,7 +133,19 @@ type Reading = {
   from: { x: number; y: number; k: number } | null;
 };
 
-export function NetworkOrg() {
+/** Marketing's name on its band, before the view draws back. */
+const MKT_NAME = "X-Bionic · Marketing";
+
+/** For a page that letters the module itself (the swarm lab): when
+    Marketing's frame comes on, and the stretch its name is typed over, on
+    the pin's clock. Absent, the frame and its name fade in together over
+    `T.frame`. */
+export type Lettered = {
+  frame: readonly [number, number];
+  name: readonly [number, number];
+};
+
+export function NetworkOrg({ lettered }: { lettered?: Lettered } = {}) {
   const runway = useRef<HTMLDivElement>(null);
   const fig = useRef<HTMLDivElement>(null);
   const [r, setR] = useState<Reading>({ p: 0, q: 0, from: null });
@@ -197,8 +209,12 @@ export function NetworkOrg() {
     };
   }, []);
 
-  const st = moment(r.p);
+  const st = moment(r.p, lettered?.frame);
   const z = st.zoom;
+  /* the name, typed: how much of it, and the head while it types */
+  const typed = lettered
+    ? Math.floor(MKT_NAME.length * seg(r.p, lettered.name[0], lettered.name[1]) + 1e-6)
+    : MKT_NAME.length;
   const travel = ease(r.q);
   const k0 = r.from?.k ?? 1;
 
@@ -452,10 +468,11 @@ export function NetworkOrg() {
               className="xn-band"
               style={{
                 ...at(fr.x0 + lerp(18, NODE_PAD, z), fr.y0 + fr.band / 2),
-                opacity: st.frame * (1 - seg(z, 0.15, 0.45)),
+                opacity: (lettered ? 1 : st.frame) * (1 - seg(z, 0.15, 0.45)),
               }}
             >
-              X-Bionic &middot; Marketing
+              {MKT_NAME.slice(0, typed)}
+              {typed > 0 && typed < MKT_NAME.length && <i className="xno-caret" />}
             </span>
             <span
               className="xn-band xno-word"

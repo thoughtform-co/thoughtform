@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { clocksAt, hop2T, STOPS, stopY } from "@/app/(internal)/test/proposal-swarm/engine/clocks";
+import {
+  BARS_BY,
+  clocksAt,
+  hop2T,
+  LETTERED,
+  networkAt,
+  STOPS,
+  stopY,
+} from "@/app/(internal)/test/proposal-swarm/engine/clocks";
+import {
+  charMid,
+  eraseX,
+  frontX,
+  headOn,
+  scaleAt,
+  typedOf,
+} from "@/app/(internal)/test/proposal-swarm/engine/courses";
 import {
   FALL,
   fallStart,
@@ -11,6 +27,7 @@ import {
   marchRoute,
   newFrame,
   scanRoute,
+  TURN,
 } from "@/app/(internal)/test/proposal-swarm/engine/flight";
 import { SHOW } from "@/app/(internal)/test/proposal-swarm/engine/formations";
 import { pickLattice, plateWidth } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
@@ -214,7 +231,7 @@ describe("a hop", () => {
       expect(landed.F.y[d]).toBe(W.big.y[d]);
     }
     /* and that is where the hop's last moment had them */
-    const last = shot(R.xnTop + 0.19 * (R.xnH - METRICS.vh) - HAIR, fly);
+    const last = shot(R.xnTop + BARS_BY * (R.xnH - METRICS.vh) - HAIR, fly);
     expect(last.F.state).toBe("hop2");
     for (let d = 0; d < P.own; d++) {
       expect(last.F.x[d]).toBe(W.big.x[d]);
@@ -444,7 +461,7 @@ describe("the turn into the network", () => {
   it("gathers each plate on itself into its bar: face on, every dot is on its cell", () => {
     /* a twentieth of the way into the bars' settle, when a dot would still
        be most of its way off if the turn had not brought it there */
-    const p2 = 0.02 + (0.17 * (0.75 - 0.7)) / 0.3;
+    const p2 = 0.02 + ((BARS_BY - 0.02) * (0.75 - 0.7)) / 0.3;
     const F = shot(R.xnTop + p2 * (R.xnH - METRICS.vh), "fall").F;
     expect(F.state).toBe("hop2");
     for (let d = 0; d < P.own; d++) {
@@ -518,15 +535,132 @@ describe("the bars", () => {
     const worded: number[] = [];
     for (let d = 0; d < P.own; d++) if (W.big.show[d] === SHOW.window) worded.push(d);
     expect(worded.length).toBeGreaterThan(30);
-    /* the courses are lettered over the last of the turn and until the view
-       has begun to draw back: p from about 0.2 to 0.4 */
-    for (const p of [0.2, 0.27, 0.34, 0.4]) {
+    /* the courses stand whole from the end of the hop until the view
+       begins to draw back */
+    for (const p of [BARS_BY, 0.27, 0.34, 0.4]) {
       const F = shot(R.xnTop + p * (R.xnH - METRICS.vh), "march").F;
       for (const d of worded) {
         expect(F.show[d]).toBe(SHOW.window);
         expect(F.alpha[d]).toBeLessThanOrEqual(0.001);
       }
     }
+  });
+});
+
+describe("the line that writes the bars", () => {
+  const pAt = (p: number) => R.xnTop + p * (R.xnH - METRICS.vh);
+  /** The network's pin where the hop's clock reads `t`, past 0.7. */
+  const pOfT = (t: number) => 0.02 + ((BARS_BY - 0.02) * (t - 0.7)) / 0.3;
+  const C = W.courses;
+
+  it("starts once the stack faces the reader, and ends the hop on the last column", () => {
+    expect(TURN.sweep[0]).toBeGreaterThanOrEqual(TURN.end);
+    expect(TURN.sweep[1]).toBe(1);
+    expect(shot(pAt(pOfT(TURN.sweep[0])), "fall").F.front).toBeLessThan(0.01);
+    expect(shot(Y("bars"), "fall").F.front).toBe(1);
+  });
+
+  it("gives a dot its bar's look as it passes, and types a course's characters as it passes them", () => {
+    const { F } = shot(Y("typing"), "fall");
+    expect(F.state).toBe("hop2");
+    expect(F.front).toBeGreaterThan(0.2);
+    expect(F.front).toBeLessThan(0.8);
+    const line = frontX(C, F.front);
+    let behind = 0;
+    let ahead = 0;
+    for (let d = 0; d < P.own; d++) {
+      const passed = W.big.x[d] <= line;
+      if (W.big.show[d] === SHOW.window) {
+        /* a dot on a word's place gives way to the word */
+        expect(F.alpha[d]).toBe(passed ? 0 : 1);
+      } else if (F.show[d] !== SHOW.no) {
+        expect(F.style[d] === W.big.style[d] && F.size[d] === W.big.size[d]).toBe(
+          passed || (P.style[d] === W.big.style[d] && W.sizes[P.tier[d]] === W.big.size[d])
+        );
+      }
+      if (passed) behind++;
+      else ahead++;
+    }
+    expect(behind).toBeGreaterThan(300);
+    expect(ahead).toBeGreaterThan(300);
+    /* mid-line, every course part typed, up to the line and no further */
+    let mid = 0;
+    C.words.forEach((word, i) => {
+      const n = typedOf(C, i, F.front, F.erase);
+      for (let c = 0; c < word.length; c++) expect(c < n).toBe(charMid(C, i, c) <= line);
+      if (n > 0 && n < word.length) mid++;
+    });
+    expect(mid).toBeGreaterThan(0);
+  });
+
+  it("types at the scroll's pace and never takes a character back while it writes", () => {
+    const last = [0, 0, 0];
+    for (let t = TURN.sweep[0]; t <= 1.0001; t += 0.01) {
+      const F = shot(pAt(pOfT(Math.min(1, t))), "fall").F;
+      C.words.forEach((_, i) => {
+        const n = typedOf(C, i, F.front, F.erase);
+        expect(n).toBeGreaterThanOrEqual(last[i]);
+        last[i] = n;
+      });
+    }
+    C.words.forEach((word, i) => expect(last[i]).toBe(word.length));
+  });
+
+  it("shows its head only on a word being typed", () => {
+    C.words.forEach((_, i) => {
+      expect(headOn(C, i, 0, 0)).toBe(false);
+      expect(headOn(C, i, 1, 0)).toBe(false);
+    });
+    const { F } = shot(Y("typing"), "fall");
+    C.words.forEach((word, i) => {
+      const n = typedOf(C, i, F.front, F.erase);
+      expect(headOn(C, i, F.front, F.erase)).toBe(n < word.length && frontX(C, F.front) >= C.big[i].x + C.inset);
+    });
+  });
+
+  it("has every course whole when Marketing's frame comes on, and the frame waits for it", () => {
+    expect(LETTERED.frame[0]).toBe(BARS_BY);
+    expect(LETTERED.name[0]).toBeGreaterThanOrEqual(LETTERED.frame[0]);
+    expect(networkAt(BARS_BY - 0.001, LETTERED.frame).frame).toBe(0);
+    expect(networkAt(LETTERED.frame[1], LETTERED.frame).frame).toBe(1);
+    const { F } = shot(Y("bars"), "fall");
+    C.words.forEach((word, i) => expect(typedOf(C, i, F.front, F.erase)).toBe(word.length));
+    /* and the view draws back well after the name is typed */
+    expect(LETTERED.name[1]).toBeLessThan(0.4);
+  });
+
+  it("erases each course from its end as the view draws back, and gives its dots back behind the head", () => {
+    /* a third of the way through the erase */
+    let p = 0.4;
+    while (networkAt(p).zoom < 0.22 / 3) p += 0.0005;
+    const { F } = shot(pAt(p), "fall");
+    expect(F.state).toBe("network");
+    expect(F.erase).toBeGreaterThan(0.2);
+    expect(F.erase).toBeLessThan(0.5);
+    C.words.forEach((word, i) => {
+      const n = typedOf(C, i, F.front, F.erase);
+      expect(n).toBeLessThan(word.length);
+      const head = eraseX(C, i, F.erase);
+      for (let c = 0; c < word.length; c++)
+        expect(c < n).toBe(charMid(C, i, c) + C.adv / 2 < head);
+    });
+    for (let d = 0; d < P.own; d++) {
+      if (W.big.show[d] !== SHOW.window || F.show[d] !== SHOW.window) continue;
+      expect(F.alpha[d]).toBe(W.big.x[d] > eraseX(C, P.plate[d], F.erase) ? 1 : 0);
+    }
+    /* a word and its dots shrink as one: a dot's place on its way to its
+       node is its bar's scale about the bar's left edge */
+    const k = scaleAt(C, F.zoom);
+    for (let d = 0; d < P.own; d++) {
+      if (W.org.team[d] >= 0 || F.show[d] === SHOW.no) continue;
+      const B = C.big[P.plate[d]];
+      const N = C.node[P.plate[d]];
+      const left = B.x + (N.x - B.x) * F.zoom;
+      expect(Math.abs(F.x[d] - (left + (W.big.x[d] - B.x) * k))).toBeLessThanOrEqual(1.5);
+    }
+    /* and nothing is left of them once it has drawn back that far */
+    const gone = shot(Y("drawback"), "fall").F;
+    C.words.forEach((_, i) => expect(typedOf(C, i, gone.front, gone.erase)).toBe(0));
   });
 });
 

@@ -39,6 +39,15 @@
   stroke-opacity: 1;
 }
 
+/* the head of a word being typed (`lettered`): a block a character wide */
+.xno-caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  vertical-align: top;
+  background: currentColor;
+}
+
 /* words new to this view: never under 12px */
 .xno-word.xn-band,
 .xno-word.xn-next {

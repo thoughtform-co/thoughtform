@@ -115,15 +115,26 @@ export const arriveLight = (q1: number) => 1 - seg(q1, ARRIVE_LIT, 1);
 
 /* -- the network -------------------------------------------------------------- */
 
-/** The plates must be bars before the courses are lettered, which the
-    section does over the last tenth of its turn (about p = 0.2). */
-const BARS_BY = 0.19;
+/** Where the second hop ends, on the network's pin: the line that writes the
+    bars, and types the courses on them, has crossed the last column
+    (`TURN.sweep`). Marketing's frame comes on from here (round 08). */
+export const BARS_BY = 0.25;
 
 /** The second hop's one clock: most of it while the network's runway rises
     through the screen, so every plate has left the stack well before the
     steps have scrolled away from under it; the rest over the start of the
-    network's pin, where the bars finish printing. */
+    network's pin, where the bars are written. Past 0.7 it runs level with
+    the scroll, so the line that writes them crosses at an even pace. */
 export const hop2T = (c: Clocks) => 0.7 * c.q2 + 0.3 * seg(c.p2, 0.02, BARS_BY);
+
+/** The owner, 2026-10-14: "When the full swipe is done and reveals the
+    frame, the X-Bionic Marketing frame should be shown." The frame comes on
+    the moment the line has written the bars, near at once, and its name is
+    typed on its band just after (`NetworkOrg`'s `lettered`). */
+export const LETTERED = {
+  frame: [BARS_BY, BARS_BY + 0.015],
+  name: [BARS_BY + 0.005, BARS_BY + 0.06],
+} as const;
 
 export { moment as networkAt };
 
@@ -149,6 +160,7 @@ export const STOPS = [
   "hop2-25",
   "hop2-50",
   "hop2-75",
+  "typing",
   "bars",
   "module",
   "drawback",
@@ -193,8 +205,10 @@ export function stopY(name: Stop, vh: number, r: Runways): number {
       return hop2(0.9);
     case "hop2-75":
       return xn(0.09);
+    case "typing":
+      return xn(0.16);
     case "bars":
-      return xn(0.2);
+      return xn(BARS_BY);
     case "module":
       return xn(0.36);
     case "drawback":

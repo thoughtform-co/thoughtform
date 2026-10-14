@@ -9,7 +9,7 @@ import { getClient } from "@/lib/arcs/clients";
 import { X_BIONIC_PROPOSAL_ARC as PROD } from "@/lib/arcs/content/x-bionic-proposal";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
-import { type Stop, STOPS } from "./engine/clocks";
+import { LETTERED, type Stop, STOPS } from "./engine/clocks";
 import { FLIES, type Fly } from "./engine/flight";
 import { GRAINS } from "./engine/lattice";
 import { type Mark, MARKS } from "./engine/mark";
@@ -162,7 +162,7 @@ export default async function ProposalSwarmRoute({
           <EmbedStack arrive />
         </div>
         <div className="xb xb-in-frame psw">
-          <NetworkOrg />
+          <NetworkOrg lettered={LETTERED} />
         </div>
       </ArcBeat>
 

@@ -10,9 +10,11 @@
 
    The three sections are mounted as they are, their drawings hidden by the
    lab's sheet. They keep their own scroll readers; this one reads the scroll
-   too and writes only what is its own: the canvas, and the six phrases the
+   too and writes only what is its own: the canvas, the six phrases the
    steps set beside their plates (`EmbedStack`'s callouts, by reference; their
-   leader lines went with the drawing).
+   leader lines went with the drawing), and the three courses on the bars,
+   typed by the line that writes them (`engine/courses.ts`; the section's
+   own are hidden by the lab's sheet).
 
    No per-frame React state: the engine is plain functions over typed
    arrays, built once a size (`engine/world.ts`). */
@@ -20,8 +22,10 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import { CALLOUTS } from "@/components/xb-proposal/embed/EmbedStack";
+import { COURSES } from "@/components/xb-proposal/network/NetworkPlug";
 
 import { clocksAt, type Stop, STOPS, stopY } from "./engine/clocks";
+import { headOn, scaleAt, typedOf } from "./engine/courses";
 import { type Fly, frameAt, newFrame } from "./engine/flight";
 import type { Mark } from "./engine/mark";
 import { measure, readTones, trackBox } from "./engine/measure";
@@ -67,6 +71,7 @@ export function SwarmAct({
   const track = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const words = useRef<(HTMLSpanElement | null)[]>([]);
+  const courses = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
     if (!live) return;
@@ -88,6 +93,7 @@ export function SwarmAct({
     let onScreen = true;
     let opened = false;
     const said: string[] = [];
+    const typed: string[] = [];
 
     const build = () => {
       const m = measure(tr);
@@ -113,6 +119,7 @@ export function SwarmAct({
       world = buildWorld(m, { n, mark });
       F = newFrame(world.pool.count);
       said.length = 0;
+      typed.length = 0;
       /* the page's facts, all true: what the lab's bar and a shoot read */
       const { pick } = world;
       tr.dataset.pswDots = String(world.dots);
@@ -153,6 +160,35 @@ export function SwarmAct({
       });
     };
 
+    /* the courses, as much of each as the line has typed, on its bar as
+       the view draws back */
+    const typeCourses = (W: World) => {
+      const C = W.courses;
+      const on = F.state === "hop2" || F.state === "network";
+      const { dpr } = W.metrics;
+      C.words.forEach((word, i) => {
+        const el = courses.current[i];
+        const text = el?.firstElementChild;
+        if (!el || !text) return;
+        const n = on ? typedOf(C, i, F.front, F.erase) : 0;
+        const head = on && headOn(C, i, F.front, F.erase);
+        /* on its bar, at its bar's scale, as the view draws back */
+        const B = C.big[i];
+        const N = C.node[i];
+        const k = scaleAt(C, F.zoom);
+        const x = (B.x + (N.x - B.x) * F.zoom + C.inset * k) / dpr;
+        const y = (B.y + B.h / 2 + (N.y + N.h / 2 - (B.y + B.h / 2)) * F.zoom) / dpr;
+        const key = `${n}${head ? "|" : ""}@${x.toFixed(1)},${y.toFixed(1)},${k.toFixed(3)}`;
+        if (typed[i] === key) return;
+        typed[i] = key;
+        el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${k.toFixed(3)})`;
+        el.style.fontSize = `${(C.font / dpr).toFixed(2)}px`;
+        text.textContent = word.slice(0, n);
+        el.toggleAttribute("data-head", head);
+        el.toggleAttribute("data-on", n > 0 || head);
+      });
+    };
+
     const draw = (ts: number) => {
       if (!world) return;
       const t = still || t0 < 0 ? 0 : (ts - t0) / 1000;
@@ -160,6 +196,7 @@ export function SwarmAct({
       frameAt(world, c, t, fly, F);
       paint(ctx, seatCtx, world, F, t, P, cv.width, cv.height);
       seatWords(world);
+      typeCourses(world);
       tr.dataset.pswState = F.state;
     };
     const frame = (ts: number) => {
@@ -245,6 +282,19 @@ export function SwarmAct({
                 <br />
                 {word.lines[1]}
               </span>
+            </span>
+          ))}
+          {COURSES.map((word, i) => (
+            <span
+              key={word}
+              className="psw-course"
+              data-tone={TONES[i]}
+              ref={(el) => {
+                courses.current[i] = el;
+              }}
+            >
+              <span />
+              <i className="psw-caret" />
             </span>
           ))}
         </div>

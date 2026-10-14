@@ -12,7 +12,6 @@ import { U_FRONT } from "@/components/xb-proposal/network/NetworkOrg";
 import {
   COURSE_GAP,
   COURSE_H,
-  COURSES,
   END_K,
   S as PLATE_SIDE,
   STACK_AT,
@@ -43,6 +42,7 @@ import {
 } from "../../stack-forms/swarm/dots";
 
 import { type Runways, stepsAt, type StepsReading } from "./clocks";
+import { coursesOf } from "./courses";
 import { scanOf, type Seat, type Stage } from "./flight";
 import { barTargets, gridOf, orgTargets, placeCells, type Rect } from "./formations";
 import { latticeAt, type Pick, pickLattice, plateWidth, poseOfGap } from "./lattice";
@@ -186,12 +186,10 @@ export function buildWorld(m: Metrics, o: { n?: number; mark?: Mark } = {}): Wor
   );
   /* the three courses are lettered on the bars (`.xn-course`: 16 units in
      from the bar's left edge, PT Mono at 11 units and never under 10px,
-     tracked 0.15em), so each bar keeps that stretch clear */
+     tracked 0.15em), so each bar keeps that stretch clear; here they are
+     typed by the line that writes the bars (`courses.ts`) */
   const font = Math.max(10, (11 * m.xnFig.w) / NET_W) * dpr;
-  const windows = COURSES.map((words, i): [number, number] => {
-    const x0 = bigRects[i].x + 16 * unit;
-    return [x0 - 0.8 * font, x0 + words.length * 0.75 * font + 0.8 * font];
-  });
+  const courses = coursesOf(bigRects, nodeRects, unit, font);
 
   const grid = gridOf(L.m, L.n);
   const cellCount = grid.cols * grid.rows;
@@ -205,7 +203,13 @@ export function buildWorld(m: Metrics, o: { n?: number; mark?: Mark } = {}): Wor
   setMark(pool, place, L.m, L.n, tops[1], o.mark ?? "lit");
   const cells = placeCells(pool, grid, place.i, place.j);
   const sizes = scene.sizes;
-  const big = barTargets(pool, cells, bigRects, { edge: sizes[3], fill: sizes[2] }, windows);
+  const big = barTargets(
+    pool,
+    cells,
+    bigRects,
+    { edge: sizes[3], fill: sizes[2] },
+    courses.windows
+  );
   const node = barTargets(pool, cells, nodeRects, { edge: sizes[2], fill: sizes[1] });
   const org = orgTargets(
     pool,
@@ -294,6 +298,7 @@ export function buildWorld(m: Metrics, o: { n?: number; mark?: Mark } = {}): Wor
     org,
     scan1,
     turn,
+    courses,
     step: [L.a * L.g, L.b * L.g],
     traces,
     steps,

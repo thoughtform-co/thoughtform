@@ -46,7 +46,7 @@ The three ways to fly are one engine with one switch. **March**: a level run, a 
 **Edits outside the lab, none changing behaviour:**
 
 - `components/xb-proposal/embed/EmbedStack.tsx` (shipped): seven `export` keywords (`GAP`, `INK_TOP`, `AIR`, `CALLOUTS`, `TRAVEL_END`, `read`, `ARRIVE_LIT`).
-- `components/xb-proposal/network/NetworkOrg.tsx`: eight `export` keywords, and a class name on the plates' group and on the courses' group.
+- `components/xb-proposal/network/NetworkOrg.tsx`: eight `export` keywords, and a class name on the plates' group and on the courses' group. Round 08: an optional `lettered` prop (when Marketing's frame comes on, and the stretch its name is typed over) and the `.xno-caret` rule in `network-org.css`; absent, the section is as it was (the travelling copy's 72 stills at two sizes and both themes are identical).
 - `stack-forms/swarm/dots.ts`: `buildScene` takes an optional lattice (absent, the one it fitted before).
 - `stack-forms/swarm/clear.ts`: five `export` keywords.
 
@@ -281,3 +281,46 @@ What read as a second rectangle was the end of the turn. Each face-on plate's 33
 
 - **The mark is the brandmark only,** without the wordmark. At 33 sites a side, its finest strokes (the ring's thin side, the outer arc) are a dot wide.
 - The title still rises through the turning stack.
+
+# Round 08 (2026-10-14): the line types the courses, then the frame
+
+> when you have those horizontal scan lines in the "Marketing First" and "Every Team" sections, we can also reveal the text as it moves from left to right. Right now the text has some sort of opacity animation and I don't know what it does. I think we can just use a typewriter effect. When the full swipe is done and reveals the frame, the X-Bionic Marketing frame should be shown. Remove "Run by your team." We don't need that.
+
+## One line writes the bars and types their words
+
+`engine/courses.ts`. The section letters its three courses on the bars and fades them in once its turn is done; that fade was the "opacity animation". Here the lab sets the courses itself, on the canvas's screen, and the lab's sheet hides the section's.
+
+- **One line crosses the three bars from left to right** (`TURN.sweep`, the last quarter of the second hop), at the scroll's own pace: past 0.7 the hop's clock runs level with the scroll. A dot takes its bar's look as the line passes it; it was column by column on an eased clock.
+- **A character is typed as the line passes its middle.** A dot on a word's place gives way as the line passes it, where those dots faded out.
+- **The head** is a block a character wide in the bar's own tone, only while the line is on the word.
+- **The hop now ends as the line crosses the last column**, a little later on the pin than before (0.25 of it, was 0.19), so the line crosses in about 0.6 of a screen of scroll (590 px at 1976×966, 760 px at 1920×1247). A new stop, `typing`, is halfway across; `bars` is where the line has finished.
+
+## Then Marketing's frame
+
+The frame comes on the moment the line has written the bars (`LETTERED` in `clocks.ts`), in about 50 px of scroll, and its name, "X-Bionic · Marketing", is typed on its band just after, with the same head. They used to fade in together after a gap in which the courses faded in. It comes through `NetworkOrg`'s new `lettered` prop.
+
+"Run by your team" is gone from the frame, at every size.
+
+## As the view draws back
+
+The section faded its courses out over the first fifth of the draw-back. Here each is erased from its end and the dots it held off come back behind the head. While it is erased a word is drawn at its bar's scale, so it and the dots round it shrink as one (test: a dot's place on its way to its node is its bar's scale about the bar's left edge). With the words at a fixed size, the bar's filled end ran into the last letters.
+
+## Checked
+
+- 48 guard tests, among them: the line starts once the stack faces the reader and ends the hop on the last column; mid-line, a dot has its bar's look exactly when the line has passed it, and a course is typed up to the line and no further; typing never takes a character back while the line writes; the head shows only on a word being typed; every course is whole when the frame comes on, and the frame waits for it; the erase runs from the end, gives the dots back behind the head and leaves nothing at `drawback`.
+- The travelling copy: 72 stills (1920×1247 and 1976×966, dark and light) shot with the round's edits and with them stashed are identical.
+- The 12 stills of `round-08/` (six stops at 1976×966 and 1920×1247) are byte-identical shot twice.
+- Every stop visited on the live page at 1976×966: the states in order, the courses typed then erased, the name typed, no page error.
+- `tsc` clean, ESLint with no warning on the lab or `NetworkOrg.tsx`.
+
+## Decisions taken without asking, to be confirmed
+
+- **The head.** "A typewriter effect" did not say whether it has a cursor. It is a block in the bar's tone while a word is typed or erased, and on the frame's name in gold. Take it out and the letters still come on at the line.
+- **The erase.** The courses go as the view draws back by being erased from their ends, so no opacity is left on these words.
+- **The frame itself** comes on in about 50 px of scroll rather than being drawn or swept; only its name is typed.
+
+## Known, and not fixed in round 08
+
+- Below 961 px, where no canvas mounts and the page is otherwise the travelling copy, the frame still comes on at the new moment, with its name typed.
+- The title still rises through the turning stack.
+- Judged from stills and stop-by-stop reads, not on the owner's screen.

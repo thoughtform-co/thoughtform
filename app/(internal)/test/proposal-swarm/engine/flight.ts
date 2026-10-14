@@ -35,6 +35,7 @@
              kept as the control */
 
 import { type Clocks, arriveLight, hop2T, networkAt, TURN_LEN, turnOf } from "./clocks";
+import { type Courses, eraseX, frontX } from "./courses";
 import { along, type Org, SHOW, type Targets } from "./formations";
 import { type Pool, rowAt } from "./pool";
 import { hullOf, lensAt, project, topPlane, type Turn } from "./turn";
@@ -472,6 +473,13 @@ export interface Frame {
   rain: Rain | null;
   /** The layer's light while the stack turns. */
   glow: Glow | null;
+  /** How far the line that writes the bars, and types the courses on them,
+      has crossed: 0 before it starts, 1 once written (`courses.ts`). */
+  front: number;
+  /** How far the courses have been erased as the view draws back, 0..1. */
+  erase: number;
+  /** How far the view has drawn back to Marketing's node, 0..1. */
+  zoom: number;
 }
 
 export function newFrame(n: number): Frame {
@@ -495,6 +503,9 @@ export function newFrame(n: number): Frame {
     trails: false,
     rain: null,
     glow: null,
+    front: 0,
+    erase: 0,
+    zoom: 0,
   };
 }
 
@@ -518,6 +529,8 @@ export interface Stage {
   scan1: Scan;
   /** The second hop: the stack's turn to face the reader. */
   turn: Turn;
+  /** The courses' words on the bars. */
+  courses: Courses;
   /** One site step of the lattice, across and down, device px. */
   step: readonly [number, number];
 }
@@ -853,14 +866,21 @@ function rainOf(S: Stage, T: number, fly: Fly): Rain | null {
     round three), settling as it faces the reader. While it turns, each
     plate's dots gather on the plate to the lines its bar's cells stand on
     (`gather`), so the plate face on is its bar (`turn.ts`); `settle` only
-    hands each dot to its cell, a pixel at most. The bar takes its own look
-    column by column over `settle`, left to right, as a line is written;
-    what a turned plate hides, and the layer's light, let go over `let`. */
+    hands each dot to its cell, a pixel at most. What a turned plate hides,
+    and the layer's light, let go over `let`.
+
+    Once it faces the reader, one line crosses the three bars from left to
+    right over `sweep`, at the scroll's own pace, as a terminal writes a
+    line: a dot takes its bar's look as the line passes it, and the courses
+    are typed on the bars as it passes their characters (owner, 2026-10-14:
+    "reveal the text as it moves from left to right"). The hop ends as it
+    crosses the last column. */
 export const TURN = {
   end: 0.74,
   gather: [0.28, 0.66] as const,
   settle: [0.6, 1] as const,
   let: [0.62, 0.8] as const,
+  sweep: [0.76, 1] as const,
 } as const;
 
 /** The layer's light on its top face, as a share of the plate's side: S4·E's
@@ -878,6 +898,8 @@ function turn2(S: Stage, F: Frame, T: number, t: number) {
   const V = lensAt(R, e);
   const k = smooth(seg(T, TURN.settle[0], TURN.settle[1]));
   const g = smooth(seg(T, TURN.gather[0], TURN.gather[1]));
+  F.front = seg(T, TURN.sweep[0], TURN.sweep[1]);
+  const line = frontX(S.courses, F.front);
   for (let d = 0; d < P.count; d++) {
     if (P.host[d] >= 0) {
       F.show[d] = SHOW.no;
@@ -904,14 +926,14 @@ function turn2(S: Stage, F: Frame, T: number, t: number) {
     }
     F.x[d] = Math.round(lerp(at[0], G.x[d], k));
     F.y[d] = Math.round(lerp(at[1], G.y[d], k));
-    /* its bar's look, its column's turn: a sweep from left to right */
-    const bar = k >= 0.2 + 0.6 * (R.gi[d] / R.m);
+    /* its bar's look once the line that writes the bars has passed it */
+    const bar = G.x[d] <= line;
     F.size[d] = bar ? G.size[d] : S.sizes[P.tier[d]];
     F.style[d] = bar ? G.style[d] : P.style[d];
-    /* a dot bound for a word's place is let go as it settles */
+    /* a dot on a word's place gives way to the word as the line types it */
     if (G.show[d] === SHOW.window) {
       F.show[d] = SHOW.window;
-      F.alpha[d] = 1 - seg(k, 0.55, 0.95);
+      F.alpha[d] = bar ? 0 : 1;
     } else F.show[d] = SHOW.yes;
   }
   /* each plate, and each solid on the agents' board, hides what is behind
@@ -947,8 +969,13 @@ function network(S: Stage, F: Frame, p2: number) {
   const O = S.org;
   const st = networkAt(p2);
   const z = st.zoom;
+  /* the courses are erased from their ends as the view draws back: too
+     small to letter once it has */
   const back = seg(z, 0, 0.22);
   const small = z >= 0.5;
+  F.front = 1;
+  F.erase = back;
+  F.zoom = z;
   for (let k = 0; k < F.walked.length; k++)
     F.walked[k] = seg(p2, turnOf(k) + TURN_LEN * 0.7, turnOf(k) + TURN_LEN);
 
@@ -973,8 +1000,9 @@ function network(S: Stage, F: Frame, p2: number) {
       F.size[d] = small ? N.size[d] : G.size[d];
       F.style[d] = N.style[d];
       if (G.show[d] === SHOW.window && back < 1) {
+        /* held off its word until the head erasing it has gone by */
         F.show[d] = SHOW.window;
-        F.alpha[d] = back;
+        F.alpha[d] = G.x[d] > eraseX(S.courses, P.plate[d], back) ? 1 : 0;
       } else F.show[d] = SHOW.yes;
       continue;
     }
@@ -1040,6 +1068,9 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
   F.trails = false;
   F.rain = null;
   F.glow = null;
+  F.front = 0;
+  F.erase = 0;
+  F.zoom = 0;
   F.walked.fill(0);
   if (c.q2 <= 0) {
     if (c.q1 <= 0) {

@@ -48,6 +48,11 @@
   .psw .xno-org-name {
     visibility: hidden;
   }
+  /* the courses on the bars: the lab types its own as the line that writes
+     the bars passes them (`.psw-course`), where the section fades its in */
+  .psw .xn-course {
+    visibility: hidden;
+  }
 
   /* ---- the opening holds ---- */
 
@@ -86,6 +91,13 @@
   .psw .es .xm__brief {
     opacity: calc((var(--es-brief, 1) - 0.55) / 0.45);
   }
+}
+
+/* Marketing's frame says only its name (owner, 2026-10-14: "Remove 'Run by
+   your team.' We don't need that."). At every size: it is what the page
+   says, not how the swarm draws it. */
+.psw .xn-state {
+  display: none;
 }
 
 /* ---- 2 · the canvas ---- */
@@ -184,6 +196,51 @@
 }
 .psw-word[data-side="l"] .psw-word__in i {
   margin-left: auto;
+}
+
+/* ---- the courses on the bars, typed ---- */
+
+/* the section's own course type (`.xn-course`), set on the canvas's screen;
+   its size is the section's, written with its place (`SwarmAct`) */
+.psw-course {
+  --tone: rgb(var(--dawn-rgb, 235, 227, 214));
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  visibility: hidden;
+  font-family: "XB Mono", ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+}
+.psw-course[data-on] {
+  visibility: visible;
+}
+.psw-course > span,
+.psw-course > i {
+  display: inline-block;
+  transform: translateY(-50%);
+  vertical-align: top;
+}
+.psw-course[data-tone="green"] {
+  --tone: var(--atreides-ink, #7a9e6a);
+}
+.psw-course[data-tone="gold"] {
+  --tone: var(--gold-ink, #caa554);
+}
+/* the head: a block a character wide, in the bar's own tone, only while
+   the line is on the word or the word is being erased */
+.psw-caret {
+  width: 0.6em;
+  height: 1em;
+  background: var(--tone);
+}
+.psw-course:not([data-head]) .psw-caret {
+  display: none;
 }
 
 /* ---- the lab's bar ---- */
