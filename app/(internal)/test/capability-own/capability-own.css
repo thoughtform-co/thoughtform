@@ -1,0 +1,397 @@
+/* /test/capability-own: the lab's own sheet. Every class here starts co-.
+   The section box, the title and the chips are the proposal's own (`.xb`,
+   `.xm`, `.pl-chip`); this sets the runways, the figure's box (the
+   opening's, `.pl-fig`, without its dotted field unless asked), the line
+   work and the words. Green is the team, gold Thoughtform, dawn what runs:
+   the opening's own key. */
+
+/* The house frame from the first screen: the shell lifts its rails as the
+   page scrolls off a hero (`--hero-lift`, `useArcScroll`), and this lab has
+   none. Only on a page that carries the lab. */
+html:has(.co-run) {
+  --hero-lift: 1 !important;
+}
+
+/* ---- the runway: a pinned screen inside a section several screens tall ---- */
+
+.co-run {
+  height: calc(var(--co-screens, 3) * 100svh);
+}
+.co-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 640px;
+}
+
+.co {
+  --co-green: var(--es-green, var(--atreides-ink, #7a9e6a));
+  --co-gold: var(--xb-gold, #caa554);
+  --co-dawn: var(--xb-text, #ebe3d6);
+  --pl-green: var(--co-green);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: clamp(20px, 3.4vh, 40px);
+  height: 100%;
+}
+
+/* the opening's figure box, to the letter (`.pl-fig`) */
+.co-fig {
+  --co-w: min(
+    calc(100% + 144px),
+    calc(
+      (100svh - var(--hud-rail-y-start, 96px) - var(--hud-rail-y-end, 72px) - 168px) * 1200 / 460
+    )
+  );
+  position: relative;
+  align-self: center;
+  justify-self: start;
+  width: var(--co-w);
+  margin: 0 0 0 calc((100% - var(--co-w)) / 2);
+  aspect-ratio: 1200 / 460;
+  container-type: inline-size;
+}
+.co-fig[data-field] {
+  background-image: radial-gradient(var(--xb-line) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  background-position: center;
+}
+.co-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.co-canvas {
+  position: absolute;
+  inset: 0;
+}
+.co-canvas canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ---- words, seated in the frame's units, as the opening seats its own ---- */
+
+.co-fig > .co-w,
+.co-fig > .pl-chip {
+  position: absolute;
+  left: calc(var(--px) * 100%);
+  top: calc(var(--py) * 100%);
+  font-size: max(12px, 1.05cqw);
+}
+.co-w {
+  transform: translateY(-50%);
+  white-space: nowrap;
+  transition: opacity 240ms ease;
+}
+.co-tag--l {
+  transform: translate(0, -50%);
+}
+.co-tag--c {
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.co-tag--r {
+  transform: translate(-100%, -50%);
+  text-align: right;
+}
+
+.co-mono {
+  font-family: var(--xb-mono);
+  font-size: 0.82em;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--xb-text-3);
+}
+.co-mono__key {
+  font-weight: 400;
+  color: var(--xb-text-2);
+}
+.co-mono--gold,
+.co-mono--gold .co-mono__key {
+  color: var(--co-gold);
+}
+.co-mono--green,
+.co-tag--green {
+  color: var(--co-green);
+}
+.co-tag {
+  font-size: 0.74em;
+}
+.co-num {
+  font-size: 0.74em;
+}
+.co-readout {
+  font-family: var(--xb-sans);
+  color: var(--xb-text-2);
+}
+
+/* a workstream's chip once an owner in the team runs it */
+.co-chip {
+  transition:
+    border-color 240ms ease,
+    color 240ms ease;
+}
+.co-chip[data-owned] {
+  border-color: var(--co-green);
+}
+.co-chip:not([data-owned]) {
+  color: var(--xb-text-2);
+}
+
+/* ---- line work ---- */
+
+.co-rule {
+  fill: none;
+  stroke: var(--xb-line-2);
+  stroke-width: 1;
+}
+.co-rule--faint {
+  stroke: var(--xb-line);
+}
+.co-rule--gold {
+  stroke: var(--co-gold);
+  stroke-opacity: 0.6;
+}
+.co-rule--green {
+  stroke: var(--co-green);
+  stroke-opacity: 0.7;
+}
+.co-grid {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+  stroke-dasharray: 1 5;
+}
+.co-edge {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+}
+.co-playhead {
+  fill: none;
+  stroke: var(--xb-text-3);
+  stroke-width: 1;
+}
+
+.co-lane {
+  fill: none;
+  stroke: var(--xb-line);
+  stroke-width: 1;
+}
+.co-lane--learning {
+  stroke: var(--co-green);
+  stroke-opacity: 0.55;
+  stroke-dasharray: 2 4;
+}
+.co-lane--owned {
+  stroke: var(--co-green);
+  stroke-opacity: 0.95;
+  stroke-width: 1.5;
+}
+.co-run-tick {
+  fill: var(--xb-text-2);
+}
+
+.co-gold {
+  fill: none;
+  stroke: var(--co-gold);
+  stroke-width: 1.5;
+}
+.co-gold--remote {
+  stroke-dasharray: 4 5;
+  stroke-opacity: 0.7;
+  stroke-width: 1;
+}
+.co-gold--out {
+  stroke-width: 1;
+  stroke-opacity: 0.55;
+}
+.co-gold--tie {
+  stroke-width: 1;
+  stroke-opacity: 0.8;
+}
+.co-gold--track {
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+  stroke-dasharray: 2 4;
+}
+.co-tap-gold {
+  fill: var(--co-gold);
+}
+.co-tap-green {
+  fill: var(--co-green);
+}
+.co-skill {
+  fill: var(--xb-ground);
+  stroke: var(--co-gold);
+  stroke-width: 1.2;
+}
+.co-mark path {
+  fill: var(--co-gold);
+}
+
+/* B · the dial */
+.co-ring {
+  fill: none;
+  stroke-width: 1;
+}
+.co-ring--dawn {
+  stroke: var(--xb-text);
+}
+.co-ring--gold {
+  stroke: var(--co-gold);
+}
+.co-ring--work {
+  stroke: var(--xb-line-2);
+}
+.co-ring--turned {
+  stroke: var(--co-green);
+  stroke-opacity: 0.6;
+}
+.co-station {
+  stroke-width: 1.2;
+  fill: var(--xb-ground);
+}
+.co-station--green {
+  stroke: var(--co-green);
+}
+.co-station--gold {
+  stroke: var(--co-gold);
+}
+.co-station--dawn {
+  stroke: var(--xb-text-2);
+}
+.co-sweep {
+  fill: none;
+  stroke: var(--co-gold);
+  stroke-width: 2;
+}
+.co-sweep--team {
+  stroke: var(--co-green);
+}
+.co-bearing {
+  fill: var(--co-gold);
+}
+.co-bearing--team {
+  fill: var(--co-green);
+}
+.co-hub {
+  fill: var(--xb-ground-2);
+  stroke: var(--xb-line-2);
+}
+.co-station-word,
+.co-hub-word {
+  display: grid;
+  gap: 0.3em;
+  font-family: var(--xb-sans);
+  font-size: 0.92em;
+  color: var(--xb-text-2);
+  white-space: nowrap;
+}
+.co-station-word .co-mono {
+  font-size: 0.82em;
+  color: var(--tone-k, var(--xb-text-2));
+}
+.co-hub-word {
+  justify-items: center;
+}
+.co-hub-word .co-mono {
+  font-size: 0.72em;
+}
+.co-hub-word span[data-team] {
+  color: var(--co-green);
+}
+
+/* C · the crossover */
+.co-days {
+  fill: var(--co-gold);
+  fill-opacity: 0.78;
+}
+.co-steps {
+  fill: none;
+  stroke: var(--co-green);
+  stroke-width: 1.5;
+}
+.co-bracket {
+  fill: none;
+  stroke: var(--xb-text);
+  stroke-width: 1.2;
+}
+.co-lock-word {
+  font-family: var(--xb-mono);
+  font-size: 0.9em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--xb-text);
+}
+.co-week {
+  font-size: 0.74em;
+}
+
+/* ---- the lab's bar, the swarm lab's own grammar ---- */
+
+.co-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 60;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 8px 14px;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.16);
+  background: rgba(var(--void-rgb, 10, 9, 8), 0.92);
+  font-family: "XB Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.4);
+}
+.co-bar__title {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+}
+.co-bar__set {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.co-bar a {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.62);
+  text-decoration: none;
+}
+.co-bar a b {
+  font-weight: 400;
+  color: var(--gold-ink, #caa554);
+}
+.co-bar a:hover {
+  color: rgb(var(--dawn-rgb, 235, 227, 214));
+}
+.co-bar a[data-on] {
+  color: var(--gold-ink, #caa554);
+}
+.co-bar a:focus-visible {
+  outline: 1px solid var(--gold-ink, #caa554);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .co-w,
+  .co-chip {
+    transition: none;
+  }
+}
+
+/* A · a stretch's name over the ruler, on two lines */
+.co-stretch {
+  display: grid;
+  gap: 0.25em;
+  transform: translate(0, -100%);
+}
