@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { clocksAt, hop2T, STOPS, stopY } from "@/app/(internal)/test/proposal-swarm/engine/clocks";
 import {
+  FALL,
+  fallStart,
   FLIES,
   frameAt,
   HOP1,
   HOP2,
   marchRoute,
   newFrame,
+  scanRoute,
 } from "@/app/(internal)/test/proposal-swarm/engine/flight";
 import { SHOW } from "@/app/(internal)/test/proposal-swarm/engine/formations";
 import { pickLattice, plateWidth } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
@@ -219,6 +222,71 @@ describe("a hop", () => {
     }
   });
 
+  it("scans: a row on its way is a rigid row, on its own line or on its landing line", () => {
+    const F = shot(Y("hop1-40"), "scan").F;
+    const rows = new Map<string, { y: number; dx: number }>();
+    let moving = 0;
+    for (let d = 0; d < P.own; d++) {
+      if (F.show[d] === SHOW.seat) continue;
+      const B = W.seatB(0);
+      const landed = F.x[d] === B.ox + P.lx[d] && F.y[d] === B.oy + P.ly[d] + B.lift[P.plate[d]];
+      if (landed) continue;
+      moving++;
+      const key = `${P.plate[d]}:${P.ly[d]}`;
+      const mine = { y: F.y[d] - P.ly[d], dx: F.x[d] - P.lx[d] };
+      const row = rows.get(key);
+      if (!row) rows.set(key, mine);
+      else expect(mine).toEqual(row);
+    }
+    expect(moving).toBeGreaterThan(100);
+    expect(rows.size).toBeGreaterThan(20);
+  });
+
+  it("falls: what stands on the board drops first, and the board follows", () => {
+    const first = Math.min(...Array.from({ length: P.own }, (_, d) => fallStart(P, d, FALL.lead1)));
+    const F = shot(Y("opening") + (first + 0.02) * METRICS.vh, "fall").F;
+    let moving = 0;
+    for (let d = 0; d < P.own; d++) {
+      if (F.show[d] === SHOW.seat) continue;
+      moving++;
+      expect(P.plate[d]).toBe(2);
+      expect(P.solid[d]).toBe(1);
+    }
+    expect(moving).toBeGreaterThan(20);
+    const [team, layer, agents] = FALL.lead1;
+    expect(agents).toBeLessThan(layer);
+    expect(layer).toBeLessThan(team);
+  });
+
+  it("falls whole: a plate on its way keeps its shape, but for a few stragglers", () => {
+    const F = shot(Y("hop1-40"), "fall").F;
+    const B = W.seatB(0);
+    for (const p of [0, 1, 2]) {
+      const off: number[] = [];
+      for (let d = 0; d < P.own; d++) {
+        if (P.plate[d] !== p || F.show[d] !== SHOW.yes || P.solid[d]) continue;
+        if (P.h[d] > FALL.keep || P.amp[d] > 0) continue;
+        const ty = B.oy + P.ly[d] + B.lift[p];
+        if (F.y[d] === ty) continue;
+        off.push(F.y[d] - P.ly[d]);
+      }
+      if (off.length < 50) continue;
+      /* the body is one lattice: every row of it on the same way, to the px */
+      expect(Math.max(...off) - Math.min(...off)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("scans the bottom plate first", () => {
+    const F = shot(Y("opening") + 0.05 * METRICS.vh, "scan").F;
+    let moving = 0;
+    for (let d = 0; d < P.own; d++) {
+      if (F.show[d] === SHOW.seat) continue;
+      moving++;
+      expect(P.plate[d]).toBe(2);
+    }
+    expect(moving).toBeGreaterThan(20);
+  });
+
   it("builds the stack from the ground up on the way into the steps", () => {
     const [team, layer, agents] = HOP1.lead;
     expect(agents).toBeLessThan(layer);
@@ -260,6 +328,12 @@ describe("a hop", () => {
         HOP2.first
       );
       expect(isStraight(first, 1e-6)).toBe(true);
+      expect(
+        isStraight(
+          scanRoute(W.seatA.ox + P.lx[d], W.seatA.oy + P.ly[d], B0.ox + P.lx[d], B0.oy + P.ly[d]),
+          1e-6
+        )
+      ).toBe(true);
       expect(isStraight(second, 1e-6)).toBe(true);
     }
   });

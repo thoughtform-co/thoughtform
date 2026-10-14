@@ -54,6 +54,8 @@ export interface Pool {
   /** Where each plate's rows are by rank: `ly` at 33 even steps of it, so
       what hides the dots behind a plate can follow it as it prints. */
   rows: [Float32Array, Float32Array, Float32Array];
+  /** 1 for a dot of something that stands on the agents' board. */
+  solid: Uint8Array;
 }
 
 /** A plate's `ly` at a rank, 0..1. */
@@ -96,6 +98,7 @@ export function buildPool(S: Scene, riders: number): Pool {
     segs: [],
     holds: [0, 0, 0],
     rows: [new Float32Array(33), new Float32Array(33), new Float32Array(33)],
+    solid: new Uint8Array(count),
   };
 
   /* each plate's top row: a dot's place across its plate is read back
@@ -126,6 +129,7 @@ export function buildPool(S: Scene, riders: number): Pool {
       P.h[d] = hash2(pop.x[q], pop.y[q], 17 + plate);
     }
     P.segs.push({ plate, from: at, to: at + pop.count, mask: part.mask, block: part.block });
+    if (part.block) P.solid.fill(1, at, at + pop.count);
     P.holds[plate] += pop.count;
     at += pop.count;
   }

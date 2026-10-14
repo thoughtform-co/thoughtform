@@ -10,7 +10,7 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-proposal-swarm.mjs --port 3021
- *     [--fly march|drift|rigid] [--n 3|4]
+ *     [--fly fall|march|drift|rigid|scan] [--n 3|4]
  *     [--sizes 1280x720,1470x830,1920x1247] [--themes dark,light]
  *     [--out docs/design/proposal-swarm/round-01] [--only opening,hop1-40]
  *     [--twice]
@@ -27,7 +27,7 @@ const argOf = (flag, fallback) => {
 };
 
 const PORT = argOf("--port", "3021");
-const FLY = argOf("--fly", "march");
+const FLY = argOf("--fly", "fall");
 const N = argOf("--n", "");
 const OUT = argOf("--out", "docs/design/proposal-swarm/round-01");
 const ONLY = argOf("--only", "").split(",").filter(Boolean);
@@ -38,7 +38,7 @@ const THEMES = argOf("--themes", "dark").split(",");
 const TWICE = args.includes("--twice");
 
 const query = new URLSearchParams({ still: "1" });
-if (FLY !== "march") query.set("fly", FLY);
+if (FLY !== "fall") query.set("fly", FLY);
 if (N) query.set("n", N);
 const URL = `http://localhost:${PORT}/test/proposal-swarm?${query}`;
 

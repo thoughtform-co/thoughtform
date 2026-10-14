@@ -43,7 +43,7 @@ import {
 } from "../../stack-forms/swarm/dots";
 
 import { type Runways, stepsAt, type StepsReading } from "./clocks";
-import type { Seat, Stage } from "./flight";
+import { scanOf, type Seat, type Stage } from "./flight";
 import { assignCells, barTargets, gridOf, orgTargets, type Rect } from "./formations";
 import { latticeAt, type Pick, pickLattice, plateWidth, poseOfGap } from "./lattice";
 import { buildPool } from "./pool";
@@ -210,6 +210,12 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
       sides: SEATS.map((s) => s.side),
     }
   );
+  /* the scan's order. The first hop sends the bottom plate first, each
+     plate's rows top of the screen first; the second sends the bars'
+     rows top first, so each bar is written as a terminal writes a page. */
+  const BOTTOM_FIRST = [2, 1, 0];
+  const scan1 = scanOf(pool, (d) => BOTTOM_FIRST[pool.plate[d]] * 1e6 + pool.ly[d]);
+  const scan2 = scanOf(pool, (d) => big.y[d]);
   const rank2 = new Float32Array(pool.count);
   for (let d = 0; d < pool.count; d++) rank2[d] = (cells.cell[d] % grid.cols) / (grid.cols - 1);
 
@@ -277,6 +283,9 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
     node,
     org,
     rank2,
+    scan1,
+    scan2,
+    step: [L.a * L.g, L.b * L.g],
     traces,
     steps,
     dots: scene.plates.reduce((sum, p) => sum + p.dots, 0),

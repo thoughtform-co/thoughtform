@@ -11,10 +11,19 @@
      the network   the bars shrink to Marketing's node as the view draws
                    back, then dots leave along each team's lane
 
-   A HOP is never one move of the whole. Each dot has its own start (its
-   plate's turn, then its row's, then a little of its own) and its own
-   route, and how it goes is the page's one switch:
+   A HOP is never one move of the whole, and how it goes is the page's one
+   switch:
 
+     fall    each plate falls whole, mostly downward, the bottom plate first,
+             what stands on the agents' board ahead of it, a few dots
+             straggling with trails behind them
+     scan    as a terminal prints: the plate is sent a row at a time, each
+             row a rigid line of dots stepping on the lattice, the rows
+             one after another at an even pitch, plumb to the line they
+             land on, then level into place; the bottom plate first
+             (owner, 2026-10-14, on march's clouds: "I don't really like
+             the pancake shape … Isn't there something closer to our
+             aesthetic of terminal interfaces?")
      march   a level run, a 45-degree cut, a plumb run: files of dots on
              lanes, a row landing as a row
      drift   a loose cloud: each dot starts when its own number says, and
@@ -25,9 +34,12 @@
 import { type Clocks, arriveLight, hop2T, networkAt, TURN_LEN, turnOf } from "./clocks";
 import { along, type Org, SHOW, type Targets } from "./formations";
 import { type Pool, rowAt } from "./pool";
+import { STYLE } from "../../stack-forms/swarm/dots";
 
-export type Fly = "march" | "drift" | "rigid";
-export const FLIES: readonly Fly[] = ["march", "drift", "rigid"];
+const STYLE_LIT = { team: STYLE.teamLit, layer: STYLE.layerLit, agents: STYLE.agentsLit } as const;
+
+export type Fly = "fall" | "march" | "drift" | "rigid" | "scan";
+export const FLIES: readonly Fly[] = ["fall", "march", "drift", "rigid", "scan"];
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
@@ -87,6 +99,176 @@ export const HOP2: HopSpec = {
   first: "h",
 };
 const DRIFT_DUR = 0.55;
+
+/* -- the fall --------------------------------------------------------------------
+
+   The owner, 2026-10-14, after the scan: "I don't like how our artifacts are
+   being flattened. What I liked in one of the previous versions is that the
+   nodes on the gray panel just dropped down and then the rest followed. It
+   should be more of a vertical motion. I don't want it to look flat and 2D
+   or to rotate, morph, or warp too much."
+
+   So a plate falls WHOLE: every dot of it on the same way at nearly the same
+   moment, so it keeps its depth and its shape all the way down. What stands
+   on the agents' board (the chip and the modules) drops first and the board
+   follows; the front of a plate leaves a hair before its back; and a few of
+   its dots straggle, each one trailing two smaller dots behind it as S4·E's
+   own drops do. The way is mostly down: down on a sine, and across in the
+   middle of the fall, so it leaves straight down and settles straight down. */
+
+export const FALL = {
+  /** When each plate starts, team first: into the steps the bottom plate
+      first; into the network the top one. */
+  lead1: [0.34, 0.17, 0] as const,
+  lead2: [0, 0.12, 0.24] as const,
+  /** What stands on the agents' board (the nodes) drops first, one after
+      another over this much; the board itself follows by `board`. */
+  nodes: 0.03,
+  board: 0.04,
+  /** The share of a plate's dots that fall as its body, together, so the
+      body stays the exact lattice it is at rest; the rest straggle, at
+      most `straggle` after it, and trail. */
+  keep: 0.85,
+  straggle: 0.12,
+  dur: 0.48,
+  /** How far behind on its way a straggler's two trailing dots are. */
+  trail: [0.05, 0.1] as const,
+} as const;
+
+const smooth = (t: number) => t * t * (3 - 2 * t);
+const sine = (t: number) => 0.5 - 0.5 * Math.cos(Math.PI * t);
+
+/** A fall from a to b, `e` of it, into `out`: down on a sine, across in the
+    middle of it. */
+export function fallTo(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  e: number,
+  out: number[]
+): void {
+  const ex = smooth(seg(e, 0.18, 0.82));
+  const ey = sine(clamp01(e));
+  out[0] = ax + (bx - ax) * ex;
+  out[1] = ay + (by - ay) * ey;
+}
+
+/** When a dot starts to fall, on its hop's clock. */
+export function fallStart(P: Pool, d: number, lead: readonly number[]): number {
+  const h = P.h[d];
+  /* a node drops whole (its dots share one number), the nodes one after
+     another, all of them before the board */
+  if (P.solid[d]) return lead[P.plate[d]] + FALL.nodes * h;
+  const late = h > FALL.keep ? FALL.straggle * ((h - FALL.keep) / (1 - FALL.keep)) ** 1.5 : 0;
+  return lead[P.plate[d]] + FALL.board + late;
+}
+
+/** A straggler, or a node: the dots that trail as they fall. */
+const trails = (P: Pool, d: number) => P.solid[d] === 1 || P.h[d] > FALL.keep;
+
+/** When a plate's body starts to fall. */
+const bodyStart = (lead: readonly number[], p: number) => lead[p] + FALL.board;
+
+/* -- the scan ------------------------------------------------------------------ */
+
+/** A scan's timing: how long one row is on its way, and how early the last
+    row lands, so a hop's end is its rest to the pixel. */
+export const SCAN = { dur: 0.3, slack: 0.03 } as const;
+
+/** The order a scan sends its rows in. */
+export interface Scan {
+  /** Each dot's start on its hop's clock: its row's. */
+  start: Float32Array;
+  /** When each plate's first row leaves and its last, team first. */
+  plates: [number, number][];
+  dur: number;
+}
+
+/**
+ * The rows of a hop in order: `key` gives a dot's row, smaller first, and
+ * every dot of a row starts together. Rows leave at an even pitch over the
+ * hop, so the rows on their way stand an even pitch apart.
+ */
+export function scanOf(pool: Pool, key: (d: number) => number, dur: number = SCAN.dur): Scan {
+  const keys = new Float64Array(pool.count);
+  const ds: number[] = [];
+  for (let d = 0; d < pool.own; d++) {
+    keys[d] = Math.round(key(d));
+    ds.push(d);
+  }
+  ds.sort((p, q) => keys[p] - keys[q] || p - q);
+  const rowOf = new Int32Array(pool.count);
+  let rows = 0;
+  ds.forEach((d, i) => {
+    if (i > 0 && keys[d] !== keys[ds[i - 1]]) rows++;
+    rowOf[d] = rows;
+  });
+  const span = 1 - dur - SCAN.slack;
+  /* a rider never leaves a seat on a hop: it is not seen until the teams' */
+  const start = new Float32Array(pool.count).fill(2);
+  const plates: [number, number][] = [
+    [1, 0],
+    [1, 0],
+    [1, 0],
+  ];
+  for (const d of ds) {
+    const s = rows > 0 ? (rowOf[d] / rows) * span : 0;
+    start[d] = s;
+    const window = plates[pool.plate[d]];
+    window[0] = Math.min(window[0], s);
+    window[1] = Math.max(window[1], s);
+  }
+  return { start, plates, dur };
+}
+
+/**
+ * A scan's way from a to b, `e` of it, into `out`: plumb to the line it
+ * lands on, then level into its place, in whole steps of the lattice
+ * counted back from where it lands, so a row on its way is still a row of
+ * the grid, and it lands to the pixel.
+ */
+export function scanTo(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  e: number,
+  stepX: number,
+  stepY: number,
+  out: number[]
+): void {
+  if (e <= 0) {
+    out[0] = ax;
+    out[1] = ay;
+    return;
+  }
+  if (e >= 1) {
+    out[0] = bx;
+    out[1] = by;
+    return;
+  }
+  const dx = bx - ax;
+  const dy = by - ay;
+  const left = (1 - e) * (Math.abs(dx) + Math.abs(dy));
+  if (left > Math.abs(dx)) {
+    out[0] = ax;
+    out[1] = by - Math.sign(dy) * Math.round((left - Math.abs(dx)) / stepY) * stepY;
+  } else {
+    out[0] = bx - Math.sign(dx) * Math.round(left / stepX) * stepX;
+    out[1] = by;
+  }
+}
+
+/** That way's corners, for the guard: plumb, then level. */
+export const scanRoute = (ax: number, ay: number, bx: number, by: number): [number, number][] => [
+  [ax, ay],
+  [ax, by],
+  [bx, by],
+];
+
+/** A row on its way is lit, as a line being written is. */
+const WRITING = [STYLE_LIT.team, STYLE_LIT.layer, STYLE_LIT.agents] as const;
 
 /** How far one dot is through a hop whose clock reads `T`, eased. */
 export function dotT(
@@ -265,6 +447,9 @@ export interface Frame {
   ride: number;
   /** The whole stack stands in the opening's seat. */
   home: boolean;
+  /** A falling dot's two trailing dots, x1 y1 x2 y2 a dot; NaN for none. */
+  trail: Float32Array;
+  trails: boolean;
 }
 
 export function newFrame(n: number): Frame {
@@ -284,6 +469,8 @@ export function newFrame(n: number): Frame {
     p1: -1,
     ride: 0,
     home: false,
+    trail: new Float32Array(n * 4).fill(NaN),
+    trails: false,
   };
 }
 
@@ -305,6 +492,11 @@ export interface Stage {
   org: Org;
   /** A dot's turn within its plate on the second hop. */
   rank2: Float32Array;
+  /** The scan's order for each hop. */
+  scan1: Scan;
+  scan2: Scan;
+  /** One site step of the lattice, across and down, device px. */
+  step: readonly [number, number];
 }
 
 const at = [0, 0];
@@ -359,8 +551,23 @@ function masksOf(
   T: number,
   fly: Fly,
   spec: HopSpec,
-  home: boolean
+  home: boolean,
+  scan: Scan
 ) {
+  if (fly === "scan" && !to) {
+    /* the second hop sends the bars' rows, each gathered from all over a
+       plate, so a plate thins everywhere at once: its silhouette fades
+       over the time its dots are leaving */
+    const gone = scan.plates.map(([a, b]) => 1 - seg(T, a, b + 0.02));
+    if (gone.some((v) => v > 0))
+      F.masks.push({
+        ...from,
+        home,
+        alpha: [gone[0], gone[1], gone[2]],
+        share: [gone[0], gone[1], gone[2]],
+      });
+    return;
+  }
   if (fly === "rigid" && to) {
     const e = ease(clamp01(T));
     F.masks.push({
@@ -376,7 +583,7 @@ function masksOf(
     });
     return;
   }
-  if (fly !== "march") {
+  if (fly !== "march" && fly !== "scan") {
     const gone = 1 - seg(T, 0.02, 0.3);
     const come = seg(T, 0.72, 1);
     if (gone > 0)
@@ -397,13 +604,19 @@ function masksOf(
     ? { ...to, alpha: [0, 0, 0], band: [null, null, null], share: [0, 0, 0] }
     : null;
   for (const p of [0, 1, 2]) {
-    /* the rank whose dot is starting now, and the rank whose dot has landed */
-    const gone = seg(T, spec.lead[p], spec.lead[p] + spec.spread);
-    const come = seg(
-      T,
-      spec.lead[p] + spec.dur + spec.jitter,
-      spec.lead[p] + spec.dur + spec.jitter + spec.spread
-    );
+    /* the rank whose dot is starting now, and the rank whose dot has landed;
+       a scan's rows are a plate's ranks in the same order, top first */
+    const [s0, s1] = scan.plates[p];
+    const gone =
+      fly === "scan" ? seg(T, s0, s1 + 1e-6) : seg(T, spec.lead[p], spec.lead[p] + spec.spread);
+    const come =
+      fly === "scan"
+        ? seg(T, s0 + scan.dur, s1 + scan.dur + 1e-6)
+        : seg(
+            T,
+            spec.lead[p] + spec.dur + spec.jitter,
+            spec.lead[p] + spec.dur + spec.jitter + spec.spread
+          );
     if (gone < 1) {
       left.alpha[p] = 1;
       left.share[p] = 1 - gone;
@@ -418,6 +631,150 @@ function masksOf(
   }
   if (left.alpha.some((v) => v > 0)) F.masks.push(left);
   if (landed && landed.alpha.some((v) => v > 0)) F.masks.push(landed);
+}
+
+/** A falling dot's trailing dots, behind it on its own way. */
+function trailOf(
+  F: Frame,
+  d: number,
+  e: number,
+  on: boolean,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number
+) {
+  const i = d * 4;
+  F.trail[i] = NaN;
+  F.trail[i + 2] = NaN;
+  if (e >= 1 || !on) return;
+  for (let k = 0; k < 2; k++) {
+    const back = e - FALL.trail[k];
+    if (back <= 0) return;
+    fallTo(ax, ay, bx, by, back, tip);
+    /* only while it is moving: a trail is how far it has come */
+    if (Math.abs(tip[0] - F.x[d]) + Math.abs(tip[1] - F.y[d]) < 2) return;
+    F.trail[i + k * 2] = Math.round(tip[0]);
+    F.trail[i + k * 2 + 1] = Math.round(tip[1]);
+  }
+}
+
+/** The first hop as a fall: out of the opening's seat, which goes with its
+    section, down into the steps. */
+function fall1(S: Stage, F: Frame, T: number, t: number) {
+  const P = S.pool;
+  const A = S.seatA;
+  const B = S.seatB(0);
+  const ride = Math.round(T * S.screen);
+  F.ride = ride;
+  F.trails = true;
+  for (let d = 0; d < P.count; d++) {
+    F.trail[d * 4] = NaN;
+    F.trail[d * 4 + 2] = NaN;
+    if (P.host[d] >= 0) {
+      F.show[d] = SHOW.no;
+      continue;
+    }
+    const p = P.plate[d];
+    const e = clamp01((T - fallStart(P, d, FALL.lead1)) / FALL.dur);
+    const ax = A.ox + P.lx[d];
+    const ay = A.oy + P.ly[d] + A.lift[p];
+    const amp = P.amp[d];
+    const a = P.phase[d] + P.rate[d] * t;
+    F.size[d] = S.sizes[P.tier[d]];
+    F.style[d] = P.style[d];
+    if (e <= 0) {
+      F.x[d] = amp > 0 ? ax + Math.round(amp * Math.cos(a)) : ax;
+      F.y[d] = amp > 0 ? ay + Math.round(amp * S.squash * Math.sin(a)) : ay;
+      F.show[d] = SHOW.seat;
+      continue;
+    }
+    const bx = B.ox + P.lx[d];
+    const by = B.oy + P.ly[d] + B.lift[p];
+    fallTo(ax, ay - ride, bx, by, e, at);
+    if (amp > 0) {
+      const still = (1 - 2 * e) * (1 - 2 * e);
+      at[0] += amp * still * Math.cos(a);
+      at[1] += amp * still * S.squash * Math.sin(a);
+    }
+    F.x[d] = Math.round(at[0]);
+    F.y[d] = Math.round(at[1]);
+    F.show[d] = SHOW.yes;
+    trailOf(F, d, e, trails(P, d), ax, ay - ride, bx, by);
+  }
+  /* what hides the dots behind a plate goes with the plate: in its seat
+     until its body leaves, then falling with it */
+  const home: Standing = { ...A, home: true, alpha: [0, 0, 0], share: [0, 0, 0] };
+  for (const p of [0, 1, 2] as const) {
+    const eb = clamp01((T - bodyStart(FALL.lead1, p)) / FALL.dur);
+    if (eb <= 0) {
+      home.alpha[p] = 1;
+      home.share[p] = 1;
+      continue;
+    }
+    fallTo(A.ox, A.oy + A.lift[p] - ride, B.ox, B.oy + B.lift[p], eb, at);
+    const lift: [number, number, number] = [0, 0, 0];
+    lift[p] = Math.round(at[1]);
+    const alpha: [number, number, number] = [0, 0, 0];
+    alpha[p] = 1;
+    F.masks.push({
+      ox: Math.round(at[0]),
+      oy: 0,
+      lift,
+      alpha,
+      share: [...alpha] as [number, number, number],
+    });
+  }
+  if (home.alpha.some((v) => v > 0)) F.masks.push(home);
+}
+
+/** The second hop as a fall: the top plate first, each plate's dots taking
+    their places in the bars. */
+function fall2(S: Stage, F: Frame, T: number, t: number) {
+  const P = S.pool;
+  const B = S.seatB(1);
+  const G = S.big;
+  F.trails = true;
+  for (let d = 0; d < P.count; d++) {
+    F.trail[d * 4] = NaN;
+    F.trail[d * 4 + 2] = NaN;
+    if (P.host[d] >= 0) {
+      F.show[d] = SHOW.no;
+      continue;
+    }
+    const p = P.plate[d];
+    const e = clamp01((T - fallStart(P, d, FALL.lead2)) / FALL.dur);
+    const ax = B.ox + P.lx[d];
+    const ay = B.oy + P.ly[d] + B.lift[p];
+    fallTo(ax, ay, G.x[d], G.y[d], e, at);
+    const amp = P.amp[d];
+    if (amp > 0 && e < 0.5) {
+      const still = (1 - 2 * e) * (1 - 2 * e);
+      const a = P.phase[d] + P.rate[d] * t;
+      at[0] += amp * still * Math.cos(a);
+      at[1] += amp * still * S.squash * Math.sin(a);
+    }
+    F.x[d] = Math.round(at[0]);
+    F.y[d] = Math.round(at[1]);
+    F.size[d] = Math.round(lerp(S.sizes[P.tier[d]], G.size[d], e));
+    F.style[d] = e < 0.5 ? P.style[d] : G.style[d];
+    if (G.show[d] === SHOW.window) {
+      F.show[d] = SHOW.window;
+      F.alpha[d] = 1 - seg(e, 0.55, 0.95);
+    } else F.show[d] = SHOW.yes;
+    trailOf(F, d, e, trails(P, d), ax, ay, G.x[d], G.y[d]);
+  }
+  /* a plate stands whole until its body leaves; then it is becoming a bar,
+     and what hid the dots behind it lets go */
+  const gone = [0, 1, 2].map(
+    (p) => 1 - seg(T, bodyStart(FALL.lead2, p), bodyStart(FALL.lead2, p) + 0.08)
+  );
+  if (gone.some((v) => v > 0))
+    F.masks.push({
+      ...B,
+      alpha: [gone[0], gone[1], gone[2]],
+      share: [gone[0], gone[1], gone[2]],
+    });
 }
 
 function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
@@ -436,7 +793,10 @@ function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
       continue;
     }
     const p = P.plate[d];
-    const e = dotT(T, p, P.rank[d], P.h[d], fly, HOP1);
+    const e =
+      fly === "scan"
+        ? clamp01((T - S.scan1.start[d]) / S.scan1.dur)
+        : dotT(T, p, P.rank[d], P.h[d], fly, HOP1);
     const ax = A.ox + P.lx[d];
     const ay = A.oy + P.ly[d] + A.lift[p];
     const amp = P.amp[d];
@@ -448,6 +808,26 @@ function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
       F.x[d] = amp > 0 ? ax + Math.round(amp * Math.cos(a)) : ax;
       F.y[d] = amp > 0 ? ay + Math.round(amp * S.squash * Math.sin(a)) : ay;
       F.show[d] = SHOW.seat;
+      continue;
+    }
+    if (fly === "scan") {
+      /* a row on its way: rigid, on the grid, lit; no drift */
+      scanTo(
+        ax,
+        ay - ride,
+        B.ox + P.lx[d],
+        B.oy + P.ly[d] + B.lift[p],
+        e,
+        S.step[0],
+        S.step[1],
+        at
+      );
+      /* landed, a crowd's dot takes up its drift again, as it stands at rest */
+      const land = e >= 1 && amp > 0;
+      F.x[d] = Math.round(at[0]) + (land ? Math.round(amp * Math.cos(a)) : 0);
+      F.y[d] = Math.round(at[1]) + (land ? Math.round(amp * S.squash * Math.sin(a)) : 0);
+      if (e < 1) F.style[d] = WRITING[p];
+      F.show[d] = SHOW.yes;
       continue;
     }
     moveTo(
@@ -472,7 +852,7 @@ function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
     F.y[d] = Math.round(at[1]);
     F.show[d] = SHOW.yes;
   }
-  masksOf(S, F, A, B, T, fly, HOP1, true);
+  masksOf(S, F, A, B, T, fly, HOP1, true, S.scan1);
 }
 
 function hop2(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
@@ -485,11 +865,27 @@ function hop2(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
       continue;
     }
     const p = P.plate[d];
-    const e = dotT(T, p, S.rank2[d], P.h[d], fly, HOP2);
-    moveTo(B.ox + P.lx[d], B.oy + P.ly[d] + B.lift[p], G.x[d], G.y[d], e, fly, P.h[d], S.cut, at);
+    const scan = fly === "scan";
+    const e = scan
+      ? clamp01((T - S.scan2.start[d]) / S.scan2.dur)
+      : dotT(T, p, S.rank2[d], P.h[d], fly, HOP2);
+    if (scan)
+      scanTo(
+        B.ox + P.lx[d],
+        B.oy + P.ly[d] + B.lift[p],
+        G.x[d],
+        G.y[d],
+        e,
+        S.step[0],
+        S.step[1],
+        at
+      );
+    else
+      moveTo(B.ox + P.lx[d], B.oy + P.ly[d] + B.lift[p], G.x[d], G.y[d], e, fly, P.h[d], S.cut, at);
     const amp = P.amp[d];
-    if (amp > 0 && e < 0.5) {
-      /* the team's drift lets go as a dot leaves; a bar holds still */
+    if (amp > 0 && e < 0.5 && (!scan || e <= 0)) {
+      /* the team's drift lets go as a dot leaves; a bar holds still. A
+         scanned row lets go of it at once: it travels rigid */
       const still = (1 - 2 * e) * (1 - 2 * e);
       const a = P.phase[d] + P.rate[d] * t;
       at[0] += amp * still * Math.cos(a);
@@ -498,14 +894,22 @@ function hop2(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
     F.x[d] = Math.round(at[0]);
     F.y[d] = Math.round(at[1]);
     F.size[d] = Math.round(lerp(S.sizes[P.tier[d]], G.size[d], e));
-    F.style[d] = e < 0.5 ? P.style[d] : G.style[d];
+    F.style[d] = scan
+      ? e <= 0
+        ? P.style[d]
+        : e < 1
+          ? WRITING[p]
+          : G.style[d]
+      : e < 0.5
+        ? P.style[d]
+        : G.style[d];
     /* a dot bound for a word's place is let go as it lands */
     if (G.show[d] === SHOW.window) {
       F.show[d] = SHOW.window;
       F.alpha[d] = 1 - seg(e, 0.55, 0.95);
     } else F.show[d] = SHOW.yes;
   }
-  masksOf(S, F, B, null, T, fly, HOP2, false);
+  masksOf(S, F, B, null, T, fly, HOP2, false, S.scan2);
 }
 
 /** The share of a team's turn its last dot starts at, and how long one walks. */
@@ -608,6 +1012,7 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
   F.p1 = -1;
   F.ride = 0;
   F.home = false;
+  F.trails = false;
   F.walked.fill(0);
   if (c.q2 <= 0) {
     if (c.q1 <= 0) {
@@ -616,7 +1021,8 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
     } else if (c.q1 < 1) {
       F.state = "hop1";
       F.reel = seg(c.q1, 0, 0.06);
-      hop1(S, F, c.q1, t, fly);
+      if (fly === "fall") fall1(S, F, c.q1, t);
+      else hop1(S, F, c.q1, t, fly);
       const lit = arriveLight(c.q1);
       const own = S.seatB(0).level;
       F.level = [lerp(own[0], 1, lit), lerp(own[1], 1, lit), lerp(own[2], 1, lit)];
@@ -634,7 +1040,8 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
   const T2 = hop2T(c);
   if (T2 < 1) {
     F.state = "hop2";
-    hop2(S, F, T2, t, fly);
+    if (fly === "fall") fall2(S, F, T2, t);
+    else hop2(S, F, T2, t, fly);
   } else {
     F.state = "network";
     network(S, F, c.p2);

@@ -27,7 +27,7 @@ export function LabBar({ fly, n }: { fly: Fly; n?: number }) {
     const f = next.fly ?? fly;
     const grain = next.n === null ? undefined : (next.n ?? n);
     const q = new URLSearchParams();
-    if (f !== "march") q.set("fly", f);
+    if (f !== "fall") q.set("fly", f);
     if (grain) q.set("n", String(grain));
     const s = q.toString();
     return s ? `?${s}` : "?";

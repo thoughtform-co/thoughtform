@@ -88,6 +88,17 @@ function dots(
       ctx.fillRect(F.x[d] - (size >> 1), y - (size >> 1), size, size);
       ctx.globalAlpha = 1;
     } else ctx.fillRect(F.x[d] - (size >> 1), y - (size >> 1), size, size);
+    /* a falling dot's trail: two dots behind it on its way, each a size
+       smaller, as S4·E's own drops trail */
+    if (F.trails && !seated) {
+      for (let k = 0; k < 2; k++) {
+        const tx = F.trail[d * 4 + k * 2];
+        if (Number.isNaN(tx)) break;
+        const ty = F.trail[d * 4 + k * 2 + 1];
+        const dot = Math.max(1, size - 1 - k);
+        ctx.fillRect(tx - (dot >> 1), ty - (dot >> 1), dot, dot);
+      }
+    }
   }
 }
 

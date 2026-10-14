@@ -170,3 +170,36 @@ On the second hop the same timing applies (off at once, settling as it lands), a
 - The 18 stills of `round-03/` (nine stops, at 1976×966 and 1920×1247) are byte-identical shot twice.
 - 26 guard tests. The hop's start is now held to within a few px of the rest, since a dot is off at once; its end is still to the pixel.
 - Nothing outside the lab changed in this round.
+
+---
+
+# Round 04 (2026-10-14): scan, set aside
+
+> when the particles move from the second section to the third section, I don't really like the pancake shape of the things … Isn't there something closer to our aesthetic of terminal interfaces?
+
+`?fly=scan`: a plate sent a row at a time, each row a rigid line of dots stepping on the lattice, the rows one after another at an even pitch; plumb to the line it lands on, then level into place. Into the network, the bars written row by row. Stills: `round-04/`.
+
+The owner's read the same hour: "I don't like how our artifacts are being flattened." In flight the rows stood apart and the plates read as tall flat diamonds and sheared zig-zags. It stays on the switch, last.
+
+# Round 05 (2026-10-14): fall, the default
+
+> What I liked in one of the previous versions is that the nodes on the gray panel just dropped down and then the rest followed. It should be more of a vertical motion. I don't want it to look flat and 2D or to rotate, morph, or warp too much. Really look at some elegant particle animations
+
+`?fly=fall`, now the default:
+
+- **A plate falls whole.** 85 % of its dots (its body) share one moment and one way, so on its way it is the exact lattice it is at rest: depth, shape and texture kept, nothing stretched (test: the body's rows stand on the same way to the pixel).
+- **Mostly downward.** Down on a sine, and across only in the middle of the fall, so it leaves straight down and settles straight down.
+- **The nodes first.** What stands on the agents' board (the chip and the four modules) drops first, one after another, each whole; the board follows. The plates go bottom first, as before: agents, layer, team.
+- **The rest follow as particles.** The other 15 % straggle, up to an eighth of the hop behind the body, each trailing two smaller dots behind it on its way, as S4·E's own drops trail. Only stragglers and nodes trail.
+- **Still 3D.** What hides the dots behind a plate falls with the plate, so a falling plate still covers what is behind it.
+
+Into the network the same fall, team first; there each plate's dots take their cells in the bars, so that hop is still a plate becoming a bar, as the section's own drawing turns the stack frontal.
+
+`march`, `drift`, `rigid` and `scan` stay on the switch.
+
+## Checked
+
+- 34 guard tests, among them: the nodes are the only dots moving at the start of the hop; a plate's body falls as one lattice; every hop starts within a few px of the rest and ends on the seat to the pixel, in all five modes.
+- The live Play run at 1976×966: every state in order, 59 frames a second, no page error.
+- The 22 stills of `round-05/` (eleven stops at 1976×966 and 1920×1247) are byte-identical shot twice.
+- Nothing outside the lab changed in rounds 04 and 05.
