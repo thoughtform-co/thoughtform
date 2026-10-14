@@ -19,6 +19,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { RailManifestController } from "./RailManifest";
+import { HeroPlateMotion } from "./HeroPlateMotion";
 import { HeroThemeGlitch } from "./HeroThemeGlitch";
 import { RailInstruments } from "./rail-instruments/RailInstruments";
 import { SettingsCluster } from "./rail-instruments/SettingsCluster";
@@ -402,6 +403,9 @@ export function LandingPage({
           outgoing plate is drawn in the same task as the flip — before the
           browser paints the new one. It owns no state here. */}
       {THEME_TOGGLE && <HeroThemeGlitch containerRef={rootRef} />}
+      {/* The plate in motion (ADR-158): a leaf by the same law, NOT gated on
+          THEME_TOGGLE — an un-themed site is dark, and dark is where it runs. */}
+      <HeroPlateMotion containerRef={rootRef} />
       {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} roster={journey} />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve

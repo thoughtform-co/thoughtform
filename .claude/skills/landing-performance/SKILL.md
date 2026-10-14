@@ -79,6 +79,12 @@ Load order for an anonymous first visit to `/`:
    ⚠ Verify fetches in a FRESH tab — a tab that has visited the other theme
    reports the other plate as a memory-cache hit with `initiatorType:
 "link"`, indistinguishable from a real second preload.
+   **The dark plate also MOVES since ADR-158** (2026-10-14): `HeroPlateMotion`
+   lays `/videos/ThoughtForm_v1-motion.av1.mp4` (2.19 MB) or its H.264 twin
+   (`.mp4`, 2.86 MB), both native 2912×1632, over the still AFTER `load` and an
+   idle slot. It is NEVER preloaded and never the LCP; dark only, off the ≤640
+   rung, not under reduced motion or Save-Data, paused off screen. Never add it
+   to the preload or a `<link>`: it would put ~2.5 MB on the LCP path.
 4. **Hydration** on the ~72.8 kB gzip First Load JS (no three, no supabase).
 5. **Async three/WebGL chunk.** Fetched right after hydration. On **≤960 px**
    viewports the import is **deferred** by `corridorImportGate()` in

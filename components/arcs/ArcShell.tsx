@@ -5,6 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import type { ArcMotion } from "@/lib/arcs/types";
 
+import { HeroPlateMotion } from "@/components/landing/v7/HeroPlateMotion";
 import { HeroThemeGlitch } from "@/components/landing/v7/HeroThemeGlitch";
 import { ThemeLock } from "@/components/landing/v7/ThemeLock";
 import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
@@ -233,6 +234,10 @@ export function ArcShell({
       {THEME_TOGGLE && gatewayPlate && variant === "detail" ? (
         <HeroThemeGlitch containerRef={rootRef} />
       ) : null}
+      {/* The plate in motion (ADR-158). Ungated: it finds the house still by its
+          `src` and leaves any other hero alone, so an arc that owns its plate,
+          or has no hero, gets nothing. */}
+      <HeroPlateMotion containerRef={rootRef} />
       {/* The lock (ADR-098), a leaf by the same law as the two above: it
           owns no state here and renders nothing. ⚠ It must come AFTER
           `HeroThemeGlitch` in the tree for the reason its own docstring

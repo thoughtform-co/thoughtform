@@ -52,6 +52,29 @@ export const HERO_PLATE_DARK_FALLBACK = "/images/ThoughtForm_v1.webp";
 export const HERO_PLATE_DARK_SIZE = { width: 2912, height: 1632 } as const;
 
 /**
+ * The dark plate IN MOTION (ADR-158, owner 2026-10-14: "promote this to everywhere
+ * where we used the static version; optimize it for web but don't lose any
+ * resolution"): the world ship's wave 11, route H. The same 2912×1632 pixels, the
+ * camera locked; the raster lines off the head stream and stretch, the stars
+ * twinkle, the drafting lines carry light, and strands of the lines' own light
+ * travel level to the left edge. Everything outside what moves is the still's own
+ * pixels in every frame. An 8 s seamless loop at 24 fps, no audio.
+ *
+ * ⚠ NEVER THE LCP AND NEVER PRELOADED. The still above stays the painted, preloaded
+ * hero; `HeroPlateMotion` lays this over it after `load` and an idle slot, in dark
+ * only, off the phone rung (whose plate is the portrait, a different picture), and
+ * never under reduced motion or Save-Data. Native size on purpose: the plate is
+ * cover-fit and height-bound on most screens, so a smaller cut would be upscaled.
+ * Sources in preference order, AV1 first (the smaller file at the same fidelity);
+ * `HeroPlateMotion` takes the first the device decodes power-efficiently, so a
+ * machine with hardware H.264 and only software AV1 gets the H.264.
+ */
+export const HERO_PLATE_DARK_MOTION = [
+  { src: "/videos/ThoughtForm_v1-motion.av1.mp4", type: 'video/mp4; codecs="av01.0.12M.08"', bitrate: 2_000_000 },
+  { src: "/videos/ThoughtForm_v1-motion.mp4", type: 'video/mp4; codecs="avc1.640033"', bitrate: 2_900_000 },
+] as const;
+
+/**
  * The phone hero's PORTRAIT plate (ADR-145, 2026-10-04): MF-04 extended to 9:16
  * by an edit (the world ship's wave 06, `MF-arcfloor916__nano_02`), the head on
  * the floor and the sky above it empty for the copy, which the ≤640 rung seats at

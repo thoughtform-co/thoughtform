@@ -7,6 +7,7 @@ import { ArcHudNav } from "@/components/arcs/ArcHudNav";
 import { ArcRailInstruments } from "@/components/arcs/ArcRailInstruments";
 import { useArcReveal } from "@/components/arcs/useArcReveal";
 import { useArcScroll } from "@/components/arcs/useArcScroll";
+import { HeroPlateMotion } from "@/components/landing/v7/HeroPlateMotion";
 import { HeroThemeGlitch } from "@/components/landing/v7/HeroThemeGlitch";
 import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
 import { useHeroBoot } from "@/components/landing/v7/hooks/useHeroBoot";
@@ -101,6 +102,8 @@ export function SessionsShell({ hudHtml, bodyClass, chapters, children }: Sessio
           <LightModeToggle />
         ))}
       {THEME_TOGGLE ? <HeroThemeGlitch containerRef={rootRef} /> : null}
+      {/* The plate in motion (ADR-158), the landing's own leaf. */}
+      <HeroPlateMotion containerRef={rootRef} />
       {children}
     </main>
   );

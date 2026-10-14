@@ -2010,6 +2010,42 @@
   object-position: center center;
   display: block;
 }
+/* The dark plate in motion (ADR-158), laid over the still by `HeroPlateMotion`
+   after load: the same 2912×1632 frame, cover-fit and centred exactly as the
+   img above, so the fade-in moves nothing but what animates. Under the overlay
+   (it is inserted before it), invisible until its first `playing`.
+   ⚠ HIDDEN WHEREVER THE STILL UNDER IT IS NOT THE PICTURE: in light (theme.css
+   hides the img and paints the obsidian plate on `.hero__bg`) and on the phone
+   rung (the `<picture>` paints the portrait plate there, the same media string
+   as `HERO_PHONE_MEDIA`). The component also pauses it in both. */
+.hero__bg .hero__motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+.hero__bg .hero__motion.is-live {
+  opacity: 1;
+}
+html[data-theme="light"] .hero__bg .hero__motion {
+  display: none;
+}
+@media (max-width: 640px) {
+  .hero__bg .hero__motion {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero__bg .hero__motion {
+    display: none;
+  }
+}
 .hero__video__overlay {
   position: absolute;
   inset: 0;
