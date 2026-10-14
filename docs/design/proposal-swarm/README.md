@@ -10,6 +10,7 @@ http://localhost:3021/test/proposal-swarm
 
 - `?fly=fall|march|drift|rigid|scan` is how the dots fly into the steps (fall); into the network the stack turns, whichever (round 06).
 - `?n=3|4` holds the grain, sites a unit (absent: the one that fits).
+- `?mark=lit|cut` sets the Thoughtform mark on the layer in white dots, or leaves it out of a lit disc (lit; round 07).
 - `?at=<stop>` opens on a named stop; `?still=1` stops the clock and hides the bar, for a shoot.
 - The bar at the foot of the page has the same switches, and **Play**, which scrolls the whole act at one pace.
 
@@ -239,3 +240,44 @@ What falls between the plates fell only once the whole stack stood in the steps.
 - **The title still rises through the stack** on the way in, now a turning object rather than a cloud.
 - **The runners and the rain stop when the hop begins.** By then the stack is closed and the gaps are shut, so the rain has already stopped; the agents' runners go out with the first frame of the turn.
 - **Judged from stills and a 16-frame sequence,** not on the owner's screen.
+
+# Round 07 (2026-10-14): the mark on the layer, the plates become their bars, the rain sooner and slower
+
+> I think those raindrops (the data drops in the navigating code build) can happen a bit sooner. They are also a bit fast but not too fast. … Marketing first and every team: I love the stack but then I see them transform. I guess we need a transformation to show the text but right now it feels like it's transforming into another rectangular shape. I think we can make it a bit more elegant. Also a very important part of navigating codebuild: the middle layer is the Thoughtform layer but it now shows a circle. I want to have a super clean particle version of our Thoughtform logo. Maybe it can be created with negative space or white space.
+
+## The Thoughtform mark on the layer
+
+`engine/mark.ts`. S4·E's layer was concentric: a white-hot core and two lit rings. Its top face now carries the brandmark, from `lib/brandmark` (the one record of the mark's paths, flattened by `brandmarkPolylines`). Each site of the layer's lattice is tested against the mark across its own patch (5 by 5 points); a site a third covered is the mark's. Only a dot's look changes, never its place, so the layer is still S4·E's dots on S4·E's pixels.
+
+- **Square to the screen in the stack's own view.** The mark lies on the plate and is foreshortened as anything lying there is, but its level bar runs left to right across the screen, so it reads upright in the steps. It turns with the plate on the way into the network.
+- **`?mark=lit`, the default:** the mark in white dots (the layer's hot tone) on the gold field, with a ring of clear sites round every stroke (the white space).
+- **`?mark=cut`:** the mark left out of a lit gold disc, as negative space. At this lattice (33 sites a side, the plate 320 px wide) it reads far less clearly than `lit`; it stays on the switch for a look.
+- The layer's halo, S4·E's own, still lights the mark from under it.
+
+## The plates become their bars
+
+What read as a second rectangle was the end of the turn. Each face-on plate's 33 rows from back to front crushed into strokes, then reshuffled into a frame of cells.
+
+- **A dot's cell is where it stands on its plate** (`placeCells`): the column of its nearest site, the row of its nearest unit, back on top. A cell nothing falls in borrows the nearest spare dot. It was by rank, which sent a clustered plate's dots across each other.
+- **The plate gathers on itself while it turns.** In three dimensions, each dot slides to its cell's point on the plate's top: a few sites from back to front, less than one across, and up the plate's walls. So the plate resolves into the five lines its bar's rows stand on while it is still a turning slab (`TURN.gather`).
+- **The turn ends at the pitch that sets those lines at the bar's own row pitch,** each plate's top over its bar. Face on, the plate is its bar, cell for cell, and the bars take the dots without a step (test: within a pixel before the settle has done anything).
+- **The bar's look comes in column by column,** left to right, as a line is written; the stretch where the course's words are lettered empties as before.
+- A plate's silhouette flattens to its top as its dots gather, so it no longer hides the plate below once they stand a bar apart.
+
+## The rain, sooner and slower
+
+- **It falls at 0.7 of S4·E's pace** (`RAIN_PACE`).
+- **It shows within half a second of a gap's plates landing.** A gap starting to rain no longer puts every drop back a whole fall, which left some streams half a fall from showing. A stream's drops go back together, keeping their spacing, until its first is just under the upper plate, and the streams follow one another nearest the corner first, over 0.15 of a fall.
+
+## Checked
+
+- 42 guard tests. New: face on, before the settle, every dot is on its cell to the pixel; a solid on the board stays inside the board's turned silhouette as it gathers; the mark sets white dots on the layer only; the cut keeps every dot's place and sets no white dot.
+- The live rain shot over three seconds: streams out from under both upper plates by 0.4 s.
+- A 16-frame sequence of the turn: the stack turns, the plates gather into lines, land face on as their bars, and take the bars' look left to right.
+- The 20 stills of `round-07/` (ten stops at 1976×966 and 1920×1247) are byte-identical shot twice; one more of the cut mark.
+- `tsc` clean, ESLint with no warning on the lab. Nothing outside the lab changed; `scripts/capture-proposal-swarm.mjs` takes `--mark`.
+
+## Known, and not fixed in round 07
+
+- **The mark is the brandmark only,** without the wordmark. At 33 sites a side, its finest strokes (the ring's thin side, the outer arc) are a dot wide.
+- The title still rises through the turning stack.

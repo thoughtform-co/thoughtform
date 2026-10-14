@@ -514,8 +514,6 @@ export interface Stage {
   big: Targets;
   node: Targets;
   org: Org;
-  /** 1 for the one dot a bar's cell shows (`formations.ts`). */
-  resident: Uint8Array;
   /** The scan's order for the first hop. */
   scan1: Scan;
   /** The second hop: the stack's turn to face the reader. */
@@ -852,20 +850,17 @@ function rainOf(S: Stage, T: number, fly: Fly): Rain | null {
 /** The second hop's timing, on its own clock. The stack turns over the first
     `end` of it, on `flow`: under way the moment the steps let go (eased in,
     it would stand still while its section scrolled away, the dead space of
-    round three), settling as it faces the reader. Each dot takes its cell
-    in its bar over
-    `settle`, which begins before the turn has ended, so the two read as one
-    move; what a turned plate hides, and the layer's light, let go over
-    `let`. */
+    round three), settling as it faces the reader. While it turns, each
+    plate's dots gather on the plate to the lines its bar's cells stand on
+    (`gather`), so the plate face on is its bar (`turn.ts`); `settle` only
+    hands each dot to its cell, a pixel at most. The bar takes its own look
+    column by column over `settle`, left to right, as a line is written;
+    what a turned plate hides, and the layer's light, let go over `let`. */
 export const TURN = {
   end: 0.74,
+  gather: [0.28, 0.66] as const,
   settle: [0.6, 1] as const,
   let: [0.62, 0.8] as const,
-  /** As a plate goes edge-on, its rows from back to front close up into
-      strokes. A bar shows one dot a cell and holds the rest unseen under
-      it, so those others fade over this, and the plate face on is the
-      bar's own grid by the time the bars take it. */
-  thin: [0.42, 0.6] as const,
 } as const;
 
 /** The layer's light on its top face, as a share of the plate's side: S4·E's
@@ -882,15 +877,23 @@ function turn2(S: Stage, F: Frame, T: number, t: number) {
   const e = flow(seg(T, 0, TURN.end));
   const V = lensAt(R, e);
   const k = smooth(seg(T, TURN.settle[0], TURN.settle[1]));
-  /* the others in a cell: on the bar they stand under the one it shows,
-     on its pixel, so they come back unseen once the bars hold them */
-  const other = 1 - seg(T, TURN.thin[0], TURN.thin[1]);
+  const g = smooth(seg(T, TURN.gather[0], TURN.gather[1]));
   for (let d = 0; d < P.count; d++) {
     if (P.host[d] >= 0) {
       F.show[d] = SHOW.no;
       continue;
     }
-    project(V, R, P.plate[d], R.i[d], R.j[d], R.k[d], at);
+    /* on its plate, gathering to its cell's point on the plate's top */
+    const p = P.plate[d];
+    project(
+      V,
+      R,
+      p,
+      lerp(R.i[d], R.gi[d], g),
+      lerp(R.j[d], R.gj[d], g),
+      lerp(R.k[d], R.tall[p], g),
+      at
+    );
     const amp = P.amp[d];
     if (amp > 0 && e < 1) {
       /* the team's drift lets go as the plate turns */
@@ -901,14 +904,14 @@ function turn2(S: Stage, F: Frame, T: number, t: number) {
     }
     F.x[d] = Math.round(lerp(at[0], G.x[d], k));
     F.y[d] = Math.round(lerp(at[1], G.y[d], k));
-    F.size[d] = Math.round(lerp(S.sizes[P.tier[d]], G.size[d], k));
-    F.style[d] = k < 0.5 ? P.style[d] : G.style[d];
+    /* its bar's look, its column's turn: a sweep from left to right */
+    const bar = k >= 0.2 + 0.6 * (R.gi[d] / R.m);
+    F.size[d] = bar ? G.size[d] : S.sizes[P.tier[d]];
+    F.style[d] = bar ? G.style[d] : P.style[d];
     /* a dot bound for a word's place is let go as it settles */
-    const word = G.show[d] === SHOW.window ? 1 - seg(k, 0.55, 0.95) : 1;
-    const seen = S.resident[d] ? word : Math.min(word, other);
-    if (seen < 1) {
+    if (G.show[d] === SHOW.window) {
       F.show[d] = SHOW.window;
-      F.alpha[d] = seen;
+      F.alpha[d] = 1 - seg(k, 0.55, 0.95);
     } else F.show[d] = SHOW.yes;
   }
   /* each plate, and each solid on the agents' board, hides what is behind
@@ -922,7 +925,13 @@ function turn2(S: Stage, F: Frame, T: number, t: number) {
     lift: [0, 0, 0],
     alpha: [hold, hold, hold],
     share: [0, 0, 0],
-    poly: R.boxes.map((b) => (b ? hullOf(V, R, b, pad) : null)),
+    /* a box flattens to its plate's top as its dots gather there, or it
+       would hide the plate below it once the plates stand a bar apart */
+    poly: R.boxes.map((b) => {
+      if (!b) return null;
+      const top = R.tall[b.plate];
+      return hullOf(V, R, { ...b, k0: lerp(b.k0, top, g), k1: lerp(b.k1, top, g) }, pad);
+    }),
   });
   project(V, R, 1, R.m / 2, R.m / 2, R.tall[1], at);
   F.glow = { x: at[0], y: at[1], plane: topPlane(V), reach: GLOW_REACH * R.m, alpha: hold };

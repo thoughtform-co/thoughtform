@@ -17,6 +17,7 @@ import { pickLattice, plateWidth } from "@/app/(internal)/test/proposal-swarm/en
 import { rowAt } from "@/app/(internal)/test/proposal-swarm/engine/pool";
 import { buildWorld, type Metrics } from "@/app/(internal)/test/proposal-swarm/engine/world";
 import { isStraight } from "@/components/xb-proposal/kit/trace";
+import { STYLE } from "@/app/(internal)/test/stack-forms/swarm/dots";
 
 /* /test/proposal-swarm plays the travelling proposal's three sections with one
    swarm of dots. Everything it draws is arithmetic over the scroll, so the
@@ -372,11 +373,6 @@ describe("the turn into the network", () => {
     const ys = poly.filter((_, q) => q % 2 === 1);
     return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
   };
-  const middle = (poly: Int32Array) => {
-    const xs = poly.filter((_, q) => q % 2 === 0);
-    const ys = poly.filter((_, q) => q % 2 === 1);
-    return [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2];
-  };
   /** Each plate's own segment, team first. */
   const plateSeg = [0, 1, 2].map((p) =>
     P.segs.findIndex((s) => !s.block && s.plate === p && s.from < P.own)
@@ -392,10 +388,13 @@ describe("the turn into the network", () => {
       P.segs.forEach((seg, n) => {
         const poly = own![n];
         if (!poly) return;
+        /* a solid on the board gathers to the board's lines */
+        const board = seg.block ? own![plateSeg[2]] : null;
         for (let d = seg.from; d < seg.to; d++) {
           /* a dot that drifts is off its site by its drift */
           if (P.amp[d] > 0) continue;
-          expect(inPoly(poly, F.x[d], F.y[d])).toBe(true);
+          const on = inPoly(poly, F.x[d], F.y[d]) || (!!board && inPoly(board, F.x[d], F.y[d]));
+          expect(on).toBe(true);
           checked++;
         }
       });
@@ -419,46 +418,73 @@ describe("the turn into the network", () => {
 
   it("faces the reader by the time the network pins, each plate over its bar", () => {
     const start = polys(shot(Y("stacked") + HAIR, "fall").F)!;
-    const pinned = polys(shot(R.xnTop, "fall").F)!;
+    const at = shot(R.xnTop, "fall").F;
+    const pinned = polys(at)!;
     for (const p of [0, 1, 2]) {
       /* a diamond as it leaves the steps, a level bar as the network pins */
       const a = extent(start[plateSeg[p]]!);
       const b = extent(pinned[plateSeg[p]]!);
       expect(a.h / a.w).toBeGreaterThan(0.5);
-      expect(b.h / b.w).toBeLessThan(0.25);
-      /* and its middle is its bar's */
-      let x = 0;
-      let y = 0;
+      expect(b.h / b.w).toBeLessThan(0.35);
+      /* and its dots stand where its bar's do */
+      let dx = 0;
+      let dy = 0;
       let n = 0;
       for (let d = 0; d < P.own; d++) {
         if (P.plate[d] !== p) continue;
-        x += W.big.x[d];
-        y += W.big.y[d];
+        dx += at.x[d] - W.big.x[d];
+        dy += at.y[d] - W.big.y[d];
         n++;
       }
-      const [mx, my] = middle(pinned[plateSeg[p]]!);
-      expect(Math.abs(mx - x / n)).toBeLessThan(6);
-      expect(Math.abs(my - y / n)).toBeLessThan(6);
+      expect(Math.abs(dx / n)).toBeLessThan(3);
+      expect(Math.abs(dy / n)).toBeLessThan(3);
     }
   });
 
-  it("thins each plate to its bar's grid as it goes edge-on", () => {
-    const F = shot(Y("hop2-75"), "fall").F;
+  it("gathers each plate on itself into its bar: face on, every dot is on its cell", () => {
+    /* a twentieth of the way into the bars' settle, when a dot would still
+       be most of its way off if the turn had not brought it there */
+    const p2 = 0.02 + (0.17 * (0.75 - 0.7)) / 0.3;
+    const F = shot(R.xnTop + p2 * (R.xnH - METRICS.vh), "fall").F;
     expect(F.state).toBe("hop2");
-    let shown = 0;
     for (let d = 0; d < P.own; d++) {
-      const seen = F.show[d] === SHOW.yes || (F.show[d] === SHOW.window && F.alpha[d] > 0.01);
-      /* the others in a cell are let go; the one a cell shows is not, but
-         where a course's words will be lettered */
-      if (!W.resident[d]) expect(seen).toBe(false);
-      else if (seen) shown++;
+      expect(Math.abs(F.x[d] - W.big.x[d])).toBeLessThanOrEqual(1);
+      expect(Math.abs(F.y[d] - W.big.y[d])).toBeLessThanOrEqual(1);
     }
-    expect(shown).toBeGreaterThan(300);
   });
 
   it("is the same turn whichever way the dots came into the steps", () => {
     const fall = shot(Y("hop2-25"), "fall").rows;
     for (const fly of FLIES) expect(shot(Y("hop2-25"), fly).rows).toEqual(fall);
+  });
+});
+
+describe("the Thoughtform mark", () => {
+  it("is set on the layer's top in white dots, where S4·E had its rings", () => {
+    let hot = 0;
+    for (let d = 0; d < P.own; d++) {
+      if (P.style[d] !== STYLE.layerHot) continue;
+      expect(P.plate[d]).toBe(1);
+      hot++;
+    }
+    expect(hot).toBeGreaterThan(60);
+    /* and every dot stays on its own pixel: only its look is the mark's */
+    expect(P.own).toBe(W.scene.plates.reduce((sum, p) => sum + p.dots, 0));
+  });
+
+  it("is left out of a lit disc when it is cut", () => {
+    const cut = buildWorld(METRICS, { mark: "cut" });
+    let hot = 0;
+    let lit = 0;
+    for (let d = 0; d < cut.pool.own; d++) {
+      if (cut.pool.plate[d] !== 1) continue;
+      if (cut.pool.style[d] === STYLE.layerHot) hot++;
+      if (cut.pool.style[d] === STYLE.layerLit) lit++;
+      expect(cut.pool.lx[d]).toBe(P.lx[d]);
+      expect(cut.pool.ly[d]).toBe(P.ly[d]);
+    }
+    expect(hot).toBe(0);
+    expect(lit).toBeGreaterThan(200);
   });
 });
 

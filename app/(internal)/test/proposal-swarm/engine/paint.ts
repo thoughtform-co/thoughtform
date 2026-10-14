@@ -53,13 +53,31 @@ export const newPaint = (tones: Tones): Paint => ({
   rain: null,
 });
 
-/** A gap's rain starts again from the top: every drop is put back one whole
-    way, so the gap fills as rain does, a drop at a time out from under the
-    upper plate, and is the rain it is at rest a way later. Without this a
-    gap was full of drops the frame it began (owner, 2026-10-14: "they just
-    appear out of nowhere"). */
+/** How long after a gap's first stream its last one starts, in ways. */
+const STAGGER = 0.15;
+
+/** A gap's rain starts again from the top. Without this a gap was full of
+    drops the frame it began (owner, 2026-10-14: "they just appear out of
+    nowhere"); put back a whole way, a stream could take half a way to show
+    ("can happen a bit sooner"). So a stream's drops go back together,
+    keeping their spacing, until its first is just under the upper plate,
+    and the streams start one after another, nearest the corner first, over
+    `STAGGER` of a way. */
 function restart(f: Falls) {
-  for (let q = 0; q < f.count; q++) f.prog[q] = (((f.prog[q] % 1) + 1) % 1) - 1;
+  const streams = new Map<string, number[]>();
+  for (let q = 0; q < f.count; q++) {
+    const key = `${f.x[q]}:${f.speed[q]}`;
+    const qs = streams.get(key);
+    if (qs) qs.push(q);
+    else streams.set(key, [q]);
+  }
+  const wrap = (v: number) => ((v % 1) + 1) % 1;
+  let s = 0;
+  for (const qs of streams.values()) {
+    const lead = Math.max(...qs.map((q) => wrap(f.prog[q])));
+    const wait = (STAGGER * s++) / Math.max(1, streams.size - 1);
+    for (const q of qs) f.prog[q] = wrap(f.prog[q]) - lead - wait;
+  }
 }
 
 const GOLD = [1, 3, 5].map((at) => parseInt(HEX.gold.slice(at, at + 2), 16));

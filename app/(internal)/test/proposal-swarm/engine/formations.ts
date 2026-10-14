@@ -3,10 +3,11 @@
    Three formations, each a seat for every dot of the pool:
 
      BARS   the three plates turned to face the reader: three level bars,
-            one a plate, each a grid of dots. A plate's dots take the bar's
-            cells by rank (left of the plate to the left of the bar, back
-            of the plate to the top), so every cell is taken and no dot
-            crosses another on the way.
+            one a plate, each a grid of dots. A dot takes the bar's cell
+            its place on its plate falls in (a column a site across, a row
+            a unit from back to front, the back on top), so a plate turned
+            face on and gathered to its cells' lines IS its bar, and every
+            cell is taken.
      NODE   the same three bars at a team's size.
      ORG    Marketing keeps one dot a cell; the rest leave along the six
             routes and stand as the lanes, each team's first course and the
@@ -74,28 +75,63 @@ export interface Cells {
     site, a row a unit of depth and one more. */
 export const gridOf = (m: number, n: number): Grid => ({ cols: m + 1, rows: n + 1 });
 
-export function assignCells(pool: Pool, grid: Grid): Cells {
+/** Where a cell is on its plate, in sites: its column across, its row from
+    the back. */
+export const cellSite = (g: Grid, cell: number): [number, number] => {
+  const m = g.cols - 1;
+  const n = g.rows - 1;
+  return [cell % g.cols, (Math.floor(cell / g.cols) * m) / n];
+};
+
+/**
+ * Each dot's cell, by its place on its plate (`i` across, `j` from the back,
+ * in sites, as `turn.ts` reads them back): the column of its nearest site,
+ * the row of its nearest unit. A cell's resident is the dot nearest its
+ * point. A cell nothing falls in borrows a dot from the nearest cell that
+ * can spare one, so every cell is taken.
+ */
+export function placeCells(pool: Pool, grid: Grid, i: Float32Array, j: Float32Array): Cells {
   const { cols, rows } = grid;
+  const m = cols - 1;
+  const n = rows - 1;
   const cell = new Int32Array(pool.count);
   const resident = new Uint8Array(pool.count);
+  const far = (d: number, c: number) => {
+    const [ci, cj] = cellSite(grid, c);
+    return Math.abs(i[d] - ci) + Math.abs(j[d] - cj);
+  };
   for (const plate of [0, 1, 2]) {
-    const mine: number[] = [];
-    for (let d = 0; d < pool.own; d++) if (pool.plate[d] === plate) mine.push(d);
-    mine.sort((p, q) => pool.u[p] - pool.u[q] || pool.v[p] - pool.v[q] || p - q);
-    const N = mine.length;
-    for (let c = 0; c < cols; c++) {
-      const column = mine.slice(Math.floor((c * N) / cols), Math.floor(((c + 1) * N) / cols));
-      column.sort((p, q) => pool.v[p] - pool.v[q] || pool.u[p] - pool.u[q] || p - q);
-      const taken = new Uint8Array(rows);
-      column.forEach((d, k) => {
-        const r = Math.min(rows - 1, Math.floor((k * rows) / column.length));
-        cell[d] = r * cols + c;
-        if (!taken[r]) {
-          taken[r] = 1;
-          resident[d] = 1;
-        }
-      });
+    const held: number[][] = Array.from({ length: cols * rows }, () => []);
+    for (let d = 0; d < pool.own; d++) {
+      if (pool.plate[d] !== plate) continue;
+      const c = Math.min(m, Math.max(0, Math.round(i[d])));
+      const r = Math.min(n, Math.max(0, Math.round((j[d] * n) / m)));
+      cell[d] = r * cols + c;
+      held[cell[d]].push(d);
     }
+    for (let c = 0; c < held.length; c++) {
+      if (held[c].length) continue;
+      const [ci, cr] = [c % cols, Math.floor(c / cols)];
+      let from = -1;
+      let best = Infinity;
+      for (let o = 0; o < held.length; o++) {
+        if (held[o].length < 2) continue;
+        const dist = Math.abs((o % cols) - ci) + Math.abs(Math.floor(o / cols) - cr) * (m / n);
+        if (dist < best) [best, from] = [dist, o];
+      }
+      if (from < 0) continue;
+      held[from].sort((p, q) => far(p, c) - far(q, c) || p - q);
+      const d = held[from].shift()!;
+      cell[d] = c;
+      held[c].push(d);
+    }
+    held.forEach((ds, c) => {
+      if (!ds.length) return;
+      let best = ds[0];
+      for (const d of ds)
+        if (far(d, c) < far(best, c) || (far(d, c) === far(best, c) && d < best)) best = d;
+      resident[best] = 1;
+    });
   }
   /* a rider's cell is its host's: it is unseen there, on the same pixel */
   for (let d = pool.own; d < pool.count; d++) cell[d] = cell[pool.host[d]];

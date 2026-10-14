@@ -12,6 +12,7 @@ import { sliceV7Sections } from "@/lib/v7-parse";
 import { type Stop, STOPS } from "./engine/clocks";
 import { FLIES, type Fly } from "./engine/flight";
 import { GRAINS } from "./engine/lattice";
+import { type Mark, MARKS } from "./engine/mark";
 import { LabBar } from "./LabBar";
 import { SwarmAct } from "./SwarmAct";
 
@@ -73,6 +74,8 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  *   ?fly=fall|march|drift|rigid|scan   how the dots go into the steps (fall);
  *                            into the network the stack turns, whichever
  *   ?n=3|4                   sites a unit, held (absent: the lattice that fits)
+ *   ?mark=lit|cut            the Thoughtform mark on the layer: in white
+ *                            dots, or left out of a lit disc (lit)
  *   ?at=<stop>               open on a named stop (`engine/clocks.ts`)
  *   ?still=1                 nothing rides the clock and the bar is off: a still
  */
@@ -87,6 +90,9 @@ export default async function ProposalSwarmRoute({
     : "fall";
   const grain = Number(one(q.n));
   const n = (GRAINS as readonly number[]).includes(grain) ? grain : undefined;
+  const mark = (MARKS as readonly string[]).includes(one(q.mark) ?? "")
+    ? (one(q.mark) as Mark)
+    : "lit";
   const at = (STOPS as readonly string[]).includes(one(q.at) ?? "")
     ? (one(q.at) as Stop)
     : undefined;
@@ -151,7 +157,7 @@ export default async function ProposalSwarmRoute({
         ariaLabel="Navigate, encode, build"
         motion={motion}
       >
-        <SwarmAct fly={fly} n={n} still={still} at={at} />
+        <SwarmAct fly={fly} n={n} mark={mark} still={still} at={at} />
         <div className="xb xb-in-frame psw">
           <EmbedStack arrive />
         </div>
@@ -165,7 +171,7 @@ export default async function ProposalSwarmRoute({
         motion={motion}
         indexOffset={DRAWN.length}
       />
-      {still ? null : <LabBar fly={fly} n={n} />}
+      {still ? null : <LabBar fly={fly} n={n} mark={mark} />}
     </ArcShell>
   );
 }

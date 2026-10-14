@@ -44,11 +44,12 @@ import {
 
 import { type Runways, stepsAt, type StepsReading } from "./clocks";
 import { scanOf, type Seat, type Stage } from "./flight";
-import { assignCells, barTargets, gridOf, orgTargets, type Rect } from "./formations";
+import { barTargets, gridOf, orgTargets, placeCells, type Rect } from "./formations";
 import { latticeAt, type Pick, pickLattice, plateWidth, poseOfGap } from "./lattice";
+import { type Mark, setMark } from "./mark";
 import { buildPool } from "./pool";
 import { buildTraces, type Traces } from "./traces";
-import { buildTurn } from "./turn";
+import { buildTurn, placeOf } from "./turn";
 
 type Pt = readonly [number, number];
 
@@ -101,7 +102,11 @@ const TAG = { w: 44, h: 19 };
 /** A plate's width in the proposal's drawing, in drawing units. */
 const PLATE_W = 2 * PLATE_SIDE * C30 * STACK.unit;
 
-export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
+/** How fast what falls between the plates falls, against S4·E's own (owner,
+    2026-10-14: "They are also a bit fast but not too fast"). */
+const RAIN_PACE = 0.7;
+
+export function buildWorld(m: Metrics, o: { n?: number; mark?: Mark } = {}): World {
   const { dpr } = m;
   const kA = m.flowStage.w / HERO_BOX.w;
   const kB = m.esStage.w / STACK.vbW;
@@ -115,6 +120,7 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
   const blocks = scene.plates[2].blocks;
   const onAgents = (i: number, j: number) => blocks.find((b) => inside(b.cells, i, j))?.k ?? board;
   const falls: [Falls, Falls] = [wingFalls(L, 101, () => tops[1]), wingFalls(L, 211, onAgents)];
+  for (const f of falls) for (let q = 0; q < f.count; q++) f.speed[q] *= RAIN_PACE;
 
   /* -- the stack's two seats: the layer's floor, at its middle, is the point
         both sections' drawings are stated for ------------------------------- */
@@ -193,7 +199,11 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
      past one dot a cell, and riders make up the rest */
   const riders = Math.max(0, SEATS.length * cellCount - (scene.plates[0].dots - cellCount));
   const pool = buildPool(scene, riders);
-  const cells = assignCells(pool, grid);
+  /* each dot's place on its plate in three dimensions: what the mark is set
+     by, what a dot's cell in its bar is, and what the turn turns */
+  const place = placeOf(pool, L, tops, blocks);
+  setMark(pool, place, L.m, L.n, tops[1], o.mark ?? "lit");
+  const cells = placeCells(pool, grid, place.i, place.j);
   const sizes = scene.sizes;
   const big = barTargets(pool, cells, bigRects, { edge: sizes[3], fill: sizes[2] }, windows);
   const node = barTargets(pool, cells, nodeRects, { edge: sizes[2], fill: sizes[1] });
@@ -217,7 +227,7 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
   const scan1 = scanOf(pool, (d) => BOTTOM_FIRST[pool.plate[d]] * 1e6 + pool.ly[d]);
   /* the turn into the network: from the closed stack the steps leave, to
      the three plates face on over the big bars */
-  const turn = buildTurn(pool, L, tops, blocks, seatB(1), bigRects);
+  const turn = buildTurn(L, tops, place, cells.cell, seatB(1), bigRects);
 
   /* -- the opening's files, in the flow's own frame ------------------------------ */
   const fu = (m.flowFig.w / FLOW_W) * dpr;
@@ -282,7 +292,6 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
     big,
     node,
     org,
-    resident: cells.resident,
     scan1,
     turn,
     step: [L.a * L.g, L.b * L.g],

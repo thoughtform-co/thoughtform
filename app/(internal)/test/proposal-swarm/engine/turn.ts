@@ -15,7 +15,16 @@
    the dots. Every dot keeps its place on its plate in three dimensions, read
    back through the lattice, so the turn's first frame is the stack as it
    stood, to the pixel, and its last is the three plates face on, each over
-   its bar. */
+   its bar.
+
+   The owner again, the same day, on the plates becoming bars: "I love the
+   stack but then I see them transform … it feels like it's transforming
+   into another rectangular shape." So nothing is reshuffled at the end.
+   While the stack turns, each plate's dots gather on the plate itself, in
+   three dimensions, to the lines its bar's cells stand on: a column a site
+   across, a row a unit from back to front. The turn ends at the pitch that
+   sets those rows at the bar's own row pitch, so the plate face on is its
+   bar, cell for cell. */
 
 import type { Cells, Lattice } from "../../stack-forms/swarm/dots";
 
@@ -58,6 +67,10 @@ export interface Turn {
   i: Float32Array;
   j: Float32Array;
   k: Float32Array;
+  /** Where each dot gathers to on its plate's top, in sites: its cell's
+      column, and its cell's row from the back. */
+  gi: Float32Array;
+  gj: Float32Array;
   /** Sites a side. */
   m: number;
   /** Each plate's height in rows, team first. */
@@ -159,20 +172,25 @@ export function hullOf(V: Lens, R: Turn, b: Box, pad: number): Int32Array {
   return Int32Array.from(hull.flatMap(([x, y]) => [Math.round(x), Math.round(y)]));
 }
 
+/** Each dot's place on its plate in three dimensions, and the boxes. */
+export interface Place {
+  i: Float32Array;
+  j: Float32Array;
+  k: Float32Array;
+  boxes: (Box | null)[];
+}
+
 /**
- * The turn, for the pool on lattice `L`: `tall` is each plate's height in
- * rows (the agents' to their board), `blocks` the solids on the board in the
- * pool's order, `seat` the closed stack where the steps leave it, `bars` the
- * three bars where the network takes it.
+ * Every dot's place on its plate, for the pool on lattice `L`: `tall` is each
+ * plate's height in rows (the agents' to their board), `blocks` the solids
+ * on the board in the pool's order.
  */
-export function buildTurn(
+export function placeOf(
   P: Pool,
   L: Lattice,
   tall: [number, number, number],
-  blocks: readonly { cells: Cells; k: number }[],
-  seat: { ox: number; oy: number; lift: readonly [number, number, number] },
-  bars: readonly Rect[]
-): Turn {
+  blocks: readonly { cells: Cells; k: number }[]
+): Place {
   const m = L.m;
   const step = L.a * L.g;
   const row = L.b * L.g;
@@ -224,6 +242,27 @@ export function buildTurn(
     j[d] = j[host];
     k[d] = k[host];
   }
+  return { i, j, k, boxes };
+}
+
+/**
+ * The turn, for the pool on lattice `L`, its dots placed by `placeOf`:
+ * `seat` is the closed stack where the steps leave it, `bars` the three bars
+ * where the network takes it, and `cell` each dot's cell in its bar
+ * (`formations.ts`), on a grid of a column a site and a row a unit.
+ */
+export function buildTurn(
+  L: Lattice,
+  tall: [number, number, number],
+  place: Place,
+  cell: Int32Array,
+  seat: { ox: number; oy: number; lift: readonly [number, number, number] },
+  bars: readonly Rect[]
+): Turn {
+  const m = L.m;
+  const step = L.a * L.g;
+  const row = L.b * L.g;
+  const { i, j, k, boxes } = place;
 
   /* where it starts: the lattice's own projection, so a site lands on its
      pixel. The lattice is isometric to the grain: its pitch is the one whose
@@ -243,29 +282,38 @@ export function buildTurn(
     z: [(mid(0) - mid(1)) * zr0, 0, (mid(2) - mid(1)) * zr0],
   };
 
-  /* where it ends: face on, a site to a column of the bar (`gridOf`: a
-     column a site), each plate's middle on its bar's, and pitched just far
-     enough that the layer's top face and front together span the bar's
-     rows, so each dot is a step from its cell when the bars take it */
+  /* where it ends: face on, every dot gathered to its cell's point on its
+     plate's top. A site is a column of the bar (`gridOf`), and the pitch is
+     the one that sets the plate's rows, a unit apart from back to front, at
+     the bar's own row pitch; each plate's top is on its bar's middle. So the
+     gathered plate face on IS its bar, cell for cell, and the bars take the
+     dots without a step. */
   const mid1 = (r: Rect) => r.y + r.h / 2;
   const s1 = bars[1].w / (m + 1);
-  const span = (L.n / (L.n + 1)) * bars[1].h;
-  const sp = clamp(
-    (span - tall[1] * 0.5 * s1) / (m * s1),
-    Math.sin((2 * Math.PI) / 180),
-    Math.sin((12 * Math.PI) / 180)
-  );
-  const pitch1 = Math.asin(sp);
-  const lift1 = (p: 0 | 1 | 2) => -(mid1(bars[p]) - mid1(bars[1])) / (s1 * Math.cos(pitch1));
+  const rowPx = bars[1].h / (L.n + 1);
+  const pitch1 = Math.asin(clamp(rowPx / ((m / L.n) * s1), 0.01, 0.5));
+  const cp = Math.cos(pitch1);
+  const cy = mid1(bars[1]) + (tall[1] / 2) * 0.5 * s1 * cp;
+  const lift1 = (p: 0 | 1 | 2) => (cy - mid1(bars[p])) / (s1 * cp) - (tall[p] / 2) * 0.5;
   const to: Cam = {
     yaw: 0,
     pitch: pitch1,
     s: s1,
     zr: 0.5,
     cx: bars[1].x + bars[1].w / 2,
-    cy: mid1(bars[1]),
-    z: [lift1(0), 0, lift1(2)],
+    cy,
+    z: [lift1(0), lift1(1), lift1(2)],
   };
 
-  return { i, j, k, m, tall, boxes, from, to };
+  /* each dot's point to gather to: its cell's column and row on its
+     plate's top (a solid on the board comes down to the board) */
+  const n = L.n;
+  const gi = new Float32Array(cell.length);
+  const gj = new Float32Array(cell.length);
+  for (let d = 0; d < cell.length; d++) {
+    gi[d] = cell[d] % (m + 1);
+    gj[d] = (Math.floor(cell[d] / (m + 1)) * m) / n;
+  }
+
+  return { i, j, k, gi, gj, m, tall, boxes, from, to };
 }

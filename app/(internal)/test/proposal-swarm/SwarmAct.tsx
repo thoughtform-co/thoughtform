@@ -23,6 +23,7 @@ import { CALLOUTS } from "@/components/xb-proposal/embed/EmbedStack";
 
 import { clocksAt, type Stop, STOPS, stopY } from "./engine/clocks";
 import { type Fly, frameAt, newFrame } from "./engine/flight";
+import type { Mark } from "./engine/mark";
 import { measure, readTones, trackBox } from "./engine/measure";
 import { newPaint, paint } from "./engine/paint";
 import { buildWorld, widthOf, type World } from "./engine/world";
@@ -48,12 +49,15 @@ const WORD_OFF = 28;
 export function SwarmAct({
   fly,
   n,
+  mark,
   still,
   at,
 }: {
   fly: Fly;
   /** Sites a unit, held; absent, the lattice that fits. */
   n?: number;
+  /** How the Thoughtform mark is set on the layer. */
+  mark: Mark;
   /** A still: nothing rides the clock, so a shoot is repeatable. */
   still: boolean;
   /** A named stop to open on. */
@@ -106,7 +110,7 @@ export function SwarmAct({
         seatCv.style.width = `${w / m.dpr}px`;
         seatCv.style.height = `${h / m.dpr}px`;
       }
-      world = buildWorld(m, { n });
+      world = buildWorld(m, { n, mark });
       F = newFrame(world.pool.count);
       said.length = 0;
       /* the page's facts, all true: what the lab's bar and a shoot read */
@@ -212,7 +216,7 @@ export function SwarmAct({
       if (seatCv && seatCtx) seatCtx.clearRect(0, 0, seatCv.width, seatCv.height);
       tr.removeAttribute("data-psw-ready");
     };
-  }, [live, fly, n, still, at]);
+  }, [live, fly, n, mark, still, at]);
 
   if (!live) return null;
   return (

@@ -1,6 +1,7 @@
 "use client";
 
-/* The lab's one bar: how the dots fly, how fine they are, and a button that
+/* The lab's one bar: how the dots fly, how fine they are, how the mark is
+   set on the layer, and a button that
    plays the act, so the flow can be watched whole without scrolling it.
 
    The switches are links (the page reads them on the server). Play scrolls
@@ -11,24 +12,27 @@ import { useEffect, useRef, useState } from "react";
 
 import { FLIES, type Fly } from "./engine/flight";
 import { GRAINS } from "./engine/lattice";
+import { type Mark, MARKS } from "./engine/mark";
 
 /** Screens a second. */
 const PACE = 0.42;
 /** A breath before the page starts to move, seconds. */
 const HOLD = 0.3;
 
-export function LabBar({ fly, n }: { fly: Fly; n?: number }) {
+export function LabBar({ fly, n, mark }: { fly: Fly; n?: number; mark: Mark }) {
   const [playing, setPlaying] = useState(false);
   const stop = useRef<(() => void) | null>(null);
 
   useEffect(() => () => stop.current?.(), []);
 
-  const href = (next: { fly?: Fly; n?: number | null }) => {
+  const href = (next: { fly?: Fly; n?: number | null; mark?: Mark }) => {
     const f = next.fly ?? fly;
     const grain = next.n === null ? undefined : (next.n ?? n);
+    const k = next.mark ?? mark;
     const q = new URLSearchParams();
     if (f !== "fall") q.set("fly", f);
     if (grain) q.set("n", String(grain));
+    if (k !== "lit") q.set("mark", k);
     const s = q.toString();
     return s ? `?${s}` : "?";
   };
@@ -96,6 +100,14 @@ export function LabBar({ fly, n }: { fly: Fly; n?: number }) {
         {GRAINS.slice(0, 2).map((g) => (
           <a key={g} href={href({ n: g })} data-on={g === n ? "" : undefined}>
             {g}
+          </a>
+        ))}
+      </span>
+      <span className="psw-bar__set">
+        <b>Mark</b>
+        {MARKS.map((k) => (
+          <a key={k} href={href({ mark: k })} data-on={k === mark ? "" : undefined}>
+            {k}
           </a>
         ))}
       </span>
