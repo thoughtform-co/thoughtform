@@ -160,12 +160,47 @@ describe("at rest", () => {
 });
 
 describe("a hop", () => {
-  it.each(FLIES)("starts and ends on the seats exactly: %s", (fly) => {
-    /* the first hop: out of the opening, into the steps */
-    expect(shot(Y("opening") + HAIR, fly).rows).toEqual(shot(Y("opening"), fly).rows);
+  /** The furthest any dot is, in px, from where another frame has it; a
+      dot on its way out of the opening is put back in the opening's frame. */
+  const apart = (a: ReturnType<typeof shot>["F"], b: ReturnType<typeof shot>["F"]) => {
+    const inPage = (F: typeof a, d: number) =>
+      F.y[d] + (F.state === "hop1" && F.show[d] !== SHOW.seat ? F.ride : 0);
+    let most = 0;
+    for (let d = 0; d < P.own; d++)
+      most = Math.max(most, Math.abs(a.x[d] - b.x[d]), Math.abs(inPage(a, d) - inPage(b, d)));
+    return most;
+  };
+
+  it.each(FLIES)("starts where the stack rests and ends on its seat: %s", (fly) => {
+    /* a dot is off at once, so a hair into a hop the first of them have
+       moved, by a few px and no more; a landing is to the pixel */
+    expect(apart(shot(Y("opening") + HAIR, fly).F, shot(Y("opening"), fly).F)).toBeLessThan(8);
     expect(shot(Y("navigate") - HAIR, fly).rows).toEqual(shot(Y("navigate"), fly).rows);
-    /* the second: out of the closed stack */
-    expect(shot(Y("stacked") + HAIR, fly).rows).toEqual(shot(Y("stacked"), fly).rows);
+    expect(apart(shot(Y("stacked") + HAIR, fly).F, shot(Y("stacked"), fly).F)).toBeLessThan(8);
+  });
+
+  it("leaves at once: no stretch of scroll in which nothing is seen to go", () => {
+    /* a twentieth of a screen into the hop the first rows are well on their
+       way, and the rest have not moved in the opening's own frame */
+    const rest = shot(Y("opening"), "march").F;
+    const early = shot(Y("opening") + 0.05 * METRICS.vh, "march").F;
+    let flying = 0;
+    let furthest = 0;
+    for (let d = 0; d < P.own; d++) {
+      if (early.show[d] === SHOW.seat) {
+        expect(early.x[d]).toBe(rest.x[d]);
+        expect(early.y[d]).toBe(rest.y[d]);
+        continue;
+      }
+      flying++;
+      /* it drops first, so how far it has got is read in the opening's own frame */
+      furthest = Math.max(furthest, Math.abs(early.y[d] + early.ride - rest.y[d]));
+      /* the bottom plate goes first */
+      expect(P.plate[d]).toBe(2);
+    }
+    expect(flying).toBeGreaterThan(50);
+    expect(furthest).toBeGreaterThan(20);
+    expect(early.ride).toBe(Math.round(0.05 * METRICS.vh * METRICS.dpr));
   });
 
   it.each(FLIES)("lands every dot on its bar, whichever way it flew: %s", (fly) => {
@@ -213,14 +248,16 @@ describe("a hop", () => {
         W.seatA.oy + P.ly[d] + W.seatA.lift[p],
         B0.ox + P.lx[d],
         B0.oy + P.ly[d] + B0.lift[p],
-        W.cut
+        W.cut,
+        HOP1.first
       );
       const second = marchRoute(
         B1.ox + P.lx[d],
         B1.oy + P.ly[d] + B1.lift[p],
         W.big.x[d],
         W.big.y[d],
-        W.cut
+        W.cut,
+        HOP2.first
       );
       expect(isStraight(first, 1e-6)).toBe(true);
       expect(isStraight(second, 1e-6)).toBe(true);
@@ -239,6 +276,8 @@ describe("a hop", () => {
     const mid = shot(Y("hop1-40"), "march").F;
     expect(mid.whole).toBeNull();
     expect(mid.masks.length).toBeGreaterThan(0);
+    /* what still stands in the opening is stated in the opening's own space */
+    expect(mid.masks[0].home).toBe(true);
     /* rigid is the travel as it was: the stack whole, its silhouettes with it */
     const rigid = shot(Y("hop1-40"), "rigid").F;
     expect(rigid.masks).toHaveLength(1);

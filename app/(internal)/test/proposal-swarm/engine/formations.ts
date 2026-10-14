@@ -35,7 +35,9 @@ export interface Grid {
   rows: number;
 }
 
-export const SHOW = { no: 0, yes: 1, window: 2 } as const;
+/** How a dot is shown. `seat`: it has not left the opening, and is drawn on
+    the opening's own canvas, in that canvas's space. */
+export const SHOW = { no: 0, yes: 1, window: 2, seat: 3 } as const;
 
 /** A seat for every dot of the pool, in device px on the canvas. */
 export interface Targets {

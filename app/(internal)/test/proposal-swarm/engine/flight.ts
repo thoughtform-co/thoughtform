@@ -33,6 +33,13 @@ const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+/** A dot on its way: off at once, settling as it lands. Eased in, a dot
+    covers a hundredth of its way in the first sixth of its time, and with
+    every dot doing so a hop began with a stretch of scroll in which nothing
+    was seen to leave (owner, 2026-10-14: "a weird dead space where the
+    three stacks move … rigidly instead of through the elegant particle
+    flow"). */
+const flow = (t: number) => 1 - (1 - t) * (1 - t);
 
 /** A seat of the stack: its lattice's origin on the canvas and each plate's
     lift, device px. */
@@ -52,14 +59,33 @@ export interface HopSpec {
   jitter: number;
   /** How long one dot is on the way. */
   dur: number;
+  /** Which leg a march takes first: the level run, or the plumb one. */
+  first: "h" | "v";
 }
 
 /* both end at 1 exactly: the last dot of the last plate lands as the hop does */
 /* the first hop builds the stack from the ground up: the agents leave first
    and land first, then the layer, and the team last (owner, 2026-10-14:
-   "it should be bottom, middle and THEN the first layer") */
-export const HOP1: HopSpec = { lead: [0.21, 0.13, 0.05], spread: 0.26, jitter: 0.03, dur: 0.5 };
-export const HOP2: HopSpec = { lead: [0, 0.08, 0.16], spread: 0.3, jitter: 0.04, dur: 0.5 };
+   "it should be bottom, middle and THEN the first layer"). In both hops the
+   first plate's first row is off the moment the hop begins. */
+/* The first hop marches plumb first: a dot drops out of the stack, as
+   S4·E's own drops do, and then files level along its row into its seat.
+   Level first, it would cross the tool cards, which stand beside the
+   stack at its own height. */
+export const HOP1: HopSpec = {
+  lead: [0.16, 0.08, 0],
+  spread: 0.26,
+  jitter: 0.03,
+  dur: 0.55,
+  first: "v",
+};
+export const HOP2: HopSpec = {
+  lead: [0, 0.07, 0.14],
+  spread: 0.28,
+  jitter: 0.03,
+  dur: 0.55,
+  first: "h",
+};
 const DRIFT_DUR = 0.55;
 
 /** How far one dot is through a hop whose clock reads `T`, eased. */
@@ -72,9 +98,9 @@ export function dotT(
   spec: HopSpec
 ): number {
   if (fly === "rigid") return ease(clamp01(T));
-  if (fly === "drift") return ease(seg(T, h * (1 - DRIFT_DUR), h * (1 - DRIFT_DUR) + DRIFT_DUR));
+  if (fly === "drift") return flow(seg(T, h * (1 - DRIFT_DUR), h * (1 - DRIFT_DUR) + DRIFT_DUR));
   const start = spec.lead[plate] + rank * spec.spread + h * spec.jitter;
-  return ease(seg(T, start, start + spec.dur));
+  return flow(seg(T, start, start + spec.dur));
 }
 
 /** When a plate's first dot has left and its last has landed. */
@@ -96,7 +122,8 @@ export function moveTo(
   fly: Fly,
   h: number,
   cut: number,
-  out: number[]
+  out: number[],
+  first: "h" | "v" = "h"
 ): void {
   if (e <= 0) {
     out[0] = ax;
@@ -137,6 +164,23 @@ export function moveTo(
   const sx = Math.sign(dx);
   const sy = Math.sign(dy);
   let s = e * (level + diagonal + plumb);
+  if (first === "v") {
+    if (s <= plumb) {
+      out[0] = ax;
+      out[1] = ay + sy * s;
+      return;
+    }
+    s -= plumb;
+    if (s <= diagonal) {
+      const d = s / Math.SQRT2;
+      out[0] = ax + sx * d;
+      out[1] = ay + sy * (plumb + d);
+      return;
+    }
+    out[0] = ax + sx * (c + s - diagonal);
+    out[1] = by;
+    return;
+  }
   if (s <= level) {
     out[0] = ax + sx * s;
     out[1] = ay;
@@ -159,11 +203,19 @@ export function marchRoute(
   ay: number,
   bx: number,
   by: number,
-  cut: number
+  cut: number,
+  first: "h" | "v" = "h"
 ): [number, number][] {
   const dx = bx - ax;
   const dy = by - ay;
   const c = Math.min(cut, Math.abs(dx), Math.abs(dy));
+  if (first === "v")
+    return [
+      [ax, ay],
+      [ax, by - Math.sign(dy) * c],
+      [ax + Math.sign(dx) * c, by],
+      [bx, by],
+    ];
   return [
     [ax, ay],
     [bx - Math.sign(dx) * c, ay],
@@ -176,6 +228,9 @@ export function marchRoute(
 
 /** Where a plate stands, and how much of it: what hides the dots behind it. */
 export interface Standing extends Seat {
+  /** It stands in the opening's seat, which goes where the opening goes:
+      stated in that seat's space, not the screen's. */
+  home?: boolean;
   alpha: [number, number, number];
   /** For a plate that is printing or leaving row by row: the band of the
       canvas, y0 to y1, its standing rows are in. Absent, it stands whole. */
@@ -205,6 +260,11 @@ export interface Frame {
   walked: number[];
   /** The steps' clock while the stack stands in the steps, else -1. */
   p1: number;
+  /** How far the opening has scrolled since the stack began to leave it,
+      device px: where its seat is on a canvas that holds still. */
+  ride: number;
+  /** The whole stack stands in the opening's seat. */
+  home: boolean;
 }
 
 export function newFrame(n: number): Frame {
@@ -222,6 +282,8 @@ export function newFrame(n: number): Frame {
     reel: 0,
     walked: [0, 0, 0, 0, 0, 0],
     p1: -1,
+    ride: 0,
+    home: false,
   };
 }
 
@@ -234,6 +296,8 @@ export interface Stage {
   squash: number;
   /** The march's cut, device px. */
   cut: number;
+  /** A screen's height, device px: how far the opening scrolls in a hop. */
+  screen: number;
   seatA: Seat;
   seatB: (p1: number) => Seat & { level: [number, number, number] };
   big: Targets;
@@ -246,7 +310,7 @@ export interface Stage {
 const at = [0, 0];
 const tip = [0, 0];
 
-function stand(S: Stage, F: Frame, seat: Seat, t: number) {
+function stand(S: Stage, F: Frame, seat: Seat, t: number, home: boolean) {
   const P = S.pool;
   for (let d = 0; d < P.count; d++) {
     if (P.host[d] >= 0) {
@@ -265,10 +329,11 @@ function stand(S: Stage, F: Frame, seat: Seat, t: number) {
     F.y[d] = y;
     F.size[d] = S.sizes[P.tier[d]];
     F.style[d] = P.style[d];
-    F.show[d] = SHOW.yes;
+    F.show[d] = home ? SHOW.seat : SHOW.yes;
   }
-  F.masks.push({ ...seat, alpha: [1, 1, 1], share: [1, 1, 1] });
+  F.masks.push({ ...seat, home, alpha: [1, 1, 1], share: [1, 1, 1] });
   F.whole = seat;
+  F.home = home;
 }
 
 /** A band that takes in everything: a row of dots is never this far off. */
@@ -282,6 +347,9 @@ const FAR = 1e6;
  * plate is cut to the rows still standing where it leaves and to the rows
  * already landed where it prints. Drift has no order: the silhouette fades.
  * Rigid moves the stack whole, so its silhouettes move with it.
+ *
+ * `home`: the seat it leaves is the opening's, which scrolls with its
+ * section; what stands there is stated in that seat's own space.
  */
 function masksOf(
   S: Stage,
@@ -290,13 +358,14 @@ function masksOf(
   to: Seat | null,
   T: number,
   fly: Fly,
-  spec: HopSpec
+  spec: HopSpec,
+  home: boolean
 ) {
   if (fly === "rigid" && to) {
     const e = ease(clamp01(T));
     F.masks.push({
       ox: Math.round(lerp(from.ox, to.ox, e)),
-      oy: Math.round(lerp(from.oy, to.oy, e)),
+      oy: Math.round(lerp(from.oy - (home ? F.ride : 0), to.oy, e)),
       lift: [
         Math.round(lerp(from.lift[0], to.lift[0], e)),
         Math.round(lerp(from.lift[1], to.lift[1], e)),
@@ -310,13 +379,20 @@ function masksOf(
   if (fly !== "march") {
     const gone = 1 - seg(T, 0.02, 0.3);
     const come = seg(T, 0.72, 1);
-    if (gone > 0) F.masks.push({ ...from, alpha: [gone, gone, gone], share: [gone, gone, gone] });
+    if (gone > 0)
+      F.masks.push({ ...from, home, alpha: [gone, gone, gone], share: [gone, gone, gone] });
     if (to && come > 0)
       F.masks.push({ ...to, alpha: [come, come, come], share: [come, come, come] });
     return;
   }
   const pad = S.sizes[S.sizes.length - 1];
-  const left: Standing = { ...from, alpha: [0, 0, 0], band: [null, null, null], share: [0, 0, 0] };
+  const left: Standing = {
+    ...from,
+    home,
+    alpha: [0, 0, 0],
+    band: [null, null, null],
+    share: [0, 0, 0],
+  };
   const landed: Standing | null = to
     ? { ...to, alpha: [0, 0, 0], band: [null, null, null], share: [0, 0, 0] }
     : null;
@@ -348,6 +424,12 @@ function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
   const P = S.pool;
   const A = S.seatA;
   const B = S.seatB(0);
+  /* The opening scrolls a screen away while the hop plays. A dot that has
+     not left yet stays in the opening's seat and goes with it; a dot on
+     its way leaves from where that seat has got to. So the stack is never
+     seen sliding against its own section before it flies. */
+  const ride = Math.round(T * S.screen);
+  F.ride = ride;
   for (let d = 0; d < P.count; d++) {
     if (P.host[d] >= 0) {
       F.show[d] = SHOW.no;
@@ -355,32 +437,42 @@ function hop1(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
     }
     const p = P.plate[d];
     const e = dotT(T, p, P.rank[d], P.h[d], fly, HOP1);
+    const ax = A.ox + P.lx[d];
+    const ay = A.oy + P.ly[d] + A.lift[p];
+    const amp = P.amp[d];
+    const a = P.phase[d] + P.rate[d] * t;
+    F.size[d] = S.sizes[P.tier[d]];
+    F.style[d] = P.style[d];
+    if (e <= 0) {
+      /* in its seat, as it stands at rest, in the seat's own space */
+      F.x[d] = amp > 0 ? ax + Math.round(amp * Math.cos(a)) : ax;
+      F.y[d] = amp > 0 ? ay + Math.round(amp * S.squash * Math.sin(a)) : ay;
+      F.show[d] = SHOW.seat;
+      continue;
+    }
     moveTo(
-      A.ox + P.lx[d],
-      A.oy + P.ly[d] + A.lift[p],
+      ax,
+      ay - ride,
       B.ox + P.lx[d],
       B.oy + P.ly[d] + B.lift[p],
       e,
       fly,
       P.h[d],
       S.cut,
-      at
+      at,
+      HOP1.first
     );
-    const amp = P.amp[d];
     if (amp > 0) {
       /* the team's drift lets go as a dot leaves and takes it back as it lands */
       const still = (1 - 2 * e) * (1 - 2 * e);
-      const a = P.phase[d] + P.rate[d] * t;
       at[0] += amp * still * Math.cos(a);
       at[1] += amp * still * S.squash * Math.sin(a);
     }
     F.x[d] = Math.round(at[0]);
     F.y[d] = Math.round(at[1]);
-    F.size[d] = S.sizes[P.tier[d]];
-    F.style[d] = P.style[d];
     F.show[d] = SHOW.yes;
   }
-  masksOf(S, F, A, B, T, fly, HOP1);
+  masksOf(S, F, A, B, T, fly, HOP1, true);
 }
 
 function hop2(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
@@ -413,7 +505,7 @@ function hop2(S: Stage, F: Frame, T: number, t: number, fly: Fly) {
       F.alpha[d] = 1 - seg(e, 0.55, 0.95);
     } else F.show[d] = SHOW.yes;
   }
-  masksOf(S, F, B, null, T, fly, HOP2);
+  masksOf(S, F, B, null, T, fly, HOP2, false);
 }
 
 /** The share of a team's turn its last dot starts at, and how long one walks. */
@@ -514,11 +606,13 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
   F.level = [1, 1, 1];
   F.reel = 0;
   F.p1 = -1;
+  F.ride = 0;
+  F.home = false;
   F.walked.fill(0);
   if (c.q2 <= 0) {
     if (c.q1 <= 0) {
       F.state = "opening";
-      stand(S, F, S.seatA, t);
+      stand(S, F, S.seatA, t, true);
     } else if (c.q1 < 1) {
       F.state = "hop1";
       F.reel = seg(c.q1, 0, 0.06);
@@ -530,7 +624,7 @@ export function frameAt(S: Stage, c: Clocks, t: number, fly: Fly, F: Frame): Fra
       F.state = "steps";
       F.reel = 1;
       const B = S.seatB(c.p1);
-      stand(S, F, B, t);
+      stand(S, F, B, t, false);
       F.level = B.level;
       F.p1 = c.p1;
     }

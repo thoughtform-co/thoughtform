@@ -135,6 +135,9 @@ export default async function ProposalSwarmRoute({
         <div className="psw-hold">
           <div className="xb xb-in-frame xb-sec psw">
             <StackFlow />
+            {/* the opening's own canvas: the stack while it rests here, and
+                every dot of it that has not left yet (`engine/paint.ts`) */}
+            <canvas className="psw-seat" aria-hidden />
           </div>
         </div>
       </ArcBeat>

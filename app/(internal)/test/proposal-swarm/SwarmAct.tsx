@@ -70,6 +70,11 @@ export function SwarmAct({
     const cv = canvas.current;
     const ctx = cv?.getContext("2d");
     if (!tr || !cv || !ctx) return;
+    /* the opening's own canvas, inside its own screen: it holds every dot
+       that has not left the opening, so those go where their section goes.
+       Absent, the one canvas takes everything. */
+    const seatCv = document.querySelector<HTMLCanvasElement>(".psw-seat");
+    const seatCtx = seatCv?.getContext("2d") ?? null;
 
     let world: World | null = null;
     let F = newFrame(0);
@@ -94,6 +99,12 @@ export function SwarmAct({
         /* one canvas pixel to one device pixel, whatever the box rounds to */
         cv.style.width = `${w / m.dpr}px`;
         cv.style.height = `${h / m.dpr}px`;
+      }
+      if (seatCv && (seatCv.width !== w || seatCv.height !== h)) {
+        seatCv.width = w;
+        seatCv.height = h;
+        seatCv.style.width = `${w / m.dpr}px`;
+        seatCv.style.height = `${h / m.dpr}px`;
       }
       world = buildWorld(m, { n });
       F = newFrame(world.pool.count);
@@ -143,7 +154,7 @@ export function SwarmAct({
       const t = still || t0 < 0 ? 0 : (ts - t0) / 1000;
       const c = clocksAt(window.scrollY, world.metrics.vh, world.metrics.runways);
       frameAt(world, c, t, fly, F);
-      paint(ctx, world, F, t, P, cv.width, cv.height);
+      paint(ctx, seatCtx, world, F, t, P, cv.width, cv.height);
       seatWords(world);
       tr.dataset.pswState = F.state;
     };
@@ -198,6 +209,7 @@ export function SwarmAct({
       theme.disconnect();
       window.removeEventListener("resize", rebuild);
       document.removeEventListener("visibilitychange", run);
+      if (seatCv && seatCtx) seatCtx.clearRect(0, 0, seatCv.width, seatCv.height);
       tr.removeAttribute("data-psw-ready");
     };
   }, [live, fly, n, still, at]);

@@ -119,9 +119,11 @@ export const arriveLight = (q1: number) => 1 - seg(q1, ARRIVE_LIT, 1);
     section does over the last tenth of its turn (about p = 0.2). */
 const BARS_BY = 0.19;
 
-/** The second hop's one clock: half of it while the network's runway rises
-    through the screen, half over the start of its pin. */
-export const hop2T = (c: Clocks) => 0.45 * c.q2 + 0.55 * seg(c.p2, 0.02, BARS_BY);
+/** The second hop's one clock: most of it while the network's runway rises
+    through the screen, so every plate has left the stack well before the
+    steps have scrolled away from under it; the rest over the start of the
+    network's pin, where the bars finish printing. */
+export const hop2T = (c: Clocks) => 0.7 * c.q2 + 0.3 * seg(c.p2, 0.02, BARS_BY);
 
 export { moment as networkAt };
 

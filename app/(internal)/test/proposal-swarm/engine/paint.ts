@@ -1,4 +1,4 @@
-/* One frame, painted. No React; the canvas is handed in.
+/* One frame, painted. No React; the canvases are handed in.
 
    S4·E's own order, bottom plate first, with one change: a plate hides what
    is behind it by CUTTING its silhouette out of what has been painted
@@ -6,19 +6,32 @@
    canvas lies over a page here, so it has to stay clear where no dot is.
 
    What runs and what falls is S4·E's own, by reference (`swarm/clear.ts`),
-   and only while every dot is on the stack: a plate in flight sheds nothing. */
+   and only while every dot is on the stack: a plate in flight sheds nothing.
+
+   TWO LAYERS. A dot that has not left the opening belongs to the opening: it
+   has to go where that section goes, with nothing between the scroll and the
+   pixel. So the opening has a canvas of its own inside its own screen (the
+   SEAT), and it holds the stack while it rests there, every dot of it that
+   has not left yet, and the files tied to it. Everything else, a dot from
+   the moment it leaves, is on the canvas that holds still on the screen (the
+   FLIGHT). Both are painted from one frame, in one order, with the same
+   silhouettes, so a dot leaving is hidden behind a plate still standing. */
 
 import { drawFalls, drawRunners, halo } from "../../stack-forms/swarm/clear";
 import { hash2 } from "../../stack-forms/model";
 import { STYLE } from "../../stack-forms/swarm/dots";
 
-import type { Frame, Standing } from "./flight";
+import type { Frame } from "./flight";
 import { along, SHOW } from "./formations";
 import { DIM, paletteOf, type Tones } from "./palette";
 import { inGap, stationAt } from "./traces";
 import type { World } from "./world";
 
 type Ctx = CanvasRenderingContext2D;
+
+/** Which of the frame a canvas shows: the opening's own dots, the rest, or,
+    on a page with one canvas only, everything. */
+type Layer = "seat" | "flight" | "both";
 
 export interface Paint {
   tones: Tones;
@@ -46,22 +59,35 @@ function cut(ctx: Ctx, poly: Int32Array, ox: number, oy: number, alpha: number) 
   ctx.globalAlpha = 1;
 }
 
-function dots(ctx: Ctx, F: Frame, palette: readonly string[], from: number, to: number) {
+/** The dots of one run that belong on this layer. A dot in the opening's
+    seat is stated in the seat's own space: on a canvas that holds still it
+    is drawn where the opening has scrolled to. */
+function dots(
+  ctx: Ctx,
+  F: Frame,
+  palette: readonly string[],
+  from: number,
+  to: number,
+  layer: Layer
+) {
   let style = -1;
   for (let d = from; d < to; d++) {
     const show = F.show[d];
     if (show === SHOW.no) continue;
+    const seated = show === SHOW.seat;
+    if (layer === "seat" ? !seated : layer === "flight" && seated) continue;
     if (F.style[d] !== style) {
       style = F.style[d];
       ctx.fillStyle = palette[style];
     }
     const size = F.size[d];
+    const y = seated && layer === "both" ? F.y[d] - F.ride : F.y[d];
     if (show === SHOW.window) {
       if (F.alpha[d] <= 0.01) continue;
       ctx.globalAlpha = F.alpha[d];
-      ctx.fillRect(F.x[d] - (size >> 1), F.y[d] - (size >> 1), size, size);
+      ctx.fillRect(F.x[d] - (size >> 1), y - (size >> 1), size, size);
       ctx.globalAlpha = 1;
-    } else ctx.fillRect(F.x[d] - (size >> 1), F.y[d] - (size >> 1), size, size);
+    } else ctx.fillRect(F.x[d] - (size >> 1), y - (size >> 1), size, size);
   }
 }
 
@@ -72,7 +98,7 @@ const WALKER = [STYLE.teamLit, STYLE.layerLit, STYLE.agentsHot] as const;
 /** Stations a second a walker covers. */
 const PACE = 6;
 
-function files(ctx: Ctx, W: World, F: Frame, t: number, palette: readonly string[]) {
+function files(ctx: Ctx, W: World, F: Frame, t: number, palette: readonly string[], dy: number) {
   const T = W.traces;
   if (F.reel >= 1 || T.count === 0) return;
   const at = [0, 0];
@@ -86,7 +112,7 @@ function files(ctx: Ctx, W: World, F: Frame, t: number, palette: readonly string
       style = mine;
       ctx.fillStyle = palette[style];
     }
-    ctx.fillRect(Math.round(at[0]) - (size >> 1), Math.round(at[1]) - (size >> 1), size, size);
+    ctx.fillRect(Math.round(at[0]) - (size >> 1), Math.round(at[1]) + dy - (size >> 1), size, size);
   }
   /* one brighter dot a file, stepping station to station the way the work
      flows; they stop with the reel */
@@ -106,7 +132,7 @@ function files(ctx: Ctx, W: World, F: Frame, t: number, palette: readonly string
       if (inGap(T.gaps, at[0], at[1])) continue;
       const dot = W.sizes[tier];
       ctx.fillStyle = palette[paint];
-      ctx.fillRect(Math.round(at[0]) - (dot >> 1), Math.round(at[1]) - (dot >> 1), dot, dot);
+      ctx.fillRect(Math.round(at[0]) - (dot >> 1), Math.round(at[1]) + dy - (dot >> 1), dot, dot);
     }
   });
 }
@@ -137,57 +163,60 @@ function lanes(ctx: Ctx, W: World, F: Frame, t: number, palette: readonly string
   });
 }
 
-/* -- the frame -------------------------------------------------------------------- */
+/* -- one layer of the frame ----------------------------------------------------------- */
 
-export function paint(ctx: Ctx, W: World, F: Frame, t: number, P: Paint, w: number, h: number) {
-  const dt = Math.min(0.1, Math.max(0, t - P.tLast));
-  P.tLast = t;
-  const key = F.level.map((v) => v.toFixed(3)).join();
-  if (key !== P.key) {
-    P.key = key;
-    P.palette = paletteOf(F.level, P.tones);
-  }
-  const palette = P.palette;
+function draw(
+  ctx: Ctx,
+  W: World,
+  F: Frame,
+  t: number,
+  dt: number,
+  palette: readonly string[],
+  w: number,
+  layer: Layer
+) {
   const S = W.scene;
   const row = W.L.b * W.L.g;
-  const whole = F.whole;
-  const segs = W.pool.segs;
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = "source-over";
-  ctx.clearRect(0, 0, w, h);
+  /* on a canvas that holds still, what stands in the opening's seat is
+     where the opening has scrolled to */
+  const home = layer === "seat" ? 0 : -F.ride;
+  /* the stack as a standing thing belongs to the layer it stands on */
+  const whole = F.whole && (layer === "both" || (layer === "seat") === F.home) ? F.whole : null;
+  const wholeY = whole ? whole.oy + (F.home ? home : 0) : 0;
 
-  files(ctx, W, F, t, palette);
+  if (layer !== "flight") files(ctx, W, F, t, palette, home);
 
-  /* what belongs to the stack as a standing thing, drawn in its own space */
-  const inSeat = (alpha: number, draw: () => void) => {
+  const inSeat = (alpha: number, paint: () => void) => {
     if (!whole || alpha <= 0) return;
     ctx.save();
-    ctx.translate(whole.ox, whole.oy);
+    ctx.translate(whole.ox, wholeY);
     ctx.globalAlpha = alpha;
-    draw();
+    paint();
     ctx.restore();
   };
   const masks = (plate: 0 | 1 | 2, poly: Int32Array, wholeOnly: boolean) => {
-    for (const m of F.masks as Standing[]) {
+    for (const m of F.masks) {
+      if (layer === "seat" && !m.home) continue;
       const a = m.alpha[plate];
       const band = m.band?.[plate];
       /* a solid on the board hides what is behind it only while its plate
          stands whole */
       if (wholeOnly ? a < 0.999 || band : a <= 0) continue;
+      const dy = m.home ? home : 0;
       if (band) {
         ctx.save();
         ctx.beginPath();
-        ctx.rect(0, band[0], w, band[1] - band[0]);
+        ctx.rect(0, band[0] + dy, w, band[1] - band[0]);
         ctx.clip();
-        cut(ctx, poly, m.ox, m.oy + m.lift[plate], a);
+        cut(ctx, poly, m.ox, m.oy + dy + m.lift[plate], a);
         ctx.restore();
-      } else cut(ctx, poly, m.ox, m.oy + m.lift[plate], a);
+      } else cut(ctx, poly, m.ox, m.oy + dy + m.lift[plate], a);
     }
   };
 
   let layerDone = false;
   let teamDone = false;
-  segs.forEach((seg, n) => {
+  W.pool.segs.forEach((seg, n) => {
     if (seg.block) {
       /* a solid on the board hides the board behind it, while it stands */
       masks(2, seg.mask, true);
@@ -207,10 +236,12 @@ export function paint(ctx: Ctx, W: World, F: Frame, t: number, P: Paint, w: numb
           )
         );
       masks(1, seg.mask, false);
+      /* the layer's own light, on the layer it stands on */
       for (const m of F.masks) {
+        if (layer === "seat" ? !m.home : layer === "flight" && m.home) continue;
         if (m.alpha[1] <= 0 || m.share[1] <= 0) continue;
         ctx.save();
-        ctx.translate(m.ox, m.oy);
+        ctx.translate(m.ox, m.oy + (m.home ? home : 0));
         ctx.globalAlpha = m.alpha[1] * m.share[1] * lit(F.level[1]);
         halo(ctx, S, m.lift[1]);
         ctx.restore();
@@ -232,12 +263,47 @@ export function paint(ctx: Ctx, W: World, F: Frame, t: number, P: Paint, w: numb
         );
       masks(0, seg.mask, false);
     }
-    dots(ctx, F, palette, seg.from, seg.to);
+    dots(ctx, F, palette, seg.from, seg.to, layer);
     /* the runners on the agents' traces, over the bare board and under
        what stands on it */
     if (n === 0 && whole)
       inSeat(lit(F.level[2]), () => drawRunners(ctx, S, S.plates[2].runners, whole.lift[2], t));
   });
 
-  if (F.state === "network") lanes(ctx, W, F, t, palette);
+  if (layer !== "seat" && F.state === "network") lanes(ctx, W, F, t, palette);
+}
+
+/* -- the frame -------------------------------------------------------------------- */
+
+/**
+ * One frame onto the canvas that holds still (`flight`) and the opening's
+ * own (`seat`); both are `w` by `h`. On a page without the second, the one
+ * canvas takes everything. What falls is drawn by one layer only, the one
+ * the whole stack stands on, so both may be handed the frame's own step.
+ */
+export function paint(
+  flight: Ctx,
+  seat: Ctx | null,
+  W: World,
+  F: Frame,
+  t: number,
+  P: Paint,
+  w: number,
+  h: number
+) {
+  const dt = Math.min(0.1, Math.max(0, t - P.tLast));
+  P.tLast = t;
+  const key = F.level.map((v) => v.toFixed(3)).join();
+  if (key !== P.key) {
+    P.key = key;
+    P.palette = paletteOf(F.level, P.tones);
+  }
+  for (const ctx of seat ? [seat, flight] : [flight]) {
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, w, h);
+  }
+  if (seat && (F.state === "opening" || F.state === "hop1"))
+    draw(seat, W, F, t, dt, P.palette, w, "seat");
+  draw(flight, W, F, t, dt, P.palette, w, seat ? "flight" : "both");
 }

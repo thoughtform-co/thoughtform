@@ -66,6 +66,9 @@
     position: sticky;
     top: 0;
   }
+  .psw .psw-seat {
+    display: block;
+  }
 
   /* ---- the steps: the stack and the three steps in one box ---- */
 
@@ -114,6 +117,19 @@
   left: 0;
   display: block;
   /* a dot is a whole device pixel: never smoothed */
+  image-rendering: pixelated;
+}
+/* The opening's own canvas, inside its own screen and the size of it. It
+   holds the stack while it rests in the opening and every dot of it that
+   has not left yet, so those scroll with their section and not against
+   it. Shown only where the swarm runs (the rule above, by `.psw`). */
+.psw-seat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: none;
+  pointer-events: none;
   image-rendering: pixelated;
 }
 

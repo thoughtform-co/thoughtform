@@ -270,6 +270,7 @@ export function buildWorld(m: Metrics, o: { n?: number } = {}): World {
     sizes,
     squash: L.b / L.a,
     cut: 3 * L.n * row,
+    screen: m.vh * dpr,
     seatA,
     seatB,
     big,

@@ -148,3 +148,25 @@ Stills: `round-02/`.
 - **The gap is tighter on a short screen.** At 1976×966 the opened plates stand about 180 px apart, a little less than a plate is tall, so each plate's front corner reaches the next one's back corner.
 - **The hold is one number,** 60 % of a screen, in `proposal-swarm.css`. It was not tuned by eye on the owner's screen.
 - Everything under "Known, and not fixed" in round 01 still stands, but for the organisation's frame.
+
+---
+
+# Round 03 (2026-10-14)
+
+> there's a weird "dead space" where the three stacks move from the second section like rigidly instead of through the elegant particle flow; shouldn't happen
+
+Two causes, both fixed on the first hop:
+
+- **The stack was pinned to the screen while its section left.** The canvas holds still on the screen; the opening does not. So for the first stretch of the hop the whole stack stood still while the chips and cards scrolled away around it, which reads as the stack sliding against its own section. Now the opening has a canvas of its own inside its own screen (the seat, `.psw-seat`). It holds the stack while it rests there and every dot that has not left yet, so those go where their section goes, natively, with nothing between the scroll and the pixel. A dot moves to the canvas that holds still the moment it leaves, from where its seat has got to. Both canvases are painted from one frame, with the same silhouettes, so a dot leaving is hidden behind a plate still standing.
+- **Nothing was seen to leave for the first part of the hop.** Every dot was eased in, covering a hundredth of its way in the first sixth of its time, and the bottom plate's first row only left at 5 % of the hop. Now a dot is off at once and settles as it lands, and the bottom plate's first row leaves the moment the hop begins. A twentieth of a screen into the hop, the first rows are already well on their way (test).
+
+And one more on the first hop: **it marches plumb first.** A dot drops out of the stack, as S4·E's own drops do, then files level along its row into its seat. Level first, the files crossed the tool cards, which stand beside the stack at its own height.
+
+On the second hop the same timing applies (off at once, settling as it lands), and its clock is spread so that every plate has left the stack while the network's runway is still rising. Its lower plates still hold on the screen for the first fifth of that rise while the steps scroll away. The seat treatment was not given to the second hop.
+
+## Checked
+
+- The live Play run, at 1976×966: opening, hop, steps, hop, network, in that order, 59 frames a second, no page error.
+- The 18 stills of `round-03/` (nine stops, at 1976×966 and 1920×1247) are byte-identical shot twice.
+- 26 guard tests. The hop's start is now held to within a few px of the rest, since a dot is off at once; its end is still to the pixel.
+- Nothing outside the lab changed in this round.
