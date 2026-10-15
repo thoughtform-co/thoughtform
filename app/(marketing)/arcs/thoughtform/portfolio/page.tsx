@@ -11,9 +11,6 @@ import { CHAPTER_MENU, CHAPTER_VIEWS } from "./PortfolioChapters";
 
 import "@/components/landing/v7/landing.css";
 import "@/components/arcs/arcs.css";
-// The setup is the proposal system's isometric stack (`stack` kind), whose
-// sheet only the proposal routes and the talk load. After arcs.css.
-import "@/components/arcs/stack/stack.css";
 // The case's own beats, `.tfp-*`-scoped. After arcs.css, whose ramp it reads.
 import "./portfolio.css";
 // The close mounts the site footer (ADR-127). Before theme.css.
@@ -30,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 /** The beats that open a chapter of the page in the header's inline row. */
-const PRIMARY = new Set(["film", "the-skill", "the-video", "the-check"]);
+const PRIMARY = new Set(["film", "the-video", "the-check", "close"]);
 
 type ChapterId = keyof typeof CHAPTER_VIEWS;
 const isChapter = (id: string): id is ChapterId => id in CHAPTER_VIEWS;
@@ -40,13 +37,16 @@ const isChapter = (id: string): id is ChapterId => id in CHAPTER_VIEWS;
  * 2026-10-15): the breakdown of one real motion ad, in the register of the
  * X-Bionic proposal and the UX meetup talk.
  *
- *   hero → the film → PART ONE (the skill · setup · how it runs)
- *        → PART TWO (ask · look · idea · plan · ingredients · make · sound)
- *        → PART THREE (check · cost · next time) → close
+ *   hero → the film → how it runs
+ *        → PART ONE (ask · look · idea · plan · ingredients · make · sound)
+ *        → PART TWO (check · cost · next time) → close
+ *
+ * ⚠ IT FLOWS (ADR-076: a deck is presented, a portfolio is scrolled). No
+ * pin, no tail: every beat is one screen and its words are there with it.
  *
  * ⚠ AN OWN ROUTE under `[slug]`'s namespace: the folder wins over the
  * dynamic segment and `[slug]/[leaf]` filters the slug (`OWN_ROUTE_SLUGS`).
- * The record's sections (statements, the stack, the close) render through
+ * The record's sections (statements, the close) render through
  * `ArcSectionRenderer`; the case's chapters through `PortfolioChapters`, in
  * `PORTFOLIO_RUN`'s order, numbered as one run.
  */

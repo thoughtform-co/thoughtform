@@ -2,9 +2,8 @@ import type { ArcHead } from "@/lib/arcs/types";
 
 /**
  * The case's own bodies: Prompt to Loop's twelve chapters as data, in the
- * breakdown's words (the owner's artifact, 1 October 2026). The setup is the
- * arc's `stack` beat and lives in the record; everything here is one case,
- * so it stays beside the route that draws it.
+ * breakdown's words (the owner's artifact, 1 October 2026). Everything here
+ * is one case, so it stays beside the route that draws it.
  *
  * Frames are the loop's own: 240 at 24 a second, one beat every 10.
  */
@@ -36,7 +35,7 @@ export const CHAPTERS = {
   runs: ch(
     "runs",
     "How it runs",
-    "02",
+    "01",
     "How it runs",
     "Claude picks the skill.",
     "You make the call.",
@@ -45,7 +44,7 @@ export const CHAPTERS = {
   ask: ch(
     "ask",
     "Ask",
-    "03",
+    "02",
     "The ask",
     "You send one message.",
     "Claude asks four questions.",
@@ -54,7 +53,7 @@ export const CHAPTERS = {
   look: ch(
     "look",
     "Look",
-    "04",
+    "03",
     "Look first",
     "Look before drawing.",
     "Your ads first, then the world.",
@@ -63,7 +62,7 @@ export const CHAPTERS = {
   idea: ch(
     "idea",
     "Idea",
-    "05",
+    "04",
     "The idea",
     "One idea, one hinge.",
     "The earplug is the O.",
@@ -72,7 +71,7 @@ export const CHAPTERS = {
   plan: ch(
     "plan",
     "Plan",
-    "06",
+    "05",
     "The plan",
     "Every beat on a frame.",
     "Before anything moves.",
@@ -81,7 +80,7 @@ export const CHAPTERS = {
   stuff: ch(
     "ingredients",
     "Ingredients",
-    "07",
+    "06",
     "Ingredients",
     "Generate a little.",
     "Never redraw the product.",
@@ -90,7 +89,7 @@ export const CHAPTERS = {
   make: ch(
     "make",
     "Make",
-    "08",
+    "07",
     "Making it",
     "Drawn in code, frame by frame.",
     "Like stop-motion on a table.",
@@ -99,7 +98,7 @@ export const CHAPTERS = {
   sound: ch(
     "sound",
     "Sound",
-    "09",
+    "08",
     "Sound",
     "The claim, made audible.",
     "Noise drops 17 dB.",
@@ -108,7 +107,7 @@ export const CHAPTERS = {
   check: ch(
     "check",
     "Check",
-    "10",
+    "09",
     "Check",
     "Look. Fix. Look again.",
     "Nine rounds of stills.",
@@ -117,7 +116,7 @@ export const CHAPTERS = {
   cost: ch(
     "cost",
     "Cost",
-    "11",
+    "10",
     "Cost",
     "About $27.",
     "Mostly Claude.",
@@ -126,7 +125,7 @@ export const CHAPTERS = {
   next: ch(
     "next",
     "Next time",
-    "12",
+    "11",
     "Next time",
     "Now it's a skill.",
     "Just ask.",
@@ -150,8 +149,6 @@ export const STEPS = [
 /** The page's reading order: record sections and case chapters, interleaved. */
 export const PORTFOLIO_RUN = [
   "film",
-  "the-skill",
-  "setup",
   "runs",
   "the-video",
   "ask",
@@ -166,22 +163,6 @@ export const PORTFOLIO_RUN = [
   "cost",
   "next",
   "close",
-] as const;
-
-/** The index on the film beat: each step's chapter, in order. */
-export const INDEX = [
-  { n: "01", label: "Setup", href: "#setup" },
-  { n: "02", label: "How it runs", href: "#runs" },
-  { n: "03", label: "Ask", href: "#ask" },
-  { n: "04", label: "Look", href: "#look" },
-  { n: "05", label: "Idea", href: "#idea" },
-  { n: "06", label: "Plan", href: "#plan" },
-  { n: "07", label: "Ingredients", href: "#ingredients" },
-  { n: "08", label: "Make", href: "#make" },
-  { n: "09", label: "Sound", href: "#sound" },
-  { n: "10", label: "Check", href: "#check" },
-  { n: "11", label: "Cost", href: "#cost" },
-  { n: "12", label: "Next time", href: "#next" },
 ] as const;
 
 /** The loop's scenes on its 240 frames (the plan's timeline). */

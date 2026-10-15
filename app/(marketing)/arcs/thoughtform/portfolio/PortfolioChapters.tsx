@@ -2,7 +2,6 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { ArcBeat } from "@/components/arcs/ArcBeat";
 import { ArcSectionHead } from "@/components/arcs/ArcSectionHead";
-import { rung } from "@/components/arcs/arcMotion";
 import { arcTitleText } from "@/components/arcs/chrome";
 import type { ArcMotion } from "@/lib/arcs/types";
 
@@ -10,7 +9,6 @@ import {
   CHAPTERS,
   FRAMES,
   FX,
-  INDEX,
   KICKS,
   NOISE,
   SCENES,
@@ -62,9 +60,10 @@ function Shell({
           sectionId={chapter.id}
           motion={motion}
         />
-        <div className={`tfp-body tfp-body--${mod} arc-reveal`} {...rung(motion, 0.16)}>
-          {children}
-        </div>
+        {/* No arrival rung: the body is on screen when the beat lands, and
+            only the title decodes (owner, 2026-10-15: elements "aren't
+            immediately loading"). */}
+        <div className={`tfp-body tfp-body--${mod}`}>{children}</div>
       </div>
     </ArcBeat>
   );
@@ -100,43 +99,20 @@ const Check = ({ ok }: { ok: boolean }) => (
 
 /* ── 00 · The film ───────────────────────────────────────────────────── */
 
-export function FilmChapter({ index, motion }: { index: number; motion: ArcMotion }) {
+/** The loop alone, centred in its beat: no head, no index (owner, 2026-10-15). */
+export function FilmChapter({ motion }: { index: number; motion: ArcMotion }) {
   return (
-    <Shell chapter={CHAPTERS.film} index={index} motion={motion} mod="film">
-      <div className="tfp-film">
-        <div className="tfp-film__pic">
-          <PortfolioFilm />
-          <dl className="tfp-readout tfp-readout--row">
-            <div>
-              <dt>Format</dt>
-              <dd>9:16</dd>
-            </div>
-            <div>
-              <dt>Frames</dt>
-              <dd>240</dd>
-            </div>
-            <div>
-              <dt>Length</dt>
-              <dd>10 s, loops</dd>
-            </div>
-          </dl>
-        </div>
-        <nav className="tfp-index" aria-label="The steps">
-          <span className="tfp-kicker">The breakdown · twelve steps</span>
-          <ol>
-            {INDEX.map((item) => (
-              <li key={item.n}>
-                <a href={item.href}>
-                  <span className="tfp-index__n">{item.n}</span>
-                  <span className="tfp-index__l">{item.label}</span>
-                  <i aria-hidden="true" />
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
+    <ArcBeat
+      id={CHAPTERS.film.id}
+      kind="media"
+      className="arc-section arc-sec tfp-sec tfp-sec--film"
+      ariaLabel="The finished 10-second loop"
+      motion={motion}
+    >
+      <div className="arc-band tfp-film">
+        <PortfolioFilm />
       </div>
-    </Shell>
+    </ArcBeat>
   );
 }
 

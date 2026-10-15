@@ -243,12 +243,11 @@
 
 .tfp-film {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: clamp(40px, 7vw, 128px);
-  align-items: center;
+  place-items: center;
 }
-.tfp-film__pic {
-  width: clamp(220px, calc((100svh - 420px) * 9 / 16), 360px);
+/* One screen: the beat's padding and the HUD rows take the rest. */
+.tfp-film .tfp-phone {
+  height: min(calc(100svh - 320px), 800px);
 }
 .tfp-phone {
   position: relative;
@@ -307,52 +306,6 @@
 .tfp-sound[aria-pressed="true"] i {
   background: transparent;
   border: 1px solid #caa554;
-}
-
-.tfp-index ol {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: clamp(24px, 3vw, 56px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--arc-rule);
-}
-.tfp-index li {
-  border-bottom: 1px solid var(--arc-rule);
-}
-.tfp-index a {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 14px;
-  align-items: center;
-  padding: 14px 0;
-  color: var(--arc-ink-82);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-.tfp-index__n {
-  font-family: var(--tfp-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--arc-ink-50);
-}
-.tfp-index__l {
-  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
-}
-.tfp-index a i {
-  width: 6px;
-  height: 6px;
-  border-top: 1px solid currentColor;
-  border-right: 1px solid currentColor;
-  transform: rotate(45deg);
-  opacity: 0.4;
-}
-.tfp-index a:hover,
-.tfp-index a:focus-visible {
-  color: var(--tfp-gold-ink);
-}
-.tfp-index a:hover i {
-  opacity: 1;
 }
 
 /* ── 02 · How it runs ─────────────────────────────────────────────────── */
@@ -1355,10 +1308,20 @@
   color: var(--arc-ink-50);
 }
 
+/* Laptop heights: the ask's panel gives up its row air to fit one screen. */
+@media (max-height: 760px) {
+  .tfp-q__opts li {
+    padding-block: 6px;
+  }
+  .tfp-chat__note,
+  .tfp-q {
+    margin-top: 10px;
+  }
+}
+
 /* ── Small screens: every row stacks ─────────────────────────────────── */
 
 @media (max-width: 960px) {
-  .tfp-film,
   .tfp-ask,
   .tfp-idea,
   .tfp-make,
@@ -1367,7 +1330,6 @@
   .tfp-next {
     grid-template-columns: minmax(0, 1fr);
   }
-  .tfp-film__pic,
   .tfp-idea__hinge {
     width: min(300px, 72vw);
     margin-inline: auto;
@@ -1429,7 +1391,8 @@
   .tfp-snd__plot {
     min-width: 720px;
   }
-  .tfp-index ol {
-    grid-template-columns: minmax(0, 1fr);
+  .tfp-film .tfp-phone {
+    height: auto;
+    width: min(320px, 78vw);
   }
 }
