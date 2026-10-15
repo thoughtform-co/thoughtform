@@ -4,10 +4,10 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
-import { Absorption } from "./figures/absorption/Absorption";
+import { CapabilityStack } from "./figures/capability/CapabilityStack";
 import { Crossroads } from "./figures/crossroads/Crossroads";
 import { Logic } from "./figures/logic/Logic";
-import { Timeline } from "./figures/timeline/Timeline";
+import { Interface } from "./figures/interface/Interface";
 
 /**
  * ArcFigure — the `figure` kind (ADR-156 U3): the section head, then one
@@ -47,17 +47,17 @@ export function ArcFigure({
             <i className="arc-inter__x arc-inter__x--origin" aria-hidden="true" />
             <span className="arc-inter__mrule" aria-hidden="true" />
             {section.eyebrow ? (
-              <span className="arc-desig arc-inter__eyebrow">{section.eyebrow}</span>
+              <span className="arc-desig arc-fig__eyebrow">{section.eyebrow}</span>
             ) : null}
             <span className="arc-inter__mrule" aria-hidden="true" />
             <i className="arc-inter__x arc-inter__x--close" aria-hidden="true" />
           </p>
         )}
         <div className="arc-fig arc-reveal" data-fig-id={spec.id} {...rung(motion, 0.14)}>
-          {spec.id === "timeline" ? <Timeline spec={spec} /> : null}
-          {spec.id === "absorption" ? <Absorption spec={spec} /> : null}
+          {spec.id === "interface" ? <Interface spec={spec} /> : null}
           {spec.id === "logic" ? <Logic spec={spec} /> : null}
           {spec.id === "crossroads" ? <Crossroads spec={spec} /> : null}
+          {spec.id === "capability" ? <CapabilityStack spec={spec} /> : null}
         </div>
       </div>
     </ArcBeat>

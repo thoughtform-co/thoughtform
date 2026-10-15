@@ -237,6 +237,36 @@ marks, the lattice ratchet (`figures.css` pinned at zero), the context budget; w
 walk at 1920×1247 and in light on the owner's screen; the crossroads head's likeness is the owner's
 read.
 
+## U4 · No pane, one beat up, the stack and the new interface (2026-10-15, owner)
+
+**No pane slides over anything** (owner: "a black frame from the section after the era slides
+over the previous section ... I don't want any section or any black pane sliding over anything").
+The talk's station (void plus image) and its arc root (void) were opaque and welded up into the
+eras' runway, so they rose over the eras as one black frame. Both are transparent; the only
+ground is the talk's own, on only while a beat is up. The tail's reader decides which beat is up
+(the one whose slot, its park to the next beat's park, holds the scroll) and only that beat shows
+its plane: the decode hook still types the words but no longer hides drawings, which made whole
+beats vanish on the way back up. After the last beat the ground switches off in place and the
+corridor's thesis, held beneath, is there. The brand mark field is brighter. Wheel-walked down
+and back up, 134 steps: the beat up always matches the geometry, its plane always visible.
+
+**The timeline back to the drawing board: the capability stack.** One beat, no head: one framed
+card up at a time (an image, a film, the tools, mathematics), each rotating back on its x-axis
+into a stack of plates above as the next appears where it stands, its title decoding in place.
+Real assets: the Midjourney key visual, Loop's AI film, PhotoCraft, and a drawn proof (no
+invented mathematics). `cardPose` is pure; the test pins one card facing at every scroll and a
+stack that only grows. The particle act of U3 left with the timelines it was anchored to.
+
+**The new interface** replaces the machine. No head, no paragraph: a piece of work at the top
+and, downstream, two ways. Before: the capability stack zoomed out as the flow it was, ten
+hand-offs in a snake with two rework loops and thumbnails from the cards. Now: the frontier model
+as a brain of circuits (a procedural outline, 64 traces routed at 0, 45 and 90 degrees, pads,
+three buses), fed context, problems and evals, with one gold answer. The particles are the work:
+they crawl the left, stopping at every tile, and run the right straight through; the test pins
+that the new way is done while the old way still crawls.
+
+The figure kind's registry is now capability, interface, logic and crossroads.
+
 ## Left open
 
 - Every line in the tail is his to rewrite; U2's statements are his own lines from the brain dump.

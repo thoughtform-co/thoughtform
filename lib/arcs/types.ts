@@ -2894,23 +2894,6 @@ export interface ArcSource {
   href?: string;
 }
 
-/** One dated event on a timeline lane (ADR-156 U3). */
-export interface ArcTimelineEvent {
-  id: string;
-  /** `YYYY-MM`, or `YYYY` when only the year is on the record. */
-  date: string;
-  /** The tag on the drawing: short, mono, uppercase on screen. */
-  label: string;
-  source: ArcSource;
-}
-
-export interface ArcTimelineLane {
-  id: string;
-  label: string;
-  /** Rising by date; `ux-meetup.test.ts` pins it. */
-  events: readonly ArcTimelineEvent[];
-}
-
 /** The talk's drawings, a union on `id` (ADR-156 U3). */
 export type ArcFigureSpec = {
   alt: string;
@@ -2918,30 +2901,32 @@ export type ArcFigureSpec = {
   note?: string;
 } & (
   | {
-      id: "timeline";
-      /** `content` draws the products lane as a ghost: the lane arrives on
-       *  the next beat, the same floor (owner: "as you move to the next
-       *  section, new stuff gets added"). */
-      show: "content" | "both";
-      lanes: readonly [ArcTimelineLane, ArcTimelineLane];
-      /** The gold rail along the time edge: what drives the climb. */
-      rail: { label: string; source: ArcSource };
-      axes: { time: string; height: string };
-    }
-  | {
-      id: "absorption";
-      panels: readonly [
-        { id: string; label: string; items: readonly string[] },
-        { id: string; label: string; items: readonly string[] },
-      ];
-      machine: { label: string; core: string; interface: string; compute: string };
-      agents: { label: string; tools: readonly string[] };
+      /** One piece of work, two ways downstream (ADR-156 U4): the steps it
+       *  took before, and the frontier model as the interface. */
+      id: "interface";
+      work: { label: string; line: string };
+      before: { label: string; line: string; steps: readonly string[]; end: string };
+      now: { label: string; line: string; inputs: readonly [string, string, string]; output: string };
     }
   | {
       id: "logic";
       logic: { label: string; line: string };
       statistics: { label: string; line: string };
       source: ArcSource;
+    }
+  | {
+      /** What AI could make, one card at a time, each settling into the
+       *  stack (ADR-156 U4). */
+      id: "capability";
+      cards: readonly {
+        id: string;
+        kind: "image" | "video" | "tools" | "mathematics";
+        year: string;
+        title: string;
+        caption: string;
+        media?: { type: "image" | "video"; src: string; poster?: string; alt: string };
+        source: ArcSource;
+      }[];
     }
   | {
       id: "crossroads";

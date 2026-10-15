@@ -128,24 +128,24 @@
   }
 }
 
-/* ── The act's canvas (U3) ───────────────────────────────────────────────
-   The proof's particle artifact: one fixed canvas over the screen, inside
-   the talk, drawing only while the act's beats are parked or handing off
-   (`actClock.ts` returns nothing outside them). Over the drawings, never
-   under them: the dots sit on the blocks and run along the wires. */
-.uxm-act {
-  /* The dots' inks, from the theme's tokens: the canvas reads them. */
-  color: rgb(var(--dawn-rgb));
-  --uxm-act-gold: var(--gold, #caa554);
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
+/* ── The capability beat's runway (U4) ───────────────────────────────────
+   Four cards in one beat: a longer hold than the talk's 120svh, and the next
+   beat welded to it by the same rule on this beat's own tail. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #capability > .arc-beat__tail {
+    height: 420svh;
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #capability + [data-arc-beat] {
+    margin-top: calc(-100svh - 0.38 * 420svh);
+  }
 }
-@media (max-width: 960px), (prefers-reduced-motion: reduce) {
-  .uxm-act {
-    display: none;
+
+/* ── The interface beat's runway (U4): the slow way needs room to crawl. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #the-interface > .arc-beat__tail {
+    height: 320svh;
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #the-interface + [data-arc-beat] {
+    margin-top: calc(-100svh - 0.38 * 320svh);
   }
 }

@@ -1,4 +1,4 @@
-import type { ArcDef, ArcFigureSpec } from "../types";
+import type { ArcDef } from "../types";
 
 import { WORKSHOP_INTRO, type WorkshopIntro } from "./shared/workshopIntro";
 
@@ -46,64 +46,6 @@ export const UX_MEETUP_PROOF_LEDES: WorkshopIntro["proof"]["ledes"] = {
     "Then we built for the agents: what each team knows, written down, and the checks they run on their own work.",
 };
 
-/** The two lanes and the rail, one record for both proof beats (U3): the
- *  first draws the products lane as a ghost, the second draws it in.
- *  ⚠ The Loop films' month is not on the record: dated late 2025 here,
- *  the owner's to confirm (ADR-156 U3, left open). */
-const TIMELINE_LANES: Extract<ArcFigureSpec, { id: "timeline" }>["lanes"] = [
-  {
-    id: "content",
-    label: "Digital content",
-    events: [
-      { id: "c-first", date: "2023", label: "My first Midjourney image", source: { label: "Vince Buyssens, 2023" } },
-      {
-        id: "c-sora",
-        date: "2024-02",
-        label: "A minute of AI video",
-        source: { label: "OpenAI, Sora, 15 February 2024", href: "https://openai.com/index/sora/" },
-      },
-      { id: "c-veo", date: "2025-05", label: "Video with its own sound", source: { label: "Google, Veo 3, I/O 20 May 2025" } },
-      { id: "c-loop", date: "2025-11", label: "AI films on paid media", source: { label: "Loop Earplugs creative archive" } },
-    ],
-  },
-  {
-    id: "products",
-    label: "Digital products",
-    events: [
-      { id: "p-sketch", date: "2023-03", label: "A sketch becomes a website", source: { label: "OpenAI, GPT-4 livestream, 14 March 2023" } },
-      { id: "p-agent", date: "2025-02", label: "An agent in the terminal", source: { label: "Anthropic, Claude Code, 24 February 2025" } },
-      { id: "p-imo", date: "2025-07", label: "Gold at the Maths Olympiad", source: { label: "Google DeepMind, IMO 2025, certified" } },
-      {
-        id: "p-photocraft",
-        date: "2026-09",
-        label: "Photoshop, rebuilt with Claude",
-        source: { label: "PhotoCraft, github.com/storytold/photocraft", href: "https://github.com/storytold/photocraft" },
-      },
-    ],
-  },
-];
-
-function uxMeetupTimeline(show: "content" | "both"): ArcFigureSpec {
-  return {
-    id: "timeline",
-    show,
-    alt:
-      show === "content"
-        ? "An isometric timeline from 2023 to 2026. On the front lane, digital content: a first Midjourney image in 2023, a minute of AI video in February 2024, video with sound in May 2025, AI films on paid media in late 2025, each block taller than the last. Behind it, the digital products lane is still a ghost. A gold rail of compute climbs the time edge."
-        : "The same isometric timeline with both lanes drawn. Digital products: a sketch becomes a website in March 2023, an agent in the terminal in February 2025, gold at the Maths Olympiad in July 2025, Photoshop rebuilt with Claude in September 2026. Both lanes climb with the gold compute rail.",
-    lanes: TIMELINE_LANES,
-    rail: {
-      label: "Training compute · ×4 to 5 a year",
-      source: {
-        label: "Epoch AI",
-        href: "https://epoch.ai/blog/training-compute-of-frontier-ai-models-grows-by-4-to-5x-per-year",
-      },
-    },
-    axes: { time: "Time", height: "What it can finish" },
-    note: "Height: the task an agent can finish, ×2 every 7 months (METR) · Rail: training compute (Epoch AI)",
-  };
-}
-
 export const UX_MEETUP_ARC: ArcDef = {
   slug: "thoughtform-ux-meetup",
   leaf: "ux-meetup",
@@ -127,7 +69,7 @@ export const UX_MEETUP_ARC: ArcDef = {
     lede: "A talk on what is left to design once making digital things costs almost nothing.",
     actions: [
       { id: "start", label: "The claim", href: "#the-claim", primary: true },
-      { id: "proof", label: "The proof", href: "#proof-content" },
+      { id: "proof", label: "What it can make", href: "#capability" },
     ],
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
@@ -163,51 +105,93 @@ export const UX_MEETUP_ARC: ArcDef = {
       },
     },
     {
-      id: "proof-content",
+      /* U4 (owner, 2026-10-15): the timeline back to the drawing board. One
+         beat, no head: under the registration row, one framed card at a
+         time, each rotating back into the stack as the next appears. */
+      id: "capability",
       kind: "figure",
-      menuLabel: "Digital content",
+      menuLabel: "What it can make",
       menuPrimary: true,
-      head: {
-        eyebrow: "02 · The proof · Digital content",
-        title: { pre: "What a model could make,", em: "month by month." },
-        sub: "Each block stands as tall as the task an agent could finish that month, a length that doubles about every seven months. In 2023, my first strange picture. Now, AI films running as paid media.",
-      },
-      figure: uxMeetupTimeline("content"),
-    },
-    {
-      id: "proof-products",
-      kind: "figure",
-      menuLabel: "Digital products",
-      head: {
-        eyebrow: "03 · The proof · Digital products",
-        title: { pre: "The same climb,", em: "in code and in maths." },
-        sub: "A sketch became a website, then an agent ran in the terminal, then gold at the Maths Olympiad, then Photoshop rebuilt with Claude. Both lanes rise because the gold rail does: compute grows four to five times a year. Scale beat cleverness again, the bitter lesson.",
-      },
-      figure: uxMeetupTimeline("both"),
-    },
-    {
-      id: "absorbed",
-      kind: "figure",
-      menuLabel: "Absorbed",
-      head: {
-        eyebrow: "04 · Absorbed",
-        title: { pre: "The frontier labs", em: "become the interface." },
-        sub: "Content and products feed one machine. People stop opening the other software: they ask the model, and their agents use the tools for them. Nobody has to build their own SAP for that to happen.",
-      },
+      eyebrow: "02 · What it can make",
       figure: {
-        id: "absorption",
-        alt: "An isometric machine: two panels on the floor, digital content with images, video, ads and decks, and digital products with code, tools, apps and dashboards, each feeding a ribbon of wires into a housing labelled the frontier labs. On the housing sits the model, the one gold block, and over it the interface; small agents in front are wired up to the interface.",
-        panels: [
-          { id: "content", label: "Digital content", items: ["Images", "Video", "Ads", "Decks"] },
-          { id: "products", label: "Digital products", items: ["Code", "Tools", "Apps", "Dashboards"] },
+        id: "capability",
+        alt: "Four framed cards, one after another, each settling into a stack: an image made with Midjourney (2023), a film made with AI and run as paid media, a tool built by an agent (PhotoCraft, Photoshop rebuilt with Claude), and mathematics (gold at the International Maths Olympiad, open problems solved since).",
+        cards: [
+          {
+            id: "image",
+            kind: "image",
+            year: "2023",
+            title: "An image",
+            caption: "A picture from a prompt, made with Midjourney.",
+            media: {
+              type: "image",
+              src: "/images/ThoughtForm_v1.webp",
+              alt: "A head shaped from sand inside a broken ring, made with Midjourney",
+            },
+            source: { label: "Thoughtform, Midjourney" },
+          },
+          {
+            id: "video",
+            kind: "video",
+            year: "2024",
+            title: "A film",
+            caption: "Sora showed a minute of video in February 2024. Here, Loop's AI film, run as paid media.",
+            media: {
+              type: "video",
+              src: "/videos/loop-smug-owl-ai-atl.mp4",
+              poster: "/arcs/posters/smug-owl.jpg",
+              alt: "Smug Owl, Loop's AI above-the-line film",
+            },
+            source: { label: "OpenAI, Sora, 15 February 2024 · Loop Earplugs creative archive" },
+          },
+          {
+            id: "tools",
+            kind: "tools",
+            year: "2025",
+            title: "The tools themselves",
+            caption: "Agents build the software now. Here, PhotoCraft: Photoshop, rebuilt with Claude.",
+            media: {
+              type: "image",
+              src: "/arcs/ux-meetup/photocraft.webp",
+              alt: "PhotoCraft open on Hokusai's Great Wave, a Photoshop layout rebuilt with Claude",
+            },
+            source: { label: "Anthropic, Claude Code, February 2025 · github.com/storytold/photocraft" },
+          },
+          {
+            id: "mathematics",
+            kind: "mathematics",
+            year: "2025",
+            title: "Mathematics",
+            caption: "Gold at the International Maths Olympiad, then open problems solved that had stood for decades.",
+            source: { label: "Google DeepMind, IMO 2025, certified · Erdős problems, 2025 to 2026" },
+          },
         ],
-        machine: {
-          label: "The frontier labs",
-          core: "The model",
-          interface: "The interface",
-          compute: "Compute",
+      },
+    },
+    {
+      /* U4 (owner, 2026-10-15): no head, no paragraph. A piece of work, and
+         downstream from it the two ways: every step we used to take, and the
+         frontier model as the interface. */
+      id: "the-interface",
+      kind: "figure",
+      menuLabel: "The interface",
+      eyebrow: "03 · The new interface",
+      figure: {
+        id: "interface",
+        alt: "A piece of work at the top. On the left, the way it was done: ten hand-offs in a winding flow (prompt, image, edit, video, brief, PRD, workflow, tool, vibe-coded app, review) with work sent back twice, and the particles crawling through it. On the right, the frontier model as a brain of circuits, fed context, problems and evals, and the particles running straight through it to a gold answer.",
+        work: { label: "A piece of work", line: "A campaign, a product, a proof" },
+        before: {
+          label: "Before",
+          line: "Every step a person, a tool and a hand-off.",
+          steps: ["Prompt", "Image", "Edit", "Video", "Brief", "PRD", "Workflow", "Tool", "Vibe-coded app", "Review"],
+          end: "Shipped, weeks later",
         },
-        agents: { label: "Agents", tools: ["Using every other tool for you"] },
+        now: {
+          label: "Now",
+          line: "Give the model context, hard problems and evals. It is the interface.",
+          inputs: ["Context", "Problems", "Evals"],
+          output: "Solved",
+        },
       },
     },
     {
@@ -216,7 +200,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "A voice",
-      eyebrow: "05 · Heard in the industry",
+      eyebrow: "04 · Heard in the industry",
       line: {
         pre: "I don\u2019t want to use your agent.",
         em: "I want my agent to use your tool.",
@@ -228,7 +212,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       menuLabel: "An intelligence",
       menuPrimary: true,
       head: {
-        eyebrow: "06 · An intelligence",
+        eyebrow: "05 · An intelligence",
         title: { pre: "A new kind", em: "of automation." },
         sub: "Every earlier wave automated steps you could write down. This one works wherever there is enough data and the answer can be checked: a logic problem becomes a statistics problem. And nobody knows its limits yet. It is not software. It is an intelligence.",
       },
@@ -252,7 +236,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       kind: "figure",
       /* The talk's last beat is its exit, never a chapter (arc-marks). */
       menuLabel: "The crossroads",
-      eyebrow: "07 · The crossroads",
+      eyebrow: "06 · The crossroads",
       figure: {
         id: "crossroads",
         alt: "An anonymous head seen from three-quarters, split down the nose line. The left half is a cloud of particles; the right half is drawn in gold contour lines, like a machine. On the left: live action matters more than ever. On the right: embrace the intelligence.",

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -6,20 +6,10 @@ import { describe, expect, it } from "vitest";
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import {
-  ABSORPTION_PARTS,
-  WIRE_COUNT,
-  absorptionFrame,
-} from "@/components/arcs/figures/absorption/layout";
+import { cardPose } from "@/components/arcs/figures/capability/pose";
+import { BRAIN_BOX, brainDrawing } from "@/components/arcs/figures/interface/brain";
+import { OUTPUT, PARTICLES, VB, brain, particlesAt } from "@/components/arcs/figures/interface/layout";
 import { HEAD_PARTS, headDrawing, headField } from "@/components/arcs/figures/crossroads/head";
-import { monthsOf } from "@/components/arcs/figures/timeline/model";
-import {
-  timelineFrame,
-  timelineLabels,
-  timelinePrisms,
-} from "@/components/arcs/figures/timeline/layout";
-import { labelBoxes, labelCollisions } from "@/components/arcs/framing/iso";
-import type { ArcFigureSpec } from "@/lib/arcs/types";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
   UX_MEETUP_ARC,
@@ -214,9 +204,8 @@ describe("the UX meetup talk (ADR-156)", () => {
     const sections = UX_MEETUP_ARC.sections;
     expect(sections.map((s) => s.id)).toEqual([
       "the-claim",
-      "proof-content",
-      "proof-products",
-      "absorbed",
+      "capability",
+      "the-interface",
       "your-tool",
       "an-intelligence",
       "crossroads",
@@ -231,72 +220,66 @@ describe("the UX meetup talk (ADR-156)", () => {
       const i = sections.indexOf(s);
       expect(eyebrow.slice(0, 2), `${s.id}: its number`).toBe(String(i + 1).padStart(2, "0"));
     }
-    /* ⚠ THE ACT IS ONE UNIT (U3): the two timelines and the machine are one
-       drawing built up over three beats, so the alternation law (ADR-155)
-       reads statement · act · voice · picture, never two of a kind. */
-    const ACT = new Set(["proof-content", "proof-products", "absorbed"]);
-    const units: string[] = [];
-    for (const s of sections) {
-      const unit = ACT.has(s.id)
-        ? "act"
-        : s.kind === "interstitial" || (s.kind === "figure" && !s.head)
-          ? "line"
-          : "picture";
-      if (unit === "act" && units.at(-1) === "act") continue;
-      units.push(unit);
-    }
+    /* Never two lines side by side (ADR-155): a statement or a voice is a
+       line; every drawing, with a head or standing alone, is a picture. */
+    const units = sections.map((s) => (s.kind === "interstitial" ? "line" : "picture"));
     for (let i = 1; i < units.length; i++) {
-      const pair = [units[i - 1], units[i]];
-      expect(pair[0] === "line" && pair[1] === "line", `two lines side by side at ${i}`).toBe(false);
+      expect(units[i - 1] === "line" && units[i] === "line", `two lines at ${i}`).toBe(false);
     }
     const chapters = sections.filter((s) => s.menuPrimary).map((s) => s.id);
     expect(chapters.length).toBeLessThanOrEqual(5);
   });
 
   /**
-   * ⚠ THE TIMELINE IS A RECORD (U3): every event dated and sourced, each lane
-   * rising, the two beats one record (the second only draws the ghost lane
-   * in), and the drawing's words never seated on top of each other at the
-   * size they render.
+   * ⚠ ONE CARD UP AT A TIME (U4): the capability stack never shows two cards
+   * facing at once and never an empty stage, and the stack only grows.
    */
-  it("draws the timeline from a dated, sourced record without a word on a word", () => {
-    const figs = UX_MEETUP_ARC.sections.flatMap((s) =>
-      s.kind === "figure" && s.figure.id === "timeline" ? [s.figure] : []
-    ) as Extract<ArcFigureSpec, { id: "timeline" }>[];
-    expect(figs.map((f) => f.show)).toEqual(["content", "both"]);
-    expect(figs[0].lanes, "one record for both beats").toBe(figs[1].lanes);
-    for (const lane of figs[0].lanes) {
-      const months = lane.events.map((e) => monthsOf(e.date));
-      expect([...months].sort((x, y) => x - y), `${lane.id}: rising`).toEqual(months);
-      for (const e of lane.events) {
-        expect(e.source.label.length, `${e.id}: sourced`).toBeGreaterThan(0);
-        expect(e.date, `${e.id}: a date`).toMatch(/^\d{4}(-\d{2})?$/);
+  it("shows one capability card at a time, the rest settling into the stack", () => {
+    const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
+    const cards = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
+    expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tools", "mathematics"]);
+    for (const c of cards) {
+      expect(c.source.label.length, `${c.id}: sourced`).toBeGreaterThan(0);
+      if (c.media) {
+        expect(existsSync(join(process.cwd(), "public", c.media.src)), `${c.media.src} on disk`).toBe(true);
       }
     }
-    expect(figs[0].rail.source.href).toMatch(/^https:\/\/epoch\.ai\//);
-
-    const lanes = figs[1].lanes;
-    const prisms = timelinePrisms(lanes.map((l) => l.events));
-    const f = timelineFrame(prisms);
-    const tags = Object.fromEntries(
-      lanes.flatMap((l) => l.events.map((e) => [e.id, `${e.date} ${e.label}`]))
-    );
-    const labels = timelineLabels(prisms, tags, [lanes[0].label, lanes[1].label], figs[1].rail.label, f);
-    // The tags render at ~11px across a drawing ~760px wide at 1280x720.
-    const type = (11 * f.w) / 760;
-    expect(labelCollisions(labelBoxes(labels, type, f))).toEqual([]);
+    const n = cards.length;
+    let stacked = 0;
+    for (let s = 0; s <= 1.0001; s += 0.01) {
+      const poses = cards.map((_, i) => cardPose(i, n, s));
+      const fronts = poses.filter((p) => p.front).length;
+      expect(fronts, `facing cards at ${s.toFixed(2)}`).toBe(1);
+      const now = poses.filter((p) => p.stacked).length;
+      expect(now, `the stack only grows (${s.toFixed(2)})`).toBeGreaterThanOrEqual(stacked);
+      stacked = now;
+    }
+    expect(stacked).toBe(n - 1);
   });
 
   /**
-   * ⚠ THE MACHINE IS A MECHANISM (U3, the anatomy method): forty or more
-   * parts and wires, one gold part (the model), on the framing's projection.
+   * ⚠ THE INTERFACE TELLS ITS STORY BY ARITHMETIC (U4): the new way reaches
+   * its answer while the old way is still crawling, the brain is the same
+   * every time and stays in its box, and the particles keep their count.
    */
-  it("builds the absorption machine from forty or more parts, one of them gold", () => {
-    expect(ABSORPTION_PARTS.length + WIRE_COUNT).toBeGreaterThanOrEqual(40);
-    expect(ABSORPTION_PARTS.filter((p) => p.kind === "model")).toHaveLength(1);
-    const f = absorptionFrame();
-    expect(f.w).toBeGreaterThan(0);
-    expect(f.h).toBeGreaterThan(0);
+  it("runs the new way to its answer while the old way still crawls", () => {
+    const b = brain();
+    expect(b.traces.length).toBeGreaterThan(40);
+    expect(brainDrawing(0, 0).traces).toEqual(brainDrawing(0, 0).traces);
+    for (const pad of brainDrawing(0, 0).pads) {
+      expect(pad.x).toBeGreaterThanOrEqual(0);
+      expect(pad.x).toBeLessThanOrEqual(BRAIN_BOX.w);
+    }
+    const mid = particlesAt(0.55, b);
+    expect(mid).toHaveLength(PARTICLES);
+    const right = mid.filter((p) => p.side === 1);
+    const left = mid.filter((p) => p.side === 0);
+    const atOutput = right.filter((p) => Math.hypot(p.x - OUTPUT.x, p.y - OUTPUT.y) < 12).length;
+    expect(atOutput, "the new way is done").toBeGreaterThan(right.length * 0.8);
+    const done = left.filter((p) => p.y > VB.h * 0.78).length;
+    expect(done, "the old way is not").toBeLessThan(left.length * 0.2);
+    const it = UX_MEETUP_ARC.sections.find((s) => s.id === "the-interface");
+    expect(it?.kind === "figure" && it.head, "no head and no paragraph").toBeFalsy();
   });
 
   /**
