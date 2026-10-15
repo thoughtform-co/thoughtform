@@ -267,7 +267,44 @@ that the new way is done while the old way still crawls.
 
 The figure kind's registry is now capability, interface, logic and crossroads.
 
+## U5 · The examples stand as sheets and lie down as the foundations (2026-10-15, owner)
+
+**The cards were a 2D image rotated over another** (owner: "those golden corners are ugly ...
+there is no notched corner so you ignored our guidelines"; "you're just rotating a 2D image on
+top of each other"). The frames are now the X-Bionic frame: the house chamfer, cut at the top
+right and the bottom left, a hairline edge, the cross at three corners, a dashed ghost behind.
+The title is one line in the body face, decoding in place; the source lines are gone.
+
+**One act over both beats.** `FoundationAct` is one fixed layer, live while either
+`#capability` or `#the-interface` is the beat up. Its geometry is one pure module,
+`components/arcs/figures/foundation/scene.ts`: a true 30-degree isometric (no second projection
+on the page), every sheet an exact plane affine. In the first beat one example faces the reader;
+when the next arrives the last turns away on its x-axis into a stack of standing sheets that
+recede on the diagonal, as Unsiloed stands its sheets (owner: "stack and rotate along the
+x-axis ... a bit more diagonal ... it really feels like they're stacked on the sides"). Six
+examples: an image (2023), a film (Loop), a tool (Vesper, built at Loop), a whole product
+(PhotoCraft), worlds made from game assets (a placeholder until the owner's video), mathematics
+(a drawn proof).
+
+**The new interface is no longer a diagram** (owner: "glorified PowerPoint"). In the second beat
+the standing sheets tip over their bottom edge, one after another, and lie as plates: the
+foundations, each still carrying its picture. Above them a mind assembles out of dots, an
+ellipsoid in two hemispheres whose folds are circuit traces walked on its own grid, kept off the
+crown where they read as a target. Gold cables leave it, go round the outside of the stack and
+plug into each plate's edge, a socket at every end (owner: "tendrils or commands coordinating
+these different things on the stacks and plugging into the stacks"). The beat's line sits on a
+leader beside the mind: give it context, hard problems and evals, and it works every layer below.
+
+The canvas reads its colours from the theme, again when the theme changes: in light the mind
+and its cables are the deep gold ink, never pale gold on parchment. Under reduced motion, on
+phones and without script each beat shows its static fallback. The test pins one example facing
+at every scroll of the first beat, every sheet lying in the second, a mind of dots with traces,
+and a cable to every plate. Wheel-walked down and back up, 134 steps, 0 mismatches.
+
 ## Left open
+
+- The worlds card waits on the owner's video of the Halo assets.
+- The owner named "a bit of a regression" in passing without saying where; not yet found.
 
 - Every line in the tail is his to rewrite; U2's statements are his own lines from the brain dump.
 - `sentinel/DIGEST.md`'s list of the era stage's readers did not name Suri's lunch and

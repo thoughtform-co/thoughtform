@@ -4,10 +4,8 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
-import { CapabilityStack } from "./figures/capability/CapabilityStack";
 import { Crossroads } from "./figures/crossroads/Crossroads";
 import { Logic } from "./figures/logic/Logic";
-import { Interface } from "./figures/interface/Interface";
 
 /**
  * ArcFigure — the `figure` kind (ADR-156 U3): the section head, then one
@@ -54,10 +52,25 @@ export function ArcFigure({
           </p>
         )}
         <div className="arc-fig arc-reveal" data-fig-id={spec.id} {...rung(motion, 0.14)}>
-          {spec.id === "interface" ? <Interface spec={spec} /> : null}
+          {spec.id === "interface" ? (
+            /* The live drawing is the route's foundation act; this is what a
+               phone, reduced motion and no-JS read. */
+            <p className="fa-static fa-static--line">
+              <strong>{spec.mind}</strong> {spec.line}
+            </p>
+          ) : null}
           {spec.id === "logic" ? <Logic spec={spec} /> : null}
           {spec.id === "crossroads" ? <Crossroads spec={spec} /> : null}
-          {spec.id === "capability" ? <CapabilityStack spec={spec} /> : null}
+          {spec.id === "capability" ? (
+            <ol className="fa-static">
+              {spec.cards.map((c) => (
+                <li key={c.id} className="fa-static__card">
+                  <span className="fa-static__year">{c.year}</span>
+                  <strong>{c.title}</strong> {c.caption}
+                </li>
+              ))}
+            </ol>
+          ) : null}
         </div>
       </div>
     </ArcBeat>

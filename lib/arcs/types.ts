@@ -2903,10 +2903,12 @@ export type ArcFigureSpec = {
   | {
       /** One piece of work, two ways downstream (ADR-156 U4): the steps it
        *  took before, and the frontier model as the interface. */
+      /** The new interface (ADR-156 U5): the capability stack's sheets as
+       *  the foundations, the machine mind above them. Its words only; the
+       *  drawing is the route's foundation act. */
       id: "interface";
-      work: { label: string; line: string };
-      before: { label: string; line: string; steps: readonly string[]; end: string };
-      now: { label: string; line: string; inputs: readonly [string, string, string]; output: string };
+      mind: string;
+      line: string;
     }
   | {
       id: "logic";
@@ -2920,12 +2922,11 @@ export type ArcFigureSpec = {
       id: "capability";
       cards: readonly {
         id: string;
-        kind: "image" | "video" | "tools" | "mathematics";
+        kind: "image" | "video" | "tool" | "product" | "worlds" | "mathematics";
         year: string;
         title: string;
         caption: string;
         media?: { type: "image" | "video"; src: string; poster?: string; alt: string };
-        source: ArcSource;
       }[];
     }
   | {

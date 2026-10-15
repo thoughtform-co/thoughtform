@@ -149,3 +149,182 @@
     margin-top: calc(-100svh - 0.38 * 320svh);
   }
 }
+
+/* ── The foundation act (U5) ─────────────────────────────────────────────
+   One fixed layer over the screen, shown only while one of its two beats is
+   up (`data-fa-up`). Its box holds the scene's viewBox exactly, so a word
+   seated by a fraction of the box lands on its point of the drawing. The
+   frames are the house's: a chamfer at top-right and bottom-left, a hairline
+   at the seam, the survey crosses at the corners; gold is the mind's. */
+.fa {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  visibility: hidden;
+}
+.fa[data-fa-up] {
+  visibility: visible;
+}
+.fa__box {
+  position: relative;
+  width: min(calc(100vw - 2 * var(--hud-margin, 64px)), calc((100svh - 96px) * 1440 / 820));
+  aspect-ratio: 1440 / 820;
+  margin-top: 24px;
+}
+/* The act carries its beats' label row (they sit under it). */
+.fa__marks {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  justify-content: center;
+}
+.arc-root[data-act="live"] #capability .arc-fig__marks,
+.arc-root[data-act="live"] #the-interface .arc-fig__marks {
+  visibility: hidden;
+}
+.fa__svg,
+.fa__dots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fa__dots {
+  color: rgba(var(--dawn-rgb), 0.85);
+  --fa-gold: var(--gold-ink, #caa554);
+}
+.fa__ground {
+  fill: var(--void, #0a0908);
+}
+.fa__edge {
+  fill: none;
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__ghost path {
+  fill: none;
+  stroke: var(--arc-rule);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.fa__cross {
+  fill: none;
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__tag {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  fill: var(--dawn, #ebe3d6);
+  paint-order: stroke;
+  stroke: var(--void, #0a0908);
+  stroke-width: 3px;
+}
+.fa__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fa__worlds path {
+  fill: none;
+  stroke: var(--arc-rule);
+}
+.fa__worlds text {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  fill: var(--arc-ink-50);
+}
+.fa__proof path {
+  fill: none;
+  stroke: var(--arc-seam);
+}
+.fa__proof rect {
+  fill: var(--void, #0a0908);
+  stroke: var(--arc-ink-50);
+}
+.fa__proof rect[data-qed] {
+  stroke: var(--gold, #caa554);
+}
+.fa__words,
+.fa__plate,
+.fa__mind {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+}
+.fa__words {
+  display: grid;
+  gap: var(--space-xs);
+  width: calc(728 / 1440 * 100%);
+  visibility: hidden;
+}
+.fa[data-fa-facing] .fa__words {
+  visibility: inherit;
+}
+.fa__year,
+.fa__plate {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+}
+.fa__year {
+  color: var(--gold-ink, #caa554);
+}
+.fa__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: var(--type-2xl);
+  line-height: 1.1;
+  color: var(--dawn, #ebe3d6);
+}
+.fa__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-lg);
+  line-height: 1.35;
+  color: var(--arc-ink-70);
+}
+.fa__plate {
+  translate: -100% -50%;
+  white-space: nowrap;
+  color: var(--arc-ink-70);
+  visibility: hidden;
+}
+.fa[data-fa-plates] .fa__plate {
+  visibility: inherit;
+}
+.fa__mind {
+  display: grid;
+  gap: var(--space-xs);
+  width: 30ch;
+  translate: -100% 0;
+  text-align: right;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-base);
+  line-height: 1.35;
+  color: var(--arc-ink-70);
+  visibility: hidden;
+}
+.fa[data-fa-mind] .fa__mind {
+  visibility: inherit;
+}
+.fa__mind-name {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-sm);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}

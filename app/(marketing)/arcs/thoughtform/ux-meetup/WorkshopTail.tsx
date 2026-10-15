@@ -8,6 +8,7 @@ import { useArcReveal } from "@/components/arcs/useArcReveal";
 import { useArcTerminalMotion } from "@/components/arcs/useArcTerminalMotion";
 import { UX_MEETUP_ARC } from "@/lib/arcs/content/ux-meetup";
 
+import { FoundationAct } from "./FoundationAct";
 import { TalkGround } from "./TalkGround";
 import { useTalkFrame } from "./useTalkFrame";
 
@@ -91,6 +92,9 @@ export default function UxMeetupTail() {
     >
       <TalkGround />
       <ArcSectionRenderer sections={UX_MEETUP_ARC.sections} motion={MOTION} />
+      {/* What it can make, then the new interface: one scene over both beats
+          (U5), above the terminal tier only. */}
+      {MOTION === "terminal" ? <FoundationAct /> : null}
     </div>
   );
 }

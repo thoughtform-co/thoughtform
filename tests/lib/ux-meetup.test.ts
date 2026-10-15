@@ -6,9 +6,7 @@ import { describe, expect, it } from "vitest";
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import { cardPose } from "@/components/arcs/figures/capability/pose";
-import { BRAIN_BOX, brainDrawing } from "@/components/arcs/figures/interface/brain";
-import { OUTPUT, PARTICLES, VB, brain, particlesAt } from "@/components/arcs/figures/interface/layout";
+import { mindDots, sheetPoses, tendril } from "@/components/arcs/figures/foundation/scene";
 import { HEAD_PARTS, headDrawing, headField } from "@/components/arcs/figures/crossroads/head";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
@@ -231,55 +229,39 @@ describe("the UX meetup talk (ADR-156)", () => {
   });
 
   /**
-   * ⚠ ONE CARD UP AT A TIME (U4): the capability stack never shows two cards
-   * facing at once and never an empty stage, and the stack only grows.
+   * ⚠ THE FOUNDATION ACT (U5): one example faces the reader at every scroll
+   * of the first beat, the rest stand in the stack; in the second beat none
+   * faces and every sheet lies as a plate; the mind is made of dots, its
+   * traces among them, and one tendril reaches every plate.
    */
-  it("shows one capability card at a time, the rest settling into the stack", () => {
+  it("faces one example at a time, then lays every sheet down as a foundation", () => {
     const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
     const cards = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
-    expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tools", "mathematics"]);
+    expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tool", "product", "worlds", "mathematics"]);
     for (const c of cards) {
-      expect(c.source.label.length, `${c.id}: sourced`).toBeGreaterThan(0);
       if (c.media) {
         expect(existsSync(join(process.cwd(), "public", c.media.src)), `${c.media.src} on disk`).toBe(true);
+        if (c.media.poster) {
+          expect(existsSync(join(process.cwd(), "public", c.media.poster)), `${c.media.poster} on disk`).toBe(true);
+        }
       }
     }
     const n = cards.length;
-    let stacked = 0;
-    for (let s = 0; s <= 1.0001; s += 0.01) {
-      const poses = cards.map((_, i) => cardPose(i, n, s));
-      const fronts = poses.filter((p) => p.front).length;
-      expect(fronts, `facing cards at ${s.toFixed(2)}`).toBe(1);
-      const now = poses.filter((p) => p.stacked).length;
-      expect(now, `the stack only grows (${s.toFixed(2)})`).toBeGreaterThanOrEqual(stacked);
-      stacked = now;
+    for (let a = 0; a < 1; a += 0.01) {
+      const facing = sheetPoses(n, a, 0).filter((p) => p.facing).length;
+      expect(facing, `facing at ${a.toFixed(2)}`).toBe(1);
     }
-    expect(stacked).toBe(n - 1);
-  });
-
-  /**
-   * ⚠ THE INTERFACE TELLS ITS STORY BY ARITHMETIC (U4): the new way reaches
-   * its answer while the old way is still crawling, the brain is the same
-   * every time and stays in its box, and the particles keep their count.
-   */
-  it("runs the new way to its answer while the old way still crawls", () => {
-    const b = brain();
-    expect(b.traces.length).toBeGreaterThan(40);
-    expect(brainDrawing(0, 0).traces).toEqual(brainDrawing(0, 0).traces);
-    for (const pad of brainDrawing(0, 0).pads) {
-      expect(pad.x).toBeGreaterThanOrEqual(0);
-      expect(pad.x).toBeLessThanOrEqual(BRAIN_BOX.w);
-    }
-    const mid = particlesAt(0.55, b);
-    expect(mid).toHaveLength(PARTICLES);
-    const right = mid.filter((p) => p.side === 1);
-    const left = mid.filter((p) => p.side === 0);
-    const atOutput = right.filter((p) => Math.hypot(p.x - OUTPUT.x, p.y - OUTPUT.y) < 12).length;
-    expect(atOutput, "the new way is done").toBeGreaterThan(right.length * 0.8);
-    const done = left.filter((p) => p.y > VB.h * 0.78).length;
-    expect(done, "the old way is not").toBeLessThan(left.length * 0.2);
-    const it = UX_MEETUP_ARC.sections.find((s) => s.id === "the-interface");
-    expect(it?.kind === "figure" && it.head, "no head and no paragraph").toBeFalsy();
+    const laid = sheetPoses(n, 1, 1);
+    expect(laid.every((p) => !p.facing && p.shown)).toBe(true);
+    // Lying: each sheet's downward axis runs into the floor's depth (+y),
+    // which this isometric draws down and to the left: a negative x step.
+    for (const p of laid) expect(p.m[2]).toBeLessThan(0);
+    const dots = mindDots(n);
+    expect(dots.length).toBeGreaterThan(1000);
+    expect(dots.filter((d) => d.trace).length).toBeGreaterThan(100);
+    for (let i = 0; i < n; i++) expect(tendril(i, n).length).toBeGreaterThan(10);
+    const ifc = UX_MEETUP_ARC.sections.find((s) => s.id === "the-interface");
+    expect(ifc?.kind === "figure" && ifc.head, "no head and no paragraph").toBeFalsy();
   });
 
   /**
