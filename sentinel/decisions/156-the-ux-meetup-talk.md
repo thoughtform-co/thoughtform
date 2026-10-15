@@ -129,9 +129,13 @@ small text under them and two sizes between them, a clone named and not shown, a
   corridor mount at parse time and THROWS on any miss; the kill edge (`data-corridor-kill`)
   moves with it to `#contact`, and the hero's corridor link points at the talk. The shared
   flow hook takes `seam: false` (`useWorkshopFlow`, absent or `true` byte-identical for v1, v2,
-  v3, the lecture and Suri): the About's flow runs, the eras never open the corridor, and
-  `data-tw-flow` is never written, so the fixed corridor cell, the weld and the eras-over-ground
-  rules all stay off. ⚠ The eras still play their outro (from ~0.8 of their clock the figure
+  v3, the lecture and Suri): the About's flow runs and the eras never open the corridor
+  (no square, no mark travel, no morph). ⚠ The `data-tw-flow` stamp STAYS ON: the first cut
+  left it off too, and the About then handed over to an eras station still below the screen, so
+  its title and portrait vanished (owner, the same day); the stamp carries the eras' overlap and
+  the About's fade. Of what the stamp switches, only the weld would hurt the talk (it pulls the
+  corridor a screen up over the talk's last beat), and `ux-meetup.css` cancels it; the held
+  corridor cell is then uncovered as the talk's last screen lifts off it. ⚠ The eras still play their outro (from ~0.8 of their clock the figure
   leaves for a seam that no longer comes), which left a screen of empty frame: the talk rises
   over it as a CURTAIN (`ux-meetup.css`, `margin-top: -75svh` on the page's ground, scoped by
   `data-tw-order="talk-first"`, a stamp only this page carries). Measured: through the corridor

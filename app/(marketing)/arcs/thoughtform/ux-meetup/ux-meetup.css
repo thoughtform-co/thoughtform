@@ -8,6 +8,14 @@
    make room for a thesis that is no longer there, which left about a screen
    of empty frame before the claim. The talk rises over that stretch on the
    page's ground, so the claim arrives as the last era leaves. */
+/* ⚠ THE WELD IS CANCELLED. The flow stamp stays on (the About's hand-off into
+   the eras needs it), and with it v1's weld pulls the corridor mount up a
+   screen, which here would land the corridor over the talk's last beat. The
+   mount sits in flow after the talk; the held corridor cell is uncovered as
+   the talk's last screen lifts off it, the homepage's curtain grammar. */
+.tw-root[data-tw-order="talk-first"][data-tw-flow] [data-home-corridor-mount] {
+  margin-top: 0;
+}
 .tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc {
   position: relative;
   z-index: 4;

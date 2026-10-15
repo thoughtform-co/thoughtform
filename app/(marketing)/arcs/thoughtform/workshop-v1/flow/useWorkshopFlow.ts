@@ -169,10 +169,15 @@ export interface WorkshopFlowOptions {
   titleMorph?: boolean;
   /**
    * The UX meetup talk (ADR-156 U2): its own sections sit BETWEEN the eras
-   * and the corridor, so the eras must not open the corridor. `false` keeps
-   * the About's flow and never writes the seam: no `data-tw-flow` stamp
-   * (so no fixed corridor cell, no weld, no eras over the ground), no
-   * square, no mark travel, no morph. Absent or `true`, byte-identical.
+   * and the corridor, so the eras must not open the corridor. `false` never
+   * writes the seam: no square, no mark travel, no morph.
+   *
+   * ⚠ THE STAMP STILL GOES ON. `data-tw-flow` also carries the About's
+   * hand-off into the eras (the eras' overlap, the portrait and the deck
+   * fading on the era's morph); without it the About handed over to a
+   * station still below the screen and its parts vanished (owner, the same
+   * day). What the talk must not get, the weld, its route sheet cancels.
+   * Absent or `true`, byte-identical.
    */
   seam?: boolean;
 }
@@ -413,7 +418,7 @@ export function useWorkshopFlow(options: WorkshopFlowOptions = {}): void {
       lastP = p;
       const nextFlow = flowState(p);
       if (nextFlow !== flow) {
-        if (seamOn) dom.root.setAttribute(FLOW_ATTR, nextFlow);
+        dom.root.setAttribute(FLOW_ATTR, nextFlow);
         flow = nextFlow;
       }
       /* The title morph reads its seat BEFORE the seam writes, so the one
