@@ -1806,9 +1806,9 @@ describe("the workshop's shared beats (ADR-143)", () => {
     }
     // Suri's lunch and learn draws the stages at their names alone (ADR-147
     // U7), so it is no longer a word-for-word reader. The UX meetup talk
-    // shows all three as they are, at the lecture's positions (ADR-156).
+    // dropped the stages and turns the curve's and the steer's heads (ADR-156
+    // U1), so it reads none of the three word for word.
     expect(readers.get("three-ways")?.sort()).toEqual([
-      "thoughtform-ux-meetup",
       "thoughtform-workshop",
       "thoughtform-workshop-v2",
       "thoughtform-workshop-v3",
@@ -1818,7 +1818,6 @@ describe("the workshop's shared beats (ADR-143)", () => {
     for (const id of ["the-curve", "between"]) {
       expect(readers.get(id)?.sort(), id).toEqual([
         "ap-hogeschool-lecture",
-        "thoughtform-ux-meetup",
         "thoughtform-workshop",
       ]);
     }

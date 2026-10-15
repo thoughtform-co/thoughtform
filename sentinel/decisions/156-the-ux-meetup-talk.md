@@ -79,9 +79,44 @@ nowhere else.
 - Headless walk at 1280×720: twelve sections mounted, no console error, every beat one
   screen but the bench (the kind's own known overflow at that frame).
 
+## U1 · The tail follows the owner's storyline (2026-10-15, the morning of the talk)
+
+The owner's brain dump of 15 October set the order the talk is told in, and the first cut's tail
+did not carry most of it: the marginal cost going to zero and why it goes this fast, the open-source
+clone that is not the threat, "nobody opens the other software", the two ways out, and headless or
+told. The tail is rewritten in his order, still sixteen sections at most and no new kind:
+
+- **The reality**: the claim (`the-claim`), why so fast (`why-so-fast`, four cards: trained on all of
+  it, a product in a few weeks, open models follow, a utility), the clone (`rebuilt`) and the threat
+  (`the-threat`), three beats with no picture.
+- **An intelligence**: the electricity line (`not-software`, the consciousness caveat in its
+  subline), then the curve and the spectrum as the SHARED DRAWINGS UNDER THIS TALK'S HEADS
+  ("No ceiling yet", "An intelligence"), the way v3 and Suri's cut turn them. The page is no longer a
+  word-for-word reader of either, and `arcs-registry` no longer names it.
+- **Trusting it**: Tom on the Moon's path, bench and wall and In The Pocket's nine sectors, by
+  reference, unchanged but renumbered.
+- **Two ways out** (`two-ways`): toward the authentic, toward the intelligence.
+- **What is left to design**: the turn, the four cards (the physical card moved into the two ways
+  out; "Interfaces nobody has drawn yet" takes its place), and **headless or told**
+  (`headless-or-told`, `list-groups` in columns, Told first because the first group is the lit one).
+- The stages (prompt, tool, agent) LEFT: workshop material, in a twenty-five minute slot.
+- Five chapters in the header: the reality, not software, Tom on the Moon, two ways out, the turn.
+
+The spoken script, beat by beat with timings, is `docs/talks/2026-10-15-ux-meetup.md`. Nothing on
+the page waits on an asset: the clone, a game built with AI and an artifact are shown live in the
+browser, which the script cues.
+
+**Verified** (headless, 1280×720 and 1920×1247, dark and light): sixteen sections, no console
+error, every beat one screen but the bench (its known 25px). `ux-meetup.test.ts` pins the
+storyline's order, the five chapters, every eyebrow's number against its position, and the shared
+curve and spectrum data by reference. `npm run lint` fails on `main` at 338 of 337 before and after
+this change (none of it in these files); typecheck passes; the suite's three failures
+(`skill-file-fidelity`, `thoughtform-armada`, `trinny-mark`) read sibling repositories or exact
+bytes on disk and fail the same without it.
+
 ## Left open
 
-- Every line in the tail is a first cut from his notes, his to rewrite.
+- Every line in the tail is a first cut from his notes, his to rewrite (U1 included).
 - Whether Tom on the Moon and In The Pocket may be shown to a public room is his call.
 - `sentinel/DIGEST.md`'s list of the era stage's readers did not name Suri's lunch and
   learn before this change and still does not; this change adds only its own page.

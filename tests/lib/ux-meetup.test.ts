@@ -8,7 +8,8 @@ import { WORKSHOP_V3_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/wo
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
 import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
 import { ITP_WALL_CAPTION, ITP_WALL_MEDIA } from "@/lib/arcs/content/shared/in-the-pocket";
-import { THREE_WAYS_LOOP } from "@/lib/arcs/content/shared/threeWaysLoop";
+import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
+import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
 import {
   TOM_BENCH_EXAMPLE,
   TOM_PATH_STAGES,
@@ -139,26 +140,68 @@ describe("the UX meetup talk (ADR-156)", () => {
   });
 
   /**
-   * The talk's order: the claim first, the three shared beats at the
-   * lecture's positions (their eyebrows letter 02 · 03 · 04), the evidence,
-   * the turn, the close, and the whole thing inside the archetype's
-   * seven-to-sixteen (ADR-131's law, one screen a section).
+   * The talk's order (U1, the owner's storyline of 15 October): the reality,
+   * an intelligence, what happened when he trusted it, the two ways out, what
+   * is left to design, the close; the whole thing inside the archetype's
+   * seven-to-sixteen (ADR-131's law, one screen a section) and five chapters
+   * in the header.
    */
-  it("opens on the claim, closes on the close, and stays inside the law", () => {
+  it("follows the storyline and stays inside the law", () => {
     const sections = UX_MEETUP_ARC.sections;
     expect(sections[0].id).toBe("the-claim");
     expect(UX_MEETUP_ARC.hero.actions?.[0]?.href).toBe("#the-claim");
-    expect(sections[1], "02 is the shared stages").toBe(THREE_WAYS_LOOP);
-    expect(sections[2], "03 is the shared curve").toBe(THE_CURVE_BEAT);
-    expect(sections[3], "04 is the shared spectrum").toBe(HARD_TO_STEER_BEAT);
     expect(sections.at(-1)?.kind).toBe("close");
     expect(sections.length).toBeGreaterThanOrEqual(7);
     expect(sections.length).toBeLessThanOrEqual(16);
 
     const ids = sections.map((s) => s.id);
-    expect(ids.indexOf("tom-on-the-moon")).toBeGreaterThan(ids.indexOf("not-software"));
-    expect(ids.indexOf("the-turn")).toBeGreaterThan(ids.indexOf("itp-wall"));
+    const order = [
+      "the-claim",
+      "why-so-fast",
+      "rebuilt",
+      "the-threat",
+      "not-software",
+      "the-curve",
+      "between",
+      "tom-on-the-moon",
+      "itp-wall",
+      "two-ways",
+      "the-turn",
+      "what-is-left",
+      "headless-or-told",
+      "close",
+    ];
+    const at = order.map((id) => ids.indexOf(id));
+    expect(at, "every beat of the storyline is on the page").not.toContain(-1);
+    expect([...at].sort((a, b) => a - b), "in the storyline's order").toEqual(at);
     expect(ids.indexOf("what-is-left")).toBe(ids.indexOf("the-turn") + 1);
+
+    const chapters = sections.filter((s) => s.menuPrimary).map((s) => s.id);
+    expect(chapters).toEqual(["the-claim", "not-software", "tom-on-the-moon", "two-ways", "the-turn"]);
+
+    /* Every eyebrow letters its own position, so a beat moved is a beat
+       renumbered. */
+    sections.forEach((s, i) => {
+      const own = s as unknown as { eyebrow?: string; head?: { eyebrow?: string } };
+      const eyebrow = own.head?.eyebrow ?? own.eyebrow ?? "";
+      expect(eyebrow.slice(0, 2), `${s.id}: its number`).toBe(String(i + 1).padStart(2, "0"));
+    });
+  });
+
+  /**
+   * ⚠ THE CURVE AND THE SPECTRUM ARE THE SHARED DRAWINGS UNDER THIS TALK'S
+   * HEADS (U1), as v3 turns them: the data halves by reference, the words the
+   * talk's own, so `arcs-registry` no longer counts this page a reader.
+   */
+  it("draws the shared curve and spectrum under its own heads", () => {
+    const curve = UX_MEETUP_ARC.sections.find((s) => s.id === "the-curve");
+    expect(curve?.kind === "curve" && curve.lanes, "the curve's lanes").toBe(FRONTIER_CURVE.lanes);
+    expect(curve?.kind === "curve" && curve.head).not.toEqual(THE_CURVE_BEAT.head);
+    const steer = UX_MEETUP_ARC.sections.find((s) => s.id === "between");
+    expect(steer?.kind === "spectrum" && steer.bands, "the spectrum's bands").toBe(
+      TOOL_AND_COLLABORATOR.bands
+    );
+    expect(steer?.kind === "spectrum" && steer.head).not.toEqual(HARD_TO_STEER_BEAT.head);
   });
 
   /**
@@ -206,9 +249,7 @@ describe("the UX meetup talk (ADR-156)", () => {
     scanStrings(frame, "arc", visit);
     scanStrings(UX_MEETUP_HERO, "hero", visit);
     scanStrings(UX_MEETUP_PROOF_LEDES["ai-transformation"], "ledes.ai-transformation", visit);
-    const shared: readonly unknown[] = [THREE_WAYS_LOOP, THE_CURVE_BEAT, HARD_TO_STEER_BEAT];
     for (const section of sections) {
-      if (shared.includes(section)) continue;
       const own = section as unknown as Record<string, unknown>;
       for (const key of ["menuLabel", "eyebrow", "head", "line", "subline", "cards", "actions"]) {
         scanStrings(own[key], `${section.id}.${key}`, visit);
