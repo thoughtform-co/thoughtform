@@ -214,8 +214,80 @@ function looseHalf(side: -1 | 1): string {
   return `<g class="fa-loose">${dotsSvg(pts, { size: 1.15, tone: "hi" })}</g>`;
 }
 
+/** The mask (the shoggoth beat): a machined faceplate held in the brain's
+    front plane, in the same camera. Its plane is spanned by L and z at
+    `MASK.f`; the plate has real thickness back toward the brain, the face's
+    features are slots cut through it, rivets ring its rim, and two straps
+    run back from its sides onto the hemispheres. */
+const MASK = { f: 156, w: 58, rx: 76, ry: 86, thick: 8 } as const;
+function maskMarkup(): string {
+  const at = (u: number, w: number, df = 0) => iso(W(u, MASK.f + df, MASK.w + w), P);
+  const oval = (rx: number, ry: number, n = 72, df = 0, cx = 0, cy = 0): Flat[] =>
+    Array.from({ length: n }, (_, i) => {
+      const t = (i / n) * Math.PI * 2;
+      // a face: a touch narrower at the chin
+      const narrow = 1 - 0.14 * Math.max(0, -Math.sin(t));
+      return at(cx + rx * narrow * sgnPow(Math.cos(t), 0.9), cy + ry * sgnPow(Math.sin(t), 0.9), df);
+    });
+  const front = oval(MASK.rx, MASK.ry);
+  const back = oval(MASK.rx, MASK.ry, 72, -MASK.thick);
+  const hull = (pts: Flat[]): Flat[] => {
+    const q = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cross = (o: Flat, a: Flat, b: Flat) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo: Flat[] = [];
+    for (const p of q) {
+      while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop();
+      lo.push(p);
+    }
+    const up: Flat[] = [];
+    for (const p of q.reverse()) {
+      while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop();
+      up.push(p);
+    }
+    return [...lo.slice(0, -1), ...up.slice(0, -1)];
+  };
+  const out: string[] = [];
+  // The straps first: from each side of the plate back onto the brain.
+  for (const sgn of [-1, 1]) {
+    const from = at(sgn * MASK.rx * 0.98, 6, -MASK.thick / 2);
+    const mid = iso(W(sgn * (LC + HEMI.a * 0.7), MASK.f - 40, MASK.w + 14), P);
+    const end = iso(W(sgn * (LC + HEMI.a * 0.98), MASK.f - 96, MASK.w + 18), P);
+    for (const off of [-4, 4]) {
+      out.push(lineSvg(`M${from[0]} ${from[1] + off}Q${mid[0]} ${mid[1] + off} ${end[0]} ${end[1] + off}`, { tone: "mid" }));
+    }
+    out.push(dotsSvg([end], { size: 2.2, tone: "hi" }));
+  }
+  // The plate: its side band (the hull of both faces), the back rim, the face.
+  out.push(`<path class="fa-mask-side" d="${pathOf(hull([...front, ...back]), true)}"/>`);
+  out.push(`<path class="fa-mask-face" d="${pathOf(front, true)}"/>`);
+  out.push(`<path class="fa-mask-edge" d="${pathOf(front, true)}"/>`);
+  // An inset groove a little inside the rim.
+  out.push(lineSvg(pathOf(oval(MASK.rx - 9, MASK.ry - 9, 72, 0.4), true), { tone: "lo" }));
+  // The face, cut through the plate: two closed, smiling eyes and a smile.
+  const slot = (cx: number, cy: number, r: number, a0: number, a1: number, w: number) => {
+    const outer: Flat[] = [];
+    const inner: Flat[] = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = a0 + ((a1 - a0) * i) / 24;
+      outer.push(at(cx + (r + w / 2) * Math.cos(t), cy + (r + w / 2) * Math.sin(t), 0.4));
+      inner.push(at(cx + (r - w / 2) * Math.cos(t), cy + (r - w / 2) * Math.sin(t), 0.4));
+    }
+    return `<path class="fa-mask-slot" d="${pathOf([...outer, ...inner.reverse()], true)}"/>`;
+  };
+  out.push(slot(-28, 22, 12, Math.PI * 0.15, Math.PI * 0.85, 4.5));
+  out.push(slot(28, 22, 12, Math.PI * 0.15, Math.PI * 0.85, 4.5));
+  out.push(slot(0, -2, 38, Math.PI * 1.18, Math.PI * 1.82, 5.5));
+  // Rivets round the rim.
+  out.push(dotsSvg(Array.from({ length: 10 }, (_, i) => {
+    const t = (i / 10) * Math.PI * 2 + 0.3;
+    const narrow = 1 - 0.14 * Math.max(0, -Math.sin(t));
+    return at((MASK.rx - 4.5) * narrow * Math.cos(t), (MASK.ry - 4.5) * Math.sin(t), 0.4);
+  }), { size: 0.9, tone: "hi" }));
+  return `<g class="fa-mask">${out.join("")}</g>`;
+}
+
 /** The brain at scale 1, as SVG markup (no `<svg>` wrapper). */
-export function brainIsoMarkup({ split = false }: { split?: boolean } = {}): string {
+export function brainIsoMarkup({ split = false, mask = false }: { split?: boolean; mask?: boolean } = {}): string {
   const out: string[] = [];
 
   // 1. The ports, under the manifold, back row first.
@@ -281,6 +353,7 @@ export function brainIsoMarkup({ split = false }: { split?: boolean } = {}): str
   };
   const sides = ([-1, 1] as const).slice().sort((a, b) => depthOf(W(a * LC, 0, 0), P) - depthOf(W(b * LC, 0, 0), P));
   out.push(hemisphere(sides[0]), ...stem, hemisphere(sides[1]));
+  if (mask) out.push(maskMarkup());
   return out.join("");
 }
 
@@ -293,11 +366,11 @@ export function brainIsoStyle(t: { light: boolean; ink: string; gold: string; li
   const gold = t.light
     ? `.fa-gold>.iso-top{fill:#e4cf98}.fa-gold>.iso-shade{fill:#cdb47a}`
     : `.fa-gold>.iso-top{fill:#3d3218}.fa-gold>.iso-shade{fill:#2b2311}`;
-  return `${ISO_CSS}.iso{${tokens}}${gold}.fa-gold>.iso-edge{stroke:${t.gold}}.fa-gold-line{stroke:${t.gold}!important;opacity:.85}.fa-core>.iso-top{fill:${t.light ? "#d9b65c" : "#6a5424"}}.fa-loose .iso-dots circle{fill:${t.green};opacity:1}`;
+  return `${ISO_CSS}.iso{${tokens}}${gold}.fa-gold>.iso-edge{stroke:${t.gold}}.fa-gold-line{stroke:${t.gold}!important;opacity:.85}.fa-core>.iso-top{fill:${t.light ? "#d9b65c" : "#6a5424"}}.fa-loose .iso-dots circle{fill:${t.green};opacity:1}.fa-mask-side{fill:${t.light ? "#d6c79f" : "#2a2312"};stroke:${t.gold};stroke-width:.6;stroke-opacity:.6}.fa-mask-face{fill:${t.light ? "#f3ead2" : "#1c180f"}}.fa-mask-edge{fill:none;stroke:${t.gold};stroke-width:1.4}.fa-mask-slot{fill:${t.light ? "#2a2214" : "#050504"};stroke:${t.lit};stroke-width:.8}`;
 }
 
 /** A whole standalone SVG document of the brain, for rasterising. */
-export function brainIsoSvg(opts: { split?: boolean; light: boolean; ink: string; gold: string; lit: string; green: string }): string {
+export function brainIsoSvg(opts: { split?: boolean; mask?: boolean; light: boolean; ink: string; gold: string; lit: string; green: string }): string {
   const B = BRAIN_ISO_BOX;
   const w = B.x1 - B.x0;
   const h = B.y1 - B.y0;

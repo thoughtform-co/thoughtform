@@ -93,7 +93,8 @@ const CORDS = [
 /** Where the brain stands in each beat that has it. */
 const PLACE: Record<number, Place> = {
   1: { x: 806, y: 208, s: 0.68 },
-  2: { x: 720, y: 352, s: 0.95 },
+  // clear of the headline (owner, 2026-10-15: "too close to the text")
+  2: { x: 720, y: 412, s: 0.84 },
   3: { x: 720, y: 360, s: 0.74 },
   4: { x: 720, y: 330, s: 0.78 },
 };
@@ -205,12 +206,12 @@ export function FoundationAct() {
        its order. */
     const pictures = new Map<string, HTMLImageElement | null>();
     let gone = false;
-    const pictureOf = (split: boolean): HTMLImageElement | null => {
-      const key = `${split}|${light}`;
+    const pictureOf = (split: boolean, mask = false): HTMLImageElement | null => {
+      const key = `${split}|${mask}|${light}`;
       if (pictures.has(key)) return pictures.get(key) ?? null;
       pictures.set(key, null);
       const img = new Image();
-      const url = URL.createObjectURL(new Blob([brainIsoSvg({ split, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
+      const url = URL.createObjectURL(new Blob([brainIsoSvg({ split, mask, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
       img.onload = () => {
         URL.revokeObjectURL(url);
         if (gone) return;
@@ -246,7 +247,7 @@ export function FoundationAct() {
         l.width = canvas.width;
         l.height = canvas.height;
         const c = l.getContext("2d");
-        const pic = pictureOf(ph === 2);
+        const pic = pictureOf(ph === 2, ph === 4);
         if (!pic) return l;
         if (c) {
           const pl = PLACE[ph];
@@ -398,9 +399,9 @@ export function FoundationAct() {
         paintRings(ctx, knowledge?.layers ?? [], PLACE[3], { k, dpr, tone, since, now, light }, true);
       } else if (phase === 4) {
         paintTentacles(ctx, PLACE[4], { k, dpr, tone, since, now, light }, false);
-        const shown = paintBrain(4, since, now);
+        paintBrain(4, since, now);
         paintTentacles(ctx, PLACE[4], { k, dpr, tone, since, now, light }, true);
-        if (shown) paintMask(ctx, PLACE[4], { k, dpr, tone, since: since - 1.0, light });
+        // The mask is part of the machined picture now (`brainIso.ts`).
       } else if (phase === 5) {
         paintField(ctx, field, { k, dpr, tone, since, now, light });
       }
@@ -971,47 +972,6 @@ function paintTentacles(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number
       }
     }
   }
-  ctx.restore();
-}
-
-/** The mask: a smiling face held in front of the brain, thin gold. */
-function paintMask(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; light: boolean }) {
-  const { k, dpr, tone } = o;
-  const show = smooth(o.since / 0.8);
-  if (show <= 0) return;
-  const c = { x: pl.x + 6 * pl.s, y: pl.y - 4 * pl.s };
-  const rx = 62 * pl.s;
-  const ry = 74 * pl.s;
-  ctx.save();
-  ctx.translate(c.x * k, c.y * k);
-  ctx.rotate(-0.08);
-  ctx.globalAlpha = show * (o.light ? 0.9 : 0.85);
-  ctx.fillStyle = o.light ? "rgba(233, 225, 211, 0.9)" : "rgba(10, 9, 8, 0.82)";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, rx * k, ry * k, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = tone.lit;
-  ctx.lineWidth = 1.6 * dpr;
-  ctx.stroke();
-  // Two eyes and the smile.
-  ctx.lineWidth = 1.8 * dpr;
-  for (const sx of [-1, 1]) {
-    ctx.beginPath();
-    ctx.arc(sx * 22 * pl.s * k, -16 * pl.s * k, 8 * pl.s * k, Math.PI * 1.1, Math.PI * 1.9);
-    ctx.stroke();
-  }
-  ctx.beginPath();
-  ctx.arc(0, 6 * pl.s * k, 30 * pl.s * k, Math.PI * 0.15, Math.PI * 0.85);
-  ctx.stroke();
-  // Its strap, round behind the brain.
-  ctx.globalAlpha = show * 0.5;
-  ctx.lineWidth = 1 * dpr;
-  ctx.beginPath();
-  ctx.moveTo(-rx * k, -8 * pl.s * k);
-  ctx.lineTo(-rx * k - 110 * pl.s * k, -24 * pl.s * k);
-  ctx.moveTo(rx * k, -8 * pl.s * k);
-  ctx.lineTo(rx * k + 110 * pl.s * k, -24 * pl.s * k);
-  ctx.stroke();
   ctx.restore();
 }
 
