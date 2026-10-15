@@ -18,6 +18,7 @@ import { THOUGHTFORM_WORKSHOP_V2_ARC } from "./content/thoughtform-workshop-v2";
 import { THOUGHTFORM_WORKSHOP_V3_ARC } from "./content/thoughtform-workshop-v3";
 import { THOUGHTFORM_ARMADA_ARC } from "./content/thoughtform-armada";
 import { UX_MEETUP_ARC } from "./content/ux-meetup";
+import { THOUGHTFORM_PORTFOLIO_ARC } from "./content/thoughtform-portfolio";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
@@ -73,6 +74,9 @@ export const ARCS: readonly ArcDef[] = [
   /* A talk cut from it (ADR-156): v3's spine, then a tail for a room of
      designers at the UX meetup of 15 October. */
   UX_MEETUP_ARC,
+  /* The portfolio (2026-10-15): Prompt to Loop converted into the register
+     of the X-Bionic proposal and the talk, on its own route. */
+  THOUGHTFORM_PORTFOLIO_ARC,
   /* Its technical companion (ADR-146): one piece of work through the
      machinery, from the configuration to the next team. */
   THOUGHTFORM_ARMADA_ARC,

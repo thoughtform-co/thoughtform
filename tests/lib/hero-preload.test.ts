@@ -139,6 +139,7 @@ describe("hero preload", () => {
       "/arcs/thoughtform/workshop-v2",
       "/arcs/thoughtform/workshop-v3",
       "/arcs/thoughtform/ux-meetup",
+      "/arcs/thoughtform/portfolio",
       "/arcs/thoughtform/armada",
       "/arcs/thoughtform/ai-storytelling",
       "/arcs/thoughtform/ai-storytelling-class-1",
