@@ -22,9 +22,15 @@ import { useTalkFrame } from "./useTalkFrame";
  * movement or travel, just a glitch effect"). Its frames come from the
  * talk's one READER (`useTalkFrame`), never a second scroll writer.
  *
- * The reader also switches the ground on: off while the talk's top is still
- * below the screen's top (the weld lays the talk over the eras' runway, and
- * an opaque ground there would cover the eras), on from the frame it parks.
+ * The reader also decides WHICH BEAT IS UP (owner, 2026-10-15: "I don't want
+ * any section or any black pane sliding over anything"). Exactly one beat is
+ * active at a time, the one whose slot holds the scroll (a slot runs from its
+ * park to the next beat's park); only it shows its plane, and the ground is
+ * on only while one is active. Before the first beat parks nothing of the
+ * talk paints, so the eras finish clean; after the last, the ground switches
+ * off in place and the corridor's thesis, already held underneath, is there.
+ * The decode hook still types and un-types the words; it no longer decides
+ * whether a drawing is seen (that hid whole beats on the way back up).
  *
  * Default export, because `WorkshopPortals` mounts it through `lazy()`.
  */
@@ -40,15 +46,35 @@ export default function UxMeetupTail() {
   });
   const onBeatFrame = useArcTerminalMotion({ rootRef, motion: MOTION, observeDocument: true });
 
-  const groundOn = useRef<boolean | null>(null);
+  const state = useRef<{ ground: boolean | null; active: HTMLElement | null }>({
+    ground: null,
+    active: null,
+  });
   const onFrame = useCallback(
     (scrollY: number, vh: number) => {
       onBeatFrame(scrollY, vh);
       const root = rootRef.current;
       if (!root) return;
-      const on = root.getBoundingClientRect().top <= 1;
-      if (on !== groundOn.current) {
-        groundOn.current = on;
+      const beats = Array.from(root.querySelectorAll<HTMLElement>(":scope > [data-arc-beat]"));
+      const rects = beats.map((b) => b.getBoundingClientRect());
+      let active: HTMLElement | null = null;
+      for (let i = 0; i < beats.length; i++) {
+        const parked = rects[i].top <= 0.5;
+        const held = i < beats.length - 1 ? rects[i + 1].top > 0.5 : rects[i].bottom > vh;
+        if (parked && held) {
+          active = beats[i];
+          break;
+        }
+      }
+      const s = state.current;
+      if (active !== s.active) {
+        s.active?.removeAttribute("data-uxm-active");
+        active?.setAttribute("data-uxm-active", "");
+        s.active = active;
+      }
+      const on = active !== null;
+      if (on !== s.ground) {
+        s.ground = on;
         root.setAttribute("data-uxm-ground", on ? "on" : "off");
       }
     },

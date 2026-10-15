@@ -11,9 +11,17 @@
   margin-top: 0;
 }
 
+/* ⚠ NO PANE. The talk is welded up into the eras' runway, so anything opaque
+   on its station or its root rose over the eras as a black frame (owner,
+   2026-10-15). Both are transparent; the only ground is `.uxm-ground`, on
+   only while a beat is up. */
 .tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc {
   position: relative;
   z-index: 4;
+  background: none;
+}
+.tw-root[data-tw-order="talk-first"] #workshop .arc-root {
+  background: none;
 }
 
 /* ⚠ THE TALK'S OWN WELD (U3, owner 2026-10-15: no slide-over, the eras'
@@ -60,7 +68,8 @@
 .uxm-ground__mark {
   position: absolute;
   inset: 0;
-  opacity: 0.12;
+  /* Seen, not shouted (owner: "not seeing our brand mark particle system"). */
+  opacity: 0.24;
 }
 .uxm-ground__canvas {
   display: block;
@@ -85,7 +94,11 @@
    before the next one appears. Above the terminal tier only; below it the
    page flows and every beat is plainly there. */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] > .arc-plane {
+  /* ONE BEAT UP AT A TIME (owner, 2026-10-15): the tail's reader marks the
+     beat whose slot holds the scroll; every other beat's plane is withheld,
+     whatever its words are doing, so a drawing never vanishes on the way
+     back up and two never stand on each other. */
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat]:not([data-uxm-active]) > .arc-stage > .arc-plane {
     visibility: hidden;
   }
 }
