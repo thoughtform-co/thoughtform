@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -6,8 +6,19 @@ import { describe, expect, it } from "vitest";
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
-import { THE_CURVE_BEAT } from "@/lib/arcs/content/shared/workshopFraming";
+import {
+  ABSORPTION_PARTS,
+  WIRE_COUNT,
+  absorptionFrame,
+} from "@/components/arcs/figures/absorption/layout";
+import { monthsOf } from "@/components/arcs/figures/timeline/model";
+import {
+  timelineFrame,
+  timelineLabels,
+  timelinePrisms,
+} from "@/components/arcs/figures/timeline/layout";
+import { labelBoxes, labelCollisions } from "@/components/arcs/framing/iso";
+import type { ArcFigureSpec } from "@/lib/arcs/types";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
   UX_MEETUP_ARC,
@@ -202,42 +213,94 @@ describe("the UX meetup talk (ADR-156)", () => {
     const sections = UX_MEETUP_ARC.sections;
     expect(sections.map((s) => s.id)).toEqual([
       "the-claim",
-      "rebuilt",
-      "the-threat",
-      "the-curve",
-      "two-ends",
-      "the-interface",
-      "designer",
+      "proof-content",
+      "proof-products",
+      "absorbed",
+      "your-tool",
+      "an-intelligence",
     ]);
     for (const s of sections) {
       expect(["cards", "list-groups"], `${s.id}: a box grid`).not.toContain(s.kind);
-    }
-    const statement = (i: number) =>
-      sections[i].kind === "interstitial" &&
-      (sections[i] as { variant?: string }).variant === "statement";
-    sections.forEach((s, i) => {
-      expect(statement(i), `${s.id}: statements take every other beat`).toBe(i % 2 === 0);
-      if (statement(i)) {
-        expect((s as { subline?: string }).subline, `${s.id}: no small text`).toBeUndefined();
+      if (s.kind === "interstitial" && s.variant === "statement") {
+        expect(s.subline, `${s.id}: no small text`).toBeUndefined();
       }
       const own = s as unknown as { eyebrow?: string; head?: { eyebrow?: string } };
       const eyebrow = own.head?.eyebrow ?? own.eyebrow ?? "";
+      const i = sections.indexOf(s);
       expect(eyebrow.slice(0, 2), `${s.id}: its number`).toBe(String(i + 1).padStart(2, "0"));
-    });
+    }
+    /* ⚠ THE ACT IS ONE UNIT (U3): the two timelines and the machine are one
+       drawing built up over three beats, so the alternation law (ADR-155)
+       reads statement · act · voice · picture, never two of a kind. */
+    const ACT = new Set(["proof-content", "proof-products", "absorbed"]);
+    const units: string[] = [];
+    for (const s of sections) {
+      const unit = ACT.has(s.id) ? "act" : s.kind === "interstitial" ? "line" : "picture";
+      if (unit === "act" && units.at(-1) === "act") continue;
+      units.push(unit);
+    }
+    for (let i = 1; i < units.length; i++) {
+      const pair = [units[i - 1], units[i]];
+      expect(pair[0] === "line" && pair[1] === "line", `two lines side by side at ${i}`).toBe(false);
+    }
     const chapters = sections.filter((s) => s.menuPrimary).map((s) => s.id);
     expect(chapters.length).toBeLessThanOrEqual(5);
   });
 
-  /** The evidence: the shared curve's data by reference, the screenshot on disk. */
-  it("draws the shared curve under its own head and ships its screenshot", () => {
-    const curve = UX_MEETUP_ARC.sections.find((s) => s.id === "the-curve");
-    expect(curve?.kind === "curve" && curve.lanes, "the curve's lanes").toBe(FRONTIER_CURVE.lanes);
-    expect(curve?.kind === "curve" && curve.head).not.toEqual(THE_CURVE_BEAT.head);
-    const rebuilt = UX_MEETUP_ARC.sections.find((s) => s.id === "rebuilt");
-    const src = rebuilt?.kind === "media" ? rebuilt.media.src : "";
-    expect(existsSync(join(process.cwd(), "public", src)), `${src} on disk`).toBe(true);
-    const stack = UX_MEETUP_ARC.sections.find((s) => s.kind === "stack");
-    expect(stack?.kind === "stack" && stack.figure.lit, "one lit tier, the layer").toBe("layer");
+  /**
+   * ⚠ THE TIMELINE IS A RECORD (U3): every event dated and sourced, each lane
+   * rising, the two beats one record (the second only draws the ghost lane
+   * in), and the drawing's words never seated on top of each other at the
+   * size they render.
+   */
+  it("draws the timeline from a dated, sourced record without a word on a word", () => {
+    const figs = UX_MEETUP_ARC.sections.flatMap((s) =>
+      s.kind === "figure" && s.figure.id === "timeline" ? [s.figure] : []
+    ) as Extract<ArcFigureSpec, { id: "timeline" }>[];
+    expect(figs.map((f) => f.show)).toEqual(["content", "both"]);
+    expect(figs[0].lanes, "one record for both beats").toBe(figs[1].lanes);
+    for (const lane of figs[0].lanes) {
+      const months = lane.events.map((e) => monthsOf(e.date));
+      expect([...months].sort((x, y) => x - y), `${lane.id}: rising`).toEqual(months);
+      for (const e of lane.events) {
+        expect(e.source.label.length, `${e.id}: sourced`).toBeGreaterThan(0);
+        expect(e.date, `${e.id}: a date`).toMatch(/^\d{4}(-\d{2})?$/);
+      }
+    }
+    expect(figs[0].rail.source.href).toMatch(/^https:\/\/epoch\.ai\//);
+
+    const lanes = figs[1].lanes;
+    const prisms = timelinePrisms(lanes.map((l) => l.events));
+    const f = timelineFrame(prisms);
+    const tags = Object.fromEntries(
+      lanes.flatMap((l) => l.events.map((e) => [e.id, `${e.date} ${e.label}`]))
+    );
+    const labels = timelineLabels(prisms, tags, [lanes[0].label, lanes[1].label], figs[1].rail.label, f);
+    // The tags render at ~11px across a drawing ~760px wide at 1280x720.
+    const type = (11 * f.w) / 760;
+    expect(labelCollisions(labelBoxes(labels, type, f))).toEqual([]);
+  });
+
+  /**
+   * ⚠ THE MACHINE IS A MECHANISM (U3, the anatomy method): forty or more
+   * parts and wires, one gold part (the model), on the framing's projection.
+   */
+  it("builds the absorption machine from forty or more parts, one of them gold", () => {
+    expect(ABSORPTION_PARTS.length + WIRE_COUNT).toBeGreaterThanOrEqual(40);
+    expect(ABSORPTION_PARTS.filter((p) => p.kind === "model")).toHaveLength(1);
+    const f = absorptionFrame();
+    expect(f.w).toBeGreaterThan(0);
+    expect(f.h).toBeGreaterThan(0);
+  });
+
+  /** The intelligence beat stands on its source: Evans's keynote, timestamped. */
+  it("sources the turn to an intelligence", () => {
+    const logic = UX_MEETUP_ARC.sections.find((s) => s.id === "an-intelligence");
+    const spec = logic?.kind === "figure" ? logic.figure : null;
+    expect(spec?.id).toBe("logic");
+    if (spec?.id === "logic") {
+      expect(spec.source.href).toMatch(/youtube\.com\/watch\?v=EbqiuDtFWxA&t=\d+s/);
+    }
   });
 
   /** The house copy law, over what this page letters of its own. */

@@ -1,6 +1,5 @@
-import type { ArcDef } from "../types";
+import type { ArcDef, ArcFigureSpec } from "../types";
 
-import { THE_CURVE_BEAT } from "./shared/workshopFraming";
 import { WORKSHOP_INTRO, type WorkshopIntro } from "./shared/workshopIntro";
 
 /**
@@ -47,6 +46,64 @@ export const UX_MEETUP_PROOF_LEDES: WorkshopIntro["proof"]["ledes"] = {
     "Then we built for the agents: what each team knows, written down, and the checks they run on their own work.",
 };
 
+/** The two lanes and the rail, one record for both proof beats (U3): the
+ *  first draws the products lane as a ghost, the second draws it in.
+ *  ⚠ The Loop films' month is not on the record: dated late 2025 here,
+ *  the owner's to confirm (ADR-156 U3, left open). */
+const TIMELINE_LANES: Extract<ArcFigureSpec, { id: "timeline" }>["lanes"] = [
+  {
+    id: "content",
+    label: "Digital content",
+    events: [
+      { id: "c-first", date: "2023", label: "My first Midjourney image", source: { label: "Vince Buyssens, 2023" } },
+      {
+        id: "c-sora",
+        date: "2024-02",
+        label: "A minute of AI video",
+        source: { label: "OpenAI, Sora, 15 February 2024", href: "https://openai.com/index/sora/" },
+      },
+      { id: "c-veo", date: "2025-05", label: "Video with its own sound", source: { label: "Google, Veo 3, I/O 20 May 2025" } },
+      { id: "c-loop", date: "2025-11", label: "AI films on paid media", source: { label: "Loop Earplugs creative archive" } },
+    ],
+  },
+  {
+    id: "products",
+    label: "Digital products",
+    events: [
+      { id: "p-sketch", date: "2023-03", label: "A sketch becomes a website", source: { label: "OpenAI, GPT-4 livestream, 14 March 2023" } },
+      { id: "p-agent", date: "2025-02", label: "An agent in the terminal", source: { label: "Anthropic, Claude Code, 24 February 2025" } },
+      { id: "p-imo", date: "2025-07", label: "Gold at the Maths Olympiad", source: { label: "Google DeepMind, IMO 2025, certified" } },
+      {
+        id: "p-photocraft",
+        date: "2026-09",
+        label: "Photoshop, rebuilt with Claude",
+        source: { label: "PhotoCraft, github.com/storytold/photocraft", href: "https://github.com/storytold/photocraft" },
+      },
+    ],
+  },
+];
+
+function uxMeetupTimeline(show: "content" | "both"): ArcFigureSpec {
+  return {
+    id: "timeline",
+    show,
+    alt:
+      show === "content"
+        ? "An isometric timeline from 2023 to 2026. On the front lane, digital content: a first Midjourney image in 2023, a minute of AI video in February 2024, video with sound in May 2025, AI films on paid media in late 2025, each block taller than the last. Behind it, the digital products lane is still a ghost. A gold rail of compute climbs the time edge."
+        : "The same isometric timeline with both lanes drawn. Digital products: a sketch becomes a website in March 2023, an agent in the terminal in February 2025, gold at the Maths Olympiad in July 2025, Photoshop rebuilt with Claude in September 2026. Both lanes climb with the gold compute rail.",
+    lanes: TIMELINE_LANES,
+    rail: {
+      label: "Training compute · ×4 to 5 a year",
+      source: {
+        label: "Epoch AI",
+        href: "https://epoch.ai/blog/training-compute-of-frontier-ai-models-grows-by-4-to-5x-per-year",
+      },
+    },
+    axes: { time: "Time", height: "What it can finish" },
+    note: "Height: the task an agent can finish, ×2 every 7 months (METR) · Rail: training compute (Epoch AI)",
+  };
+}
+
 export const UX_MEETUP_ARC: ArcDef = {
   slug: "thoughtform-ux-meetup",
   leaf: "ux-meetup",
@@ -70,7 +127,7 @@ export const UX_MEETUP_ARC: ArcDef = {
     lede: "A talk on what is left to design once making digital things costs almost nothing.",
     actions: [
       { id: "start", label: "The claim", href: "#the-claim", primary: true },
-      { id: "rebuilt", label: "Rebuilt", href: "#rebuilt" },
+      { id: "proof", label: "The proof", href: "#proof-content" },
     ],
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
@@ -87,11 +144,10 @@ export const UX_MEETUP_ARC: ArcDef = {
       "A talk for designers: digital content and products become a commodity, and what is left to design is the interface with an intelligence.",
   },
   sections: [
-    /* ── U2 (owner, 2026-10-15): seven beats, a statement then a section
-       with its picture, never two of a kind side by side (ADR-155's law).
-       A statement is one line and nothing under it; the speaker says the
-       rest. No card grid anywhere: the owner's ruling, standing. The thesis
-       and the Arc come after this, in the corridor. */
+    /* ── U3 (owner, 2026-10-15): the wake-up call, then the proof as an act
+       of three drawings on one floor (the content lane, the products lane
+       added, then both absorbed by the machine), a voice, the turn to an
+       intelligence. Statements glitch in where they stand; nothing slides. */
     {
       id: "the-claim",
       kind: "interstitial",
@@ -107,107 +163,85 @@ export const UX_MEETUP_ARC: ArcDef = {
       },
     },
     {
-      id: "rebuilt",
-      kind: "media",
-      menuLabel: "Rebuilt",
+      id: "proof-content",
+      kind: "figure",
+      menuLabel: "Digital content",
       menuPrimary: true,
       head: {
-        eyebrow: "02 · Rebuilt",
-        title: { pre: "Photoshop,", em: "rebuilt with Claude." },
-        sub: "An open-source Photoshop, written in Rust with Claude and on GitHub since 30 September; Word, Excel and PowerPoint followed a week later. Up close it is early alpha, and no company leaves a subscription for a clone.",
+        eyebrow: "02 · The proof · Digital content",
+        title: { pre: "What a model could make,", em: "month by month." },
+        sub: "Each block stands as tall as the task an agent could finish that month, a length that doubles about every seven months. In 2023, my first strange picture. Now, AI films running as paid media.",
       },
-      media: {
-        type: "image",
-        src: "/arcs/ux-meetup/photocraft.webp",
-        alt: "PhotoCraft open on Hokusai's Great Wave: a Photoshop layout with the tools on the left, a Curves adjustment and a layer stack on the right.",
-      },
-      caption: {
-        label: "PhotoCraft, the ArtCraft project",
-        role: "A clean-room rebuild of Photoshop, mostly written by AI",
-        meta: "Rust · Apache-2.0 · early alpha · over 60,000 stars in two weeks",
-        sourceLabel: "github.com/storytold/photocraft",
-        sourceHref: "https://github.com/storytold/photocraft",
-      },
+      figure: uxMeetupTimeline("content"),
     },
     {
-      id: "the-threat",
-      kind: "interstitial",
-      variant: "statement",
-      glitch: true,
-      menuLabel: "The threat",
-      eyebrow: "03 · The threat",
-      line: {
-        pre: "The threat is that nobody",
-        em: "opens the other software.",
-      },
-    },
-    {
-      /* The shared curve's drawing under the talk's electricity line. */
-      ...THE_CURVE_BEAT,
-      menuLabel: "Not software",
-      menuPrimary: true,
+      id: "proof-products",
+      kind: "figure",
+      menuLabel: "Digital products",
       head: {
-        eyebrow: "04 · Not software",
-        title: { pre: "A commodity like electricity,", em: "except this one solves problems." },
-        sub: "More power plants run more machines and solve nothing. More intelligence finishes longer and harder work, and no upper bound has shown up yet. No claim about consciousness: trained on our language, it reasons through a problem.",
+        eyebrow: "03 · The proof · Digital products",
+        title: { pre: "The same climb,", em: "in code and in maths." },
+        sub: "A sketch became a website, then an agent ran in the terminal, then gold at the Maths Olympiad, then Photoshop rebuilt with Claude. Both lanes rise because the gold rail does: compute grows four to five times a year. Scale beat cleverness again, the bitter lesson.",
       },
+      figure: uxMeetupTimeline("both"),
     },
     {
-      id: "two-ends",
-      kind: "interstitial",
-      variant: "statement",
-      glitch: true,
-      menuLabel: "Two ways out",
-      eyebrow: "05 · Two ways out",
-      line: {
-        pre: "Value moves to what only people make,",
-        em: "and to the intelligence itself.",
-      },
-    },
-    {
-      id: "the-interface",
-      kind: "stack",
-      menuLabel: "What is left",
-      menuPrimary: true,
+      id: "absorbed",
+      kind: "figure",
+      menuLabel: "Absorbed",
       head: {
-        eyebrow: "06 · What is left to design",
-        title: { pre: "The interface is", em: "the intelligence." },
-        sub: "People build what they need on the fly. Where the story is not yours, go headless and let them. Where it is, tell it yourself, and encode the brand so every intelligence renders you right.",
+        eyebrow: "04 · Absorbed",
+        title: { pre: "The frontier labs", em: "become the interface." },
+        sub: "Content and products feed one machine. People stop opening the other software: they ask the model, and their agents use the tools for them. Nobody has to build their own SAP for that to happen.",
       },
       figure: {
-        tiers: ["tiles", "layer", "host", "shared"],
-        lit: "layer",
-        tiles: [
-          { id: "dashboard", bucket: "Headless", name: "A dashboard" },
-          { id: "report", bucket: "Headless", name: "A report" },
-          { id: "tool", bucket: "Headless", name: "An internal tool" },
-          { id: "page", bucket: "Headless", name: "A page for one person" },
+        id: "absorption",
+        alt: "An isometric machine: two panels on the floor, digital content with images, video, ads and decks, and digital products with code, tools, apps and dashboards, each feeding a ribbon of wires into a housing labelled the frontier labs. On the housing sits the model, the one gold block, and over it the interface; small agents in front are wired up to the interface.",
+        panels: [
+          { id: "content", label: "Digital content", items: ["Images", "Video", "Ads", "Decks"] },
+          { id: "products", label: "Digital products", items: ["Code", "Tools", "Apps", "Dashboards"] },
         ],
-        callouts: {
-          layer: { label: "Told", lines: ["Your brand, encoded"], chip: "Yours" },
-          host: { label: "The intelligence", lines: ["Claude, ChatGPT"] },
-          shared: { label: "The models", lines: ["A commodity"] },
+        machine: {
+          label: "The frontier labs",
+          core: "The model",
+          interface: "The interface",
+          compute: "Compute",
         },
-        /* The tiles' words to the left: on the right they ran into the
-           layer's, which sits just under them. */
-        sides: { tiles: "left" },
-        courses: {
-          skills: ["Shader libraries", "A design system shipped as source", "Motion and type rules"],
-          evals: ["Checks for what is on brand"],
-        },
-        alt: "An isometric stack. On top, interfaces built on the fly: a dashboard, a report, an internal tool, a page for one person. Under them, lit gold, the brand encoded: shader libraries, a design system shipped as source, motion and type rules, and checks. Under that, the intelligence, Claude and ChatGPT, and at the bottom the models, a commodity.",
+        agents: { label: "Agents", tools: ["Using every other tool for you"] },
       },
     },
     {
-      id: "designer",
+      id: "your-tool",
       kind: "interstitial",
-      variant: "statement",
-      glitch: true,
-      menuLabel: "Designers",
-      eyebrow: "07 · Where that leaves us",
+      variant: "quote",
+      frame: "marks",
+      menuLabel: "A voice",
+      eyebrow: "05 · Heard in the industry",
       line: {
-        pre: "The most interesting time",
-        em: "to be a designer.",
+        pre: "I don\u2019t want to use your agent.",
+        em: "I want my agent to use your tool.",
+      },
+    },
+    {
+      id: "an-intelligence",
+      kind: "figure",
+      menuLabel: "An intelligence",
+      menuPrimary: true,
+      head: {
+        eyebrow: "06 · An intelligence",
+        title: { pre: "A new kind", em: "of automation." },
+        sub: "Every earlier wave automated steps you could write down. This one works wherever there is enough data and the answer can be checked: a logic problem becomes a statistics problem. And nobody knows its limits yet. It is not software. It is an intelligence.",
+      },
+      figure: {
+        id: "logic",
+        alt: "On the left, a stair of five steps on one wire: logic, steps you can write down. On the right, a cloud of observations with one gold line fitted through it: statistics, anything with enough data and an answer you can check.",
+        logic: { label: "Logic", line: "Steps you can write down: mainframes, spreadsheets, software." },
+        statistics: { label: "Statistics", line: "Anything with enough data and an answer you can check." },
+        source: {
+          label: "Benedict Evans, AI Is Eating the World, hx Live NYC 2026, 24:18",
+          href: "https://www.youtube.com/watch?v=EbqiuDtFWxA&t=1458s",
+        },
+        note: "After Benedict Evans, AI Is Eating the World, hx Live NYC 2026",
       },
     },
   ],

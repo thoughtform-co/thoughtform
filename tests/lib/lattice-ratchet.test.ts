@@ -83,6 +83,8 @@ const PINS: Record<string, Counts> = {
      enters at zero and may never rise. */
   "components/sessions/sessions.css": { P: 0, S: 0, F: 0, M: 0 },
   "components/arcs/arcs.css": { P: 6, S: 374, F: 251, M: 13 },
+  /* ADR-156 U3: the talk's figures, entered at zero and held there. */
+  "components/arcs/figures/figures.css": { P: 0, S: 0, F: 0, M: 0 },
   /* The leverage, the handoff, the terms and the job (ADR-153): every
      spacing a token or the console's fluid unit, so it enters at zero. */
   "components/arcs/leverage.css": { P: 0, S: 0, F: 0, M: 0 },

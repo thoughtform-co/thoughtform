@@ -35,6 +35,9 @@ import "@/components/arcs/arcs.css";
 // The isometric stack (ADR-156 U2): the `stack` kind draws `StackFigure`,
 // whose sheet only the proposal routes loaded.
 import "@/components/arcs/stack/stack.css";
+// The talk's figures (ADR-156 U3): the timeline, the machine, logic to
+// statistics, on the framing's floor classes from arcs.css.
+import "@/components/arcs/figures/figures.css";
 // about-stage.css / continuum-stage.css are deliberately NOT imported: this
 // page mounts no about deck stage (ADR-053).
 // ⚠ v1's ROUTE SHEET, BY PATH. This page renders `.tw-root` and shares v1's

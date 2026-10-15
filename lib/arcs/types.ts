@@ -319,6 +319,10 @@ export type ArcSection = ArcSectionBase &
          *  in-place scramble instead of typing, a glitch with no travel
          *  (owner, 2026-10-15). Absent, the statement types. */
         glitch?: boolean;
+        /** `quote` only (ADR-156 U3): the statement's registration row over
+         *  the quote, the house's marks around a voice. Absent, the quote as
+         *  it was. */
+        frame?: "marks";
         /** The part ruler, `chapter` only: which part of how many. */
         chapter?: { n: number; of: number };
         /** The part's index, `chapter` only (ADR-153 U1): its beats as
@@ -1516,6 +1520,24 @@ export type ArcSection = ArcSectionBase &
          * teams own.", the team, the layer and Claude Enterprise as one flow.
          */
         port?: "s1a" | "plug";
+      }
+    | {
+        /**
+         * A FIGURE OF THE TALK'S OWN (ADR-156 U3, owner 2026-10-15: "use our
+         * diagram system and the anatomy skill to create a very clear
+         * consistent timeline"): the standard head, then one drawing from the
+         * figure registry (`components/arcs/figures/`), on the workshop
+         * framing's ONE projection (`framing/iso.ts`). Words, dates and
+         * sources live here, in the record, where the copy law reads them;
+         * geometry and true numbers live in each figure's model.
+         *
+         * ⚠ THE THIRTY-FIRST ENUMERATED EXCEPTION, one kind for the talk's
+         * drawings rather than one kind per drawing. Server, no state; the
+         * SVG letters nothing, every word is a DOM span on a leader.
+         */
+        kind: "figure";
+        head: ArcHead;
+        figure: ArcFigureSpec;
       }
     | {
         /**
@@ -2861,6 +2883,63 @@ export interface ArcStepsCheck {
   x: number;
   y: number;
 }
+
+/** A source on the record: what it is, and where, when there is a page. */
+export interface ArcSource {
+  label: string;
+  href?: string;
+}
+
+/** One dated event on a timeline lane (ADR-156 U3). */
+export interface ArcTimelineEvent {
+  id: string;
+  /** `YYYY-MM`, or `YYYY` when only the year is on the record. */
+  date: string;
+  /** The tag on the drawing: short, mono, uppercase on screen. */
+  label: string;
+  source: ArcSource;
+}
+
+export interface ArcTimelineLane {
+  id: string;
+  label: string;
+  /** Rising by date; `ux-meetup.test.ts` pins it. */
+  events: readonly ArcTimelineEvent[];
+}
+
+/** The talk's drawings, a union on `id` (ADR-156 U3). */
+export type ArcFigureSpec = {
+  alt: string;
+  /** Under the drawing: the sources, one mono line. */
+  note?: string;
+} & (
+  | {
+      id: "timeline";
+      /** `content` draws the products lane as a ghost: the lane arrives on
+       *  the next beat, the same floor (owner: "as you move to the next
+       *  section, new stuff gets added"). */
+      show: "content" | "both";
+      lanes: readonly [ArcTimelineLane, ArcTimelineLane];
+      /** The gold rail along the time edge: what drives the climb. */
+      rail: { label: string; source: ArcSource };
+      axes: { time: string; height: string };
+    }
+  | {
+      id: "absorption";
+      panels: readonly [
+        { id: string; label: string; items: readonly string[] },
+        { id: string; label: string; items: readonly string[] },
+      ];
+      machine: { label: string; core: string; interface: string; compute: string };
+      agents: { label: string; tools: readonly string[] };
+    }
+  | {
+      id: "logic";
+      logic: { label: string; line: string };
+      statistics: { label: string; line: string };
+      source: ArcSource;
+    }
+);
 
 export type ArcSectionKind = ArcSection["kind"];
 

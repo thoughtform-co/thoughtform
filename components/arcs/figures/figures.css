@@ -1,0 +1,129 @@
+/* The talk's figures (ADR-156 U3). They stand on the workshop framing's
+   floor and wear its classes (`arc-floor__*`, arcs.css), so the timeline,
+   the machine and the logic figure read as the stages' and the curve's own
+   instrument. What is here is only what those classes do not draw: the gold
+   rail, the wires, the struts, the observations, the word blocks and the
+   note. Tokens only; the sheet reads `.arc-floor`'s iso ramp. */
+
+/* One figure at the band's width: the floor's two columns become one. */
+.arc-fig__floor {
+  grid-template-columns: minmax(0, 1fr);
+}
+.arc-fig {
+  margin-top: var(--space-xl);
+}
+/* Held to one screen: the drawing is width-bound by its aspect (the
+   derived crop's, written inline by each figure, never typed here), so its
+   width is solved from the height the head, the note and the stage's air
+   leave it. */
+.arc-fig .arc-floor__figure {
+  width: min(100%, calc((100svh - 380px) * var(--fig-aspect, 2)));
+  margin-inline: auto;
+}
+
+/* The one gold object: the compute rail, the fitted line. */
+.arc-fig__rail {
+  fill: none;
+  stroke: var(--arc-iso-gold);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.arc-fig__rail-tie {
+  fill: none;
+  stroke: var(--arc-iso-gold-hidden);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-fig__wire {
+  fill: none;
+  stroke: var(--arc-iso-edge);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-fig__strut {
+  fill: none;
+  stroke: var(--arc-iso-hidden);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-fig__dot {
+  fill: var(--arc-ink-50);
+}
+
+/* Words. A tag is the floor's own; a block is a name over a line. */
+.arc-fig__date {
+  margin-right: var(--space-xs);
+  color: var(--arc-ink-50);
+}
+.arc-fig__year {
+  translate: 0 0;
+}
+.arc-fig__lane {
+  translate: 0 -50%;
+}
+.arc-fig__lane[data-anchor="end"] {
+  translate: -100% -50%;
+}
+.arc-fig__lane {
+  color: var(--arc-ink-90);
+}
+.arc-fig__lane[data-fig-ghost] {
+  color: var(--arc-ink-40);
+}
+.arc-fig__rail-word,
+.arc-fig__lit {
+  color: var(--gold-ink, #caa554);
+}
+.arc-floor__tag[data-anchor="end"] {
+  translate: -100% -50%;
+}
+.arc-fig__block {
+  position: absolute;
+  left: calc(var(--ax, 0) * 100%);
+  top: calc(var(--at, 0) * 100%);
+  z-index: 2;
+  display: grid;
+  gap: var(--space-xs);
+  max-width: 22ch;
+  translate: 0 -50%;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-base);
+  line-height: 1.35;
+  color: var(--arc-ink-70);
+  text-shadow: var(--arc-iso-halo);
+  pointer-events: none;
+}
+.arc-fig__block[data-anchor="middle"] {
+  translate: -50% 0;
+  text-align: center;
+}
+.arc-fig__block[data-anchor="end"] {
+  translate: -100% -50%;
+  text-align: right;
+}
+.arc-fig__block-name {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-sm);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+}
+.arc-fig__block[data-lit] .arc-fig__block-name {
+  color: var(--gold-ink, #caa554);
+}
+/* The note runs on one line under the drawing, centred on it, even where
+   the drawing is narrower than the line. */
+.arc-fig__note {
+  position: relative;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--hud-margin, 64px));
+  translate: -50% 0;
+  margin-top: var(--space-md);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-sm);
+  letter-spacing: var(--track-eyebrow);
+  color: var(--arc-ink-40);
+  text-align: center;
+}

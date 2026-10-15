@@ -66,7 +66,7 @@ export function ArcInterstitial({
             </span>
           </div>
         ) : null}
-        {statement ? (
+        {statement || section.frame === "marks" ? (
           <p className="arc-inter__marks">
             <i className="arc-inter__x arc-inter__x--origin" aria-hidden="true" />
             <span className="arc-inter__mrule" aria-hidden="true" />
