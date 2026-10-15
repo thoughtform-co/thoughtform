@@ -48,6 +48,23 @@ function sectionBlock(html: string, id: string): { start: number; end: number; o
   throw new Error(`[ux-meetup order] #${id} is never closed`);
 }
 
+const SWARM_ID = "uxm-swarm";
+
+/**
+ * The swarm chapter's slot (owner, 2026-10-15: "after the era section"),
+ * directly before the talk, so the page reads eras → swarm → talk. The
+ * chapter itself is a nested root (`SwarmChapter`, mounted by the portals).
+ * Throws on a miss, and on a second pass.
+ */
+export function insertSwarmBeforeTalk(bodyHtml: string): string {
+  if (bodyHtml.includes(`id="${SWARM_ID}"`)) {
+    throw new Error(`[ux-meetup order] #${SWARM_ID} is already in place`);
+  }
+  const talk = sectionBlock(bodyHtml, TALK_ID);
+  const slot = `<section id="${SWARM_ID}" class="uxm-swarm" aria-label="AI capability your teams own"><div data-uxm-swarm-root></div></section>\n`;
+  return bodyHtml.slice(0, talk.start) + slot + bodyHtml.slice(talk.start);
+}
+
 export function moveTalkBeforeCorridor(bodyHtml: string, mountId: string): string {
   const talk = sectionBlock(bodyHtml, TALK_ID);
   if (!new RegExp(`\\s${KILL_ATTR}\\b`).test(talk.open)) {

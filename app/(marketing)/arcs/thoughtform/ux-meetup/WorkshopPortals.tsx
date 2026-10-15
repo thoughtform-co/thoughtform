@@ -28,6 +28,7 @@ import { useWorkshopFlow } from "../workshop-v1/flow/useWorkshopFlow";
  */
 const WorkshopProof = lazy(() => import("../workshop-v3/WorkshopProof"));
 const UxMeetupTail = lazy(() => import("./WorkshopTail"));
+const SwarmChapter = lazy(() => import("./SwarmChapter"));
 
 const RING_ATTR = "data-services-ring";
 
@@ -48,6 +49,12 @@ export function UxMeetupPortals() {
     ".tw-root [data-tw-arc-root]",
     <Suspense fallback={null}>
       <UxMeetupTail />
+    </Suspense>
+  );
+  useNestedRoot(
+    ".tw-root [data-uxm-swarm-root]",
+    <Suspense fallback={null}>
+      <SwarmChapter />
     </Suspense>
   );
   usePortraitDeck();

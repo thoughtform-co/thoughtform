@@ -9,7 +9,7 @@ import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 import { replaceAboutBio } from "../workshop-v3/about";
 import { replaceHeroCopy } from "../workshop-v3/hero";
 import { UX_MEETUP_JOURNEY, UX_MEETUP_NAV_ITEMS } from "./journey";
-import { moveTalkBeforeCorridor } from "./order";
+import { insertSwarmBeforeTalk, moveTalkBeforeCorridor } from "./order";
 import { UxMeetupPortals } from "./WorkshopPortals";
 
 import "@/components/landing/v7/landing.css";
@@ -45,6 +45,18 @@ import "@/components/arcs/figures/figures.css";
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
 import "../workshop-v1/thoughtform-workshop.css";
+// The swarm chapter (owner, 2026-10-15): the X-Bionic proposal's three
+// sections as /test/proposal-swarm draws them, that route's sheets for them.
+import "@/components/xb-proposal/xb.css";
+import "@/components/xb-proposal/xb-in-frame.css";
+import "@/components/xb-proposal/masthead.css";
+import "@/components/xb-proposal/plug/plug.css";
+import "@/components/xb-proposal/embed/embed.css";
+import "@/components/xb-proposal/network/network.css";
+import "@/components/xb-proposal/kit/kit.css";
+import "@/components/xb-proposal/stack/stack-hero.css";
+import "@/components/xb-proposal/network/network-org.css";
+import "@/app/(internal)/test/proposal-swarm/proposal-swarm.css";
 // The talk's own order: the curtain over the eras' outro (ADR-156 U2).
 import "./ux-meetup.css";
 // No equilibrium sheet: the talk opens hero → About (ADR-156 U2, owner
@@ -117,9 +129,11 @@ export default async function UxMeetupPage() {
   // v3's intro (ADR-143 U3, U6) with the talk's own hero written over the
   // prototype's and the About from the record; no equilibrium, and the talk
   // moved before the corridor (U2).
-  const bodyHtml = moveTalkBeforeCorridor(
-    replaceAboutBio(replaceHeroCopy(protoHtml, UX_MEETUP_HERO), WORKSHOP_INTRO.about),
-    CORRIDOR_MOUNT_ID
+  const bodyHtml = insertSwarmBeforeTalk(
+    moveTalkBeforeCorridor(
+      replaceAboutBio(replaceHeroCopy(protoHtml, UX_MEETUP_HERO), WORKSHOP_INTRO.about),
+      CORRIDOR_MOUNT_ID
+    )
   );
   const shared = extractV7Text();
   const corridorText = {

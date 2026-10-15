@@ -418,6 +418,26 @@ html[data-theme="light"] .fa__dots {
   top: calc(84 / 820 * 100%);
   width: calc(470 / 1440 * 100%);
 }
+/* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
+   right, the brain between them. */
+.fa[data-fa-phase="4"] .fa__head {
+  right: calc(48 / 1440 * 100%);
+  width: auto;
+  grid-template-columns: minmax(0, 470fr) minmax(0, 404fr) minmax(0, 470fr);
+}
+.fa[data-fa-phase="4"] .fa__eyebrow {
+  grid-area: 1 / 1;
+}
+.fa[data-fa-phase="4"] .fa__title {
+  grid-area: 2 / 1;
+}
+.fa[data-fa-phase="4"] .fa__line {
+  grid-area: 2 / 3;
+  align-self: end;
+  justify-self: end;
+  max-width: 24ch;
+  text-align: right;
+}
 .fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
 .fa[data-fa-phase="5"] .fa__head {
@@ -562,4 +582,32 @@ html[data-theme="light"] .fa__dots {
 /* U8: the owner's two lines, the second under the first. */
 #any-software .arc-inter__line em {
   display: block;
+}
+
+/* ── The hero without its buttons (owner, 2026-10-15: "we don't need the
+   cta buttons"). Hidden, not removed: the hero's boot decode reads
+   `.hero__cta` and stands down without it. */
+.tw-root[data-tw-order="talk-first"] #hero .hero__cta {
+  display: none;
+}
+
+/* ── The swarm chapter (owner, 2026-10-15): the X-Bionic proposal's three
+   sections, as /test/proposal-swarm draws them, between the eras and the
+   talk. In flow: it arrives as the eras' emptied stage scrolls away (their
+   exit ends at 153.6svh, their pin releases at 160svh), so it needs no weld,
+   and the talk's weld up into the eras' runway is cancelled, since the swarm
+   now stands between them. */
+.tw-root[data-tw-order="talk-first"] #uxm-swarm {
+  position: relative;
+  z-index: 4;
+}
+.tw-root[data-tw-order="talk-first"] #uxm-swarm .arc-root {
+  background: var(--void, #0a0908);
+}
+@supports (animation-timeline: scroll(root block)) {
+  @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+    .tw-root[data-tw-order="talk-first"][data-tw-flow] #uxm-swarm + #workshop.station.tw-arc {
+      margin-top: 0;
+    }
+  }
 }

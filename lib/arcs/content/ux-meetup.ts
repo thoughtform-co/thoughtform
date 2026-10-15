@@ -100,8 +100,8 @@ export const UX_MEETUP_ARC: ArcDef = {
       menuPrimary: true,
       eyebrow: "01 · The wake-up call",
       line: {
-        pre: "Within two years, all digital content and products",
-        em: "will be absorbed.",
+        pre: "AI will absorb all digital contents and products",
+        em: "within 2 years.",
       },
     },
     {
@@ -115,18 +115,18 @@ export const UX_MEETUP_ARC: ArcDef = {
       eyebrow: "02 · What it can make",
       figure: {
         id: "capability",
-        alt: "Six framed examples, one after another, each turning into a standing sheet in a stack to the side: an image made with Midjourney, Loop's AI film, Vesper (the image and video tool built at Loop), PhotoCraft (Photoshop rebuilt with Claude), new worlds built from game assets, and mathematics.",
+        alt: "Six framed examples, one after another, each turning into a standing sheet in a stack to the side: an image from a prompt in 2022, Loop's AI film, Vesper (the image and video tool built at Loop), PhotoCraft (Photoshop rebuilt with Claude), new worlds built from game assets, and mathematics.",
         cards: [
           {
             id: "image",
             kind: "image",
-            year: "2023",
+            year: "2022",
             title: "An image",
-            caption: "A picture from a prompt, made with Midjourney.",
+            caption: "A picture from a prompt.",
             media: {
               type: "image",
-              src: "/images/ThoughtForm_v1.webp",
-              alt: "A head shaped from sand inside a broken ring, made with Midjourney",
+              src: "/images/ux-meetup-image-2022.webp",
+              alt: "Red figures entwined in a nebula among the stars, an early image from a prompt",
             },
           },
           {

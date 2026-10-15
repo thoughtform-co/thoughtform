@@ -92,6 +92,9 @@ export function ArcInterstitial({
           className="arc-inter__line"
           as="p"
           effect={quote || (statement && !section.glitch) ? "type" : "scramble"}
+          // The wake-up call's glitch runs at twice the station pace (owner,
+          // 2026-10-15: "the glitch effect can be a bit faster").
+          rate={section.glitch ? 2 : undefined}
         />
         {section.subline ? (
           <ArcTypeCopy text={section.subline} motion={motion} className="arc-inter__subline" />

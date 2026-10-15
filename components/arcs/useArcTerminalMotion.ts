@@ -260,7 +260,8 @@ export function useArcTerminalMotion({ rootRef, motion, observeDocument = false 
       dropJobs(beat);
       const t0 = nowSec();
       beat.decode.forEach((el, i) => {
-        queueScramble(jobs, el, el.dataset.arcDecode ?? "", t0 + i * TITLE_STAGGER_S);
+        const rate = Number(el.dataset.arcDecodeRate) || 1;
+        queueScramble(jobs, el, el.dataset.arcDecode ?? "", t0 + (i * TITLE_STAGGER_S) / rate, rate);
       });
       // Typewriter targets CHAIN in DOM order (a quote line's segments
       // type as one continuous line; a lone intro paragraph is the

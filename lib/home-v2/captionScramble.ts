@@ -41,6 +41,8 @@ export interface ScrambleJob {
   from: string;
   to: string;
   startSec: number;
+  /** Playback rate; 2 resolves in half the time. Omitted, 1. */
+  rate?: number;
 }
 
 /** Total seconds a scramble takes for a given incoming/outgoing pair
@@ -58,13 +60,14 @@ export function queueScramble(
   jobs: ScrambleJob[],
   el: ScrambleTarget,
   to: string,
-  startSec: number
+  startSec: number,
+  rate?: number
 ): void {
   const from = el.textContent ?? "";
   const existing = jobs.findIndex((j) => j.el === el);
   if (existing !== -1) jobs.splice(existing, 1);
   if (from === to) return;
-  jobs.push({ el, from, to, startSec });
+  jobs.push(rate && rate !== 1 ? { el, from, to, startSec, rate } : { el, from, to, startSec });
 }
 
 /** Compute the display string for one job at elapsed time `t` seconds.
@@ -115,7 +118,7 @@ export function advanceScrambles(jobs: ScrambleJob[], nowSec: number): void {
   for (let i = jobs.length - 1; i >= 0; i--) {
     const job = jobs[i];
     if (!job) continue;
-    const frame = scrambleFrame(job, nowSec - job.startSec);
+    const frame = scrambleFrame(job, (nowSec - job.startSec) * (job.rate ?? 1));
     if (frame === null) {
       job.el.textContent = job.to;
       jobs.splice(i, 1);

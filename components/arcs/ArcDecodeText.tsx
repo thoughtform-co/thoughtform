@@ -24,11 +24,13 @@ import { ArcTitleText, arcTitleText, glueFor } from "./chrome";
 type DecodeEffect = "scramble" | "type";
 
 /** One decode target — a leaf span carrying its own target string. */
-function Target({ text, effect }: { text: string; effect: DecodeEffect }) {
+function Target({ text, effect, rate }: { text: string; effect: DecodeEffect; rate?: number }) {
   return effect === "type" ? (
     <span data-arc-type={text}>{text}</span>
   ) : (
-    <span data-arc-decode={text}>{text}</span>
+    <span data-arc-decode={text} data-arc-decode-rate={rate}>
+      {text}
+    </span>
   );
 }
 
@@ -37,21 +39,29 @@ function Target({ text, effect }: { text: string; effect: DecodeEffect }) {
  * punctuation glue mirror `ArcTitleText` exactly, so the resolved render
  * is identical to the reveal-mode one.
  */
-function TitleSegments({ title, effect }: { title: ArcTitle; effect: DecodeEffect }) {
+function TitleSegments({
+  title,
+  effect,
+  rate,
+}: {
+  title: ArcTitle;
+  effect: DecodeEffect;
+  rate?: number;
+}) {
   const { pre, em, post } = title;
   return (
     <>
-      {pre ? <Target text={pre} effect={effect} /> : null}
+      {pre ? <Target text={pre} effect={effect} rate={rate} /> : null}
       {pre && em ? " " : ""}
       {em ? (
         <em>
-          <Target text={em} effect={effect} />
+          <Target text={em} effect={effect} rate={rate} />
         </em>
       ) : null}
       {post ? (
         <>
           {pre || em ? glueFor(post) : ""}
-          <Target text={post} effect={effect} />
+          <Target text={post} effect={effect} rate={rate} />
         </>
       ) : null}
     </>
@@ -72,6 +82,8 @@ interface ArcDecodeTitleProps {
    * being TYPED still honours the only-via-the-effect law.
    */
   effect?: DecodeEffect;
+  /** Scramble playback rate (2 = twice as fast). Omitted, the station pace. */
+  rate?: number;
 }
 
 /** A title that decodes into place, or the plain title in reveal mode. */
@@ -82,6 +94,7 @@ export function ArcDecodeTitle({
   as = "h2",
   cursor = true,
   effect = "scramble",
+  rate,
 }: ArcDecodeTitleProps) {
   const Tag = as;
   if (motion !== "terminal") {
@@ -97,7 +110,7 @@ export function ArcDecodeTitle({
         <ArcTitleText title={title} />
       </span>
       <span className="arc-tdec__live" aria-hidden="true">
-        <TitleSegments title={title} effect={effect} />
+        <TitleSegments title={title} effect={effect} rate={rate} />
         {cursor ? <i className="arc-cursor" aria-hidden="true" /> : null}
       </span>
     </Tag>
