@@ -100,6 +100,14 @@ interface Beat {
 interface Options {
   rootRef: RefObject<HTMLElement | null>;
   motion: ArcMotion;
+  /**
+   * Re-measure when the DOCUMENT resizes too, not only the arc's root (ADR-156
+   * U3). A page whose arc sits BELOW other live content (the talk, under the
+   * About and the eras) sees every cached `topDoc` go stale when that content
+   * changes height, and the root's own box never notices. Absent, the root
+   * alone, byte-identical.
+   */
+  observeDocument?: boolean;
 }
 
 const nowSec = () => performance.now() / 1000;
@@ -117,7 +125,7 @@ function writeChannel(el: HTMLElement, name: string, value: number, last: number
   return value;
 }
 
-export function useArcTerminalMotion({ rootRef, motion }: Options) {
+export function useArcTerminalMotion({ rootRef, motion, observeDocument = false }: Options) {
   const frameRef = useRef<((scrollY: number, vh: number) => void) | null>(null);
 
   const onFrame = useCallback((scrollY: number, vh: number) => {
@@ -545,6 +553,7 @@ export function useArcTerminalMotion({ rootRef, motion }: Options) {
     // Fonts and images settling shift every cached offset under them.
     const ro = new ResizeObserver(() => measure());
     ro.observe(root);
+    if (observeDocument) ro.observe(document.documentElement);
 
     const onVisibility = () => {
       if (document.visibilityState !== "hidden") return;
@@ -585,7 +594,7 @@ export function useArcTerminalMotion({ rootRef, motion }: Options) {
         beat.section.style.removeProperty("--arc-head-pin");
       }
     };
-  }, [rootRef, motion]);
+  }, [rootRef, motion, observeDocument]);
 
   return onFrame;
 }

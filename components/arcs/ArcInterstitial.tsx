@@ -91,7 +91,7 @@ export function ArcInterstitial({
           motion={motion}
           className="arc-inter__line"
           as="p"
-          effect={quote || statement ? "type" : "scramble"}
+          effect={quote || (statement && !section.glitch) ? "type" : "scramble"}
         />
         {section.subline ? (
           <ArcTypeCopy text={section.subline} motion={motion} className="arc-inter__subline" />

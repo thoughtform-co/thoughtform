@@ -52,7 +52,11 @@ export const UX_MEETUP_ARC: ArcDef = {
   leaf: "ux-meetup",
   format: "workshop",
   /* A house arc: no `client`, so it lives at `/arcs/thoughtform/ux-meetup`
-     (owner, 2026-10-13). No `theme`, no `motion`, no `worked` anywhere. */
+     (owner, 2026-10-13). No `theme`, no `worked` anywhere. */
+  /* U3 (owner, 2026-10-15): "no movement or travel, just a glitch effect".
+     The terminal grammar (ADR-057): every beat parks, its title decodes
+     where it stands, nothing slides in. */
+  motion: "terminal",
   cardChip: "talk",
   status: "running",
   date: "2026-10-13",
@@ -92,12 +96,14 @@ export const UX_MEETUP_ARC: ArcDef = {
       id: "the-claim",
       kind: "interstitial",
       variant: "statement",
-      menuLabel: "The reality",
+      /* The wake-up call (U3): it glitches in over the emptied eras. */
+      glitch: true,
+      menuLabel: "The wake-up call",
       menuPrimary: true,
-      eyebrow: "01 · The reality",
+      eyebrow: "01 · The wake-up call",
       line: {
-        pre: "Within two years, digital content and products",
-        em: "are a commodity.",
+        pre: "Within two years, all digital content and products",
+        em: "will be absorbed.",
       },
     },
     {
@@ -127,6 +133,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       id: "the-threat",
       kind: "interstitial",
       variant: "statement",
+      glitch: true,
       menuLabel: "The threat",
       eyebrow: "03 · The threat",
       line: {
@@ -149,6 +156,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       id: "two-ends",
       kind: "interstitial",
       variant: "statement",
+      glitch: true,
       menuLabel: "Two ways out",
       eyebrow: "05 · Two ways out",
       line: {
@@ -194,6 +202,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       id: "designer",
       kind: "interstitial",
       variant: "statement",
+      glitch: true,
       menuLabel: "Designers",
       eyebrow: "07 · Where that leaves us",
       line: {

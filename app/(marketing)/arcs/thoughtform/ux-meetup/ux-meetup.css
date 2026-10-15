@@ -1,24 +1,116 @@
-/* The talk's route sheet (ADR-156 U2): the order is eras → TALK → corridor,
-   stamped `data-tw-order="talk-first"` on this page's `.tw-root` alone, so
-   no other cut matches (v3 and Suri's lunch and learn share `data-tw-cut`).
-   Wins on specificity, never on order (ADR-141 U1).
+/* The talk's route sheet (ADR-156 U2, U3): the order is eras → TALK →
+   corridor, stamped `data-tw-order="talk-first"` on this page's `.tw-root`
+   alone, so no other cut matches (v3 and Suri's lunch and learn share
+   `data-tw-cut`). Wins on specificity, never on order (ADR-141 U1). */
 
-   ⚠ THE CURTAIN. With no seam (`useWorkshopFlow({ seam: false })`) the eras
-   still play their outro: from ~0.8 of their clock the figure leaves to
-   make room for a thesis that is no longer there, which left about a screen
-   of empty frame before the claim. The talk rises over that stretch on the
-   page's ground, so the claim arrives as the last era leaves. */
-/* ⚠ THE WELD IS CANCELLED. The flow stamp stays on (the About's hand-off into
-   the eras needs it), and with it v1's weld pulls the corridor mount up a
-   screen, which here would land the corridor over the talk's last beat. The
-   mount sits in flow after the talk; the held corridor cell is uncovered as
-   the talk's last screen lifts off it, the homepage's curtain grammar. */
+/* ⚠ v1's CORRIDOR WELD IS CANCELLED. The flow stamp stays on (the About's
+   hand-off into the eras needs it), and with it v1's weld pulls the corridor
+   mount up a screen, which here would land the corridor over the talk's
+   last beat. The mount sits in flow after the talk. */
 .tw-root[data-tw-order="talk-first"][data-tw-flow] [data-home-corridor-mount] {
   margin-top: 0;
 }
+
 .tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc {
   position: relative;
   z-index: 4;
-  margin-top: -75svh;
-  background-color: var(--void);
+}
+
+/* ⚠ THE TALK'S OWN WELD (U3, owner 2026-10-15: no slide-over, the eras'
+   elements move away and the next title glitches in where it stands). The
+   eras' runway is 260svh with a 100svh stage, so their pin travels 160svh,
+   and their exit ends at 0.96 of it (`VOIDWALKER_HOLOGRAM_EXIT_WINDOW`):
+   153.6svh after their top. The talk is laid 260 − 153.6 = 106.4svh up into
+   that runway, so its first beat parks on the frame the eras' exit ends,
+   over a stage that has just emptied, and decodes there without moving.
+   `ux-meetup.test.ts` reads both numbers from source.
+   ⚠ Only under the eras' own conditions, v1's gate for the flow stamp: below
+   it the page flows and the first beat parks at its ordinary place. The
+   welded box takes no pointer until it parks, so the era chips under it stay
+   clickable. */
+@supports (animation-timeline: scroll(root block)) {
+  @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+    .tw-root[data-tw-order="talk-first"][data-tw-flow] #workshop.station.tw-arc {
+      margin-top: -106.4svh;
+    }
+    .tw-root[data-tw-order="talk-first"][data-tw-flow] #workshop .arc-root[data-uxm-ground="off"] {
+      pointer-events: none;
+    }
+  }
+}
+
+/* ── The ground (U3) ─────────────────────────────────────────────────────
+   One sticky screen at the head of the talk, out of flow by its own height:
+   the void, and the brand mark as particles at a whisper. Hidden until the
+   talk parks (`data-uxm-ground`, written by the tail's reader), so it never
+   covers the eras it is welded over. */
+.uxm-ground {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  height: 100svh;
+  margin-bottom: -100svh;
+  background: var(--void, #0a0908);
+  pointer-events: none;
+  visibility: hidden;
+}
+#workshop .arc-root[data-uxm-ground="on"] > .uxm-ground {
+  visibility: visible;
+}
+.uxm-ground__mark {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+}
+.uxm-ground__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* The talk's sections drop their own void and read on the ground: the
+   ambient mark is behind every beat, not only the gaps between them. Every
+   beat stays opaque as a whole because the ground is (ADR-008, recorded as
+   this page's exception in ADR-156 U3). */
+.tw-root[data-tw-order="talk-first"] #workshop .arc-section,
+.tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] .arc-stage {
+  background: transparent;
+}
+
+/* ── Nothing travels in (U3) ─────────────────────────────────────────────
+   The terminal grammar (ADR-057) lets a beat's stage scroll up into its
+   park, its panels arriving on a ramp as it comes: on the talk that read as
+   the slide the owner refused ("no movement or travel, just a glitch
+   effect"). Here a beat withholds its whole plane until it parks: it
+   appears where it stands, its title decodes in place, and it folds out
+   before the next one appears. Above the terminal tier only; below it the
+   page flows and every beat is plainly there. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] .arc-stage[data-reveal="armed"] > .arc-plane {
+    visibility: hidden;
+  }
+}
+
+/* ── The talk's beat runway (U3) ─────────────────────────────────────────
+   Withholding a beat until it parks leaves its approach empty, so the beats
+   are WELDED instead: each one parks on the scroll where the previous has
+   gone blank, never a screen later.
+   · Every beat holds a 120svh tail (the house's 50 / 70 was a reader's
+     pace; a presenter needs the line to stay through several wheel steps).
+   · The fold's clocks (`arcMotion.ts`: OUT 0.14 → 0.97, UNTYPE_OUT 0.3,
+     FORCE_BLANK_OUT 0.5 on the smoothed channel) leave a beat blank by
+     0.6 of its tail, so the next one parks there: its section is pulled up
+     by the stage's screen plus the 0.38 of the tail still to run,
+     −(100svh + 0.38 × 120svh). The previous beat is armed, and so withheld,
+     by then; both are sticky at the top for the overlap and only one has
+     anything in it. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] {
+    --uxm-tail: 120svh;
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat] > .arc-beat__tail {
+    height: var(--uxm-tail);
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat] ~ [data-arc-beat] {
+    margin-top: calc(-100svh - 0.38 * var(--uxm-tail));
+  }
 }

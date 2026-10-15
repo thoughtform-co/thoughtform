@@ -315,6 +315,10 @@ export type ArcSection = ArcSectionBase &
          *  (cross · rule · eyebrow · rule · cross), and NO subline: the
          *  speaker says the rest. One size for every statement. */
         variant: "question" | "callout" | "quote" | "chapter" | "statement";
+        /** `statement` only (ADR-156 U3): the line arrives by the house's
+         *  in-place scramble instead of typing, a glitch with no travel
+         *  (owner, 2026-10-15). Absent, the statement types. */
+        glitch?: boolean;
         /** The part ruler, `chapter` only: which part of how many. */
         chapter?: { n: number; of: number };
         /** The part's index, `chapter` only (ADR-153 U1): its beats as

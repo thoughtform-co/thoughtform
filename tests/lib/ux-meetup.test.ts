@@ -16,6 +16,7 @@ import {
 } from "@/lib/arcs/content/ux-meetup";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import { getThoughtformWorkshopContent } from "@/lib/v7-parse";
+import { VOIDWALKER_HOLOGRAM_EXIT_WINDOW } from "@/lib/voidwalker/voidwalkerHologramClock";
 
 /**
  * The UX meetup talk's route guard (ADR-156, U2).
@@ -114,6 +115,39 @@ describe("the UX meetup talk (ADR-156)", () => {
     expect(moved).toContain('href="#workshop"');
     expect(() => moveTalkBeforeCorridor(moved, MOUNT)).toThrow();
     expect(() => moveTalkBeforeCorridor("<main></main>", MOUNT)).toThrow();
+  });
+
+  /**
+   * ⚠ THE WELD IS ARITHMETIC ON TWO OTHER FILES (U3): the eras' runway
+   * (`voidwalker.css`, 260svh with a 100svh stage) and the end of their exit
+   * (`VOIDWALKER_HOLOGRAM_EXIT_WINDOW`). The talk is laid up into that runway
+   * so its first beat parks on the frame the exit ends; a change to either
+   * number fails here, by name, before it shows as a gap or an overlap.
+   */
+  it("welds the talk to the end of the eras' exit, and runs the terminal grammar", () => {
+    const eras = readFileSync(
+      join(process.cwd(), "components", "landing", "home-v2", "voidwalker", "voidwalker.css"),
+      "utf8"
+    );
+    expect(eras, "the eras' runway").toContain("min-height: 260svh;");
+    const pinTravel = 260 - 100;
+    const weld = 260 - VOIDWALKER_HOLOGRAM_EXIT_WINDOW[1] * pinTravel;
+    const sheet = routeFile("thoughtform", "ux-meetup", "ux-meetup.css");
+    expect(sheet, "the talk's weld").toContain(`margin-top: -${weld.toFixed(1)}svh;`);
+    expect(sheet, "the curtain is gone").not.toContain("-75svh");
+    expect(sheet, "beats welded to the blank point of the fold").toContain(
+      "margin-top: calc(-100svh - 0.38 * var(--uxm-tail));"
+    );
+
+    expect(UX_MEETUP_ARC.motion, "titles decode where they stand").toBe("terminal");
+    const tail = routeFile("thoughtform", "ux-meetup", "WorkshopTail.tsx");
+    expect(tail, "the talk's frames come from its one reader").toContain("useTalkFrame(");
+    expect(tail).toContain("observeDocument: true");
+    for (const s of UX_MEETUP_ARC.sections) {
+      if (s.kind === "interstitial" && s.variant === "statement") {
+        expect(s.glitch, `${s.id}: glitches in`).toBe(true);
+      }
+    }
   });
 
   /** The hero is the talk's own, one record with the arc's. */
