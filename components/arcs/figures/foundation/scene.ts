@@ -3,10 +3,10 @@
  *
  * WHAT IT CAN MAKE: one example faces the reader, a framed slab with depth;
  * when its turn ends it turns on its x-axis and lies down in the stack on the
- * left, in the very pose it keeps in the next beat, on a little grid, between
- * a y-axis and an x-axis lettered MODEL CAPABILITIES (owner, 2026-10-15: "the
- * way they should be stacked on the left is the way they eventually get
- * stacked in the new interface section").
+ * left, in the very pose it keeps in the next beat, on a little grid; the
+ * y-axis beside it is MODEL CAPABILITIES and grows with every plate (owner,
+ * 2026-10-15: "it's actually the y-axis that needs to grow because that
+ * represents the model's capabilities").
  * THE NEW INTERFACE: the stack moves to the centre, layer by layer, a
  * cascade; the machine mind (`mind.ts`) stands above it and its tendrils plug
  * into every plate.
@@ -184,17 +184,18 @@ export const FLOOR = { z: -0.45, x0: -1.1, y0: -0.8, y1: SHEET.h + 1.1, pad: 0.6
 export interface Axes {
   /** The floor's grid, one path. */
   grid: string;
-  /** The y-axis: up the stack's front-left. */
-  y: [P2, P2];
+  /** The y-axis's foot: MODEL CAPABILITIES rises from here, a plate at a
+      time (`capabilityTop`). */
+  foot: P2;
   /** A tick per plate on it. */
   ticks: P2[];
-  /** The x-axis: MODEL CAPABILITIES, along the floor's front edge. */
+  /** The floor's front edge, unlettered. */
   x: [P2, P2];
-  /** The x-axis's lettering, set on the floor plane. */
-  label: M6;
-  /** Its arrowhead. */
-  arrow: string;
 }
+
+/** How high the capability axis stands over its foot, in world z, when
+    `count` plates are in the stack: a margin past the highest. */
+export const capabilityTop = (count: number) => (count > 0 ? (count - 1) * PLATE.rise + 1.3 : 0.8);
 
 const pathOf = (pts: P2[]) => pts.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
 
@@ -209,26 +210,13 @@ export function axesAt(n: number, o: P2): Axes {
     lines.push(pathOf([proj({ x: FLOOR.x0, y, z }, o), proj({ x: x1, y, z }, o)]));
   }
   const foot: V3 = { x: FLOOR.x0, y: FLOOR.y1, z };
-  const top = (n - 1) * PLATE.rise + 1.6;
   const ticks: P2[] = [];
   for (let i = 0; i < n; i++) ticks.push(proj({ ...foot, z: i * PLATE.rise }, o));
-  const xEnd = proj({ x: x1 + 0.8, y: FLOOR.y1, z }, o);
-  const ux = { x: C30, y: 0.5 };
-  const uy = { x: -C30, y: 0.5 };
-  const at = proj({ x: FLOOR.x0 + 0.4, y: FLOOR.y1 + 0.75, z }, o);
-  const back = { x: xEnd.x - ux.x * 14, y: xEnd.y - ux.y * 14 };
-  const arrow = pathOf([
-    { x: back.x + uy.x * 6, y: back.y + uy.y * 6 },
-    xEnd,
-    { x: back.x - uy.x * 6, y: back.y - uy.y * 6 },
-  ]);
   return {
     grid: lines.join(" "),
-    y: [proj(foot, o), proj({ ...foot, z: top }, o)],
+    foot: proj(foot, o),
     ticks,
-    x: [proj(foot, o), xEnd],
-    label: [ux.x, ux.y, uy.x, uy.y, at.x, at.y],
-    arrow,
+    x: [proj(foot, o), proj({ x: x1 + 0.4, y: FLOOR.y1, z }, o)],
   };
 }
 

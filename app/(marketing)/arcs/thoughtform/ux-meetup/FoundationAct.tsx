@@ -6,12 +6,13 @@ import type { CSSProperties } from "react";
 import {
   EDGE,
   ISO_PHI,
-  ISO_PSI,
   ISO_S,
   basisOf,
   dot3,
   mindModel,
+  orbitAt,
   projB,
+  ringAround,
   type Camera,
   type MindModel,
 } from "@/components/arcs/figures/foundation/mind";
@@ -22,14 +23,17 @@ import {
   VB,
   axesAt,
   cable,
+  capabilityTop,
   lerp,
   plateCorner,
   plateOrigin,
   plateSocket,
   sheetPoses,
   smooth,
+  U,
   type M6,
   type P2,
+  type V3,
 } from "@/components/arcs/figures/foundation/scene";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { UX_MEETUP_ARC } from "@/lib/arcs/content/ux-meetup";
@@ -91,10 +95,12 @@ const CORDS = [
   { tone: "green", w: 2.8 },
 ] as const;
 
-/** The interface beat's mind: the scene's isometric, over the stack. */
-const MIND_IFC: Camera = { psi: ISO_PSI, phi: ISO_PHI, s: ISO_S * 0.82, o: { x: 742, y: 244 } };
-/** The intelligence beat's mind: face on, centred, larger. */
-const MIND_MID: Camera = { psi: Math.PI / 2, phi: 0.24, s: ISO_S * 1.32, o: { x: 720, y: 400 } };
+/** The interface beat's mind: seen from its left and the front, at the
+    isometric's pitch, over the stack; a pose it holds. */
+const MIND_IFC: Camera = { psi: 0.38, phi: ISO_PHI, s: ISO_S * 0.74, o: { x: 742, y: 252 } };
+/** The intelligence beat's mind: the same side, near level, centred and
+    larger. It appears there, it never turns there. */
+const MIND_MID: Camera = { psi: 0.3, phi: 0.2, s: ISO_S * 1.12, o: { x: 720, y: 400 } };
 /** The two poles of the middle beat, in the viewBox. */
 const POLE = { tool: { x: 214, y: 430 }, collab: { x: 1226, y: 430 }, w: 176, h: 124 } as const;
 
@@ -140,6 +146,8 @@ export function FoundationAct() {
   const joinRefs = useRef<(SVGPathElement | null)[]>([]);
   const tickRefs = useRef<(SVGGElement | null)[]>([]);
   const floorRef = useRef<SVGGElement>(null);
+  const yAxisRef = useRef<SVGPathElement>(null);
+  const yNameRef = useRef<SVGTextElement>(null);
   const leaderRef = useRef<SVGPathElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
@@ -172,6 +180,7 @@ export function FoundationAct() {
     };
     let facingIdx = -1;
     let phase = -1;
+    let axisZ = capabilityTop(0);
     let landed = 0;
     let dpr = 1;
     const tone = { ink: "rgb(235, 227, 214)", gold: "rgb(202, 165, 84)", green: "rgb(122, 158, 106)", red: "rgb(255, 107, 53)" };
@@ -225,6 +234,20 @@ export function FoundationAct() {
         const o0 = plateOrigin(0, a);
         floorRef.current?.setAttribute("transform", `translate(${(o0.x - STACK_L.x).toFixed(1)} ${(o0.y - STACK_L.y).toFixed(1)})`);
         root.toggleAttribute("data-fa-floor", poses[0].seated);
+        // The capability axis grows with the stack, a plate at a time.
+        const inStack = poses.filter((p) => p.shown && !p.facing).length;
+        axisZ += (capabilityTop(inStack) - axisZ) * 0.12;
+        const tip = { x: axes.foot.x, y: axes.foot.y - axisZ * U };
+        yAxisRef.current?.setAttribute(
+          "d",
+          `M${axes.foot.x} ${axes.foot.y} L${tip.x} ${tip.y.toFixed(1)} M${tip.x - 6} ${(tip.y + 10).toFixed(1)} L${tip.x} ${tip.y.toFixed(1)} L${tip.x + 6} ${(tip.y + 10).toFixed(1)}`
+        );
+        // Its name runs down the axis from the tip, once the axis can hold it.
+        const yName = yNameRef.current;
+        if (yName) {
+          yName.setAttribute("transform", `translate(${axes.foot.x - 14} ${(tip.y + 4).toFixed(1)}) rotate(-90)`);
+          yName.style.opacity = smooth((axisZ - 3.2) / 1.6).toFixed(3);
+        }
         const leaders: string[] = [];
         poses.forEach((p, i) => {
           const g = sheetRefs.current[i];
@@ -275,21 +298,16 @@ export function FoundationAct() {
           }
         }
         if (phase === 1) {
-          const cam: Camera = { ...MIND_IFC, psi: ISO_PSI + 0.12 * Math.sin(now / 2600) };
+          const cam = MIND_IFC;
           const grown = paintMind(ctx, model, cam, { k, dpr, tone, since, split: 0, now });
           placeLabel(modelRef.current, cam);
           if (grown) paintCords(ctx, model, cam, { k, dpr, tone, since, now, n, a });
         }
       } else {
-        // The middle: the mind turns to face the reader, then reaches out.
-        const turn = smooth(since / 1.5);
-        const cam: Camera = {
-          psi: lerp(MIND_IFC.psi, MIND_MID.psi, turn) + 0.1 * turn * Math.sin(now / 3200),
-          phi: lerp(MIND_IFC.phi, MIND_MID.phi, turn),
-          s: lerp(MIND_IFC.s, MIND_MID.s, turn),
-          o: { x: lerp(MIND_IFC.o.x, MIND_MID.o.x, turn), y: lerp(MIND_IFC.o.y, MIND_MID.o.y, turn) },
-        };
-        paintMind(ctx, model, cam, { k, dpr, tone, since, split: turn, now });
+        // The middle: the mind assembles where it stands, then reaches out.
+        const cam = MIND_MID;
+        const sides = smooth((since - 0.8) / 0.8);
+        paintMind(ctx, model, cam, { k, dpr, tone, since, split: sides, now });
         root.toggleAttribute("data-fa-poles", since > 1.3);
         if (since > 1.3) paintRuns(ctx, model, cam, { k, dpr, tone, since: since - 1.3, now });
       }
@@ -298,7 +316,7 @@ export function FoundationAct() {
 
     const placeLabel = (el: HTMLElement | null, cam: Camera) => {
       if (!el) return;
-      const p = projB({ x: 0, y: 0, z: 4.4 }, basisOf(cam), cam.o);
+      const p = projB({ x: 0, y: 0, z: 6.3 }, basisOf(cam), cam.o);
       el.style.setProperty("--ax", String(p.x / VB.w));
       el.style.setProperty("--at", String(p.y / VB.h));
     };
@@ -336,18 +354,14 @@ export function FoundationAct() {
           <g className="fa__stack">
             <g ref={floorRef} className="fa__floor">
               <path className="fa__grid" d={axes.grid} />
-              <path className="fa__axis" d={`M${axes.y[0].x} ${axes.y[0].y} L${axes.y[1].x} ${axes.y[1].y}`} />
               <path className="fa__axis" d={`M${axes.x[0].x} ${axes.x[0].y} L${axes.x[1].x} ${axes.x[1].y}`} />
-              <path className="fa__axis" d={axes.arrow} />
-              <text className="fa__axis-name" transform={mat(axes.label)}>
+              <path ref={yAxisRef} className="fa__axis fa__axis--y" />
+              <text ref={yNameRef} className="fa__axis-name" textAnchor="end">
                 MODEL CAPABILITIES
               </text>
               {cards.map((c, i) => (
                 <g key={c.id} ref={(el) => void (tickRefs.current[i] = el)}>
-                  <path className="fa__axis" d={`M${axes.ticks[i].x - 6} ${axes.ticks[i].y} L${axes.ticks[i].x} ${axes.ticks[i].y}`} />
-                  <text className="fa__tick" x={axes.ticks[i].x - 12} y={axes.ticks[i].y + 4} textAnchor="end">
-                    {String(i + 1).padStart(2, "0")} {c.kind.toUpperCase()}
-                  </text>
+                  <path className="fa__axis" d={`M${axes.ticks[i].x - 7} ${axes.ticks[i].y} L${axes.ticks[i].x + 7} ${axes.ticks[i].y}`} />
                 </g>
               ))}
             </g>
@@ -377,7 +391,7 @@ export function FoundationAct() {
                       </foreignObject>
                     ) : null}
                     {c.kind === "worlds" ? <WorldsPlaceholder /> : null}
-                    {c.kind === "mathematics" ? <ProofTree /> : null}
+                    {c.kind === "mathematics" ? <MathBoard /> : null}
                   </g>
                   <path className="fa__inset" d={inner} />
                   <path className="fa__edge" d={chamfer} />
@@ -424,10 +438,13 @@ export function FoundationAct() {
 type Tone = { ink: string; gold: string; green: string; red: string };
 
 /**
- * The machine mind, painted: its seams as lines, its particles as the
- * texture, its dies, traces and bus in gold. `split` (0 to 1) gives the two
- * halves their two natures: the left a crisp machine, the right loose
- * particles. Returns whether it has assembled (the cords wait for it).
+ * The machine mind, painted as the homepage's hologram is: particles on the
+ * seams and in the faces, the low poly's seams as lines, the board in gold
+ * (traces with a pulse, a via at each end, ringed cores), ticks off the skin,
+ * two orbits round it shaded by depth with a node drifting on each. `split`
+ * (0 to 1) gives the two sides of the screen their two natures: the left a
+ * crisp machine, the right loose particles. It never turns. Returns whether
+ * it has assembled (the cords wait for it).
  */
 function paintMind(
   ctx: CanvasRenderingContext2D,
@@ -439,142 +456,172 @@ function paintMind(
   const v = B.view;
   const { k, dpr, tone, split } = o;
   const t = o.since / 0.9;
-  const pts = m.verts.map((p) => projB(p, B, cam.o));
-  const under = smooth((t - 0.45) / 0.5);
-  if (under > 0) {
+  const P = (p: V3) => projB(p, B, cam.o);
+  const pts = m.verts.map(P);
+  // Which side of the screen: the tool's (left) or the collaborator's.
+  const crispAt = (x: number) => (x < cam.o.x ? split : 0);
+  const looseAt = (x: number) => (x >= cam.o.x ? split : 0);
+  const wire = smooth((t - 0.45) / 0.5);
+  const chip = smooth((t - 0.75) / 0.4);
+  const depthOf = (p: V3) => dot3(p, v);
+
+  const line = (a: P2, b: P2) => {
+    ctx.beginPath();
+    ctx.moveTo(a.x * k, a.y * k);
+    ctx.lineTo(b.x * k, b.y * k);
+    ctx.stroke();
+  };
+  const poly = (q: P2[]) => {
+    ctx.beginPath();
+    q.forEach((p, i) => (i ? ctx.lineTo(p.x * k, p.y * k) : ctx.moveTo(p.x * k, p.y * k)));
+    ctx.stroke();
+  };
+  // The orbits, one half at a time: the far half under the mind, the near
+  // half over it, so the rings weave through it as the homepage's do.
+  const orbits = (near: boolean) => {
+    if (chip <= 0) return;
+    m.orbits.forEach((ob, oi) => {
+      ctx.strokeStyle = tone.gold;
+      ctx.lineWidth = (ob.dashed ? 1 : 1.4) * dpr;
+      ctx.setLineDash(ob.dashed ? [3 * dpr, 6 * dpr] : []);
+      const N = 120;
+      for (let j = 0; j < N; j++) {
+        const p0 = orbitAt(ob, (j / N) * Math.PI * 2);
+        const p1 = orbitAt(ob, ((j + 1) / N) * Math.PI * 2);
+        const d = depthOf(p0);
+        if ((d > 0) !== near) continue;
+        ctx.globalAlpha = (near ? 0.75 : 0.18) * chip;
+        line(P(p0), P(p1));
+      }
+      ctx.setLineDash([]);
+      // A node drifting on the ring: the one thing that moves on its own.
+      const at = orbitAt(ob, o.now / (9000 + oi * 4000) + oi * 2.1);
+      if ((depthOf(at) > 0) === near) {
+        const q = P(at);
+        ctx.globalAlpha = (near ? 1 : 0.35) * chip;
+        ctx.fillStyle = tone.gold;
+        ctx.beginPath();
+        ctx.arc(q.x * k, q.y * k, 3.2 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  };
+
+  // The stem and the port first, faint where the brain stands over them.
+  if (wire > 0) {
     ctx.lineWidth = 1 * dpr;
-    ctx.strokeStyle = tone.ink;
     for (const ed of m.edges) {
       if (ed.kind === EDGE.shell) continue;
-      const f = dot3(ed.n, v);
-      // The heatsink is the back's: seen from the front it would read as a
-      // box over the face, so it fades as the mind turns.
-      const fin = 0.38 * (1 - 0.92 * Math.abs(v.x));
-      ctx.globalAlpha = (ed.kind === EDGE.fin ? fin : f > 0 ? 0.6 : 0.2) * under;
+      ctx.globalAlpha = (dot3(ed.n, v) > 0 ? 0.55 : 0.18) * wire;
       ctx.strokeStyle = ed.kind === EDGE.port ? tone.gold : tone.ink;
-      const a = pts[ed.a];
-      const b = pts[ed.b];
-      ctx.beginPath();
-      ctx.moveTo(a.x * k, a.y * k);
-      ctx.lineTo(b.x * k, b.y * k);
-      ctx.stroke();
+      line(pts[ed.a], pts[ed.b]);
     }
   }
-  // The particles: they fly in, then hold their seats; the right half
-  // breathes once the mind has turned.
+  orbits(false);
+
+  // The particles: they fly in, then hold their seats; the collaborator's
+  // side breathes.
   for (const d of m.dots) {
     const e = smooth((t - d.delay) / 0.6);
     if (e <= 0) continue;
     const f = dot3(d.n, v);
-    const lit = f > 0;
-    const loose = d.side < 0 ? split : 0;
-    const crisp = d.side > 0 ? split : 0;
-    let alpha = lit ? 0.3 + 0.55 * f : 0.07;
-    alpha *= d.seam ? 1 : 0.7;
-    alpha *= 1 - 0.55 * crisp;
-    alpha *= 1 + 0.5 * loose;
-    const q = projB(d.p, B, cam.o);
-    const wob = loose * 3 * Math.sin(o.now / 700 + d.delay * 40);
-    const x = q.x + d.dx * (1 - e) + wob;
+    const q = P(d.p);
+    const loose = looseAt(q.x);
+    const crisp = crispAt(q.x);
+    let alpha = f > 0 ? 0.25 + 0.6 * f : 0.06;
+    alpha *= d.seam ? 1 : 0.55;
+    alpha *= (1 - 0.6 * crisp) * (1 + 0.6 * loose);
+    const x = q.x + d.dx * (1 - e) + loose * 3 * Math.sin(o.now / 700 + d.delay * 40);
     const y = q.y + d.dy * (1 - e) + loose * 3 * Math.cos(o.now / 900 + d.delay * 30);
     ctx.globalAlpha = Math.min(1, alpha) * e;
     ctx.fillStyle = loose > 0.5 && d.seam ? tone.green : tone.ink;
-    const s = (d.seam ? 1.6 : 1.3) * (1 + 0.6 * loose) * dpr;
-    ctx.fillRect(x * k - s / 2, y * k - s / 2, s, s);
+    const sz = (d.seam ? 1.5 : 1.2) * (1 + 0.6 * loose) * dpr;
+    ctx.fillRect(x * k - sz / 2, y * k - sz / 2, sz, sz);
   }
-  const wire = smooth((t - 0.45) / 0.5);
   if (wire <= 0) return false;
-  // The seams: front ones bright, the far side faint, the left half gold
-  // as it turns into the tool's side.
-  ctx.lineWidth = 1 * dpr;
+
+  // The low poly's seams: the far side a whisper, the near side drawn.
+  ctx.lineWidth = 0.9 * dpr;
   for (const pass of [0, 1] as const) {
     for (const ed of m.edges) {
       if (ed.kind !== EDGE.shell) continue;
       const f = dot3(ed.n, v);
-      const front = f > 0;
-      if ((pass === 1) !== front) continue;
-      const gold = ed.side > 0 ? split : 0;
-      const loose = ed.side < 0 ? split : 0;
-      let alpha = front ? 0.3 + 0.45 * f : 0.08;
-      alpha *= 1 - 0.65 * loose;
-      ctx.globalAlpha = Math.min(1, alpha * (1 + 0.6 * gold)) * wire;
-      ctx.strokeStyle = gold > 0.5 ? tone.gold : tone.ink;
+      if ((pass === 1) !== f > 0) continue;
       const a = pts[ed.a];
       const b = pts[ed.b];
-      ctx.beginPath();
-      ctx.moveTo(a.x * k, a.y * k);
-      ctx.lineTo(b.x * k, b.y * k);
-      ctx.stroke();
+      const mx = (a.x + b.x) / 2;
+      const gold = crispAt(mx);
+      const loose = looseAt(mx);
+      let alpha = f > 0 ? 0.22 + 0.4 * f : 0.05;
+      alpha *= (1 - 0.7 * loose) * (1 + 0.7 * gold);
+      ctx.globalAlpha = Math.min(1, alpha) * wire;
+      ctx.strokeStyle = gold > 0.5 ? tone.gold : tone.ink;
+      line(a, b);
     }
   }
-  // Vertices: a node at every front corner of the shells.
-  ctx.fillStyle = tone.ink;
-  for (const ed of m.edges) {
-    if (ed.kind !== EDGE.shell || dot3(ed.n, v) <= 0.2) continue;
-    const a = pts[ed.a];
-    ctx.globalAlpha = 0.75 * wire * (1 - 0.6 * (ed.side < 0 ? split : 0));
-    ctx.fillRect(a.x * k - 1.5 * dpr, a.y * k - 1.5 * dpr, 3 * dpr, 3 * dpr);
-  }
-  // The circuits: dies with their pins, traces with a pulse, the bus.
-  const chip = smooth((t - 0.75) / 0.4);
+
   if (chip > 0) {
+    // The board: traces in gold, a pulse running each.
     ctx.strokeStyle = tone.gold;
     ctx.fillStyle = tone.gold;
-    for (const die of m.dies) {
-      const f = dot3(die.n, v);
-      const shown = f > 0 ? 1 : 0.18;
-      const fade = die.side < 0 ? 1 - 0.6 * split : 1;
-      const c = die.corners.map((p) => projB(p, B, cam.o));
-      ctx.globalAlpha = 0.28 * shown * chip * fade;
-      ctx.beginPath();
-      c.forEach((p, i) => (i ? ctx.lineTo(p.x * k, p.y * k) : ctx.moveTo(p.x * k, p.y * k)));
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 0.95 * shown * chip * fade;
-      ctx.lineWidth = 1.3 * dpr;
-      ctx.stroke();
-      ctx.lineWidth = 1 * dpr;
-      ctx.beginPath();
-      for (const [p, q] of die.pins) {
-        const a = projB(p, B, cam.o);
-        const b = projB(q, B, cam.o);
-        ctx.moveTo(a.x * k, a.y * k);
-        ctx.lineTo(b.x * k, b.y * k);
-      }
-      ctx.globalAlpha = 0.7 * shown * chip * fade;
-      ctx.stroke();
-    }
     m.traces.forEach((tr, ti) => {
-      const p = tr.pts.map((q) => projB(q, B, cam.o));
-      const f = dot3(m.dies[Math.min(m.dies.length - 1, ti)].n, v);
-      const fade = tr.side < 0 ? 1 - 0.6 * split : 1;
-      ctx.globalAlpha = (f > 0 ? 0.85 : 0.15) * chip * fade;
-      ctx.lineWidth = 1.4 * dpr;
-      ctx.beginPath();
-      p.forEach((q, i) => (i ? ctx.lineTo(q.x * k, q.y * k) : ctx.moveTo(q.x * k, q.y * k)));
-      ctx.stroke();
-      const run = (o.now / 1400 + ti * 0.23) % 1;
-      const q = p[Math.min(p.length - 1, Math.floor(run * p.length))];
+      const mid = tr[Math.floor(tr.length / 2)];
+      const lit = dot3(sub3(mid, { x: -0.2, y: 0, z: -0.1 }), v) > 0;
+      const q = tr.map(P);
+      const fade = 1 - 0.6 * looseAt(q[0].x);
+      ctx.globalAlpha = (lit ? 0.95 : 0.14) * chip * fade;
+      ctx.lineWidth = 1.5 * dpr;
+      poly(q);
+      if (!lit) return;
+      const run = (o.now / 1600 + ti * 0.29) % 1;
+      const at = q[Math.min(q.length - 1, Math.floor(run * q.length))];
       ctx.globalAlpha = chip * fade;
-      ctx.fillRect(q.x * k - 2 * dpr, q.y * k - 2 * dpr, 4 * dpr, 4 * dpr);
+      ctx.fillRect(at.x * k - 2 * dpr, at.y * k - 2 * dpr, 4 * dpr, 4 * dpr);
     });
-    ctx.lineWidth = 1.2 * dpr;
-    for (const w of m.bus) {
-      const p = w.map((q) => projB(q, B, cam.o));
-      ctx.globalAlpha = 0.8 * chip;
-      ctx.beginPath();
-      p.forEach((q, i) => (i ? ctx.lineTo(q.x * k, q.y * k) : ctx.moveTo(q.x * k, q.y * k)));
-      ctx.stroke();
-      for (const q of [p[0], p[p.length - 1]]) ctx.fillRect(q.x * k - 2 * dpr, q.y * k - 2 * dpr, 4 * dpr, 4 * dpr);
+    // Vias: a pad ring at each run's ends, on the skin's own plane.
+    ctx.lineWidth = 1.1 * dpr;
+    for (const via of m.vias) {
+      if (dot3(via.n, v) <= 0) continue;
+      const q = ringAround(via.p, via.n, 0.17, 12).map(P);
+      ctx.globalAlpha = 0.95 * chip * (1 - 0.6 * looseAt(q[0].x));
+      poly(q);
     }
-    for (const s of m.sockets) {
-      const q = projB(s, B, cam.o);
+    // Cores: rings within rings, as the reference's nodes.
+    for (const c of m.cores) {
+      if (dot3(c.n, v) <= 0.05) continue;
+      for (const f of [1, 0.66, 0.33]) {
+        const q = ringAround(c.p, c.n, c.r * f, 32).map(P);
+        ctx.globalAlpha = (f === 1 ? 0.95 : 0.7) * chip * (1 - 0.5 * looseAt(q[0].x));
+        ctx.lineWidth = (f === 1 ? 1.4 : 1) * dpr;
+        poly(q);
+      }
+      const q = P(c.p);
+      ctx.globalAlpha = chip;
+      ctx.fillRect(q.x * k - 1.5 * dpr, q.y * k - 1.5 * dpr, 3 * dpr, 3 * dpr);
+    }
+    // Ticks: short spikes off the near skin.
+    ctx.strokeStyle = tone.red;
+    ctx.lineWidth = 1.2 * dpr;
+    for (const tk of m.ticks) {
+      if (dot3(tk.n, v) <= 0.1) continue;
+      const a = P({ x: tk.p.x + tk.n.x * 0.12, y: tk.p.y + tk.n.y * 0.12, z: tk.p.z + tk.n.z * 0.12 });
+      const b = P({ x: tk.p.x + tk.n.x * 0.42, y: tk.p.y + tk.n.y * 0.42, z: tk.p.z + tk.n.z * 0.42 });
+      ctx.globalAlpha = 0.7 * chip;
+      line(a, b);
+    }
+    // The port's sockets.
+    ctx.fillStyle = tone.gold;
+    for (const sk of m.sockets) {
+      const q = P(sk);
       ctx.globalAlpha = chip;
       ctx.fillRect(q.x * k - 3 * dpr, q.y * k - 3 * dpr, 6 * dpr, 6 * dpr);
     }
   }
+  orbits(true);
   return chip >= 1;
 }
+
+const sub3 = (a: V3, b: V3): V3 => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
 
 const toneOf = (tone: Tone, name: string) =>
   name === "gold" ? tone.gold : name === "green" ? tone.green : name === "red" ? tone.red : tone.ink;
@@ -736,42 +783,81 @@ function Pole({ at, name, line, glyph }: { at: P2; name: string; line: string; g
   );
 }
 
-/** Game worlds built from assets: a placeholder until the owner's video. */
+/** Game worlds built from assets: the slot for the owner's Halo mods video.
+    Until it comes, a low-poly terrain stands in, lettered as the slot. */
 function WorldsPlaceholder() {
-  const lines = [];
-  for (let x = INSET; x <= W - INSET; x += 28) lines.push(`M${x} ${INSET} L${x} ${H - INSET}`);
-  for (let y = INSET; y <= H - INSET; y += 28) lines.push(`M${INSET} ${y} L${W - INSET} ${y}`);
+  const cols = 15;
+  const rows = 8;
+  const h = (i: number, j: number) => 26 * Math.sin(j * 0.55 + i * 0.3) * Math.cos(i * 0.7 - j * 0.2) + 12 * Math.sin(j * 1.3 + i * 1.1);
+  const at = (i: number, j: number): [number, number] => [70 + j * 30 + i * 12, 118 + i * 20 - h(i, j)];
+  const d: string[] = [];
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const [x, y] = at(i, j);
+      if (j + 1 < cols) d.push(`M${x.toFixed(1)} ${y.toFixed(1)} L${at(i, j + 1).map((v) => v.toFixed(1)).join(" ")}`);
+      if (i + 1 < rows) d.push(`M${x.toFixed(1)} ${y.toFixed(1)} L${at(i + 1, j).map((v) => v.toFixed(1)).join(" ")}`);
+      if (i + 1 < rows && j + 1 < cols) d.push(`M${x.toFixed(1)} ${y.toFixed(1)} L${at(i + 1, j + 1).map((v) => v.toFixed(1)).join(" ")}`);
+    }
+  }
   return (
     <g className="fa__worlds">
-      <path d={lines.join(" ")} />
-      <text x={W / 2} y={H / 2 + 5} textAnchor="middle">
-        VIDEO TO COME
+      <path d={d.join(" ")} />
+      <text x={W / 2} y={H - 34} textAnchor="middle">
+        HALO MODS · VIDEO TO COME
       </text>
     </g>
   );
 }
 
-/** A proof, drawn: premises, steps branching and joining, one gold result. */
-function ProofTree() {
-  const nodes: [number, number][] = [
-    [100, 70], [220, 70], [340, 70], [460, 70],
-    [160, 145], [300, 145], [420, 145],
-    [230, 215], [380, 215],
-    [300, 280],
-  ];
-  const links: [number, number][] = [
-    [0, 4], [1, 4], [1, 5], [2, 5], [3, 6], [2, 6],
-    [4, 7], [5, 7], [5, 8], [6, 8],
-    [7, 9], [8, 9],
-  ];
+/** Flow past a cylinder, its true stream function psi = y (1 - R^2 / r^2):
+    each streamline solved for y along x, by bisection. */
+const FLOW = (() => {
+  const R = 22;
+  const cx = 458;
+  const cy = 176;
+  const lines: string[] = [];
+  for (const c of [-72, -48, -30, -15, -5, 5, 15, 30, 48, 72]) {
+    const pts: string[] = [];
+    for (let x = -76; x <= 76; x += 4) {
+      const lo0 = Math.sqrt(Math.max(0, R * R - x * x)) + 1e-6;
+      let lo = lo0;
+      let hi = Math.abs(c) + R + 60;
+      for (let k = 0; k < 30; k++) {
+        const m = (lo + hi) / 2;
+        const f = m * (1 - (R * R) / (x * x + m * m)) - Math.abs(c);
+        if (f > 0) hi = m;
+        else lo = m;
+      }
+      const y = Math.sign(c) * lo;
+      pts.push(`${pts.length ? "L" : "M"}${(cx + x).toFixed(1)} ${(cy - y).toFixed(1)}`);
+    }
+    lines.push(pts.join(" "));
+  }
+  return { R, cx, cy, lines };
+})();
+
+/** Mathematics, as it is written: the Navier–Stokes equations and the flow
+    they govern, an Erdős equation, the Olympiad and FrontierMath. */
+function MathBoard() {
   return (
-    <g className="fa__proof">
-      {links.map(([a, b]) => (
-        <path key={`${a}-${b}`} d={`M${nodes[a][0]} ${nodes[a][1]} L${nodes[b][0]} ${nodes[b][1]}`} />
-      ))}
-      {nodes.map(([x, y], i) => (
-        <rect key={i} x={x - 24} y={y - 11} width="48" height="22" data-qed={i === nodes.length - 1 ? "" : undefined} />
-      ))}
+    <g className="fa__math">
+      <text className="fa__math-key" x="34" y="78">NAVIER–STOKES</text>
+      <text className="fa__math-eq" x="34" y="112">∂ₜu + (u · ∇)u = −∇p + νΔu</text>
+      <text className="fa__math-eq" x="34" y="146">∇ · u = 0</text>
+      <text className="fa__math-note" x="34" y="170">A MILLENNIUM PRIZE PROBLEM</text>
+      <path className="fa__math-rule" d="M34 190 L300 190" />
+      <text className="fa__math-key" x="34" y="216">ERDŐS</text>
+      <text className="fa__math-eq" x="34" y="250">4/n = 1/x + 1/y + 1/z</text>
+      <text className="fa__math-chip" x="34" y="286">IMO 2025 · GOLD</text>
+      <text className="fa__math-chip" x="200" y="286">FRONTIERMATH</text>
+      <g className="fa__flow">
+        {FLOW.lines.map((d, i) => (
+          <path key={i} d={d} data-lit={i === 6 ? "" : undefined} />
+        ))}
+        <path d={`M${FLOW.cx - 76} ${FLOW.cy} L${FLOW.cx - FLOW.R} ${FLOW.cy} M${FLOW.cx + FLOW.R} ${FLOW.cy} L${FLOW.cx + 76} ${FLOW.cy}`} />
+        <circle cx={FLOW.cx} cy={FLOW.cy} r={FLOW.R} />
+        <text className="fa__math-note" x={FLOW.cx} y={FLOW.cy + 118} textAnchor="middle">FLOW PAST A CYLINDER</text>
+      </g>
     </g>
   );
 }

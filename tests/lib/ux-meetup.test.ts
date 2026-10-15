@@ -278,8 +278,10 @@ describe("the UX meetup talk (ADR-156)", () => {
     const m = mindModel();
     expect(m.parts.length, "the anatomy's parts").toBeGreaterThanOrEqual(40);
     expect(new Set(m.parts).size, "every part named once").toBe(m.parts.length);
-    expect(m.dies.length).toBeGreaterThanOrEqual(10);
-    expect(m.traces.length).toBeGreaterThanOrEqual(6);
+    expect(m.traces.length, "a board on the skin").toBeGreaterThanOrEqual(20);
+    expect(m.vias.length).toBe(m.traces.length * 2);
+    expect(m.cores.length).toBeGreaterThanOrEqual(4);
+    expect(m.orbits.length).toBe(2);
     expect(m.sockets.length, "a socket for every plate").toBe(6);
     expect(m.dots.length).toBeGreaterThan(2000);
     // No line ends in mid-air: every edge joins two of the model's vertices.
@@ -334,8 +336,9 @@ describe("the UX meetup talk (ADR-156)", () => {
       expect([spec.tool.label, spec.collaborator.label]).toEqual(["Tool", "Collaborator"]);
     }
     expect(mid?.kind === "figure" && mid.head).toBeFalsy();
-    expect(mindModel().flanks.tool.every((p) => p.y > 0)).toBe(true);
-    expect(mindModel().flanks.collab.every((p) => p.y < 0)).toBe(true);
+    // The tool takes the back of the mind, the collaborator its front.
+    expect(mindModel().flanks.tool.every((p) => p.x < 0)).toBe(true);
+    expect(mindModel().flanks.collab.every((p) => p.x > 0)).toBe(true);
   });
 
   /** The house copy law, over what this page letters of its own. */

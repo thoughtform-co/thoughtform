@@ -353,9 +353,45 @@ script keeps the point in the speaker's words. Every new colour has its light va
 ink, a darker green and red on parchment), checked in both themes. Wheel-walked down and back up,
 118 steps, 0 mismatches.
 
+## U7 · The capability axis grows, and the model is a brain (2026-10-15, owner)
+
+**The y-axis is the capability** (owner: "I don't think we need the labels ... It's actually the
+y-axis that needs to grow because that represents the model's capabilities"). The kind names left
+the ticks; the floor's front edge is a plain axis. The y-axis is gold, lettered MODEL CAPABILITIES
+down its length, and grows with the stack: its tip eases to a margin over the highest plate in it
+(`capabilityTop`), its arrow riding up, its name fading in once the axis can hold it.
+
+**The model, modelled** (owner: "the brain looks like two zeppelins ... capture what a brain looks
+like. You can model it, make it more low-poly, and then make the outside look like computer
+circuits"; the references: a geodesic hologram sphere with ringed nodes, ticks and an orbit, and
+a low-poly sphere rooted to a grid). `mind.ts` now models ONE solid, a signed-distance composite
+with the brain's true outline: a cerebrum fuller at the back, the longitudinal fissure cut along
+its crown, two temporal lobes, the cerebellum. A level-3 geodesic sphere (642 corners) is cast
+onto it from inside, so the low poly follows the outline. The outside is a board: 22 runs routed
+along the facets, straight with one turn, a via at each end; seven cores ringed three deep, as the
+reference's nodes; red ticks off the skin. As the homepage's hologram is: particles sampled along
+the seams first and then in the faces, and two orbits round it, near level, the far half under
+the mind and the near half over it, a node drifting on each.
+
+**It never turns** (owner: "I don't want it to rotate. It needs to be an elegant artifact"). One
+pose per beat: over the stack it is seen from its left and front at the isometric's pitch; in
+the middle beat from the same side, near level, larger. It appears there and assembles; the turn
+between the two poses is never drawn, the voice stands between them. In the middle beat the left
+of the screen, the back of the brain, is the tool's: crisp and gold; the right, its front, is the
+collaborator's: loose green particles. The label THE MODEL stands clear above the orbits.
+
+**The mathematics card is mathematics** (owner: "It looks like a flowchart. Where are the math
+formulas?"). The Navier–Stokes equations as they are written, with the flow they govern drawn
+beside them: streamlines past a cylinder from the exact stream function, one in gold. Under them
+an Erdős equation, and the Olympiad and FrontierMath named. The worlds card is the slot for the
+owner's Halo mods video, lettered so, a low-poly terrain until the file arrives.
+
+Wheel-walked down and back up, 118 steps, 0 mismatches; both themes checked.
+
 ## Left open
 
-- The worlds card waits on the owner's video of the Halo assets.
+- The worlds card waits on the owner's video of the Halo mods: a file under `public/` and a
+  `media` entry on the card is the whole change.
 - The corridor's thesis after the talk still reads "AI sits somewhere between tool and
   collaborator", now an echo of section 05; the owner decides whether it stays.
 - The owner named "a bit of a regression" in passing without saying where; not yet found.

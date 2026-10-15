@@ -286,16 +286,13 @@ html[data-theme="light"] .fa__dots {
   stroke-width: 1;
   stroke-dasharray: 2 4;
 }
-.fa__tick,
+.fa__axis--y {
+  stroke: var(--gold-ink, #caa554);
+  stroke-width: 1.5;
+}
 .fa__axis-name {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   letter-spacing: 0.16em;
-}
-.fa__tick {
-  font-size: 13px;
-  fill: var(--arc-ink-70);
-}
-.fa__axis-name {
   font-size: 17px;
   fill: var(--gold-ink, #caa554);
 }
@@ -315,16 +312,42 @@ html[data-theme="light"] .fa__dots {
   letter-spacing: 0.2em;
   fill: var(--arc-ink-50);
 }
-.fa__proof path {
+/* The mathematics card: the equations as they are written. */
+.fa__math-eq {
+  font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  font-style: italic;
+  font-size: 22px;
+  fill: var(--dawn, #ebe3d6);
+}
+.fa__math-key,
+.fa__math-note,
+.fa__math-chip {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+}
+.fa__math-key,
+.fa__math-chip {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__math-note {
+  fill: var(--arc-ink-50);
+}
+.fa__math-rule {
+  stroke: var(--arc-rule);
+}
+.fa__flow path,
+.fa__flow circle {
   fill: none;
-  stroke: var(--arc-seam);
-}
-.fa__proof rect {
-  fill: var(--void, #0a0908);
   stroke: var(--arc-ink-50);
+  stroke-width: 1;
 }
-.fa__proof rect[data-qed] {
-  stroke: var(--gold, #caa554);
+.fa__flow path[data-lit] {
+  stroke: var(--gold-ink, #caa554);
+  stroke-width: 1.6;
+}
+.fa__flow circle {
+  stroke: var(--dawn, #ebe3d6);
 }
 /* The middle beat's poles and the spine between them. */
 .fa__spine {

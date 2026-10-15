@@ -172,7 +172,7 @@ export const UX_MEETUP_ARC: ArcDef = {
             kind: "worlds",
             year: "2026",
             title: "New worlds",
-            caption: "Players build whole games and worlds out of existing assets.",
+            caption: "Players mod Halo into new games and worlds of their own.",
           },
           {
             id: "mathematics",
