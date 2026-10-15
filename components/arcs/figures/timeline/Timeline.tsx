@@ -83,11 +83,11 @@ export function Timeline({ spec }: { spec: TimelineSpec }) {
             ))}
             {boxes.map(({ id, lane, paths }) =>
               ghost(lane) ? (
-                <g key={id} className="arc-floor__housing" data-fig-ghost="">
+                <g key={id} className="arc-floor__housing" data-fig-ghost="" data-fig-prism={id}>
                   <path className="arc-floor__hidden" d={paths.visible} />
                 </g>
               ) : (
-                <g key={id} className="arc-floor__housing" data-fig-lane={lane}>
+                <g key={id} className="arc-floor__housing" data-fig-lane={lane} data-fig-prism={id}>
                   <path className="arc-floor__face" data-face="left" d={paths.left} />
                   <path className="arc-floor__face" data-face="right" d={paths.right} />
                   <path className="arc-floor__face" data-face="top" d={paths.top} />

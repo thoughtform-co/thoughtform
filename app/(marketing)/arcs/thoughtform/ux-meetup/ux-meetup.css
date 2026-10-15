@@ -114,3 +114,22 @@
     margin-top: calc(-100svh - 0.38 * var(--uxm-tail));
   }
 }
+
+/* ── The act's canvas (U3) ───────────────────────────────────────────────
+   The proof's particle artifact: one fixed canvas over the screen, inside
+   the talk, drawing only while the act's beats are parked or handing off
+   (`actClock.ts` returns nothing outside them). Over the drawings, never
+   under them: the dots sit on the blocks and run along the wires. */
+.uxm-act {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
+  .uxm-act {
+    display: none;
+  }
+}

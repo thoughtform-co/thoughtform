@@ -51,6 +51,7 @@ export function Absorption({ spec }: { spec: AbsorptionSpec }) {
                 key={id}
                 className="arc-floor__housing"
                 data-fig-part={kind}
+                data-fig-part-id={id}
                 data-stages-lit={kind === "model" ? "" : undefined}
               >
                 <path className="arc-floor__face" data-face="left" d={paths.left} />
