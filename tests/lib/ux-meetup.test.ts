@@ -11,6 +11,7 @@ import {
   WIRE_COUNT,
   absorptionFrame,
 } from "@/components/arcs/figures/absorption/layout";
+import { HEAD_PARTS, headDrawing, headField } from "@/components/arcs/figures/crossroads/head";
 import { monthsOf } from "@/components/arcs/figures/timeline/model";
 import {
   timelineFrame,
@@ -218,6 +219,7 @@ describe("the UX meetup talk (ADR-156)", () => {
       "absorbed",
       "your-tool",
       "an-intelligence",
+      "crossroads",
     ]);
     for (const s of sections) {
       expect(["cards", "list-groups"], `${s.id}: a box grid`).not.toContain(s.kind);
@@ -235,7 +237,11 @@ describe("the UX meetup talk (ADR-156)", () => {
     const ACT = new Set(["proof-content", "proof-products", "absorbed"]);
     const units: string[] = [];
     for (const s of sections) {
-      const unit = ACT.has(s.id) ? "act" : s.kind === "interstitial" ? "line" : "picture";
+      const unit = ACT.has(s.id)
+        ? "act"
+        : s.kind === "interstitial" || (s.kind === "figure" && !s.head)
+          ? "line"
+          : "picture";
       if (unit === "act" && units.at(-1) === "act") continue;
       units.push(unit);
     }
@@ -291,6 +297,29 @@ describe("the UX meetup talk (ADR-156)", () => {
     const f = absorptionFrame();
     expect(f.w).toBeGreaterThan(0);
     expect(f.h).toBeGreaterThan(0);
+  });
+
+  /**
+   * ⚠ THE HEAD IS NOBODY'S (U3, owner: "an anonymous head"): built from
+   * solids, raymarched, the same every time; split at its nose line into a
+   * human half of particles and a machine half of lines, both present.
+   */
+  it("draws the crossroads head from solids, the same every time, in two halves", () => {
+    expect(HEAD_PARTS.length).toBeGreaterThanOrEqual(12);
+    const f = headField();
+    const hits = Array.from(f.depth).filter(Number.isFinite).length;
+    expect(hits / f.depth.length, "the head fills a fair share of its window").toBeGreaterThan(0.25);
+    expect(f.seam).toBeGreaterThan(f.cols * 0.3);
+    expect(f.seam).toBeLessThan(f.cols * 0.7);
+    const a = headDrawing();
+    const b = headDrawing();
+    expect(a.lines).toEqual(b.lines);
+    expect(a.dots.length).toBe(b.dots.length);
+    expect(a.lines.length, "the machine half").toBeGreaterThan(40);
+    expect(a.dots.length, "the human half").toBeGreaterThan(800);
+    for (const d of a.dots) expect(d.x).toBeLessThanOrEqual(a.seamX + 4);
+    const cross = UX_MEETUP_ARC.sections.find((s) => s.id === "crossroads");
+    expect(cross?.kind === "figure" && cross.head, "it stands without a section head").toBeFalsy();
   });
 
   /** The intelligence beat stands on its source: Evans's keynote, timestamped. */

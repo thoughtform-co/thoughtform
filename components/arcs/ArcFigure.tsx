@@ -5,6 +5,7 @@ import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
 import { Absorption } from "./figures/absorption/Absorption";
+import { Crossroads } from "./figures/crossroads/Crossroads";
 import { Logic } from "./figures/logic/Logic";
 import { Timeline } from "./figures/timeline/Timeline";
 
@@ -29,21 +30,34 @@ export function ArcFigure({
       id={section.id}
       kind="figure"
       className="arc-section arc-sec arc-sec--figure"
-      ariaLabel={section.ariaLabel ?? arcTitleText(section.head.title)}
+      ariaLabel={section.ariaLabel ?? (section.head ? arcTitleText(section.head.title) : spec.alt)}
       motion={motion}
     >
       <div className="arc-band">
-        <ArcSectionHead
-          head={section.head}
-          kind="figure"
-          index={index}
-          sectionId={section.id}
-          motion={motion}
-        />
+        {section.head ? (
+          <ArcSectionHead
+            head={section.head}
+            kind="figure"
+            index={index}
+            sectionId={section.id}
+            motion={motion}
+          />
+        ) : (
+          <p className="arc-inter__marks arc-fig__marks">
+            <i className="arc-inter__x arc-inter__x--origin" aria-hidden="true" />
+            <span className="arc-inter__mrule" aria-hidden="true" />
+            {section.eyebrow ? (
+              <span className="arc-desig arc-inter__eyebrow">{section.eyebrow}</span>
+            ) : null}
+            <span className="arc-inter__mrule" aria-hidden="true" />
+            <i className="arc-inter__x arc-inter__x--close" aria-hidden="true" />
+          </p>
+        )}
         <div className="arc-fig arc-reveal" data-fig-id={spec.id} {...rung(motion, 0.14)}>
           {spec.id === "timeline" ? <Timeline spec={spec} /> : null}
           {spec.id === "absorption" ? <Absorption spec={spec} /> : null}
           {spec.id === "logic" ? <Logic spec={spec} /> : null}
+          {spec.id === "crossroads" ? <Crossroads spec={spec} /> : null}
         </div>
       </div>
     </ArcBeat>

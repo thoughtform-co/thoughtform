@@ -244,5 +244,27 @@ export const UX_MEETUP_ARC: ArcDef = {
         note: "After Benedict Evans, AI Is Eating the World, hx Live NYC 2026",
       },
     },
+    {
+      /* The conclusion (U3): one head, two ways. No section head: it stands
+         under the registration row, centred, so it never reads as a second
+         head-and-picture after the intelligence (ADR-155). */
+      id: "crossroads",
+      kind: "figure",
+      /* The talk's last beat is its exit, never a chapter (arc-marks). */
+      menuLabel: "The crossroads",
+      eyebrow: "07 · The crossroads",
+      figure: {
+        id: "crossroads",
+        alt: "An anonymous head seen from three-quarters, split down the nose line. The left half is a cloud of particles; the right half is drawn in gold contour lines, like a machine. On the left: live action matters more than ever. On the right: embrace the intelligence.",
+        human: {
+          label: "One way",
+          line: "Live action matters more than ever: real experiences, rooms with people in them.",
+        },
+        machine: {
+          label: "The other way",
+          line: "Embrace the intelligence: interactions, interfaces and business models for a new digital civilisation.",
+        },
+      },
+    },
   ],
 };

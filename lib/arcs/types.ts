@@ -1536,7 +1536,11 @@ export type ArcSection = ArcSectionBase &
          * SVG letters nothing, every word is a DOM span on a leader.
          */
         kind: "figure";
-        head: ArcHead;
+        /** Absent, the figure stands alone under the statements' registration
+         *  row (`eyebrow`), centred: the crossroads, a different arrangement
+         *  from a head and its picture (ADR-155's law). */
+        head?: ArcHead;
+        eyebrow?: string;
         figure: ArcFigureSpec;
       }
     | {
@@ -2938,6 +2942,13 @@ export type ArcFigureSpec = {
       logic: { label: string; line: string };
       statistics: { label: string; line: string };
       source: ArcSource;
+    }
+  | {
+      id: "crossroads";
+      /** The left way: the human half of the head. */
+      human: { label: string; line: string };
+      /** The right way: the machine half. */
+      machine: { label: string; line: string };
     }
 );
 

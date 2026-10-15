@@ -127,3 +127,64 @@
   color: var(--arc-ink-40);
   text-align: center;
 }
+
+/* ── The crossroads (U3) ─────────────────────────────────────────────────
+   A centred beat: the registration row, then the head between its two
+   ways. The human half is particles in dawn, the machine half gold
+   contours, the one gold object. */
+.arc-fig__marks {
+  justify-content: center;
+}
+.arc-fig__cross {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2xl);
+}
+.arc-fig__head {
+  margin: 0;
+  height: calc(100svh - 300px);
+  aspect-ratio: 600 / 760;
+}
+.arc-fig__head svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.arc-fig__particle {
+  fill: rgba(var(--dawn-rgb), 0.78);
+}
+.arc-fig__contour {
+  fill: none;
+  stroke: var(--arc-iso-gold, var(--gold-line));
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-fig__seam {
+  fill: none;
+  stroke: var(--arc-ink-40);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.arc-fig__way {
+  display: grid;
+  gap: var(--space-sm);
+  max-width: 30ch;
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-lg);
+  line-height: 1.35;
+  color: var(--arc-ink-90);
+}
+.arc-fig__way[data-side="human"] {
+  justify-self: end;
+  text-align: right;
+}
+.arc-fig__way[data-side="machine"] {
+  justify-self: start;
+}
+.arc-fig__way[data-side="machine"] .arc-fig__block-name {
+  color: var(--gold-ink, #caa554);
+}
