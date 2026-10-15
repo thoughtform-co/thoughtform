@@ -130,4 +130,8 @@ For a talk or deck presented from an arc page (`/arcs/...`), standing law, not o
 - **A thing named is a thing shown.** A slide that names a product, a clone or a tool shows it.
 - **Frames and spacing come from the X-Bionic proposal's system** (ADR-155, `proposal-grammar.md`,
   `docs/plans/xb-offer-rebuild-handoff.md` and its reference sites), never a new grammar.
+- **Nothing travels in** (ADR-156 U3): a talk runs the terminal grammar and a beat appears where it
+  stands; its title glitches in place. A drawing is a `figure` on the framing's one projection,
+  with its true numbers in a model module; a sequence of drawings may be one act carried by one
+  particle artifact.
 

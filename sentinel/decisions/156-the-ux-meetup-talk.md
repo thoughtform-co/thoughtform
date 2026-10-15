@@ -165,6 +165,78 @@ structure (no `cards` or `list-groups`, statements without sublines on every oth
 eyebrow its position). Walked headless at 1280×720: the seven beats one screen each, the eras
 handing to the claim, the thesis and the Arc after the designer, no console error.
 
+## U3 · The story told in drawings (2026-10-15, owner)
+
+The owner read U2 and set the rest of the talk: no slide-over ("no movement or travel, just a
+glitch effect"), the brand mark as an ambient particle field, the proof drawn in the house's
+diagram language with the anatomy skill's method, a voice, the turn to an intelligence (after
+Benedict Evans's hx Live NYC 2026 keynote), and a crossroads to close on. Not for the night of the
+talk, so built at full quality.
+
+**The order.** Hero → About → the eras → the wake-up call ("Within two years, all digital content
+and products will be absorbed.") → the proof as one ACT of three drawings (digital content;
+digital products added; both absorbed by the frontier labs) → the voice ("I don't want to use your
+agent. I want my agent to use your tool.", unattributed by the owner's choice) → an intelligence
+(logic to statistics) → the crossroads → the corridor's thesis and the Arc → the proof pile →
+contact. The alternation law (ADR-155) counts the act as one unit.
+
+**Nothing travels in.**
+- The talk runs the terminal grammar (ADR-057) on its own frames: one READER (`useTalkFrame`, a
+  passive listener and one rAF) feeds `useArcTerminalMotion`'s `onFrame` and a route-scoped bus;
+  `LandingPage` keeps the scroll writer. `useArcTerminalMotion` takes an opt-in `observeDocument`
+  (the talk sits under live content that changes height); absent, byte-identical.
+- On this page a beat WITHHOLDS its plane until it parks, so it appears where it stands and its
+  title decodes in place; statements take an opt-in `glitch` (the in-place scramble).
+- The talk is WELDED to the end of the eras' exit: 260 − 0.96 × 160 = 106.4svh up into their
+  runway, numbers the test reads from `voidwalker.css` and the hologram clock. The beats are welded
+  to the blank point of the previous fold (−(100svh + 0.38 × tail), the fold's own constants) with
+  a 120svh hold, so each hands to the next with no empty screen. The U2 curtain is gone.
+
+**The ground.** One sticky void screen under the talk with the brand mark sampled into particles at
+a whisper (`TalkMarkField`, its own 2D canvas: the services field's canvas is hidden on desktop by
+its own sheet). It switches on as the talk parks, so it never covers the eras. The talk's sections
+drop their own void and read on it: recorded here as this page's exception to ADR-008.
+
+**The `figure` kind, the thirty-first exception.** One kind for the talk's drawings, a registry
+(`components/arcs/figures/`), all on the framing's ONE projection (`framing/iso.ts`), words as DOM
+spans on leaders, one gold object each, a model module per drawing with its true numbers (the
+anatomy skill's method; its filled-solid style is not taken, it fights the house wireframe):
+- **The timeline.** Two lanes, digital content in front and digital products behind, January 2023
+  to December 2026. A milestone's height is the capability curve that month (METR: task length
+  doubles every seven months); the gold rail behind both is training compute on the same scale
+  (Epoch AI: 4 to 5 times a year). The two climbing together IS the bitter lesson (Sutton, 2019).
+  Every event dated and sourced in the record; the first beat draws the products lane as a ghost.
+  `labelCollisions` found two real overlaps while seating the tags and the lane names.
+- **The absorption machine.** 44 parts and wires: two panels feed ribbons of eight wires into the
+  frontier labs' housing, compute racks beside it, the model the gold block, the interface held
+  over it, agents wired to it.
+- **Logic to statistics.** A stair of instructions on one wire beside a seeded cloud of
+  observations and the gold line fitted through it.
+- **The crossroads.** An anonymous head, built from solids (a signed-distance composite,
+  raymarched, drawn as scanlines lifted by the relief), split at the nose line: particles for the
+  human way, gold lines for the intelligence. The figure's head is optional; this beat stands
+  under the registration row, centred. It is the talk's exit, not a chapter (`arc-marks`).
+
+**The act.** One particle artifact carries the proof across its three beats (after the X-Bionic
+swarm, never its design): dots on the content blocks; re-seated on the second timeline as the
+products lane's dots fill in out of its ghosts; across to their panel's tiles; streaming into the
+housing and turning gold in the model. A pure function of the scroll (`actClock.ts`), anchors read
+from the drawings' parts at their parked seat, terminal tier only. `ux-meetup-act.test.ts` pins the
+pool, no jump at any seam, nothing outside the act.
+
+**The quote** takes an opt-in `frame: "marks"` (the registration row over a voice).
+
+**Out of the tail:** the U2 statements, the PhotoCraft screenshot beat (PhotoCraft is now a dated
+milestone on the products lane), the curve, the stack, the designer line.
+
+**Verified.** The talk's suite (`ux-meetup.test.ts`, `ux-meetup-act.test.ts`), the registry, the
+marks, the lattice ratchet (`figures.css` pinned at zero), the context budget; walked headless at
+1280×720 beat by beat and through the act; no console error.
+
+**Left open:** the Loop films' month (dated late 2025 on the timeline; not on the record); a headed
+walk at 1920×1247 and in light on the owner's screen; the crossroads head's likeness is the owner's
+read.
+
 ## Left open
 
 - Every line in the tail is his to rewrite; U2's statements are his own lines from the brain dump.
