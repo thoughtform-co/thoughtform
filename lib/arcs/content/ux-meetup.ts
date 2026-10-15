@@ -191,24 +191,25 @@ export const UX_MEETUP_ARC: ArcDef = {
       id: "the-interface",
       kind: "figure",
       menuLabel: "The interface",
-      eyebrow: "03 · The new interface",
+      eyebrow: "03 · Intelligence as the interface",
       figure: {
         id: "interface",
         alt: "The stack of examples moves to the centre, layer by layer: images, film, tools, products, worlds, mathematics, the foundations. Above it stands the model, a machine brain of low-poly shells, circuit dies and a heatsink, and from the port under it cords of different weights and colours plug into every plate.",
-        mind: "The model",
+        mind: "Intelligence as the interface.",
         line: "The new interface: give it context, hard problems and evals, and it works every layer below.",
       },
     },
     {
-      id: "your-tool",
+      id: "any-software",
       kind: "interstitial",
       variant: "quote",
       frame: "marks",
-      menuLabel: "A voice",
-      eyebrow: "04 · Heard in the industry",
+      /* U8: the owner's own two lines, the second under the first. */
+      menuLabel: "Not software",
+      eyebrow: "04 · Not software",
       line: {
-        pre: "I don\u2019t want to use your agent.",
-        em: "I want my agent to use your tool.",
+        pre: "AI can make any software,",
+        em: "but isn\u2019t software itself.",
       },
     },
     {

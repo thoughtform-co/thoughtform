@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import { ISO_PHI, ISO_PSI, ISO_S, basisOf, mindModel } from "@/components/arcs/figures/foundation/mind";
+import { EDGE, ISO_PHI, ISO_PSI, ISO_S, basisOf, coreModel } from "@/components/arcs/figures/foundation/mind";
 import { CARDS_END, STACK_C, U, axesAt, plateOrigin, proj, sheetPoses } from "@/components/arcs/figures/foundation/scene";
 import { HEAD_PARTS, headDrawing, headField } from "@/components/arcs/figures/crossroads/head";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
@@ -205,7 +205,7 @@ describe("the UX meetup talk (ADR-156)", () => {
       "the-claim",
       "capability",
       "the-interface",
-      "your-tool",
+      "any-software",
       "an-intelligence",
       "crossroads",
     ]);
@@ -274,21 +274,30 @@ describe("the UX meetup talk (ADR-156)", () => {
     for (let i = 1; i < n; i++) expect(ax.ticks[i].y).toBeLessThan(ax.ticks[i - 1].y);
   });
 
-  it("builds the model as a machine, on the scene's own projection", () => {
-    const m = mindModel();
-    expect(m.parts.length, "the anatomy's parts").toBeGreaterThanOrEqual(40);
+  it("builds the model as an instrument: a dodecahedron round its dual, on the scene's projection", () => {
+    const m = coreModel();
+    expect(m.parts.length, "the anatomy's parts").toBeGreaterThanOrEqual(36);
     expect(new Set(m.parts).size, "every part named once").toBe(m.parts.length);
-    expect(m.traces.length, "a board on the skin").toBeGreaterThanOrEqual(20);
-    expect(m.vias.length).toBe(m.traces.length * 2);
-    expect(m.cores.length).toBeGreaterThanOrEqual(4);
-    expect(m.orbits.length).toBe(2);
-    expect(m.sockets.length, "a socket for every plate").toBe(6);
-    expect(m.dots.length).toBeGreaterThan(2000);
-    // No line ends in mid-air: every edge joins two of the model's vertices.
-    for (const e of m.edges) {
-      expect(m.verts[e.a] && m.verts[e.b]).toBeTruthy();
-      expect(e.a).not.toBe(e.b);
+    expect(m.shell.length, "a dodecahedron's corners").toBe(20);
+    expect(m.lattice.length, "an icosahedron's").toBe(12);
+    expect(m.edges.filter((e) => e.kind === EDGE.shell).length).toBe(30);
+    expect(m.edges.filter((e) => e.kind === EDGE.lattice).length).toBe(30);
+    // Twelve faces, each its own five corners, each corner on three faces.
+    expect(new Set(m.faces.map((f) => [...f.idx].sort().join())).size).toBe(12);
+    const uses = new Array(20).fill(0);
+    for (const f of m.faces) for (const i of f.idx) uses[i]++;
+    expect(uses.every((u) => u === 3)).toBe(true);
+    // Front-facing: one face looks straight along +y, at the reader.
+    expect(Math.max(...m.faces.map((f) => f.n.y))).toBeCloseTo(1, 6);
+    // Every circuit lies on its face's plane.
+    for (const e of m.edges.filter((x) => x.kind === EDGE.circuit)) {
+      const f = m.faces.reduce((best, g) => (g.n.x * e.a.x + g.n.y * e.a.y + g.n.z * e.a.z > best.n.x * e.a.x + best.n.y * e.a.y + best.n.z * e.a.z ? g : best));
+      const p0 = m.shell[f.idx[0]];
+      const off = (q: { x: number; y: number; z: number }) => f.n.x * (q.x - p0.x) + f.n.y * (q.y - p0.y) + f.n.z * (q.z - p0.z);
+      expect(Math.abs(off(e.a))).toBeLessThan(0.05);
+      expect(Math.abs(off(e.b))).toBeLessThan(0.05);
     }
+    expect(m.sockets.length, "a socket for every plate").toBe(6);
     // At its isometric pose the camera draws exactly what the scene draws.
     const b = basisOf({ psi: ISO_PSI, phi: ISO_PHI, s: ISO_S, o: { x: 0, y: 0 } });
     const o = { x: 0, y: 0 };
@@ -337,8 +346,8 @@ describe("the UX meetup talk (ADR-156)", () => {
     }
     expect(mid?.kind === "figure" && mid.head).toBeFalsy();
     // The tool takes the back of the mind, the collaborator its front.
-    expect(mindModel().flanks.tool.every((p) => p.x < 0)).toBe(true);
-    expect(mindModel().flanks.collab.every((p) => p.x > 0)).toBe(true);
+    expect(coreModel().flanks.tool.every((p) => p.x < 0)).toBe(true);
+    expect(coreModel().flanks.collab.every((p) => p.x > 0)).toBe(true);
   });
 
   /** The house copy law, over what this page letters of its own. */

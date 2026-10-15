@@ -64,10 +64,10 @@ export const PLATE = { rise: 1.05, step: 0.6, thick: 0.16 } as const;
 
 /** The stack's origins: on the left beside the facing card, then centred. */
 export const STACK_L: P2 = { x: 318, y: 400 };
-export const STACK_C: P2 = { x: 596, y: 536 };
+export const STACK_C: P2 = { x: 656, y: 536 };
 
 /** The facing pose: a flat card, right of the stack, reading size. */
-export const FACING = { x: 700, y: 118, s: 1.14 } as const;
+export const FACING = { x: 700, y: 214, s: 1.14 } as const;
 /** The facing slab's depth: its back face, up and to the right. */
 const FACE_DEPTH: P2 = { x: 16, y: -12 };
 
@@ -195,7 +195,7 @@ export interface Axes {
 
 /** How high the capability axis stands over its foot, in world z, when
     `count` plates are in the stack: a margin past the highest. */
-export const capabilityTop = (count: number) => (count > 0 ? (count - 1) * PLATE.rise + 1.3 : 0.8);
+export const capabilityTop = (count: number) => (count > 0 ? (count - 1) * PLATE.rise + 2.6 : 1.2);
 
 const pathOf = (pts: P2[]) => pts.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
 

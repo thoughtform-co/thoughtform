@@ -388,6 +388,48 @@ owner's Halo mods video, lettered so, a low-poly terrain until the file arrives.
 
 Wheel-walked down and back up, 118 steps, 0 mismatches; both themes checked.
 
+## U8 · The heads over the work, an instrument for the model, and the line about software (2026-10-15, owner)
+
+**The heads sit over the work, as Unsiloed sets its words** (owner: "the title ... should be
+above it and really be nicely integrated. Look at how Unsiloed does the composition"). The act's
+hairline label row is gone. Each beat has one head: a mono eyebrow, a title in the display size,
+a line. On the first beat it stands over the facing card, the eyebrow carrying the section and,
+at its right, the card's place and year (04 / 06 · 2026); the card's own tag ("02 · VIDEO") is gone,
+since the head says it. On the second the head is the beat's title alone, top left: Intelligence
+as the interface. On the third it is centred over the core.
+
+**A film plays as itself** (owner: "add the ability to play it full screen and show the audio").
+Under a facing film a button, the act's one control, plays it full screen with its sound, from the
+start; leaving full screen stops it and lets it go.
+
+**The axis stands higher, its name smaller, and leaves with the floor.** The capability axis rises
+a further margin over the highest plate, lettered at 12 px; as the stack leaves for the next beat
+the floor's grid, the axis, the leaders and the trays fade out, and only the plates arrive.
+
+**The model is an instrument** (owner: "more like a wireframe, maybe something that looks like a
+computer, like a dodecahedron ... less literally like a brain but visually a bit more interesting
+... It's not using 3D frontend best practices"). `mind.ts` now builds a compound: a dodecahedron
+shell round its dual icosahedron, a vertex of the one under every face of the other (the test
+pins twelve faces, each corner on three); on each face a circuit, an inset pentagon and two runs
+squared out to the face's edges, a via at each end, every one on its face's plane (pinned); spokes
+in to a core of 560 particles with three rings; two near-level orbits outside. Drawn as a 3D layer
+should be: in perspective, every line and particle sorted far to near, faded and thinned with
+depth, each line under a halo, the light added on the void and laid as ink on parchment, and the
+whole pose rendered ONCE into an offscreen layer, so a frame only blits it and moves the signals
+walking the shell's edges and the orbits' nodes. It boots top to bottom behind a scanline. In the
+middle beat it is turned once in its own frame so a face looks at the reader (pinned), the
+tool's side lit gold, the collaborator's loose and green.
+
+**The terminals are the house's, not boxes** (owner: "the tool and collaborator frames and the
+font are ... like frames you draw in Word or PowerPoint"). The framed glyphs and the 22 px slab
+lettering are gone. Each run ends on a pin header, a short gold bar with a survey cross at either
+end, and its name and line stand beside it as a HUD readout: the mono at the house's small size,
+the line in the body face.
+
+**The voice is the owner's own line now** (owner: "remove that ... and replace it with 'AI can
+make any software,' and then, below it, add 'but isn't software itself.'"). Section 04 is
+`any-software`, eyebrow "04 · Not software"; the second line stands under the first.
+
 ## Left open
 
 - The worlds card waits on the owner's video of the Halo mods: a file under `public/` and a
