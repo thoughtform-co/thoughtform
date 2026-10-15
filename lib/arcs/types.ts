@@ -2911,10 +2911,13 @@ export type ArcFigureSpec = {
       line: string;
     }
   | {
-      id: "logic";
-      logic: { label: string; line: string };
-      statistics: { label: string; line: string };
-      source: ArcSource;
+      /** An intelligence (ADR-156 U6): the machine mind faces the reader
+       *  between a tool and a collaborator. Its words only; the drawing is
+       *  the route's foundation act. */
+      id: "middle";
+      line: string;
+      tool: { label: string; line: string };
+      collaborator: { label: string; line: string };
     }
   | {
       /** What AI could make, one card at a time, each settling into the

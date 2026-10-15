@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import { mindDots, sheetPoses, tendril } from "@/components/arcs/figures/foundation/scene";
+import { ISO_PHI, ISO_PSI, ISO_S, basisOf, mindModel } from "@/components/arcs/figures/foundation/mind";
+import { CARDS_END, STACK_C, U, axesAt, plateOrigin, proj, sheetPoses } from "@/components/arcs/figures/foundation/scene";
 import { HEAD_PARTS, headDrawing, headField } from "@/components/arcs/figures/crossroads/head";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
@@ -229,12 +230,14 @@ describe("the UX meetup talk (ADR-156)", () => {
   });
 
   /**
-   * ⚠ THE FOUNDATION ACT (U5): one example faces the reader at every scroll
-   * of the first beat, the rest stand in the stack; in the second beat none
-   * faces and every sheet lies as a plate; the mind is made of dots, its
-   * traces among them, and one tendril reaches every plate.
+   * ⚠ THE FOUNDATION ACT (U5, U6): one example faces the reader at every
+   * scroll of the first beat until the last has lain down; a sheet lies in
+   * the stack in the very pose it keeps in the next beat, the stack landing
+   * in the centre only after a cascade, the bottom plate first; the stack
+   * stands between its two axes; the mind is a machine of named parts, and
+   * its isometric camera IS the scene's projection.
    */
-  it("faces one example at a time, then lays every sheet down as a foundation", () => {
+  it("faces one example at a time, then stacks them in the pose the interface keeps", () => {
     const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
     const cards = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
     expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tool", "product", "worlds", "mathematics"]);
@@ -247,19 +250,52 @@ describe("the UX meetup talk (ADR-156)", () => {
       }
     }
     const n = cards.length;
-    for (let a = 0; a < 1; a += 0.01) {
-      const facing = sheetPoses(n, a, 0).filter((p) => p.facing).length;
+    const lastDown = ((n - 1 + 0.62) / n) * CARDS_END;
+    for (let a = 0; a < lastDown - 0.005; a += 0.01) {
+      const facing = sheetPoses(n, a).filter((p) => p.facing).length;
       expect(facing, `facing at ${a.toFixed(2)}`).toBe(1);
     }
-    const laid = sheetPoses(n, 1, 1);
-    expect(laid.every((p) => !p.facing && p.shown)).toBe(true);
-    // Lying: each sheet's downward axis runs into the floor's depth (+y),
-    // which this isometric draws down and to the left: a negative x step.
-    for (const p of laid) expect(p.m[2]).toBeLessThan(0);
-    const dots = mindDots(n);
-    expect(dots.length).toBeGreaterThan(1000);
-    expect(dots.filter((d) => d.trace).length).toBeGreaterThan(100);
-    for (let i = 0; i < n; i++) expect(tendril(i, n).length).toBeGreaterThan(10);
+    // Seated in the stack on the left, then landed in the centre: the same
+    // pose moved, never turned again.
+    const left = sheetPoses(n, CARDS_END + 0.005);
+    const centre = sheetPoses(n, 1);
+    for (let i = 0; i < n; i++) {
+      expect(left[i].seated && centre[i].seated).toBe(true);
+      expect(centre[i].m.slice(0, 4)).toEqual(left[i].m.slice(0, 4));
+    }
+    expect(plateOrigin(n - 1, 1)).toEqual(STACK_C);
+    // The cascade: mid-move, a lower plate is always further along.
+    const mid = [0, 1, 2, 3, 4, 5].map((i) => plateOrigin(i, 0.93).x);
+    for (let i = 1; i < n; i++) expect(mid[i]).toBeLessThanOrEqual(mid[i - 1]);
+    expect(mid[0]).toBeGreaterThan(mid[n - 1]);
+    // The axes: a tick per plate, climbing.
+    const ax = axesAt(n, STACK_C);
+    expect(ax.ticks.length).toBe(n);
+    for (let i = 1; i < n; i++) expect(ax.ticks[i].y).toBeLessThan(ax.ticks[i - 1].y);
+  });
+
+  it("builds the model as a machine, on the scene's own projection", () => {
+    const m = mindModel();
+    expect(m.parts.length, "the anatomy's parts").toBeGreaterThanOrEqual(40);
+    expect(new Set(m.parts).size, "every part named once").toBe(m.parts.length);
+    expect(m.dies.length).toBeGreaterThanOrEqual(10);
+    expect(m.traces.length).toBeGreaterThanOrEqual(6);
+    expect(m.sockets.length, "a socket for every plate").toBe(6);
+    expect(m.dots.length).toBeGreaterThan(2000);
+    // No line ends in mid-air: every edge joins two of the model's vertices.
+    for (const e of m.edges) {
+      expect(m.verts[e.a] && m.verts[e.b]).toBeTruthy();
+      expect(e.a).not.toBe(e.b);
+    }
+    // At its isometric pose the camera draws exactly what the scene draws.
+    const b = basisOf({ psi: ISO_PSI, phi: ISO_PHI, s: ISO_S, o: { x: 0, y: 0 } });
+    const o = { x: 0, y: 0 };
+    for (const [x, y, z] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
+      const q = proj({ x, y, z }, o);
+      expect(x * b.ex.x + y * b.ey.x + z * b.ez.x).toBeCloseTo(q.x, 6);
+      expect(x * b.ex.y + y * b.ey.y + z * b.ez.y).toBeCloseTo(q.y, 6);
+    }
+    expect(ISO_S * Math.cos(ISO_PHI)).toBeCloseTo(U, 6);
     const ifc = UX_MEETUP_ARC.sections.find((s) => s.id === "the-interface");
     expect(ifc?.kind === "figure" && ifc.head, "no head and no paragraph").toBeFalsy();
   });
@@ -287,14 +323,19 @@ describe("the UX meetup talk (ADR-156)", () => {
     expect(cross?.kind === "figure" && cross.head, "it stands without a section head").toBeFalsy();
   });
 
-  /** The intelligence beat stands on its source: Evans's keynote, timestamped. */
-  it("sources the turn to an intelligence", () => {
-    const logic = UX_MEETUP_ARC.sections.find((s) => s.id === "an-intelligence");
-    const spec = logic?.kind === "figure" ? logic.figure : null;
-    expect(spec?.id).toBe("logic");
-    if (spec?.id === "logic") {
-      expect(spec.source.href).toMatch(/youtube\.com\/watch\?v=EbqiuDtFWxA&t=\d+s/);
+  /** The intelligence beat (U6): the mind between a tool and a collaborator,
+      the owner's own line, and no head over it. */
+  it("seats the mind between a tool and a collaborator", () => {
+    const mid = UX_MEETUP_ARC.sections.find((s) => s.id === "an-intelligence");
+    const spec = mid?.kind === "figure" ? mid.figure : null;
+    expect(spec?.id).toBe("middle");
+    if (spec?.id === "middle") {
+      expect(spec.line).toBe("AI is an intelligence that sits in the middle.");
+      expect([spec.tool.label, spec.collaborator.label]).toEqual(["Tool", "Collaborator"]);
     }
+    expect(mid?.kind === "figure" && mid.head).toBeFalsy();
+    expect(mindModel().flanks.tool.every((p) => p.y > 0)).toBe(true);
+    expect(mindModel().flanks.collab.every((p) => p.y < 0)).toBe(true);
   });
 
   /** The house copy law, over what this page letters of its own. */

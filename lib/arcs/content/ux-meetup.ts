@@ -194,7 +194,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       eyebrow: "03 · The new interface",
       figure: {
         id: "interface",
-        alt: "The examples tip over and settle as stacked plates, the foundations: images, film, tools, products, worlds, mathematics. Above them a machine mind assembles from particles, a brain whose folds are circuit traces, and its tendrils plug into every plate.",
+        alt: "The stack of examples moves to the centre, layer by layer: images, film, tools, products, worlds, mathematics, the foundations. Above it stands the model, a machine brain of low-poly shells, circuit dies and a heatsink, and from the port under it cords of different weights and colours plug into every plate.",
         mind: "The model",
         line: "The new interface: give it context, hard problems and evals, and it works every layer below.",
       },
@@ -216,21 +216,15 @@ export const UX_MEETUP_ARC: ArcDef = {
       kind: "figure",
       menuLabel: "An intelligence",
       menuPrimary: true,
-      head: {
-        eyebrow: "05 · An intelligence",
-        title: { pre: "A new kind", em: "of automation." },
-        sub: "Every earlier wave automated steps you could write down. This one works wherever there is enough data and the answer can be checked: a logic problem becomes a statistics problem. And nobody knows its limits yet. It is not software. It is an intelligence.",
-      },
+      /* U6: the logic figure is gone (owner: "we don't need that"); the
+         mind of the interface beat comes back alone and faces the reader. */
+      eyebrow: "05 · An intelligence",
       figure: {
-        id: "logic",
-        alt: "On the left, a stair of five steps on one wire: logic, steps you can write down. On the right, a cloud of observations with one gold line fitted through it: statistics, anything with enough data and an answer you can check.",
-        logic: { label: "Logic", line: "Steps you can write down: mainframes, spreadsheets, software." },
-        statistics: { label: "Statistics", line: "Anything with enough data and an answer you can check." },
-        source: {
-          label: "Benedict Evans, AI Is Eating the World, hx Live NYC 2026, 24:18",
-          href: "https://www.youtube.com/watch?v=EbqiuDtFWxA&t=1458s",
-        },
-        note: "After Benedict Evans, AI Is Eating the World, hx Live NYC 2026",
+        id: "middle",
+        alt: "The machine mind turns to face the reader. Its left half, crisp gold circuits, is routed square to a tool; its right half, loose particles, streams to a collaborator and back. It sits in the middle.",
+        line: "AI is an intelligence that sits in the middle.",
+        tool: { label: "Tool", line: "It does what you tell it." },
+        collaborator: { label: "Collaborator", line: "It thinks it through with you." },
       },
     },
     {

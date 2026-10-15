@@ -5,7 +5,6 @@ import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
 import { Crossroads } from "./figures/crossroads/Crossroads";
-import { Logic } from "./figures/logic/Logic";
 
 /**
  * ArcFigure — the `figure` kind (ADR-156 U3): the section head, then one
@@ -59,7 +58,19 @@ export function ArcFigure({
               <strong>{spec.mind}</strong> {spec.line}
             </p>
           ) : null}
-          {spec.id === "logic" ? <Logic spec={spec} /> : null}
+          {spec.id === "middle" ? (
+            <div className="fa-static">
+              <p className="fa-static--line">
+                <strong>{spec.line}</strong>
+              </p>
+              <p>
+                <strong>{spec.tool.label}</strong> {spec.tool.line}
+              </p>
+              <p>
+                <strong>{spec.collaborator.label}</strong> {spec.collaborator.line}
+              </p>
+            </div>
+          ) : null}
           {spec.id === "crossroads" ? <Crossroads spec={spec} /> : null}
           {spec.id === "capability" ? (
             <ol className="fa-static">

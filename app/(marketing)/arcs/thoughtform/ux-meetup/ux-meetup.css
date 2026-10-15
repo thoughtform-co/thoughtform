@@ -140,22 +140,14 @@
   }
 }
 
-/* ── The interface beat's runway (U4): the slow way needs room to crawl. */
-@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #the-interface > .arc-beat__tail {
-    height: 320svh;
-  }
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #the-interface + [data-arc-beat] {
-    margin-top: calc(-100svh - 0.38 * 320svh);
-  }
-}
-
-/* ── The foundation act (U5) ─────────────────────────────────────────────
-   One fixed layer over the screen, shown only while one of its two beats is
-   up (`data-fa-up`). Its box holds the scene's viewBox exactly, so a word
-   seated by a fraction of the box lands on its point of the drawing. The
-   frames are the house's: a chamfer at top-right and bottom-left, a hairline
-   at the seam, the survey crosses at the corners; gold is the mind's. */
+/* ── The foundation act (U5, U6) ─────────────────────────────────────────
+   One fixed layer over the screen, shown only while one of its three beats
+   is up (`data-fa-up`; which one, `data-fa-phase`). Its box holds the
+   scene's viewBox exactly, so a word seated by a fraction of the box lands on
+   its point of the drawing. The frames are the house's: a chamfer at
+   top-right and bottom-left, a hairline at the seam, the survey crosses at
+   the corners; a card is a slab, its back face and its sides drawn as
+   Unsiloed draws its sheets. The mind is gold, its cords four tones. */
 .fa {
   position: fixed;
   inset: 0;
@@ -183,7 +175,8 @@
   justify-content: center;
 }
 .arc-root[data-act="live"] #capability .arc-fig__marks,
-.arc-root[data-act="live"] #the-interface .arc-fig__marks {
+.arc-root[data-act="live"] #the-interface .arc-fig__marks,
+.arc-root[data-act="live"] #an-intelligence .arc-fig__marks {
   visibility: hidden;
 }
 .fa__svg,
@@ -195,17 +188,51 @@
   overflow: visible;
 }
 .fa__dots {
-  color: rgba(var(--dawn-rgb), 0.85);
+  color: rgba(var(--dawn-rgb), 0.9);
   --fa-gold: var(--gold-ink, #caa554);
+  --fa-green: rgb(122, 158, 106);
+  --fa-red: var(--alert, #ff6b35);
 }
+html[data-theme="light"] .fa__dots {
+  --fa-green: rgb(70, 108, 58);
+  --fa-red: rgb(196, 70, 30);
+}
+/* What each beat shows. */
+.fa[data-fa-phase="2"] .fa__stack,
+.fa:not([data-fa-phase="2"]) .fa__poles {
+  visibility: hidden;
+}
+.fa__poles {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.fa[data-fa-poles] .fa__poles {
+  opacity: 1;
+}
+/* The slab. */
 .fa__ground {
-  fill: var(--void, #0a0908);
+  fill: rgb(var(--void-deep-rgb, 5, 4, 3));
 }
-.fa__edge {
+.fa__back path {
+  fill: var(--void, #0a0908);
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__join {
+  fill: none;
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+}
+.fa__edge,
+.fa__inset {
   fill: none;
   stroke: var(--arc-seam);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+}
+.fa__inset {
+  stroke: var(--arc-rule);
 }
 .fa__ghost path {
   fill: none;
@@ -228,6 +255,49 @@
   paint-order: stroke;
   stroke: var(--void, #0a0908);
   stroke-width: 3px;
+}
+/* The stack's floor, its trays and its axes. */
+.fa__floor,
+.fa__leader {
+  visibility: hidden;
+}
+.fa[data-fa-floor] .fa__floor,
+.fa[data-fa-floor] .fa__leader {
+  visibility: inherit;
+}
+.fa__grid,
+.fa__tray path {
+  fill: none;
+  stroke: var(--arc-grid);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__tray path {
+  stroke: var(--arc-rule);
+}
+.fa__axis {
+  fill: none;
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+}
+.fa__leader {
+  fill: none;
+  stroke: var(--arc-rule-dash);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.fa__tick,
+.fa__axis-name {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  letter-spacing: 0.16em;
+}
+.fa__tick {
+  font-size: 13px;
+  fill: var(--arc-ink-70);
+}
+.fa__axis-name {
+  font-size: 17px;
+  fill: var(--gold-ink, #caa554);
 }
 .fa__video {
   display: block;
@@ -256,9 +326,52 @@
 .fa__proof rect[data-qed] {
   stroke: var(--gold, #caa554);
 }
+/* The middle beat's poles and the spine between them. */
+.fa__spine {
+  fill: none;
+  stroke: var(--arc-rule-dash);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+}
+.fa__pole-frame {
+  fill: var(--void, #0a0908);
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+}
+.fa__pole-back {
+  fill: none;
+  stroke: var(--arc-rule);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.fa__glyph path,
+.fa__glyph circle {
+  fill: none;
+  stroke-width: 1.5;
+}
+.fa__pole[data-glyph="tool"] .fa__glyph * {
+  stroke: var(--gold-ink, #caa554);
+}
+.fa__pole[data-glyph="collab"] .fa__glyph * {
+  stroke: var(--dawn, #ebe3d6);
+}
+.fa__pole-name {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  fill: var(--dawn, #ebe3d6);
+}
+.fa__pole[data-glyph="tool"] .fa__pole-name {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__pole-line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 20px;
+  fill: var(--arc-ink-70);
+}
+/* Words. */
 .fa__words,
-.fa__plate,
-.fa__mind {
+.fa__model {
   position: absolute;
   left: calc(var(--ax, 0) * 100%);
   top: calc(var(--at, 0) * 100%);
@@ -266,20 +379,17 @@
 .fa__words {
   display: grid;
   gap: var(--space-xs);
-  width: calc(728 / 1440 * 100%);
+  width: calc(640 / 1440 * 100%);
   visibility: hidden;
 }
 .fa[data-fa-facing] .fa__words {
   visibility: inherit;
 }
-.fa__year,
-.fa__plate {
+.fa__year {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-size: var(--type-xs);
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-}
-.fa__year {
   color: var(--gold-ink, #caa554);
 }
 .fa__title {
@@ -297,34 +407,34 @@
   line-height: 1.35;
   color: var(--arc-ink-70);
 }
-.fa__plate {
-  translate: -100% -50%;
+/* The model's name, over the mind: the beat's one word. */
+.fa__model {
+  translate: -50% -100%;
   white-space: nowrap;
-  color: var(--arc-ink-70);
-  visibility: hidden;
-}
-.fa[data-fa-plates] .fa__plate {
-  visibility: inherit;
-}
-.fa__mind {
-  display: grid;
-  gap: var(--space-xs);
-  width: 30ch;
-  translate: -100% 0;
-  text-align: right;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: var(--type-base);
-  line-height: 1.35;
-  color: var(--arc-ink-70);
-  visibility: hidden;
-}
-.fa[data-fa-mind] .fa__mind {
-  visibility: inherit;
-}
-.fa__mind-name {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: var(--type-sm);
+  font-size: var(--type-2xl);
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--gold-ink, #caa554);
+  visibility: hidden;
+}
+.fa[data-fa-phase="1"] .fa__model {
+  visibility: inherit;
+}
+.fa__statement {
+  position: absolute;
+  top: calc(64 / 820 * 100%);
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: var(--type-display);
+  line-height: 1.1;
+  color: var(--dawn, #ebe3d6);
+  visibility: hidden;
+}
+.fa[data-fa-phase="2"] .fa__statement {
+  visibility: inherit;
 }

@@ -301,9 +301,63 @@ phones and without script each beat shows its static fallback. The test pins one
 at every scroll of the first beat, every sheet lying in the second, a mind of dots with traces,
 and a cable to every plate. Wheel-walked down and back up, 134 steps, 0 mismatches.
 
+## U6 · One stack pose, a machine for a mind, and the mind in the middle (2026-10-15, owner)
+
+**Depth the way Unsiloed draws it** (owner: "a front image that is just flat, like our images ...
+they add some depth to it by just drawing lines and adding a background"). A card is a slab: the
+picture inset in a panel, the panel's back face offset up and to the right, its corners joined to
+the front, two dashed sheets further behind while it faces the reader. Lying in the stack the
+same slab shows its thickness under the plate.
+
+**The stack takes the interface's pose from the start** (owner: "the way they should be stacked on
+the left is the way they eventually get stacked in the new interface section"). A card's turn
+ends lying down in the stack on the left, each plate a rise above the last and a step along x, so
+the stack climbs on the diagonal. Each plate sits on a tray, a little grid a margin past its
+edges, over a floor grid; a y-axis carries a tick per plate with its number and kind, and the
+x-axis along the floor is lettered MODEL CAPABILITIES with its arrow (owner: "the x-axis is
+clearly labeled"). At the end of the first beat the stack moves to the centre plate by plate,
+the bottom first, a cascade; it is only moved, never turned again, which the test pins.
+
+**The model is a machine, not dough** (owner: "it just looks like some dough or bread ... make it
+with the anatomy skill: not a brain, but something that looks like a machine brain with
+circuits"). The anatomy skill is not installed on this seat; its method is applied as the
+proposal swarm applied it, with the house particles as the texture. `foundation/mind.ts` builds
+the mechanism from named parts (46 of them, the test asks for 40): two low-poly cortex shells,
+ten dies with their pins on the upper facets, eight traces routed between them along the shells'
+grid, a seven-wire callosum bus arched over the groove, a seven-fin heatsink for a cerebellum, a
+stem of four collars, and a port plate with six sockets. Seams are lines, corners are nodes, the
+faces are filled with particles; dies, traces and bus are gold. It stands on a camera whose
+isometric pose IS the scene's projection (pinned), so it shares the plates' space.
+
+**The tendrils are there when the beat lands** (owner: "they should immediately appear when you
+land in the section and they should not all be the same size"). The mind assembles in under a
+second from landing, by the clock rather than the scroll, and six cords grow from the port's
+sockets, out wide round the stack's right side and into each plate's right edge, ending in a plug.
+No two alike: gold, green, bone and red, from 1.1 to 3.4 px, the heavy ones with a halo, commands
+running down them. The label THE MODEL stands over the mind in the beat's largest mono; the line
+under it is gone from the drawing and kept for the fallback. The beat no longer needs a long
+runway (U4's 320svh was for the crawl), so it runs on the talk's default tail.
+
+**The logic figure is gone; the mind comes back in the middle** (owner: "a new kind of
+automation. We don't need that but I actually want that brain to then be present ... it is at the
+center ... the machine brain sits between a tool and a collaborator"). Section 05 keeps its id and
+its eyebrow and loses its head. After the voice the act returns with the mind alone: it turns
+from the isometric to face the reader, larger and centred, and its two hemispheres take their two
+natures: the left a crisp gold machine routed square, as a board routes, to a framed TOOL, the
+commands one way; the right loose green particles streaming to a framed COLLABORATOR, both ways.
+The owner's line stands over it: AI is an intelligence that sits in the middle. The heatsink,
+seen from the front, would read as a box over the face; it fades as the mind turns.
+
+Benedict Evans's logic-to-statistics figure and its source left the page with the section; the
+script keeps the point in the speaker's words. Every new colour has its light value (the deep gold
+ink, a darker green and red on parchment), checked in both themes. Wheel-walked down and back up,
+118 steps, 0 mismatches.
+
 ## Left open
 
 - The worlds card waits on the owner's video of the Halo assets.
+- The corridor's thesis after the talk still reads "AI sits somewhere between tool and
+  collaborator", now an echo of section 05; the owner decides whether it stays.
 - The owner named "a bit of a regression" in passing without saying where; not yet found.
 
 - Every line in the tail is his to rewrite; U2's statements are his own lines from the brain dump.
