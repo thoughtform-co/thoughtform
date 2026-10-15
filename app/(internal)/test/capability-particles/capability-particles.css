@@ -1,0 +1,39 @@
+/* /test/capability-particles: the lab's own sheet. Every rule here is under
+   `.cp` or `.cp-*`, classes only this page carries.
+
+   The opening's figure is kept for its title, its four chips and its box;
+   everything else it draws is hidden, and the sketch's canvas lies over the
+   figure, the same size. */
+
+/* no hero above it: the frame's chrome sits as it does past the hero (the
+   capability lab's own rule) */
+html:has(.cp-sec) {
+  --hero-lift: 1 !important;
+}
+.cp {
+  position: relative;
+}
+.cp .pl-svg,
+.cp .shf-stage,
+.cp .pl-tab,
+.cp .shf-parts,
+.cp .pl-card {
+  visibility: hidden;
+}
+.cp .pl-fig {
+  background-image: none;
+}
+.cp-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: block;
+  pointer-events: none;
+  /* a dot is a whole device pixel: never smoothed */
+  image-rendering: pixelated;
+}
+.cp-bar output {
+  min-width: 6ch;
+  text-align: right;
+}
