@@ -295,7 +295,9 @@ html[data-theme="light"] .fa__dots {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* the whole film, never cropped (owner, 2026-10-15) */
+  object-fit: contain;
+  background: #000;
 }
 .fa__worlds path {
   fill: none;

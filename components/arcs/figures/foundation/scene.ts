@@ -52,11 +52,12 @@ export function proj(p: V3, o: P2): P2 {
 
 /** A sheet's face in local pixels: one module, its head over its picture
     (U9: "one integrated module"). */
-export const CARD = { w: 560, h: 420 } as const;
-/** Where the picture sits on the module: 16:9 under the head. */
-export const MEDIA = { x: 12, y: 108, w: 536, h: 300 } as const;
+export const CARD = { w: 560, h: 540 } as const;
+/** Where the picture sits on the module, under the head: tall enough that a
+    film is seen whole (owner, 2026-10-15: "so we can see the full video"). */
+export const MEDIA = { x: 12, y: 96, w: 536, h: 432 } as const;
 /** The sheet in world units, the module's proportions. */
-export const SHEET = { w: 7.2, h: 5.4 } as const;
+export const SHEET = { w: 7.2, h: (7.2 * 540) / 560 } as const;
 
 /**
  * The stack: plate `i` lies `rise` above the last and `step` further along
@@ -70,7 +71,7 @@ export const STACK_L: P2 = { x: 318, y: 400 };
 export const STACK_C: P2 = { x: 656, y: 536 };
 
 /** The facing pose: a flat card, right of the stack, reading size. */
-export const FACING = { x: 690, y: 150, s: 1.14 } as const;
+export const FACING = { x: 700, y: 118, s: 1.08 } as const;
 /** The facing slab's depth: its back face, up and to the right. */
 const FACE_DEPTH: P2 = { x: 16, y: -12 };
 

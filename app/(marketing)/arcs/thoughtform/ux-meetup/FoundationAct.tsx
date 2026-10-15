@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-import { BRAIN3D_BOX, brainModel, type BrainModel } from "@/components/arcs/figures/foundation/brain";
-import { bakeBrain, flankAt, paintSignals, portAt, type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
+import { brainModel, type BrainModel } from "@/components/arcs/figures/foundation/brain";
+import { BRAIN_ISO_BOX, BRAIN_ISO_PORTS, brainIsoFlank, brainIsoSvg } from "@/components/arcs/figures/foundation/brainIso";
+import { type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
   FACING,
@@ -28,7 +29,6 @@ import {
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { UX_MEETUP_ARC } from "@/lib/arcs/content/ux-meetup";
 
-import type { Brain3D } from "./brain3d";
 
 /**
  * FoundationAct — one scene across six beats (ADR-156 U5 to U9): what it can
@@ -143,7 +143,6 @@ function findSpecs() {
 export function FoundationAct() {
   const { cards, middle, knowledge, latent, eyebrows, heads } = useMemo(() => findSpecs(), []);
   const n = cards.length;
-  const capEyebrow = eyebrows[0];
   const axes = useMemo(() => axesAt(n, STACK_L), [n]);
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -200,16 +199,27 @@ export function FoundationAct() {
     let light = false;
     const tone: Tone = { ink: "rgb(235, 227, 214)", gold: "rgb(202, 165, 84)", lit: "rgb(240, 200, 106)", green: "rgb(122, 158, 106)", red: "rgb(255, 107, 53)" };
     const layers = new Map<string, HTMLCanvasElement>();
-    /* The brain in depth (owner, 2026-10-15): three.js, loaded on demand so
-       the route's first load stays three-free. Until it lands, or where
-       WebGL is missing, the painter draws the whole brain in 2D. */
-    let b3: Brain3D | null = null;
+    /* The brain as a machined object, built with the anatomy kit in the
+       stack's own camera (`brainIso.ts`), rasterised once per pose and
+       theme and painted through this canvas, so everything round it keeps
+       its order. */
+    const pictures = new Map<string, HTMLImageElement | null>();
     let gone = false;
-    void import("./brain3d").then(({ createBrain3D }) => {
-      if (gone) return;
-      b3 = createBrain3D(model);
-      layers.clear();
-    });
+    const pictureOf = (split: boolean): HTMLImageElement | null => {
+      const key = `${split}|${light}`;
+      if (pictures.has(key)) return pictures.get(key) ?? null;
+      pictures.set(key, null);
+      const img = new Image();
+      const url = URL.createObjectURL(new Blob([brainIsoSvg({ split, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        if (gone) return;
+        pictures.set(key, img);
+        layers.clear();
+      };
+      img.src = url;
+      return null;
+    };
 
     const size = () => {
       const r = canvas.getBoundingClientRect();
@@ -222,7 +232,9 @@ export function FoundationAct() {
       tone.lit = cs.getPropertyValue("--fa-lit").trim() || tone.lit;
       tone.green = cs.getPropertyValue("--fa-green").trim() || tone.green;
       tone.red = cs.getPropertyValue("--fa-red").trim() || tone.red;
+      const was = light;
       light = document.documentElement.dataset.theme === "light";
+      if (was !== light) pictures.clear();
       layers.clear();
     };
     /** The brain in one pose, drawn once at this size and in this theme. */
@@ -234,7 +246,16 @@ export function FoundationAct() {
         l.width = canvas.width;
         l.height = canvas.height;
         const c = l.getContext("2d");
-        if (c) bakeBrain(c, model, PLACE[ph], { k: canvas.width / VB.w, dpr, tone, light, split: ph === 2 ? 1 : 0, cables: ph === 2 || ph === 3, body: !b3 });
+        const pic = pictureOf(ph === 2);
+        if (!pic) return l;
+        if (c) {
+          const pl = PLACE[ph];
+          const k = canvas.width / VB.w;
+          if (ph === 2 || ph === 3) paintHanging(c, pl, { k, dpr, tone });
+          const B = BRAIN_ISO_BOX;
+          const s = pl.s * ISO_S;
+          c.drawImage(pic, (pl.x + B.x0 * s) * k, (pl.y + B.y0 * s) * k, (B.x1 - B.x0) * s * k, (B.y1 - B.y0) * s * k);
+        }
         layers.set(key, l);
       }
       return l;
@@ -243,7 +264,7 @@ export function FoundationAct() {
     const paintBrain = (ph: number, since: number, now: number) => {
       const pl = PLACE[ph];
       const k = canvas.width / VB.w;
-      const top = pl.y - 215 * pl.s;
+      const top = pl.y + BRAIN_ISO_BOX.y0 * pl.s * ISO_S;
       const bottom = pl.y + 470 * pl.s;
       const boot = smooth(since / 1.0);
       const edge = top + (bottom - top) * boot;
@@ -252,14 +273,6 @@ export function FoundationAct() {
       ctx.rect(0, 0, canvas.width, edge * k);
       ctx.clip();
       ctx.drawImage(layerOf(ph), 0, 0);
-      if (b3) {
-        const B = BRAIN3D_BOX;
-        const x = (pl.x + B.x0 * pl.s) * k;
-        const y = (pl.y + B.y0 * pl.s) * k;
-        const w = Math.round((B.x1 - B.x0) * pl.s * k);
-        const h = Math.round((B.y1 - B.y0) * pl.s * k);
-        ctx.drawImage(b3.render({ w, h, now, split: ph === 2 ? 1 : 0, light, tone }), x, y, w, h);
-      }
       ctx.restore();
       if (boot < 1) {
         ctx.globalAlpha = 0.7 * (1 - boot);
@@ -268,7 +281,7 @@ export function FoundationAct() {
         ctx.globalAlpha = 1;
         return false;
       }
-      paintSignals(ctx, model, pl, { k, dpr, tone, now, light });
+      void now;
       return true;
     };
 
@@ -430,7 +443,6 @@ export function FoundationAct() {
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => {
       gone = true;
-      b3?.dispose();
       cancelAnimationFrame(raf);
       if (scrambleRaf) cancelAnimationFrame(scrambleRaf);
       ro.disconnect();
@@ -494,7 +506,7 @@ export function FoundationAct() {
                 </g>
                 <path ref={(el) => void (joinRefs.current[i] = el)} className="fa__join" />
                 <g ref={(el) => void (sheetRefs.current[i] = el)} className="fa__sheet">
-                  <Module card={c} index={i} count={n} eyebrow={capEyebrow} />
+                  <Module card={c} index={i} count={n} />
                 </g>
               </g>
             ))}
@@ -548,20 +560,18 @@ export function FoundationAct() {
 }
 
 /** One example as one module: its head in the frame, its picture under it. */
-function Module({ card, index, count, eyebrow }: { card: Card; index: number; count: number; eyebrow: string }) {
+function Module({ card, index, count }: { card: Card; index: number; count: number }) {
   return (
     <>
       <path className="fa__ground" d={chamfer} />
-      <text className="fa__mod-eyebrow" x="24" y="34">
-        {eyebrow.toUpperCase()}
-      </text>
+      {/* No eyebrow on a module (owner, 2026-10-15): the title is the head. */}
       <text className="fa__mod-count" x={W - 24} y="34" textAnchor="end">
         {String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")} · {card.year}
       </text>
-      <text className="fa__mod-title" x="24" y="72">
+      <text className="fa__mod-title" x="24" y="56">
         {card.title}
       </text>
-      <text className="fa__mod-line" x="24" y="94">
+      <text className="fa__mod-line" x="24" y="80">
         {card.caption}
       </text>
       <g clipPath="url(#fa-media)">
@@ -658,6 +668,46 @@ function SideCard({
   );
 }
 
+/** The machined brain's size against the old drawing's units. */
+const ISO_S = 1.02;
+/** A port's mouth in the viewBox: a cord leaves here. */
+function isoPortAt(pl: Place, i: number): P2 {
+  const [x, y] = BRAIN_ISO_PORTS[i % BRAIN_ISO_PORTS.length];
+  return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
+}
+/** A point on a hemisphere's outer flank in the viewBox, high, level or low. */
+function isoFlankAt(pl: Place, side: -1 | 1, j: number): P2 {
+  const [x, y] = brainIsoFlank(side, j);
+  return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
+}
+/** The cables hanging from the ports where no cord plugs them in: each falls
+    and fades into the ground, a gold ferrule on it. */
+function paintHanging(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone }) {
+  const { k, dpr, tone } = o;
+  ctx.save();
+  ctx.lineCap = "round";
+  for (let i = 0; i < BRAIN_ISO_PORTS.length; i++) {
+    const a = isoPortAt(pl, i);
+    const drop = (190 + (i % 3) * 30) * pl.s;
+    const b = { x: a.x + (i - 3) * 9 * pl.s, y: a.y + drop };
+    const fade = ctx.createLinearGradient(0, a.y * k, 0, b.y * k);
+    fade.addColorStop(0, tone.ink);
+    fade.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.strokeStyle = fade;
+    ctx.globalAlpha = 0.75;
+    ctx.lineWidth = (i === 0 || i === BRAIN_ISO_PORTS.length - 1 ? 2.6 : 1.2) * dpr;
+    ctx.beginPath();
+    ctx.moveTo(a.x * k, a.y * k);
+    ctx.quadraticCurveTo(a.x * k, ((a.y + b.y) / 2) * k, b.x * k, b.y * k);
+    ctx.stroke();
+    const f = { x: a.x + (b.x - a.x) * 0.12, y: a.y + (b.y - a.y) * 0.3 };
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = tone.gold;
+    ctx.fillRect(f.x * k - 3 * dpr, f.y * k - 5 * dpr, 6 * dpr, 10 * dpr);
+  }
+  ctx.restore();
+}
+
 const toneOf = (tone: Tone, name: string) =>
   name === "gold" ? tone.gold : name === "green" ? tone.green : name === "red" ? tone.red : tone.ink;
 
@@ -678,7 +728,8 @@ function paintCords(
   const { k, dpr, tone, n } = o;
   for (let i = 0; i < n; i++) {
     const cord = CORDS[i % CORDS.length];
-    const from = portAt(m, pl, i);
+    void m;
+    const from = isoPortAt(pl, i);
     const to = plateSocket(i, n, plateOrigin(i, o.a));
     const reachOut = 80 + i * 22;
     // Down out of the manifold first, then round the stack's corner and in
@@ -725,7 +776,7 @@ function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr
   const widths = [2.2, 1.2, 1.8];
   const pinY = [-40, 0, 40];
   for (let j = 0; j < 3; j++) {
-    const a = flankAt(pl, -1, j);
+    const a = isoFlankAt(pl, -1, j);
     const end = { x: SIDE.tool + SIDE.w + 1, y: SIDE.y + pinY[j] };
     const bend = (a.x + end.x) / 2 + (j - 1) * 14;
     const pts: P2[] = [a, { x: bend, y: a.y }, { x: bend, y: end.y }, end];
@@ -750,7 +801,7 @@ function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr
     }
   }
   for (let j = 0; j < 3; j++) {
-    const a = flankAt(pl, 1, j);
+    const a = isoFlankAt(pl, 1, j);
     const end = { x: SIDE.collab - 1, y: SIDE.y + pinY[j] };
     const pts = cable(a, end, { x: 80, y: (j - 1) * 60 }, { x: -80, y: (1 - j) * 30 }, 40);
     const col = j === 1 ? tone.ink : tone.green;
