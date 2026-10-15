@@ -421,7 +421,8 @@ html[data-theme="light"] .fa__dots {
 /* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
    right, the brain between them. */
 .fa[data-fa-phase="4"] .fa__head {
-  right: calc(48 / 1440 * 100%);
+  /* clear of the right rail's readouts (BEARING sits on the line's row) */
+  right: calc(210 / 1440 * 100%);
   width: auto;
   grid-template-columns: minmax(0, 470fr) minmax(0, 404fr) minmax(0, 470fr);
 }

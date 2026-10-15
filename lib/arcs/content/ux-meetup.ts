@@ -115,7 +115,7 @@ export const UX_MEETUP_ARC: ArcDef = {
       eyebrow: "02 · What it can make",
       figure: {
         id: "capability",
-        alt: "Six framed examples, one after another, each turning into a standing sheet in a stack to the side: an image from a prompt in 2022, Loop's AI film, Vesper (the image and video tool built at Loop), PhotoCraft (Photoshop rebuilt with Claude), new worlds built from game assets, and mathematics.",
+        alt: "Six framed examples, one after another, each turning into a standing sheet in a stack to the side: an image from a prompt in 2022, Loop's AI film, Vesper (the image and video tool built at Loop), PhotoCraft (Photoshop rebuilt with Claude), hyperpersonalized content (Halo modded with AI), and mathematics.",
         cards: [
           {
             id: "image",
@@ -185,8 +185,14 @@ export const UX_MEETUP_ARC: ArcDef = {
             id: "worlds",
             kind: "worlds",
             year: "2026",
-            title: "New worlds",
+            title: "Hyperpersonalized content",
             caption: "Players mod Halo into new games and worlds of their own.",
+            media: {
+              type: "video",
+              src: "/arcs/ux-meetup/halo-mods.mp4",
+              poster: "/arcs/ux-meetup/halo-mods-poster.jpg",
+              alt: "Halo modded with AI: a player's own game and world built from the game's assets",
+            },
           },
           {
             id: "mathematics",
@@ -246,7 +252,9 @@ export const UX_MEETUP_ARC: ArcDef = {
         collaborator: {
           label: "Collaborator",
           line: "It thinks it through with you.",
-          rows: ["What if the hero is the sound?", "Then open in silence."],
+          /* Owner, 2026-10-15: the old pair was "too vague". A brief, and
+             the read that changes it: a collaborator questions the work. */
+          rows: ["The launch film feels flat.", "It shows the product before the problem."],
         },
       },
     },

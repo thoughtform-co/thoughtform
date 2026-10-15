@@ -65,6 +65,10 @@ export interface BrainModel {
 /** The brain's true numbers, in its own units. */
 export const BRAIN = { width: 430, top: -186, podBottom: 186, ports: 7 } as const;
 
+/** The box the brain's 3D render covers, in brain units (+y down): the glass
+    and the pods with room for the sway; the block and ports stay 2D below. */
+export const BRAIN3D_BOX = { x0: -262, x1: 262, y0: -236, y1: 236 } as const;
+
 /** A closed Catmull-Rom spline through `pts`, `k` samples a span. */
 function spline(pts: Pt[], k = 14, closed = true): Pt[] {
   const out: Pt[] = [];

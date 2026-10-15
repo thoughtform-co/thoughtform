@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-import { brainModel, type BrainModel } from "@/components/arcs/figures/foundation/brain";
+import { BRAIN3D_BOX, brainModel, type BrainModel } from "@/components/arcs/figures/foundation/brain";
 import { bakeBrain, flankAt, paintSignals, portAt, type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
@@ -27,6 +27,8 @@ import {
 } from "@/components/arcs/figures/foundation/scene";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { UX_MEETUP_ARC } from "@/lib/arcs/content/ux-meetup";
+
+import type { Brain3D } from "./brain3d";
 
 /**
  * FoundationAct — one scene across six beats (ADR-156 U5 to U9): what it can
@@ -198,6 +200,16 @@ export function FoundationAct() {
     let light = false;
     const tone: Tone = { ink: "rgb(235, 227, 214)", gold: "rgb(202, 165, 84)", lit: "rgb(240, 200, 106)", green: "rgb(122, 158, 106)", red: "rgb(255, 107, 53)" };
     const layers = new Map<string, HTMLCanvasElement>();
+    /* The brain in depth (owner, 2026-10-15): three.js, loaded on demand so
+       the route's first load stays three-free. Until it lands, or where
+       WebGL is missing, the painter draws the whole brain in 2D. */
+    let b3: Brain3D | null = null;
+    let gone = false;
+    void import("./brain3d").then(({ createBrain3D }) => {
+      if (gone) return;
+      b3 = createBrain3D(model);
+      layers.clear();
+    });
 
     const size = () => {
       const r = canvas.getBoundingClientRect();
@@ -222,7 +234,7 @@ export function FoundationAct() {
         l.width = canvas.width;
         l.height = canvas.height;
         const c = l.getContext("2d");
-        if (c) bakeBrain(c, model, PLACE[ph], { k: canvas.width / VB.w, dpr, tone, light, split: ph === 2 ? 1 : 0, cables: ph === 2 || ph === 3 });
+        if (c) bakeBrain(c, model, PLACE[ph], { k: canvas.width / VB.w, dpr, tone, light, split: ph === 2 ? 1 : 0, cables: ph === 2 || ph === 3, body: !b3 });
         layers.set(key, l);
       }
       return l;
@@ -240,6 +252,14 @@ export function FoundationAct() {
       ctx.rect(0, 0, canvas.width, edge * k);
       ctx.clip();
       ctx.drawImage(layerOf(ph), 0, 0);
+      if (b3) {
+        const B = BRAIN3D_BOX;
+        const x = (pl.x + B.x0 * pl.s) * k;
+        const y = (pl.y + B.y0 * pl.s) * k;
+        const w = Math.round((B.x1 - B.x0) * pl.s * k);
+        const h = Math.round((B.y1 - B.y0) * pl.s * k);
+        ctx.drawImage(b3.render({ w, h, now, split: ph === 2 ? 1 : 0, light, tone }), x, y, w, h);
+      }
       ctx.restore();
       if (boot < 1) {
         ctx.globalAlpha = 0.7 * (1 - boot);
@@ -409,6 +429,8 @@ export function FoundationAct() {
     const mo = new MutationObserver(size);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => {
+      gone = true;
+      b3?.dispose();
       cancelAnimationFrame(raf);
       if (scrambleRaf) cancelAnimationFrame(scrambleRaf);
       ro.disconnect();
@@ -551,7 +573,7 @@ function Module({ card, index, count, eyebrow }: { card: Card; index: number; co
             <video className="fa__video" src={card.media.src} poster={card.media.poster} muted loop autoPlay playsInline preload="metadata" />
           </foreignObject>
         ) : null}
-        {card.kind === "worlds" || card.kind === "mathematics" ? (
+        {(card.kind === "worlds" && !card.media) || card.kind === "mathematics" ? (
           <g transform={`translate(${MEDIA.x} ${MEDIA.y}) scale(${MEDIA.w / 560} ${MEDIA.h / 315})`}>
             {card.kind === "worlds" ? <WorldsPlaceholder /> : <MathBoard />}
           </g>
