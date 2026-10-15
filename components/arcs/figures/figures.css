@@ -143,7 +143,9 @@
 }
 .arc-fig__head {
   margin: 0;
-  height: calc(100svh - 300px);
+  /* Capped: at a tall screen the head grew past the reading size and
+     squeezed the two ways into narrow columns. */
+  height: min(calc(100svh - 300px), 620px);
   aspect-ratio: 600 / 760;
 }
 .arc-fig__head svg {

@@ -39,6 +39,15 @@ export function TalkAct() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    /* The theme's own inks, read off the canvas (`ux-meetup.css` sets them
+       from the tokens), so the dots hold in light as in dark. */
+    let ink = "rgb(235, 227, 214)";
+    let gold = "rgb(202, 165, 84)";
+    const readInks = () => {
+      const cs = getComputedStyle(canvas);
+      ink = cs.color || ink;
+      gold = cs.getPropertyValue("--uxm-act-gold").trim() || gold;
+    };
     let anchors: ActAnchors | null = null;
     let clock: ActClock | null = null;
     let dpr = 1;
@@ -107,6 +116,7 @@ export function TalkAct() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(window.innerWidth * dpr);
       canvas.height = Math.round(window.innerHeight * dpr);
+      readInks();
       measure();
       lastKey = "";
     };
@@ -123,7 +133,7 @@ export function TalkAct() {
       for (const d of frame) {
         if (d.alpha <= 0.01) continue;
         ctx.globalAlpha = d.alpha;
-        ctx.fillStyle = d.gold ? "rgb(202, 165, 84)" : "rgb(235, 227, 214)";
+        ctx.fillStyle = d.gold ? gold : ink;
         ctx.fillRect(d.x * dpr - size / 2, d.y * dpr - size / 2, size, size);
       }
       ctx.globalAlpha = 1;
@@ -141,6 +151,13 @@ export function TalkAct() {
       lastKey = "";
     });
     ro.observe(document.documentElement);
+    /* A theme switch repaints the tokens; read them again. */
+    const themeWatch = new MutationObserver(() => {
+      readInks();
+      lastKey = "";
+      draw(window.scrollY);
+    });
+    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     document.fonts?.ready.then(() => {
       measure();
       lastKey = "";
@@ -150,6 +167,7 @@ export function TalkAct() {
       unsub();
       window.removeEventListener("resize", onResize);
       ro.disconnect();
+      themeWatch.disconnect();
     };
   }, []);
 
