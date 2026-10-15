@@ -430,6 +430,65 @@ the line in the body face.
 make any software,' and then, below it, add 'but isn't software itself.'"). Section 04 is
 `any-software`, eyebrow "04 · Not software"; the second line stands under the first.
 
+## U9 · One module per example, a glass brain, and four new beats (2026-10-15, owner)
+
+**One module per example** (owner: "Why is there so much space between the title and the card? ...
+I don't mind redesigning the cards so it feels like one integrated module"). The head moved into
+the frame: section and place on one mono row, the title, the line, a rule, the picture under it,
+all one slab; the module is what lies down in the stack. The sheet takes the module's proportions
+(560 by 420; 7.2 by 5.4 world units), the cascade fitted so the seventh plate lands with the beat.
+
+**A film plays over the viewport, not full screen** (owner: "when I do full screen ... I show a
+black screen"). The theatre is the page's own: portalled to the body so no stacking context of the
+page can draw over it, the film contained, its sound on, closed by its button, Escape or the
+backdrop.
+
+**Vesper without another company's brand** (owner: "there's an example of Stripe. Don't show
+that"). The demo's own footage carries that brand from 9 to 66 seconds; the talk plays its own cut
+from 68 seconds, the part that is Loop's alone (`vesper-loop.mp4`). The shared tool video is
+untouched.
+
+**Brand systems, a new example, as a film made from its own pictures** (owner: "a simple motion
+design video, 16:9 ... on Tom on the Moon ... 15-second"). Seventeen renders from the production's
+Drive (its vistas, the wave 10 portraits of board D, the wave 21 and 24 people and spaces) set as a
+15-second film at 1920 by 1080: the world pushed in, a wipe to a walker under the moon, the four
+editors rising into columns, the spaces opening in an editorial grid over the board's palette, out
+into the world, closing on the moon as a disc over the name. Rendered frame by frame from a
+deterministic page (no generation), encoded H.264 at 3.7 MB.
+
+**The brain, after the owner's references** (glass brains with machinery inside, a ribbed spine,
+cables hanging). `brain.ts` models it face on and names its 42 parts: two glass hemispheres, each
+an outline with two inner walls and five glass tubes swooping through it; the temporal lobes as
+pods with a lens each; boards stacked down the spine and packages among the tubes, their pins and
+squared traces; lenses; a ribbed coil in each half; a corrugated spine down the fissure; a
+connector block and a manifold of seven ports, each with its cable and ferrules; a fine back layer
+of circuitry. `paintBrain.ts` lights it as glass: a faint body lit from the upper left, the tubes'
+walls as thin light with a highlight and a glint, a rim light on the outline, the machine in gold
+behind; baked once per pose, only its signals moving. Over the stack its cables are the cords into
+the plates; in the middle they hang. The test pins the two halves as mirrors, every board inside
+its glass, every cable leaving a port, a port for every plate.
+
+**The tool and the collaborator are cards** (owner: "like those tool collaboration labels, are so
+ugly ... Really use the unsiloed ones"). Two slabs in the modules' own make: the tool's an
+instruction log with its rows done, the collaborator's an exchange in two voices.
+
+**The crossroads is gone** (owner: "Remove that"), with its head and its figure. In its place four
+beats, the order and the alternation held:
+
+- **06 · Every desk.** The brain at the centre and three rings of knowledge work round it, near
+  level, nearest first: now, next, in reach; every kind of work a node and its name, drifting.
+- **07 · An alien user.** The owner's question, set as the voice is: "How do you design
+  experiences and interfaces for a user that is alien?"
+- **08 · The shoggoth.** The brain with twelve tentacles fanning from under it and reaching up
+  behind it, each tapering and curling, a wave running out along it, gold suckers on its
+  underside; and the small smiling mask held in front.
+- **09 · Latent space.** A field of 1,600 particles in clusters, drifting in depth, ten nodes
+  named for artists and tied to their neighbours; at the centre, in a frame of corners, a line
+  after Markov (@MarkovMagnifico): inside the models, great artists become nodes in latent space.
+  The talk's exit, never a chapter.
+
+Wheel-walked down and back up, 146 steps, 0 mismatches.
+
 ## Left open
 
 - The worlds card waits on the owner's video of the Halo mods: a file under `public/` and a

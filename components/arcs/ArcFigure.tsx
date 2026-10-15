@@ -4,7 +4,6 @@ import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
-import { Crossroads } from "./figures/crossroads/Crossroads";
 
 /**
  * ArcFigure — the `figure` kind (ADR-156 U3): the section head, then one
@@ -71,7 +70,29 @@ export function ArcFigure({
               </p>
             </div>
           ) : null}
-          {spec.id === "crossroads" ? <Crossroads spec={spec} /> : null}
+          {spec.id === "knowledge" ? (
+            <div className="fa-static">
+              <p className="fa-static--line">
+                <strong>{spec.line}</strong>
+              </p>
+              {spec.layers.map((l) => (
+                <p key={l.label}>
+                  <strong>{l.label}</strong> {l.domains.join(", ")}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          {spec.id === "shoggoth" ? (
+            <p className="fa-static fa-static--line">
+              <strong>{spec.title}</strong> {spec.line}
+            </p>
+          ) : null}
+          {spec.id === "latent" ? (
+            <blockquote className="fa-static fa-static--line">
+              <p>{spec.quote}</p>
+              <cite>{spec.source.label}</cite>
+            </blockquote>
+          ) : null}
           {spec.id === "capability" ? (
             <ol className="fa-static">
               {spec.cards.map((c) => (

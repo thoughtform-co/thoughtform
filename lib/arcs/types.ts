@@ -2916,8 +2916,30 @@ export type ArcFigureSpec = {
        *  the route's foundation act. */
       id: "middle";
       line: string;
-      tool: { label: string; line: string };
-      collaborator: { label: string; line: string };
+      /** Each side's card: its name, its line and its rows. */
+      tool: { label: string; line: string; rows: readonly string[] };
+      collaborator: { label: string; line: string; rows: readonly string[] };
+    }
+  | {
+      /** Every desk (ADR-156 U9): the brain and the rings of knowledge work
+       *  it is growing into, nearest first. */
+      id: "knowledge";
+      line: string;
+      layers: readonly { label: string; domains: readonly string[] }[];
+    }
+  | {
+      /** The shoggoth (ADR-156 U9): the brain with its tentacles and mask. */
+      id: "shoggoth";
+      title: string;
+      line: string;
+    }
+  | {
+      /** Latent space (ADR-156 U9): a line at the centre of a particle field,
+       *  a few nodes named. */
+      id: "latent";
+      quote: string;
+      source: ArcSource;
+      nodes: readonly string[];
     }
   | {
       /** What AI could make, one card at a time, each settling into the
@@ -2925,19 +2947,12 @@ export type ArcFigureSpec = {
       id: "capability";
       cards: readonly {
         id: string;
-        kind: "image" | "video" | "tool" | "product" | "worlds" | "mathematics";
+        kind: "image" | "video" | "tool" | "brand" | "product" | "worlds" | "mathematics";
         year: string;
         title: string;
         caption: string;
         media?: { type: "image" | "video"; src: string; poster?: string; alt: string };
       }[];
-    }
-  | {
-      id: "crossroads";
-      /** The left way: the human half of the head. */
-      human: { label: string; line: string };
-      /** The right way: the machine half. */
-      machine: { label: string; line: string };
     }
 );
 

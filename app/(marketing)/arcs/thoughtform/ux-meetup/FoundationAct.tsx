@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
-import {
-  EDGE,
-  ISO_PHI,
-  ISO_S,
-  basisOf,
-  coreModel,
-  dot3,
-  orbitAt,
-  projP,
-  ringAround,
-  type Camera,
-  type CoreModel,
-} from "@/components/arcs/figures/foundation/mind";
+import { brainModel, type BrainModel } from "@/components/arcs/figures/foundation/brain";
+import { bakeBrain, flankAt, paintSignals, portAt, type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
   FACING,
+  MEDIA,
   SCREEN_X,
   STACK_L,
   VB,
@@ -33,35 +24,34 @@ import {
   U,
   type M6,
   type P2,
-  type V3,
 } from "@/components/arcs/figures/foundation/scene";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { UX_MEETUP_ARC } from "@/lib/arcs/content/ux-meetup";
 
 /**
- * FoundationAct — one scene across three beats (ADR-156 U5 to U8): what it
- * can make, intelligence as the interface, an intelligence. The examples face
- * the reader one by one as framed slabs under their own head, as Unsiloed
- * sets its words over its drawing, and lie down in the stack on the left,
- * whose capability axis grows with it; on the way to the next beat the floor
- * and the axis fall away and the stack cascades to the centre; the model's
- * core stands over it and its cords plug into every plate the moment the
- * beat lands. After the line about software the core alone faces the reader,
- * between a tool and a collaborator.
+ * FoundationAct — one scene across six beats (ADR-156 U5 to U9): what it can
+ * make, intelligence as the interface, the middle, every desk, the
+ * shoggoth, latent space. The examples face the reader one by one as
+ * modules, their head in the frame over their picture as Unsiloed builds its
+ * cards, and lie down in the stack on the left, whose capability axis grows
+ * with it; the floor falls away and the stack cascades to the centre; the
+ * machine brain (`brain.ts`) hangs over it and its cables plug into every
+ * plate the moment the beat lands. After the line about software the brain
+ * returns: between a tool and a collaborator, inside the rings of the
+ * knowledge work it is growing into, as the shoggoth with its tentacles and
+ * mask. Last, latent space: a field of particles round a line.
  *
  * ⚠ A READER on the talk's scroll (one passive listener, one rAF) that
  * writes only its own layer. It is shown only while one of its beats is the
  * beat up (`data-uxm-active`, the tail's reader), above the terminal tier.
- * The sheets are SVG on exact plane matrices (`scene.ts`); the core
- * (`mind.ts`) is drawn ONCE per pose into an offscreen layer, depth-sorted,
- * in perspective, with its glow, and only its signals move on top; the cords
- * and runs are the live canvas; the words are DOM.
+ * The modules are SVG on exact plane matrices (`scene.ts`); the brain is
+ * baked ONCE per pose into a layer and only its signals move; the cords,
+ * rings, tentacles and the field are the live canvas; the words are DOM.
  */
 
 const CUT = 22;
 const W = CARD.w;
 const H = CARD.h;
-const INSET = 12;
 const chamferPts = (w: number, h: number, cut: number, x = 0, y = 0): [number, number][] => [
   [x, y],
   [x + w - cut, y],
@@ -73,7 +63,7 @@ const chamferPts = (w: number, h: number, cut: number, x = 0, y = 0): [number, n
 const chamferOf = (pts: [number, number][]) => `M${pts.map(([x, y]) => `${x} ${y}`).join(" L")} Z`;
 const OUTER = chamferPts(W, H, CUT);
 const chamfer = chamferOf(OUTER);
-const inner = chamferOf(chamferPts(W - 2 * INSET, H - 2 * INSET, CUT - 6, INSET, INSET));
+const media = chamferOf(chamferPts(MEDIA.w, MEDIA.h, 14, MEDIA.x, MEDIA.y));
 const mat = (m: M6) => `matrix(${m.map((v) => v.toFixed(4)).join(" ")})`;
 const apply = (m: M6, x: number, y: number): P2 => ({ x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] });
 
@@ -95,16 +85,18 @@ const CORDS = [
   { tone: "red", w: 1.1 },
   { tone: "gold", w: 2.2 },
   { tone: "green", w: 2.8 },
+  { tone: "ink", w: 1.6 },
 ] as const;
 
-/** The interface beat's core: three-quarters, at the isometric's pitch,
-    over the stack; a pose it holds. */
-const MIND_IFC: Camera = { psi: 0.62, phi: ISO_PHI, s: ISO_S * 0.74, o: { x: 806, y: 254 } };
-/** The intelligence beat's core: one face to the reader, near level,
-    centred, larger. It appears there; it never turns there. */
-const MIND_MID: Camera = { psi: 0, phi: 0.12, s: ISO_S * 1.04, o: { x: 720, y: 438 } };
-/** The middle beat's two terminals: a pin header each, in the viewBox. */
-const TERM = { tool: 318, collab: 1122, y: 438, half: 34 } as const;
+/** Where the brain stands in each beat that has it. */
+const PLACE: Record<number, Place> = {
+  1: { x: 806, y: 208, s: 0.68 },
+  2: { x: 720, y: 352, s: 0.95 },
+  3: { x: 720, y: 360, s: 0.74 },
+  4: { x: 720, y: 330, s: 0.78 },
+};
+/** The middle beat's two cards, in the viewBox. */
+const SIDE = { w: 300, h: 196, y: 352, tool: 98, collab: 1042 } as const;
 
 type Card = {
   id: string;
@@ -115,26 +107,41 @@ type Card = {
   media?: { type: "image" | "video"; src: string; poster?: string; alt: string };
 };
 
-const IDS = ["capability", "the-interface", "an-intelligence"] as const;
+const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "shoggoth", "latent-space"] as const;
 
 function findSpecs() {
-  const [cap, ifc, mid] = IDS.map((id) => UX_MEETUP_ARC.sections.find((s) => s.id === id));
-  const cards: readonly Card[] =
-    cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
-  const title = ifc?.kind === "figure" && ifc.figure.id === "interface" ? ifc.figure.mind : "";
-  const middle =
-    mid?.kind === "figure" && mid.figure.id === "middle"
-      ? mid.figure
-      : { line: "", tool: { label: "", line: "" }, collaborator: { label: "", line: "" } };
-  const eyebrows = [cap, ifc, mid].map((s) =>
-    s?.kind === "figure" ? (s.eyebrow ?? s.head?.eyebrow ?? "") : ""
-  );
-  return { cards, title, middle, eyebrows };
+  const s = IDS.map((id) => UX_MEETUP_ARC.sections.find((x) => x.id === id));
+  const fig = <T extends string>(i: number, id: T) => {
+    const x = s[i];
+    return x?.kind === "figure" && x.figure.id === id ? x.figure : null;
+  };
+  const cap = fig(0, "capability");
+  const cards: readonly Card[] = cap && cap.id === "capability" ? cap.cards : [];
+  const ifc = fig(1, "interface");
+  const mid = fig(2, "middle");
+  const know = fig(3, "knowledge");
+  const shog = fig(4, "shoggoth");
+  const lat = fig(5, "latent");
+  const middle = mid && mid.id === "middle" ? mid : null;
+  const knowledge = know && know.id === "knowledge" ? know : null;
+  const shoggoth = shog && shog.id === "shoggoth" ? shog : null;
+  const latent = lat && lat.id === "latent" ? lat : null;
+  const eyebrows = s.map((x) => (x?.kind === "figure" ? (x.eyebrow ?? x.head?.eyebrow ?? "") : ""));
+  const heads: { title: string; line: string }[] = [
+    { title: "", line: "" },
+    { title: ifc && ifc.id === "interface" ? ifc.mind : "", line: "" },
+    { title: middle?.line ?? "", line: "" },
+    { title: knowledge?.line ?? "", line: "" },
+    { title: shoggoth?.title ?? "", line: shoggoth?.line ?? "" },
+    { title: "", line: "" },
+  ];
+  return { cards, middle, knowledge, latent, eyebrows, heads };
 }
 
 export function FoundationAct() {
-  const { cards, title, middle, eyebrows } = useMemo(() => findSpecs(), []);
+  const { cards, middle, knowledge, latent, eyebrows, heads } = useMemo(() => findSpecs(), []);
   const n = cards.length;
+  const capEyebrow = eyebrows[0];
   const axes = useMemo(() => axesAt(n, STACK_L), [n]);
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -149,11 +156,12 @@ export function FoundationAct() {
   const yNameRef = useRef<SVGTextElement>(null);
   const leaderRef = useRef<SVGPathElement>(null);
   const eyebrowRef = useRef<HTMLSpanElement>(null);
-  const countRef = useRef<HTMLSpanElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
   const playRef = useRef<HTMLButtonElement>(null);
+  const theatreRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLVideoElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -164,8 +172,8 @@ export function FoundationAct() {
     if (!ctx) return;
     const talk = root.closest<HTMLElement>(".arc-root");
     talk?.setAttribute("data-act", "live");
-    const model = coreModel();
-    const walks = walksOf(model);
+    const model = brainModel();
+    const field = latentField(latent?.nodes ?? []);
     const jobs: ScrambleJob[] = [];
     let scrambleRaf = 0;
     const tick = () => {
@@ -175,6 +183,8 @@ export function FoundationAct() {
     };
     const scramble = (el: HTMLElement | null, text: string) => {
       if (!el) return;
+      // A new word for this element cancels the one still decoding into it.
+      for (let j = jobs.length - 1; j >= 0; j--) if (jobs[j].el === el) jobs.splice(j, 1);
       el.textContent = "";
       if (!text) return;
       queueScramble(jobs, el, text, performance.now() / 1000);
@@ -186,7 +196,7 @@ export function FoundationAct() {
     let landed = 0;
     let dpr = 1;
     let light = false;
-    const tone = { ink: "rgb(235, 227, 214)", gold: "rgb(202, 165, 84)", lit: "rgb(240, 200, 106)", green: "rgb(122, 158, 106)", red: "rgb(255, 107, 53)" };
+    const tone: Tone = { ink: "rgb(235, 227, 214)", gold: "rgb(202, 165, 84)", lit: "rgb(240, 200, 106)", green: "rgb(122, 158, 106)", red: "rgb(255, 107, 53)" };
     const layers = new Map<string, HTMLCanvasElement>();
 
     const size = () => {
@@ -203,18 +213,43 @@ export function FoundationAct() {
       light = document.documentElement.dataset.theme === "light";
       layers.clear();
     };
-    /** The core in one pose, drawn once at this size and in this theme. */
-    const layerOf = (key: string, cam: Camera, split: number) => {
+    /** The brain in one pose, drawn once at this size and in this theme. */
+    const layerOf = (ph: number) => {
+      const key = `${ph}|${light}`;
       let l = layers.get(key);
       if (!l) {
         l = document.createElement("canvas");
         l.width = canvas.width;
         l.height = canvas.height;
         const c = l.getContext("2d");
-        if (c) bakeCore(c, model, cam, { k: canvas.width / VB.w, dpr, tone, split, light });
+        if (c) bakeBrain(c, model, PLACE[ph], { k: canvas.width / VB.w, dpr, tone, light, split: ph === 2 ? 1 : 0, cables: ph === 2 || ph === 3 });
         layers.set(key, l);
       }
       return l;
+    };
+    /** The brain boots top to bottom behind a scanline, then holds. */
+    const paintBrain = (ph: number, since: number, now: number) => {
+      const pl = PLACE[ph];
+      const k = canvas.width / VB.w;
+      const top = pl.y - 215 * pl.s;
+      const bottom = pl.y + 470 * pl.s;
+      const boot = smooth(since / 1.0);
+      const edge = top + (bottom - top) * boot;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, canvas.width, edge * k);
+      ctx.clip();
+      ctx.drawImage(layerOf(ph), 0, 0);
+      ctx.restore();
+      if (boot < 1) {
+        ctx.globalAlpha = 0.7 * (1 - boot);
+        ctx.fillStyle = tone.lit;
+        ctx.fillRect((pl.x - 240 * pl.s) * k, edge * k - dpr, 480 * pl.s * k, 1.5 * dpr);
+        ctx.globalAlpha = 1;
+        return false;
+      }
+      paintSignals(ctx, model, pl, { k, dpr, tone, now, light });
+      return true;
     };
 
     const clocks = () => {
@@ -242,12 +277,9 @@ export function FoundationAct() {
         facingIdx = -1;
         root.dataset.faPhase = String(phase);
         const eb = eyebrows[phase];
-        // The interface's head is its title alone: the number, then the words.
         scramble(eyebrowRef.current, phase === 1 ? eb.split(" · ")[0] : eb);
-        if (countRef.current) countRef.current.textContent = "";
-        if (lineRef.current) lineRef.current.textContent = "";
-        if (phase === 1) scramble(titleRef.current, title);
-        if (phase === 2) scramble(titleRef.current, middle.line);
+        scramble(titleRef.current, heads[phase].title);
+        if (lineRef.current) lineRef.current.textContent = heads[phase].line;
       }
       const since = (now - landed) / 1000;
       const k = canvas.width / VB.w;
@@ -266,7 +298,6 @@ export function FoundationAct() {
         }
         if (leaderRef.current) leaderRef.current.style.opacity = floor.toFixed(3);
         root.toggleAttribute("data-fa-floor", poses[0].seated && floor > 0.01);
-        // The capability axis grows with the stack, a plate at a time.
         const inStack = poses.filter((p) => p.shown && !p.facing).length;
         axisZ += (capabilityTop(inStack) - axisZ) * 0.12;
         const tip = { x: axes.foot.x, y: axes.foot.y - axisZ * U };
@@ -294,7 +325,6 @@ export function FoundationAct() {
           const bm: M6 = [p.m[0], p.m[1], p.m[2], p.m[3], p.m[4] + p.depth.x, p.m[5] + p.depth.y];
           back.setAttribute("transform", mat(bm));
           back.style.visibility = vis;
-          // The slab's sides: each corner of the face joined to its back.
           join.setAttribute(
             "d",
             p.shown
@@ -319,54 +349,53 @@ export function FoundationAct() {
         });
         leaderRef.current?.setAttribute("d", leaders.join(" "));
         const f = phase === 0 ? poses.findIndex((p) => p.facing) : -1;
-        root.toggleAttribute("data-fa-facing", f >= 0);
         root.toggleAttribute("data-fa-video", f >= 0 && cards[f]?.media?.type === "video");
-        if (phase === 0 && f !== facingIdx) {
-          facingIdx = f;
-          const card = cards[f];
-          if (card && lineRef.current && countRef.current) {
-            countRef.current.textContent = `${String(f + 1).padStart(2, "0")} / ${String(n).padStart(2, "0")} · ${card.year}`;
-            lineRef.current.textContent = card.caption;
-            scramble(titleRef.current, card.title);
-          }
-        }
+        facingIdx = f;
         if (phase === 1) {
-          const shown = paintCore(ctx, layerOf(`ifc|${light}`, MIND_IFC, 0), model, walks, MIND_IFC, { k, dpr, tone, since, now, light });
-          if (shown) paintCords(ctx, model, MIND_IFC, { k, dpr, tone, since, now, n, a });
+          const shown = paintBrain(1, since, now);
+          if (shown) paintCords(ctx, model, PLACE[1], { k, dpr, tone, since, now, n, a });
         }
-      } else {
-        root.toggleAttribute("data-fa-facing", false);
-        root.toggleAttribute("data-fa-video", false);
-        const shown = paintCore(ctx, layerOf(`mid|${light}`, MIND_MID, 1), model, walks, MIND_MID, { k, dpr, tone, since, now, light });
-        root.toggleAttribute("data-fa-poles", shown);
-        if (shown) paintRuns(ctx, model, MIND_MID, { k, dpr, tone, since: since - 1.1, now });
+      } else if (phase === 2) {
+        const shown = paintBrain(2, since, now);
+        root.toggleAttribute("data-fa-cards", shown);
+        if (shown) paintRuns(ctx, PLACE[2], { k, dpr, tone, since: since - 1.0, now });
+      } else if (phase === 3) {
+        paintRings(ctx, knowledge?.layers ?? [], PLACE[3], { k, dpr, tone, since, now, light }, false);
+        paintBrain(3, since, now);
+        paintRings(ctx, knowledge?.layers ?? [], PLACE[3], { k, dpr, tone, since, now, light }, true);
+      } else if (phase === 4) {
+        paintTentacles(ctx, PLACE[4], { k, dpr, tone, since, now, light }, false);
+        const shown = paintBrain(4, since, now);
+        paintTentacles(ctx, PLACE[4], { k, dpr, tone, since, now, light }, true);
+        if (shown) paintMask(ctx, PLACE[4], { k, dpr, tone, since: since - 1.0, light });
+      } else if (phase === 5) {
+        paintField(ctx, field, { k, dpr, tone, since, now, light });
       }
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
     };
 
-    // Full screen with sound: the facing film, played as itself.
-    const player = playerRef.current;
-    const play = playRef.current;
+    // The film, played as itself: over the viewport with its sound. The
+    // theatre is portalled to the body (no stacking context of the page's
+    // can sit over it), so it is read at the moment of the click.
     const onPlay = () => {
+      const theatre = theatreRef.current;
+      const player = playerRef.current;
       const card = cards[facingIdx];
-      if (!player || !card?.media || card.media.type !== "video") return;
+      if (!player || !theatre || !card?.media || card.media.type !== "video") return;
       player.src = card.media.src;
       player.muted = false;
       player.currentTime = 0;
-      root.toggleAttribute("data-fa-playing", true);
-      void player.requestFullscreen?.().catch(() => undefined);
+      theatre.toggleAttribute("data-open", true);
       void player.play().catch(() => undefined);
+      closeRef.current?.focus();
     };
-    const onFull = () => {
-      if (document.fullscreenElement || !player) return;
-      player.pause();
-      player.removeAttribute("src");
-      player.load();
-      root.toggleAttribute("data-fa-playing", false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && theatreRef.current?.hasAttribute("data-open")) closeTheatre();
     };
-    play?.addEventListener("click", onPlay);
-    document.addEventListener("fullscreenchange", onFull);
+    const playBtn = playRef.current;
+    playBtn?.addEventListener("click", onPlay);
+    window.addEventListener("keydown", onKey);
 
     let raf = 0;
     const loop = (t: number) => {
@@ -377,7 +406,6 @@ export function FoundationAct() {
     raf = requestAnimationFrame(loop);
     const ro = new ResizeObserver(size);
     ro.observe(canvas);
-    // The canvas holds its colours; a theme switch must reach it too.
     const mo = new MutationObserver(size);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => {
@@ -385,20 +413,34 @@ export function FoundationAct() {
       if (scrambleRaf) cancelAnimationFrame(scrambleRaf);
       ro.disconnect();
       mo.disconnect();
-      play?.removeEventListener("click", onPlay);
-      document.removeEventListener("fullscreenchange", onFull);
+      playBtn?.removeEventListener("click", onPlay);
+      window.removeEventListener("keydown", onKey);
       talk?.removeAttribute("data-act");
     };
-  }, [cards, n, title, middle, eyebrows, axes]);
+  }, [cards, n, middle, knowledge, latent, eyebrows, heads, axes]);
 
-  const [pre, post] = [FACING.x / VB.w, FACING.y / VB.h];
+  /** Leave the theatre: the film stops and lets go of its source. */
+  function closeTheatre() {
+    const player = playerRef.current;
+    player?.pause();
+    player?.removeAttribute("src");
+    player?.load();
+    theatreRef.current?.toggleAttribute("data-open", false);
+  }
+  const client = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false
+  );
+  const s = FACING.s;
+  const playAt = { left: `${((FACING.x + (MEDIA.x + 14) * s) / VB.w) * 100}%`, top: `${((FACING.y + (MEDIA.y + MEDIA.h - 14) * s) / VB.h) * 100}%` };
   return (
     <div ref={rootRef} className="fa">
       <div className="fa__box">
         <svg className="fa__svg" viewBox={`0 0 ${VB.w} ${VB.h}`} aria-hidden="true">
           <defs>
-            <clipPath id="fa-cut">
-              <path d={inner} />
+            <clipPath id="fa-media">
+              <path d={media} />
             </clipPath>
           </defs>
           <g className="fa__stack">
@@ -430,306 +472,168 @@ export function FoundationAct() {
                 </g>
                 <path ref={(el) => void (joinRefs.current[i] = el)} className="fa__join" />
                 <g ref={(el) => void (sheetRefs.current[i] = el)} className="fa__sheet">
-                  <path className="fa__ground" d={chamfer} />
-                  <g clipPath="url(#fa-cut)">
-                    {c.media?.type === "image" ? (
-                      <image href={c.media.src} x={INSET} y={INSET} width={W - 2 * INSET} height={H - 2 * INSET} preserveAspectRatio="xMidYMid slice" />
-                    ) : null}
-                    {c.media?.type === "video" ? (
-                      <foreignObject x={INSET} y={INSET} width={W - 2 * INSET} height={H - 2 * INSET}>
-                        <video className="fa__video" src={c.media.src} poster={c.media.poster} muted loop autoPlay playsInline preload="metadata" />
-                      </foreignObject>
-                    ) : null}
-                    {c.kind === "worlds" ? <WorldsPlaceholder /> : null}
-                    {c.kind === "mathematics" ? <MathBoard /> : null}
-                  </g>
-                  <path className="fa__inset" d={inner} />
-                  <path className="fa__edge" d={chamfer} />
-                  {[
-                    [0, 0],
-                    [W, H],
-                    [0, H],
-                  ].map(([x, y], j) => (
-                    <path key={j} className="fa__cross" d={`M${x - 7} ${y} L${x + 7} ${y} M${x} ${y - 7} L${x} ${y + 7}`} />
-                  ))}
+                  <Module card={c} index={i} count={n} eyebrow={capEyebrow} />
                 </g>
               </g>
             ))}
           </g>
-          <g className="fa__poles">
-            {[TERM.tool, TERM.collab].map((x) => (
-              <g key={x}>
-                <path className="fa__header" d={`M${x} ${TERM.y - TERM.half} L${x} ${TERM.y + TERM.half}`} />
-                {[-TERM.half, TERM.half].map((dy) => (
-                  <path key={dy} className="fa__cross" d={`M${x - 6} ${TERM.y + dy} L${x + 6} ${TERM.y + dy} M${x} ${TERM.y + dy - 6} L${x} ${TERM.y + dy + 6}`} />
-                ))}
-              </g>
-            ))}
-          </g>
+          {middle ? (
+            <g className="fa__cards">
+              <SideCard x={SIDE.tool} y={SIDE.y - SIDE.h / 2} mark="A" spec={middle.tool} kind="tool" />
+              <SideCard x={SIDE.collab} y={SIDE.y - SIDE.h / 2} mark="B" spec={middle.collaborator} kind="collab" />
+            </g>
+          ) : null}
         </svg>
         <canvas ref={canvasRef} className="fa__dots" aria-hidden="true" />
         <div className="fa__head" aria-hidden="true">
           <p className="fa__eyebrow">
             <span ref={eyebrowRef} />
-            <span ref={countRef} className="fa__count" />
           </p>
           <h3 ref={titleRef} className="fa__title" />
           <p ref={lineRef} className="fa__line" />
         </div>
-        <div className="fa__term" data-side="tool" aria-hidden="true">
-          <span className="fa__term-name">{middle.tool.label}</span>
-          <span className="fa__term-line">{middle.tool.line}</span>
-        </div>
-        <div className="fa__term" data-side="collab" aria-hidden="true">
-          <span className="fa__term-name">{middle.collaborator.label}</span>
-          <span className="fa__term-line">{middle.collaborator.line}</span>
-        </div>
-        <button
-          ref={playRef}
-          type="button"
-          className="fa__play"
-          style={{ left: `${pre * 100}%`, top: `calc(${post * 100}% + ${((H * FACING.s) / VB.h) * 100}% + 18px)` }}
-        >
+        {latent ? (
+          <figure className="fa__quote" aria-hidden="true">
+            <blockquote>{latent.quote}</blockquote>
+            <figcaption>{latent.source.label}</figcaption>
+          </figure>
+        ) : null}
+        <button ref={playRef} type="button" className="fa__play" style={playAt}>
           <span aria-hidden="true">▶</span> Play with sound
         </button>
-        <video ref={playerRef} className="fa__player" controls playsInline />
       </div>
+      {client
+        ? createPortal(
+            <div
+              ref={theatreRef}
+              className="fa-theatre"
+              role="dialog"
+              aria-label="Film"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) closeTheatre();
+              }}
+            >
+              <video ref={playerRef} className="fa-theatre__video" controls playsInline />
+              <button ref={closeRef} type="button" className="fa-theatre__close" onClick={closeTheatre}>
+                Close <span aria-hidden="true">×</span>
+              </button>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }
 
-type Tone = { ink: string; gold: string; lit: string; green: string; red: string };
-
-/** Seven signals walking the shell's edges, each a fixed walk of 240 steps. */
-function walksOf(m: CoreModel): V3[][] {
-  const key = (p: V3) => `${p.x.toFixed(3)},${p.y.toFixed(3)},${p.z.toFixed(3)}`;
-  const nbr = new Map<string, V3[]>();
-  for (const e of m.edges) {
-    if (e.kind !== EDGE.shell) continue;
-    for (const [a, b] of [
-      [e.a, e.b],
-      [e.b, e.a],
-    ]) {
-      const list = nbr.get(key(a)) ?? [];
-      list.push(b);
-      nbr.set(key(a), list);
-    }
-  }
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  return Array.from({ length: 7 }, (_, w) => {
-    let at = m.shell[(w * 3) % m.shell.length];
-    let prev: V3 | null = null;
-    const out = [at];
-    for (let s = 0; s < 240; s++) {
-      const options = (nbr.get(key(at)) ?? []).filter((p) => !prev || key(p) !== key(prev));
-      const next = options[Math.floor(rnd() * options.length)];
-      prev = at;
-      at = next;
-      out.push(at);
-    }
-    return out;
-  });
+/** One example as one module: its head in the frame, its picture under it. */
+function Module({ card, index, count, eyebrow }: { card: Card; index: number; count: number; eyebrow: string }) {
+  return (
+    <>
+      <path className="fa__ground" d={chamfer} />
+      <text className="fa__mod-eyebrow" x="24" y="34">
+        {eyebrow.toUpperCase()}
+      </text>
+      <text className="fa__mod-count" x={W - 24} y="34" textAnchor="end">
+        {String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")} · {card.year}
+      </text>
+      <text className="fa__mod-title" x="24" y="72">
+        {card.title}
+      </text>
+      <text className="fa__mod-line" x="24" y="94">
+        {card.caption}
+      </text>
+      <g clipPath="url(#fa-media)">
+        {card.media?.type === "image" ? (
+          <image href={card.media.src} x={MEDIA.x} y={MEDIA.y} width={MEDIA.w} height={MEDIA.h} preserveAspectRatio="xMidYMid slice" />
+        ) : null}
+        {card.media?.type === "video" ? (
+          <foreignObject x={MEDIA.x} y={MEDIA.y} width={MEDIA.w} height={MEDIA.h}>
+            <video className="fa__video" src={card.media.src} poster={card.media.poster} muted loop autoPlay playsInline preload="metadata" />
+          </foreignObject>
+        ) : null}
+        {card.kind === "worlds" || card.kind === "mathematics" ? (
+          <g transform={`translate(${MEDIA.x} ${MEDIA.y}) scale(${MEDIA.w / 560} ${MEDIA.h / 315})`}>
+            {card.kind === "worlds" ? <WorldsPlaceholder /> : <MathBoard />}
+          </g>
+        ) : null}
+      </g>
+      <path className="fa__inset" d={media} />
+      <path className="fa__edge" d={chamfer} />
+      {[
+        [0, 0],
+        [W, H],
+        [0, H],
+      ].map(([x, y], j) => (
+        <path key={j} className="fa__cross" d={`M${x - 7} ${y} L${x + 7} ${y} M${x} ${y - 7} L${x} ${y + 7}`} />
+      ))}
+    </>
+  );
 }
 
-/**
- * The core, drawn once per pose: every line and particle in perspective,
- * sorted far to near, faded and thinned with depth as a long lens would see
- * it, each line under its own halo. On the void the light adds ("lighter");
- * on parchment it lays down as ink. `split` gives the middle beat its two
- * sides: the tool's (left) crisp and lit, the collaborator's (right) loose
- * particles in green.
- */
-function bakeCore(
-  ctx: CanvasRenderingContext2D,
-  m: CoreModel,
-  cam: Camera,
-  o: { k: number; dpr: number; tone: Tone; split: number; light: boolean }
-) {
-  const B = basisOf(cam);
-  const v = B.view;
-  const { k, dpr, tone, split, light } = o;
-  const R = 6.3;
-  const fog = (d: number) => 0.18 + 0.82 * Math.min(1, Math.max(0, (d + R) / (2 * R)));
-  type Prim = { d: number; draw: () => void };
-  const prims: Prim[] = [];
-  const P = (p: V3) => projP(p, B, cam.o);
-  const right = (x: number) => (x > cam.o.x ? split : 0);
-  const left = (x: number) => (x < cam.o.x ? split : 0);
-
-  const seg = (a: V3, b: V3, col: string, w: number, alpha: number, halo = true) => {
-    const pa = P(a);
-    const pb = P(b);
-    const d = (pa.d + pb.d) / 2;
-    const f = fog(d);
-    const mx = (pa.x + pb.x) / 2;
-    prims.push({
-      d,
-      draw: () => {
-        const al = alpha * f * (1 - 0.55 * right(mx)) * (1 + 0.4 * left(mx));
-        if (halo && !light) {
-          ctx.globalAlpha = Math.min(1, al * 0.16);
-          ctx.lineWidth = (w + 3.2) * f * dpr;
-          ctx.strokeStyle = col;
-          ctx.beginPath();
-          ctx.moveTo(pa.x * k, pa.y * k);
-          ctx.lineTo(pb.x * k, pb.y * k);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = Math.min(1, al);
-        ctx.lineWidth = Math.max(0.6, w * (0.6 + 0.6 * f)) * dpr;
-        ctx.strokeStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(pa.x * k, pa.y * k);
-        ctx.lineTo(pb.x * k, pb.y * k);
-        ctx.stroke();
-      },
-    });
-  };
-  const dot = (p: V3, col: string, size: number, alpha: number) => {
-    const q = P(p);
-    const f = fog(q.d);
-    prims.push({
-      d: q.d,
-      draw: () => {
-        const loose = right(q.x);
-        ctx.globalAlpha = Math.min(1, alpha * f * (1 + 0.5 * loose) * (1 - 0.4 * left(q.x)));
-        ctx.fillStyle = loose > 0.5 ? tone.green : col;
-        const s = size * q.k * (1 + 0.5 * loose) * dpr;
-        ctx.fillRect(q.x * k - s / 2, q.y * k - s / 2, s, s);
-      },
-    });
-  };
-  const ring = (pts: V3[], col: string, w: number, alpha: number, dash = false) => {
-    for (let j = 0; j + 1 < pts.length; j++) {
-      if (dash && j % 2) continue;
-      seg(pts[j], pts[j + 1], col, w, alpha, false);
-    }
-  };
-
-  // The shell and the lattice, as lines and as the particles on them.
-  for (const e of m.edges) {
-    if (e.kind === EDGE.shell) seg(e.a, e.b, tone.gold, 1.1, 0.75);
-    else if (e.kind === EDGE.lattice) seg(e.a, e.b, tone.ink, 0.8, 0.42, false);
-    else if (e.kind === EDGE.spoke) seg(e.a, e.b, tone.ink, 0.6, 0.22, false);
-  }
-  for (const d of m.dust) dot(d.p, d.kind === EDGE.shell ? tone.lit : tone.ink, d.kind === EDGE.shell ? 1.5 : 1.2, d.kind === EDGE.shell ? 0.8 : 0.5);
-  // The face circuits: lit where the face looks at the reader.
-  const facing = (n: V3) => dot3(n, v);
-  for (const e of m.edges) {
-    if (e.kind !== EDGE.circuit) continue;
-    const mid = { x: (e.a.x + e.b.x) / 2, y: (e.a.y + e.b.y) / 2, z: (e.a.z + e.b.z) / 2 };
-    const face = m.faces.reduce((best, f) => (dot3(f.n, mid) > dot3(best.n, mid) ? f : best), m.faces[0]);
-    const lit = facing(face.n) > 0.05;
-    seg(e.a, e.b, tone.lit, lit ? 1.2 : 0.8, lit ? 0.95 : 0.16, lit);
-  }
-  for (const via of m.vias) {
-    const lit = facing(via.n) > 0.05;
-    ring(ringAround(via.p, via.n, 0.09, 10), tone.lit, 1, lit ? 0.95 : 0.15);
-  }
-  // The shell's corners: a node and a ring on each near one.
-  for (const p of m.shell) {
-    dot(p, tone.lit, 3.2, 0.95);
-    const n = { x: p.x / 4.3, y: p.y / 4.3, z: p.z / 4.3 };
-    if (facing(n) > 0.2) ring(ringAround(p, n, 0.2, 14), tone.gold, 0.8, 0.6);
-  }
-  // The core: a sphere of particles and its three rings.
-  for (const p of m.core.dots) dot(p, tone.ink, 1.3, 0.7);
-  for (const r of m.core.rings) {
-    const pts: V3[] = [];
-    for (let j = 0; j <= 64; j++) pts.push(orbitAt(r, (j / 64) * Math.PI * 2));
-    ring(pts, tone.gold, 0.9, 0.7);
-  }
-  // The hologram's orbits outside.
-  for (const ob of m.orbits) {
-    const pts: V3[] = [];
-    for (let j = 0; j <= 160; j++) pts.push(orbitAt(ob, (j / 160) * Math.PI * 2, 0.2));
-    ring(pts, ob.dashed ? tone.ink : tone.gold, ob.dashed ? 0.8 : 1.2, ob.dashed ? 0.45 : 0.7, ob.dashed);
-  }
-  // The sockets.
-  for (const s of m.sockets) dot(s, tone.lit, 6, 1);
-
-  prims.sort((a, b) => a.d - b.d);
-  ctx.globalCompositeOperation = light ? "source-over" : "lighter";
-  ctx.lineCap = "round";
-  for (const p of prims) p.draw();
-  // The core's light, at its centre.
-  if (!light) {
-    const c = P({ x: 0, y: 0, z: 0 });
-    const r = 1.9 * cam.s * k;
-    const g = ctx.createRadialGradient(c.x * k, c.y * k, 0, c.x * k, c.y * k, r);
-    g.addColorStop(0, "rgba(240, 200, 106, 0.32)");
-    g.addColorStop(1, "rgba(240, 200, 106, 0)");
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = g;
-    ctx.fillRect(c.x * k - r, c.y * k - r, 2 * r, 2 * r);
-  }
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 1;
-}
-
-/**
- * The core in its pose: it boots top to bottom behind a scanline, then
- * holds, and only its signals move, walking the shell's edges, with the
- * orbits' nodes. Returns whether it is up (the cords wait for it).
- */
-function paintCore(
-  ctx: CanvasRenderingContext2D,
-  layer: HTMLCanvasElement,
-  m: CoreModel,
-  walks: V3[][],
-  cam: Camera,
-  o: { k: number; dpr: number; tone: Tone; since: number; now: number; light: boolean }
-): boolean {
-  const { k, dpr, tone } = o;
-  const B = basisOf(cam);
-  const P = (p: V3) => projP(p, B, cam.o);
-  const half = 6.6 * cam.s;
-  const top = cam.o.y - half;
-  const boot = smooth(o.since / 1.0);
-  const edge = top + 2 * half * boot;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, ctx.canvas.width, edge * k);
-  ctx.clip();
-  ctx.drawImage(layer, 0, 0);
-  ctx.restore();
-  if (boot < 1) {
-    ctx.globalAlpha = 0.7 * (1 - boot);
-    ctx.fillStyle = tone.lit;
-    ctx.fillRect((cam.o.x - half) * k, edge * k - dpr, 2 * half * k, 1.5 * dpr);
-    return false;
-  }
-  ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
-  // Signals: each walks a shell edge in 0.7 s, with a short trail.
-  walks.forEach((w, i) => {
-    const t = o.now / 700 + i * 13.7;
-    const s = Math.floor(t) % (w.length - 1);
-    const f = t - Math.floor(t);
-    for (let tail = 0; tail < 5; tail++) {
-      const u = f - tail * 0.07;
-      if (u < 0) break;
-      const a = P(w[s]);
-      const b = P(w[s + 1]);
-      const x = lerp(a.x, b.x, u);
-      const y = lerp(a.y, b.y, u);
-      const r = (3.4 - tail * 0.5) * dpr;
-      ctx.globalAlpha = 1 - tail * 0.2;
-      ctx.fillStyle = tone.lit;
-      ctx.fillRect(x * k - r / 2, y * k - r / 2, r, r);
-    }
-  });
-  // A node drifting on each orbit.
-  m.orbits.forEach((ob, i) => {
-    const q = P(orbitAt(ob, o.now / (9000 + i * 5000) + i * 2.4, 0.2));
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = tone.lit;
-    ctx.beginPath();
-    ctx.arc(q.x * k, q.y * k, 3 * dpr, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.globalCompositeOperation = "source-over";
-  return true;
+/** A card of the middle beat, in the modules' own make: a slab with its head
+    and its rows, the tool's an instruction log, the collaborator's a talk. */
+function SideCard({
+  x,
+  y,
+  mark,
+  spec,
+  kind,
+}: {
+  x: number;
+  y: number;
+  mark: string;
+  spec: { label: string; line: string; rows: readonly string[] };
+  kind: "tool" | "collab";
+}) {
+  const w = SIDE.w;
+  const h = SIDE.h;
+  const outer = chamferPts(w, h, 16, x, y);
+  const back = chamferPts(w, h, 16, x + 12, y - 9);
+  return (
+    <g className="fa__side" data-kind={kind}>
+      <path className="fa__side-back" d={chamferOf(back)} />
+      <path className="fa__join" d={outer.map(([px, py]) => `M${px} ${py} l12 -9`).join(" ")} />
+      <path className="fa__ground" d={chamferOf(outer)} />
+      <path className="fa__edge" d={chamferOf(outer)} />
+      <text className="fa__mod-eyebrow" x={x + 18} y={y + 28}>
+        {mark} · {spec.label.toUpperCase()}
+      </text>
+      <text className="fa__side-title" x={x + 18} y={y + 60}>
+        {spec.line}
+      </text>
+      <path className="fa__inset" d={`M${x + 18} ${y + 78} L${x + w - 18} ${y + 78}`} />
+      {spec.rows.map((r, i) =>
+        kind === "tool" ? (
+          <g key={r}>
+            <text className="fa__side-row" x={x + 18} y={y + 104 + i * 26}>
+              <tspan className="fa__side-mark">›</tspan> {r}
+            </text>
+            <text className="fa__side-ok" x={x + w - 18} y={y + 104 + i * 26} textAnchor="end">
+              DONE
+            </text>
+          </g>
+        ) : (
+          <text
+            key={r}
+            className="fa__side-row"
+            data-voice={i % 2 ? "b" : "a"}
+            x={i % 2 ? x + w - 18 : x + 18}
+            y={y + 108 + i * 34}
+            textAnchor={i % 2 ? "end" : "start"}
+          >
+            {r}
+          </text>
+        )
+      )}
+      {[
+        [x, y],
+        [x + w, y + h],
+        [x, y + h],
+      ].map(([cx, cy], j) => (
+        <path key={j} className="fa__cross" d={`M${cx - 6} ${cy} L${cx + 6} ${cy} M${cx} ${cy - 6} L${cx} ${cy + 6}`} />
+      ))}
+    </g>
+  );
 }
 
 const toneOf = (tone: Tone, name: string) =>
@@ -742,23 +646,22 @@ function strokePath(ctx: CanvasRenderingContext2D, pts: P2[], k: number, upto = 
   ctx.stroke();
 }
 
-/** The cords: from the base's sockets out and round into every plate. */
+/** The cords: from the manifold's ports out and round into every plate. */
 function paintCords(
   ctx: CanvasRenderingContext2D,
-  m: CoreModel,
-  cam: Camera,
+  m: BrainModel,
+  pl: Place,
   o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number }
 ) {
-  const B = basisOf(cam);
   const { k, dpr, tone, n } = o;
   for (let i = 0; i < n; i++) {
     const cord = CORDS[i % CORDS.length];
-    const from = projP(m.sockets[i % m.sockets.length], B, cam.o);
+    const from = portAt(m, pl, i);
     const to = plateSocket(i, n, plateOrigin(i, o.a));
-    const reachOut = 80 + i * 26;
-    // Out wide to the right first, round the stack's corner, and in from
-    // outside its right edge: a cord never crosses a plate's face.
-    const pts = cable(from, to, { x: 200 + i * 30, y: 30 + i * 12 }, { x: SCREEN_X.x * reachOut, y: SCREEN_X.y * reachOut }, 40);
+    const reachOut = 80 + i * 22;
+    // Down out of the manifold first, then round the stack's corner and in
+    // from outside its right edge: a cord never crosses a plate's face.
+    const pts = cable(from, to, { x: 60 + i * 26, y: 110 }, { x: SCREEN_X.x * reachOut, y: SCREEN_X.y * reachOut }, 40);
     const grow = smooth((o.since - 1.0 - i * 0.06) / 0.5);
     if (grow <= 0) continue;
     const upto = Math.max(1, Math.floor(grow * (pts.length - 1)));
@@ -790,27 +693,19 @@ function paintCords(
   }
 }
 
-/**
- * The middle beat's runs: from the core's left to the tool's pin header,
- * routed square as a board routes, the commands one way; from its right to
- * the collaborator's, loose streams of particles running both ways.
- */
-function paintRuns(
-  ctx: CanvasRenderingContext2D,
-  m: CoreModel,
-  cam: Camera,
-  o: { k: number; dpr: number; tone: Tone; since: number; now: number }
-) {
-  const B = basisOf(cam);
+/** The middle beat's runs: from the brain's left to the tool's card, squared
+    as a board routes; from its right to the collaborator's, loose streams of
+    particles running both ways. */
+function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number }) {
   const { k, dpr, tone } = o;
   const grow = smooth(o.since / 0.8);
   if (grow <= 0) return;
-  const widths = [2.4, 1.2, 1.8];
-  const pinY = [-22, 0, 22];
-  m.flanks.tool.forEach((p, j) => {
-    const a = projP(p, B, cam.o);
-    const end = { x: TERM.tool, y: TERM.y + pinY[j] };
-    const bend = 400 - j * 24;
+  const widths = [2.2, 1.2, 1.8];
+  const pinY = [-40, 0, 40];
+  for (let j = 0; j < 3; j++) {
+    const a = flankAt(pl, -1, j);
+    const end = { x: SIDE.tool + SIDE.w + 1, y: SIDE.y + pinY[j] };
+    const bend = (a.x + end.x) / 2 + (j - 1) * 14;
     const pts: P2[] = [a, { x: bend, y: a.y }, { x: bend, y: end.y }, end];
     const dense: P2[] = [];
     for (let s = 0; s + 1 < pts.length; s++) {
@@ -831,33 +726,312 @@ function paintRuns(
         ctx.fillRect(q.x * k - r / 2, q.y * k - r / 2, r, r);
       }
     }
-  });
-  m.flanks.collab.forEach((p, j) => {
-    const a = projP(p, B, cam.o);
-    const end = { x: TERM.collab, y: TERM.y + pinY[j] };
-    const pts = cable(a, end, { x: 120, y: (j - 1) * 70 }, { x: -120, y: (1 - j) * 40 }, 40);
+  }
+  for (let j = 0; j < 3; j++) {
+    const a = flankAt(pl, 1, j);
+    const end = { x: SIDE.collab - 1, y: SIDE.y + pinY[j] };
+    const pts = cable(a, end, { x: 80, y: (j - 1) * 60 }, { x: -80, y: (1 - j) * 30 }, 40);
     const col = j === 1 ? tone.ink : tone.green;
     ctx.strokeStyle = col;
     ctx.fillStyle = col;
     ctx.globalAlpha = 0.3;
     ctx.lineWidth = 1 * dpr;
     strokePath(ctx, pts, k, Math.max(1, Math.floor(grow * (pts.length - 1))));
-    if (grow < 1) return;
+    if (grow < 1) continue;
     ctx.globalAlpha = 0.9;
     ctx.fillRect(end.x * k - 3 * dpr, end.y * k - 3 * dpr, 6 * dpr, 6 * dpr);
-    // A stream of particles, both ways: a conversation, not a command.
-    for (let s = 0; s < 22; s++) {
+    for (let s = 0; s < 20; s++) {
       const dir = s % 2 ? 1 : -1;
-      const base = (s / 22 + (dir * o.now) / (5200 + j * 600)) % 1;
+      const base = (s / 20 + (dir * o.now) / (5200 + j * 600)) % 1;
       const t = base < 0 ? base + 1 : base;
       const q = pts[Math.floor(t * (pts.length - 1))];
-      const jx = 4 * Math.sin(s * 12.9 + o.now / 600);
-      const jy = 4 * Math.cos(s * 7.3 + o.now / 700);
+      const jx = 3.5 * Math.sin(s * 12.9 + o.now / 600);
+      const jy = 3.5 * Math.cos(s * 7.3 + o.now / 700);
       const r = (1.4 + (s % 3) * 0.7) * dpr;
       ctx.globalAlpha = 0.85;
       ctx.fillRect((q.x + jx) * k - r / 2, (q.y + jy) * k - r / 2, r, r);
     }
+  }
+}
+
+/**
+ * Every desk: three rings of knowledge work round the brain, nearest first,
+ * near level as the homepage's orbits are, a node and its name for every
+ * kind of work, drifting slowly round. Drawn in two passes: the far halves
+ * under the brain, the near halves over it.
+ */
+function paintRings(
+  ctx: CanvasRenderingContext2D,
+  layers: readonly { label: string; domains: readonly string[] }[],
+  pl: Place,
+  o: { k: number; dpr: number; tone: Tone; since: number; now: number; light: boolean },
+  near: boolean
+) {
+  const { k, dpr, tone } = o;
+  const RX = [300, 420, 540];
+  const tilt = 0.34;
+  ctx.save();
+  ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
+  ctx.font = `${11 * k}px "PT Mono", ui-monospace, monospace`;
+  layers.forEach((layer, li) => {
+    const rx = RX[li];
+    const ry = rx * tilt;
+    const cy = pl.y + 10;
+    const show = smooth((o.since - 1.0 - li * 0.35) / 0.7);
+    if (show <= 0) return;
+    // The ring, its far or near half.
+    ctx.strokeStyle = li === 0 ? tone.gold : tone.ink;
+    ctx.lineWidth = (li === 0 ? 1.3 : 1) * dpr;
+    ctx.setLineDash(li === 2 ? [3 * dpr, 6 * dpr] : []);
+    ctx.globalAlpha = (near ? 0.75 : 0.22) * show * (li === 2 ? 0.8 : 1);
+    ctx.beginPath();
+    const from = near ? 0 : Math.PI;
+    for (let j = 0; j <= 80; j++) {
+      const t = from + (j / 80) * Math.PI;
+      const x = pl.x + Math.cos(t) * rx;
+      const y = cy + Math.sin(t) * ry;
+      if (j) ctx.lineTo(x * k, y * k);
+      else ctx.moveTo(x * k, y * k);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Its nodes and their names.
+    const m = layer.domains.length;
+    layer.domains.forEach((d, j) => {
+      const t = (j / m) * Math.PI * 2 + o.now / (60000 + li * 30000) * (li % 2 ? -1 : 1) + li * 0.4;
+      const front = Math.sin(t) > 0;
+      if (front !== near) return;
+      const x = pl.x + Math.cos(t) * rx;
+      const y = cy + Math.sin(t) * ry;
+      const depth = 0.45 + 0.55 * (Math.sin(t) + 1) / 2;
+      ctx.globalAlpha = show * depth;
+      ctx.fillStyle = li === 0 ? tone.lit : tone.ink;
+      const r = (li === 0 ? 4 : 3) * dpr;
+      ctx.fillRect(x * k - r / 2, y * k - r / 2, r, r);
+      ctx.globalAlpha = show * depth * 0.9;
+      ctx.fillStyle = li === 0 ? tone.gold : tone.ink;
+      ctx.textAlign = Math.cos(t) < 0 ? "right" : "left";
+      ctx.fillText(d.toUpperCase(), (x + (Math.cos(t) < 0 ? -10 : 10)) * k, (y + 4) * k);
+    });
+    // The ring's name, in the legend under the figure.
+    if (near) {
+      const lx = pl.x - 260 + li * 190;
+      const ly = 700;
+      ctx.globalAlpha = 0.8 * show;
+      ctx.strokeStyle = li === 0 ? tone.gold : tone.ink;
+      ctx.lineWidth = (li === 0 ? 1.3 : 1) * dpr;
+      ctx.setLineDash(li === 2 ? [3 * dpr, 6 * dpr] : []);
+      ctx.beginPath();
+      ctx.moveTo(lx * k, ly * k);
+      ctx.lineTo((lx + 36) * k, ly * k);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = li === 0 ? tone.gold : tone.ink;
+      ctx.textAlign = "left";
+      ctx.fillText(layer.label.toUpperCase(), (lx + 46) * k, (ly + 4) * k);
+    }
   });
+  ctx.restore();
+}
+
+/**
+ * The shoggoth's tentacles: twelve from under and around the brain, each a
+ * chain that tapers to its tip and curls, a slow wave running out along it,
+ * suckers in gold along its underside. Far ones first, under the brain.
+ */
+function paintTentacles(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number; light: boolean }, near: boolean) {
+  const { k, dpr, tone } = o;
+  const grow = smooth((o.since - 0.6) / 1.6);
+  if (grow <= 0) return;
+  ctx.save();
+  ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
+  ctx.lineCap = "round";
+  const N = 12;
+  for (let i = 0; i < N; i++) {
+    const isNear = i % 3 !== 0;
+    if (isNear !== near) continue;
+    // Roots along the brain's underside, fanning out.
+    const u = i / (N - 1);
+    const root = isNear
+      ? { x: pl.x + (u - 0.5) * 300 * pl.s, y: pl.y + (110 + 70 * Math.sin(u * Math.PI)) * pl.s }
+      : { x: pl.x + (u - 0.5) * 380 * pl.s, y: pl.y - 40 * pl.s };
+    const ang0 = isNear ? Math.PI / 2 - (u - 0.5) * 3.0 : -Math.PI / 2 + (u - 0.5) * 2.8;
+    const len = (isNear ? 420 + 160 * Math.sin(i * 2.3) : 330 + 90 * Math.cos(i)) * pl.s * grow;
+    const segs = 60;
+    const step = len / segs;
+    const pts: P2[] = [root];
+    let p = root;
+    for (let s = 1; s <= segs; s++) {
+      const f = s / segs;
+      // The heading is set, not summed: a wave travels out along it and the
+      // tip curls, but the fan holds.
+      const ang = ang0 + 0.32 * Math.sin(o.now / 1400 - f * 5 + i * 1.3) * (0.25 + f) + (f > 0.55 ? (i % 2 ? 1 : -1) * (f - 0.55) * 2.6 : 0);
+      p = { x: p.x + Math.cos(ang) * step, y: p.y + Math.sin(ang) * step };
+      pts.push(p);
+    }
+    const base = (isNear ? 8 : 5) * pl.s;
+    for (let s = 1; s < pts.length; s++) {
+      const f = s / segs;
+      const w = base * (1 - f) + 0.6;
+      ctx.strokeStyle = f > 0.55 ? tone.gold : tone.ink;
+      ctx.globalAlpha = (isNear ? 0.38 : 0.18) * (1 - 0.5 * f);
+      ctx.lineWidth = w * dpr;
+      ctx.beginPath();
+      ctx.moveTo(pts[s - 1].x * k, pts[s - 1].y * k);
+      ctx.lineTo(pts[s].x * k, pts[s].y * k);
+      ctx.stroke();
+      // Suckers along the underside, in gold, shrinking to the tip.
+      if (s % 4 === 0 && f < 0.85) {
+        const a = pts[s - 1];
+        const b = pts[s];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const l = Math.hypot(dx, dy) || 1;
+        const sx = b.x + (-dy / l) * w * 0.9;
+        const sy = b.y + (dx / l) * w * 0.9;
+        ctx.globalAlpha = (isNear ? 0.85 : 0.35) * (1 - f);
+        ctx.strokeStyle = tone.gold;
+        ctx.lineWidth = 0.9 * dpr;
+        ctx.beginPath();
+        ctx.arc(sx * k, sy * k, Math.max(0.8, w * 0.45) * k, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+/** The mask: a smiling face held in front of the brain, thin gold. */
+function paintMask(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; light: boolean }) {
+  const { k, dpr, tone } = o;
+  const show = smooth(o.since / 0.8);
+  if (show <= 0) return;
+  const c = { x: pl.x + 6 * pl.s, y: pl.y - 4 * pl.s };
+  const rx = 62 * pl.s;
+  const ry = 74 * pl.s;
+  ctx.save();
+  ctx.translate(c.x * k, c.y * k);
+  ctx.rotate(-0.08);
+  ctx.globalAlpha = show * (o.light ? 0.9 : 0.85);
+  ctx.fillStyle = o.light ? "rgba(233, 225, 211, 0.9)" : "rgba(10, 9, 8, 0.82)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, rx * k, ry * k, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = tone.lit;
+  ctx.lineWidth = 1.6 * dpr;
+  ctx.stroke();
+  // Two eyes and the smile.
+  ctx.lineWidth = 1.8 * dpr;
+  for (const sx of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(sx * 22 * pl.s * k, -16 * pl.s * k, 8 * pl.s * k, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(0, 6 * pl.s * k, 30 * pl.s * k, Math.PI * 0.15, Math.PI * 0.85);
+  ctx.stroke();
+  // Its strap, round behind the brain.
+  ctx.globalAlpha = show * 0.5;
+  ctx.lineWidth = 1 * dpr;
+  ctx.beginPath();
+  ctx.moveTo(-rx * k, -8 * pl.s * k);
+  ctx.lineTo(-rx * k - 110 * pl.s * k, -24 * pl.s * k);
+  ctx.moveTo(rx * k, -8 * pl.s * k);
+  ctx.lineTo(rx * k + 110 * pl.s * k, -24 * pl.s * k);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Latent space: points in depth, in clusters, and the named nodes among
+    them, each tied to its nearest neighbours. */
+type Field = { pts: { x: number; y: number; z: number; c: number }[]; nodes: { i: number; name: string; near: number[] }[] };
+function latentField(names: readonly string[]): Field {
+  let seed = 9;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-9)) * Math.cos(2 * Math.PI * rnd());
+  const centres = Array.from({ length: 11 }, () => ({ x: (rnd() - 0.5) * 2.8, y: (rnd() - 0.5) * 1.2, z: (rnd() - 0.5) * 2.4 }));
+  const pts = Array.from({ length: 1600 }, () => {
+    const c = Math.floor(rnd() * centres.length);
+    const s = 0.16 + rnd() * 0.18;
+    return { x: centres[c].x + gauss() * s, y: centres[c].y + gauss() * s * 0.7, z: centres[c].z + gauss() * s, c };
+  });
+  const nodes = names.map((name, j) => {
+    const i = Math.floor((j + 0.5) * (pts.length / names.length));
+    const p = pts[i];
+    const near = pts
+      .map((q, qi) => ({ qi, d: (q.x - p.x) ** 2 + (q.y - p.y) ** 2 + (q.z - p.z) ** 2 }))
+      .sort((a, b) => a.d - b.d)
+      .slice(1, 6)
+      .map((x) => x.qi);
+    return { i, name, near };
+  });
+  return { pts, nodes };
+}
+
+function paintField(ctx: CanvasRenderingContext2D, f: Field, o: { k: number; dpr: number; tone: Tone; since: number; now: number; light: boolean }) {
+  const { k, dpr, tone } = o;
+  const show = smooth(o.since / 1.2);
+  const yaw = o.now / 26000;
+  const cy = Math.cos(yaw);
+  const sy = Math.sin(yaw);
+  const C = { x: 720, y: 430 };
+  const S = 330;
+  const proj = (p: { x: number; y: number; z: number }) => {
+    const x = p.x * cy - p.z * sy;
+    const z = p.x * sy + p.z * cy;
+    const persp = 3.2 / (3.2 - z);
+    return { x: C.x + x * S * persp, y: C.y + p.y * S * persp, z, persp };
+  };
+  ctx.save();
+  ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
+  const P = f.pts.map(proj);
+  // The ties first, faint.
+  ctx.strokeStyle = tone.gold;
+  ctx.lineWidth = 0.7 * dpr;
+  for (const n of f.nodes) {
+    const a = P[n.i];
+    for (const qi of n.near) {
+      const b = P[qi];
+      ctx.globalAlpha = 0.35 * show;
+      ctx.beginPath();
+      ctx.moveTo(a.x * k, a.y * k);
+      ctx.lineTo(b.x * k, b.y * k);
+      ctx.stroke();
+    }
+  }
+  // The field, faded with depth, and kept quiet round the line at its centre.
+  for (let i = 0; i < P.length; i++) {
+    const q = P[i];
+    const dx = (q.x - C.x) / 380;
+    const dy = (q.y - C.y) / 150;
+    const hush = Math.min(1, Math.sqrt(dx * dx + dy * dy));
+    ctx.globalAlpha = show * (0.15 + 0.6 * ((q.z + 1.4) / 2.8)) * (0.25 + 0.75 * hush);
+    ctx.fillStyle = f.pts[i].c % 3 === 0 ? tone.gold : tone.ink;
+    const r = 1.6 * q.persp * dpr;
+    ctx.fillRect(q.x * k - r / 2, q.y * k - r / 2, r, r);
+  }
+  // The named nodes: a ring, a point, a name.
+  ctx.font = `${11 * k}px "PT Mono", ui-monospace, monospace`;
+  for (const n of f.nodes) {
+    const q = P[n.i];
+    const dx = (q.x - C.x) / 300;
+    const dy = (q.y - C.y) / 140;
+    const clear = smooth((Math.sqrt(dx * dx + dy * dy) - 0.9) / 0.4);
+    if (clear <= 0) continue;
+    ctx.globalAlpha = show * clear;
+    ctx.strokeStyle = tone.lit;
+    ctx.lineWidth = 1.2 * dpr;
+    ctx.beginPath();
+    ctx.arc(q.x * k, q.y * k, 7 * q.persp * k, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = tone.lit;
+    ctx.fillRect(q.x * k - 2 * dpr, q.y * k - 2 * dpr, 4 * dpr, 4 * dpr);
+    ctx.globalAlpha = show * 0.9 * clear;
+    ctx.fillStyle = tone.ink;
+    ctx.textAlign = "left";
+    ctx.fillText(n.name.toUpperCase(), (q.x + 12) * k, (q.y + 4) * k);
+  }
+  ctx.restore();
 }
 
 /** Game worlds built from assets: the slot for the owner's Halo mods video.
@@ -879,7 +1053,7 @@ function WorldsPlaceholder() {
   return (
     <g className="fa__worlds">
       <path d={d.join(" ")} />
-      <text x={W / 2} y={H - 34} textAnchor="middle">
+      <text x={560 / 2} y={315 - 34} textAnchor="middle">
         HALO MODS · VIDEO TO COME
       </text>
     </g>

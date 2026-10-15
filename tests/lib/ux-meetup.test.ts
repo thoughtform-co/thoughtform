@@ -6,9 +6,8 @@ import { describe, expect, it } from "vitest";
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import { EDGE, ISO_PHI, ISO_PSI, ISO_S, basisOf, coreModel } from "@/components/arcs/figures/foundation/mind";
-import { CARDS_END, STACK_C, U, axesAt, plateOrigin, proj, sheetPoses } from "@/components/arcs/figures/foundation/scene";
-import { HEAD_PARTS, headDrawing, headField } from "@/components/arcs/figures/crossroads/head";
+import { BRAIN, brainModel, inside } from "@/components/arcs/figures/foundation/brain";
+import { CARDS_END, STACK_C, axesAt, plateOrigin, sheetPoses } from "@/components/arcs/figures/foundation/scene";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
   UX_MEETUP_ARC,
@@ -207,7 +206,10 @@ describe("the UX meetup talk (ADR-156)", () => {
       "the-interface",
       "any-software",
       "an-intelligence",
-      "crossroads",
+      "every-desk",
+      "an-alien",
+      "shoggoth",
+      "latent-space",
     ]);
     for (const s of sections) {
       expect(["cards", "list-groups"], `${s.id}: a box grid`).not.toContain(s.kind);
@@ -240,7 +242,10 @@ describe("the UX meetup talk (ADR-156)", () => {
   it("faces one example at a time, then stacks them in the pose the interface keeps", () => {
     const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
     const cards = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
-    expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tool", "product", "worlds", "mathematics"]);
+    expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tool", "brand", "product", "worlds", "mathematics"]);
+    // Vesper's own demo shows another company's brand mid-way: the talk
+    // plays its own cut, from the part that is Loop's alone.
+    expect(cards.find((c) => c.kind === "tool")?.media?.src).toBe("/arcs/ux-meetup/vesper-loop.mp4");
     for (const c of cards) {
       if (c.media) {
         expect(existsSync(join(process.cwd(), "public", c.media.src)), `${c.media.src} on disk`).toBe(true);
@@ -265,7 +270,7 @@ describe("the UX meetup talk (ADR-156)", () => {
     }
     expect(plateOrigin(n - 1, 1)).toEqual(STACK_C);
     // The cascade: mid-move, a lower plate is always further along.
-    const mid = [0, 1, 2, 3, 4, 5].map((i) => plateOrigin(i, 0.93).x);
+    const mid = cards.map((_, i) => plateOrigin(i, 0.93).x);
     for (let i = 1; i < n; i++) expect(mid[i]).toBeLessThanOrEqual(mid[i - 1]);
     expect(mid[0]).toBeGreaterThan(mid[n - 1]);
     // The axes: a tick per plate, climbing.
@@ -274,64 +279,38 @@ describe("the UX meetup talk (ADR-156)", () => {
     for (let i = 1; i < n; i++) expect(ax.ticks[i].y).toBeLessThan(ax.ticks[i - 1].y);
   });
 
-  it("builds the model as an instrument: a dodecahedron round its dual, on the scene's projection", () => {
-    const m = coreModel();
-    expect(m.parts.length, "the anatomy's parts").toBeGreaterThanOrEqual(36);
+  /**
+   * ⚠ THE BRAIN (U9): a glass brain with a machine in it, after the
+   * owner's references. Its parts are named; the two hemispheres mirror each
+   * other; every board sits inside its glass; every cable leaves a port, and
+   * there is a port for every plate.
+   */
+  it("builds the brain as glass with a machine inside, every part named and seated", () => {
+    const m = brainModel();
+    expect(m.parts.length, "the anatomy's parts").toBeGreaterThanOrEqual(40);
     expect(new Set(m.parts).size, "every part named once").toBe(m.parts.length);
-    expect(m.shell.length, "a dodecahedron's corners").toBe(20);
-    expect(m.lattice.length, "an icosahedron's").toBe(12);
-    expect(m.edges.filter((e) => e.kind === EDGE.shell).length).toBe(30);
-    expect(m.edges.filter((e) => e.kind === EDGE.lattice).length).toBe(30);
-    // Twelve faces, each its own five corners, each corner on three faces.
-    expect(new Set(m.faces.map((f) => [...f.idx].sort().join())).size).toBe(12);
-    const uses = new Array(20).fill(0);
-    for (const f of m.faces) for (const i of f.idx) uses[i]++;
-    expect(uses.every((u) => u === 3)).toBe(true);
-    // Front-facing: one face looks straight along +y, at the reader.
-    expect(Math.max(...m.faces.map((f) => f.n.y))).toBeCloseTo(1, 6);
-    // Every circuit lies on its face's plane.
-    for (const e of m.edges.filter((x) => x.kind === EDGE.circuit)) {
-      const f = m.faces.reduce((best, g) => (g.n.x * e.a.x + g.n.y * e.a.y + g.n.z * e.a.z > best.n.x * e.a.x + best.n.y * e.a.y + best.n.z * e.a.z ? g : best));
-      const p0 = m.shell[f.idx[0]];
-      const off = (q: { x: number; y: number; z: number }) => f.n.x * (q.x - p0.x) + f.n.y * (q.y - p0.y) + f.n.z * (q.z - p0.z);
-      expect(Math.abs(off(e.a))).toBeLessThan(0.05);
-      expect(Math.abs(off(e.b))).toBeLessThan(0.05);
+    expect(m.glass.length).toBe(2);
+    const [l, r] = m.glass;
+    for (let i = 0; i < l.outline.length; i += 7) {
+      expect(r.outline[i].x).toBeCloseTo(-l.outline[i].x, 6);
+      expect(r.outline[i].y).toBeCloseTo(l.outline[i].y, 6);
     }
-    expect(m.sockets.length, "a socket for every plate").toBe(6);
-    // At its isometric pose the camera draws exactly what the scene draws.
-    const b = basisOf({ psi: ISO_PSI, phi: ISO_PHI, s: ISO_S, o: { x: 0, y: 0 } });
-    const o = { x: 0, y: 0 };
-    for (const [x, y, z] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
-      const q = proj({ x, y, z }, o);
-      expect(x * b.ex.x + y * b.ey.x + z * b.ez.x).toBeCloseTo(q.x, 6);
-      expect(x * b.ex.y + y * b.ey.y + z * b.ez.y).toBeCloseTo(q.y, 6);
+    for (const b of m.boards) {
+      const g = b.x < 0 ? l.outline : r.outline;
+      for (const p of [
+        { x: b.x, y: b.y },
+        { x: b.x + b.w, y: b.y + b.h },
+      ]) {
+        expect(inside(p, g), `board at ${b.x},${b.y} inside its glass`).toBe(true);
+      }
     }
-    expect(ISO_S * Math.cos(ISO_PHI)).toBeCloseTo(U, 6);
+    expect(m.ports.length).toBe(BRAIN.ports);
+    const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
+    const n = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards.length : 0;
+    expect(m.ports.length, "a port for every plate").toBeGreaterThanOrEqual(n);
+    for (const c of m.cables) expect(m.ports.some((p) => p.x === c.path[0].x && p.y === c.path[0].y)).toBe(true);
     const ifc = UX_MEETUP_ARC.sections.find((s) => s.id === "the-interface");
     expect(ifc?.kind === "figure" && ifc.head, "no head and no paragraph").toBeFalsy();
-  });
-
-  /**
-   * ⚠ THE HEAD IS NOBODY'S (U3, owner: "an anonymous head"): built from
-   * solids, raymarched, the same every time; split at its nose line into a
-   * human half of particles and a machine half of lines, both present.
-   */
-  it("draws the crossroads head from solids, the same every time, in two halves", () => {
-    expect(HEAD_PARTS.length).toBeGreaterThanOrEqual(12);
-    const f = headField();
-    const hits = Array.from(f.depth).filter(Number.isFinite).length;
-    expect(hits / f.depth.length, "the head fills a fair share of its window").toBeGreaterThan(0.25);
-    expect(f.seam).toBeGreaterThan(f.cols * 0.3);
-    expect(f.seam).toBeLessThan(f.cols * 0.7);
-    const a = headDrawing();
-    const b = headDrawing();
-    expect(a.lines).toEqual(b.lines);
-    expect(a.dots.length).toBe(b.dots.length);
-    expect(a.lines.length, "the machine half").toBeGreaterThan(40);
-    expect(a.dots.length, "the human half").toBeGreaterThan(800);
-    for (const d of a.dots) expect(d.x).toBeLessThanOrEqual(a.seamX + 4);
-    const cross = UX_MEETUP_ARC.sections.find((s) => s.id === "crossroads");
-    expect(cross?.kind === "figure" && cross.head, "it stands without a section head").toBeFalsy();
   });
 
   /** The intelligence beat (U6): the mind between a tool and a collaborator,
@@ -346,8 +325,17 @@ describe("the UX meetup talk (ADR-156)", () => {
     }
     expect(mid?.kind === "figure" && mid.head).toBeFalsy();
     // The tool takes the back of the mind, the collaborator its front.
-    expect(coreModel().flanks.tool.every((p) => p.x < 0)).toBe(true);
-    expect(coreModel().flanks.collab.every((p) => p.x > 0)).toBe(true);
+    if (spec?.id === "middle") {
+      expect(spec.tool.rows.length).toBeGreaterThan(0);
+      expect(spec.collaborator.rows.length).toBeGreaterThan(0);
+    }
+    // The beats after it: the brain's layers, the alien user, the
+    // shoggoth, latent space with its line and its source.
+    const desk = UX_MEETUP_ARC.sections.find((s) => s.id === "every-desk");
+    expect(desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.layers.length : 0).toBe(3);
+    const latent = UX_MEETUP_ARC.sections.find((s) => s.id === "latent-space");
+    expect(latent?.kind === "figure" && latent.figure.id === "latent" ? latent.figure.source.label : "").toMatch(/Markov/);
+    expect(latent?.kind === "figure" && latent.menuPrimary, "the exit is never a chapter").toBeFalsy();
   });
 
   /** The house copy law, over what this page letters of its own. */

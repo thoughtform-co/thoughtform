@@ -168,7 +168,10 @@
 }
 .arc-root[data-act="live"] #capability .arc-fig__marks,
 .arc-root[data-act="live"] #the-interface .arc-fig__marks,
-.arc-root[data-act="live"] #an-intelligence .arc-fig__marks {
+.arc-root[data-act="live"] #an-intelligence .arc-fig__marks,
+.arc-root[data-act="live"] #every-desk .arc-fig__marks,
+.arc-root[data-act="live"] #shoggoth .arc-fig__marks,
+.arc-root[data-act="live"] #latent-space .arc-fig__marks {
   visibility: hidden;
 }
 .fa__svg,
@@ -192,15 +195,22 @@ html[data-theme="light"] .fa__dots {
   --fa-lit: var(--gold-ink, #6e5216);
 }
 /* What each beat shows. */
-.fa[data-fa-phase="2"] .fa__stack,
-.fa:not([data-fa-phase="2"]) .fa__poles {
+.fa__stack,
+.fa__cards,
+.fa__quote {
   visibility: hidden;
 }
-.fa__poles {
+.fa[data-fa-phase="0"] .fa__stack,
+.fa[data-fa-phase="1"] .fa__stack,
+.fa[data-fa-phase="2"] .fa__cards,
+.fa[data-fa-phase="5"] .fa__quote {
+  visibility: inherit;
+}
+.fa__cards {
   opacity: 0;
   transition: opacity 0.5s ease;
 }
-.fa[data-fa-poles] .fa__poles {
+.fa[data-fa-cards] .fa__cards {
   opacity: 1;
 }
 /* The slab. */
@@ -334,92 +344,96 @@ html[data-theme="light"] .fa__dots {
 .fa__flow circle {
   stroke: var(--dawn, #ebe3d6);
 }
-/* The middle beat's terminals: a pin header each, its name and its line
-   set as the house sets a HUD readout, never in a box. */
-.fa__header {
-  fill: none;
-  stroke: var(--gold-ink, #caa554);
-  stroke-width: 1.5;
-}
-.fa__term {
-  position: absolute;
-  top: calc(438 / 820 * 100%);
-  display: grid;
-  gap: var(--space-xs);
-  width: calc(290 / 1440 * 100%);
-  translate: 0 -50%;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-.fa[data-fa-poles] .fa__term {
-  opacity: 1;
-}
-.fa__term[data-side="tool"] {
-  right: calc((1440 - 318 + 22) / 1440 * 100%);
-  text-align: right;
-}
-.fa__term[data-side="collab"] {
-  left: calc((1122 + 22) / 1440 * 100%);
-}
-.fa__term-name {
+/* The module: its head in the frame over its picture, as Unsiloed builds
+   its cards; the middle beat's cards in the same make. */
+.fa__mod-eyebrow,
+.fa__mod-count,
+.fa__side-ok {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: var(--type-sm);
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold-ink, #caa554);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
 }
-.fa__term-line {
+.fa__mod-eyebrow {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__mod-count,
+.fa__side-ok {
+  fill: var(--arc-ink-50);
+}
+.fa__mod-title,
+.fa__side-title {
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: var(--type-md);
-  line-height: 1.35;
-  color: var(--arc-ink-70);
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  fill: var(--dawn, #ebe3d6);
 }
-.fa:not([data-fa-phase="2"]) .fa__term {
-  visibility: hidden;
+.fa__side-title {
+  font-size: 19px;
 }
-/* The head: an eyebrow, a title, a line, set over the work as Unsiloed sets
-   its words over its drawing; where it stands depends on the beat. */
+.fa__mod-line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  fill: var(--arc-ink-70);
+}
+.fa__side-row {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  fill: var(--arc-ink-80);
+}
+.fa__side[data-kind="collab"] .fa__side-row {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.fa__side-row[data-voice="b"] {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__side-mark {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__side-back {
+  fill: var(--void, #0a0908);
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+}
+/* The head: an eyebrow, a title, a line, where the beat has one. The first
+   beat's is in its modules. */
 .fa__head {
   position: absolute;
   display: grid;
   gap: var(--space-sm);
   visibility: hidden;
 }
-.fa[data-fa-phase="0"][data-fa-facing] .fa__head,
 .fa[data-fa-phase="1"] .fa__head,
-.fa[data-fa-phase="2"] .fa__head {
+.fa[data-fa-phase="2"] .fa__head,
+.fa[data-fa-phase="3"] .fa__head,
+.fa[data-fa-phase="4"] .fa__head,
+.fa[data-fa-phase="5"] .fa__head {
   visibility: inherit;
 }
-.fa[data-fa-phase="0"] .fa__head {
-  left: calc(700 / 1440 * 100%);
-  top: calc(52 / 820 * 100%);
-  width: calc(638 / 1440 * 100%);
-}
-.fa[data-fa-phase="1"] .fa__head {
+.fa[data-fa-phase="1"] .fa__head,
+.fa[data-fa-phase="4"] .fa__head {
   left: calc(48 / 1440 * 100%);
   top: calc(84 / 820 * 100%);
   width: calc(470 / 1440 * 100%);
 }
-.fa[data-fa-phase="2"] .fa__head {
+.fa[data-fa-phase="2"] .fa__head,
+.fa[data-fa-phase="3"] .fa__head,
+.fa[data-fa-phase="5"] .fa__head {
   left: 0;
   right: 0;
-  top: calc(48 / 820 * 100%);
+  top: calc(40 / 820 * 100%);
   justify-items: center;
   text-align: center;
 }
 .fa__eyebrow {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
   margin: 0;
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-size: var(--type-xs);
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--gold-ink, #caa554);
-}
-.fa__count {
-  color: var(--arc-ink-50);
 }
 .fa__title {
   margin: 0;
@@ -430,6 +444,10 @@ html[data-theme="light"] .fa__dots {
   letter-spacing: -0.01em;
   color: var(--dawn, #ebe3d6);
 }
+.fa__title:empty,
+.fa__line:empty {
+  display: none;
+}
 .fa__line {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
@@ -437,18 +455,52 @@ html[data-theme="light"] .fa__dots {
   line-height: 1.35;
   color: var(--arc-ink-70);
 }
-.fa__line:empty {
-  display: none;
+/* Latent space: the line at the centre, in a quiet frame of corners. */
+.fa__quote {
+  position: absolute;
+  left: 50%;
+  top: calc(430 / 820 * 100%);
+  translate: -50% -50%;
+  width: min(44%, 620px);
+  margin: 0;
+  padding: var(--space-lg) var(--space-xl);
+  display: grid;
+  gap: var(--space-sm);
+  text-align: center;
+  background:
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 1px 18px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 1px 18px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 1px 18px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 1px 18px no-repeat;
 }
-/* Full screen with sound: the one thing on the act a reader can press. */
+.fa__quote blockquote {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-2xl);
+  line-height: 1.25;
+  color: var(--dawn, #ebe3d6);
+}
+.fa__quote figcaption {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+/* Play with sound: the one thing on the act a reader can press. */
 .fa__play {
   position: absolute;
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  translate: 0 -100%;
   padding: var(--space-xs) var(--space-sm);
-  border: 1px solid rgba(var(--gold-rgb), 0.45);
-  background: rgba(var(--void-rgb), 0.6);
+  border: 1px solid rgba(var(--gold-rgb), 0.55);
+  background: rgba(var(--void-rgb), 0.72);
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-size: var(--type-xs);
   letter-spacing: var(--track-widest);
@@ -465,21 +517,47 @@ html[data-theme="light"] .fa__dots {
 .fa__play:focus-visible {
   border-color: var(--gold-ink, #caa554);
 }
-.fa__player {
-  position: absolute;
-  width: 1px;
-  height: 1px;
+/* The film over the viewport: not full screen, the page's own theatre,
+   portalled to the body so nothing of the page draws over it. */
+.fa-theatre {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-xl);
+  background: rgba(var(--void-rgb), 0.94);
+  visibility: hidden;
   opacity: 0;
+  transition: opacity 0.25s ease;
   pointer-events: none;
 }
-.fa[data-fa-playing] .fa__player {
+.fa-theatre[data-open] {
+  visibility: visible;
   opacity: 1;
   pointer-events: auto;
 }
-.fa__player:fullscreen {
+.fa-theatre__video {
   width: 100%;
   height: 100%;
+  max-width: calc(100vw - 2 * var(--space-xl));
+  max-height: calc(100svh - 2 * var(--space-xl));
+  object-fit: contain;
   background: #000;
+}
+.fa-theatre__close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid rgba(var(--gold-rgb), 0.55);
+  background: rgba(var(--void-rgb), 0.72);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+  cursor: pointer;
 }
 /* U8: the owner's two lines, the second under the first. */
 #any-software .arc-inter__line em {

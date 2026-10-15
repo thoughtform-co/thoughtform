@@ -150,9 +150,23 @@ export const UX_MEETUP_ARC: ArcDef = {
             caption: "Vesper: the image and video tool I built at Loop.",
             media: {
               type: "video",
-              src: "/videos/tools/vesper.mp4",
-              poster: "/videos/tools/vesper-poster.jpg",
-              alt: "Vesper, the image and video generation tool built at Loop Earplugs",
+              src: "/arcs/ux-meetup/vesper-loop.mp4",
+              poster: "/arcs/ux-meetup/vesper-loop-poster.jpg",
+              alt: "Vesper, the image and video tool built at Loop: one engine with the Loop Studio's know-how, reachable from every tool, and its usage across the team",
+            },
+          },
+          {
+            /* U9: a brand system, as a film made from its own pictures. */
+            id: "brand",
+            kind: "brand",
+            year: "2026",
+            title: "Brand systems",
+            caption: "Tom on the Moon: one world, its people and its spaces.",
+            media: {
+              type: "video",
+              src: "/arcs/ux-meetup/brand-systems.mp4",
+              poster: "/arcs/ux-meetup/brand-systems-poster.jpg",
+              alt: "A fifteen-second film through the Tom on the Moon brand world: the plate moon over pink flats, its editors and writers, its earthen spaces and its palette, closing on the moon.",
             },
           },
           {
@@ -224,30 +238,73 @@ export const UX_MEETUP_ARC: ArcDef = {
         id: "middle",
         alt: "The machine mind turns to face the reader. Its left half, crisp gold circuits, is routed square to a tool; its right half, loose particles, streams to a collaborator and back. It sits in the middle.",
         line: "AI is an intelligence that sits in the middle.",
-        tool: { label: "Tool", line: "It does what you tell it." },
-        collaborator: { label: "Collaborator", line: "It thinks it through with you." },
+        tool: {
+          label: "Tool",
+          line: "It does what you tell it.",
+          rows: ["Resize to 4:5", "Translate to Japanese", "Export twelve variants"],
+        },
+        collaborator: {
+          label: "Collaborator",
+          line: "It thinks it through with you.",
+          rows: ["What if the hero is the sound?", "Then open in silence."],
+        },
       },
     },
     {
-      /* The conclusion (U3): one head, two ways. No section head: it stands
-         under the registration row, centred, so it never reads as a second
-         head-and-picture after the intelligence (ADR-155). */
-      id: "crossroads",
+      /* U9: the brain again, with the layers it is growing into. */
+      id: "every-desk",
       kind: "figure",
-      /* The talk's last beat is its exit, never a chapter (arc-marks). */
-      menuLabel: "The crossroads",
-      eyebrow: "06 · The crossroads",
+      menuLabel: "Every desk",
+      menuPrimary: true,
+      eyebrow: "06 · Every desk",
       figure: {
-        id: "crossroads",
-        alt: "An anonymous head seen from three-quarters, split down the nose line. The left half is a cloud of particles; the right half is drawn in gold contour lines, like a machine. On the left: live action matters more than ever. On the right: embrace the intelligence.",
-        human: {
-          label: "One way",
-          line: "Live action matters more than ever: real experiences, rooms with people in them.",
-        },
-        machine: {
-          label: "The other way",
-          line: "Embrace the intelligence: interactions, interfaces and business models for a new digital civilisation.",
-        },
+        id: "knowledge",
+        alt: "The machine brain at the centre, and around it three rings of knowledge work it is growing into: writing, code, images and research closest; law, finance, design and support next; medicine, science, engineering and policy furthest out.",
+        line: "Next: every kind of knowledge work on the planet.",
+        layers: [
+          { label: "Now", domains: ["Writing", "Code", "Images", "Video", "Research", "Translation"] },
+          { label: "Next", domains: ["Law", "Finance", "Design", "Marketing", "Support", "Analysis", "Sales", "Teaching"] },
+          { label: "In reach", domains: ["Medicine", "Science", "Engineering", "Architecture", "Policy", "Accounting", "Journalism", "Strategy", "Operations", "Hiring"] },
+        ],
+      },
+    },
+    {
+      id: "an-alien",
+      kind: "interstitial",
+      variant: "quote",
+      frame: "marks",
+      menuLabel: "An alien user",
+      eyebrow: "07 · An alien user",
+      line: {
+        pre: "How do you design experiences and interfaces",
+        em: "for a user that is alien?",
+      },
+    },
+    {
+      /* U9: the shoggoth, the field's own meme, drawn with care. */
+      id: "shoggoth",
+      kind: "figure",
+      menuLabel: "The shoggoth",
+      eyebrow: "08 · The shoggoth",
+      figure: {
+        id: "shoggoth",
+        alt: "The machine brain with tentacles unfurling from under it, slow and many, and a small smiling mask held in front of it: the shoggoth, the field's picture of a friendly face on something not understood.",
+        title: "A mask on the shoggoth.",
+        line: "A friendly face on something we don\u2019t fully understand.",
+      },
+    },
+    {
+      /* U9: latent space, around a line after Markov. The talk's exit. */
+      id: "latent-space",
+      kind: "figure",
+      menuLabel: "Latent space",
+      eyebrow: "09 · Latent space",
+      figure: {
+        id: "latent",
+        alt: "A field of particles drifting in depth, latent space, with a few brighter nodes named for artists; at its centre, in a quiet frame, a line: inside the models, great artists become nodes in latent space.",
+        quote: "Inside the models, great artists become nodes in latent space. Their vision tames the infinite into new beauty.",
+        source: { label: "After Markov, @MarkovMagnifico" },
+        nodes: ["Hokusai", "Moebius", "Kubrick", "Miyazaki", "Basquiat", "Dieter Rams", "Kusama", "Tarkovsky", "Saul Bass", "Turrell"],
       },
     },
   ],

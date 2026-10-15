@@ -50,10 +50,13 @@ export function proj(p: V3, o: P2): P2 {
   };
 }
 
-/** A sheet's face in local pixels. */
-export const CARD = { w: 560, h: 315 } as const;
-/** The sheet in world units: 16:9, as the pictures. */
-export const SHEET = { w: 8, h: 4.5 } as const;
+/** A sheet's face in local pixels: one module, its head over its picture
+    (U9: "one integrated module"). */
+export const CARD = { w: 560, h: 420 } as const;
+/** Where the picture sits on the module: 16:9 under the head. */
+export const MEDIA = { x: 12, y: 108, w: 536, h: 300 } as const;
+/** The sheet in world units, the module's proportions. */
+export const SHEET = { w: 7.2, h: 5.4 } as const;
 
 /**
  * The stack: plate `i` lies `rise` above the last and `step` further along
@@ -67,7 +70,7 @@ export const STACK_L: P2 = { x: 318, y: 400 };
 export const STACK_C: P2 = { x: 656, y: 536 };
 
 /** The facing pose: a flat card, right of the stack, reading size. */
-export const FACING = { x: 700, y: 214, s: 1.14 } as const;
+export const FACING = { x: 690, y: 150, s: 1.14 } as const;
 /** The facing slab's depth: its back face, up and to the right. */
 const FACE_DEPTH: P2 = { x: 16, y: -12 };
 
@@ -132,7 +135,7 @@ const HOLD = 0.62;
 /** The share of the first beat the cards take; the rest is the stack's. */
 export const CARDS_END = 0.84;
 /** The cascade to the centre, at the first beat's end: plate by plate. */
-const CASCADE = { from: 0.86, each: 0.016, span: 0.06 } as const;
+const CASCADE = { from: 0.86, each: 0.012, span: 0.06 } as const;
 
 /** Where plate `i`'s stack origin is at the first beat's progress `a`. */
 export function plateOrigin(i: number, a: number): P2 {
