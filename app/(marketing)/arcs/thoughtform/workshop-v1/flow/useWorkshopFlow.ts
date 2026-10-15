@@ -167,6 +167,14 @@ export interface WorkshopFlowOptions {
    * across the seam. Off on every other cut, which is then byte-identical.
    */
   titleMorph?: boolean;
+  /**
+   * The UX meetup talk (ADR-156 U2): its own sections sit BETWEEN the eras
+   * and the corridor, so the eras must not open the corridor. `false` keeps
+   * the About's flow and never writes the seam: no `data-tw-flow` stamp
+   * (so no fixed corridor cell, no weld, no eras over the ground), no
+   * square, no mark travel, no morph. Absent or `true`, byte-identical.
+   */
+  seam?: boolean;
 }
 
 /** The two titles the morph runs between: the era's, the thesis's. */
@@ -184,7 +192,8 @@ function resolveTitles(root: HTMLElement): Titles | null {
 }
 
 export function useWorkshopFlow(options: WorkshopFlowOptions = {}): void {
-  const titleMorph = options.titleMorph === true;
+  const seamOn = options.seam !== false;
+  const titleMorph = seamOn && options.titleMorph === true;
   useEffect(() => {
     let dom = resolveDom();
     if (!dom) return;
@@ -404,7 +413,7 @@ export function useWorkshopFlow(options: WorkshopFlowOptions = {}): void {
       lastP = p;
       const nextFlow = flowState(p);
       if (nextFlow !== flow) {
-        dom.root.setAttribute(FLOW_ATTR, nextFlow);
+        if (seamOn) dom.root.setAttribute(FLOW_ATTR, nextFlow);
         flow = nextFlow;
       }
       /* The title morph reads its seat BEFORE the seam writes, so the one
@@ -438,7 +447,7 @@ export function useWorkshopFlow(options: WorkshopFlowOptions = {}): void {
         }
       }
 
-      writeSeam(p, nextFlow !== "done");
+      if (seamOn) writeSeam(p, nextFlow !== "done");
       if (morph && seat && morphLayer) {
         writeTitleMorph(
           morphLayer,
@@ -523,5 +532,5 @@ export function useWorkshopFlow(options: WorkshopFlowOptions = {}): void {
       park();
       morphLayer?.remove();
     };
-  }, [titleMorph]);
+  }, [titleMorph, seamOn]);
 }

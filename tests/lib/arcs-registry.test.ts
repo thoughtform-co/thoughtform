@@ -135,6 +135,10 @@ describe("arcs registry (ADR-052)", () => {
       /* One exception, the owner's (2026-10-05, ADR-147 U8): Suri's lunch and
          learn ends on the loop made for the room, the last slide. */
       if (arc.slug === "suri-lunch-and-learn") continue;
+      /* And the UX meetup talk's (2026-10-15, ADR-156 U2): its sections sit
+         BEFORE the corridor, so the thesis and the Arc close it and the
+         contact station is its exit; its last section is the designer line. */
+      if (arc.slug === "thoughtform-ux-meetup") continue;
       expect(arc.sections[arc.sections.length - 1]?.kind, arc.slug).toBe("close");
     }
   });

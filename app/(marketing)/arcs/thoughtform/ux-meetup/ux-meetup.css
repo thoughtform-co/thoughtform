@@ -1,0 +1,16 @@
+/* The talk's route sheet (ADR-156 U2): the order is eras → TALK → corridor,
+   stamped `data-tw-order="talk-first"` on this page's `.tw-root` alone, so
+   no other cut matches (v3 and Suri's lunch and learn share `data-tw-cut`).
+   Wins on specificity, never on order (ADR-141 U1).
+
+   ⚠ THE CURTAIN. With no seam (`useWorkshopFlow({ seam: false })`) the eras
+   still play their outro: from ~0.8 of their clock the figure leaves to
+   make room for a thesis that is no longer there, which left about a screen
+   of empty frame before the claim. The talk rises over that stretch on the
+   page's ground, so the claim arrives as the last era leaves. */
+.tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc {
+  position: relative;
+  z-index: 4;
+  margin-top: -75svh;
+  background-color: var(--void);
+}

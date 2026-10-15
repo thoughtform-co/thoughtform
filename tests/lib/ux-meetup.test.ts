@@ -4,19 +4,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/journey";
-import { WORKSHOP_V3_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/journey";
+import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
-import { AP_HOGESCHOOL_ARC } from "@/lib/arcs/content/ap-hogeschool";
-import { ITP_WALL_CAPTION, ITP_WALL_MEDIA } from "@/lib/arcs/content/shared/in-the-pocket";
 import { FRONTIER_CURVE } from "@/lib/arcs/content/shared/frontierCurve";
-import { TOOL_AND_COLLABORATOR } from "@/lib/arcs/content/shared/toolAndCollaborator";
-import {
-  TOM_BENCH_EXAMPLE,
-  TOM_PATH_STAGES,
-  TOM_WALL_CAPTION,
-  TOM_WALL_MEDIA,
-} from "@/lib/arcs/content/shared/tom-on-the-moon";
-import { HARD_TO_STEER_BEAT, THE_CURVE_BEAT } from "@/lib/arcs/content/shared/workshopFraming";
+import { THE_CURVE_BEAT } from "@/lib/arcs/content/shared/workshopFraming";
 import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
   UX_MEETUP_ARC,
@@ -24,17 +15,17 @@ import {
   UX_MEETUP_PROOF_LEDES,
 } from "@/lib/arcs/content/ux-meetup";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
+import { getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 /**
- * The UX meetup talk's route guard (ADR-156).
+ * The UX meetup talk's route guard (ADR-156, U2).
  *
- * ⚠ THE SHAPE IS THE LECTURE'S OWN TEST (`ap-hogeschool.test.ts`), and for
- * its reason: this route reads the SAME prototype through the SAME function
- * with the SAME removed stations, so the parse test already guards the markup,
- * and the folder walk in `thoughtform-workshop-v2.test.ts` covers this
- * folder's `OWN_ROUTE_SLUGS` row. What is pinned here is only what is TRUE OF
- * THIS ROUTE: that it is v3's page with the record swapped, that its hero and
- * one proof lede are its own, and that its evidence is the shared records.
+ * ⚠ THE SHAPE IS THE LECTURE'S OWN TEST, and for its reason: this route reads
+ * the SAME prototype through the SAME function with the SAME removed
+ * stations, so the parse test already guards the markup. What is pinned here
+ * is what is TRUE OF THIS ROUTE: v3's corridor half with the talk moved in
+ * front of it, its hero and one proof lede, and the owner's rulings of
+ * 15 October on how the talk is built.
  */
 
 const ARCS_DIR = join(__dirname, "..", "..", "app", "(marketing)", "arcs");
@@ -49,47 +40,83 @@ const REMOVED_STATIONS = [
   "buildQuote",
   "build",
 ] as const;
+const MOUNT = "home-corridor-mount";
 
 describe("the UX meetup talk (ADR-156)", () => {
   /**
-   * ⚠ IT IS v3's PAGE WITH THE RECORD SWAPPED, as Suri's lunch and learn is
-   * (ADR-147): v1's prototype, sheet and root class, v3's cut stamp, v3's
-   * seams and leaves by import. The day the corridor half diverges, all of it
-   * forks together (ADR-139).
+   * v3's page with the record swapped, as Suri's lunch and learn is
+   * (ADR-147), MINUS the equilibrium and with the talk before the corridor
+   * (U2): the hook runs with `seam: false`, and this page alone is stamped.
    */
-  it("shares the corridor with v3 rather than forking it", () => {
+  it("shares the corridor with v3, opens on the About, and turns the seam off", () => {
     const page = routeFile("thoughtform", "ux-meetup", "page.tsx");
-    expect(page, "renders v1's root class on v3's cut").toContain(
-      'className="tw-root" data-tw-cut="v3"'
+    expect(page, "v1's root class, v3's cut, the talk's order").toContain(
+      'className="tw-root" data-tw-cut="v3" data-tw-order="talk-first"'
     );
-    expect(page, "imports v1's route sheet").toContain(
-      '"../workshop-v1/thoughtform-workshop.css"'
-    );
-    expect(page, "imports v3's opener sheet").toContain('"../workshop-v3/equilibrium.css"');
-    expect(page, "loads the sheet the path kind is styled in").toContain(
-      '"@/components/arcs/course.css"'
-    );
+    expect(page, "imports v1's route sheet").toContain('"../workshop-v1/thoughtform-workshop.css"');
+    expect(page, "imports its own sheet").toContain('"./ux-meetup.css"');
+    expect(page, "loads the stack's sheet").toContain('"@/components/arcs/stack/stack.css"');
+    expect(page, "no equilibrium sheet").not.toContain("equilibrium.css");
+    expect(page, "no equilibrium station").not.toContain("insertEquilibriumStation");
+    expect(page, "moves the talk").toContain("moveTalkBeforeCorridor(");
     expect(page, "reads v1's prototype").toContain("getThoughtformWorkshopContent");
     for (const station of REMOVED_STATIONS) {
       expect(page, `removes ${station}, as v1 does`).toContain(`"${station}"`);
     }
-    for (const seam of ["../workshop-v3/about", "../workshop-v3/equilibrium", "../workshop-v3/hero"]) {
+    for (const seam of ["../workshop-v3/about", "../workshop-v3/hero"]) {
       expect(page, `v3's seam by import: ${seam}`).toContain(`"${seam}"`);
     }
     const portals = routeFile("thoughtform", "ux-meetup", "WorkshopPortals.tsx");
     expect(portals, "reuses v3's proof, never a copy").toContain('"../workshop-v3/WorkshopProof"');
-    expect(portals, "reuses v3's opener mount").toContain('"../workshop-v3/EquilibriumMount"');
-    expect(portals, "reuses v1's About flow").toContain('"../workshop-v1/flow/useWorkshopFlow"');
-    /* The two orders are equal TODAY; the files are separate so they need
-       not stay equal. A deliberately weak pin. */
-    expect([...UX_MEETUP_JOURNEY_ORDER]).toEqual([...WORKSHOP_V3_JOURNEY_ORDER]);
+    expect(portals, "no opener").not.toContain("EquilibriumMount");
+    expect(portals, "the About's flow, no seam").toContain("useWorkshopFlow({ seam: false })");
+    const sheet = routeFile("thoughtform", "ux-meetup", "ux-meetup.css");
+    expect(sheet, "scoped to this page's stamp").toContain('[data-tw-order="talk-first"]');
+
+    expect([...UX_MEETUP_JOURNEY_ORDER]).toEqual([
+      "hero",
+      "about",
+      "voidwalker",
+      "workshop",
+      "thesis",
+      "navigate",
+      "encode",
+      "build",
+      "services",
+      "contact",
+    ]);
   });
 
   /**
-   * The hero is the talk's own, written over the prototype's, and it is one
-   * record with the arc's: what the room reads and what the overview's card
-   * says cannot drift apart.
+   * ⚠ THE MOVE RUNS ON THE REAL PROTOTYPE and throws on a miss: the talk lands
+   * directly before the corridor mount, the kill edge goes to `#contact`, the
+   * hero's corridor link points at the talk, and a second pass refuses.
    */
+  it("moves the talk in front of the corridor, with the kill edge and the hero link", () => {
+    const { bodyHtml } = getThoughtformWorkshopContent({
+      removeStations: REMOVED_STATIONS,
+      corridorMountId: MOUNT,
+    });
+    const moved = moveTalkBeforeCorridor(bodyHtml, MOUNT);
+    const at = (re: RegExp) => moved.search(re);
+    const talk = at(/<section\b[^>]*\bid="workshop"/);
+    const mount = at(new RegExp(`<div\\s+id="${MOUNT}"`));
+    const eras = at(/<section\b[^>]*\bid="voidwalker"/);
+    const services = at(/<section\b[^>]*\bid="services"/);
+    expect(eras).toBeGreaterThan(-1);
+    expect(talk, "after the eras").toBeGreaterThan(eras);
+    expect(mount, "the talk is before the corridor").toBeGreaterThan(talk);
+    expect(services, "the proof after the corridor").toBeGreaterThan(mount);
+    expect(moved.match(/\bid="workshop"/g)?.length, "moved, not copied").toBe(1);
+    expect(moved).toMatch(/<section\b[^>]*\bid="workshop"(?![^>]*data-corridor-kill)[^>]*>/);
+    expect(moved).toMatch(/<section\b[^>]*\bid="contact"[^>]*\sdata-corridor-kill\b[^>]*>/);
+    expect(moved).not.toContain(`href="#${MOUNT}"`);
+    expect(moved).toContain('href="#workshop"');
+    expect(() => moveTalkBeforeCorridor(moved, MOUNT)).toThrow();
+    expect(() => moveTalkBeforeCorridor("<main></main>", MOUNT)).toThrow();
+  });
+
+  /** The hero is the talk's own, one record with the arc's. */
   it("says one hero, inside the house measure", () => {
     const { title, lede } = UX_MEETUP_ARC.hero;
     const titleText = [title.pre, title.em, title.post].filter(Boolean).join(" ");
@@ -97,40 +124,29 @@ describe("the UX meetup talk (ADR-156)", () => {
     const headline = UX_MEETUP_HERO.headlineHtml.replace(/<br\s*\/?>/g, " ");
     expect(headline, "the headline is the arc's title").toBe(titleText);
     expect(UX_MEETUP_HERO.descHtml, "the lede is the arc's lede").toBe(lede);
+    for (const action of UX_MEETUP_ARC.hero.actions ?? []) {
+      const id = action.href.replace(/^#/, "");
+      expect(
+        UX_MEETUP_ARC.sections.some((s) => s.id === id),
+        `${action.label}: points at a beat on the page`
+      ).toBe(true);
+    }
   });
 
-  /**
-   * ⚠ ONE LEDE DIFFERS FROM v3's, AND ONLY ONE. v3's last proof card ends on
-   * "The rest of today is how", a promise a talk does not keep. The seam is
-   * the identity when nothing is passed, so v3 and Suri's cut are unchanged.
-   */
+  /** One lede differs from v3's: the workshop's promise taken out. */
   it("reads v3's proof with the workshop's promise taken out", () => {
     const record = WORKSHOP_INTRO.proof.ledes;
     for (const id of WORKSHOP_INTRO.proof.order) {
       if (id === "ai-transformation") continue;
       expect(UX_MEETUP_PROOF_LEDES[id], `${id}: v3's lede, by value`).toBe(record[id]);
     }
-    expect(record["ai-transformation"]).toContain("The rest of today is how");
     expect(UX_MEETUP_PROOF_LEDES["ai-transformation"]).not.toMatch(/today/i);
-    expect(record["ai-transformation"].startsWith(UX_MEETUP_PROOF_LEDES["ai-transformation"])).toBe(
-      true
-    );
-
     const talk = workshopV3Tracks(UX_MEETUP_PROOF_LEDES);
     const v3 = workshopV3Tracks();
     expect(talk.map((t) => t.id)).toEqual(v3.map((t) => t.id));
-    for (const [i, track] of talk.entries()) {
-      expect(track.card?.lede).toBe(UX_MEETUP_PROOF_LEDES[track.id as keyof typeof record]);
-      expect(v3[i].card?.lede, "the default is the record's").toBe(
-        record[track.id as keyof typeof record]
-      );
-    }
   });
 
-  /**
-   * ⚠ NO SWITCH, as on the lecture: this page carries no switched beats, so
-   * the island is not mounted and no section carries a panel stamp.
-   */
+  /** No switch: no switched beats, no island. */
   it("carries no worked-example switch", () => {
     const tail = routeFile("thoughtform", "ux-meetup", "WorkshopTail.tsx");
     expect(tail, "the tail mounts no switch").not.toContain("ArcWorkedSwitch");
@@ -140,103 +156,57 @@ describe("the UX meetup talk (ADR-156)", () => {
   });
 
   /**
-   * The talk's order (U1, the owner's storyline of 15 October): the reality,
-   * an intelligence, what happened when he trusted it, the two ways out, what
-   * is left to design, the close; the whole thing inside the archetype's
-   * seven-to-sixteen (ADR-131's law, one screen a section) and five chapters
-   * in the header.
+   * ⚠ THE OWNER'S RULINGS OF 15 OCTOBER, as structure:
+   * - no card grid and no list of boxes ("a glorified PowerPoint");
+   * - a statement is one line and nothing under it ("we don't need the small
+   *   text below it");
+   * - a statement and a section with its picture take turns, never two of a
+   *   kind side by side (ADR-155's law);
+   * - every eyebrow letters its own position.
    */
-  it("follows the storyline and stays inside the law", () => {
+  it("holds the owner's rulings on how the talk is built", () => {
     const sections = UX_MEETUP_ARC.sections;
-    expect(sections[0].id).toBe("the-claim");
-    expect(UX_MEETUP_ARC.hero.actions?.[0]?.href).toBe("#the-claim");
-    expect(sections.at(-1)?.kind).toBe("close");
-    expect(sections.length).toBeGreaterThanOrEqual(7);
-    expect(sections.length).toBeLessThanOrEqual(16);
-
-    const ids = sections.map((s) => s.id);
-    const order = [
+    expect(sections.map((s) => s.id)).toEqual([
       "the-claim",
-      "why-so-fast",
       "rebuilt",
       "the-threat",
-      "not-software",
       "the-curve",
-      "between",
-      "tom-on-the-moon",
-      "itp-wall",
-      "two-ways",
-      "the-turn",
-      "what-is-left",
-      "headless-or-told",
-      "close",
-    ];
-    const at = order.map((id) => ids.indexOf(id));
-    expect(at, "every beat of the storyline is on the page").not.toContain(-1);
-    expect([...at].sort((a, b) => a - b), "in the storyline's order").toEqual(at);
-    expect(ids.indexOf("what-is-left")).toBe(ids.indexOf("the-turn") + 1);
-
-    const chapters = sections.filter((s) => s.menuPrimary).map((s) => s.id);
-    expect(chapters).toEqual(["the-claim", "not-software", "tom-on-the-moon", "two-ways", "the-turn"]);
-
-    /* Every eyebrow letters its own position, so a beat moved is a beat
-       renumbered. */
+      "two-ends",
+      "the-interface",
+      "designer",
+    ]);
+    for (const s of sections) {
+      expect(["cards", "list-groups"], `${s.id}: a box grid`).not.toContain(s.kind);
+    }
+    const statement = (i: number) =>
+      sections[i].kind === "interstitial" &&
+      (sections[i] as { variant?: string }).variant === "statement";
     sections.forEach((s, i) => {
+      expect(statement(i), `${s.id}: statements take every other beat`).toBe(i % 2 === 0);
+      if (statement(i)) {
+        expect((s as { subline?: string }).subline, `${s.id}: no small text`).toBeUndefined();
+      }
       const own = s as unknown as { eyebrow?: string; head?: { eyebrow?: string } };
       const eyebrow = own.head?.eyebrow ?? own.eyebrow ?? "";
       expect(eyebrow.slice(0, 2), `${s.id}: its number`).toBe(String(i + 1).padStart(2, "0"));
     });
+    const chapters = sections.filter((s) => s.menuPrimary).map((s) => s.id);
+    expect(chapters.length).toBeLessThanOrEqual(5);
   });
 
-  /**
-   * ⚠ THE CURVE AND THE SPECTRUM ARE THE SHARED DRAWINGS UNDER THIS TALK'S
-   * HEADS (U1), as v3 turns them: the data halves by reference, the words the
-   * talk's own, so `arcs-registry` no longer counts this page a reader.
-   */
-  it("draws the shared curve and spectrum under its own heads", () => {
+  /** The evidence: the shared curve's data by reference, the screenshot on disk. */
+  it("draws the shared curve under its own head and ships its screenshot", () => {
     const curve = UX_MEETUP_ARC.sections.find((s) => s.id === "the-curve");
     expect(curve?.kind === "curve" && curve.lanes, "the curve's lanes").toBe(FRONTIER_CURVE.lanes);
     expect(curve?.kind === "curve" && curve.head).not.toEqual(THE_CURVE_BEAT.head);
-    const steer = UX_MEETUP_ARC.sections.find((s) => s.id === "between");
-    expect(steer?.kind === "spectrum" && steer.bands, "the spectrum's bands").toBe(
-      TOOL_AND_COLLABORATOR.bands
-    );
-    expect(steer?.kind === "spectrum" && steer.head).not.toEqual(HARD_TO_STEER_BEAT.head);
+    const rebuilt = UX_MEETUP_ARC.sections.find((s) => s.id === "rebuilt");
+    const src = rebuilt?.kind === "media" ? rebuilt.media.src : "";
+    expect(existsSync(join(process.cwd(), "public", src)), `${src} on disk`).toBe(true);
+    const stack = UX_MEETUP_ARC.sections.find((s) => s.kind === "stack");
+    expect(stack?.kind === "stack" && stack.figure.lit, "one lit tier, the layer").toBe("layer");
   });
 
-  /**
-   * ⚠ THE EVIDENCE IS THE SHARED RECORDS, BY REFERENCE (one section, one
-   * record). The nine-sector wall was the lecture's own picture until this
-   * page showed it too; both pages read it now, and it is on disk.
-   */
-  it("mounts Tom on the Moon and the nine sectors by reference", () => {
-    const sections = UX_MEETUP_ARC.sections;
-    const path = sections.find((s) => s.kind === "path");
-    expect(path?.kind === "path" && path.stages, "the Tom path").toBe(TOM_PATH_STAGES);
-    const bench = sections.find((s) => s.kind === "bench");
-    expect(bench?.kind === "bench" && bench.example, "the Tom bench").toBe(TOM_BENCH_EXAMPLE);
-    const tomWall = sections.find((s) => s.id === "tom-scale");
-    expect(tomWall?.kind === "media" && tomWall.media, "the Tom wall").toBe(TOM_WALL_MEDIA);
-    expect(tomWall?.kind === "media" && tomWall.caption, "its caption").toBe(TOM_WALL_CAPTION);
-
-    for (const arc of [UX_MEETUP_ARC, AP_HOGESCHOOL_ARC]) {
-      const wall = arc.sections.find((s) => s.id === "itp-wall");
-      expect(wall?.kind === "media" && wall.media, `${arc.slug}: the wall`).toBe(ITP_WALL_MEDIA);
-      expect(wall?.kind === "media" && wall.caption, `${arc.slug}: its caption`).toBe(
-        ITP_WALL_CAPTION
-      );
-    }
-    expect(
-      existsSync(join(process.cwd(), "public", ITP_WALL_MEDIA.src)),
-      `${ITP_WALL_MEDIA.src} on disk`
-    ).toBe(true);
-  });
-
-  /**
-   * The house copy law, over what THIS PAGE letters of its own: its hero, its
-   * card, its heads, lines and cards. The shared records answer to their own
-   * pages' guards (Tom on the Moon's record says "wave", which is its word).
-   */
+  /** The house copy law, over what this page letters of its own. */
   it("holds the copy law on its own words", () => {
     const faults: string[] = [];
     const visit = (value: string, path: string) => {
@@ -248,10 +218,9 @@ describe("the UX meetup talk (ADR-156)", () => {
     const { sections, ...frame } = UX_MEETUP_ARC;
     scanStrings(frame, "arc", visit);
     scanStrings(UX_MEETUP_HERO, "hero", visit);
-    scanStrings(UX_MEETUP_PROOF_LEDES["ai-transformation"], "ledes.ai-transformation", visit);
     for (const section of sections) {
       const own = section as unknown as Record<string, unknown>;
-      for (const key of ["menuLabel", "eyebrow", "head", "line", "subline", "cards", "actions"]) {
+      for (const key of ["menuLabel", "eyebrow", "head", "line", "subline", "media", "caption", "figure"]) {
         scanStrings(own[key], `${section.id}.${key}`, visit);
       }
     }

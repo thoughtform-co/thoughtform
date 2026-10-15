@@ -108,3 +108,26 @@ Four branded variations — see `hud-frame-implementation.md` section 12 for ful
 - More than 2–3 accent colors per slide
 - Dense text blocks (break into multiple slides)
 - Decorative clip art or off-brand imagery
+
+---
+
+## Arc talks: the owner's rulings (2026-10-15, ADR-156 U2)
+
+For a talk or deck presented from an arc page (`/arcs/...`), standing law, not one page's taste:
+
+- ⚠ **NO CARD GRID, NO LIST OF BOXES, unless the owner asks for one by name.** Four cards under a
+  head is "a glorified PowerPoint" and "jarring"; it is what a page does when it has no picture.
+  The house has pictures: the instruments, the isometric stack (the `stack` kind,
+  `isometric-wireframe-grammar.md`), the curve, real screenshots and films. Find the visual; if
+  there is none, the point is a statement, or it is spoken.
+- **A statement is one line.** `interstitial` variant `statement`: sentence case, never capitals,
+  one size for every statement on the page, set above centre, under the registration row (gold
+  cross · rule · eyebrow · rule · quiet cross, kin to the section heads' survey cross and to
+  Marathon's title bands), and nothing under it. The speaker says the rest.
+- **A section is a head and its picture**: title left, paragraph right, the visual under it at the
+  band's width, held to one screen.
+- **Statements and sections take turns**, never two of a kind side by side (ADR-155's law).
+- **A thing named is a thing shown.** A slide that names a product, a clone or a tool shows it.
+- **Frames and spacing come from the X-Bionic proposal's system** (ADR-155, `proposal-grammar.md`,
+  `docs/plans/xb-offer-rebuild-handoff.md` and its reference sites), never a new grammar.
+

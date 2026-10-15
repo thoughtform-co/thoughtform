@@ -7,9 +7,9 @@ import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getThoughtformWorkshopContent } from "@/lib/v7-parse";
 
 import { replaceAboutBio } from "../workshop-v3/about";
-import { insertEquilibriumStation } from "../workshop-v3/equilibrium";
 import { replaceHeroCopy } from "../workshop-v3/hero";
 import { UX_MEETUP_JOURNEY, UX_MEETUP_NAV_ITEMS } from "./journey";
+import { moveTalkBeforeCorridor } from "./order";
 import { UxMeetupPortals } from "./WorkshopPortals";
 
 import "@/components/landing/v7/landing.css";
@@ -27,14 +27,14 @@ import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";
-// The arcs' sheet: the talk after the proof is the arcs' own section
-// components inside an `.arc-root`, and this is their grammar and their light
-// re-derivation. Before the route sheet, so the route can overrule it.
+// The arcs' sheet: the talk is the arcs' own section components inside an
+// `.arc-root`, and this is their grammar and their light re-derivation.
+// Before the route sheet, so the route can overrule it. No course sheet
+// since U2: the `path` kind left with Tom on the Moon.
 import "@/components/arcs/arcs.css";
-// ⚠ THE COURSE'S SHEET (ADR-134), as the AP lecture loads it: the `path` kind
-// is styled there and nowhere else, and so are the Tom wall's height caps.
-// After arcs.css, whose tokens it reads.
-import "@/components/arcs/course.css";
+// The isometric stack (ADR-156 U2): the `stack` kind draws `StackFigure`,
+// whose sheet only the proposal routes loaded.
+import "@/components/arcs/stack/stack.css";
 // about-stage.css / continuum-stage.css are deliberately NOT imported: this
 // page mounts no about deck stage (ADR-053).
 // ⚠ v1's ROUTE SHEET, BY PATH. This page renders `.tw-root` and shares v1's
@@ -42,10 +42,10 @@ import "@/components/arcs/course.css";
 // to keep in step with `flowClock.ts`, which the flow test pins by literal
 // path against that file and that file alone (ADR-139).
 import "../workshop-v1/thoughtform-workshop.css";
-// v3's opener, BY PATH, as Suri's cut loads it (ADR-147 U1). Every rule is
-// scoped `.tw-root[data-tw-cut="v3"]`, which this page renders, and wins on
-// specificity, never on order (ADR-141 U1).
-import "../workshop-v3/equilibrium.css";
+// The talk's own order: the curtain over the eras' outro (ADR-156 U2).
+import "./ux-meetup.css";
+// No equilibrium sheet: the talk opens hero → About (ADR-156 U2, owner
+// 2026-10-15: "remove it. I want the second section to just be the About").
 // Theme sheet LAST of the composition sheets (ADR-058).
 import "@/components/landing/v7/theme.css";
 // The instruments after it, exactly as `/` and the arcs route do; without it
@@ -70,10 +70,16 @@ export const metadata: Metadata = {
  * through the same seams, so the owner's edits to v3 land here), with the
  * talk's own hero, and the talk's own arc after the proof.
  *
- *   hero → the equilibrium → about → the eras
+ *   hero → about → the eras → THE TALK (#workshop)
  *        → CORRIDOR (thesis · Navigate/Encode/Build · epilogue)
- *        → the proof stack (#services, no card ring)
- *        → the talk (#workshop) → contact
+ *        → the proof stack (#services, no card ring) → contact
+ *
+ * ⚠ U2 (owner, 2026-10-15): the talk sits between the eras and the corridor,
+ * so the thesis ("AI sits somewhere between tool and collaborator") and the
+ * Arc close it. `order.ts` moves the station at parse time; the flow hook
+ * runs with `seam: false` so the eras never open the corridor. No
+ * equilibrium. A second exception to ADR-139's fork-together rule, recorded
+ * in the ADR.
  *
  * ⚠ A STATIC FOLDER UNDER `[slug]`'s NAMESPACE, like v3's. Next matches this
  * folder before the dynamic segment, and `[slug]`'s `generateStaticParams`
@@ -106,13 +112,11 @@ export default async function UxMeetupPage() {
     corridorMountId: CORRIDOR_MOUNT_ID,
   });
   // v3's intro (ADR-143 U3, U6) with the talk's own hero written over the
-  // prototype's; the equilibrium and the About are the record's.
-  const bodyHtml = replaceAboutBio(
-    insertEquilibriumStation(
-      replaceHeroCopy(protoHtml, UX_MEETUP_HERO),
-      WORKSHOP_INTRO.equilibrium
-    ),
-    WORKSHOP_INTRO.about
+  // prototype's and the About from the record; no equilibrium, and the talk
+  // moved before the corridor (U2).
+  const bodyHtml = moveTalkBeforeCorridor(
+    replaceAboutBio(replaceHeroCopy(protoHtml, UX_MEETUP_HERO), WORKSHOP_INTRO.about),
+    CORRIDOR_MOUNT_ID
   );
   const shared = extractV7Text();
   const corridorText = {
@@ -130,7 +134,7 @@ export default async function UxMeetupPage() {
     <>
       {/* `data-tw-cut="v3"` scopes v3's rules in v1's sheet (the concise
           claims, the lit card), which this cut shares (ADR-141 U1). */}
-      <div className="tw-root" data-tw-cut="v3">
+      <div className="tw-root" data-tw-cut="v3" data-tw-order="talk-first">
         <LandingPage
           bodyHtml={bodyHtml}
           bodyClass={bodyClass}

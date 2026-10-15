@@ -16,6 +16,11 @@ import { arcTitleText } from "./chrome";
  * height of its content, set left, a part ruler above the line and, when
  * the part has one, its index under it (U1).
  *
+ * `statement` (ADR-156 U2) is the talk's beat: one line in sentence case,
+ * above centre, under a registration row kin to the section heads' survey
+ * crosses (a gold cross, a rule, the eyebrow, a rule, a quiet cross) and
+ * after the title bands of Marathon's HUD. It TYPES, as the quote does.
+ *
  * Terminal: a pure decode beat — one panel, no travel. The QUOTE variant
  * TYPES rather than scrambles: the glyph pool is mono caps, so sentence
  * case through it reads as noise — but the masthead law is absolute
@@ -30,6 +35,7 @@ export function ArcInterstitial({
   motion?: ArcMotion;
 }) {
   const quote = section.variant === "quote";
+  const statement = section.variant === "statement";
   return (
     <ArcBeat
       id={section.id}
@@ -60,7 +66,19 @@ export function ArcInterstitial({
             </span>
           </div>
         ) : null}
-        {section.eyebrow ? <p className="arc-desig arc-inter__eyebrow">{section.eyebrow}</p> : null}
+        {statement ? (
+          <p className="arc-inter__marks">
+            <i className="arc-inter__x arc-inter__x--origin" aria-hidden="true" />
+            <span className="arc-inter__mrule" aria-hidden="true" />
+            {section.eyebrow ? (
+              <span className="arc-desig arc-inter__eyebrow">{section.eyebrow}</span>
+            ) : null}
+            <span className="arc-inter__mrule" aria-hidden="true" />
+            <i className="arc-inter__x arc-inter__x--close" aria-hidden="true" />
+          </p>
+        ) : section.eyebrow ? (
+          <p className="arc-desig arc-inter__eyebrow">{section.eyebrow}</p>
+        ) : null}
         {/* The silent loop (ADR-143 U7), above the line it pictures. Absent,
             nothing is drawn: a beat with no file is the line alone. */}
         {section.clip ? (
@@ -73,7 +91,7 @@ export function ArcInterstitial({
           motion={motion}
           className="arc-inter__line"
           as="p"
-          effect={quote ? "type" : "scramble"}
+          effect={quote || statement ? "type" : "scramble"}
         />
         {section.subline ? (
           <ArcTypeCopy text={section.subline} motion={motion} className="arc-inter__subline" />

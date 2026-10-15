@@ -23,35 +23,34 @@ import { buildJourneyRoster } from "@/components/landing/v7/rail-instruments/jou
  */
 export const UX_MEETUP_JOURNEY_ORDER = [
   "hero",
-  // v3's opener: a station the manifest does not know, so it resolves
-  // directly off `data-active-station` (`rosterDirectId`).
-  "equilibrium",
   "about",
   "voidwalker",
+  // U2 (owner, 2026-10-15): the talk between the eras and the corridor.
+  "workshop",
   "thesis",
   "navigate",
   "encode",
   "build",
   "services",
-  "workshop",
   "contact",
 ] as const;
 
 export const UX_MEETUP_JOURNEY = buildJourneyRoster(
   UX_MEETUP_JOURNEY_ORDER,
-  // The era stage sits directly above the corridor mount on this page
-  // (ADR-138), so the seam-gap rule needs it or the eras stay lit through the
-  // whole Arc.
+  // ⚠ The talk sits directly above the corridor mount now (U2), but it is a
+  // roster-only station the seam-gap rule cannot resolve, so the argument
+  // stays the eras'. Measured 2026-10-15: through the corridor the marks
+  // follow the corridor's phase bus (thesis · navigate · encode · build),
+  // exactly as on v3.
   "voidwalker",
   [
-    // Home holds through the opener, which has no mark of its own.
-    { id: "hero", name: "Home", range: ["hero", "equilibrium"] },
+    { id: "hero", name: "Home" },
     { id: "about" },
     { id: "voidwalker" },
+    { id: "workshop", name: "Talk" },
     { id: "thesis", name: "Thesis" },
     { id: "arc", range: ["navigate", "build"] },
     { id: "services", name: "Proof", glyph: "proof" },
-    { id: "workshop", name: "Talk" },
   ],
   [{ id: "contact" }]
 );
@@ -62,6 +61,6 @@ export const UX_MEETUP_JOURNEY = buildJourneyRoster(
 export const UX_MEETUP_NAV_ITEMS: readonly NavItem[] = [
   { num: "01", label: "About", href: "#about" },
   { num: "02", label: "Voidwalker", href: "#voidwalker" },
-  { num: "03", label: "Proof", href: "#services" },
-  { num: "04", label: "The talk", href: "#workshop" },
+  { num: "03", label: "The talk", href: "#workshop" },
+  { num: "04", label: "Proof", href: "#services" },
 ];

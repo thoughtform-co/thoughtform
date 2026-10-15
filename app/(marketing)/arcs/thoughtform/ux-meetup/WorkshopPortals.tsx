@@ -28,8 +28,6 @@ import { useWorkshopFlow } from "../workshop-v1/flow/useWorkshopFlow";
  */
 const WorkshopProof = lazy(() => import("../workshop-v3/WorkshopProof"));
 const UxMeetupTail = lazy(() => import("./WorkshopTail"));
-/* v3's opener hologram, v3's own mount by import. */
-const EquilibriumMount = lazy(() => import("../workshop-v3/EquilibriumMount"));
 
 const RING_ATTR = "data-services-ring";
 
@@ -40,12 +38,6 @@ export function UxMeetupPortals() {
     return () => html.removeAttribute(RING_ATTR);
   }, []);
 
-  useNestedRoot(
-    ".tw-root [data-tw-eq-canvas]",
-    <Suspense fallback={null}>
-      <EquilibriumMount />
-    </Suspense>
-  );
   useNestedRoot(
     ".tw-root [data-tw-proof-root]",
     <Suspense fallback={null}>
@@ -59,8 +51,9 @@ export function UxMeetupPortals() {
     </Suspense>
   );
   usePortraitDeck();
-  // As v3: the era title glides and decodes into the thesis title (ADR-143 U5).
-  useWorkshopFlow({ titleMorph: true });
+  // The About's flow, but no seam: the talk sits between the eras and the
+  // corridor, so the eras must not open it (ADR-156 U2).
+  useWorkshopFlow({ seam: false });
 
   return null;
 }

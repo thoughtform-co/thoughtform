@@ -114,9 +114,55 @@ this change (none of it in these files); typecheck passes; the suite's three fai
 (`skill-file-fidelity`, `thoughtform-armada`, `trinny-mark`) read sibling repositories or exact
 bytes on disk and fail the same without it.
 
+## U2 · The talk between the eras and the corridor (2026-10-15, owner, hours before the room)
+
+The owner read U1 and ruled it "a glorified PowerPoint": the four-card grids ("I never want to
+see this type of shit again unless I explicitly ask for it"), interstitials in capitals with
+small text under them and two sizes between them, a clone named and not shown, and evidence
+(Tom on the Moon, In The Pocket) the talk does not need. His rulings, as built:
+
+- **The order.** Hero ("AI is not software.", kept) → About → the eras → THE TALK → the
+  corridor's thesis ("AI sits somewhere between tool and collaborator") → the Arc → the proof
+  → contact. The equilibrium opener is gone: "I want the second section to just be the About".
+  The thesis and the Arc close the talk: "I want to leave that for the end."
+- **How the order is built.** `ux-meetup/order.ts` moves `#workshop` to sit directly before the
+  corridor mount at parse time and THROWS on any miss; the kill edge (`data-corridor-kill`)
+  moves with it to `#contact`, and the hero's corridor link points at the talk. The shared
+  flow hook takes `seam: false` (`useWorkshopFlow`, absent or `true` byte-identical for v1, v2,
+  v3, the lecture and Suri): the About's flow runs, the eras never open the corridor, and
+  `data-tw-flow` is never written, so the fixed corridor cell, the weld and the eras-over-ground
+  rules all stay off. ⚠ The eras still play their outro (from ~0.8 of their clock the figure
+  leaves for a seam that no longer comes), which left a screen of empty frame: the talk rises
+  over it as a CURTAIN (`ux-meetup.css`, `margin-top: -75svh` on the page's ground, scoped by
+  `data-tw-order="talk-first"`, a stamp only this page carries). Measured: through the corridor
+  the journey marks follow its phase bus exactly as on v3. This is a second exception to
+  ADR-139's fork-together rule, after v3's equilibrium.
+- **The statement** (`interstitial` variant `statement`, every arc may use it): ONE line in
+  sentence case, ONE size for all of them, set above centre, under a registration row kin to the
+  section heads' survey cross and Marathon's title bands (gold cross · rule · eyebrow · rule ·
+  quiet cross), and NO subline. It types rather than scrambles (the scramble pool is capitals).
+  The older variants are untouched.
+- **A section is a head and its picture.** The head as ever (title left, paragraph right), the
+  visual under it at the band's width. PhotoCraft (the ArtCraft project's open-source Photoshop,
+  Apache-2.0, its README's own demo screenshot in `public/arcs/ux-meetup/`) is held to one screen
+  by `#rebuilt`'s frame rule, as `#loop-ad`'s is.
+- **The `stack` kind, the THIRTIETH enumerated exception**: the head, then `StackFigure` (the
+  proposal system's isometric stack) and nothing else; no console, no uses grid. On this page it
+  draws "headless or told": interfaces built on the fly on the deck, the brand encoded on the lit
+  layer (shader libraries, a design system shipped as source, motion and type rules, checks), the
+  intelligence, the models.
+- **The tail is seven beats**, statement and picture in turn (ADR-155's law): the claim ·
+  PhotoCraft · the threat · the curve under the electricity line · the two ends · the stack ·
+  "The most interesting time to be a designer." Out: Tom on the Moon, In The Pocket, the
+  spectrum (the thesis says it), the close (the contact station is the exit), every card grid.
+
+`ux-meetup.test.ts` pins the order, the move on the real prototype, and the rulings as
+structure (no `cards` or `list-groups`, statements without sublines on every other beat, each
+eyebrow its position). Walked headless at 1280×720: the seven beats one screen each, the eras
+handing to the claim, the thesis and the Arc after the designer, no console error.
+
 ## Left open
 
-- Every line in the tail is a first cut from his notes, his to rewrite (U1 included).
-- Whether Tom on the Moon and In The Pocket may be shown to a public room is his call.
+- Every line in the tail is his to rewrite; U2's statements are his own lines from the brain dump.
 - `sentinel/DIGEST.md`'s list of the era stage's readers did not name Suri's lunch and
   learn before this change and still does not; this change adds only its own page.

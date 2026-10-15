@@ -310,7 +310,11 @@ export type ArcSection = ArcSectionBase &
         kind: "interstitial";
         /** `chapter` (ADR-153): a compact band, not a screen; the line set
          *  left under a part ruler, for a page read by a board. */
-        variant: "question" | "callout" | "quote" | "chapter";
+        /** `statement` (ADR-156 U2, owner 2026-10-15): the talk's one big
+         *  line, sentence case, set above centre under a registration row
+         *  (cross · rule · eyebrow · rule · cross), and NO subline: the
+         *  speaker says the rest. One size for every statement. */
+        variant: "question" | "callout" | "quote" | "chapter" | "statement";
         /** The part ruler, `chapter` only: which part of how many. */
         chapter?: { n: number; of: number };
         /** The part's index, `chapter` only (ADR-153 U1): its beats as
@@ -1508,6 +1512,40 @@ export type ArcSection = ArcSectionBase &
          * teams own.", the team, the layer and Claude Enterprise as one flow.
          */
         port?: "s1a" | "plug";
+      }
+    | {
+        /**
+         * THE STACK, AS A SECTION (ADR-156 U2, owner 2026-10-15: "why aren't
+         * we visualizing it with those isometric things"): the standard head,
+         * then the proposal system's isometric stack (`StackFigure`) at the
+         * band's width under it, and nothing else: no console, no grid of
+         * uses, no cards. The words sit beside their plates on leaders.
+         *
+         * ⚠ THE THIRTIETH ENUMERATED EXCEPTION. Server, no state, DOM words,
+         * an SVG that letters nothing. One lit tier, by the house's law.
+         */
+        kind: "stack";
+        head: ArcHead;
+        figure: {
+          /** Any order; the drawing sorts top-down. */
+          tiers: readonly ("tiles" | "layer" | "host" | "shared")[];
+          lit?: "tiles" | "layer" | "host" | "shared";
+          callouts: Readonly<
+            Partial<
+              Record<
+                "tiles" | "layer" | "host" | "shared",
+                { label: string; lines?: readonly string[]; chip?: string }
+              >
+            >
+          >;
+          /** The tiles on the deck, at most four (`MAX_TILES`). */
+          tiles?: readonly { id: string; bucket: string; name: string; lit?: boolean }[];
+          /** The courses ruled on the layer, at most eight in all. */
+          courses?: { skills: readonly string[]; evals: readonly string[] };
+          /** Which side a tier's words sit; `STACK_SIDES` otherwise. */
+          sides?: Readonly<Partial<Record<"tiles" | "layer" | "host" | "shared", "left" | "right">>>;
+          alt: string;
+        };
       }
     | {
         /**
