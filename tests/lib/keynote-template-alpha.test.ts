@@ -211,7 +211,7 @@ describe("the keynote template (ADR-159)", () => {
   it("reads the Ghent beats by reference and forks only what moved or changed", () => {
     const ghent = (id: string) => UX_MEETUP_ARC.sections.find((s) => s.id === id);
     const here = (id: string) => KEYNOTE_ARC.sections.find((s) => s.id === id);
-    for (const id of ["the-claim", "capability", "the-interface", "an-intelligence", "every-desk"]) {
+    for (const id of ["the-claim", "capability", "the-interface", "an-intelligence"]) {
       expect(here(id), `${id}: the talk's object`).toBe(ghent(id));
     }
     // U1 (owner, 2026-10-16): the voice about software has his new line.
@@ -221,6 +221,15 @@ describe("the keynote template (ADR-159)", () => {
       "AI is both the tool",
       "and the builder of the tool.",
     ]);
+    // U2: the rings keep the talk's layers under his new line.
+    const desk = here("every-desk");
+    const ghentDesk = ghent("every-desk");
+    expect(desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.line : "").toBe(
+      "An intelligence that will soon absorb all knowledge work."
+    );
+    expect(desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.layers : null).toBe(
+      ghentDesk?.kind === "figure" && ghentDesk.figure.id === "knowledge" ? ghentDesk.figure.layers : undefined
+    );
     for (const [id, n] of [
       ["latent-space", "12"],
       ["prowl", "14"],
@@ -232,7 +241,7 @@ describe("the keynote template (ADR-159)", () => {
       );
       expect(a?.kind === "figure" ? a.eyebrow?.slice(0, 2) : "", `${id}: renumbered`).toBe(n);
     }
-    for (const id of ["any-software", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
+    for (const id of ["any-software", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
     }
@@ -314,9 +323,16 @@ describe("the keynote template (ADR-159)", () => {
     expect(act, "no scanline").not.toContain("behind a scanline");
     expect(act, "the cords from three edges").toMatch(/edge: "left"[\s\S]*edge: "back"/);
     expect(act, "the field on the last phase").toContain("phase === 9");
+    // U2: the camera turns to face the reader between the interface and the
+    // middle, and the head stands on the screen's top datum.
+    expect(act, "the camera's path").toMatch(/const VIEW_T: Record<number, number> = \{ 1: 0, 2: 1, 3: 2/);
+    expect(act).toContain("BRAIN_VIEW_FRONT");
+    expect(act, "the head outside the scene's box").toMatch(/<\/div>\s*\{\/\* The head stands on the screen's own top datum/);
     const sheet = own("keynote-template-alpha.css");
     expect(sheet, "the scene inside the instrument band").toContain("var(--instrument-margin");
     expect(sheet, "the voices read over the brain").toContain("#any-software .arc-stage");
+    expect(sheet, "the head on a top datum").toContain("--fa-head-top: clamp(");
+    expect(sheet, "no head seated by the box").not.toContain("top: calc(40 / 820 * 100%)");
   });
 
   /**
@@ -326,11 +342,21 @@ describe("the keynote template (ADR-159)", () => {
    * manifold, and a partial reveal is a prefix of the build.
    */
   it("keeps the Ghent brain byte-identical and builds the keynote's from the floor", async () => {
-    const { brainIsoMarkup, BRAIN_ISO_ROOTS, BRAIN_ISO_PORTS } = await import(
-      "@/components/arcs/figures/foundation/brainIso"
-    );
+    const { brainIsoMarkup, brainIsoBox, brainIsoRoots, BRAIN_ISO_BOX, BRAIN_ISO_ROOTS, BRAIN_ISO_PORTS, BRAIN_VIEW_ISO, BRAIN_VIEW_FRONT } =
+      await import("@/components/arcs/figures/foundation/brainIso");
     const whole = brainIsoMarkup();
     expect(brainIsoMarkup({ base: "manifold", reveal: 1 })).toBe(whole);
+    expect(brainIsoMarkup({ view: BRAIN_VIEW_ISO }), "the isometric is the default camera").toBe(whole);
+    // U2: a second camera, face on and tilted up, with its own bounds and roots.
+    const front = brainIsoMarkup({ view: BRAIN_VIEW_FRONT, base: "tendrils" });
+    expect(front).not.toBe(brainIsoMarkup({ base: "tendrils" }));
+    expect(front.length).toBeGreaterThan(1000);
+    expect(brainIsoBox(BRAIN_VIEW_ISO)).toEqual(BRAIN_ISO_BOX);
+    expect(brainIsoBox(BRAIN_VIEW_FRONT)).not.toEqual(BRAIN_ISO_BOX);
+    expect(brainIsoRoots(BRAIN_VIEW_ISO)).toEqual(BRAIN_ISO_ROOTS);
+    const frontRoots = brainIsoRoots(BRAIN_VIEW_FRONT);
+    expect(frontRoots.length).toBe(8);
+    for (let i = 1; i < frontRoots.length; i++) expect(frontRoots[i][0]).toBeGreaterThanOrEqual(frontRoots[i - 1][0]);
     const tendrils = brainIsoMarkup({ base: "tendrils" });
     expect(tendrils.length).toBeLessThan(whole.length);
     // The hemispheres are the same parts in both: the far one appears inside

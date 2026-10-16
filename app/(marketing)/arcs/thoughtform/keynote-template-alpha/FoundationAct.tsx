@@ -3,7 +3,18 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-import { BRAIN_ISO_BOX, BRAIN_ISO_ROOTS, brainIsoFlank, brainIsoSvg, type BrainIsoOptions } from "@/components/arcs/figures/foundation/brainIso";
+import {
+  BRAIN_VIEW_FRONT,
+  BRAIN_VIEW_ISO,
+  brainIsoBox,
+  brainIsoFlank,
+  brainIsoRoots,
+  brainIsoSvg,
+  type BrainIsoBox,
+  type BrainIsoOptions,
+  type BrainView,
+} from "@/components/arcs/figures/foundation/brainIso";
+import type { Flat } from "@/components/arcs/figures/foundation/isoKit";
 import { type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
@@ -143,6 +154,39 @@ const PICTURE: Record<number, Picture> = { 1: "plain", 2: "plain", 3: "split", 4
     steps over this many seconds. */
 const STEPS = 12;
 const MANIFEST = 0.9;
+
+/**
+ * The camera's path (ADR-159 U2, owner: the brain "rotated so it's more
+ * central ... also tilt up so that, when you land [on the middle], you can
+ * really see the frontal view while still maintaining a 3D POV"). Two legs
+ * on one parameter `t`: 0 → 1 the TURN, from the stack's isometric (where
+ * the brain must share the cards' camera) to face on; 1 → 2 the TILT, from
+ * the isometric's height down to the frontal view's. Each phase has its
+ * station on the path; the brain eases along it by the clock, and the
+ * picture is rasterised at `VIEW_STEPS` frames a leg.
+ */
+const VIEW_T: Record<number, number> = { 1: 0, 2: 1, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2 };
+const VIEW_STEPS = 12;
+function viewOf(t: number): BrainView {
+  const u = Math.max(0, Math.min(2, t));
+  if (u <= 1) return { azimuth: BRAIN_VIEW_ISO.azimuth * (1 - u), elevation: BRAIN_VIEW_ISO.elevation };
+  const w = u - 1;
+  return { azimuth: BRAIN_VIEW_FRONT.azimuth, elevation: BRAIN_VIEW_ISO.elevation + (BRAIN_VIEW_FRONT.elevation - BRAIN_VIEW_ISO.elevation) * w };
+}
+const viewAt = (vi: number): BrainView => viewOf(vi / VIEW_STEPS);
+/** The brain's bounds and roots at a frame of the path, once each. */
+const BOXES = new Map<number, BrainIsoBox>();
+const ROOTS = new Map<number, Flat[]>();
+function boxAt(vi: number): BrainIsoBox {
+  let b = BOXES.get(vi);
+  if (!b) BOXES.set(vi, (b = brainIsoBox(viewAt(vi))));
+  return b;
+}
+function rootsAt(vi: number): Flat[] {
+  let r = ROOTS.get(vi);
+  if (!r) ROOTS.set(vi, (r = brainIsoRoots(viewAt(vi))));
+  return r;
+}
 /** The middle beat's two cards, in the viewBox. */
 const SIDE = { w: 300, h: 196, y: 352, tool: 98, collab: 1042 } as const;
 
@@ -258,12 +302,12 @@ export function FoundationAct() {
        everything round it keeps its order. */
     const pictures = new Map<string, HTMLImageElement | null>();
     let gone = false;
-    const pictureOf = (kind: Picture, step = STEPS): HTMLImageElement | null => {
-      const key = `${kind}|${step}|${light}`;
+    const pictureOf = (kind: Picture, step = STEPS, vi = 0): HTMLImageElement | null => {
+      const key = `${kind}|${step}|${vi}|${light}`;
       if (pictures.has(key)) return pictures.get(key) ?? null;
       pictures.set(key, null);
       const img = new Image();
-      const opts: BrainIsoOptions = { base: "tendrils", split: kind === "split", mask: kind === "mask", reveal: step / STEPS };
+      const opts: BrainIsoOptions = { base: "tendrils", split: kind === "split", mask: kind === "mask", reveal: step / STEPS, view: viewAt(vi) };
       const url = URL.createObjectURL(new Blob([brainIsoSvg({ ...opts, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
       img.onload = () => {
         URL.revokeObjectURL(url);
@@ -272,24 +316,31 @@ export function FoundationAct() {
       img.src = url;
       return null;
     };
-    /** The highest build step loaded at or under `step`. */
-    const readyUnder = (kind: Picture, step: number): HTMLImageElement | null => {
+    /** The highest build step loaded at or under `step`, at a frame. */
+    const readyUnder = (kind: Picture, step: number, vi: number): HTMLImageElement | null => {
       for (let k = step; k >= 1; k--) {
-        const img = pictureOf(kind, k);
+        const img = pictureOf(kind, k, vi);
         if (img) return img;
       }
       return null;
     };
-    /** Every step of a picture, asked for ahead of its manifest. */
-    const prime = (kind: Picture) => {
-      for (let k = 1; k <= STEPS; k++) pictureOf(kind, k);
+    /** Every step of a picture at a frame, asked for ahead of its manifest. */
+    const prime = (kind: Picture, vi: number) => {
+      for (let k = 1; k <= STEPS; k++) pictureOf(kind, k, vi);
     };
-    prime("plain");
+    /** The frames of a turn, asked for a couple a frame so nothing stalls. */
+    const queue: [Picture, number][] = [];
+    const primeTurn = (kind: Picture, from: number, to: number) => {
+      const a = Math.round(Math.min(from, to) * VIEW_STEPS);
+      const b = Math.round(Math.max(from, to) * VIEW_STEPS);
+      for (let vi = a; vi <= b; vi++) queue.push([kind, vi]);
+    };
+    prime("plain", 0);
 
     /* The brain's live state: its seat eases toward the beat's pose, its
-       picture crossfades when the beat changes it, and it manifests the
-       first time it is seen after being gone. */
-    const brain = { x: 0, y: 0, s: 0, a: 0, seated: false, kind: "plain" as Picture, prev: null as Picture | null, fade: 1, shownAt: 0, last: 0 };
+       camera along the path, its picture crossfades when the beat changes
+       it, and it manifests the first time it is seen after being gone. */
+    const brain = { x: 0, y: 0, s: 0, a: 0, v: 0, vi: 0, seated: false, kind: "plain" as Picture, prev: null as Picture | null, fade: 1, shownAt: 0, last: 0 };
 
     const size = () => {
       const r = canvas.getBoundingClientRect();
@@ -306,7 +357,7 @@ export function FoundationAct() {
       light = document.documentElement.dataset.theme === "light";
       if (was !== light) {
         pictures.clear();
-        prime(brain.kind);
+        prime(brain.kind, brain.vi);
       }
     };
     /**
@@ -316,7 +367,7 @@ export function FoundationAct() {
      * which paints it where the caller wants it in the stack of layers; or
      * null when the phase has no brain. Called once a frame.
      */
-    const brainAt = (now: number): { pl: Place; manifest: number; alpha: number; draw: () => void } | null => {
+    const brainAt = (now: number): { pl: Place; vi: number; manifest: number; alpha: number; draw: () => void } | null => {
       const pose = POSES[phase];
       if (!pose) return null;
       if (!brain.seated) {
@@ -324,13 +375,15 @@ export function FoundationAct() {
         brain.y = pose.y;
         brain.s = pose.s;
         brain.a = 0;
+        brain.v = VIEW_T[phase] ?? 0;
+        brain.vi = Math.round(brain.v * VIEW_STEPS);
         brain.seated = true;
         brain.shownAt = now;
         brain.kind = PICTURE[phase];
         brain.prev = null;
         brain.fade = 1;
         brain.last = now;
-        prime(brain.kind);
+        prime(brain.kind, brain.vi);
       }
       // By the clock, not the frame: a throttled tab still arrives.
       const dt = Math.min(0.25, Math.max(0, (now - brain.last) / 1000));
@@ -340,38 +393,59 @@ export function FoundationAct() {
       brain.y += (pose.y - brain.y) * e;
       brain.s += (pose.s - brain.s) * e;
       brain.a += (pose.a - brain.a) * e;
+      // The camera takes its time: a turn, then a tilt, each about a second.
+      const ev = 1 - Math.exp(-dt * 4.5);
+      brain.v += ((VIEW_T[phase] ?? 0) - brain.v) * ev;
+      const vi = Math.round(brain.v * VIEW_STEPS);
+      brain.vi = vi;
       const want = PICTURE[phase];
       if (want !== brain.kind) {
         brain.prev = brain.kind;
         brain.kind = want;
         brain.fade = 0;
-        pictureOf(want);
+        pictureOf(want, STEPS, Math.round((VIEW_T[phase] ?? 0) * VIEW_STEPS));
       }
       if (brain.fade < 1) brain.fade = Math.min(1, brain.fade + dt / 0.45);
       const manifest = Math.min(1, (now - brain.shownAt) / 1000 / MANIFEST);
       const step = Math.max(1, Math.ceil(manifest * STEPS));
       const k = canvas.width / VB.w;
       const pl: Place = { x: brain.x, y: brain.y, s: brain.s };
-      const B = BRAIN_ISO_BOX;
       const s = pl.s * ISO_S;
-      const draw = (img: HTMLImageElement, alpha: number) => {
+      const draw = (img: HTMLImageElement, alpha: number, B: BrainIsoBox) => {
         ctx.globalAlpha = alpha;
         ctx.drawImage(img, (pl.x + B.x0 * s) * k, (pl.y + B.y0 * s) * k, (B.x1 - B.x0) * s * k, (B.y1 - B.y0) * s * k);
       };
-      const cur = manifest < 1 ? readyUnder(brain.kind, step) : (pictureOf(brain.kind) ?? readyUnder(brain.kind, STEPS));
+      /** The whole picture at this frame of the path, or the nearest frame
+          that has loaded, with that frame's own bounds. */
+      const whole = (kind: Picture): [HTMLImageElement, BrainIsoBox] | null => {
+        const exact = pictureOf(kind, STEPS, vi);
+        if (exact) return [exact, boxAt(vi)];
+        for (let d = 1; d <= 2 * VIEW_STEPS; d++) {
+          for (const v of [vi - d, vi + d]) {
+            if (v < 0 || v > 2 * VIEW_STEPS) continue;
+            const img = pictures.get(`${kind}|${STEPS}|${v}|${light}`);
+            if (img) return [img, boxAt(v)];
+          }
+        }
+        return null;
+      };
+      const manifesting = manifest < 1;
+      const partial = manifesting ? readyUnder(brain.kind, step, vi) : null;
+      const cur: [HTMLImageElement, BrainIsoBox] | null = manifesting ? (partial ? [partial, boxAt(vi)] : null) : whole(brain.kind);
       const fading = brain.prev !== null && brain.fade < 1;
-      const prev = fading ? pictureOf(brain.prev as Picture) : null;
+      const prev = fading ? whole(brain.prev as Picture) : null;
       const alpha = brain.a;
       const fade = brain.fade;
       // A readout for the walks: what the brain is doing this frame.
-      root.dataset.faBrain = `${brain.kind} ${cur ? "ready" : "loading"} a${alpha.toFixed(2)} f${fade.toFixed(2)} m${manifest.toFixed(2)}`;
+      root.dataset.faBrain = `${brain.kind} ${cur ? "ready" : "loading"} a${alpha.toFixed(2)} f${fade.toFixed(2)} m${manifest.toFixed(2)} v${brain.v.toFixed(2)}`;
       return {
         pl,
+        vi,
         manifest,
         alpha,
         draw: () => {
-          if (prev) draw(prev, alpha * (1 - fade));
-          if (cur) draw(cur, alpha * (fading ? fade : 1));
+          if (prev) draw(prev[0], alpha * (1 - fade), prev[1]);
+          if (cur) draw(cur[0], alpha * (fading ? fade : 1), cur[1]);
           ctx.globalAlpha = 1;
         },
       };
@@ -408,6 +482,17 @@ export function FoundationAct() {
         scramble(titleRef.current, heads[phase].title);
         if (lineRef.current) lineRef.current.textContent = heads[phase].line;
         if (!POSES[phase]) brain.seated = false;
+        // A beat on another station of the camera's path: ask for the
+        // frames between, and the beat's own picture at its station.
+        if (POSES[phase] && brain.seated && VIEW_T[phase] !== brain.v) {
+          primeTurn("plain", brain.v, VIEW_T[phase]);
+          if (PICTURE[phase] !== "plain") queue.push([PICTURE[phase], Math.round(VIEW_T[phase] * VIEW_STEPS)]);
+        }
+      }
+      // The turn's frames, a couple a frame.
+      for (let i = 0; i < 2 && queue.length; i++) {
+        const [kd, vi] = queue.shift() as [Picture, number];
+        pictureOf(kd, STEPS, vi);
       }
       const since = (now - landed) / 1000;
       const k = canvas.width / VB.w;
@@ -489,25 +574,26 @@ export function FoundationAct() {
             for (let i = 0; i < n; i++) {
               if (cordGrow(since, i) > 0) started.add(CORD_PLAN[i % CORD_PLAN.length].root);
             }
-            paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, skip: started });
-            if (b.manifest >= 1) paintCords(ctx, b.pl, { k, dpr, tone, since, now, n, a, alpha: b.alpha });
+            paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi, skip: started });
+            if (b.manifest >= 1) paintCords(ctx, b.pl, { k, dpr, tone, since, now, n, a, alpha: b.alpha, vi: b.vi });
             b.draw();
           }
         }
       } else if (phase === 3) {
         const b = brainAt(now);
-        const stood = !!b && b.manifest >= 1 && brain.fade >= 1 && b.alpha > 0.9;
+        // The cards and the runs wait for the brain to stand whole, facing.
+        const stood = !!b && b.manifest >= 1 && brain.fade >= 1 && b.alpha > 0.9 && brain.v > 1.95;
         root.toggleAttribute("data-fa-cards", stood);
         if (b) {
-          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest });
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
           b.draw();
-          if (stood) paintRuns(ctx, b.pl, { k, dpr, tone, since: since - 0.6, now });
+          if (stood) paintRuns(ctx, b.pl, { k, dpr, tone, since: since - 0.6, now, vi: b.vi });
         }
       } else if (phase === 4) {
         const b = brainAt(now);
         if (b) {
           paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, false);
-          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest });
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
           b.draw();
           paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, true);
         }
@@ -524,7 +610,7 @@ export function FoundationAct() {
         // Behind a voice (2, 5, 7), receded; alone (8, ADR-159).
         const b = brainAt(now);
         if (b) {
-          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest });
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
           b.draw();
         }
       } else if (phase === 9) {
@@ -646,13 +732,6 @@ export function FoundationAct() {
           ) : null}
         </svg>
         <canvas ref={canvasRef} className="fa__dots" aria-hidden="true" />
-        <div className="fa__head" aria-hidden="true">
-          <p className="fa__eyebrow">
-            <span ref={eyebrowRef} />
-          </p>
-          <h3 ref={titleRef} className="fa__title" />
-          <p ref={lineRef} className="fa__line" />
-        </div>
         {latent ? (
           <figure className="fa__quote" aria-hidden="true">
             <blockquote>{latent.quote}</blockquote>
@@ -662,6 +741,15 @@ export function FoundationAct() {
         <button ref={playRef} type="button" className="fa__play" style={playAt}>
           <span aria-hidden="true">▶</span> Play with sound
         </button>
+      </div>
+      {/* The head stands on the screen's own top datum, not the scene's
+          box (ADR-159 U2, after Linear: "always placed properly on top"). */}
+      <div className="fa__head" aria-hidden="true">
+        <p className="fa__eyebrow">
+          <span ref={eyebrowRef} />
+        </p>
+        <h3 ref={titleRef} className="fa__title" />
+        <p ref={lineRef} className="fa__line" />
       </div>
       {client
         ? createPortal(
@@ -797,14 +885,16 @@ function SideCard({
 
 /** The machined brain's size against the old drawing's units. */
 const ISO_S = 1.02;
-/** A root's mouth in the viewBox: a hose hangs or a cord leaves here. */
-function isoRootAt(pl: Place, i: number): P2 {
-  const [x, y] = BRAIN_ISO_ROOTS[i % BRAIN_ISO_ROOTS.length];
+/** A root's mouth in the viewBox at a frame of the camera's path: a hose
+    hangs or a cord leaves here. */
+function isoRootAt(pl: Place, i: number, vi: number): P2 {
+  const roots = rootsAt(vi);
+  const [x, y] = roots[i % roots.length];
   return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
 }
 /** A point on a hemisphere's outer flank in the viewBox, high, level or low. */
-function isoFlankAt(pl: Place, side: -1 | 1, j: number): P2 {
-  const [x, y] = brainIsoFlank(side, j);
+function isoFlankAt(pl: Place, side: -1 | 1, j: number, vi: number): P2 {
+  const [x, y] = brainIsoFlank(side, j, viewAt(vi));
   return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
 }
 /**
@@ -817,16 +907,17 @@ function isoFlankAt(pl: Place, side: -1 | 1, j: number): P2 {
 function paintTendrils(
   ctx: CanvasRenderingContext2D,
   pl: Place,
-  o: { k: number; dpr: number; tone: Tone; now: number; alpha: number; grow: number; skip?: ReadonlySet<number> }
+  o: { k: number; dpr: number; tone: Tone; now: number; alpha: number; grow: number; vi: number; skip?: ReadonlySet<number> }
 ) {
   const { k, dpr, tone } = o;
   const grow = smooth(o.grow);
   if (grow <= 0 || o.alpha <= 0.01) return;
   ctx.save();
   ctx.lineCap = "round";
-  for (let i = 0; i < BRAIN_ISO_ROOTS.length; i++) {
+  const roots = rootsAt(o.vi);
+  for (let i = 0; i < roots.length; i++) {
     if (o.skip?.has(i)) continue;
-    const a = isoRootAt(pl, i);
+    const a = isoRootAt(pl, i, o.vi);
     const len = (150 + ((i * 53) % 120)) * pl.s * grow;
     const sway = Math.sin(o.now / 2100 + i * 1.9) * 9 * pl.s;
     const side = i % 2 ? 1 : -1;
@@ -902,13 +993,13 @@ function strokePath(ctx: CanvasRenderingContext2D, pts: P2[], k: number, upto = 
 function paintCords(
   ctx: CanvasRenderingContext2D,
   pl: Place,
-  o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number; alpha: number }
+  o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number; alpha: number; vi: number }
 ) {
   const { k, dpr, tone, n } = o;
   for (let i = 0; i < n; i++) {
     const cord = CORDS[i % CORDS.length];
     const plan = CORD_PLAN[i % CORD_PLAN.length];
-    const from = isoRootAt(pl, plan.root);
+    const from = isoRootAt(pl, plan.root, o.vi);
     const { at: to, out } = socketAt(i, n, plateOrigin(i, o.a), plan.edge);
     const reachOut = 80 + i * 22;
     // Down out of the brain first, then round the stack's side and in from
@@ -950,14 +1041,14 @@ function paintCords(
 /** The middle beat's runs: from the brain's left to the tool's card, squared
     as a board routes; from its right to the collaborator's, loose streams of
     particles running both ways. */
-function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number }) {
+function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number; vi: number }) {
   const { k, dpr, tone } = o;
   const grow = smooth(o.since / 0.8);
   if (grow <= 0) return;
   const widths = [2.2, 1.2, 1.8];
   const pinY = [-40, 0, 40];
   for (let j = 0; j < 3; j++) {
-    const a = isoFlankAt(pl, -1, j);
+    const a = isoFlankAt(pl, -1, j, o.vi);
     const end = { x: SIDE.tool + SIDE.w + 1, y: SIDE.y + pinY[j] };
     const bend = (a.x + end.x) / 2 + (j - 1) * 14;
     const pts: P2[] = [a, { x: bend, y: a.y }, { x: bend, y: end.y }, end];
@@ -982,7 +1073,7 @@ function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr
     }
   }
   for (let j = 0; j < 3; j++) {
-    const a = isoFlankAt(pl, 1, j);
+    const a = isoFlankAt(pl, 1, j, o.vi);
     const end = { x: SIDE.collab - 1, y: SIDE.y + pinY[j] };
     const pts = cable(a, end, { x: 80, y: (j - 1) * 60 }, { x: -80, y: (1 - j) * 30 }, 40);
     const col = j === 1 ? tone.ink : tone.green;

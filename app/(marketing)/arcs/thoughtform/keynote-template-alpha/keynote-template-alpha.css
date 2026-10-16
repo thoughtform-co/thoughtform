@@ -415,10 +415,21 @@ html[data-theme="light"] .fa__dots {
   stroke: var(--arc-seam);
   stroke-width: 1;
 }
-/* The head: an eyebrow, a title, a line, where the beat has one. The first
-   beat's is in its modules. */
+/* The head: an eyebrow, a title, a line, where the beat has one (the first
+   beat's is in its modules). ON THE SCREEN'S TOP DATUM, NOT THE SCENE'S BOX
+   (ADR-159 U2, owner: the title "feels a bit too far down and centered";
+   Linear, the reference: a section head sits a fixed inset under the top
+   and the figure fills the rest, never centred against the frame). The
+   band's own inset left and right, `--fa-head-top` down whatever the
+   viewport's height, so the brain and the rings read under it. */
+.fa {
+  --fa-head-top: clamp(72px, 10.5svh, 132px);
+}
 .fa__head {
   position: absolute;
+  top: var(--fa-head-top);
+  left: var(--instrument-margin, var(--hud-content-inset, 120px));
+  right: var(--instrument-margin, var(--hud-content-inset, 120px));
   display: grid;
   gap: var(--space-sm);
   visibility: hidden;
@@ -430,40 +441,41 @@ html[data-theme="light"] .fa__dots {
 .fa[data-fa-phase="8"] .fa__head {
   visibility: inherit;
 }
-.fa[data-fa-phase="1"] .fa__head,
-.fa[data-fa-phase="6"] .fa__head {
-  left: calc(48 / 1440 * 100%);
-  top: calc(84 / 820 * 100%);
-  width: calc(470 / 1440 * 100%);
+/* Over the stack: the title left on its own measure, as the hero's H1. */
+.fa[data-fa-phase="1"] .fa__head {
+  justify-items: start;
+  text-align: left;
+}
+.fa[data-fa-phase="1"] .fa__title {
+  max-width: 14ch;
 }
 /* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
-   right, the brain between them. */
+   right, the brain between them; the homepage hero's own shape, H1 left and
+   the paragraph right, across the band. */
 .fa[data-fa-phase="6"] .fa__head {
-  /* clear of the right rail's readouts (BEARING sits on the line's row) */
-  right: calc(210 / 1440 * 100%);
-  width: auto;
-  grid-template-columns: minmax(0, 470fr) minmax(0, 404fr) minmax(0, 470fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  justify-items: start;
+  text-align: left;
 }
 .fa[data-fa-phase="6"] .fa__eyebrow {
   grid-area: 1 / 1;
 }
 .fa[data-fa-phase="6"] .fa__title {
   grid-area: 2 / 1;
+  max-width: 14ch;
 }
 .fa[data-fa-phase="6"] .fa__line {
-  grid-area: 2 / 3;
+  grid-area: 2 / 2;
   align-self: end;
   justify-self: end;
   max-width: 24ch;
   text-align: right;
 }
-/* Centred over the brain: the middle, the rings, the brain alone (ADR-159). */
+/* Centred (owner: "I want to play around with centering it"): the middle,
+   the rings, the brain alone. */
 .fa[data-fa-phase="3"] .fa__head,
 .fa[data-fa-phase="4"] .fa__head,
 .fa[data-fa-phase="8"] .fa__head {
-  left: 0;
-  right: 0;
-  top: calc(40 / 820 * 100%);
   justify-items: center;
   text-align: center;
 }

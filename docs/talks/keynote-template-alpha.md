@@ -131,8 +131,8 @@ check the answer, and nobody knows its limits yet.
 *The rings come in one after another: now, next, in reach.*
 
 And it's growing. Writing, code, images, research: that's now. Law, finance, design, support:
-next. Medicine, science, engineering, policy: in reach. Potentially every kind of knowledge work
-on the planet.
+next. Medicine, science, engineering, policy: in reach. An intelligence that will soon absorb all
+knowledge work.
 
 ---
 

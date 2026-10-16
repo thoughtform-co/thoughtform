@@ -209,12 +209,46 @@ the manifest from the floor, the cords from three edges, the brain dim behind ea
 again after, the split with its two cards and runs, the hoses under every pose but the shoggoth's.
 No console error.
 
+## U2 · The brain turns to face the room, and the heads stand on top (2026-10-16, owner: "looks sick")
+
+- **The turn** ("when you scroll from 'intelligence as the interface' to 'the AI is both the tool
+  and the builder of the tool,' the brain rotated so it's more central. It would also tilt up so
+  that, when you land [on] 'the AI is an intelligence that sits in the middle', you can really
+  see the frontal view while still maintaining a 3D POV"). `brainIso` takes a camera (`view`):
+  `BRAIN_VIEW_ISO` is the stack's isometric, the default and byte-identical; `BRAIN_VIEW_FRONT`
+  is face on at 22° of elevation. The act walks a path in two legs, the turn (azimuth 45° → 0°)
+  behind the voice and the tilt (35.264° → 22°) into the middle, twelve frames a leg rasterised
+  as the scroll approaches them (a couple a frame, never a stall), the seat eased by the clock;
+  every anchor (the roots, the flanks, the bounds) is read at the frame drawn. From the middle on
+  the brain stays face on: the rings around a front view, the mask seen straight, the brain alone
+  facing the room.
+- **"An intelligence that will soon absorb all knowledge work."** is 06's line ("reword it so
+  it's more logical"), the rings and their layers the talk's by reference.
+- **The heads on the screen's top datum** ("the hero H1 ... is in the middle ... feels a bit too
+  far down and centered. If you look at Linear ... it feels different and always placed properly
+  on top"). Linear's section grammar, measured for ADR-099 U2 and read again today: the heading
+  first, a short paragraph under it, the visual below, the head a fixed inset under the section's
+  top, never centred against the frame. The act's head leaves the scene's box and stands on the
+  viewport at `--fa-head-top` (clamp 72px · 10.5svh · 132px), inside the band's inset: centred
+  for the middle, the rings and the brain alone (his "play around with centering it"); left on its
+  own measure over the stack; and the shoggoth as the homepage hero's shape, the title left and
+  the line right across the band.
+
+Verified: `tsc` and `eslint` clean; the keynote test (9, with the camera and the datum pinned),
+`ux-meetup` and `arcs-registry` green; the Ghent brain byte-identical with the default camera.
+Read headed in the owner's Chrome: the brain isometric over the stack with its cords; face on,
+receded and dim behind "AI is both the tool and the builder of the tool."; tilted up and split in
+the middle with its cards and runs; the rings under the new line; the mask straight on; the brain
+alone facing the room; every head at the top datum. No console error.
+
 ## Left open
 
 - Every line marked (proposal): 08's line, 14's spoken paragraph on semantic navigation, the
   wording of 07, 09's choice of quote, 10's title.
 - The hoses' make (U1) is a first cut against his two references; whether they want the glass
   brain's wires wrapped round the hemispheres as well is his read.
+- The front camera's tilt (22°) and the turn's pace (about a second a leg) are the first values;
+  his to tune on the live page.
 - The NYT byline and date in the script (Freedman, 14 October 2026, from secondary coverage; the
   article itself was not opened).
 - Whether the swarm's labels get a keynote variant now or later; whether the thesis stays.

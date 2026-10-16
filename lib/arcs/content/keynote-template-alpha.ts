@@ -59,6 +59,13 @@ function moved(id: string, eyebrow: string): Section {
   return { ...ghent(id), eyebrow } as Section;
 }
 
+/** The rings' beat with its line rewritten, the drawing the talk's. */
+function relined(id: string, line: string): Section {
+  const s = ghent(id);
+  if (s.kind !== "figure" || s.figure.id !== "knowledge") throw new Error(`[keynote] #${id} is not the rings`);
+  return { ...s, figure: { ...s.figure, line } };
+}
+
 /** The hero's copy is the talk's, by reference: "AI is not software." */
 export const KEYNOTE_HERO = UX_MEETUP_HERO;
 
@@ -118,7 +125,10 @@ export const KEYNOTE_ARC: ArcDef = {
       },
     } as Section,
     ghent("an-intelligence"),
-    ghent("every-desk"),
+    /* Owner, 2026-10-16: "reword it so it's more logical. It's like an
+       intelligence that will soon absorb all knowledge work." The rings are
+       the talk's; the line is his. */
+    relined("every-desk", "An intelligence that will soon absorb all knowledge work."),
 
     /* ── II · A new kind of user. */
     {
