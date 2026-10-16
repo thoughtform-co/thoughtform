@@ -103,12 +103,12 @@ software. They ask the model, and their agents use the tools for them.
 
 ### 04 · Not software (11:30)
 
-*Let the second line land on its own.*
+*The brain from the last beat stays behind the line, dimmed. Let the second line land on its own.*
 
-AI can make any software, but isn't software itself.
+AI is both the tool and the builder of the tool.
 
 Sit with that for a second, as a designer. Everything we design for it assumes it's a program.
-It isn't.
+It isn't. It can make any program, and it isn't one.
 
 ### 05 · An intelligence (12:30)
 

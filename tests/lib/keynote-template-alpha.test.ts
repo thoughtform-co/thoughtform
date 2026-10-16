@@ -172,7 +172,7 @@ describe("the keynote template (ADR-159)", () => {
       "margin-top: calc(-100svh - 0.38 * var(--uxm-tail));"
     );
     expect(sheet, "the act hides the brain-alone beat's marks").toContain("#their-own .arc-fig__marks");
-    expect(sheet, "the field's quote on the seventh phase").toContain('.fa[data-fa-phase="6"] .fa__quote');
+    expect(sheet, "the field's quote on the last phase").toContain('.fa[data-fa-phase="9"] .fa__quote');
 
     expect(KEYNOTE_ARC.motion, "titles decode where they stand").toBe("terminal");
     for (const s of KEYNOTE_ARC.sections) {
@@ -211,9 +211,16 @@ describe("the keynote template (ADR-159)", () => {
   it("reads the Ghent beats by reference and forks only what moved or changed", () => {
     const ghent = (id: string) => UX_MEETUP_ARC.sections.find((s) => s.id === id);
     const here = (id: string) => KEYNOTE_ARC.sections.find((s) => s.id === id);
-    for (const id of ["the-claim", "capability", "the-interface", "any-software", "an-intelligence", "every-desk"]) {
+    for (const id of ["the-claim", "capability", "the-interface", "an-intelligence", "every-desk"]) {
       expect(here(id), `${id}: the talk's object`).toBe(ghent(id));
     }
+    // U1 (owner, 2026-10-16): the voice about software has his new line.
+    const soft = here("any-software");
+    expect(soft, "forked, not the talk's").not.toBe(ghent("any-software"));
+    expect(soft?.kind === "interstitial" ? [soft.line.pre, soft.line.em] : []).toEqual([
+      "AI is both the tool",
+      "and the builder of the tool.",
+    ]);
     for (const [id, n] of [
       ["latent-space", "12"],
       ["prowl", "14"],
@@ -225,7 +232,7 @@ describe("the keynote template (ADR-159)", () => {
       );
       expect(a?.kind === "figure" ? a.eyebrow?.slice(0, 2) : "", `${id}: renumbered`).toBe(n);
     }
-    for (const id of ["an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
+    for (const id of ["any-software", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
     }
@@ -287,17 +294,58 @@ describe("the keynote template (ADR-159)", () => {
     expect(latent?.kind === "figure" && latent.menuPrimary, "the field is never a chapter").toBeFalsy();
   });
 
-  /** The act draws seven beats, the brain alone among them, from this record. */
-  it("draws the brain alone as the act's sixth beat", () => {
+  /**
+   * ⚠ THE BRAIN IS ONE OBJECT (U1, owner 2026-10-16): the act holds the
+   * voices between its drawn beats, so the brain recedes behind them and
+   * comes forward; it manifests plate by plate through `brainIso`'s
+   * `reveal`, never a scanline; it stands on tendrils, not a block; and the
+   * cords reach the plates from three edges.
+   */
+  it("holds the brain across the voices, manifests it, and hangs tendrils", () => {
     const act = own("FoundationAct.tsx");
     expect(act, "reads this record").toContain('from "@/lib/arcs/content/keynote-template-alpha"');
     expect(act, "never the talk's").not.toContain("UX_MEETUP_ARC");
     expect(act).toContain(
-      'const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "shoggoth", "their-own", "latent-space"] as const;'
+      'const IDS = ["capability", "the-interface", "any-software", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;'
     );
-    expect(act, "the brain alone: no split, no mask").toContain("paintBrain(5, since, now)");
-    expect(act, "the field on the seventh phase").toContain("phase === 6");
-    expect(act, "a seat for the brain alone").toMatch(/5: \{ x: \d+, y: \d+, s: [\d.]+ \}/);
+    expect(act, "a pose behind every voice").toMatch(/2: RECEDE,[\s\S]*5: RECEDE,[\s\S]*7: RECEDE,/);
+    expect(act, "no block under the brain").toContain('base: "tendrils"');
+    expect(act, "the manifest through the build height").toContain("reveal: step / STEPS");
+    expect(act, "no scanline").not.toContain("behind a scanline");
+    expect(act, "the cords from three edges").toMatch(/edge: "left"[\s\S]*edge: "back"/);
+    expect(act, "the field on the last phase").toContain("phase === 9");
+    const sheet = own("keynote-template-alpha.css");
+    expect(sheet, "the scene inside the instrument band").toContain("var(--instrument-margin");
+    expect(sheet, "the voices read over the brain").toContain("#any-software .arc-stage");
+  });
+
+  /**
+   * ⚠ `brainIso` GREW TWO OPTIONS AND STAYED BYTE-IDENTICAL BY DEFAULT: the
+   * Ghent page's act passes neither, so its picture is the one the room
+   * saw; the keynote's tendril base drops the stem, the block and the
+   * manifold, and a partial reveal is a prefix of the build.
+   */
+  it("keeps the Ghent brain byte-identical and builds the keynote's from the floor", async () => {
+    const { brainIsoMarkup, BRAIN_ISO_ROOTS, BRAIN_ISO_PORTS } = await import(
+      "@/components/arcs/figures/foundation/brainIso"
+    );
+    const whole = brainIsoMarkup();
+    expect(brainIsoMarkup({ base: "manifold", reveal: 1 })).toBe(whole);
+    const tendrils = brainIsoMarkup({ base: "tendrils" });
+    expect(tendrils.length).toBeLessThan(whole.length);
+    // The hemispheres are the same parts in both: the far one appears inside
+    // the whole picture after its base, the near one ends both.
+    expect(whole.includes(tendrils.slice(0, 400)), "the far hemisphere, unchanged").toBe(true);
+    expect(whole.startsWith(tendrils.slice(0, 400)), "the base is drawn before it").toBe(false);
+    expect(whole.endsWith(tendrils.slice(-400)), "the near hemisphere, unchanged").toBe(true);
+    const half = brainIsoMarkup({ base: "tendrils", reveal: 0.5 });
+    expect(half.length).toBeGreaterThan(0);
+    expect(half.length).toBeLessThan(tendrils.length);
+    expect(brainIsoMarkup({ base: "tendrils", reveal: -1 })).toBe("");
+    expect(brainIsoMarkup({ base: "tendrils", reveal: 0 }).length, "the floor plates stand at level 0").toBeGreaterThan(0);
+    expect(BRAIN_ISO_ROOTS.length).toBe(8);
+    for (let i = 1; i < BRAIN_ISO_ROOTS.length; i++) expect(BRAIN_ISO_ROOTS[i][0]).toBeGreaterThanOrEqual(BRAIN_ISO_ROOTS[i - 1][0]);
+    expect(BRAIN_ISO_PORTS.length).toBe(7);
   });
 
   /** The house copy law, over what this page letters of its own. */

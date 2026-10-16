@@ -106,7 +106,17 @@ export const KEYNOTE_ARC: ArcDef = {
     ghent("the-claim"),
     ghent("capability"),
     ghent("the-interface"),
-    ghent("any-software"),
+    {
+      /* The Ghent line was "AI can make any software, but isn't software
+         itself." The owner, 2026-10-16: "AI is both the tool and the builder
+         of the tool." The brain of the interface beat stays behind this
+         voice (the act's phase 2) and comes forward on the next. */
+      ...ghent("any-software"),
+      line: {
+        pre: "AI is both the tool",
+        em: "and the builder of the tool.",
+      },
+    } as Section,
     ghent("an-intelligence"),
     ghent("every-desk"),
 

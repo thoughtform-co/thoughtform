@@ -157,10 +157,64 @@ nothing was written into the vault by hand.
   the beat up matched the geometry at every step, 0 mismatches, the ground off past the last
   beat. Console: no error, no warning (one analytics line).
 
+## U1 · The brain is one object, on tendrils, inside the band (2026-10-16, owner: "it looks really sick")
+
+His read of the first cut, on his wide screen, with two references (a chromed brain on hanging
+hoses by Vladislav Ociacia; a glass brain wrapped in wires), as built:
+
+- **Inside the instrument band** ("the elements are too close to the left and right rails ...
+  make the right cards a bit smaller and move everything so we follow our margin best
+  practices"). The act's box is `min(100vw − 2 × --instrument-margin, …)`: capped at
+  `--instrument-max` on a wide screen, the content inset on a laptop, so the facing card reads
+  at the band's size and the stack stands clear of the rails.
+- **The brain manifests** ("its current appearance ... includes a cross-swipe effect. Isn't there
+  a way to really leverage the anatomy skill ... so the different layers of the brain are quickly
+  drawn as if they're manifesting?"). The scanline is gone. `brainIsoMarkup` takes `reveal`: every
+  part carries a build level from the floor to the crown (the lower plates, the terraces, the
+  machine on the deck, the mask) and a reveal emits the parts at or under it in paint order, so
+  the act rasterises twelve steps of the picture and draws them over 0.9 s the first time the
+  brain is seen after being gone: both hemispheres rise together, plate by plate, the machine
+  last. The anatomy skill itself is not on this seat; the kit's own build order is the animation.
+- **Tendrils, not a block** ("I don't think we need those so-called blocks at the bottom of the
+  brain. I think it needs tendrils like in this screenshot"). `base: "tendrils"` draws no stem,
+  block or manifold; `BRAIN_ISO_ROOTS` are eight points on the hemispheres' undersides, and the
+  act hangs a hose from each, live: falling, swaying, curling at its end, no two the same length
+  or weight, a gold ferrule at the mouth and a plug at the tip, drawn under the brain so each
+  emerges from it. The shoggoth keeps its tentacles instead.
+- **The cords from three sides** ("the cables are all linked on the right side but can't we spread
+  them out on the other side so they really touch all the different angles?"). On the interface
+  beat seven hoses are the cords: the right roots round the stack's right side into the plates'
+  right edges, the left roots round the left into their left edges (`socketAt`, a socket on the
+  plate's upper-left side), one over the back into the top plate; the eighth hangs free. A hose
+  lets go the moment its cord starts to grow.
+- **"AI is both the tool and the builder of the tool."** is 04's line, in place of the Ghent "AI
+  can make any software, but isn't software itself."; the beat is forked from the Ghent record.
+- **The brain persists** ("right now the brain disappears but then reappears in a later section
+  ... when you go into this interstitial quote slide, the brain we have from the previous section
+  then moves slightly into the background with lower opacity, and when you enter 'AI is an
+  intelligence that sits in the middle,' the brain comes back into view"). The act's beats are ten
+  now: the voices between its drawings (04 not software, 07 the alien question, 09 Goodfire's
+  line) are its phases too, with a RECEDE pose (centred, 0.6 scale, 0.28 alpha); the brain's seat
+  eases from pose to pose by the clock (never by the frame: a background tab is throttled to a
+  frame a second and the ease still arrives), its picture crossfades (whole → split → whole →
+  masked → whole), and those three beats' stages rise over the act's layer so the line reads over
+  the dimmed brain. The cards and the runs of the middle beat wait until it stands whole.
+  `data-fa-brain` on the act is a readout of what the brain is doing, for the walks.
+
+`brainIso` with no options is byte-identical to before, pinned in `keynote-template-alpha.test.ts`,
+so the Ghent page's brain is the one the room saw. Verified: `tsc` and `eslint` clean; the
+keynote test (9), `ux-meetup` and `arcs-registry` green; read headed in the owner's Chrome at the
+interface, not software, the middle, every desk, the alien question, the shoggoth and their own:
+the manifest from the floor, the cords from three edges, the brain dim behind each voice and whole
+again after, the split with its two cards and runs, the hoses under every pose but the shoggoth's.
+No console error.
+
 ## Left open
 
 - Every line marked (proposal): 08's line, 14's spoken paragraph on semantic navigation, the
   wording of 07, 09's choice of quote, 10's title.
+- The hoses' make (U1) is a first cut against his two references; whether they want the glass
+  brain's wires wrapped round the hemispheres as well is his read.
 - The NYT byline and date in the script (Freedman, 14 October 2026, from secondary coverage; the
   article itself was not opened).
 - Whether the swarm's labels get a keynote variant now or later; whether the thesis stays.

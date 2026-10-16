@@ -18,6 +18,9 @@
  *   stem         a corrugated column under the fissure
  *   block        the connector block the stem lands in
  *   manifold     under the block, seven ports: every cable leaves one
+ *   (ADR-159 U1: `base: "tendrils"` draws none of those three; the hoses
+ *   hang from `BRAIN_ISO_ROOTS` on the undersides, drawn live by the act.
+ *   `reveal` emits the parts up to a build height, for the manifest.)
  *
  * Brain axes: L across the screen (+ right), F toward the viewer, z up.
  * World units are screen px at scale 1; the act scales the picture by the
@@ -99,6 +102,24 @@ const portL = (i: number) => -54 + (108 * i) / (PORTS - 1);
 
 /** The seven port mouths, in screen px at scale 1. */
 export const BRAIN_ISO_PORTS: Flat[] = Array.from({ length: PORTS }, (_, i) => iso(W(portL(i), STEM_F + 8, Z.portBottom), P));
+
+/** Where the tendrils root (ADR-159 U1, `base: "tendrils"`): eight points on
+    the undersides of the two hemispheres, four a side, in screen px at
+    scale 1. The hoses hang from here; on the interface beat the cords to
+    the plates leave from here too. */
+export const BRAIN_ISO_ROOTS: Flat[] = (() => {
+  const out: Flat[] = [];
+  const z = -HEMI.down + 3;
+  for (const side of [-1, 1] as const) {
+    const ring = contour(side, 0.55, 12, z);
+    for (const k of [1, 4, 7, 10]) {
+      const [l, f] = ring[k];
+      out.push(iso(W(l, f, z), P));
+    }
+  }
+  // left to right on screen, so a cord's index reads across the brain
+  return out.sort((a, b) => a[0] - b[0]);
+})();
 
 /** Points on the flanks, high, level and low, in screen px at scale 1. */
 export function brainIsoFlank(side: -1 | 1, j: number): Flat {
@@ -286,75 +307,112 @@ function maskMarkup(): string {
   return `<g class="fa-mask">${out.join("")}</g>`;
 }
 
-/** The brain at scale 1, as SVG markup (no `<svg>` wrapper). */
-export function brainIsoMarkup({ split = false, mask = false }: { split?: boolean; mask?: boolean } = {}): string {
-  const out: string[] = [];
+/** What stands under the hemispheres: the machined base (the stem, the
+    block and the seven-port manifold), or nothing, the tendrils being the
+    act's own live drawing from `BRAIN_ISO_ROOTS` (ADR-159 U1). */
+export type BrainIsoBase = "manifold" | "tendrils";
 
-  // 1. The ports, under the manifold, back row first.
-  const ports = Array.from({ length: PORTS }, (_, i) => {
-    const [x, y] = WP(portL(i), STEM_F + 8);
-    return { d: depthOf([x, y, 0], P), svg: solidSvg(cylinder(x, y, 4, Z.portBottom, Z.manifoldBottom - Z.portBottom, P, 20, 0.4), { tone: "hi", crease: "lo" }) };
-  }).sort((a, b) => a.d - b.d);
-  out.push(...ports.map((p) => p.svg));
-  // 2. The manifold and the block, with the block's seam and screws.
-  out.push(solidSvg(extrude(box(0, STEM_F, 132, 44), Z.manifoldBottom, Z.blockBottom - Z.manifoldBottom, P, { bevel: 0.8 }), { tone: "mid", crease: "lo" }));
-  const blockRing = box(0, STEM_F, 64, 40);
-  out.push(solidSvg(extrude(blockRing, Z.blockBottom, Z.blockTop - Z.blockBottom, P, { bevel: 1 }), { tone: "mid", crease: "lo" }));
-  out.push(
-    dotsSvg(
-      [
-        [-24, -12],
-        [24, -12],
-        [-24, 24],
-        [24, 24],
-      ].map(([l, f]) => iso(W(l, STEM_F + f, Z.blockTop), P)),
-      { size: 0.55, tone: "mid" }
-    )
-  );
-  out.push(
-    dotsSvg(
-      [-58, -30, 30, 58].map((l) => iso(W(l, STEM_F + 18, Z.blockBottom), P)),
-      { size: 0.5, tone: "lo" }
-    )
-  );
+export interface BrainIsoOptions {
+  split?: boolean;
+  mask?: boolean;
+  base?: BrainIsoBase;
+  /** How much of the brain is drawn, by build height: 0 nothing, 1 whole.
+      The parts carry a level from the floor up (the base, the lower plates,
+      the terraces, the machine on the crown, the mask), and a part is
+      emitted while its level is at or under `reveal`, in paint order, so a
+      sequence of these is the brain manifesting plate by plate. */
+  reveal?: number;
+}
+
+/** One drawn part, with where it stands on the build. */
+interface Part {
+  level: number;
+  svg: string;
+}
+
+/** The brain at scale 1, as SVG markup (no `<svg>` wrapper). With the
+    defaults the output is byte-identical to the picture before ADR-159 U1. */
+export function brainIsoMarkup({ split = false, mask = false, base = "manifold", reveal = 1 }: BrainIsoOptions = {}): string {
+  const out: Part[] = [];
+  const push = (level: number, ...svgs: string[]) => {
+    for (const svg of svgs) out.push({ level, svg });
+  };
+
+  if (base === "manifold") {
+    // 1. The ports, under the manifold, back row first.
+    const ports = Array.from({ length: PORTS }, (_, i) => {
+      const [x, y] = WP(portL(i), STEM_F + 8);
+      return { d: depthOf([x, y, 0], P), svg: solidSvg(cylinder(x, y, 4, Z.portBottom, Z.manifoldBottom - Z.portBottom, P, 20, 0.4), { tone: "hi", crease: "lo" }) };
+    }).sort((a, b) => a.d - b.d);
+    push(0, ...ports.map((p) => p.svg));
+    // 2. The manifold and the block, with the block's seam and screws.
+    push(0, solidSvg(extrude(box(0, STEM_F, 132, 44), Z.manifoldBottom, Z.blockBottom - Z.manifoldBottom, P, { bevel: 0.8 }), { tone: "mid", crease: "lo" }));
+    const blockRing = box(0, STEM_F, 64, 40);
+    push(0, solidSvg(extrude(blockRing, Z.blockBottom, Z.blockTop - Z.blockBottom, P, { bevel: 1 }), { tone: "mid", crease: "lo" }));
+    push(
+      0,
+      dotsSvg(
+        [
+          [-24, -12],
+          [24, -12],
+          [-24, 24],
+          [24, 24],
+        ].map(([l, f]) => iso(W(l, STEM_F + f, Z.blockTop), P)),
+        { size: 0.55, tone: "mid" }
+      )
+    );
+    push(
+      0,
+      dotsSvg(
+        [-58, -30, 30, 58].map((l) => iso(W(l, STEM_F + 18, Z.blockBottom), P)),
+        { size: 0.5, tone: "lo" }
+      )
+    );
+  }
   // 3. The stem: a corrugated column, collar to collar, up into the fissure.
   const [sx, sy] = WP(0, STEM_F);
   const rings = 14;
   const span = (Z.stemTop - Z.blockTop) / rings;
-  const stem: string[] = [];
-  for (let i = 0; i < rings; i++) {
-    const z = Z.blockTop + i * span;
-    stem.push(solidSvg(cylinder(sx, sy, i % 2 ? 9 : 11, z, span, P, 28), { tone: i % 2 ? "mid" : "hi", crease: "lo" }));
+  const stem: Part[] = [];
+  if (base === "manifold") {
+    for (let i = 0; i < rings; i++) {
+      const z = Z.blockTop + i * span;
+      stem.push({ level: (0.3 * i) / rings, svg: solidSvg(cylinder(sx, sy, i % 2 ? 9 : 11, z, span, P, 28), { tone: i % 2 ? "mid" : "hi", crease: "lo" }) });
+    }
   }
   // 4. The hemispheres, each whole (under the equator, the terraces, the
   //    machine on its crown): the far one, then the stem between them, then
-  //    the near one, which overlaps both on screen.
-  const hemisphere = (side: -1 | 1): string => {
-    if (split && side > 0) return looseHalf(side);
-    const h: string[] = [];
+  //    the near one, which overlaps both on screen. Their levels rise from
+  //    the floor to the crown, so the two manifest together.
+  const hemisphere = (side: -1 | 1): Part[] => {
+    if (split && side > 0) return [{ level: 0.3, svg: looseHalf(side) }];
+    const h: Part[] = [];
     const lower = 5;
     for (let i = 0; i < lower; i++) {
       const z0 = -HEMI.down + (HEMI.down * i) / lower;
       const s = downScale(z0 + HEMI.down / lower / 2);
       const ring = contour(side, s, 96, z0).map(([l, f]) => WP(l, f));
-      h.push(solidSvg(extrude(ring, z0, HEMI.down / lower, P, { convex: false }), { tone: "mid", crease: "faint" }));
+      h.push({ level: (0.3 * i) / lower, svg: solidSvg(extrude(ring, z0, HEMI.down / lower, P, { convex: false }), { tone: "mid", crease: "faint" }) });
     }
     const upper = 14;
     for (let i = 0; i < upper; i++) {
       const z0 = (Z.deck * i) / upper;
       const s = upScale(z0 + Z.deck / upper);
       const ring = contour(side, s, 96, z0).map(([l, f]) => WP(l, f));
-      h.push(solidSvg(extrude(ring, z0, Z.deck / upper, P, { convex: false, bevel: i === upper - 1 ? 1.2 : 0.6 }), { tone: i === upper - 1 ? "hi" : "mid", crease: "lo" }));
+      h.push({ level: 0.3 + (0.55 * i) / upper, svg: solidSvg(extrude(ring, z0, Z.deck / upper, P, { convex: false, bevel: i === upper - 1 ? 1.2 : 0.6 }), { tone: i === upper - 1 ? "hi" : "mid", crease: "lo" }) });
     }
     const items: Item[] = [];
     deck(side, items);
-    h.push(...items.sort((a, b) => a.depth - b.depth).map((i) => i.svg));
-    return h.join("");
+    h.push(...items.sort((a, b) => a.depth - b.depth).map((i) => ({ level: 0.9, svg: i.svg })));
+    return h;
   };
   const sides = ([-1, 1] as const).slice().sort((a, b) => depthOf(W(a * LC, 0, 0), P) - depthOf(W(b * LC, 0, 0), P));
-  out.push(hemisphere(sides[0]), ...stem, hemisphere(sides[1]));
-  if (mask) out.push(maskMarkup());
-  return out.join("");
+  out.push(...hemisphere(sides[0]), ...stem, ...hemisphere(sides[1]));
+  if (mask) push(1, maskMarkup());
+  return out
+    .filter((p) => p.level <= reveal)
+    .map((p) => p.svg)
+    .join("");
 }
 
 /** The tokens the picture is painted with, per theme: the kit's own sheet
@@ -370,7 +428,7 @@ export function brainIsoStyle(t: { light: boolean; ink: string; gold: string; li
 }
 
 /** A whole standalone SVG document of the brain, for rasterising. */
-export function brainIsoSvg(opts: { split?: boolean; mask?: boolean; light: boolean; ink: string; gold: string; lit: string; green: string }): string {
+export function brainIsoSvg(opts: BrainIsoOptions & { light: boolean; ink: string; gold: string; lit: string; green: string }): string {
   const B = BRAIN_ISO_BOX;
   const w = B.x1 - B.x0;
   const h = B.y1 - B.y0;

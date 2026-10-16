@@ -168,7 +168,12 @@
 }
 .fa__box {
   position: relative;
-  width: min(calc(100vw - 2 * var(--hud-margin, 64px)), calc((100svh - 96px) * 1440 / 820));
+  /* Inside the instrument band, never out to the rails (owner, 2026-10-16,
+     on a wide screen: "too close to the left and right rails ... follow our
+     margin best practices"): the band's margin caps the scene at
+     `--instrument-max` on a wide screen and keeps the content inset on a
+     laptop, so the facing card reads at the band's size. */
+  width: min(calc(100vw - 2 * var(--instrument-margin, var(--hud-content-inset, 120px))), calc((100svh - 96px) * 1440 / 820));
   aspect-ratio: 1440 / 820;
   margin-top: 24px;
 }
@@ -207,10 +212,14 @@ html[data-theme="light"] .fa__dots {
 .fa__quote {
   visibility: hidden;
 }
+/* The act's phases (ADR-159 U1): 0 the stack · 1 the interface · 2 not
+   software (the brain behind the voice) · 3 the middle · 4 every desk ·
+   5 the alien question (behind) · 6 the shoggoth · 7 Goodfire's line
+   (behind) · 8 their own · 9 latent space. */
 .fa[data-fa-phase="0"] .fa__stack,
 .fa[data-fa-phase="1"] .fa__stack,
-.fa[data-fa-phase="2"] .fa__cards,
-.fa[data-fa-phase="6"] .fa__quote {
+.fa[data-fa-phase="3"] .fa__cards,
+.fa[data-fa-phase="9"] .fa__quote {
   visibility: inherit;
 }
 .fa__cards {
@@ -415,54 +424,61 @@ html[data-theme="light"] .fa__dots {
   visibility: hidden;
 }
 .fa[data-fa-phase="1"] .fa__head,
-.fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
 .fa[data-fa-phase="4"] .fa__head,
-.fa[data-fa-phase="5"] .fa__head,
-.fa[data-fa-phase="6"] .fa__head {
+.fa[data-fa-phase="6"] .fa__head,
+.fa[data-fa-phase="8"] .fa__head {
   visibility: inherit;
 }
 .fa[data-fa-phase="1"] .fa__head,
-.fa[data-fa-phase="4"] .fa__head {
+.fa[data-fa-phase="6"] .fa__head {
   left: calc(48 / 1440 * 100%);
   top: calc(84 / 820 * 100%);
   width: calc(470 / 1440 * 100%);
 }
 /* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
    right, the brain between them. */
-.fa[data-fa-phase="4"] .fa__head {
+.fa[data-fa-phase="6"] .fa__head {
   /* clear of the right rail's readouts (BEARING sits on the line's row) */
   right: calc(210 / 1440 * 100%);
   width: auto;
   grid-template-columns: minmax(0, 470fr) minmax(0, 404fr) minmax(0, 470fr);
 }
-.fa[data-fa-phase="4"] .fa__eyebrow {
+.fa[data-fa-phase="6"] .fa__eyebrow {
   grid-area: 1 / 1;
 }
-.fa[data-fa-phase="4"] .fa__title {
+.fa[data-fa-phase="6"] .fa__title {
   grid-area: 2 / 1;
 }
-.fa[data-fa-phase="4"] .fa__line {
+.fa[data-fa-phase="6"] .fa__line {
   grid-area: 2 / 3;
   align-self: end;
   justify-self: end;
   max-width: 24ch;
   text-align: right;
 }
-/* Centred over the brain: the middle, the rings, the brain alone (ADR-159)
-   and the field. */
-.fa[data-fa-phase="2"] .fa__head,
+/* Centred over the brain: the middle, the rings, the brain alone (ADR-159). */
 .fa[data-fa-phase="3"] .fa__head,
-.fa[data-fa-phase="5"] .fa__head,
-.fa[data-fa-phase="6"] .fa__head {
+.fa[data-fa-phase="4"] .fa__head,
+.fa[data-fa-phase="8"] .fa__head {
   left: 0;
   right: 0;
   top: calc(40 / 820 * 100%);
   justify-items: center;
   text-align: center;
 }
-.fa[data-fa-phase="5"] .fa__line {
+.fa[data-fa-phase="8"] .fa__line {
   max-width: 44ch;
+}
+/* The voices the brain stands behind (ADR-159 U1): their stage rises over
+   the act's layer (z 5), so the line reads over the dimmed brain, on the
+   talk's transparent ground. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #any-software .arc-stage,
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #an-alien .arc-stage,
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #already-clean .arc-stage {
+    z-index: 6;
+  }
 }
 .fa__eyebrow {
   margin: 0;

@@ -3,14 +3,15 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-import { brainModel, type BrainModel } from "@/components/arcs/figures/foundation/brain";
-import { BRAIN_ISO_BOX, BRAIN_ISO_PORTS, brainIsoFlank, brainIsoSvg } from "@/components/arcs/figures/foundation/brainIso";
+import { BRAIN_ISO_BOX, BRAIN_ISO_ROOTS, brainIsoFlank, brainIsoSvg, type BrainIsoOptions } from "@/components/arcs/figures/foundation/brainIso";
 import { type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
   FACING,
   MEDIA,
+  PLATE,
   SCREEN_X,
+  SHEET,
   STACK_L,
   VB,
   axesAt,
@@ -20,6 +21,7 @@ import {
   plateCorner,
   plateOrigin,
   plateSocket,
+  proj,
   sheetPoses,
   smooth,
   U,
@@ -45,9 +47,29 @@ import { KEYNOTE_ARC } from "@/lib/arcs/content/keynote-template-alpha";
  * mask, and once more alone (ADR-159: legible, and still its own). Last,
  * latent space: a field of particles round a line.
  *
- * ⚠ THE BEATS BETWEEN ITS OWN (the voices, the statements, the prowl) are
- * not its concern: while one of them is up no id in `IDS` is active, the
- * act hides, and the next of its beats boots fresh when it parks.
+ * ⚠ THE BRAIN IS ONE OBJECT (owner, 2026-10-16: "right now the brain
+ * disappears but then reappears in a later section"). Between two of its
+ * beats a voice stands (not software, the alien question, Goodfire's line);
+ * those beats are the act's too: the brain stays, pushed back and dimmed
+ * behind the words, and comes forward again when the next beat parks. Its
+ * seat eases from pose to pose, its picture crossfades (whole, split,
+ * masked), and the first time it is seen after being gone it MANIFESTS:
+ * the plates drawn one after another from the floor to the crown, both
+ * hemispheres together, the machine on the crowns last (the kit's own build
+ * order through `brainIso`'s `reveal`), never a scanline.
+ *
+ * ⚠ TENDRILS, NOT A BLOCK (owner: "I don't think we need those so-called
+ * blocks at the bottom of the brain. I think it needs tendrils"). The stem,
+ * the block and the manifold are not drawn (`base: "tendrils"`); hoses hang
+ * from eight roots on the hemispheres' undersides, sway and curl, a ferrule
+ * at the mouth and a plug at the tip. On the interface beat seven of them
+ * are the cords into the plates, from the left roots round the stack's left
+ * side into the plates' left edges, from the right round the right, one
+ * over the back ("spread them out ... so they really touch all the
+ * different angles").
+ *
+ * The statements and the prowl between its beats are not its concern:
+ * while one of them is up no id in `IDS` is active and the act hides.
  *
  * ⚠ A READER on the talk's scroll (one passive listener, one rAF) that
  * writes only its own layer. It is shown only while one of its beats is the
@@ -96,16 +118,31 @@ const CORDS = [
   { tone: "ink", w: 1.6 },
 ] as const;
 
-/** Where the brain stands in each beat that has it. */
-const PLACE: Record<number, Place> = {
-  1: { x: 806, y: 208, s: 0.68 },
+/** The brain's seat in a beat: where, how large, how present. */
+type Pose = Place & { a: number };
+/** Behind a voice: pushed back, smaller, dim (owner, 2026-10-16: "moves
+    slightly into the background with lower opacity"). */
+const RECEDE: Pose = { x: 720, y: 330, s: 0.6, a: 0.28 };
+/** Where the brain stands in each beat that has it, by the act's phase. */
+const POSES: Record<number, Pose> = {
+  1: { x: 806, y: 208, s: 0.68, a: 1 },
+  2: RECEDE,
   // clear of the headline (owner, 2026-10-15: "too close to the text")
-  2: { x: 720, y: 412, s: 0.84 },
-  3: { x: 720, y: 360, s: 0.74 },
-  4: { x: 720, y: 330, s: 0.78 },
+  3: { x: 720, y: 412, s: 0.84, a: 1 },
+  4: { x: 720, y: 360, s: 0.74, a: 1 },
+  5: RECEDE,
+  6: { x: 720, y: 330, s: 0.78, a: 1 },
+  7: RECEDE,
   // the brain alone (ADR-159), centred under its head
-  5: { x: 720, y: 400, s: 0.82 },
+  8: { x: 720, y: 400, s: 0.82, a: 1 },
 };
+/** Which picture each beat shows: whole, split (the middle), masked (the shoggoth). */
+type Picture = "plain" | "split" | "mask";
+const PICTURE: Record<number, Picture> = { 1: "plain", 2: "plain", 3: "split", 4: "plain", 5: "plain", 6: "mask", 7: "plain", 8: "plain" };
+/** The manifest: the plates from the floor to the crown, in this many
+    steps over this many seconds. */
+const STEPS = 12;
+const MANIFEST = 0.9;
 /** The middle beat's two cards, in the viewBox. */
 const SIDE = { w: 300, h: 196, y: 352, tool: 98, collab: 1042 } as const;
 
@@ -118,8 +155,9 @@ type Card = {
   media?: { type: "image" | "video"; src: string; poster?: string; alt: string };
 };
 
-/** The act's beats in page order; their index is the act's phase. */
-const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "shoggoth", "their-own", "latent-space"] as const;
+/** The act's beats in page order; their index is the act's phase. The
+    voices between the drawn beats are the act's too, so the brain holds. */
+const IDS = ["capability", "the-interface", "any-software", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;
 
 function findSpecs() {
   const s = IDS.map((id) => KEYNOTE_ARC.sections.find((x) => x.id === id));
@@ -130,25 +168,29 @@ function findSpecs() {
   const cap = fig(0, "capability");
   const cards: readonly Card[] = cap && cap.id === "capability" ? cap.cards : [];
   const ifc = fig(1, "interface");
-  const mid = fig(2, "middle");
-  const know = fig(3, "knowledge");
-  const shog = fig(4, "shoggoth");
-  const own = fig(5, "brain");
-  const lat = fig(6, "latent");
+  const mid = fig(3, "middle");
+  const know = fig(4, "knowledge");
+  const shog = fig(6, "shoggoth");
+  const own = fig(8, "brain");
+  const lat = fig(9, "latent");
   const middle = mid && mid.id === "middle" ? mid : null;
   const knowledge = know && know.id === "knowledge" ? know : null;
   const shoggoth = shog && shog.id === "shoggoth" ? shog : null;
   const theirOwn = own && own.id === "brain" ? own : null;
   const latent = lat && lat.id === "latent" ? lat : null;
   const eyebrows = s.map((x) => (x?.kind === "figure" ? (x.eyebrow ?? x.head?.eyebrow ?? "") : ""));
+  const none = { title: "", line: "" };
   const heads: { title: string; line: string }[] = [
-    { title: "", line: "" },
+    none,
     { title: ifc && ifc.id === "interface" ? ifc.mind : "", line: "" },
+    none,
     { title: middle?.line ?? "", line: "" },
     { title: knowledge?.line ?? "", line: "" },
+    none,
     { title: shoggoth?.title ?? "", line: shoggoth?.line ?? "" },
+    none,
     { title: theirOwn?.title ?? "", line: theirOwn?.line ?? "" },
-    { title: "", line: "" },
+    none,
   ];
   return { cards, middle, knowledge, latent, eyebrows, heads };
 }
@@ -186,7 +228,6 @@ export function FoundationAct() {
     if (!ctx) return;
     const talk = root.closest<HTMLElement>(".arc-root");
     talk?.setAttribute("data-act", "live");
-    const model = brainModel();
     const field = latentField(latent?.nodes ?? []);
     const jobs: ScrambleJob[] = [];
     let scrambleRaf = 0;
@@ -211,28 +252,44 @@ export function FoundationAct() {
     let dpr = 1;
     let light = false;
     const tone: Tone = { ink: "rgb(235, 227, 214)", gold: "rgb(202, 165, 84)", lit: "rgb(240, 200, 106)", green: "rgb(122, 158, 106)", red: "rgb(255, 107, 53)" };
-    const layers = new Map<string, HTMLCanvasElement>();
     /* The brain as a machined object, built with the anatomy kit in the
-       stack's own camera (`brainIso.ts`), rasterised once per pose and
-       theme and painted through this canvas, so everything round it keeps
-       its order. */
+       stack's own camera (`brainIso.ts`), rasterised once per picture, per
+       build step and per theme, and painted through this canvas, so
+       everything round it keeps its order. */
     const pictures = new Map<string, HTMLImageElement | null>();
     let gone = false;
-    const pictureOf = (split: boolean, mask = false): HTMLImageElement | null => {
-      const key = `${split}|${mask}|${light}`;
+    const pictureOf = (kind: Picture, step = STEPS): HTMLImageElement | null => {
+      const key = `${kind}|${step}|${light}`;
       if (pictures.has(key)) return pictures.get(key) ?? null;
       pictures.set(key, null);
       const img = new Image();
-      const url = URL.createObjectURL(new Blob([brainIsoSvg({ split, mask, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
+      const opts: BrainIsoOptions = { base: "tendrils", split: kind === "split", mask: kind === "mask", reveal: step / STEPS };
+      const url = URL.createObjectURL(new Blob([brainIsoSvg({ ...opts, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
       img.onload = () => {
         URL.revokeObjectURL(url);
-        if (gone) return;
-        pictures.set(key, img);
-        layers.clear();
+        if (!gone) pictures.set(key, img);
       };
       img.src = url;
       return null;
     };
+    /** The highest build step loaded at or under `step`. */
+    const readyUnder = (kind: Picture, step: number): HTMLImageElement | null => {
+      for (let k = step; k >= 1; k--) {
+        const img = pictureOf(kind, k);
+        if (img) return img;
+      }
+      return null;
+    };
+    /** Every step of a picture, asked for ahead of its manifest. */
+    const prime = (kind: Picture) => {
+      for (let k = 1; k <= STEPS; k++) pictureOf(kind, k);
+    };
+    prime("plain");
+
+    /* The brain's live state: its seat eases toward the beat's pose, its
+       picture crossfades when the beat changes it, and it manifests the
+       first time it is seen after being gone. */
+    const brain = { x: 0, y: 0, s: 0, a: 0, seated: false, kind: "plain" as Picture, prev: null as Picture | null, fade: 1, shownAt: 0, last: 0 };
 
     const size = () => {
       const r = canvas.getBoundingClientRect();
@@ -247,56 +304,77 @@ export function FoundationAct() {
       tone.red = cs.getPropertyValue("--fa-red").trim() || tone.red;
       const was = light;
       light = document.documentElement.dataset.theme === "light";
-      if (was !== light) pictures.clear();
-      layers.clear();
-    };
-    /** The brain in one pose, drawn once at this size and in this theme. */
-    const layerOf = (ph: number) => {
-      const key = `${ph}|${light}`;
-      let l = layers.get(key);
-      if (!l) {
-        l = document.createElement("canvas");
-        l.width = canvas.width;
-        l.height = canvas.height;
-        const c = l.getContext("2d");
-        const pic = pictureOf(ph === 2, ph === 4);
-        if (!pic) return l;
-        if (c) {
-          const pl = PLACE[ph];
-          const k = canvas.width / VB.w;
-          // off the stack the cables hang (the middle, the rings, and alone)
-          if (ph === 2 || ph === 3 || ph === 5) paintHanging(c, pl, { k, dpr, tone });
-          const B = BRAIN_ISO_BOX;
-          const s = pl.s * ISO_S;
-          c.drawImage(pic, (pl.x + B.x0 * s) * k, (pl.y + B.y0 * s) * k, (B.x1 - B.x0) * s * k, (B.y1 - B.y0) * s * k);
-        }
-        layers.set(key, l);
+      if (was !== light) {
+        pictures.clear();
+        prime(brain.kind);
       }
-      return l;
     };
-    /** The brain boots top to bottom behind a scanline, then holds. */
-    const paintBrain = (ph: number, since: number, now: number) => {
-      const pl = PLACE[ph];
+    /**
+     * The brain at this frame: eased to the phase's pose, its picture
+     * crossfading, manifesting plate by plate when newly seen. Returns its
+     * seat, how far the manifest has come, how present it is, and `draw`,
+     * which paints it where the caller wants it in the stack of layers; or
+     * null when the phase has no brain. Called once a frame.
+     */
+    const brainAt = (now: number): { pl: Place; manifest: number; alpha: number; draw: () => void } | null => {
+      const pose = POSES[phase];
+      if (!pose) return null;
+      if (!brain.seated) {
+        brain.x = pose.x;
+        brain.y = pose.y;
+        brain.s = pose.s;
+        brain.a = 0;
+        brain.seated = true;
+        brain.shownAt = now;
+        brain.kind = PICTURE[phase];
+        brain.prev = null;
+        brain.fade = 1;
+        brain.last = now;
+        prime(brain.kind);
+      }
+      // By the clock, not the frame: a throttled tab still arrives.
+      const dt = Math.min(0.25, Math.max(0, (now - brain.last) / 1000));
+      brain.last = now;
+      const e = 1 - Math.exp(-dt * 9);
+      brain.x += (pose.x - brain.x) * e;
+      brain.y += (pose.y - brain.y) * e;
+      brain.s += (pose.s - brain.s) * e;
+      brain.a += (pose.a - brain.a) * e;
+      const want = PICTURE[phase];
+      if (want !== brain.kind) {
+        brain.prev = brain.kind;
+        brain.kind = want;
+        brain.fade = 0;
+        pictureOf(want);
+      }
+      if (brain.fade < 1) brain.fade = Math.min(1, brain.fade + dt / 0.45);
+      const manifest = Math.min(1, (now - brain.shownAt) / 1000 / MANIFEST);
+      const step = Math.max(1, Math.ceil(manifest * STEPS));
       const k = canvas.width / VB.w;
-      const top = pl.y + BRAIN_ISO_BOX.y0 * pl.s * ISO_S;
-      const bottom = pl.y + 470 * pl.s;
-      const boot = smooth(since / 1.0);
-      const edge = top + (bottom - top) * boot;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, canvas.width, edge * k);
-      ctx.clip();
-      ctx.drawImage(layerOf(ph), 0, 0);
-      ctx.restore();
-      if (boot < 1) {
-        ctx.globalAlpha = 0.7 * (1 - boot);
-        ctx.fillStyle = tone.lit;
-        ctx.fillRect((pl.x - 240 * pl.s) * k, edge * k - dpr, 480 * pl.s * k, 1.5 * dpr);
-        ctx.globalAlpha = 1;
-        return false;
-      }
-      void now;
-      return true;
+      const pl: Place = { x: brain.x, y: brain.y, s: brain.s };
+      const B = BRAIN_ISO_BOX;
+      const s = pl.s * ISO_S;
+      const draw = (img: HTMLImageElement, alpha: number) => {
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(img, (pl.x + B.x0 * s) * k, (pl.y + B.y0 * s) * k, (B.x1 - B.x0) * s * k, (B.y1 - B.y0) * s * k);
+      };
+      const cur = manifest < 1 ? readyUnder(brain.kind, step) : (pictureOf(brain.kind) ?? readyUnder(brain.kind, STEPS));
+      const fading = brain.prev !== null && brain.fade < 1;
+      const prev = fading ? pictureOf(brain.prev as Picture) : null;
+      const alpha = brain.a;
+      const fade = brain.fade;
+      // A readout for the walks: what the brain is doing this frame.
+      root.dataset.faBrain = `${brain.kind} ${cur ? "ready" : "loading"} a${alpha.toFixed(2)} f${fade.toFixed(2)} m${manifest.toFixed(2)}`;
+      return {
+        pl,
+        manifest,
+        alpha,
+        draw: () => {
+          if (prev) draw(prev, alpha * (1 - fade));
+          if (cur) draw(cur, alpha * (fading ? fade : 1));
+          ctx.globalAlpha = 1;
+        },
+      };
     };
 
     const clocks = () => {
@@ -316,6 +394,8 @@ export function FoundationAct() {
       root.toggleAttribute("data-fa-up", c.up >= 0);
       if (c.up < 0) {
         phase = -1;
+        // gone: the next time it is seen it manifests again
+        brain.seated = false;
         return;
       }
       if (c.up !== phase) {
@@ -327,6 +407,7 @@ export function FoundationAct() {
         scramble(eyebrowRef.current, phase === 1 ? eb.split(" · ")[0] : eb);
         scramble(titleRef.current, heads[phase].title);
         if (lineRef.current) lineRef.current.textContent = heads[phase].line;
+        if (!POSES[phase]) brain.seated = false;
       }
       const since = (now - landed) / 1000;
       const k = canvas.width / VB.w;
@@ -399,28 +480,57 @@ export function FoundationAct() {
         root.toggleAttribute("data-fa-video", f >= 0 && cards[f]?.media?.type === "video");
         facingIdx = f;
         if (phase === 1) {
-          const shown = paintBrain(1, since, now);
-          if (shown) paintCords(ctx, model, PLACE[1], { k, dpr, tone, since, now, n, a });
+          const b = brainAt(now);
+          if (b) {
+            // The hoses and the cords hang from under the brain, so they are
+            // drawn first. The cords grow one by one once the brain stands;
+            // a root whose cord has started lets its hose go.
+            const started = new Set<number>();
+            for (let i = 0; i < n; i++) {
+              if (cordGrow(since, i) > 0) started.add(CORD_PLAN[i % CORD_PLAN.length].root);
+            }
+            paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, skip: started });
+            if (b.manifest >= 1) paintCords(ctx, b.pl, { k, dpr, tone, since, now, n, a, alpha: b.alpha });
+            b.draw();
+          }
         }
-      } else if (phase === 2) {
-        const shown = paintBrain(2, since, now);
-        root.toggleAttribute("data-fa-cards", shown);
-        if (shown) paintRuns(ctx, PLACE[2], { k, dpr, tone, since: since - 1.0, now });
       } else if (phase === 3) {
-        paintRings(ctx, knowledge?.layers ?? [], PLACE[3], { k, dpr, tone, since, now, light }, false);
-        paintBrain(3, since, now);
-        paintRings(ctx, knowledge?.layers ?? [], PLACE[3], { k, dpr, tone, since, now, light }, true);
+        const b = brainAt(now);
+        const stood = !!b && b.manifest >= 1 && brain.fade >= 1 && b.alpha > 0.9;
+        root.toggleAttribute("data-fa-cards", stood);
+        if (b) {
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest });
+          b.draw();
+          if (stood) paintRuns(ctx, b.pl, { k, dpr, tone, since: since - 0.6, now });
+        }
       } else if (phase === 4) {
-        paintTentacles(ctx, PLACE[4], { k, dpr, tone, since, now, light }, false);
-        paintBrain(4, since, now);
-        paintTentacles(ctx, PLACE[4], { k, dpr, tone, since, now, light }, true);
-        // The mask is part of the machined picture now (`brainIso.ts`).
-      } else if (phase === 5) {
-        // Their own (ADR-159): the brain alone, no mask, no tentacles.
-        paintBrain(5, since, now);
+        const b = brainAt(now);
+        if (b) {
+          paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, false);
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest });
+          b.draw();
+          paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, true);
+        }
       } else if (phase === 6) {
+        // The shoggoth: its tentacles are its tendrils; the mask is part of
+        // the machined picture (`brainIso.ts`).
+        const b = brainAt(now);
+        if (b) {
+          paintTentacles(ctx, b.pl, { k, dpr, tone, since, now, light }, false);
+          b.draw();
+          paintTentacles(ctx, b.pl, { k, dpr, tone, since, now, light }, true);
+        }
+      } else if (phase === 2 || phase === 5 || phase === 7 || phase === 8) {
+        // Behind a voice (2, 5, 7), receded; alone (8, ADR-159).
+        const b = brainAt(now);
+        if (b) {
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest });
+          b.draw();
+        }
+      } else if (phase === 9) {
         paintField(ctx, field, { k, dpr, tone, since, now, light });
       }
+      if (phase !== 3) root.toggleAttribute("data-fa-cards", false);
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
     };
@@ -687,9 +797,9 @@ function SideCard({
 
 /** The machined brain's size against the old drawing's units. */
 const ISO_S = 1.02;
-/** A port's mouth in the viewBox: a cord leaves here. */
-function isoPortAt(pl: Place, i: number): P2 {
-  const [x, y] = BRAIN_ISO_PORTS[i % BRAIN_ISO_PORTS.length];
+/** A root's mouth in the viewBox: a hose hangs or a cord leaves here. */
+function isoRootAt(pl: Place, i: number): P2 {
+  const [x, y] = BRAIN_ISO_ROOTS[i % BRAIN_ISO_ROOTS.length];
   return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
 }
 /** A point on a hemisphere's outer flank in the viewBox, high, level or low. */
@@ -697,33 +807,85 @@ function isoFlankAt(pl: Place, side: -1 | 1, j: number): P2 {
   const [x, y] = brainIsoFlank(side, j);
   return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
 }
-/** The cables hanging from the ports where no cord plugs them in: each falls
-    and fades into the ground, a gold ferrule on it. */
-function paintHanging(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone }) {
+/**
+ * The tendrils (owner, 2026-10-16): hoses hanging from the roots on the
+ * hemispheres' undersides, each falling, swaying and curling at its end,
+ * no two the same length or weight, a gold ferrule at its mouth and a plug
+ * at its tip. `grow` is the manifest (they lengthen with it); `skip` are
+ * the roots a cord uses instead.
+ */
+function paintTendrils(
+  ctx: CanvasRenderingContext2D,
+  pl: Place,
+  o: { k: number; dpr: number; tone: Tone; now: number; alpha: number; grow: number; skip?: ReadonlySet<number> }
+) {
   const { k, dpr, tone } = o;
+  const grow = smooth(o.grow);
+  if (grow <= 0 || o.alpha <= 0.01) return;
   ctx.save();
   ctx.lineCap = "round";
-  for (let i = 0; i < BRAIN_ISO_PORTS.length; i++) {
-    const a = isoPortAt(pl, i);
-    const drop = (190 + (i % 3) * 30) * pl.s;
-    const b = { x: a.x + (i - 3) * 9 * pl.s, y: a.y + drop };
-    const fade = ctx.createLinearGradient(0, a.y * k, 0, b.y * k);
-    fade.addColorStop(0, tone.ink);
-    fade.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.strokeStyle = fade;
-    ctx.globalAlpha = 0.75;
-    ctx.lineWidth = (i === 0 || i === BRAIN_ISO_PORTS.length - 1 ? 2.6 : 1.2) * dpr;
-    ctx.beginPath();
-    ctx.moveTo(a.x * k, a.y * k);
-    ctx.quadraticCurveTo(a.x * k, ((a.y + b.y) / 2) * k, b.x * k, b.y * k);
-    ctx.stroke();
-    const f = { x: a.x + (b.x - a.x) * 0.12, y: a.y + (b.y - a.y) * 0.3 };
-    ctx.globalAlpha = 0.95;
+  for (let i = 0; i < BRAIN_ISO_ROOTS.length; i++) {
+    if (o.skip?.has(i)) continue;
+    const a = isoRootAt(pl, i);
+    const len = (150 + ((i * 53) % 120)) * pl.s * grow;
+    const sway = Math.sin(o.now / 2100 + i * 1.9) * 9 * pl.s;
+    const side = i % 2 ? 1 : -1;
+    const end = { x: a.x + (i - 3.5) * 10 * pl.s + sway, y: a.y + len };
+    const pts = cable(a, end, { x: 0, y: 70 * pl.s * grow }, { x: side * 46 * pl.s, y: -28 * pl.s }, 36);
+    const w = (2 + (i % 3) * 0.9) * pl.s;
+    // The hose: a soft halo, the body, a thin gold core.
+    ctx.strokeStyle = tone.ink;
+    ctx.globalAlpha = 0.1 * o.alpha;
+    ctx.lineWidth = (w + 5) * dpr;
+    strokePath(ctx, pts, k);
+    ctx.globalAlpha = 0.62 * o.alpha;
+    ctx.lineWidth = w * dpr;
+    strokePath(ctx, pts, k);
+    ctx.strokeStyle = tone.gold;
+    ctx.globalAlpha = 0.55 * o.alpha;
+    ctx.lineWidth = Math.max(0.6, w * 0.28) * dpr;
+    strokePath(ctx, pts, k);
+    // The ferrule at the mouth, the plug at the tip.
     ctx.fillStyle = tone.gold;
-    ctx.fillRect(f.x * k - 3 * dpr, f.y * k - 5 * dpr, 6 * dpr, 10 * dpr);
+    ctx.globalAlpha = 0.95 * o.alpha;
+    const f = pts[3];
+    ctx.fillRect(f.x * k - 3 * dpr, f.y * k - 4 * dpr, 6 * dpr, 8 * dpr);
+    const t = pts[pts.length - 1];
+    const r = (w + 2.5) * dpr;
+    ctx.fillRect(t.x * k - r / 2, t.y * k - r / 2, r, r);
   }
   ctx.restore();
 }
+
+/** Which edge of a plate a cord plugs into. */
+type Edge = "right" | "left" | "back";
+/** Plate `i`'s socket on one of its edges and the edge's outward direction
+    on screen: the right edge (the old one), the left edge (its upper-left
+    side on screen), the back edge (its upper-right side). */
+function socketAt(i: number, n: number, o: P2, edge: Edge): { at: P2; out: P2 } {
+  const u = i / Math.max(1, n - 1);
+  if (edge === "right") return { at: plateSocket(i, n, o), out: SCREEN_X };
+  if (edge === "left") {
+    return { at: proj({ x: i * PLATE.step, y: SHEET.h * (0.25 + 0.5 * u), z: i * PLATE.rise }, o), out: { x: -SCREEN_X.x, y: -SCREEN_X.y } };
+  }
+  return { at: proj({ x: i * PLATE.step + SHEET.w * (0.3 + 0.4 * u), y: 0, z: i * PLATE.rise }, o), out: { x: SCREEN_X.x, y: -SCREEN_X.y } };
+}
+/** Which root feeds plate `i`, by which edge (owner, 2026-10-16: "spread
+    them out ... so they really touch all the different angles"): the right
+    roots round the stack's right side into the right edges, the left roots
+    round the left into the left edges, one over the back into the top plate.
+    Roots are numbered left to right on screen; root 3 hangs free. */
+const CORD_PLAN: readonly { root: number; edge: Edge }[] = [
+  { root: 7, edge: "right" },
+  { root: 0, edge: "left" },
+  { root: 6, edge: "right" },
+  { root: 1, edge: "left" },
+  { root: 5, edge: "right" },
+  { root: 2, edge: "left" },
+  { root: 4, edge: "back" },
+];
+/** How far cord `i` has grown: after the manifest, one after another. */
+const cordGrow = (since: number, i: number) => smooth((since - MANIFEST - 0.1 - i * 0.06) / 0.5);
 
 const toneOf = (tone: Tone, name: string) =>
   name === "gold" ? tone.gold : name === "green" ? tone.green : name === "red" ? tone.red : tone.ink;
@@ -735,35 +897,37 @@ function strokePath(ctx: CanvasRenderingContext2D, pts: P2[], k: number, upto = 
   ctx.stroke();
 }
 
-/** The cords: from the manifold's ports out and round into every plate. */
+/** The cords: from the roots under the brain out and round into every
+    plate, from three sides. */
 function paintCords(
   ctx: CanvasRenderingContext2D,
-  m: BrainModel,
   pl: Place,
-  o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number }
+  o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number; alpha: number }
 ) {
   const { k, dpr, tone, n } = o;
   for (let i = 0; i < n; i++) {
     const cord = CORDS[i % CORDS.length];
-    void m;
-    const from = isoPortAt(pl, i);
-    const to = plateSocket(i, n, plateOrigin(i, o.a));
+    const plan = CORD_PLAN[i % CORD_PLAN.length];
+    const from = isoRootAt(pl, plan.root);
+    const { at: to, out } = socketAt(i, n, plateOrigin(i, o.a), plan.edge);
     const reachOut = 80 + i * 22;
-    // Down out of the manifold first, then round the stack's corner and in
-    // from outside its right edge: a cord never crosses a plate's face.
-    const pts = cable(from, to, { x: 60 + i * 26, y: 110 }, { x: SCREEN_X.x * reachOut, y: SCREEN_X.y * reachOut }, 40);
-    const grow = smooth((o.since - 1.0 - i * 0.06) / 0.5);
+    // Down out of the brain first, then round the stack's side and in from
+    // outside the plate's edge: a cord never crosses a plate's face.
+    const dir = plan.edge === "left" ? -1 : 1;
+    const da = plan.edge === "back" ? { x: 0, y: 90 } : { x: dir * (60 + i * 26), y: 110 };
+    const pts = cable(from, to, da, { x: out.x * reachOut, y: out.y * reachOut }, 40);
+    const grow = cordGrow(o.since, i);
     if (grow <= 0) continue;
     const upto = Math.max(1, Math.floor(grow * (pts.length - 1)));
     const col = toneOf(tone, cord.tone);
     ctx.strokeStyle = col;
     ctx.lineCap = "round";
     if (cord.w > 2) {
-      ctx.globalAlpha = 0.16;
+      ctx.globalAlpha = 0.16 * o.alpha;
       ctx.lineWidth = (cord.w + 5) * dpr;
       strokePath(ctx, pts, k, upto);
     }
-    ctx.globalAlpha = 0.95;
+    ctx.globalAlpha = 0.95 * o.alpha;
     ctx.lineWidth = cord.w * dpr;
     strokePath(ctx, pts, k, upto);
     ctx.lineCap = "butt";
@@ -776,7 +940,7 @@ function paintCords(
         const t = (o.now / (1300 + i * 170) + off + i * 0.11) % 1;
         const q = pts[Math.floor(t * (pts.length - 1))];
         const r = (cord.w + 2.5) * dpr;
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = o.alpha;
         ctx.fillRect(q.x * k - r / 2, q.y * k - r / 2, r, r);
       }
     }
