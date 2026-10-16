@@ -334,6 +334,76 @@ function maskMarkup(p: Projection = P): string {
   return `<g class="fa-mask">${out.join("")}</g>`;
 }
 
+/** The display (ADR-159 U3, owner: the faceplate "feels a bit out of place.
+    It should also be made from the same material and form a smile. Maybe it
+    can be like a terminal interface, an LED display"): a machined panel in
+    the brain's front plane, the kit's own material, cut at its top-right
+    corner as the house's plates are, a bezel and four screws like the deck's
+    board, and a dot-matrix of dim LEDs across it with a few lit in gold:
+    two closed, happy eyes and a smile. Nothing moves; nothing blinks. */
+const DISPLAY = { f: 150, w: 54, hw: 72, hh: 44, thick: 6, cols: 15, rows: 9, cut: 9 } as const;
+/** Which LEDs are lit, by [col, row] from the top left: the eyes, the smile. */
+const SMILE: readonly [number, number][] = [
+  [4, 2], [10, 2],
+  [3, 3], [5, 3], [9, 3], [11, 3],
+  [3, 5], [11, 5],
+  [4, 6], [10, 6],
+  [5, 7], [6, 7], [7, 7], [8, 7], [9, 7],
+];
+function displayMarkup(p: Projection = P): string {
+  const { hw, hh, thick, cols, rows, cut } = DISPLAY;
+  const at = (u: number, w: number, df = 0) => iso(W(u, DISPLAY.f + df, DISPLAY.w + w), p);
+  const plate = (df: number): Flat[] => [at(-hw, hh, df), at(hw - cut, hh, df), at(hw, hh - cut, df), at(hw, -hh, df), at(-hw, -hh, df)];
+  const front = plate(0);
+  const back = plate(-thick);
+  const hull = (pts: Flat[]): Flat[] => {
+    const q = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cross = (o: Flat, a: Flat, b: Flat) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo: Flat[] = [];
+    for (const pt of q) {
+      while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], pt) <= 0) lo.pop();
+      lo.push(pt);
+    }
+    const up: Flat[] = [];
+    for (const pt of q.reverse()) {
+      while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], pt) <= 0) up.pop();
+      up.push(pt);
+    }
+    return [...lo.slice(0, -1), ...up.slice(0, -1)];
+  };
+  const out: string[] = [];
+  // The straps first: from each side of the panel back onto the brain.
+  for (const sgn of [-1, 1]) {
+    const from = at(sgn * hw * 0.98, 4, -thick / 2);
+    const mid = iso(W(sgn * (LC + HEMI.a * 0.7), DISPLAY.f - 40, DISPLAY.w + 12), p);
+    const end = iso(W(sgn * (LC + HEMI.a * 0.98), DISPLAY.f - 96, DISPLAY.w + 16), p);
+    for (const off of [-3, 3]) {
+      out.push(lineSvg(`M${from[0]} ${from[1] + off}Q${mid[0]} ${mid[1] + off} ${end[0]} ${end[1] + off}`, { tone: "mid" }));
+    }
+    out.push(dotsSvg([end], { size: 2, tone: "hi" }));
+  }
+  // The panel: its side band (the hull of both faces), then its face.
+  out.push(`<path class="fa-mask-side" d="${pathOf(hull([...front, ...back]), true)}"/>`);
+  out.push(`<path class="fa-mask-face" d="${pathOf(front, true)}"/>`);
+  out.push(`<path class="fa-mask-edge" d="${pathOf(front, true)}"/>`);
+  // The bezel, inset, and a screw at each corner, as on the deck's board.
+  const inset = 7;
+  out.push(lineSvg(pathOf([at(-hw + inset, hh - inset, 0.3), at(hw - cut - inset * 0.6, hh - inset, 0.3), at(hw - inset, hh - cut - inset * 0.6, 0.3), at(hw - inset, -hh + inset, 0.3), at(-hw + inset, -hh + inset, 0.3)], true), { tone: "lo" }));
+  out.push(dotsSvg([at(-hw + 4, hh - 4, 0.3), at(hw - 4, -hh + 4, 0.3), at(-hw + 4, -hh + 4, 0.3), at(hw - cut - 2, hh - 4, 0.3)], { size: 0.5, tone: "mid" }));
+  // The LEDs: a dim matrix across the panel, the smile lit in gold with a
+  // soft halo under each lit dot.
+  const pw = (2 * hw - 2 * inset - 12) / (cols - 1);
+  const ph = (2 * hh - 2 * inset - 10) / (rows - 1);
+  const led = (c: number, r: number) => at(-hw + inset + 6 + c * pw, hh - inset - 5 - r * ph, 0.5);
+  const dim: Flat[] = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) dim.push(led(c, r));
+  out.push(`<g class="fa-led">${dotsSvg(dim, { size: 0.55, tone: "faint" })}</g>`);
+  const lit = SMILE.map(([c, r]) => led(c, r));
+  out.push(`<g class="fa-led-glow">${dotsSvg(lit.map(([x, y]) => [x, y, 0.22] as [number, number, number]), { size: 2.4, tone: "hi" })}</g>`);
+  out.push(`<g class="fa-led-lit">${dotsSvg(lit, { size: 0.95, tone: "hi" })}</g>`);
+  return `<g class="fa-mask fa-display">${out.join("")}</g>`;
+}
+
 /** What stands under the hemispheres: the machined base (the stem, the
     block and the seven-port manifold), or nothing, the tendrils being the
     act's own live drawing from `BRAIN_ISO_ROOTS` (ADR-159 U1). */
@@ -341,7 +411,9 @@ export type BrainIsoBase = "manifold" | "tendrils";
 
 export interface BrainIsoOptions {
   split?: boolean;
-  mask?: boolean;
+  /** `true`: the faceplate (ADR-156 U13, the Ghent page's); `"display"`: the
+      LED panel in the brain's own material (ADR-159 U3). */
+  mask?: boolean | "display";
   base?: BrainIsoBase;
   /** The camera (ADR-159 U2); absent, the stack's isometric. */
   view?: BrainView;
@@ -438,7 +510,8 @@ export function brainIsoMarkup({ split = false, mask = false, base = "manifold",
   };
   const sides = ([-1, 1] as const).slice().sort((a, b) => depthOf(W(a * LC, 0, 0), p) - depthOf(W(b * LC, 0, 0), p));
   out.push(...hemisphere(sides[0]), ...stem, ...hemisphere(sides[1]));
-  if (mask) push(1, maskMarkup(p));
+  if (mask === "display") push(1, displayMarkup(p));
+  else if (mask) push(1, maskMarkup(p));
   return out
     .filter((p) => p.level <= reveal)
     .map((p) => p.svg)
@@ -454,7 +527,11 @@ export function brainIsoStyle(t: { light: boolean; ink: string; gold: string; li
   const gold = t.light
     ? `.fa-gold>.iso-top{fill:#e4cf98}.fa-gold>.iso-shade{fill:#cdb47a}`
     : `.fa-gold>.iso-top{fill:#3d3218}.fa-gold>.iso-shade{fill:#2b2311}`;
-  return `${ISO_CSS}.iso{${tokens}}${gold}.fa-gold>.iso-edge{stroke:${t.gold}}.fa-gold-line{stroke:${t.gold}!important;opacity:.85}.fa-core>.iso-top{fill:${t.light ? "#d9b65c" : "#6a5424"}}.fa-loose .iso-dots circle{fill:${t.green};opacity:1}.fa-mask-side{fill:${t.light ? "#d6c79f" : "#2a2312"};stroke:${t.gold};stroke-width:.6;stroke-opacity:.6}.fa-mask-face{fill:${t.light ? "#f3ead2" : "#1c180f"}}.fa-mask-edge{fill:none;stroke:${t.gold};stroke-width:1.4}.fa-mask-slot{fill:${t.light ? "#2a2214" : "#050504"};stroke:${t.lit};stroke-width:.8}`;
+  // The display (U3) is the kit's own material: the panel's side in a shade
+  // tone, its face the plates' face tone, its edge the mid line; the dim
+  // LEDs in the faint tone, the lit ones in gold.
+  const display = `.fa-display .fa-mask-side{fill:${t.light ? "#d9d2c2" : "#17140f"};stroke:${t.light ? "#6e6658" : "#8a8274"};stroke-width:.5;stroke-opacity:.9}.fa-display .fa-mask-face{fill:${t.light ? "#f6f1e6" : "#1d1a15"}}.fa-display .fa-mask-edge{fill:none;stroke:${t.light ? "#6e6658" : "#8a8274"};stroke-width:.8}.fa-led .iso-dots circle{opacity:.55}.fa-led-glow .iso-dots circle{fill:${t.lit}}.fa-led-lit .iso-dots circle{fill:${t.lit};opacity:1}`;
+  return `${ISO_CSS}.iso{${tokens}}${gold}.fa-gold>.iso-edge{stroke:${t.gold}}.fa-gold-line{stroke:${t.gold}!important;opacity:.85}.fa-core>.iso-top{fill:${t.light ? "#d9b65c" : "#6a5424"}}.fa-loose .iso-dots circle{fill:${t.green};opacity:1}.fa-mask-side{fill:${t.light ? "#d6c79f" : "#2a2312"};stroke:${t.gold};stroke-width:.6;stroke-opacity:.6}.fa-mask-face{fill:${t.light ? "#f3ead2" : "#1c180f"}}.fa-mask-edge{fill:none;stroke:${t.gold};stroke-width:1.4}.fa-mask-slot{fill:${t.light ? "#2a2214" : "#050504"};stroke:${t.lit};stroke-width:.8}${display}`;
 }
 
 /** A whole standalone SVG document of the brain, for rasterising. */

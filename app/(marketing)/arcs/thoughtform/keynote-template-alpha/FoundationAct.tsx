@@ -137,19 +137,22 @@ const RECEDE: Pose = { x: 720, y: 330, s: 0.6, a: 0.28 };
 /** Where the brain stands in each beat that has it, by the act's phase. */
 const POSES: Record<number, Pose> = {
   1: { x: 806, y: 208, s: 0.68, a: 1 },
-  2: RECEDE,
   // clear of the headline (owner, 2026-10-15: "too close to the text")
-  3: { x: 720, y: 412, s: 0.84, a: 1 },
-  4: { x: 720, y: 360, s: 0.74, a: 1 },
-  5: RECEDE,
-  6: { x: 720, y: 330, s: 0.78, a: 1 },
-  7: RECEDE,
+  2: { x: 720, y: 412, s: 0.84, a: 1 },
+  3: { x: 720, y: 360, s: 0.74, a: 1 },
+  4: RECEDE,
+  5: { x: 720, y: 330, s: 0.78, a: 1 },
+  6: RECEDE,
   // the brain alone (ADR-159), centred under its head
-  8: { x: 720, y: 400, s: 0.82, a: 1 },
+  7: { x: 720, y: 400, s: 0.82, a: 1 },
 };
 /** Which picture each beat shows: whole, split (the middle), masked (the shoggoth). */
 type Picture = "plain" | "split" | "mask";
-const PICTURE: Record<number, Picture> = { 1: "plain", 2: "plain", 3: "split", 4: "plain", 5: "plain", 6: "mask", 7: "plain", 8: "plain" };
+const PICTURE: Record<number, Picture> = { 1: "plain", 2: "split", 3: "plain", 4: "plain", 5: "mask", 6: "plain", 7: "plain" };
+/** How far the pointer moves the brain (owner, 2026-10-16: "when you move
+    your mouse, the brain moved slightly ... just enough for a little fun"),
+    in viewBox px at the brain's scale 1. */
+const PARALLAX = { x: 18, y: 11 } as const;
 /** The manifest: the plates from the floor to the crown, in this many
     steps over this many seconds. */
 const STEPS = 12;
@@ -165,7 +168,7 @@ const MANIFEST = 0.9;
  * station on the path; the brain eases along it by the clock, and the
  * picture is rasterised at `VIEW_STEPS` frames a leg.
  */
-const VIEW_T: Record<number, number> = { 1: 0, 2: 1, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2 };
+const VIEW_T: Record<number, number> = { 1: 0, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2 };
 const VIEW_STEPS = 12;
 function viewOf(t: number): BrainView {
   const u = Math.max(0, Math.min(2, t));
@@ -201,7 +204,7 @@ type Card = {
 
 /** The act's beats in page order; their index is the act's phase. The
     voices between the drawn beats are the act's too, so the brain holds. */
-const IDS = ["capability", "the-interface", "any-software", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;
+const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;
 
 function findSpecs() {
   const s = IDS.map((id) => KEYNOTE_ARC.sections.find((x) => x.id === id));
@@ -212,11 +215,11 @@ function findSpecs() {
   const cap = fig(0, "capability");
   const cards: readonly Card[] = cap && cap.id === "capability" ? cap.cards : [];
   const ifc = fig(1, "interface");
-  const mid = fig(3, "middle");
-  const know = fig(4, "knowledge");
-  const shog = fig(6, "shoggoth");
-  const own = fig(8, "brain");
-  const lat = fig(9, "latent");
+  const mid = fig(2, "middle");
+  const know = fig(3, "knowledge");
+  const shog = fig(5, "shoggoth");
+  const own = fig(7, "brain");
+  const lat = fig(8, "latent");
   const middle = mid && mid.id === "middle" ? mid : null;
   const knowledge = know && know.id === "knowledge" ? know : null;
   const shoggoth = shog && shog.id === "shoggoth" ? shog : null;
@@ -227,7 +230,6 @@ function findSpecs() {
   const heads: { title: string; line: string }[] = [
     none,
     { title: ifc && ifc.id === "interface" ? ifc.mind : "", line: "" },
-    none,
     { title: middle?.line ?? "", line: "" },
     { title: knowledge?.line ?? "", line: "" },
     none,
@@ -307,7 +309,7 @@ export function FoundationAct() {
       if (pictures.has(key)) return pictures.get(key) ?? null;
       pictures.set(key, null);
       const img = new Image();
-      const opts: BrainIsoOptions = { base: "tendrils", split: kind === "split", mask: kind === "mask", reveal: step / STEPS, view: viewAt(vi) };
+      const opts: BrainIsoOptions = { base: "tendrils", split: kind === "split", mask: kind === "mask" ? "display" : false, reveal: step / STEPS, view: viewAt(vi) };
       const url = URL.createObjectURL(new Blob([brainIsoSvg({ ...opts, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
       img.onload = () => {
         URL.revokeObjectURL(url);
@@ -341,6 +343,15 @@ export function FoundationAct() {
        camera along the path, its picture crossfades when the beat changes
        it, and it manifests the first time it is seen after being gone. */
     const brain = { x: 0, y: 0, s: 0, a: 0, v: 0, vi: 0, seated: false, kind: "plain" as Picture, prev: null as Picture | null, fade: 1, shownAt: 0, last: 0 };
+    /* The pointer, −1..1 across the screen, eased: the brain leans with it a
+       little in every beat it is drawn (the hoses, cords, rings and runs
+       read its seat, so they come along). */
+    const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+    const onPointer = (e: PointerEvent) => {
+      pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.ty = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener("pointermove", onPointer, { passive: true });
 
     const size = () => {
       const r = canvas.getBoundingClientRect();
@@ -409,7 +420,9 @@ export function FoundationAct() {
       const manifest = Math.min(1, (now - brain.shownAt) / 1000 / MANIFEST);
       const step = Math.max(1, Math.ceil(manifest * STEPS));
       const k = canvas.width / VB.w;
-      const pl: Place = { x: brain.x, y: brain.y, s: brain.s };
+      pointer.x += (pointer.tx - pointer.x) * e;
+      pointer.y += (pointer.ty - pointer.y) * e;
+      const pl: Place = { x: brain.x + pointer.x * PARALLAX.x * brain.s, y: brain.y + pointer.y * PARALLAX.y * brain.s, s: brain.s };
       const s = pl.s * ISO_S;
       const draw = (img: HTMLImageElement, alpha: number, B: BrainIsoBox) => {
         ctx.globalAlpha = alpha;
@@ -579,7 +592,7 @@ export function FoundationAct() {
             b.draw();
           }
         }
-      } else if (phase === 3) {
+      } else if (phase === 2) {
         const b = brainAt(now);
         // The cards and the runs wait for the brain to stand whole, facing.
         const stood = !!b && b.manifest >= 1 && brain.fade >= 1 && b.alpha > 0.9 && brain.v > 1.95;
@@ -589,7 +602,7 @@ export function FoundationAct() {
           b.draw();
           if (stood) paintRuns(ctx, b.pl, { k, dpr, tone, since: since - 0.6, now, vi: b.vi });
         }
-      } else if (phase === 4) {
+      } else if (phase === 3) {
         const b = brainAt(now);
         if (b) {
           paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, false);
@@ -597,26 +610,26 @@ export function FoundationAct() {
           b.draw();
           paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, true);
         }
-      } else if (phase === 6) {
-        // The shoggoth: its tentacles are its tendrils; the mask is part of
-        // the machined picture (`brainIso.ts`).
+      } else if (phase === 5) {
+        // The shoggoth: its tentacles are its tendrils; the display is part
+        // of the machined picture (`brainIso.ts`).
         const b = brainAt(now);
         if (b) {
           paintTentacles(ctx, b.pl, { k, dpr, tone, since, now, light }, false);
           b.draw();
           paintTentacles(ctx, b.pl, { k, dpr, tone, since, now, light }, true);
         }
-      } else if (phase === 2 || phase === 5 || phase === 7 || phase === 8) {
-        // Behind a voice (2, 5, 7), receded; alone (8, ADR-159).
+      } else if (phase === 4 || phase === 6 || phase === 7) {
+        // Behind a voice (4, 6), receded; alone (7, ADR-159).
         const b = brainAt(now);
         if (b) {
           paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
           b.draw();
         }
-      } else if (phase === 9) {
+      } else if (phase === 8) {
         paintField(ctx, field, { k, dpr, tone, since, now, light });
       }
-      if (phase !== 3) root.toggleAttribute("data-fa-cards", false);
+      if (phase !== 2) root.toggleAttribute("data-fa-cards", false);
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
     };
@@ -662,6 +675,7 @@ export function FoundationAct() {
       mo.disconnect();
       playBtn?.removeEventListener("click", onPlay);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointermove", onPointer);
       talk?.removeAttribute("data-act");
     };
   }, [cards, n, middle, knowledge, latent, eyebrows, heads, axes]);
@@ -689,6 +703,12 @@ export function FoundationAct() {
             <clipPath id="fa-media">
               <path d={media} />
             </clipPath>
+            {/* The glass of the middle beat's cards (ADR-159 U3): a wash of
+                the page's ink, lighter at the top, on the ramp's own pair. */}
+            <linearGradient id="fa-glass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" style={{ stopColor: "rgb(var(--dawn-rgb))", stopOpacity: 0.085 }} />
+              <stop offset="1" style={{ stopColor: "rgb(var(--dawn-rgb))", stopOpacity: 0.025 }} />
+            </linearGradient>
           </defs>
           <g className="fa__stack">
             <g ref={floorRef} className="fa__floor">
@@ -842,6 +862,8 @@ function SideCard({
       <path className="fa__join" d={outer.map(([px, py]) => `M${px} ${py} l12 -9`).join(" ")} />
       <path className="fa__ground" d={chamferOf(outer)} />
       <path className="fa__edge" d={chamferOf(outer)} />
+      {/* The sheen: a hairline of light along the top edge of the glass. */}
+      <path className="fa__side-sheen" d={`M${x + 1} ${y + 0.5} L${x + w - 16} ${y + 0.5}`} />
       <text className="fa__mod-eyebrow" x={x + 18} y={y + 28}>
         {mark} · {spec.label.toUpperCase()}
       </text>
@@ -1100,11 +1122,25 @@ function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr
 }
 
 /**
- * Every desk: three rings of knowledge work round the brain, nearest first,
- * near level as the homepage's orbits are, a node and its name for every
- * kind of work, drifting slowly round. Drawn in two passes: the far halves
- * under the brain, the near halves over it.
+ * Every desk: three orbits of knowledge work round the brain, as a game
+ * draws them (owner, 2026-10-16: "the orbits are pretty flat, whereas our
+ * brain feels more 3D ... video-game-style physics so they rotate around
+ * it"). Each ring is a circle in its own plane in 3D: tilted out of the
+ * screen by its own angle, rolled off the horizontal by another, the plane
+ * precessing slowly; the nodes run round it at a game's pace, the inner the
+ * fastest, each way in turn. A simple perspective sets every point's size
+ * and weight by its depth. Drawn in two passes: what lies behind the brain
+ * under it, what lies before it over it, split by depth at every point.
  */
+const ORBITS = [
+  { tilt: 1.2, roll: 0.0, prec: 70000, spin: 52000, dir: 1 },
+  { tilt: 0.9, roll: 0.42, prec: -95000, spin: 86000, dir: -1 },
+  { tilt: 0.62, roll: -0.55, prec: 120000, spin: 128000, dir: 1 },
+] as const;
+const ORBIT_RX = [300, 420, 540] as const;
+/** The eye's distance, in viewBox px: the near side of a ring grows, the far
+    side shrinks, enough to read as depth and not enough to leave the box. */
+const ORBIT_EYE = 2600;
 function paintRings(
   ctx: CanvasRenderingContext2D,
   layers: readonly { label: string; domains: readonly string[] }[],
@@ -1113,50 +1149,63 @@ function paintRings(
   near: boolean
 ) {
   const { k, dpr, tone } = o;
-  const RX = [300, 420, 540];
-  const tilt = 0.34;
+  const cy = pl.y + 10;
+  /** A point of ring `li` at its angle `t`, in the viewBox, with its depth. */
+  const at = (li: number, t: number): { x: number; y: number; z: number; sc: number } => {
+    const O = ORBITS[li];
+    const r = ORBIT_RX[li];
+    const roll = O.roll + 0.12 * Math.sin(o.now / O.prec);
+    const x0 = r * Math.cos(t);
+    const y0 = r * Math.sin(t) * Math.cos(O.tilt);
+    const z = r * Math.sin(t) * Math.sin(O.tilt);
+    const x = x0 * Math.cos(roll) - y0 * Math.sin(roll);
+    const y = x0 * Math.sin(roll) + y0 * Math.cos(roll);
+    const sc = ORBIT_EYE / (ORBIT_EYE - z);
+    return { x: pl.x + x * sc, y: cy + y * sc, z, sc };
+  };
   ctx.save();
   ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
   ctx.font = `${11 * k}px "PT Mono", ui-monospace, monospace`;
   layers.forEach((layer, li) => {
-    const rx = RX[li];
-    const ry = rx * tilt;
-    const cy = pl.y + 10;
     const show = smooth((o.since - 1.0 - li * 0.35) / 0.7);
     if (show <= 0) return;
-    // The ring, its far or near half.
+    const zmax = ORBIT_RX[li] * Math.sin(ORBITS[li].tilt);
+    // The ring: the runs of it on this side of the brain.
     ctx.strokeStyle = li === 0 ? tone.gold : tone.ink;
     ctx.lineWidth = (li === 0 ? 1.3 : 1) * dpr;
     ctx.setLineDash(li === 2 ? [3 * dpr, 6 * dpr] : []);
     ctx.globalAlpha = (near ? 0.75 : 0.22) * show * (li === 2 ? 0.8 : 1);
     ctx.beginPath();
-    const from = near ? 0 : Math.PI;
-    for (let j = 0; j <= 80; j++) {
-      const t = from + (j / 80) * Math.PI;
-      const x = pl.x + Math.cos(t) * rx;
-      const y = cy + Math.sin(t) * ry;
-      if (j) ctx.lineTo(x * k, y * k);
-      else ctx.moveTo(x * k, y * k);
+    let pen = false;
+    for (let j = 0; j <= 144; j++) {
+      const q = at(li, (j / 144) * Math.PI * 2);
+      if ((q.z >= 0) !== near) {
+        pen = false;
+        continue;
+      }
+      if (pen) ctx.lineTo(q.x * k, q.y * k);
+      else ctx.moveTo(q.x * k, q.y * k);
+      pen = true;
     }
     ctx.stroke();
     ctx.setLineDash([]);
-    // Its nodes and their names.
+    // Its nodes and their names, running round it.
+    const O = ORBITS[li];
     const m = layer.domains.length;
     layer.domains.forEach((d, j) => {
-      const t = (j / m) * Math.PI * 2 + o.now / (60000 + li * 30000) * (li % 2 ? -1 : 1) + li * 0.4;
-      const front = Math.sin(t) > 0;
-      if (front !== near) return;
-      const x = pl.x + Math.cos(t) * rx;
-      const y = cy + Math.sin(t) * ry;
-      const depth = 0.45 + 0.55 * (Math.sin(t) + 1) / 2;
+      const t = (j / m) * Math.PI * 2 + (o.now / O.spin) * O.dir + li * 0.4;
+      const q = at(li, t);
+      if ((q.z >= 0) !== near) return;
+      const depth = 0.35 + 0.65 * ((q.z / zmax + 1) / 2);
       ctx.globalAlpha = show * depth;
       ctx.fillStyle = li === 0 ? tone.lit : tone.ink;
-      const r = (li === 0 ? 4 : 3) * dpr;
-      ctx.fillRect(x * k - r / 2, y * k - r / 2, r, r);
+      const r = (li === 0 ? 4 : 3) * q.sc * dpr;
+      ctx.fillRect(q.x * k - r / 2, q.y * k - r / 2, r, r);
       ctx.globalAlpha = show * depth * 0.9;
       ctx.fillStyle = li === 0 ? tone.gold : tone.ink;
-      ctx.textAlign = Math.cos(t) < 0 ? "right" : "left";
-      ctx.fillText(d.toUpperCase(), (x + (Math.cos(t) < 0 ? -10 : 10)) * k, (y + 4) * k);
+      const left = q.x < pl.x;
+      ctx.textAlign = left ? "right" : "left";
+      ctx.fillText(d.toUpperCase(), (q.x + (left ? -10 : 10)) * k, (q.y + 4) * k);
     });
     // The ring's name, in the legend under the figure.
     if (near) {

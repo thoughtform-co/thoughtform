@@ -212,14 +212,14 @@ html[data-theme="light"] .fa__dots {
 .fa__quote {
   visibility: hidden;
 }
-/* The act's phases (ADR-159 U1): 0 the stack · 1 the interface · 2 not
-   software (the brain behind the voice) · 3 the middle · 4 every desk ·
-   5 the alien question (behind) · 6 the shoggoth · 7 Goodfire's line
-   (behind) · 8 their own · 9 latent space. */
+/* The act's phases (ADR-159 U3): 0 the stack · 1 the interface (the tool
+   and the builder of the tool) · 2 the middle · 3 every desk · 4 the alien
+   question (the brain behind the voice) · 5 the shoggoth · 6 Goodfire's
+   line (behind) · 7 their own · 8 latent space. */
 .fa[data-fa-phase="0"] .fa__stack,
 .fa[data-fa-phase="1"] .fa__stack,
-.fa[data-fa-phase="3"] .fa__cards,
-.fa[data-fa-phase="9"] .fa__quote {
+.fa[data-fa-phase="2"] .fa__cards,
+.fa[data-fa-phase="8"] .fa__quote {
   visibility: inherit;
 }
 .fa__cards {
@@ -415,6 +415,38 @@ html[data-theme="light"] .fa__dots {
   stroke: var(--arc-seam);
   stroke-width: 1;
 }
+/* The middle beat's cards as glass (ADR-159 U3, owner: "a bit more subtle
+   ... more glass-like"): a wash of the page's ink on the ramp's own pair
+   (`--dawn-rgb`, which the light theme swaps), lighter at the top, a quiet
+   edge, the back face a ghost, a hairline of light along the top. */
+.fa__side .fa__ground {
+  fill: url(#fa-glass);
+}
+.fa__side .fa__side-back {
+  fill: rgba(var(--dawn-rgb), 0.02);
+  stroke: rgba(var(--dawn-rgb), 0.12);
+}
+.fa__side .fa__join {
+  stroke: rgba(var(--dawn-rgb), 0.1);
+}
+.fa__side .fa__edge {
+  stroke: rgba(var(--dawn-rgb), 0.26);
+}
+.fa__side .fa__inset {
+  stroke: rgba(var(--dawn-rgb), 0.14);
+}
+.fa__side .fa__cross {
+  stroke: rgba(var(--dawn-rgb), 0.3);
+}
+.fa__side-sheen {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb), 0.45);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__side .fa__side-row {
+  fill: var(--arc-ink-70);
+}
 /* The head: an eyebrow, a title, a line, where the beat has one (the first
    beat's is in its modules). ON THE SCREEN'S TOP DATUM, NOT THE SCENE'S BOX
    (ADR-159 U2, owner: the title "feels a bit too far down and centered";
@@ -435,10 +467,10 @@ html[data-theme="light"] .fa__dots {
   visibility: hidden;
 }
 .fa[data-fa-phase="1"] .fa__head,
+.fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
-.fa[data-fa-phase="4"] .fa__head,
-.fa[data-fa-phase="6"] .fa__head,
-.fa[data-fa-phase="8"] .fa__head {
+.fa[data-fa-phase="5"] .fa__head,
+.fa[data-fa-phase="7"] .fa__head {
   visibility: inherit;
 }
 /* Over the stack: the title left on its own measure, as the hero's H1. */
@@ -447,24 +479,24 @@ html[data-theme="light"] .fa__dots {
   text-align: left;
 }
 .fa[data-fa-phase="1"] .fa__title {
-  max-width: 14ch;
+  max-width: 22ch;
 }
 /* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
    right, the brain between them; the homepage hero's own shape, H1 left and
    the paragraph right, across the band. */
-.fa[data-fa-phase="6"] .fa__head {
+.fa[data-fa-phase="5"] .fa__head {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   justify-items: start;
   text-align: left;
 }
-.fa[data-fa-phase="6"] .fa__eyebrow {
+.fa[data-fa-phase="5"] .fa__eyebrow {
   grid-area: 1 / 1;
 }
-.fa[data-fa-phase="6"] .fa__title {
+.fa[data-fa-phase="5"] .fa__title {
   grid-area: 2 / 1;
   max-width: 14ch;
 }
-.fa[data-fa-phase="6"] .fa__line {
+.fa[data-fa-phase="5"] .fa__line {
   grid-area: 2 / 2;
   align-self: end;
   justify-self: end;
@@ -473,20 +505,19 @@ html[data-theme="light"] .fa__dots {
 }
 /* Centred (owner: "I want to play around with centering it"): the middle,
    the rings, the brain alone. */
+.fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
-.fa[data-fa-phase="4"] .fa__head,
-.fa[data-fa-phase="8"] .fa__head {
+.fa[data-fa-phase="7"] .fa__head {
   justify-items: center;
   text-align: center;
 }
-.fa[data-fa-phase="8"] .fa__line {
+.fa[data-fa-phase="7"] .fa__line {
   max-width: 44ch;
 }
 /* The voices the brain stands behind (ADR-159 U1): their stage rises over
    the act's layer (z 5), so the line reads over the dimmed brain, on the
    talk's transparent ground. */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #any-software .arc-stage,
   .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #an-alien .arc-stage,
   .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #already-clean .arc-stage {
     z-index: 6;
@@ -624,11 +655,6 @@ html[data-theme="light"] .fa__dots {
   color: var(--gold-ink, #caa554);
   cursor: pointer;
 }
-/* U8: the owner's two lines, the second under the first. */
-#any-software .arc-inter__line em {
-  display: block;
-}
-
 /* ── The hero without its buttons (owner, 2026-10-15: "we don't need the
    cta buttons"). Hidden, not removed: the hero's boot decode reads
    `.hero__cta` and stands down without it. */

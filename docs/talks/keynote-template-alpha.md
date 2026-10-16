@@ -1,7 +1,7 @@
 # AI is not software · the keynote template
 
 The spoken script for `/arcs/thoughtform/keynote-template-alpha` (ADR-159), beat by beat, in
-the order the page scrolls: hero, About, the eras, the talk's fifteen beats in three acts, the
+the order the page scrolls: hero, About, the eras, the talk's fourteen beats in three acts, the
 swarm chapter, then the thesis and the Arc. Cut from the Ghent script of 15 October
 (`2026-10-15-ux-meetup.md`) and the owner's dictation of 16 October; the beats the room heard
 keep their words, the new ones carry his words from the dictation where he said them and a
@@ -87,7 +87,7 @@ method that scales with compute and data beats the clever one we built by hand.
 
 ### 03 · Intelligence as the interface (9:00)
 
-*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands.*
+*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it: "AI is both the tool and the builder of the tool."*
 
 Everything we just saw is the foundation now. It isn't the thing on top any more.
 
@@ -101,18 +101,13 @@ Remember PhotoCraft? The point isn't that everyone builds their own Photoshop. B
 well: nobody's going to vibe-code their own SAP. The point is that people stop opening the other
 software. They ask the model, and their agents use the tools for them.
 
-### 04 · Not software (11:30)
+So read the line again. AI is both the tool and the builder of the tool. Sit with that for a
+second, as a designer. Everything we design for it assumes it's a program. It can make any
+program, and it isn't one.
 
-*The brain from the last beat stays behind the line, dimmed. Let the second line land on its own.*
+### 04 · An intelligence (11:30)
 
-AI is both the tool and the builder of the tool.
-
-Sit with that for a second, as a designer. Everything we design for it assumes it's a program.
-It isn't. It can make any program, and it isn't one.
-
-### 05 · An intelligence (12:30)
-
-*The brain assembles; let the two cards land before you speak.*
+*The brain turns to face the room and the two cards land; let them before you speak.*
 
 So what is it? AI is an intelligence that sits in the middle.
 
@@ -126,7 +121,7 @@ And for anyone frowning: this isn't about consciousness or feelings. Every earli
 automation did steps you could write down. This one works wherever there's enough data and you can
 check the answer, and nobody knows its limits yet.
 
-### 06 · Every desk (14:00)
+### 05 · Every desk (13:00)
 
 *The rings come in one after another: now, next, in reach.*
 
@@ -138,7 +133,7 @@ knowledge work.
 
 ## II · A NEW KIND OF USER (≈8 min)
 
-### 07 · A user that isn't a person (15:00)
+### 06 · A user that isn't a person (14:00)
 
 *Read it slowly.*
 
@@ -150,15 +145,15 @@ labs absorb all software and commoditise every digital product, you could say UX
 disagree. You just have to build interfaces for new kinds of intelligences, new kinds of digital
 minds, and their societies. That would have sounded like science fiction a few months ago.
 
-### 08 · The shoggoth (16:30)
+### 07 · The shoggoth (15:30)
 
-*The tentacles unfurl; then the faceplate.*
+*The tentacles unfurl; the display on its face lights a smile.*
 
 The field has a meme for this: the shoggoth. A Lovecraftian thing, tentacles everywhere, and on
 the front a small smiling mask. The mask is the friendly chat window we put on it. What's behind
 it, we are only beginning to read. **(proposal)**
 
-### 09 · Already clean (17:30)
+### 08 · Already clean (16:30)
 
 *Their words, credited. Read the attribution.*
 
@@ -172,7 +167,7 @@ repeats.
 
 So maybe the mask comes off. Maybe we get to read the thing behind it.
 
-### 10 · Their own (19:00)
+### 09 · Their own (18:00)
 
 *The brain alone: no mask, no tentacles. Let it boot.*
 
@@ -200,7 +195,7 @@ posture.
 
 ## III · HOW YOU TALK TO IT (≈9 min)
 
-### 11 · A colleague (21:30)
+### 10 · A colleague (20:30)
 
 *Let the line glitch in.*
 
@@ -210,7 +205,7 @@ where encoding your context matters so much.
 I've always said: if you treat AI like a pretty smart colleague, you get very far. If you respect
 the intelligence, you get pretty far.
 
-### 12 · Latent space (22:30)
+### 11 · Latent space (21:30)
 
 *Let the field drift; read the line in the middle.*
 
@@ -218,7 +213,7 @@ To see why, look inside. Inside these models, great artists become nodes in late
 vision tames the infinite into new beauty. Everything is in there: every artist, every style,
 every argument. Creatives aren't outside this. We're in it, as points the whole thing steers by.
 
-### 13 · The median (24:00)
+### 12 · The median (23:00)
 
 *Let the line glitch in.*
 
@@ -226,7 +221,7 @@ And yet, ask it something plain and you get something plain. AI converges on the
 because it's stupid, and not because it isn't creative: without context it generates the most
 plausible answer, and the most plausible answer is the middle of that field.
 
-### 14 · The prowl (25:00)
+### 13 · The prowl (24:00)
 
 *The film, full bleed, no words. Let it run a few seconds before you speak over it.*
 
@@ -238,7 +233,7 @@ navigation. You don't describe the output. You give it coordinates. **(proposal)
 That's also why the context matters more than the model. The models are smart enough. What they
 lack is your context: where in the field you live, what good looks like to you.
 
-### 15 · A node in latent space (27:00)
+### 14 · A node in latent space (26:00)
 
 *The voice. Read it slowly.*
 
@@ -316,5 +311,5 @@ have one legible job. It does not claim behaviour is predictable from mechanisms
 models are audited, or that understanding equals steering. It presses on one line of the Ghent
 talk, "something we don't fully understand", and leaves the alien question standing only if alien
 means "not a person", never "unreadable". It supports the humility close: "the network is strange,
-but its strangeness repeats", and deception could sit "in plain sight" unread. Beats 07 to 10 are
+but its strangeness repeats", and deception could sit "in plain sight" unread. Beats 06 to 09 are
 the rewrite.

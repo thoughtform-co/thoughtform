@@ -241,10 +241,53 @@ receded and dim behind "AI is both the tool and the builder of the tool."; tilte
 the middle with its cards and runs; the rings under the new line; the mask straight on; the brain
 alone facing the room; every head at the top datum. No console error.
 
+## U3 · Glass, orbits, the pointer, the display, and one beat fewer (2026-10-16, owner: "I like this")
+
+- **The interface beat says it itself** ("'intelligence as the interface' I feel like we need to
+  say something like 'AI is both the tool and the builder of the tool' ... That way we can skip
+  that interstitial afterward and then immediately go to 'AI is an intelligence'"). 03's head over
+  the brain is his line; the voice that followed it is gone; the middle comes straight after, and
+  the brain turns and tilts on its way there, in one move. Fourteen beats, renumbered; the two
+  moved Ghent beats and the rings spread with their new numbers. The spoken script follows.
+- **The cards as glass** ("the cards can be a bit more subtle. Using our color palette, we can
+  make them more glass-like"). The middle beat's two cards take a wash of the page's ink on the
+  ramp's own pair (`--dawn-rgb`, which the light theme swaps), lighter at the top (`#fa-glass`),
+  a quiet edge, a ghost of a back face and a hairline of light along the top; the rows at the
+  70 rung. No literal colour.
+- **The orbits in three dimensions** ("the orbits are pretty flat, whereas our brain feels more
+  3D ... video-game-style physics so they rotate around it"). Each of the three rings is a circle
+  in its own plane: tilted out of the screen by its own angle (1.2, 0.9, 0.62 rad), rolled off
+  the horizontal by another (0, 0.42, −0.55), the plane precessing slowly, the nodes running
+  round it at a game's pace, the inner the fastest, each way in turn; a simple perspective
+  (`ORBIT_EYE` 2600 px) sets every point's size and weight by its depth, and the ring and its
+  nodes are split by depth at every point into the pass under the brain and the pass over it.
+- **The pointer leans the brain** ("when you move your mouse, the brain moved slightly across all
+  the different sections, not entirely but just enough for a little fun interaction"). The
+  pointer, −1..1 across the screen and eased by the clock, moves the brain's seat by up to 18 × 11
+  viewBox px at its scale, in every beat it is drawn; the hoses, cords, rings and runs read that
+  seat, so they come along and the cords bend.
+- **The display in place of the mask** ("The mask on the Shoggoth feels a bit out of place. It
+  should also be made from the same material and form a smile. Maybe it can be like a terminal
+  interface, an LED display ... Don't make it too disco or cringe"). `mask: "display"`: a
+  machined panel in the brain's front plane, the kit's own material (the plates' face tone, a
+  shade for its side, the mid line for its edge), cut top-right as the house's plates are, a bezel
+  and four screws as on the deck's board, and a 15 × 9 matrix of dim LEDs with fifteen lit in gold
+  under a soft halo: two closed, happy eyes and a smile. Nothing blinks. `mask: true` is still the
+  Ghent faceplate, untouched.
+
+Verified: `tsc` and `eslint` clean; the keynote test (9, with the display, the orbits, the
+pointer and the glass pinned), `ux-meetup` and `arcs-registry` green. Read headed in the owner's
+Chrome: 03 with his line over the isometric brain and its cords; the middle with its glass cards,
+split brain and runs; the orbits crossing in depth round the front view; the shoggoth with the
+display's smile, read close; the brain leaning with the pointer at the screen's two corners. No
+console error.
+
 ## Left open
 
-- Every line marked (proposal): 08's line, 14's spoken paragraph on semantic navigation, the
-  wording of 07, 09's choice of quote, 10's title.
+- Every line marked (proposal): 07's line, 13's spoken paragraph on semantic navigation, the
+  wording of 06, 08's choice of quote, 09's title.
+- The orbits' angles and periods, the glass's two opacities, the lean's reach and the display's
+  smile are first values; his to tune on the live page.
 - The hoses' make (U1) is a first cut against his two references; whether they want the glass
   brain's wires wrapped round the hemispheres as well is his read.
 - The front camera's tilt (22°) and the turn's pace (about a second a leg) are the first values;

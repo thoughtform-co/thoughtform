@@ -56,7 +56,6 @@ const ORDER = [
   "the-claim",
   "capability",
   "the-interface",
-  "any-software",
   "an-intelligence",
   "every-desk",
   "an-alien",
@@ -172,8 +171,6 @@ describe("the keynote template (ADR-159)", () => {
       "margin-top: calc(-100svh - 0.38 * var(--uxm-tail));"
     );
     expect(sheet, "the act hides the brain-alone beat's marks").toContain("#their-own .arc-fig__marks");
-    expect(sheet, "the field's quote on the last phase").toContain('.fa[data-fa-phase="9"] .fa__quote');
-
     expect(KEYNOTE_ARC.motion, "titles decode where they stand").toBe("terminal");
     for (const s of KEYNOTE_ARC.sections) {
       if (s.kind === "interstitial" && s.variant === "statement") {
@@ -211,16 +208,21 @@ describe("the keynote template (ADR-159)", () => {
   it("reads the Ghent beats by reference and forks only what moved or changed", () => {
     const ghent = (id: string) => UX_MEETUP_ARC.sections.find((s) => s.id === id);
     const here = (id: string) => KEYNOTE_ARC.sections.find((s) => s.id === id);
-    for (const id of ["the-claim", "capability", "the-interface", "an-intelligence"]) {
+    for (const id of ["the-claim", "capability"]) {
       expect(here(id), `${id}: the talk's object`).toBe(ghent(id));
     }
-    // U1 (owner, 2026-10-16): the voice about software has his new line.
-    const soft = here("any-software");
-    expect(soft, "forked, not the talk's").not.toBe(ghent("any-software"));
-    expect(soft?.kind === "interstitial" ? [soft.line.pre, soft.line.em] : []).toEqual([
-      "AI is both the tool",
-      "and the builder of the tool.",
-    ]);
+    // U3 (owner, 2026-10-16): the interface beat says it itself, and the
+    // voice that followed it on the Ghent page is gone from the keynote.
+    const ifc = here("the-interface");
+    const ghentIfc = ghent("the-interface");
+    expect(ifc, "forked, not the talk's").not.toBe(ghentIfc);
+    expect(ifc?.kind === "figure" && ifc.figure.id === "interface" ? ifc.figure.mind : "").toBe(
+      "AI is both the tool and the builder of the tool."
+    );
+    expect(ifc?.kind === "figure" && ifc.figure.id === "interface" ? ifc.figure.line : "").toBe(
+      ghentIfc?.kind === "figure" && ghentIfc.figure.id === "interface" ? ghentIfc.figure.line : null
+    );
+    expect(here("any-software"), "no voice between the interface and the middle").toBeUndefined();
     // U2: the rings keep the talk's layers under his new line.
     const desk = here("every-desk");
     const ghentDesk = ghent("every-desk");
@@ -231,8 +233,9 @@ describe("the keynote template (ADR-159)", () => {
       ghentDesk?.kind === "figure" && ghentDesk.figure.id === "knowledge" ? ghentDesk.figure.layers : undefined
     );
     for (const [id, n] of [
-      ["latent-space", "12"],
-      ["prowl", "14"],
+      ["an-intelligence", "04"],
+      ["latent-space", "11"],
+      ["prowl", "13"],
     ] as const) {
       const a = here(id);
       const b = ghent(id);
@@ -241,7 +244,7 @@ describe("the keynote template (ADR-159)", () => {
       );
       expect(a?.kind === "figure" ? a.eyebrow?.slice(0, 2) : "", `${id}: renumbered`).toBe(n);
     }
-    for (const id of ["any-software", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
+    for (const id of ["the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
     }
@@ -315,24 +318,34 @@ describe("the keynote template (ADR-159)", () => {
     expect(act, "reads this record").toContain('from "@/lib/arcs/content/keynote-template-alpha"');
     expect(act, "never the talk's").not.toContain("UX_MEETUP_ARC");
     expect(act).toContain(
-      'const IDS = ["capability", "the-interface", "any-software", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;'
+      'const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;'
     );
-    expect(act, "a pose behind every voice").toMatch(/2: RECEDE,[\s\S]*5: RECEDE,[\s\S]*7: RECEDE,/);
+    expect(act, "a pose behind every voice").toMatch(/4: RECEDE,[\s\S]*6: RECEDE,/);
     expect(act, "no block under the brain").toContain('base: "tendrils"');
     expect(act, "the manifest through the build height").toContain("reveal: step / STEPS");
     expect(act, "no scanline").not.toContain("behind a scanline");
     expect(act, "the cords from three edges").toMatch(/edge: "left"[\s\S]*edge: "back"/);
-    expect(act, "the field on the last phase").toContain("phase === 9");
+    expect(act, "the field on the last phase").toContain("phase === 8");
     // U2: the camera turns to face the reader between the interface and the
     // middle, and the head stands on the screen's top datum.
-    expect(act, "the camera's path").toMatch(/const VIEW_T: Record<number, number> = \{ 1: 0, 2: 1, 3: 2/);
+    expect(act, "the camera's path").toMatch(/const VIEW_T: Record<number, number> = \{ 1: 0, 2: 2, 3: 2/);
     expect(act).toContain("BRAIN_VIEW_FRONT");
     expect(act, "the head outside the scene's box").toMatch(/<\/div>\s*\{\/\* The head stands on the screen's own top datum/);
+    // U3: the LED display on the shoggoth, the orbits in 3D, the pointer.
+    expect(act, "the display, never the faceplate").toContain('mask: kind === "mask" ? "display" : false');
+    expect(act, "orbits in their own planes").toMatch(/const ORBITS = \[[\s\S]*tilt: [\d.]+, roll: [-\d.]+, prec: [-\d]+, spin: \d+, dir: -?1/);
+    expect(act, "a perspective on the rings").toContain("ORBIT_EYE / (ORBIT_EYE - z)");
+    expect(act, "the pointer leans the brain").toContain('window.addEventListener("pointermove", onPointer');
+    expect(act, "and lets go").toContain('window.removeEventListener("pointermove", onPointer)');
+    expect(act, "the glass").toContain('<linearGradient id="fa-glass"');
     const sheet = own("keynote-template-alpha.css");
     expect(sheet, "the scene inside the instrument band").toContain("var(--instrument-margin");
-    expect(sheet, "the voices read over the brain").toContain("#any-software .arc-stage");
+    expect(sheet, "the voices read over the brain").toContain("#an-alien .arc-stage");
+    expect(sheet, "no voice about software any more").not.toContain("#any-software");
     expect(sheet, "the head on a top datum").toContain("--fa-head-top: clamp(");
     expect(sheet, "no head seated by the box").not.toContain("top: calc(40 / 820 * 100%)");
+    expect(sheet, "the cards as glass").toContain("fill: url(#fa-glass)");
+    expect(sheet, "the field's quote on the last phase").toContain('.fa[data-fa-phase="8"] .fa__quote');
   });
 
   /**
@@ -368,6 +381,14 @@ describe("the keynote template (ADR-159)", () => {
     expect(half.length).toBeGreaterThan(0);
     expect(half.length).toBeLessThan(tendrils.length);
     expect(brainIsoMarkup({ base: "tendrils", reveal: -1 })).toBe("");
+    // U3: the display is the keynote's mask; the faceplate stays the Ghent page's.
+    const display = brainIsoMarkup({ base: "tendrils", mask: "display" });
+    expect(display).toContain('class="fa-mask fa-display"');
+    expect(display).toContain('class="fa-led-lit"');
+    expect(display).not.toContain("fa-mask-slot");
+    const plate = brainIsoMarkup({ base: "tendrils", mask: true });
+    expect(plate).toContain("fa-mask-slot");
+    expect(plate).not.toContain("fa-display");
     expect(brainIsoMarkup({ base: "tendrils", reveal: 0 }).length, "the floor plates stand at level 0").toBeGreaterThan(0);
     expect(BRAIN_ISO_ROOTS.length).toBe(8);
     for (let i = 1; i < BRAIN_ISO_ROOTS.length; i++) expect(BRAIN_ISO_ROOTS[i][0]).toBeGreaterThanOrEqual(BRAIN_ISO_ROOTS[i - 1][0]);

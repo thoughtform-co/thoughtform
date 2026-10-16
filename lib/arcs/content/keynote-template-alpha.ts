@@ -23,12 +23,12 @@ import { UX_MEETUP_ARC, UX_MEETUP_HERO, UX_MEETUP_PROOF_LEDES } from "./ux-meetu
  * ⚠ THE ORDER (owner, 2026-10-16), in three acts, a line and a picture in
  * turn (ADR-155's law; an act counts as one):
  *   I   the reality      01 the claim · 02 what it can make · 03 the
- *                        interface · 04 not software · 05 an intelligence ·
- *                        06 every desk
- *   II  a new kind of    07 a user that isn't a person · 08 the shoggoth ·
- *       user             09 already clean (Goodfire's line) · 10 their own
- *   III how you talk     11 a colleague · 12 latent space · 13 the median ·
- *       to it            14 the prowl · 15 a node in latent space
+ *                        interface (the tool and the builder of the tool) ·
+ *                        04 an intelligence · 05 every desk
+ *   II  a new kind of    06 a user that isn't a person · 07 the shoggoth ·
+ *       user             08 already clean (Goodfire's line) · 09 their own
+ *   III how you talk     10 a colleague · 11 latent space · 12 the median ·
+ *       to it            13 the prowl · 14 a node in latent space
  * then the swarm chapter (the page's, not a beat), the corridor's thesis,
  * the Arc, the proof and the close.
  *
@@ -59,11 +59,18 @@ function moved(id: string, eyebrow: string): Section {
   return { ...ghent(id), eyebrow } as Section;
 }
 
-/** The rings' beat with its line rewritten, the drawing the talk's. */
-function relined(id: string, line: string): Section {
+/** The interface beat with the head over its brain rewritten, the drawing the talk's. */
+function retitled(id: string, mind: string): Section {
+  const s = ghent(id);
+  if (s.kind !== "figure" || s.figure.id !== "interface") throw new Error(`[keynote] #${id} is not the interface`);
+  return { ...s, figure: { ...s.figure, mind } };
+}
+
+/** The rings' beat at a new position with its line rewritten, the drawing the talk's. */
+function relined(id: string, eyebrow: string, line: string): Section {
   const s = ghent(id);
   if (s.kind !== "figure" || s.figure.id !== "knowledge") throw new Error(`[keynote] #${id} is not the rings`);
-  return { ...s, figure: { ...s.figure, line } };
+  return { ...s, eyebrow, figure: { ...s.figure, line } };
 }
 
 /** The hero's copy is the talk's, by reference: "AI is not software." */
@@ -112,23 +119,16 @@ export const KEYNOTE_ARC: ArcDef = {
     /* ── I · The reality. The Ghent beats, by reference. */
     ghent("the-claim"),
     ghent("capability"),
-    ghent("the-interface"),
-    {
-      /* The Ghent line was "AI can make any software, but isn't software
-         itself." The owner, 2026-10-16: "AI is both the tool and the builder
-         of the tool." The brain of the interface beat stays behind this
-         voice (the act's phase 2) and comes forward on the next. */
-      ...ghent("any-software"),
-      line: {
-        pre: "AI is both the tool",
-        em: "and the builder of the tool.",
-      },
-    } as Section,
-    ghent("an-intelligence"),
+    /* The owner, 2026-10-16 (U3): the interface beat says it itself, "AI is
+       both the tool and the builder of the tool", and the voice that
+       followed it ("AI can make any software, but isn't software itself.")
+       is gone, so the middle comes straight after. The drawing is the talk's. */
+    retitled("the-interface", "AI is both the tool and the builder of the tool."),
+    moved("an-intelligence", "04 · An intelligence"),
     /* Owner, 2026-10-16: "reword it so it's more logical. It's like an
        intelligence that will soon absorb all knowledge work." The rings are
        the talk's; the line is his. */
-    relined("every-desk", "An intelligence that will soon absorb all knowledge work."),
+    relined("every-desk", "05 · Every desk", "An intelligence that will soon absorb all knowledge work."),
 
     /* ── II · A new kind of user. */
     {
@@ -140,7 +140,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "A new kind of user",
-      eyebrow: "07 · A new kind of user",
+      eyebrow: "06 · A new kind of user",
       line: {
         pre: "How do you design experiences and interfaces",
         em: "for a user that isn’t a person?",
@@ -152,7 +152,7 @@ export const KEYNOTE_ARC: ArcDef = {
       id: "shoggoth",
       kind: "figure",
       menuLabel: "The shoggoth",
-      eyebrow: "08 · The shoggoth",
+      eyebrow: "07 · The shoggoth",
       figure: {
         id: "shoggoth",
         alt: "The machine brain with tentacles unfurling from under it, slow and many, and a small smiling mask held in front of it: the shoggoth, the field's picture of a friendly face on a mind that is not ours.",
@@ -168,7 +168,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "Already clean",
-      eyebrow: "09 · Already clean",
+      eyebrow: "08 · Already clean",
       line: {
         pre: "The network is strange,",
         em: "but its strangeness repeats.",
@@ -183,7 +183,7 @@ export const KEYNOTE_ARC: ArcDef = {
       id: "their-own",
       kind: "figure",
       menuLabel: "Their own",
-      eyebrow: "10 · Their own",
+      eyebrow: "09 · Their own",
       figure: {
         id: "brain",
         alt: "The machine brain alone, no mask and no tentacles, its terraces lit, seen from the stack's own corner.",
@@ -203,13 +203,13 @@ export const KEYNOTE_ARC: ArcDef = {
       glitch: true,
       menuLabel: "A colleague",
       menuPrimary: true,
-      eyebrow: "11 · A colleague",
+      eyebrow: "10 · A colleague",
       line: {
         pre: "Treat it like a pretty smart colleague.",
         em: "Respect the intelligence.",
       },
     },
-    moved("latent-space", "12 · Latent space"),
+    moved("latent-space", "11 · Latent space"),
     {
       /* "AI often converges on the median, not because it is stupid or not
          creative, but because without context it just generates the most
@@ -219,7 +219,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "statement",
       glitch: true,
       menuLabel: "The median",
-      eyebrow: "13 · The median",
+      eyebrow: "12 · The median",
       line: {
         pre: "Without context it gives the most plausible answer.",
         em: "The median.",
@@ -228,7 +228,7 @@ export const KEYNOTE_ARC: ArcDef = {
     /* The wolf (owner: "that visual of a wolf ... to talk about the semantic
        navigation prompting techniques"): the film carries the point, the
        script says it. */
-    moved("prowl", "14 · The prowl"),
+    moved("prowl", "13 · The prowl"),
     {
       /* "Really try to convert yourself as a node in the latent space
          through which agents can flow. That's what I'm trying to do with
@@ -238,7 +238,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "Yourself as a node",
-      eyebrow: "15 · A node in latent space",
+      eyebrow: "14 · A node in latent space",
       line: {
         pre: "Convert yourself into a node in latent space",
         em: "that agents flow through.",
