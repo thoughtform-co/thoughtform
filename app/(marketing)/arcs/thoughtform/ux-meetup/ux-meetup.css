@@ -614,3 +614,37 @@ html[data-theme="light"] .fa__dots {
     }
   }
 }
+
+/* ── The prowl (owner, 2026-10-15): a film full bleed after the shoggoth.
+   Its beat letters nothing; the film fills the screen edge to edge, past
+   the band, and the act stands down while it is up. */
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig__marks {
+  display: none;
+}
+/* no stage padding: the stage is the film, exactly one screen, so it pins
+   at 0 (with the padding it ran 82px over and pinned 41px high) */
+.tw-root[data-tw-order="talk-first"] #prowl .arc-stage {
+  padding-block: 0;
+}
+.tw-root[data-tw-order="talk-first"] #prowl .arc-band,
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig {
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig__bleed {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  height: 100svh;
+  margin: 0 0 0 -50vw;
+  overflow: hidden;
+  background: #000;
+}
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig__bleed .arc-inter__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}

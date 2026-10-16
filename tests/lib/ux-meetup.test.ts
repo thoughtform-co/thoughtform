@@ -209,6 +209,8 @@ describe("the UX meetup talk (ADR-156)", () => {
       "every-desk",
       "an-alien",
       "shoggoth",
+      // owner, 2026-10-15: a film full bleed after the shoggoth
+      "prowl",
       "latent-space",
     ]);
     for (const s of sections) {

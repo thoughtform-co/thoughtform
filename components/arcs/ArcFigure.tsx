@@ -1,6 +1,7 @@
 import type { ArcMotion, ArcSectionOf } from "@/lib/arcs/types";
 
 import { ArcBeat } from "./ArcBeat";
+import { ArcClipLoop } from "./ArcClipLoop";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
 import { arcTitleText } from "./chrome";
@@ -86,6 +87,11 @@ export function ArcFigure({
             <p className="fa-static fa-static--line">
               <strong>{spec.title}</strong> {spec.line}
             </p>
+          ) : null}
+          {spec.id === "bleed" ? (
+            <figure className="arc-fig__bleed">
+              <ArcClipLoop clip={spec.clip} />
+            </figure>
           ) : null}
           {spec.id === "latent" ? (
             <blockquote className="fa-static fa-static--line">

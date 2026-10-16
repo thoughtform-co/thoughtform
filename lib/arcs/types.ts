@@ -2934,6 +2934,12 @@ export type ArcFigureSpec = {
       line: string;
     }
   | {
+      /** A film, full bleed and wordless (owner, 2026-10-15): the house's
+       *  silent loop (`ArcClipLoop`) stretched edge to edge on its own beat. */
+      id: "bleed";
+      clip: ArcClip;
+    }
+  | {
       /** Latent space (ADR-156 U9): a line at the centre of a particle field,
        *  a few nodes named. */
       id: "latent";

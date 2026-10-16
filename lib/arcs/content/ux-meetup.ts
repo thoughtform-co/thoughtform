@@ -302,11 +302,29 @@ export const UX_MEETUP_ARC: ArcDef = {
       },
     },
     {
+      /* Owner, 2026-10-15: after the shoggoth, a film full bleed and no
+         words: the prowl, made with Seedance 2.5 in Vesper. */
+      id: "prowl",
+      kind: "figure",
+      menuLabel: "The prowl",
+      /* Numbered with its beats; the full-bleed sheet hides the marks. */
+      eyebrow: "09 · The prowl",
+      figure: {
+        id: "bleed",
+        alt: "A wordless film, full screen: the prowl, made with Seedance 2.5 in Vesper.",
+        clip: {
+          src: "/arcs/ux-meetup/prowl.mp4",
+          poster: "/arcs/ux-meetup/prowl-poster.jpg",
+          alt: "The prowl, a film made with Seedance 2.5 in Vesper",
+        },
+      },
+    },
+    {
       /* U9: latent space, around a line after Markov. The talk's exit. */
       id: "latent-space",
       kind: "figure",
       menuLabel: "Latent space",
-      eyebrow: "09 · Latent space",
+      eyebrow: "10 · Latent space",
       figure: {
         id: "latent",
         alt: "A field of particles drifting in depth, latent space, with a few brighter nodes named for artists; at its centre, in a quiet frame, a line: inside the models, great artists become nodes in latent space.",
