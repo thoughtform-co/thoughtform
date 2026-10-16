@@ -489,10 +489,62 @@ beats, the order and the alternation held:
 
 Wheel-walked down and back up, 146 steps, 0 mismatches.
 
+## U10 · The swarm after the eras, the cards cleaned up (2026-10-15, owner)
+
+The X-Bionic proposal's three sections ("AI capability your teams own." to "Marketing first,
+then every team.") as `/test/proposal-swarm` draws them, mounted between the eras and the talk
+(`SwarmChapter.tsx`, a nested root in a slot `order.ts` inserts before `#workshop`). In flow, not
+welded: the swarm arrives as the eras' emptied stage scrolls away, and the talk's weld into the
+eras' runway is cancelled since the swarm now stands between them. The hero's two buttons are
+hidden (kept in the DOM: `useHeroBoot` stands down without `.hero__cta`). The first card is 2022
+with the owner's image; the wake-up line is "AI will absorb all digital contents and products
+within 2 years." and its scramble runs at 2× (an optional `rate` on `captionScramble`, every
+other caller unchanged); the shoggoth's line sits right of the brain, clear of the rail.
+
+## U11 · A brain in three.js, refused (2026-10-15, owner)
+
+The owner: "with the machine brain im missing depth, like an actual three.js / webgl or thing
+built with the anatomy skill". Built in three.js (glass hemispheres extruded from the 2D
+outlines, orthographic, face on, a few degrees of sway), loaded by `import()`. Refused: "the
+machine head STILL LOOKS FLAT; did you actually use any of the suggestions like anatomy skill;
+and the head should be a bit aligned with the perspective of the stacked cards … and remove the
+googly eyes". ⚠ **A renderer is not depth**: a face-on orthographic pillow has no sides to show,
+however good the glass. Deleted in U12. Same round: the worlds card is "Hyperpersonalized
+content" with the owner's Halo mods film, and the collaborator's rows are a real exchange.
+
+## U12 · The brain built with the anatomy kit (2026-10-15, owner: "that looks sick")
+
+The anatomy kit vendored as `components/arcs/figures/foundation/isoKit.ts` and the brain rebuilt
+as solids in `brainIso.ts`: terraced hemispheres (contour plates whose lobes drift with height),
+the crown cut to a deck carrying the machine (board, chips, pins, traces, a finned core, the one
+lit part), a corrugated stem, the block and a seven-port manifold. No pods, so no eyes.
+⚠ **One camera for the stage**: the kit at azimuth 45° and elevation 35.264° is exactly
+`scene.ts`'s true isometric, and the brain is squared to the stack's world axes (L = −y,
+F = +x), so it is seen corner on like the cards; squared to the viewer it read flat again.
+⚠ **Drawn through the act's canvas**: the SVG is rasterised once per pose and theme and painted
+where the old brain was, so the rings, tentacles and cords keep their order; the cords, side
+runs and hanging cables anchor on the exports (`BRAIN_ISO_PORTS`, `brainIsoFlank`). The cards
+lost their eyebrow, grew to 560 × 540 and show films whole (`object-fit: contain`). The story,
+round by round: `docs/design/machine-brain/README.md`.
+
+## U13 · The mask as a machined faceplate (2026-10-15, owner)
+
+"fix the spacing a bit because too close to the text and redo the mask as well so it fits the
+style". The mask is part of the anatomy picture: a plate in the brain's front plane with real
+thickness, a gold rim, an inset groove, ten rivets, the eyes and smile cut through it, straps
+back onto the hemispheres. The 2D mask painter is deleted. The middle beat's brain sits lower
+and smaller, clear of its headline.
+
+## U14 · The prowl, full bleed (2026-10-15, owner)
+
+After the shoggoth, a wordless film edge to edge (`prowl.mp4`, made with Seedance 2.5 in
+Vesper): a new figure id, `bleed`, which `ArcFigure` renders as the house's silent loop
+(`ArcClipLoop`: muted, in view only, the poster under reduced motion). Its stage drops the
+padding so it is exactly one screen and pins at 0. Numbered 09 (the marks hidden), latent space
+10; `ux-meetup.test.ts` pins the new order.
+
 ## Left open
 
-- The worlds card waits on the owner's video of the Halo mods: a file under `public/` and a
-  `media` entry on the card is the whole change.
 - The corridor's thesis after the talk still reads "AI sits somewhere between tool and
   collaborator", now an echo of section 05; the owner decides whether it stays.
 - The owner named "a bit of a regression" in passing without saying where; not yet found.

@@ -33,6 +33,7 @@ Use when adding **new surface area** (section, dashboard, public API, major hook
 3. **Build.** If a **recurring workflow** appears (debug steps, checklists, compositing invariants), add a `.claude/skills/<topic>/SKILL.md`.
 4. **Wire paths:** add `.claude/rules/<area>.md` and `.cursor/rules/<area>.mdc` with `paths` / `globs` and pointers back to the ADR + skill.
 5. When shipped: set ADR to **Accepted**; keep rules/skills in sync with reality.
+6. **A change under `.claude/skills/thoughtform-design/` travels to the plugin mirror**: in a sibling clone of `thoughtform-co/thoughtform-plugins`, run `scripts/sync-mirrors.ps1 -Names thoughtform-design` (or copy `SKILL.md`, `references/`, `eval/rubric.md` by hand and stamp `.mirror.json`), then commit there. That mirror is what claude.ai loads; it once fell three weeks behind.
 
 If the feature would **contradict** an existing ADR (e.g. compositing, auth), the contradiction must be **resolved in the ADR** before merge — not as a drive-by.
 

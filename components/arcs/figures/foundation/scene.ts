@@ -8,7 +8,7 @@
  * 2026-10-15: "it's actually the y-axis that needs to grow because that
  * represents the model's capabilities").
  * THE NEW INTERFACE: the stack moves to the centre, layer by layer, a
- * cascade; the machine mind (`mind.ts`) stands above it and its tendrils plug
+ * cascade; the machine brain (`brainIso.ts`, since U12) stands above it and its tendrils plug
  * into every plate.
  * AN INTELLIGENCE: the mind alone turns to face the reader, between a tool
  * and a collaborator.
