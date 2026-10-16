@@ -133,6 +133,7 @@ const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "ap-hogeschool-lecture",
   "suri-lunch-and-learn",
   "thoughtform-ux-meetup",
+  "thoughtform-keynote-template-alpha",
   "thoughtform-portfolio",
 ]);
 

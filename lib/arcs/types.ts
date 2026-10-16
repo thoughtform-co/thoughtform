@@ -2934,6 +2934,14 @@ export type ArcFigureSpec = {
       line: string;
     }
   | {
+      /** The brain alone (ADR-159): the machined mind with no mask and no
+       *  tentacles, legible and still its own. Its words only; the drawing
+       *  is the route's foundation act. */
+      id: "brain";
+      title: string;
+      line: string;
+    }
+  | {
       /** A film, full bleed and wordless (owner, 2026-10-15): the house's
        *  silent loop (`ArcClipLoop`) stretched edge to edge on its own beat. */
       id: "bleed";

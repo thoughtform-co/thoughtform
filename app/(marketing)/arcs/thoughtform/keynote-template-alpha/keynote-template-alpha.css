@@ -1,0 +1,658 @@
+/* The keynote's route sheet (ADR-159), cut from the UX meetup talk's
+   (ADR-156 U2, U3): the order is eras → TALK → SWARM → corridor, stamped
+   `data-tw-order="talk-first"` on this page's `.tw-root` as on the talk's
+   (v3 and Suri's lunch and learn share `data-tw-cut`). Wins on specificity,
+   never on order (ADR-141 U1).
+   ⚠ THE TALK MACHINERY'S HOOKS ARE SHARED, NOT RENAMED (`.uxm-ground`,
+   `data-uxm-ground`, `data-uxm-active`, the `.fa` act): the ground and the
+   reader are the talk's by import, and both sheets write the same rules for
+   them, so the two routes loaded together paint the same. Only the swarm's
+   slot is this page's own (`#kta-swarm`), because it stands elsewhere. */
+
+/* ⚠ v1's CORRIDOR WELD IS CANCELLED. The flow stamp stays on (the About's
+   hand-off into the eras needs it), and with it v1's weld pulls the corridor
+   mount up a screen, which here would land the corridor over the talk's
+   last beat. The mount sits in flow after the talk. */
+.tw-root[data-tw-order="talk-first"][data-tw-flow] [data-home-corridor-mount] {
+  margin-top: 0;
+}
+
+/* ⚠ NO PANE. The talk is welded up into the eras' runway, so anything opaque
+   on its station or its root rose over the eras as a black frame (owner,
+   2026-10-15). Both are transparent; the only ground is `.uxm-ground`, on
+   only while a beat is up. */
+.tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc {
+  position: relative;
+  z-index: 4;
+  background: none;
+}
+.tw-root[data-tw-order="talk-first"] #workshop .arc-root {
+  background: none;
+}
+
+/* ⚠ THE TALK'S OWN WELD (U3, owner 2026-10-15: no slide-over, the eras'
+   elements move away and the next title glitches in where it stands). The
+   eras' runway is 260svh with a 100svh stage, so their pin travels 160svh,
+   and their exit ends at 0.96 of it (`VOIDWALKER_HOLOGRAM_EXIT_WINDOW`):
+   153.6svh after their top. The talk is laid 260 − 153.6 = 106.4svh up into
+   that runway, so its first beat parks on the frame the eras' exit ends,
+   over a stage that has just emptied, and decodes there without moving.
+   `ux-meetup.test.ts` reads both numbers from source.
+   ⚠ Only under the eras' own conditions, v1's gate for the flow stamp: below
+   it the page flows and the first beat parks at its ordinary place. The
+   welded box takes no pointer until it parks, so the era chips under it stay
+   clickable. */
+@supports (animation-timeline: scroll(root block)) {
+  @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+    .tw-root[data-tw-order="talk-first"][data-tw-flow] #workshop.station.tw-arc {
+      margin-top: -106.4svh;
+    }
+    .tw-root[data-tw-order="talk-first"][data-tw-flow] #workshop .arc-root[data-uxm-ground="off"] {
+      pointer-events: none;
+    }
+  }
+}
+
+/* ── The ground (U3) ─────────────────────────────────────────────────────
+   One sticky screen at the head of the talk, out of flow by its own height:
+   the void, and the brand mark as particles at a whisper. Hidden until the
+   talk parks (`data-uxm-ground`, written by the tail's reader), so it never
+   covers the eras it is welded over. */
+.uxm-ground {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  height: 100svh;
+  margin-bottom: -100svh;
+  background: var(--void, #0a0908);
+  pointer-events: none;
+  visibility: hidden;
+}
+#workshop .arc-root[data-uxm-ground="on"] > .uxm-ground {
+  visibility: visible;
+}
+.uxm-ground__mark {
+  position: absolute;
+  inset: 0;
+  /* Seen, not shouted (owner: "not seeing our brand mark particle system"). */
+  opacity: 0.24;
+}
+.uxm-ground__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* The talk's sections drop their own void and read on the ground: the
+   ambient mark is behind every beat, not only the gaps between them. Every
+   beat stays opaque as a whole because the ground is (ADR-008, recorded as
+   this page's exception in ADR-156 U3). */
+.tw-root[data-tw-order="talk-first"] #workshop .arc-section,
+.tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] .arc-stage {
+  background: transparent;
+}
+
+/* ── Nothing travels in (U3) ─────────────────────────────────────────────
+   The terminal grammar (ADR-057) lets a beat's stage scroll up into its
+   park, its panels arriving on a ramp as it comes: on the talk that read as
+   the slide the owner refused ("no movement or travel, just a glitch
+   effect"). Here a beat withholds its whole plane until it parks: it
+   appears where it stands, its title decodes in place, and it folds out
+   before the next one appears. Above the terminal tier only; below it the
+   page flows and every beat is plainly there. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  /* ONE BEAT UP AT A TIME (owner, 2026-10-15): the tail's reader marks the
+     beat whose slot holds the scroll; every other beat's plane is withheld,
+     whatever its words are doing, so a drawing never vanishes on the way
+     back up and two never stand on each other. */
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat]:not([data-uxm-active]) > .arc-stage > .arc-plane {
+    visibility: hidden;
+  }
+}
+
+/* ── The talk's beat runway (U3) ─────────────────────────────────────────
+   Withholding a beat until it parks leaves its approach empty, so the beats
+   are WELDED instead: each one parks on the scroll where the previous has
+   gone blank, never a screen later.
+   · Every beat holds a 120svh tail (the house's 50 / 70 was a reader's
+     pace; a presenter needs the line to stay through several wheel steps).
+   · The fold's clocks (`arcMotion.ts`: OUT 0.14 → 0.97, UNTYPE_OUT 0.3,
+     FORCE_BLANK_OUT 0.5 on the smoothed channel) leave a beat blank by
+     0.6 of its tail, so the next one parks there: its section is pulled up
+     by the stage's screen plus the 0.38 of the tail still to run,
+     −(100svh + 0.38 × 120svh). The previous beat is armed, and so withheld,
+     by then; both are sticky at the top for the overlap and only one has
+     anything in it. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] {
+    --uxm-tail: 120svh;
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat] > .arc-beat__tail {
+    height: var(--uxm-tail);
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat] ~ [data-arc-beat] {
+    margin-top: calc(-100svh - 0.38 * var(--uxm-tail));
+  }
+}
+
+/* ── The capability beat's runway (U4) ───────────────────────────────────
+   Four cards in one beat: a longer hold than the talk's 120svh, and the next
+   beat welded to it by the same rule on this beat's own tail. */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #capability > .arc-beat__tail {
+    height: 420svh;
+  }
+  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #capability + [data-arc-beat] {
+    margin-top: calc(-100svh - 0.38 * 420svh);
+  }
+}
+
+/* ── The foundation act (U5, U6) ─────────────────────────────────────────
+   One fixed layer over the screen, shown only while one of its three beats
+   is up (`data-fa-up`; which one, `data-fa-phase`). Its box holds the
+   scene's viewBox exactly, so a word seated by a fraction of the box lands on
+   its point of the drawing. The frames are the house's: a chamfer at
+   top-right and bottom-left, a hairline at the seam, the survey crosses at
+   the corners; a card is a slab, its back face and its sides drawn as
+   Unsiloed draws its sheets. The mind is gold, its cords four tones. */
+.fa {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  visibility: hidden;
+}
+.fa[data-fa-up] {
+  visibility: visible;
+}
+.fa__box {
+  position: relative;
+  width: min(calc(100vw - 2 * var(--hud-margin, 64px)), calc((100svh - 96px) * 1440 / 820));
+  aspect-ratio: 1440 / 820;
+  margin-top: 24px;
+}
+.arc-root[data-act="live"] #capability .arc-fig__marks,
+.arc-root[data-act="live"] #the-interface .arc-fig__marks,
+.arc-root[data-act="live"] #an-intelligence .arc-fig__marks,
+.arc-root[data-act="live"] #every-desk .arc-fig__marks,
+.arc-root[data-act="live"] #shoggoth .arc-fig__marks,
+.arc-root[data-act="live"] #their-own .arc-fig__marks,
+.arc-root[data-act="live"] #latent-space .arc-fig__marks {
+  visibility: hidden;
+}
+.fa__svg,
+.fa__dots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fa__dots {
+  color: rgba(var(--dawn-rgb), 0.9);
+  --fa-gold: var(--gold-ink, #caa554);
+  --fa-green: rgb(122, 158, 106);
+  --fa-red: var(--alert, #ff6b35);
+  --fa-lit: var(--gold-ink-lit, #f0c86a);
+}
+html[data-theme="light"] .fa__dots {
+  --fa-green: rgb(70, 108, 58);
+  --fa-red: rgb(196, 70, 30);
+  --fa-lit: var(--gold-ink, #6e5216);
+}
+/* What each beat shows. */
+.fa__stack,
+.fa__cards,
+.fa__quote {
+  visibility: hidden;
+}
+.fa[data-fa-phase="0"] .fa__stack,
+.fa[data-fa-phase="1"] .fa__stack,
+.fa[data-fa-phase="2"] .fa__cards,
+.fa[data-fa-phase="6"] .fa__quote {
+  visibility: inherit;
+}
+.fa__cards {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.fa[data-fa-cards] .fa__cards {
+  opacity: 1;
+}
+/* The slab. */
+.fa__ground {
+  fill: rgb(var(--void-deep-rgb, 5, 4, 3));
+}
+.fa__back path {
+  fill: var(--void, #0a0908);
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__join {
+  fill: none;
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+}
+.fa__edge,
+.fa__inset {
+  fill: none;
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__inset {
+  stroke: var(--arc-rule);
+}
+.fa__ghost path {
+  fill: none;
+  stroke: var(--arc-rule);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.fa__cross {
+  fill: none;
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* The stack's floor, its trays and its axes. */
+.fa__floor,
+.fa__leader {
+  visibility: hidden;
+}
+.fa[data-fa-floor] .fa__floor,
+.fa[data-fa-floor] .fa__leader {
+  visibility: inherit;
+}
+.fa__grid,
+.fa__tray path {
+  fill: none;
+  stroke: var(--arc-grid);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fa__tray path {
+  stroke: var(--arc-rule);
+}
+.fa__axis {
+  fill: none;
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+}
+.fa__leader {
+  fill: none;
+  stroke: var(--arc-rule-dash);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.fa__axis--y {
+  stroke: var(--gold-ink, #caa554);
+  stroke-width: 1.5;
+}
+.fa__axis-name {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  fill: var(--gold-ink, #caa554);
+}
+.fa__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* the whole film, never cropped (owner, 2026-10-15) */
+  object-fit: contain;
+  background: #000;
+}
+.fa__worlds path {
+  fill: none;
+  stroke: var(--arc-rule);
+}
+.fa__worlds text {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  fill: var(--arc-ink-50);
+}
+/* The mathematics card: the equations as they are written. */
+.fa__math-eq {
+  font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  font-style: italic;
+  font-size: 22px;
+  fill: var(--dawn, #ebe3d6);
+}
+.fa__math-key,
+.fa__math-note,
+.fa__math-chip {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+}
+.fa__math-key,
+.fa__math-chip {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__math-note {
+  fill: var(--arc-ink-50);
+}
+.fa__math-rule {
+  stroke: var(--arc-rule);
+}
+.fa__flow path,
+.fa__flow circle {
+  fill: none;
+  stroke: var(--arc-ink-50);
+  stroke-width: 1;
+}
+.fa__flow path[data-lit] {
+  stroke: var(--gold-ink, #caa554);
+  stroke-width: 1.6;
+}
+.fa__flow circle {
+  stroke: var(--dawn, #ebe3d6);
+}
+/* The module: its head in the frame over its picture, as Unsiloed builds
+   its cards; the middle beat's cards in the same make. */
+.fa__mod-eyebrow,
+.fa__mod-count,
+.fa__side-ok {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+}
+.fa__mod-eyebrow {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__mod-count,
+.fa__side-ok {
+  fill: var(--arc-ink-50);
+}
+.fa__mod-title,
+.fa__side-title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  fill: var(--dawn, #ebe3d6);
+}
+.fa__side-title {
+  font-size: 19px;
+}
+.fa__mod-line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 14px;
+  fill: var(--arc-ink-70);
+}
+.fa__side-row {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  fill: var(--arc-ink-80);
+}
+.fa__side[data-kind="collab"] .fa__side-row {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.fa__side-row[data-voice="b"] {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__side-mark {
+  fill: var(--gold-ink, #caa554);
+}
+.fa__side-back {
+  fill: var(--void, #0a0908);
+  stroke: var(--arc-seam);
+  stroke-width: 1;
+}
+/* The head: an eyebrow, a title, a line, where the beat has one. The first
+   beat's is in its modules. */
+.fa__head {
+  position: absolute;
+  display: grid;
+  gap: var(--space-sm);
+  visibility: hidden;
+}
+.fa[data-fa-phase="1"] .fa__head,
+.fa[data-fa-phase="2"] .fa__head,
+.fa[data-fa-phase="3"] .fa__head,
+.fa[data-fa-phase="4"] .fa__head,
+.fa[data-fa-phase="5"] .fa__head,
+.fa[data-fa-phase="6"] .fa__head {
+  visibility: inherit;
+}
+.fa[data-fa-phase="1"] .fa__head,
+.fa[data-fa-phase="4"] .fa__head {
+  left: calc(48 / 1440 * 100%);
+  top: calc(84 / 820 * 100%);
+  width: calc(470 / 1440 * 100%);
+}
+/* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
+   right, the brain between them. */
+.fa[data-fa-phase="4"] .fa__head {
+  /* clear of the right rail's readouts (BEARING sits on the line's row) */
+  right: calc(210 / 1440 * 100%);
+  width: auto;
+  grid-template-columns: minmax(0, 470fr) minmax(0, 404fr) minmax(0, 470fr);
+}
+.fa[data-fa-phase="4"] .fa__eyebrow {
+  grid-area: 1 / 1;
+}
+.fa[data-fa-phase="4"] .fa__title {
+  grid-area: 2 / 1;
+}
+.fa[data-fa-phase="4"] .fa__line {
+  grid-area: 2 / 3;
+  align-self: end;
+  justify-self: end;
+  max-width: 24ch;
+  text-align: right;
+}
+/* Centred over the brain: the middle, the rings, the brain alone (ADR-159)
+   and the field. */
+.fa[data-fa-phase="2"] .fa__head,
+.fa[data-fa-phase="3"] .fa__head,
+.fa[data-fa-phase="5"] .fa__head,
+.fa[data-fa-phase="6"] .fa__head {
+  left: 0;
+  right: 0;
+  top: calc(40 / 820 * 100%);
+  justify-items: center;
+  text-align: center;
+}
+.fa[data-fa-phase="5"] .fa__line {
+  max-width: 44ch;
+}
+.fa__eyebrow {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.fa__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: var(--type-display);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  color: var(--dawn, #ebe3d6);
+}
+.fa__title:empty,
+.fa__line:empty {
+  display: none;
+}
+.fa__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-lg);
+  line-height: 1.35;
+  color: var(--arc-ink-70);
+}
+/* Latent space: the line at the centre, in a quiet frame of corners. */
+.fa__quote {
+  position: absolute;
+  left: 50%;
+  top: calc(430 / 820 * 100%);
+  translate: -50% -50%;
+  width: min(44%, 620px);
+  margin: 0;
+  padding: var(--space-lg) var(--space-xl);
+  display: grid;
+  gap: var(--space-sm);
+  text-align: center;
+  background:
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 1px 18px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 1px 18px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 1px 18px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 18px 1px no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 1px 18px no-repeat;
+}
+.fa__quote blockquote {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--type-2xl);
+  line-height: 1.25;
+  color: var(--dawn, #ebe3d6);
+}
+.fa__quote figcaption {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+/* Play with sound: the one thing on the act a reader can press. */
+.fa__play {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  translate: 0 -100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid rgba(var(--gold-rgb), 0.55);
+  background: rgba(var(--void-rgb), 0.72);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+  cursor: pointer;
+  pointer-events: auto;
+  visibility: hidden;
+}
+.fa[data-fa-phase="0"][data-fa-video] .fa__play {
+  visibility: inherit;
+}
+.fa__play:hover,
+.fa__play:focus-visible {
+  border-color: var(--gold-ink, #caa554);
+}
+/* The film over the viewport: not full screen, the page's own theatre,
+   portalled to the body so nothing of the page draws over it. */
+.fa-theatre {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-xl);
+  background: rgba(var(--void-rgb), 0.94);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.fa-theatre[data-open] {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+.fa-theatre__video {
+  width: 100%;
+  height: 100%;
+  max-width: calc(100vw - 2 * var(--space-xl));
+  max-height: calc(100svh - 2 * var(--space-xl));
+  object-fit: contain;
+  background: #000;
+}
+.fa-theatre__close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid rgba(var(--gold-rgb), 0.55);
+  background: rgba(var(--void-rgb), 0.72);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: var(--type-xs);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+  cursor: pointer;
+}
+/* U8: the owner's two lines, the second under the first. */
+#any-software .arc-inter__line em {
+  display: block;
+}
+
+/* ── The hero without its buttons (owner, 2026-10-15: "we don't need the
+   cta buttons"). Hidden, not removed: the hero's boot decode reads
+   `.hero__cta` and stands down without it. */
+.tw-root[data-tw-order="talk-first"] #hero .hero__cta {
+  display: none;
+}
+
+/* ── The swarm chapter (ADR-159, owner 2026-10-16): the X-Bionic proposal's
+   three sections, as /test/proposal-swarm draws them, AFTER THE TALK and
+   before the corridor. In flow, on its own opaque ground: it arrives as the
+   talk's last beat lifts off and its ground switches off (the tail's
+   reader), and the corridor mount follows it at margin 0. The talk keeps
+   its weld up into the eras' runway (U3), which the Ghent page cancelled
+   only because the swarm stood between them there (ADR-156 U10). */
+.tw-root[data-tw-order="talk-first"] #kta-swarm {
+  position: relative;
+  z-index: 4;
+}
+.tw-root[data-tw-order="talk-first"] #kta-swarm .arc-root {
+  background: var(--void, #0a0908);
+}
+
+/* ── The prowl (owner, 2026-10-15): a film full bleed after the shoggoth.
+   Its beat letters nothing; the film fills the screen edge to edge, past
+   the band, and the act stands down while it is up. */
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig__marks {
+  display: none;
+}
+/* no stage padding: the stage is the film, exactly one screen, so it pins
+   at 0 (with the padding it ran 82px over and pinned 41px high) */
+.tw-root[data-tw-order="talk-first"] #prowl .arc-stage {
+  padding-block: 0;
+}
+.tw-root[data-tw-order="talk-first"] #prowl .arc-band,
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig {
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig__bleed {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  height: 100svh;
+  margin: 0 0 0 -50vw;
+  overflow: hidden;
+  background: #000;
+}
+.tw-root[data-tw-order="talk-first"] #prowl .arc-fig__bleed .arc-inter__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}

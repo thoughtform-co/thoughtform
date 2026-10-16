@@ -29,6 +29,10 @@ Filed 2026-10-16, not started. Build in a later round, as a self-contained lab t
 - **B · The particle half is the swarm.** Sample `looseHalf`'s contour points into a new formation in `engine/formations.ts`, so the right hemisphere is made of pool dots. When the stack leaves for the steps, those dots go with it: the brain becoming the nanobots.
 - **C · The brain is the layer.** The brand mark engraved on the brain's crown deck in place of the chips (the lit part). The left hemisphere in the people's green, the right in gold particles. The plates below become the brain's stem and manifold.
 
+## Reference: the knot and the city (2026-10-16)
+
+The owner, on Goodfire's "Neural Networks Are Already Clean" (Cammarata, 2026, https://already-clean.goodfire.com/): "they also have these artifact shapes, especially in the header, creating a nice visual of entangled concepts ... interesting shapes here that we can also use later with the brain we've developed." The header is the essay's "A City vs a Knot" drawn: a torus of roads folded through itself beside an island city. The knot is superposition, the picture the essay retires; the city is the network read clean. So the entangled shape is their *before* state, and the honest use of it is a knot that resolves into a city, not a knot on its own. The brain's terraced contour plates (`brainIso.ts`) already read as a city from above. A candidate picture for the keynote's beats 09 and 10 (`/arcs/thoughtform/keynote-template-alpha`, ADR-159), drawn in the house grammar, never their illustration; a direction for this lab or its own, when he asks.
+
 ## How it is judged
 
 Lab at `app/(internal)/test/swarm-brain/`, importing nothing from the arcs but `brainIso.ts` and the swarm engine. Stills at 1440 × 820 and 1920 × 1080 in both themes, read at the four moments of the opening (rest, the hop's start, mid-hop, landed). The owner picks; only then is it ported. The method and the brain's own story: `docs/design/machine-brain/README.md`.

@@ -139,6 +139,9 @@ describe("arcs registry (ADR-052)", () => {
          BEFORE the corridor, so the thesis and the Arc close it and the
          contact station is its exit; its last section is the designer line. */
       if (arc.slug === "thoughtform-ux-meetup") continue;
+      /* And the keynote template cut from it (ADR-159): the same shape, its
+         last beat a voice before the swarm chapter and the Arc. */
+      if (arc.slug === "thoughtform-keynote-template-alpha") continue;
       expect(arc.sections[arc.sections.length - 1]?.kind, arc.slug).toBe("close");
     }
   });
