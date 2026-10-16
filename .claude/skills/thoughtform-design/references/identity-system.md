@@ -142,6 +142,6 @@ governs every housing they sit in.
 
 - Rounded corners on any logo or icon
 - Recoloring outside the Brand Codex palette
-- Wordmark in a non–PP Mondwest typeface
+- Wordmark set in any typeface (it is inline SVG paths, never type)
 - Circular indicators or radio buttons in UI (use diamonds)
 - Decorative use of vectors with no wayfinding purpose

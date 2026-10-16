@@ -78,7 +78,7 @@ The diagonal stroke passes through this crosshair center.
 The title block is placed within the 9x17 content grid. It contains (top to bottom):
 
 1. **Date chip** — chamfered pill with `clip-path`, `var(--dawn-10)` background, `var(--dawn-50)` border. PT Mono, `--tf-h3` size, uppercase.
-2. **H1 heading** — PT Mono Bold, `--tf-h1` size (100px at reference), uppercase, `var(--dawn)`, `line-height: 1`.
+2. **H1 heading** — PP Neue Montreal at `--weight-lit` (500), sentence case, `--track-display` (ADR-092; the Bold faces are retired), `--tf-h1` size (100px at reference), `var(--dawn)`, `line-height: 1`. (The Figma specimen still sets PT Mono Bold caps; `hud-frame-implementation.md` records it as drawn.)
 3. **Subtitle** — PT Mono Regular, `--tf-h3` size (25px at reference), uppercase, `var(--dawn)`. Pipe-separated segments.
 
 ### Placement by format
@@ -94,7 +94,7 @@ These are starting presets. Adjust grid placement based on title length: longer 
 
 ### Spacing
 
-Gap between title-block children: `--tf-rhythm-sm` (40px at reference scale).
+Gap between title-block children: 40px at reference scale (the `--tf-rhythm-*` tokens were deleted by ADR-149).
 
 ---
 

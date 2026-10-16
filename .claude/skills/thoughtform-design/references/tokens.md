@@ -112,7 +112,7 @@ the pre-lattice spelling; a new rule reads `--lat-rule` or `--lat-seam`.
 
 ### Font Stacks
 
-Two faces. PT Mono = titles + HUD labels + data. PP Neue Montreal = paragraphs + descriptions. PP Mondwest, IBM Plex Sans, and IBM Plex Mono have been retired.
+Two faces. PT Mono = HUD labels + data + the hero headline. PP Neue Montreal = titles (500, sentence case, ADR-092) + paragraphs + descriptions. PP Mondwest, IBM Plex Sans, and IBM Plex Mono have been retired.
 
 | Token          | Stack                                      | CSS Variable              | Tailwind class                              | Usage                                                             |
 | -------------- | ------------------------------------------ | ------------------------- | ------------------------------------------- | ----------------------------------------------------------------- |

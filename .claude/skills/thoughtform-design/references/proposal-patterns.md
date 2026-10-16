@@ -51,13 +51,13 @@ A proposal page typically flows top-to-bottom through numbered sections. Each se
 ### Section body
 
 - **Columns:** use 2-column layout within the 17-column grid for text-heavy sections (e.g. columns 2-8 and 10-16). Single column for focused content.
-- **Typography:** body text in PP Neue Montreal, `--tf-body` size. Subheadings in PT Mono Bold, `--tf-h3` size. Emphasized text in bold gold.
-- **Spacing:** `--tf-rhythm-default` (28px at reference) between paragraphs. `--tf-rhythm-lg` (70px at reference) between sections.
+- **Typography:** body text in PP Neue Montreal, `--tf-body` size. Subheadings in PP Neue Montreal 500, `--tf-h3` size (ADR-092). Emphasized text in upright gold.
+- **Spacing:** 28px at reference between paragraphs, 70px between sections (the `--tf-rhythm-*` tokens were deleted by ADR-149).
 - **Lists:** bullet points use `StarGlitch` markers. List items use PT Mono at body size.
 
 ### Data blocks
 
-- **Key-value pairs:** label in PT Mono Regular `--tf-h3`, value in PT Mono Bold or PP Neue Montreal at display size. Useful for pricing, duration, participants.
+- **Key-value pairs:** label in PT Mono Regular `--tf-h3`, value in PP Neue Montreal at display size (500). Useful for pricing, duration, participants.
 - **Layout:** arrange in 2-3 column sub-grids within the section band.
 
 ### Photo / media
@@ -113,7 +113,7 @@ Content flow across pages:
 | Orientation     | Landscape (16:9)             | Portrait (A4, custom)            |
 | Content density | Sparse, one idea per slide   | Denser, multi-section per page   |
 | Reading mode    | Projected/presented          | Read/printed                     |
-| Rhythm preset   | `--tf-rhythm-relaxed` (45px) | `--tf-rhythm-default` (28px)     |
+| Rhythm preset   | 45px                         | 28px                             |
 | Column usage    | Full-width or 2-column max   | 2-3 column layouts common        |
 | Section flow    | One per slide                | Multiple per page, top-to-bottom |
 | Typography      | Display-size headings        | Mix of heading and body sizes    |

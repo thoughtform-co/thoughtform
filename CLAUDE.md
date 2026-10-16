@@ -109,7 +109,7 @@ Skills live in [`.claude/skills/`](.claude/skills/) and load on demand — don't
 - **landing-performance** — load-order, code-split, and payload doctrine for the landing route (keeps the WebGL corridor and Supabase off First Load JS).
 - **brandmark-choreography** — the scroll-driven brandmark journey (continuous transform model, ADR-013).
 - **brandmark-particle** — the brandmark particle painters (atmosphere / silhouette / substrate-sphere).
-- **thoughtform-design** — Thoughtform-specific design overrides (tokens, shape law, HUD grammar).
+- **thoughtform-design** — the canonical design system: tokens, shape law, HUD, frames, particles, isometric objects.
 - **theme-parity** — both-themes discipline (ADR-058): every new element ships styled AND verified in dark + light; DOM alpha lifts, WebGL palette pairs, per-theme assets, the verify recipe.
 
 ## Conventions

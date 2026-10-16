@@ -26,11 +26,12 @@ All slides use the universal Thoughtform layout grid (see SKILL.md Layer 1):
 - **Content grid:** 9 rows x 17 columns within the margin-inset box.
 - **Scale factor:** `min(w, h) / 1080` (= 1.0 at 1920x1080).
 
-Content rhythm tokens for interior gaps:
+Content rhythm for interior gaps (values at reference scale; the `--tf-rhythm-*` tokens were
+deleted by ADR-149, so write the value or the nearest `--space-*` / `--lat-*`):
 
-- `--tf-rhythm-default` (28px) for standard 1920x1080 decks.
-- `--tf-rhythm-large` (36px) for proportionally scaled decks.
-- `--tf-rhythm-relaxed` (45px) for presentation/keynote with intentionally calm rhythm.
+- 28px for standard 1920x1080 decks.
+- 36px for proportionally scaled decks.
+- 45px for presentation/keynote with intentionally calm rhythm.
 - `--tf-panel-padding` (53px) for content panel insets.
 - Choose the preset per layout variant, not per viewport size.
 
@@ -41,7 +42,7 @@ Content rhythm tokens for interior gaps:
 ### Title Slide
 
 - **Background:** void or void-deep. Optional subtle corner brackets (viewport frame).
-- **Title:** PT Mono Bold uppercase, display or 2xl size, dawn, tight tracking (`-0.01em` / `-0.02em`). One line when possible.
+- **Title:** PP Neue Montreal at `--weight-lit` (500), sentence case, `--track-display` (ADR-092; the Bold faces are retired), display or 2xl size, dawn. One line when possible.
 - **Subtitle / tagline:** PP Neue Montreal, lg or xl, dawn-70. Optional: "Navigate intelligence" or approved tagline.
 - **Brandmark:** Bottom-left or bottom-right with clear space. No wordmark required on every title slide if the deck is clearly branded elsewhere.
 
@@ -52,7 +53,7 @@ Content rhythm tokens for interior gaps:
 
 ### Content Slide (Text)
 
-- **Title:** Section heading, PT Mono Bold uppercase, display or xl/2xl, dawn. Consistent with section slide.
+- **Title:** Section heading, PP Neue Montreal at `--weight-lit` (500), sentence case, `--track-display` (ADR-092; the Bold faces are retired), display or xl/2xl, dawn. Consistent with section slide.
 - **Body:** PP Neue Montreal, base or md, dawn-70/dawn-80. Loose line-height (1.5–1.6) for readability. Bullets: use diamond waypoints (not circles). Max 5–7 bullets; use two columns or follow-up slides if more.
 - **Layout:** Single column or two-column on wide slides. Respect contentMaxWidth or equivalent so line length stays readable.
 
@@ -62,8 +63,8 @@ Four branded variations — see `hud-frame-implementation.md` section 12 for ful
 
 - **Layout:** Text-left (x~157, w~647) / image-right. Variations differ in media treatment (inset with corner unions vs full-bleed right half).
 - **Shell states:** `GridShell` (no client logo, inner grid visible) and `ClientShell` (client logo at TL, cleaner surface).
-- **Text block:** Eyebrow (gold icon + label), heading (PT Mono Bold 50px), body (PT Mono Regular 20px with gold spans), optional bullet list.
-- **Spacing:** 28px gap between text stack items (`--tf-rhythm-default`).
+- **Text block:** Eyebrow (gold icon + label), heading (PP Neue Montreal 500, 50px, sentence case), body (PT Mono Regular 20px with gold spans), optional bullet list.
+- **Spacing:** 28px gap between text stack items.
 - **Chrome:** Same four anchors as all deck slides (chapter TR, brandmark BL, pagination BR, optional logo TL).
 
 ### Data / Chart Slide
@@ -86,7 +87,7 @@ Four branded variations — see `hud-frame-implementation.md` section 12 for ful
 
 ## Typography Summary
 
-- **Titles:** PT Mono Bold uppercase, display / 2xl / xl. Dawn. Tight tracking (`-0.01em` / `-0.02em`) at display sizes.
+- **Titles:** PP Neue Montreal at `--weight-lit` (500), sentence case, `--track-display` (ADR-092; the Bold faces are retired), display / 2xl / xl. Dawn.
 - **Body:** PP Neue Montreal, base / md. Dawn-70 / Dawn-80.
 - **Labels / coordinates:** PT Mono, xs/sm. Dawn-30 / Dawn-40. Uppercase and wide tracking (`0.08em` – `0.12em`) for HUD-style labels.
 - **Numbers / data:** PT Mono. Dawn or dawn-70 depending on hierarchy.

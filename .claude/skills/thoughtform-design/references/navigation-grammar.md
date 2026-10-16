@@ -1,4 +1,4 @@
-# Navigation UI Grammar — 11 Primitives
+# Navigation UI Grammar — 12 Primitives
 
 Each primitive maps a navigational concept to a visual element. Products dial intensity up or down: Synod is restrained (productivity tool), Atlas is full HUD (research station), thoughtform.co is editorial.
 

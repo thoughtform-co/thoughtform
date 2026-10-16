@@ -20,10 +20,12 @@ demands the specificity.
 
 > **Canonical location.** This tree, in the thoughtform.co repo, is THE skill — it sits
 > beside the ADRs, the tokens and the CSS it governs, so it can be corrected in the same
-> commit as the code. Copies at `~/.cursor/skills/` and in the `.thoughtform-brandworld`
-> repo are **pointer stubs**. The `thoughtform` plugin (thoughtform-co/thoughtform-plugins)
-> carries a full one-way mirror of `SKILL.md`, `references/` and `eval/rubric.md`, which is
-> how this skill reaches claude.ai. If any copy disagrees with this file, this file is right.
+> commit as the code. The repo's `.agents/skills/thoughtform-design/` and the
+> `.thoughtform-brandworld` repo hold **pointer stubs**. The `thoughtform` plugin
+> (thoughtform-co/thoughtform-plugins) carries a full one-way mirror of `SKILL.md`,
+> `references/` and `eval/rubric.md`, which is how this skill reaches claude.ai; re-run its
+> `scripts/sync-mirrors.ps1` after changing this tree. If any copy disagrees with this file,
+> this file is right.
 
 ---
 
@@ -79,6 +81,11 @@ drop shadows, no glows for depth — depth is surface progression, not blur.
 **Dawn/Ink** (~90%) = environment and structure. **Gold** (~7%) = wayfinding and active
 navigation. **Atreides green** (~3%) = provenance, "you made this". **Gold and green never
 swap jobs.** `references/color-system.md`.
+
+In a drawing the same rule reads: **gold is the one lit thing** (the layer, the data, what the
+reader should watch, which is what wayfinding means on a diagram); **green is a person and
+nothing else**; dawn is everything that only runs; a passed check is ink, never green.
+`references/brand-language-2026-10.md` §1.
 
 ⚠ **Never hardcode a value — call `design_tokens`.** The live source is
 `app/styles/variables.css`; `DESIGN.md`'s frontmatter is the brand documentation, and the
@@ -221,9 +228,36 @@ Layers · Signal Strength · Bearing Labels · Particle Glyphs · Nav Spine. Eac
 per-product intensity dial. This is also the vocabulary the reference corpus maps every
 pattern onto, so it is the shared language between this skill and the MCP.
 
-`references/celestial-diagram-grammar.md` — the parametric diagram system.
+### The expanded language (October 2026)
 
-`references/isometric-wireframe-grammar.md` — the THIRD drawing register, for a
+Past the rails and colours the house now speaks in **frames** (straight corners, one notch,
+hairlines; rings are instruments, connectors are straight), **particles** (the brandmark's dots
+as the material; one object travels between sections, like nanobots), **machined objects**
+(solids in the stage's camera, the anatomy method) and **proof cards**. One file holds it as a
+system, with the owner's words and the code that is the source:
+`references/brand-language-2026-10.md`. Its worked example, round by round:
+`docs/design/machine-brain/README.md`.
+
+### The drawing registers
+
+| Register | For | Reference |
+|---|---|---|
+| Celestial | diagrams and connectors, parametric | `references/celestial-diagram-grammar.md` |
+| Ring (ADR-106) | a dial: concentric rings, a graduated rim, stations | ADR-106; `components/arcs/steps/` |
+| Isometric | a record with height, layers or depth | `references/isometric-wireframe-grammar.md` |
+| Hologram | the live, turnable half of the isometric | `references/hologram-stage-grammar.md` |
+| Instrument | one record at five altitudes, housing → panel → chip | `references/instrument-grammar.md` |
+| Particles | the brandmark's dots; fields, swarms, counts drawn | `references/brand-language-2026-10.md` §3, `references/particle-icon-grammar.md` |
+| Machined objects | a thing that must read as real | `references/brand-language-2026-10.md` §4 |
+
+⚠ **The projection canon.** Three isometric bases are live. **New stage work takes the true
+isometric** (30° axes: `components/arcs/figures/foundation/scene.ts`,
+`components/xb-proposal/iso.ts`, the swarm; the anatomy kit at azimuth 45° / elevation
+35.264° is the same camera). `ISO_BASIS_STAGE` (22°) stays on the ADR-130 framing beats and
+the ADR-155 stack that use it; the cabinet oblique is the compact fallback. **One basis per
+stage**: everything that stands together shares one camera.
+
+`references/isometric-wireframe-grammar.md` — the isometric register, for a
 record with height, layers or depth: wireframe machines on a ruled grid plane,
 1980s vector-display grammar. ⚠ It carries the house's **one sanctioned
 diagonal** — an axonometric axis encodes depth, which is the single case where a
@@ -316,7 +350,11 @@ API: `references/primitives-api.md`. Figma nodes: `references/figma-codex-map.md
 
 | Intent                       | Steps                                                                                          |
 | ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Any new surface**          | `design_refs` for precedent → this skill for the law → compose → eval (below)                  |
+| **Any new surface**          | Brief + references → a lab with directions (CLAUDE.md, "new design starts from the brief") → the owner picks → this skill encodes the pick → eval (below) |
+| **An object that must read as real** | `references/brand-language-2026-10.md` §4 + the anatomy skill: solids in the stage's camera   |
+| **Particles across sections** | `references/brand-language-2026-10.md` §3; the swarm engine is the precedent                    |
+| **Proposal (web)**           | `references/proposal-grammar.md` — five registers, one object (ADR-155)                        |
+| **Instrument / configuration** | `references/instrument-grammar.md` — one record, five altitudes (ADR-154)                    |
 | **Card / panel / plate**     | `references/ui-composition.md` for the archetype, then the corner law                          |
 | **New component**            | Map to grammar primitives; BEM + tokens; zero radius; motion from `motion-system.md`           |
 | **Screenshot / Figma**       | Decompose, map to tokens + grammar, check contrast, propose                                    |
@@ -399,6 +437,7 @@ factor from `min(w,h)/1080` · both themes verified.
 
 | Concern                            | File                                        | Tier   |
 | ---------------------------------- | ------------------------------------------- | ------ |
+| **The expanded language (Oct 2026)** | `references/brand-language-2026-10.md`    | MEDIUM |
 | **Card / panel composition**       | `references/ui-composition.md`              | MEDIUM |
 | **Semantic anchors**               | `references/semantic-anchors.md`            | LOW    |
 | **Semantic method (translation)**  | `references/semantic-methodology.md`        | MEDIUM |
@@ -431,6 +470,8 @@ factor from `min(w,h)/1080` · both themes verified.
 | Celestial diagram grammar          | `references/celestial-diagram-grammar.md`   | MEDIUM |
 | Isometric wireframe grammar        | `references/isometric-wireframe-grammar.md` | MEDIUM |
 | Hologram stage (the live register) | `references/hologram-stage-grammar.md`      | MEDIUM |
+| Instrument (ADR-154)               | `references/instrument-grammar.md`          | MEDIUM |
+| Proposal system (ADR-155)          | `references/proposal-grammar.md`            | MEDIUM |
 | Depth corridor (home-v2)           | `references/depth-corridor-grammar.md`      | LOW    |
 | Promoted inspiration extractions   | `references/inspiration-extractions.md`     | HIGH   |
 | Philosophy                         | `references/brand-philosophy.md`            | HIGH   |

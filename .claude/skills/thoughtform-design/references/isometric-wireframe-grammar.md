@@ -6,6 +6,15 @@
 > without GL gets, including the printed handout. The two must read as ONE
 > picture: [hologram-stage-grammar.md](hologram-stage-grammar.md).
 
+> **The projection canon (2026-10-16).** Three bases are live. **New stage work takes the
+> TRUE isometric** — 30° axes, `components/arcs/figures/foundation/scene.ts` and
+> `components/xb-proposal/iso.ts`, the swarm's lattice; the anatomy kit at azimuth 45° /
+> elevation 35.264° is the same camera (the machine brain, `brainIso.ts`).
+> `ISO_BASIS_STAGE` (22°, below) stays on the ADR-130 framing beats and the ADR-155 stack
+> that already use it; the cabinet oblique is the compact fallback. Whatever stands together
+> shares one camera. And where this file says "line work only", a thing that must read as a
+> REAL object is built from shaded solids instead: `brand-language-2026-10.md` §4.
+
 The house's third drawing register, beside the celestial connector and the ring
 dial. Reach for it when a record has **height, layers or depth** — something
 stands on something, something is made of stacked parts, something runs longer

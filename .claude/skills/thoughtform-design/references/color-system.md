@@ -11,6 +11,7 @@ Synod uses three color tiers; each answers a different question. They never over
 - **Dawn / Ink** = the environment. This is the dominant color. All text, all structure, all borders, all surfaces. If something doesn't have a specific semantic reason to be colored, it's Dawn (light mode) or Ink (dark mode) at some opacity. Roughly 90% of visible pixels are this tier. The interface feels monochromatic by design.
 - **Gold** = wayfinding. It answers: _where am I, what am I looking at right now?_ Active sidebar item, selected message, links, navigation-oriented action buttons (Done, Snooze). Gold is present-tense and spatial. Think of it as the compass needle.
 - **Green (Atreides)** = provenance. It answers: _did I make this?_ The left-border on sent messages, the "· you" label, draft indicators, the reply compose zone, the Send button. Green is past-tense and identity-based. It marks where you've been or where you're about to leave your mark.
+- **In a drawing (2026-10)** the same two roles read: gold is the one lit thing (the layer, the data, what to look at, which is wayfinding on a diagram); green is a person and nothing else (a seat, an owner, the people's side of a split; provenance is a person's mark). Dawn is everything that only runs; a passed check is ink, never green. `brand-language-2026-10.md` §1.
 
 **Decision rule for any new element:** Ask "is this about where or about who?" Where → Gold. Who → Green. Neither → Dawn/Ink.
 

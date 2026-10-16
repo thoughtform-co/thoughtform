@@ -189,3 +189,42 @@ proven it load-bearing for Thoughtform work. Add sparingly, and by that test alo
 
 - Purple Zentry palette, ecommerce literalism, rounded capsules, and crypto/agency spectacle.
 - Turning Navigate / Encode / Build into three equal PowerPoint cards.
+
+---
+
+## The October web set (2026-10-11 → 16)
+
+Seventeen sites the owner pointed at while the X-Bionic proposal, the swarm and the machine
+brain were made. Decoded from their markup (2026-10-16), against his own verdicts in
+`docs/design/xbionic-proposal/feedback-2026-10-11/02-website-inspiration.md` (where a voice
+transcript logs some under misheard domains: cctp.tech = sstr.tech, vitejs.dev = voidzero.dev,
+dispatch.co = dispatch.framer.website). How they landed in the house language:
+`brand-language-2026-10.md`.
+
+| Site | What it teaches Thoughtform | Verdict |
+|---|---|---|
+| unsiloed.ai | Isometric planes drawn live in the page (not images); grey hairlines carry all structure; near-square corners; bracketed mono indices `[01]`; the copy column sticks while the flow scrolls past. Owner: "more like a North Star"; "a sticky here and then they basically show their flow." | adopt (North Star) |
+| griffin.com | A sticky isometric stack of four layers ordered by ownership (your app → your tech → our platform → our licence) with step navigation: ownership drawn as order. | adopt |
+| arrakis.tech/platform | Sticky left index, mono `01 / 02 / 03` labels; the source of the stack that travels across three sections. | adopt |
+| rollups.com/ruv | Mono step markers as a dated ledger (`TODAY / DAY 03 / DAY 30+`). Owner: keep the side borders, not the full-width divider, which "would kind of mess up with … our left and right rail." | adapt (ledger; no cross-rule) |
+| enerblock.net | A pinned diagram that changes while copy scrolls; captions set as drawing title blocks ("Drawing No.: 158.01.00 Scale: 1/100"), fit for our isometric plates. | adapt |
+| getcluster.ai | A three-phase horizontal flow with step chips; the rest (16px radii, handwriting, paper) is not ours. Owner: "I definitely like this flow." | adapt (the flow only) |
+| dispatch.framer.website | The palette nearest ours (charcoal, cream ink, one orange accent), dashed connectors, "four layers that connect, decide, and execute": one accent working as a role. | adapt |
+| cofounder.co | Sub-numbered mono chapters (`1.0`, `1.1–1.4`) and `x/y` progress readouts. Owner: "too small, a bit too much text… I like the way they use their fonts." | adapt (index and readouts) |
+| sstr.tech | Mono status preloader, before/after figures as proof; four corner notches. Owner: "having breathing room, this is nice" but four notches read as "a sort of post stamp". | adapt (one notch) |
+| voidzero.dev | Sticky left sidebar beside centred content; a dated timeline. Owner: "everything is like centered." | adapt |
+| lighthousehq.com | Rolling odometer counters for stats; fits our readouts. | adapt (the counter) |
+| augustus.com | One ink colour for every diagram (blue there; gold here). Owner: "I love how they use like their blue diagrams." | adapt (one ink for diagrams) |
+| atomictessellator.com | (did not load for the decode) Owner: the isometric visuals and particles are worth borrowing; "not a big fan of… these forward slashes and the zero." | adapt |
+| spade.com | A full-height pinned stage; four clipped corners per frame and a video ground. Owner: "videos are less pure than just using SVG." | not for us (keep the pinned stage idea) |
+| euclidpower.com | Sticky platform stage, but four pastel accents and screenshot video. | not for us |
+| primeintellect.ai | One green accent on near-black, dense uppercase. Owner: "more like dense… not necessarily what I want." | not for us |
+| nogood.studio | An illustrator's portfolio: pixel fonts, asymmetric sticky columns. | not for us |
+
+**What recurs across the set** (and is now house law where it fits):
+
+- **One pinned diagram, read in steps** while the copy scrolls (Unsiloed, Griffin, Enerblock, Arrakis): draw it once, step through it.
+- **An isometric layered stack as the main picture**, ordered by who owns which layer (Griffin).
+- **Mono indices and readouts as chrome**: `[01]`, `1.0`, `0/3`, `DAY 30`, title-block captions. Avoid slashes and stray zeros (the owner's dislike).
+- **Hairline structure, square corners**: never a full-width cross-rule, never four notches.
+- **One accent per page**, carrying the data; diagrams **drawn in code, not video**.
