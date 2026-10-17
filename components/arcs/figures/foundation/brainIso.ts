@@ -31,7 +31,7 @@
  * keep their order round it.
  */
 
-import { cylinder, dotsSvg, extrude, iso, lineSvg, onTop, pathOf, type Flat, type Plane, type Point3, type Projection, solidSvg, depthOf, ISO_CSS } from "./isoKit";
+import { cylinder, dotsSvg, extrude, iso, lineSvg, onTop, pathOf, ringSeam, towardViewer, type Flat, type Plane, type Point3, type Projection, solidSvg, depthOf, ISO_CSS } from "./isoKit";
 
 const UNIT = Math.sqrt(1.6);
 /** Screen px per world unit at scale 1. */
@@ -67,23 +67,37 @@ const LC = HEMI.gap / 2 + HEMI.medial * HEMI.a;
 
 const sgnPow = (v: number, p: number) => Math.sign(v) * Math.abs(v) ** p;
 
-/** One hemisphere's contour at scale `s`, as brain-axis points. The lobes
-    are a slow ripple on the radius whose phase drifts with height, so the
-    terraces fold the way gyri do; the medial wall stays flat. */
-function contour(side: -1 | 1, s: number, steps = 96, z = 0): [number, number][] {
-  const out: [number, number][] = [];
+/** Where the medial wall stands when it is a die's face (ADR-159 U7,
+    `chip.die`): a plane just clear of the fissure. */
+const DIE_L = HEMI.gap / 2 + 1;
+
+/** One point of a hemisphere's contour at scale `s` and angle `t`, as
+    brain-axis [l, f]. The lobes are a slow ripple on the radius whose phase
+    drifts with height, so the terraces fold the way gyri do; the medial wall
+    stays flat. `flat` (U7) makes it a plane, its front and back ends kept
+    round. */
+function contourPoint(side: -1 | 1, s: number, t: number, z = 0, flat = false): [number, number] {
   const ph = z * 0.045;
-  for (let i = 0; i < steps; i++) {
-    const t = (i / steps) * Math.PI * 2;
-    let u = HEMI.a * sgnPow(Math.cos(t), 2 / HEMI.n);
-    let v = HEMI.b * sgnPow(Math.sin(t), 2 / HEMI.n);
-    const lateral = Math.max(0, Math.cos(t));
-    const lobe = 1 + lateral * (0.045 * Math.sin(5 * t + ph) + 0.03 * Math.sin(9 * t - ph * 1.7)) + 0.025 * Math.sin(3 * t + 0.6);
-    if (u < 0) u *= HEMI.medial;
-    u *= (1 - 0.12 * (v / HEMI.b)) * lobe;
-    v *= lobe;
-    out.push([side * (LC + u * s), v * s]);
+  let u = HEMI.a * sgnPow(Math.cos(t), 2 / HEMI.n);
+  const sv = sgnPow(Math.sin(t), 2 / HEMI.n);
+  let v = HEMI.b * sv;
+  const lateral = Math.max(0, Math.cos(t));
+  const lobe = 1 + lateral * (0.045 * Math.sin(5 * t + ph) + 0.03 * Math.sin(9 * t - ph * 1.7)) + 0.025 * Math.sin(3 * t + 0.6);
+  const medial = u < 0;
+  if (u < 0) u *= HEMI.medial;
+  u *= (1 - 0.12 * (v / HEMI.b)) * lobe;
+  v *= lobe;
+  if (flat && medial) {
+    const round = Math.min(1, Math.max(0, (Math.abs(sv) - 0.82) / 0.18));
+    return [side * (DIE_L + (LC + u * s - DIE_L) * round), v * s];
   }
+  return [side * (LC + u * s), v * s];
+}
+
+/** One hemisphere's contour at scale `s`, as brain-axis points. */
+function contour(side: -1 | 1, s: number, steps = 96, z = 0, flat = false): [number, number][] {
+  const out: [number, number][] = [];
+  for (let i = 0; i < steps; i++) out.push(contourPoint(side, s, (i / steps) * Math.PI * 2, z, flat));
   return side > 0 ? out : out.reverse();
 }
 
@@ -143,6 +157,14 @@ export function brainIsoPoint(l: number, f: number, z: number, view: BrainView =
   return iso(W(l, f, z), projOf(view));
 }
 
+/** How far a hemisphere's medial wall stands from the fissure's middle at
+    height z, in brain units, at its deepest point (F = 0): where the layer's
+    tendrils plug in (ADR-159 U7). `flat` is the die-wall brain's. */
+export function brainMedialL(z: number, flat = false): number {
+  const s = z >= 0 ? upScale(z) : downScale(z);
+  return Math.abs(contourPoint(1, s, Math.PI, z, flat)[0]);
+}
+
 /** Points on the flanks, high, level and low, in screen px at scale 1. */
 export function brainIsoFlank(side: -1 | 1, j: number, view: BrainView = BRAIN_VIEW_ISO): Flat {
   const p = projOf(view);
@@ -184,10 +206,28 @@ function rng(seed: number) {
   return () => ((s = (s * 16807) % 2147483647) / 2147483647) * 2 - 1;
 }
 
-/** The deck's machine on one crown: its parts in depth order. */
-function deck(side: -1 | 1, items: Item[], p: Projection = P) {
+/** The deck's machine on one crown: its parts in depth order. `wafer` (U7)
+    rings the board with bond pads on the deck, each wired up to the board's
+    edge in gold. */
+function deck(side: -1 | 1, items: Item[], p: Projection = P, wafer = false) {
   const zb = Z.deck;
   const sd = upScale(zb);
+  if (wafer) {
+    const n = 72;
+    const pads = contour(side, sd * 0.93, n, zb);
+    const leads = contour(side, sd * 0.8, n, zb).map(([l, f]): [number, number] => [l * 0.97 + side * 2, f]);
+    const middle = depthOf(W(side * LC, 0, zb), p);
+    for (let k = 0; k < n; k += 4) {
+      const [pl, pf] = pads[k];
+      const [ll, lf] = leads[k];
+      const pad = iso(W(pl, pf, zb), p);
+      const arc = iso(W((pl + ll) / 2, (pf + lf) / 2, zb + 8), p);
+      const lead = iso(W(ll, lf, zb + 5.4), p);
+      // a far pad sits behind the board's raised edge, a near one in front of it
+      const near = depthOf(W(pl, pf, zb), p) > middle;
+      items.push({ depth: -1e3 + zb + (near ? 0.2 : -0.2), svg: lineSvg(pathOf([lead, arc, pad]), { tone: "lo", className: "fa-gold-line" }) + dotsSvg([pad], { size: 0.8, tone: "mid" }) });
+    }
+  }
   // The board on four stand-offs, inset from the crown's edge.
   const board = contour(side, sd * 0.8, 72, zb).map(([l, f]) => WP(l * 0.97 + side * 2, f));
   for (const [l, f] of [[0.55, -0.45], [0.55, 0.45], [0.95, -0.2], [0.95, 0.2]] as const) {
@@ -250,6 +290,34 @@ function deck(side: -1 | 1, items: Item[], p: Projection = P) {
   ].map(([l, f]) => iso(W(l, f, top), p));
   items.push({ depth: 1e3, svg: dotsSvg(screws, { size: 0.55, tone: "mid" }) });
 }
+
+/** The medial wall as a die's face (U7, `chip.die`), in the plane the flat
+    wall stands in, a hair proud of it: a double seal ring cut at one corner
+    (the house's single notch, its cut in gold), the die's cells and a row of
+    pads round the inside. Drawn only where that wall faces the reader. */
+function dieFace(side: -1 | 1, p: Projection): string {
+  const at = (f: number, z: number) => iso(W(side * (DIE_L - 0.3), f, z), p);
+  const F = 84;
+  const Z0 = -38;
+  const Z1 = 92;
+  const cut = 12;
+  const ring = (inset: number) => [at(-F + inset, Z1 - inset), at(F - cut - inset * 0.4, Z1 - inset), at(F - inset, Z1 - cut - inset * 0.4), at(F - inset, Z0 + inset), at(-F + inset, Z0 + inset)];
+  const out: string[] = [lineSvg(pathOf(ring(0), true), { tone: "mid" }), lineSvg(pathOf(ring(5), true), { tone: "lo" })];
+  out.push(lineSvg(pathOf([at(F - cut, Z1), at(F, Z1 - cut)]), { tone: "lo", className: "fa-gold-line" }));
+  const cells: string[] = [];
+  for (const f of [-42, 0, 42]) cells.push(pathOf([at(f, Z0 + 12), at(f, Z1 - 12)]));
+  for (const z of [10, 51]) cells.push(pathOf([at(-F + 12, z), at(F - 12, z)]));
+  out.push(lineSvg(cells.join(""), { tone: "faint" }));
+  const pads: Flat[] = [];
+  for (let f = -F + 14; f <= F - 14; f += 9) pads.push(at(f, Z0 + 8), at(f, Z1 - 8));
+  for (let z = Z0 + 17; z <= Z1 - 17; z += 9) pads.push(at(-F + 8, z), at(F - 8, z));
+  out.push(dotsSvg(pads, { size: 0.55, tone: "mid" }));
+  return `<g class="fa-die">${out.join("")}</g>`;
+}
+
+/** The angles, on each hemisphere's outer side, the gold weave runs down
+    the terraces at (U7, `chip.weave`). */
+const WEAVE = [-1.05, -0.62, -0.2, 0.22, 0.64, 1.06] as const;
 
 /** The loose half (the middle beat): the same hemisphere as particles. */
 function looseHalf(side: -1 | 1, p: Projection = P): string {
@@ -433,6 +501,20 @@ export interface BrainIsoOptions {
       emitted while its level is at or under `reveal`, in paint order, so a
       sequence of these is the brain manifesting plate by plate. */
   reveal?: number;
+  /** The brain machined all over (ADR-159 U7, owner: "aren't there other
+      ways we can make the rest of the things feel like chips are designed,
+      like wafers ... play with our golds a bit, weave them throughout"):
+      `wafer` a scribe line round every plate's band, die pads on the upper
+      rims and bond pads wired in gold round each crown's board; `weave` gold
+      traces stepping down the terraces with a via at each step; `die` the
+      medial wall a plane with a die's face on it. Absent, none of it. */
+  chip?: BrainChip;
+}
+
+export interface BrainChip {
+  wafer?: boolean;
+  weave?: boolean;
+  die?: boolean;
 }
 
 /** One drawn part, with where it stands on the build. */
@@ -443,8 +525,9 @@ interface Part {
 
 /** The brain at scale 1, as SVG markup (no `<svg>` wrapper). With the
     defaults the output is byte-identical to the picture before ADR-159 U1. */
-export function brainIsoMarkup({ split = false, mask = false, base = "manifold", reveal = 1, view = BRAIN_VIEW_ISO, only }: BrainIsoOptions = {}): string {
+export function brainIsoMarkup({ split = false, mask = false, base = "manifold", reveal = 1, view = BRAIN_VIEW_ISO, only, chip = {} }: BrainIsoOptions = {}): string {
   const p = projOf(view);
+  const flat = !!chip.die;
   const out: Part[] = [];
   const push = (level: number, ...svgs: string[]) => {
     for (const svg of svgs) out.push({ level, svg });
@@ -503,18 +586,51 @@ export function brainIsoMarkup({ split = false, mask = false, base = "manifold",
     for (let i = 0; i < lower; i++) {
       const z0 = -HEMI.down + (HEMI.down * i) / lower;
       const s = downScale(z0 + HEMI.down / lower / 2);
-      const ring = contour(side, s, 96, z0).map(([l, f]) => WP(l, f));
+      const ring = contour(side, s, 96, z0, flat).map(([l, f]) => WP(l, f));
       h.push({ level: (0.3 * i) / lower, svg: solidSvg(extrude(ring, z0, HEMI.down / lower, p, { convex: false }), { tone: "mid", crease: "faint" }) });
+      if (chip.wafer) h.push({ level: (0.3 * i) / lower, svg: lineSvg(ringSeam(ring, z0 + HEMI.down / lower / 2, p), { tone: "faint" }) });
     }
     const upper = 14;
+    const band = Z.deck / upper;
     for (let i = 0; i < upper; i++) {
       const z0 = (Z.deck * i) / upper;
       const s = upScale(z0 + Z.deck / upper);
-      const ring = contour(side, s, 96, z0).map(([l, f]) => WP(l, f));
-      h.push({ level: 0.3 + (0.55 * i) / upper, svg: solidSvg(extrude(ring, z0, Z.deck / upper, p, { convex: false, bevel: i === upper - 1 ? 1.2 : 0.6 }), { tone: i === upper - 1 ? "hi" : "mid", crease: "lo" }) });
+      const ring = contour(side, s, 96, z0, flat).map(([l, f]) => WP(l, f));
+      const level = 0.3 + (0.55 * i) / upper;
+      h.push({ level, svg: solidSvg(extrude(ring, z0, Z.deck / upper, p, { convex: false, bevel: i === upper - 1 ? 1.2 : 0.6 }), { tone: i === upper - 1 ? "hi" : "mid", crease: "lo" }) });
+      // U7: what is cut into this plate, pushed with it so the plate above
+      // still covers what lies behind it.
+      const next = upScale(z0 + 2 * band);
+      if (chip.wafer) {
+        h.push({ level, svg: lineSvg(ringSeam(ring, z0 + band / 2, p), { tone: "faint" }) });
+        if (i >= upper - 7 && i < upper - 1) {
+          const pads = contour(side, (s + next) / 2, 96, z0 + band, flat)
+            .filter((_, k) => k % 3 === 0)
+            .map(([l, f]) => iso(W(l, f, z0 + band), p));
+          h.push({ level, svg: dotsSvg(pads, { size: 0.42, tone: "lo" }) });
+        }
+      }
+      if (chip.weave && i < upper - 1) {
+        const runs: string[] = [];
+        const vias: Flat[] = [];
+        for (const t of WEAVE) {
+          const [ol, oF] = contourPoint(side, s, t, z0, flat);
+          if (depthOf(W(ol, oF, z0), p) <= depthOf(W(side * LC, 0, z0), p)) continue;
+          const [il, inf] = contourPoint(side, next, t, z0 + band, flat);
+          const edge = iso(W(ol, oF, z0 + band), p);
+          runs.push(pathOf([iso(W(il, inf, z0 + band), p), edge, iso(W(ol, oF, z0), p)]));
+          vias.push(edge);
+        }
+        h.push({ level, svg: lineSvg(runs.join(""), { tone: "lo", className: "fa-gold-line" }) + `<g class="fa-gold-via">${dotsSvg(vias, { size: 0.6, tone: "hi" })}</g>` });
+      }
+    }
+    if (chip.die) {
+      const [vx, vy] = towardViewer(p);
+      const [nx, ny] = W(-side, 0, 0);
+      if (nx * vx + ny * vy > 0) h.push({ level: 0.86, svg: dieFace(side, p) });
     }
     const items: Item[] = [];
-    deck(side, items, p);
+    deck(side, items, p, !!chip.wafer);
     h.push(...items.sort((a, b) => a.depth - b.depth).map((i) => ({ level: 0.9, svg: i.svg })));
     return h;
   };
@@ -531,7 +647,7 @@ export function brainIsoMarkup({ split = false, mask = false, base = "manifold",
 
 /** The tokens the picture is painted with, per theme: the kit's own sheet
     with the site's void, ink and gold, so the rasterised image is whole. */
-export function brainIsoStyle(t: { light: boolean; ink: string; gold: string; lit: string; green: string }): string {
+export function brainIsoStyle(t: { light: boolean; ink: string; gold: string; lit: string; green: string; chip?: BrainChip }): string {
   const tokens = t.light
     ? `--anatomy-paper:#efe9dc;--anatomy-face:#f6f1e6;--anatomy-top:#f8f4ea;--anatomy-shade-0:#cfc7b6;--anatomy-shade-1:#d9d2c2;--anatomy-shade-2:#e2dccd;--anatomy-shade-3:#ebe6d9;--anatomy-lit-top:#f3e2b8;--anatomy-lit-shade:#e6d3a3;--anatomy-hi:#2a2214;--anatomy-mid:#6e6658;--anatomy-lo:#a39b8a;--anatomy-faint:#cbc3b2;--anatomy-lit:${t.gold};--anatomy-dot:#2a2214;--anatomy-halo:#8a8070;--anatomy-halo-opacity:.3;`
     : `--anatomy-paper:#0d0c0a;--anatomy-face:#1d1a15;--anatomy-top:#2b261d;--anatomy-shade-0:#0e0d0a;--anatomy-shade-1:#17140f;--anatomy-shade-2:#221e17;--anatomy-shade-3:#302a20;--anatomy-lit-top:#4a3c1c;--anatomy-lit-shade:#382d15;--anatomy-hi:${t.ink};--anatomy-mid:#8a8274;--anatomy-lo:#575146;--anatomy-faint:#34302a;--anatomy-lit:${t.lit};--anatomy-dot:${t.ink};--anatomy-halo:#000;--anatomy-halo-opacity:.8;`;
@@ -542,7 +658,10 @@ export function brainIsoStyle(t: { light: boolean; ink: string; gold: string; li
   // tone, its face the plates' face tone, its edge the mid line; the dim
   // LEDs in the faint tone, the lit ones in gold.
   const display = `.fa-display .fa-mask-side{fill:${t.light ? "#d9d2c2" : "#17140f"};stroke:${t.light ? "#6e6658" : "#8a8274"};stroke-width:.5;stroke-opacity:.9}.fa-display .fa-mask-face{fill:${t.light ? "#f6f1e6" : "#1d1a15"}}.fa-display .fa-mask-edge{fill:none;stroke:${t.light ? "#6e6658" : "#8a8274"};stroke-width:.8}.fa-led .iso-dots circle{opacity:.55}.fa-led-glow .iso-dots circle{fill:${t.lit}}.fa-led-lit .iso-dots circle{fill:${t.lit};opacity:1}`;
-  return `${ISO_CSS}.iso{${tokens}}${gold}.fa-gold>.iso-edge{stroke:${t.gold}}.fa-gold-line{stroke:${t.gold}!important;opacity:.85}.fa-core>.iso-top{fill:${t.light ? "#d9b65c" : "#6a5424"}}.fa-loose .iso-dots circle{fill:${t.green};opacity:1}.fa-mask-side{fill:${t.light ? "#d6c79f" : "#2a2312"};stroke:${t.gold};stroke-width:.6;stroke-opacity:.6}.fa-mask-face{fill:${t.light ? "#f3ead2" : "#1c180f"}}.fa-mask-edge{fill:none;stroke:${t.gold};stroke-width:1.4}.fa-mask-slot{fill:${t.light ? "#2a2214" : "#050504"};stroke:${t.lit};stroke-width:.8}${display}`;
+  // U7: the weave's vias in gold; emitted only for a brain that has them, so
+  // every earlier picture's sheet is the same string.
+  const chip = t.chip?.weave ? `.fa-gold-via .iso-dots circle{fill:${t.gold};opacity:.9}` : "";
+  return `${ISO_CSS}.iso{${tokens}}${gold}.fa-gold>.iso-edge{stroke:${t.gold}}.fa-gold-line{stroke:${t.gold}!important;opacity:.85}.fa-core>.iso-top{fill:${t.light ? "#d9b65c" : "#6a5424"}}.fa-loose .iso-dots circle{fill:${t.green};opacity:1}.fa-mask-side{fill:${t.light ? "#d6c79f" : "#2a2312"};stroke:${t.gold};stroke-width:.6;stroke-opacity:.6}.fa-mask-face{fill:${t.light ? "#f3ead2" : "#1c180f"}}.fa-mask-edge{fill:none;stroke:${t.gold};stroke-width:1.4}.fa-mask-slot{fill:${t.light ? "#2a2214" : "#050504"};stroke:${t.lit};stroke-width:.8}${display}${chip}`;
 }
 
 /** A whole standalone SVG document of the brain, for rasterising. */

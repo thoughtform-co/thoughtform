@@ -1,7 +1,7 @@
 # ADR-159: The keynote template is the UX meetup talk, copied and retold
 
 - **Status:** Proposed (2026-10-16, owner), built and guarded on branch
-  `arc/keynote-template-alpha`; on main through U6 (pushed 2026-10-17 on his word). Flips
+  `arc/keynote-template-alpha`; on main through U8 (pushed 2026-10-17 on his word). Flips
   to Accepted once the owner has read the page live and ruled on the lines marked (proposal).
 - **Surface:** `/arcs/thoughtform/keynote-template-alpha` (an OWN ROUTE,
   `app/(marketing)/arcs/thoughtform/keynote-template-alpha/**`,
@@ -415,13 +415,103 @@ console error. The quote and statement lines did not type in under the automated
 page and on the frozen Ghent page alike (their text is in the DOM); a manual scroll is the
 check.
 
+## U7 · One paragraph, the H1 centred, two beats held back (2026-10-17, owner)
+
+His read of U6 (pushed as `cb95313c`): "all these sections need to flow like one coherent
+paragraph so they build on top of each other"; the stack's title "also needs to be centered";
+"hide the section about how the network is strange and also hide the section 'Legible, Still
+Their Own' because I want to build new sections". The same note asked for the cards redrawn,
+the mathematics as a black hole, the brain machined and tendrils in the layer beat: those are
+design rounds of their own (cards and mathematics in Claude Design, his pick; the brain and the
+tendrils on the dev server), recorded when they land.
+
+- **01 to 05 as one paragraph, his wording** (picked from three: "Shortest"): 01 "AI will absorb
+  all digital content and products within 2 years." ("content", as he wrote it; the Ghent room
+  heard "contents") · 02 "And the interface to it all." · 03 "Not software. An intelligence: the
+  tool and its maker." · 04 "Next, all knowledge work." · 05 "But it still needs context, nuance
+  and taste." The 02 and 03 heads are his now, no longer proposals; the cards under 03 and the
+  rings under 04 are the talk's.
+- **The stack's H1 centred**, like every head with no paragraph beside it (22ch, two lines).
+- **Goodfire's line and "Their own" held back** the shoggoth's way: `KEYNOTE_ALREADY_CLEAN` and
+  `KEYNOTE_THEIR_OWN`, off `sections`, the act's phases 7 and 8 kept, so each comes back with one
+  line. The beats renumber 01–11; the layer is followed by the third act's colleague, a line
+  after a picture, so ADR-155's alternation holds. The script keeps both under "Held back".
+
+- **The cards and the mathematics went to Claude Design** (his pick of where to design them): a
+  Design canvas, "Keynote cards" (`https://claude.ai/artifact/6Ngc9t3fTxv1czns8kGNxS`, private),
+  three card directions each drawn on an image, a film and the mathematics card (A · Band, the
+  ADR-153 job band in Tensor Gold; B · Readout, a double hairline and a key/value foot; C · Rail,
+  a mono rail with the stack's tick ladder and the play docked to it), every part in one seat
+  on every card, and the mathematics as a live black hole made of mathematics (M1; M2 held in a
+  machined collar): glyphs and the card's own equations on a tilted accretion disk, the far half
+  lensed over the horizon, a gold photon ring the one lit thing. Nothing of it is in the act
+  until he picks; then it ports as U8 (`mathHole.ts` for the hole).
+- **The brain machined all over**, as `brainIso`'s `chip` options, each off by default (the Ghent
+  brain byte-identical; `brainIsoStyle` adds the via rule only for a brain that has vias):
+  `wafer` (a scribe line round every plate's band, die pads on the upper rims, bond pads round
+  each crown's board wired up to it in gold), `weave` (gold traces stepping down the terraces
+  from the crown, a via at each step), `die` (the medial wall a plane, `contourPoint`'s `flat`,
+  its front and back kept round, with a die's face on the wall that faces the reader: a double
+  seal ring notched once in gold, cells, pads). The contour became `contourPoint` + `contour`,
+  same arithmetic. Read at `/test/keynote-brain?v=b1|b2|b3|base` (whole and parted); the act's
+  `BRAIN_CHIP` is `{}` until he picks.
+- **The layer plugged in** (L1, `layerTendrils.ts`): six files of the slab's own lattice dots to
+  each half, leaving a face along `j` (the brain's L axis), stepping once up or down the face,
+  running to the hemisphere's medial wall (`brainMedialL(z, flat)`, new) inside the walls' band
+  (`WALL_Z`), a plug where each meets it and two gold walkers a file running slab to brain;
+  painted far files, slab, near files, near half, so the slab covers the far roots and the near
+  half the near tips; they grow once the slab has printed (`apart` 0.82 to 1) and reel back
+  first when the halves close.
+
+Verified: `tsc` and `eslint` clean; the keynote test (10), `ux-meetup` (11), `arcs-registry` (60),
+`arc-terminal-markup` (9) and `proposal-swarm` (51) green. Read headed in the owner's Chrome at
+2131×1270: the H1 centred on two lines clear of the facing card; eleven beats; the brain lab's
+B2 weave and B3's die face on the parted far half; the layer beat with `files12 grown1.00`, the
+files reaching both halves. No console error from a fresh load through every phase.
+
+## U8 · The Readout card, and the black hole of mathematics (2026-10-17, owner: "I'd go for version B")
+
+His pick on the Claude Design canvas: B · Readout. Ported into the act's `Module`, in card units
+(560 × 540), the keynote's own geometry beside the talk's `MEDIA` (which stays the Ghent card's):
+
+- **The frame** is the double hairline: the chamfered edge and a second one inset 5
+  (`innerChamfer`), no survey crosses on the card's corners.
+- **The head** is the title (28) and the count (`07 / 07 · 2025`, mono, ink-50) on ONE line at
+  y 52, the right margin clearing the cut (`PAD_R` 43), the caption under them at y 78.
+- **The picture** is `KMEDIA` (27, 93, 506 × 285: 16:9) with gold survey crosses on its four
+  corners (`.fa__mark`). Stills fill it (`slice`); films stay whole ("never cropped", his
+  2026-10-15 ruling) and letterbox on the card's own ground, so no black blocks on parchment.
+- **The foot** is a readout of two ruled rows (`ROWS`): KIND (Image · Film · Drawing) and, for a
+  film, SOUND "▶ PLAY WITH SOUND" in gold, for the rest SHOWN "◇ STILL" / "◇ LIVE". The button
+  is that row: a transparent hit area seated over the drawn value from `FACING` and `ROWS`, so it
+  scales and stands with the card (measured over the value at 2131×1270), an outline on hover
+  and focus. The old overlay, sized in CSS px and seated on the picture, is gone with its
+  inconsistency.
+- **The mathematics card is the black hole** (M1, the one the Readout board showed):
+  `mathHole.ts` (`holeSeed`, `holeStep`, `paintHole`), mounted by `MathHoleCanvas` in a
+  `foreignObject` in the media rect, so it rides the sheet's matrix and clip; it runs only while
+  the act is up and rasterises at the card's on-screen size. The horizon is larger in the card
+  than on the canvas board (`size` 0.105, `tilt` 0.27) so the glyphs read as mathematics. The old
+  `MathBoard`, its flow and the worlds placeholder are deleted with their rules.
+
+Verified: `tsc` and `eslint` clean; the keynote test (11), `ux-meetup`, `arcs-registry`,
+`arc-terminal-markup` and `proposal-swarm` green (142). Read headed in his Chrome at 2131×1270,
+dark and light (through the switch): the Tools card's rows and the hit area over its value, the
+mathematics card's hole with ∑, π, θ, ∞ legible round the gold ring. No console error from a
+fresh load through every phase.
+
 ## Left open
 
-- Every line marked (proposal): 02's head and the closing paragraph of its script, 01's spoken
-  run without "then", 05's spoken paragraph, 06's spoken paragraph, 07's last line (the mask is
-  off the page), 12's spoken paragraph on semantic navigation, 07's choice of quote, 08's title.
+- Every line marked (proposal): 02's spoken paragraph, 01's spoken run without "then", 05's
+  spoken paragraph, 06's spoken paragraph, 10's spoken paragraph on semantic navigation, and in
+  the held-back beats Goodfire's last line, the choice of quote and "Their own"'s title.
 - "Nuance" is read from his dictation ("new ones").
-- Act II is still called "a new kind of user", though the question that named it is off the page.
+- Act II is still called "a new kind of user", though the question that named it is off the page,
+  and it now holds two beats until his new sections land.
+- His picks still open: a brain direction (B1, B2, B3 or today), whether the tendrils (L1) stay
+  as files or try L2 (cables with runners), and M2 (the hole in a collar) if he wants it over M1.
+  The gap between the picture and the readout (77 units) is the canvas board's; his to tune. The house rule "one lit part, gold once a drawing" is set aside on the brain at
+  his word ("weave them throughout"); the core stays the only `lit` part.
 - The layer's side, parting and height (`LAYER_SIDE`, `LAYER_PART`, `LAYER_Z`) are first
   values; whether the hemispheres should keep their hoses in that beat is his read.
 - The planets' size and glow, the glint's pace and the smile's density are first values.

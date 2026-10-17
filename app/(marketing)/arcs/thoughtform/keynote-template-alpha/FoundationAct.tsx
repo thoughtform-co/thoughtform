@@ -11,10 +11,14 @@ import {
   brainIsoPoint,
   brainIsoRoots,
   brainIsoSvg,
+  brainMedialL,
+  type BrainChip,
   type BrainIsoBox,
   type BrainIsoOptions,
   type BrainView,
 } from "@/components/arcs/figures/foundation/brainIso";
+import { tendrilFiles, type TendrilFile } from "@/components/arcs/figures/foundation/layerTendrils";
+import { holeSeed, holeStep, paintHole } from "@/components/arcs/figures/foundation/mathHole";
 import type { Flat } from "@/components/arcs/figures/foundation/isoKit";
 import { latticeAt, pickLattice } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
 import { COVER, coverOf, engraved, LIP_REACH } from "@/app/(internal)/test/proposal-swarm/engine/mark";
@@ -25,7 +29,6 @@ import { type Place, type Tone } from "@/components/arcs/figures/foundation/pain
 import {
   CARD,
   FACING,
-  MEDIA,
   PLATE,
   SCREEN_X,
   SHEET,
@@ -110,7 +113,17 @@ const chamferPts = (w: number, h: number, cut: number, x = 0, y = 0): [number, n
 const chamferOf = (pts: [number, number][]) => `M${pts.map(([x, y]) => `${x} ${y}`).join(" L")} Z`;
 const OUTER = chamferPts(W, H, CUT);
 const chamfer = chamferOf(OUTER);
-const media = chamferOf(chamferPts(MEDIA.w, MEDIA.h, 14, MEDIA.x, MEDIA.y));
+/** The Readout card's geometry (U8), in card units (560 × 540): its margins
+    (the right one clears the cut), the picture at 16:9 under the head, and
+    the two readout rows at the foot. The talk's `MEDIA` is the Ghent card's
+    and stays as it was. */
+const PAD = 27;
+const PAD_R = 43;
+const KMEDIA = { x: PAD, y: 93, w: 506, h: 285 } as const;
+const ROWS = { top: 455, h: 29, base: 19, val: 120 } as const;
+const media = `M${KMEDIA.x} ${KMEDIA.y} H${KMEDIA.x + KMEDIA.w} V${KMEDIA.y + KMEDIA.h} H${KMEDIA.x} Z`;
+/** The frame's second hairline, inset (Tensorlake's double line). */
+const innerChamfer = chamferOf(chamferPts(W - 10, H - 10, CUT, 5, 5));
 const mat = (m: M6) => `matrix(${m.map((v) => v.toFixed(4)).join(" ")})`;
 const apply = (m: M6, x: number, y: number): P2 => ({ x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] });
 
@@ -169,6 +182,12 @@ const PICTURE: Record<number, Picture> = { 1: "plain", 2: "split", 3: "plain", 4
 const LAYER_SIDE = 210;
 const LAYER_PART = 175;
 const LAYER_Z = 22;
+/** The heights the hemispheres' walls stand in, brain units: a tendril
+    plugs in between them (U7). */
+const WALL_Z: [number, number] = [-45, 92];
+/** The brain's machining (U7, `brainIso`'s `chip`): none until he picks a
+    direction at `/test/keynote-brain`. */
+const BRAIN_CHIP: BrainChip = {};
 /** How far the pointer moves the brain (owner, 2026-10-16: "when you move
     your mouse, the brain moved slightly ... just enough for a little fun"),
     in viewBox px at the brain's scale 1. */
@@ -363,6 +382,7 @@ export function FoundationAct() {
         reveal: step / STEPS,
         view: viewAt(cam),
         only: kind === "left" ? -1 : kind === "right" ? 1 : undefined,
+        chip: BRAIN_CHIP,
       };
       const url = URL.createObjectURL(new Blob([brainIsoSvg({ ...opts, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
       img.onload = () => {
@@ -587,13 +607,29 @@ export function FoundationAct() {
         const part = LAYER_PART * open;
         const B = boxAt(FLAT(0));
         const near = uy > 0 ? 1 : -1;
-        // A readout for the walks: the plate picked, its side and the parting, in brain units.
-        root.dataset.faLayer = `${D.L.a}:${D.L.b} n${D.L.n} g${D.L.g} side${(side / unit).toFixed(0)} part${part.toFixed(0)} u${ux.toFixed(2)},${uy.toFixed(2)} s${s.toFixed(3)} k${k.toFixed(3)}`;
         const half = (dir: 1 | -1) => draw(dir > 0 ? right : left, alpha, B, dir * part * ux * s, dir * part * uy * s);
         half(near > 0 ? -1 : 1);
         const mid = brainIsoPoint(0, 0, LAYER_Z, V0);
-        paintLayer(ctx, D, { cx: (pl.x + mid[0] * s) * k, cy: (pl.y + mid[1] * s) * k, tones, printed: smooth((brain.apart - 0.3) / 0.65), alpha });
+        const cx = (pl.x + mid[0] * s) * k;
+        const cy = (pl.y + mid[1] * s) * k;
+        // U7: the tendrils, files of the slab's own dots from its faces into
+        // the hemispheres' medial walls, grown once the slab has printed.
+        // Far files before the slab (it covers their roots), near ones after
+        // it (the near half covers their tips).
+        const z1 = brainIsoPoint(0, 0, 1, V0);
+        const zUnit = Math.abs(z1[1] - o[1]) * s * k;
+        const siteU = side / D.L.m / unit;
+        const zAt = (T: number) => LAYER_Z + ((T - D.L.m / 2) * 2 * D.L.b * D.L.g) / zUnit;
+        const tAt = (z: number) => Math.round(D.L.m / 2 + ((z - LAYER_Z) * zUnit) / (2 * D.L.b * D.L.g));
+        const files = tendrilFiles(D.L, D.th, (_, T) => (part + brainMedialL(zAt(T), !!BRAIN_CHIP.die) - (D.th / 2) * siteU) / siteU, [tAt(WALL_Z[0]), tAt(WALL_Z[1])]);
+        const grown = smooth((brain.apart - 0.82) / 0.18);
+        const lay = { ox: Math.round(cx - D.centre[0]), oy: Math.round(cy - D.centre[1]), grown, now, tones, alpha, L: D.L };
+        paintFiles(ctx, files, "far", lay);
+        paintLayer(ctx, D, { cx, cy, tones, printed: smooth((brain.apart - 0.3) / 0.65), alpha });
+        paintFiles(ctx, files, "near", lay);
         half(near);
+        // A readout for the walks: the plate picked, its side, the parting and the tendrils, in brain units.
+        root.dataset.faLayer = `${D.L.a}:${D.L.b} n${D.L.n} g${D.L.g} side${(side / unit).toFixed(0)} part${part.toFixed(0)} files${files.length} grown${grown.toFixed(2)} u${ux.toFixed(2)},${uy.toFixed(2)} s${s.toFixed(3)} k${k.toFixed(3)}`;
       };
       /** The whole picture at this camera, else at this frame of the path
           without the lean, else at the nearest frame that has loaded, with
@@ -888,7 +924,15 @@ export function FoundationAct() {
     () => false
   );
   const s = FACING.s;
-  const playAt = { left: `${((FACING.x + (MEDIA.x + 14) * s) / VB.w) * 100}%`, top: `${((FACING.y + (MEDIA.y + MEDIA.h - 14) * s) / VB.h) * 100}%` };
+  // U8: the button is the facing card's own "Play with sound" row, a hit area
+  // over the drawn value, so it scales and seats with the card.
+  const playRow = ROWS.top + ROWS.h;
+  const playAt = {
+    left: `${((FACING.x + (ROWS.val - 6) * s) / VB.w) * 100}%`,
+    top: `${((FACING.y + (playRow + 2) * s) / VB.h) * 100}%`,
+    width: `${((210 * s) / VB.w) * 100}%`,
+    height: `${(((ROWS.h - 4) * s) / VB.h) * 100}%`,
+  };
   return (
     <div ref={rootRef} className="fa">
       <div className="fa__box">
@@ -952,9 +996,8 @@ export function FoundationAct() {
             <figcaption>{latent.source.label}</figcaption>
           </figure>
         ) : null}
-        <button ref={playRef} type="button" className="fa__play" style={playAt}>
-          <span aria-hidden="true">▶</span> Play with sound
-        </button>
+        <button ref={playRef} type="button" className="fa__play" style={playAt} aria-label="Play with sound" />
+
       </div>
       {/* The head stands on the screen's own top datum, not the scene's
           box (ADR-159 U2, after Linear: "always placed properly on top"). */}
@@ -988,45 +1031,71 @@ export function FoundationAct() {
   );
 }
 
-/** One example as one module: its head in the frame, its picture under it. */
+/**
+ * One example as one module, the Readout card (ADR-159 U8, his pick of three
+ * on the Claude Design canvas): a double hairline frame; the title and the
+ * count on ONE line, the caption under them; the picture at 16:9 with gold
+ * survey crosses on its corners; a readout of two ruled rows at the foot,
+ * where a film's "Play with sound" is a row, never an overlay. Every part
+ * stands in the same seat on every card, whatever the picture.
+ */
 function Module({ card, index, count }: { card: Card; index: number; count: number }) {
+  const film = card.media?.type === "video";
+  const maths = card.kind === "mathematics";
+  const { x, y, w, h } = KMEDIA;
+  const arm = 6;
+  const crosses = [
+    [x, y],
+    [x + w, y],
+    [x, y + h],
+    [x + w, y + h],
+  ]
+    .map(([cx, cy]) => `M${cx - arm} ${cy} H${cx + arm} M${cx} ${cy - arm} V${cy + arm}`)
+    .join(" ");
+  const row = (i: number) => ROWS.top + i * ROWS.h;
   return (
     <>
       <path className="fa__ground" d={chamfer} />
       {/* No eyebrow on a module (owner, 2026-10-15): the title is the head. */}
-      <text className="fa__mod-count" x={W - 24} y="34" textAnchor="end">
-        {String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")} · {card.year}
-      </text>
-      <text className="fa__mod-title" x="24" y="56">
+      <text className="fa__mod-title" x={PAD} y="52">
         {card.title}
       </text>
-      <text className="fa__mod-line" x="24" y="80">
+      <text className="fa__mod-count" x={W - PAD_R} y="52" textAnchor="end">
+        {String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")} · {card.year}
+      </text>
+      <text className="fa__mod-line" x={PAD} y="78">
         {card.caption}
       </text>
       <g clipPath="url(#fa-media)">
-        {card.media?.type === "image" ? (
-          <image href={card.media.src} x={MEDIA.x} y={MEDIA.y} width={MEDIA.w} height={MEDIA.h} preserveAspectRatio="xMidYMid slice" />
-        ) : null}
-        {card.media?.type === "video" ? (
-          <foreignObject x={MEDIA.x} y={MEDIA.y} width={MEDIA.w} height={MEDIA.h}>
+        <rect className="fa__media-ground" x={x} y={y} width={w} height={h} />
+        {card.media?.type === "image" ? <image href={card.media.src} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid slice" /> : null}
+        {film && card.media ? (
+          <foreignObject x={x} y={y} width={w} height={h}>
             <video className="fa__video" src={card.media.src} poster={card.media.poster} muted loop autoPlay playsInline preload="metadata" />
           </foreignObject>
         ) : null}
-        {(card.kind === "worlds" && !card.media) || card.kind === "mathematics" ? (
-          <g transform={`translate(${MEDIA.x} ${MEDIA.y}) scale(${MEDIA.w / 560} ${MEDIA.h / 315})`}>
-            {card.kind === "worlds" ? <WorldsPlaceholder /> : <MathBoard />}
-          </g>
+        {maths ? (
+          <foreignObject x={x} y={y} width={w} height={h}>
+            <MathHoleCanvas />
+          </foreignObject>
         ) : null}
       </g>
-      <path className="fa__inset" d={media} />
+      <path className="fa__mark" d={crosses} />
+      <path className="fa__row" d={`M${PAD} ${row(0)} H${W - PAD_R} M${PAD} ${row(1)} H${W - PAD_R}`} />
+      <text className="fa__mod-key" x={PAD} y={row(0) + ROWS.base}>
+        KIND
+      </text>
+      <text className="fa__mod-val" x={ROWS.val} y={row(0) + ROWS.base}>
+        {film ? "FILM" : maths ? "DRAWING" : "IMAGE"}
+      </text>
+      <text className="fa__mod-key" x={PAD} y={row(1) + ROWS.base}>
+        {film ? "SOUND" : "SHOWN"}
+      </text>
+      <text className="fa__mod-val" data-lit={film ? "" : undefined} data-dim={film ? undefined : ""} x={ROWS.val} y={row(1) + ROWS.base}>
+        {film ? "▶ PLAY WITH SOUND" : maths ? "◇ LIVE" : "◇ STILL"}
+      </text>
       <path className="fa__edge" d={chamfer} />
-      {[
-        [0, 0],
-        [W, H],
-        [0, H],
-      ].map(([x, y], j) => (
-        <path key={j} className="fa__cross" d={`M${x - 7} ${y} L${x + 7} ${y} M${x} ${y - 7} L${x} ${y + 7}`} />
-      ))}
+      <path className="fa__inset" d={innerChamfer} />
     </>
   );
 }
@@ -1224,6 +1293,8 @@ interface LayerDots {
   rank: Float32Array;
   /** The slab's middle, in device px from the lattice's origin. */
   centre: [number, number];
+  /** Its thickness, in sites along `j` (the plate's height, on its side). */
+  th: number;
   /** The slab's silhouette, in device px from the lattice's origin. */
   outline: [number, number][];
 }
@@ -1280,6 +1351,7 @@ function layerDots(L: Lattice): LayerDots {
     style: new Uint8Array(raw.length),
     rank: new Float32Array(raw.length),
     centre: at(half, th / 2, half),
+    th,
     outline: [at(0, th, 0), at(m, th, 0), at(m, 0, 0), at(m, 0, m), at(0, 0, m), at(0, th, m)],
   };
   raw.forEach((d, i) => {
@@ -1334,6 +1406,44 @@ function paintLayer(ctx: CanvasRenderingContext2D, D: LayerDots, o: { cx: number
     const size = sizes[D.tier[d]];
     ctx.fillRect(ox + D.x[d] - (size >> 1), oy + D.y[d] - (size >> 1), size, size);
   }
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * The layer's tendrils (U7) on the canvas, one side's files: their standing
+ * dots grown from the slab `grown` of the way, a plug where each meets its
+ * wall, and two walkers a file running from the slab into the brain, the
+ * swarm's palette and dot sizes. The slab's own lattice frame (`ox`, `oy`).
+ */
+function paintFiles(
+  ctx: CanvasRenderingContext2D,
+  files: readonly TendrilFile[],
+  side: TendrilFile["side"],
+  o: { ox: number; oy: number; grown: number; now: number; tones: Tones; alpha: number; L: Lattice }
+) {
+  if (o.grown <= 0 || o.alpha <= 0) return;
+  const pal = paletteOf([1, 1, 1], o.tones);
+  const sizes = tierSizes(o.L);
+  const dot = (pts: Int32Array, i: number, size: number) => ctx.fillRect(o.ox + pts[2 * i] - (size >> 1), o.oy + pts[2 * i + 1] - (size >> 1), size, size);
+  ctx.globalAlpha = o.alpha;
+  files.forEach((f, which) => {
+    if (f.side !== side) return;
+    const n = f.pts.length / 2;
+    const shown = Math.min(n, Math.ceil(n * o.grown));
+    ctx.fillStyle = pal[STYLE.layerDim];
+    for (let i = 0; i < shown; i++) dot(f.pts, i, sizes[1]);
+    if (shown < n) return;
+    ctx.fillStyle = pal[STYLE.layerLit];
+    dot(f.pts, n - 1, sizes[3]);
+    // the walkers: a lit head and two dots of tail, slab to wall
+    for (const phase of [0, 0.5]) {
+      const head = Math.floor((((o.now / 1000) * 7) / n + phase + which * 0.13) % 1 * n);
+      ctx.fillStyle = pal[STYLE.layer];
+      for (let t = 1; t <= 2; t++) if (head - t >= 0) dot(f.pts, head - t, sizes[2]);
+      ctx.fillStyle = pal[STYLE.layerLit];
+      dot(f.pts, head, sizes[3]);
+    }
+  });
   ctx.globalAlpha = 1;
 }
 
@@ -1877,81 +1987,65 @@ function paintField(ctx: CanvasRenderingContext2D, f: Field, o: { k: number; dpr
   ctx.restore();
 }
 
-/** Game worlds built from assets: the slot for the owner's Halo mods video.
-    Until it comes, a low-poly terrain stands in, lettered as the slot. */
-function WorldsPlaceholder() {
-  const cols = 15;
-  const rows = 8;
-  const h = (i: number, j: number) => 26 * Math.sin(j * 0.55 + i * 0.3) * Math.cos(i * 0.7 - j * 0.2) + 12 * Math.sin(j * 1.3 + i * 1.1);
-  const at = (i: number, j: number): [number, number] => [70 + j * 30 + i * 12, 118 + i * 20 - h(i, j)];
-  const d: string[] = [];
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      const [x, y] = at(i, j);
-      if (j + 1 < cols) d.push(`M${x.toFixed(1)} ${y.toFixed(1)} L${at(i, j + 1).map((v) => v.toFixed(1)).join(" ")}`);
-      if (i + 1 < rows) d.push(`M${x.toFixed(1)} ${y.toFixed(1)} L${at(i + 1, j).map((v) => v.toFixed(1)).join(" ")}`);
-      if (i + 1 < rows && j + 1 < cols) d.push(`M${x.toFixed(1)} ${y.toFixed(1)} L${at(i + 1, j + 1).map((v) => v.toFixed(1)).join(" ")}`);
-    }
-  }
-  return (
-    <g className="fa__worlds">
-      <path d={d.join(" ")} />
-      <text x={560 / 2} y={315 - 34} textAnchor="middle">
-        HALO MODS · VIDEO TO COME
-      </text>
-    </g>
-  );
-}
-
-/** Flow past a cylinder, its true stream function psi = y (1 - R^2 / r^2):
-    each streamline solved for y along x, by bisection. */
-const FLOW = (() => {
-  const R = 22;
-  const cx = 458;
-  const cy = 166;
-  const lines: string[] = [];
-  for (const c of [-72, -48, -30, -15, -5, 5, 15, 30, 48, 72]) {
-    const pts: string[] = [];
-    for (let x = -76; x <= 76; x += 4) {
-      const lo0 = Math.sqrt(Math.max(0, R * R - x * x)) + 1e-6;
-      let lo = lo0;
-      let hi = Math.abs(c) + R + 60;
-      for (let k = 0; k < 30; k++) {
-        const m = (lo + hi) / 2;
-        const f = m * (1 - (R * R) / (x * x + m * m)) - Math.abs(c);
-        if (f > 0) hi = m;
-        else lo = m;
+/**
+ * The mathematics card's picture (U8): the black hole of mathematics
+ * (`mathHole.ts`), live in the card's media rect. It runs only while the act
+ * is up, and rasterises at the size the card is drawn on screen, so the
+ * glyphs stay sharp on the facing card.
+ */
+function MathHoleCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const parts = holeSeed();
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const act = c.closest(".fa");
+    let raf = 0;
+    let last = performance.now();
+    let frame = 0;
+    let scale = 1;
+    const loop = (t: number) => {
+      raf = requestAnimationFrame(loop);
+      const dt = Math.min(0.05, (t - last) / 1000);
+      last = t;
+      if (act && !act.hasAttribute("data-fa-up")) return;
+      const w = c.clientWidth;
+      const h = c.clientHeight;
+      if (!w || !h) return;
+      // the card is drawn scaled: rasterise at its size on screen
+      if (frame++ % 30 === 0) scale = Math.max(1, Math.min(3, c.getBoundingClientRect().width / w));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2) * scale;
+      const W = Math.round(w * dpr);
+      const H = Math.round(h * dpr);
+      if (c.width !== W || c.height !== H) {
+        c.width = W;
+        c.height = H;
       }
-      const y = Math.sign(c) * lo;
-      pts.push(`${pts.length ? "L" : "M"}${(cx + x).toFixed(1)} ${(cy - y).toFixed(1)}`);
-    }
-    lines.push(pts.join(" "));
-  }
-  return { R, cx, cy, lines };
-})();
-
-/** Mathematics, as it is written: the Navier–Stokes equations and the flow
-    they govern, an Erdős equation, the Olympiad and FrontierMath. */
-function MathBoard() {
-  return (
-    <g className="fa__math">
-      <text className="fa__math-key" x="34" y="58">NAVIER–STOKES</text>
-      <text className="fa__math-eq" x="34" y="94">∂ₜu + (u · ∇)u = −∇p + νΔu</text>
-      <text className="fa__math-eq" x="34" y="128">∇ · u = 0</text>
-      <text className="fa__math-note" x="34" y="154">A MILLENNIUM PRIZE PROBLEM</text>
-      <path className="fa__math-rule" d="M34 178 L300 178" />
-      <text className="fa__math-key" x="34" y="206">ERDŐS</text>
-      <text className="fa__math-eq" x="34" y="242">4/n = 1/x + 1/y + 1/z</text>
-      <text className="fa__math-chip" x="34" y="282">IMO 2025 · GOLD</text>
-      <text className="fa__math-chip" x="200" y="282">FRONTIERMATH</text>
-      <g className="fa__flow">
-        {FLOW.lines.map((d, i) => (
-          <path key={i} d={d} data-lit={i === 6 ? "" : undefined} />
-        ))}
-        <path d={`M${FLOW.cx - 76} ${FLOW.cy} L${FLOW.cx - FLOW.R} ${FLOW.cy} M${FLOW.cx + FLOW.R} ${FLOW.cy} L${FLOW.cx + 76} ${FLOW.cy}`} />
-        <circle cx={FLOW.cx} cy={FLOW.cy} r={FLOW.R} />
-        <text className="fa__math-note" x={FLOW.cx} y={FLOW.cy + 116} textAnchor="middle">FLOW PAST A CYLINDER</text>
-      </g>
-    </g>
-  );
+      const cs = getComputedStyle(c);
+      if (!still) holeStep(parts, dt);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      paintHole(
+        ctx,
+        parts,
+        w,
+        h,
+        {
+          ground: cs.backgroundColor || "rgb(5, 4, 3)",
+          ink: cs.color || "rgb(235, 227, 214)",
+          warm: cs.getPropertyValue("--fa-hole-warm").trim() || "#f3e4c2",
+          gold: cs.getPropertyValue("--fa-hole-gold").trim() || "#caa554",
+          void: cs.getPropertyValue("--fa-hole-void").trim() || "#000",
+        },
+        '"STIX Two Math", "Cambria Math", "Times New Roman", serif',
+        // the card is small: a larger horizon, the disk running past the frame
+        { size: 0.105, tilt: 0.27 }
+      );
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={ref} className="fa__hole" role="img" aria-label="A black hole made of mathematics: glyphs and equations on an accretion disk, falling into a dark horizon ringed in gold" />;
 }

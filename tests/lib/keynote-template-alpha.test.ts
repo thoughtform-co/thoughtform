@@ -13,7 +13,9 @@ import {
   KEYNOTE_ARC,
   KEYNOTE_HERO,
   KEYNOTE_PROOF_LEDES,
+  KEYNOTE_ALREADY_CLEAN,
   KEYNOTE_SHOGGOTH,
+  KEYNOTE_THEIR_OWN,
 } from "@/lib/arcs/content/keynote-template-alpha";
 import {
   UX_MEETUP_ARC,
@@ -52,8 +54,9 @@ const REMOVED_STATIONS = [
 ] as const;
 const MOUNT = "home-corridor-mount";
 
-/** The order the owner set on 16 October, cut on the 17th (U6): the wake-up
-    call is the stack's head and the shoggoth is off the page. */
+/** The order the owner set on 16 October, cut on the 17th: the wake-up call
+    is the stack's head and the shoggoth is off the page (U6); Goodfire's
+    line and his answer are held back for new sections (U7). */
 const ORDER = [
   "capability",
   "the-interface",
@@ -61,8 +64,6 @@ const ORDER = [
   "every-desk",
   "an-alien",
   "the-layer",
-  "already-clean",
-  "their-own",
   "colleague",
   "latent-space",
   "the-median",
@@ -214,10 +215,10 @@ describe("the keynote template (ADR-159)", () => {
     expect(here("the-claim"), "the wake-up call is the stack's head").toBeUndefined();
     const cap = here("capability");
     const ghentCap = ghent("capability");
-    const claim = ghent("the-claim");
     expect(cap, "forked, not the talk's").not.toBe(ghentCap);
+    // U7: 01 to 04 read as one paragraph, his wording ("content", as he wrote it).
     expect(cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.title : "").toBe(
-      claim?.kind === "interstitial" ? `${claim.line.pre} ${claim.line.em}` : null
+      "AI will absorb all digital content and products within 2 years."
     );
     const cards = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
     const ghentCards = ghentCap?.kind === "figure" && ghentCap.figure.id === "capability" ? ghentCap.figure.cards : [];
@@ -231,13 +232,13 @@ describe("the keynote template (ADR-159)", () => {
     const ghentIfc = ghent("the-interface");
     expect(ifc, "forked, not the talk's").not.toBe(ghentIfc);
     expect(ifc?.kind === "figure" && ifc.figure.id === "interface" ? ifc.figure.mind : "").toBe(
-      "And it becomes the interface to all of it."
+      "And the interface to it all."
     );
     // U4: the middle's line is his, over the talk's cards.
     const mid = here("an-intelligence");
     const ghentMid = ghent("an-intelligence");
     expect(mid?.kind === "figure" && mid.figure.id === "middle" ? mid.figure.line : "").toBe(
-      "But AI isn’t software. It sits between a tool and a collaborator."
+      "Not software. An intelligence: the tool and its maker."
     );
     expect(mid?.kind === "figure" && mid.figure.id === "middle" ? mid.figure.tool : null).toBe(
       ghentMid?.kind === "figure" && ghentMid.figure.id === "middle" ? ghentMid.figure.tool : undefined
@@ -250,14 +251,14 @@ describe("the keynote template (ADR-159)", () => {
     const desk = here("every-desk");
     const ghentDesk = ghent("every-desk");
     expect(desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.line : "").toBe(
-      "An intelligence that will soon absorb all knowledge work."
+      "Next, all knowledge work."
     );
     expect(desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.layers : null).toBe(
       ghentDesk?.kind === "figure" && ghentDesk.figure.id === "knowledge" ? ghentDesk.figure.layers : undefined
     );
     for (const [id, n] of [
-      ["latent-space", "10"],
-      ["prowl", "12"],
+      ["latent-space", "08"],
+      ["prowl", "10"],
     ] as const) {
       const a = here(id);
       const b = ghent(id);
@@ -268,7 +269,7 @@ describe("the keynote template (ADR-159)", () => {
     }
     const midHere = here("an-intelligence");
     expect(midHere?.kind === "figure" ? midHere.eyebrow?.slice(0, 2) : "", "the middle, renumbered").toBe("03");
-    for (const id of ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "the-layer", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
+    for (const id of ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "the-layer", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
     }
@@ -326,11 +327,17 @@ describe("the keynote template (ADR-159)", () => {
     expect(shog.kind === "figure" && shog.figure.id === "shoggoth" ? shog.figure.line : "").not.toMatch(
       /fully understand/
     );
-    const clean = sections.find((s) => s.id === "already-clean");
-    expect(clean?.kind === "interstitial" ? clean.attribution : "").toMatch(/Cammarata, Goodfire, 2026/);
-    expect(clean?.kind === "interstitial" ? clean.frame : "").toBe("marks");
-    const theirOwn = sections.find((s) => s.id === "their-own");
-    expect(theirOwn?.kind === "figure" ? theirOwn.figure.id : "").toBe("brain");
+    // U7: Goodfire's line and his answer held back, their records kept whole.
+    for (const id of ["already-clean", "their-own"]) {
+      expect(sections.some((s) => s.id === id), `${id}: held back`).toBe(false);
+    }
+    const clean = KEYNOTE_ALREADY_CLEAN;
+    expect(clean.id).toBe("already-clean");
+    expect(clean.kind === "interstitial" ? clean.attribution : "").toMatch(/Cammarata, Goodfire, 2026/);
+    expect(clean.kind === "interstitial" ? clean.frame : "").toBe("marks");
+    const theirOwn = KEYNOTE_THEIR_OWN;
+    expect(theirOwn.id).toBe("their-own");
+    expect(theirOwn.kind === "figure" ? theirOwn.figure.id : "").toBe("brain");
     // U5, U6: the layer, straight after what it still needs, and wordless.
     const layer = sections.find((s) => s.id === "the-layer");
     expect(layer?.kind === "figure" ? layer.figure.id : "").toBe("layer");
@@ -396,6 +403,26 @@ describe("the keynote template (ADR-159)", () => {
     expect(act, "the rim lit, as there").toContain("rim ? [2, STYLE.layerLit] : engraved(");
     expect(act, "far half, plate, near half").toMatch(/half\(near > 0 \? -1 : 1\);[\s\S]*paintLayer\(ctx, D,[\s\S]*half\(near\);/);
     expect(act, "the halves close before the next turn").toContain("const target = brain.apart > 0 && !parting ? 0 : (VIEW_T[phase] ?? 0);");
+    // U7: the layer's tendrils, far files under the slab, near ones over it
+    // and under the near half; the brain's machining one constant.
+    expect(act, "tendrils in depth order").toMatch(
+      /half\(near > 0 \? -1 : 1\);[\s\S]*paintFiles\(ctx, files, "far", lay\);\s*paintLayer\(ctx, D,[\s\S]*paintFiles\(ctx, files, "near", lay\);\s*half\(near\);/
+    );
+    expect(act, "the files grow once the slab has printed").toContain("const grown = smooth((brain.apart - 0.82) / 0.18);");
+    // U8: the Readout card (his pick): the count on the title's line, the
+    // picture at 16:9 with gold crosses, two readout rows, the film's play a
+    // row with its hit area over it; the mathematics a black hole, never the
+    // old board.
+    expect(act, "the picture at 16:9").toContain("const KMEDIA = { x: PAD, y: 93, w: 506, h: 285 } as const;");
+    expect(act, "title and count on one line").toMatch(/className="fa__mod-title" x=\{PAD\} y="52"[\s\S]*className="fa__mod-count" x=\{W - PAD_R\} y="52"/);
+    expect(act, "gold crosses on the picture").toContain('<path className="fa__mark" d={crosses} />');
+    expect(act, "the readout rows").toContain("{film ? \"▶ PLAY WITH SOUND\" : maths ? \"◇ LIVE\" : \"◇ STILL\"}");
+    expect(act, "the play is the row").toContain('<button ref={playRef} type="button" className="fa__play" style={playAt} aria-label="Play with sound" />');
+    expect(act, "the double hairline").toContain("const innerChamfer = chamferOf(chamferPts(W - 10, H - 10, CUT, 5, 5));");
+    expect(act, "the black hole").toContain("<MathHoleCanvas />");
+    expect(act, "never the old board").not.toContain("MathBoard");
+    expect(act, "the brain's machining").toMatch(/const BRAIN_CHIP: BrainChip = \{[^}]*\};/);
+    expect(act).toContain("chip: BRAIN_CHIP,");
     const sheet = own("keynote-template-alpha.css");
     expect(sheet, "the scene inside the instrument band").toContain("var(--instrument-margin");
     expect(sheet, "the voices read over the brain").toContain("#an-alien .arc-stage");
@@ -405,8 +432,9 @@ describe("the keynote template (ADR-159)", () => {
     expect(sheet, "the cards as glass").toContain("fill: url(#fa-glass)");
     expect(sheet, "the field's quote on the last phase").toContain('.fa[data-fa-phase="9"] .fa__quote');
     expect(sheet, "the layer's head, centred").toContain('.fa[data-fa-phase="6"] .fa__head');
-    // U6: the stack's head left, as an H1; a head with no paragraph, centred.
-    expect(sheet, "the stack's head").toMatch(/\.fa\[data-fa-phase="0"\] \.fa__head \{\s*justify-items: start;/);
+    // U7: every head with no paragraph beside it centred, the stack's H1 too.
+    expect(sheet, "the stack's head, centred").toMatch(/\.fa\[data-fa-phase="0"\] \.fa__head,\s*\.fa\[data-fa-phase="1"\] \.fa__head,[\s\S]*?justify-items: center;/);
+    expect(sheet, "never left any more").not.toMatch(/\.fa\[data-fa-phase="0"\] \.fa__head \{\s*justify-items: start;/);
     expect(sheet, "the interface's head, centred").toMatch(/\.fa\[data-fa-phase="1"\] \.fa__head,\s*\.fa\[data-fa-phase="2"\] \.fa__head,[\s\S]*?justify-items: center;/);
     expect(sheet, "the act hides the layer beat's marks").toContain("#the-layer .arc-fig__marks");
   });
@@ -461,9 +489,84 @@ describe("the keynote template (ADR-159)", () => {
     expect(right.length).toBeGreaterThan(1000);
     expect(left).not.toBe(right);
     expect([left + right, right + left], "the halves make the whole").toContain(tendrils);
+    // U7: the brain machined all over, every option off by default; on, the
+    // halves still make the whole, each step adds to the last.
+    const b1 = brainIsoMarkup({ base: "tendrils", chip: { wafer: true } });
+    const b2 = brainIsoMarkup({ base: "tendrils", chip: { wafer: true, weave: true } });
+    const b3chip = { wafer: true, weave: true, die: true };
+    const b3 = brainIsoMarkup({ base: "tendrils", chip: b3chip });
+    expect(brainIsoMarkup({ base: "tendrils", chip: {} }), "no chip is today's brain").toBe(tendrils);
+    expect(b1.length).toBeGreaterThan(tendrils.length);
+    expect(b2.length).toBeGreaterThan(b1.length);
+    expect(b2, "the weave in gold").toContain("fa-gold-via");
+    expect(b3, "a die's face on a wall").toContain('class="fa-die"');
+    expect(
+      [brainIsoMarkup({ base: "tendrils", chip: b3chip, only: -1 }), brainIsoMarkup({ base: "tendrils", chip: b3chip, only: 1 })].flatMap((a, i, h) => [a + h[1 - i]]),
+      "the machined halves make the machined whole"
+    ).toContain(b3);
     expect(BRAIN_ISO_ROOTS.length).toBe(8);
     for (let i = 1; i < BRAIN_ISO_ROOTS.length; i++) expect(BRAIN_ISO_ROOTS[i][0]).toBeGreaterThanOrEqual(BRAIN_ISO_ROOTS[i - 1][0]);
     expect(BRAIN_ISO_PORTS.length).toBe(7);
+  });
+
+  /**
+   * U7: the layer's tendrils are files of the slab's own lattice, six to
+   * each half, leaving its faces along `j` (the brain's L axis), stepping
+   * once up or down, and running to the wall's reach, inside the walls' band.
+   */
+  it("lays the layer's tendrils on the slab's own lattice", async () => {
+    const { tendrilFiles, slabAt } = await import("@/components/arcs/figures/foundation/layerTendrils");
+    const { latticeAt } = await import("@/app/(internal)/test/proposal-swarm/engine/lattice");
+    const L = latticeAt({ a: 5, b: 3, n: 4 }, 1);
+    const th = 4.5;
+    const files = tendrilFiles(L, th, (side) => (side === "far" ? 30 : 26), [8, 26]);
+    expect(files.filter((f) => f.side === "far").length).toBe(6);
+    expect(files.filter((f) => f.side === "near").length).toBe(6);
+    const step = (L.a + L.b) * L.g;
+    for (const f of files) {
+      const n = f.pts.length / 2;
+      const runs = f.side === "far" ? 30 : 26;
+      // every j step is one site; the riser adds whole T sites
+      expect(n, `${f.side}: at least the reach`).toBeGreaterThanOrEqual(runs);
+      // the first site is one step off the slab's face, toward its half
+      const [x0, y0] = [f.pts[0], f.pts[1]];
+      expect(Math.abs(x0) + Math.abs(y0)).toBeGreaterThan(0);
+      for (let i = 1; i < n; i++) {
+        const dx = Math.abs(f.pts[2 * i] - f.pts[2 * i - 2]);
+        const dy = Math.abs(f.pts[2 * i + 1] - f.pts[2 * i - 1]);
+        expect(dx + dy, "neighbouring sites").toBeLessThanOrEqual(step + 2 * L.b * L.g);
+      }
+    }
+    // far files run toward +L (right and up on screen), near ones toward -L
+    const far = files.find((f) => f.side === "far");
+    const near = files.find((f) => f.side === "near");
+    expect(far && far.pts[far.pts.length - 2] - far.pts[0]).toBeGreaterThan(0);
+    expect(near && near.pts[near.pts.length - 2] - near.pts[0]).toBeLessThan(0);
+    expect(slabAt(L, 0, 0, 0)).toEqual([0, 0]);
+  });
+
+  /**
+   * U8: the black hole of mathematics is seeded (the same disk every time),
+   * carries the card's own equations on its outer orbits, and falls in.
+   */
+  it("seeds the black hole of mathematics and lets it fall", async () => {
+    const { holeSeed, holeStep } = await import("@/components/arcs/figures/foundation/mathHole");
+    const a = holeSeed();
+    const b = holeSeed();
+    expect(a).toEqual(b);
+    expect(a.length).toBe(820);
+    const equations = a.filter((p) => p.frag).map((p) => p.g);
+    expect(equations).toContain("∇·u = 0");
+    expect(equations).toContain("4/n = 1/x + 1/y + 1/z");
+    for (const p of a.filter((q) => q.frag)) expect(p.r, "equations ride the outer orbits").toBeGreaterThanOrEqual(4.4);
+    const r0 = a.map((p) => p.r);
+    holeStep(a, 0.5, () => 0.5);
+    let fell = 0;
+    a.forEach((p, i) => {
+      if (p.r < r0[i]) fell++;
+      expect(p.r, "never inside the horizon").toBeGreaterThanOrEqual(1.1);
+    });
+    expect(fell).toBeGreaterThan(700);
   });
 
   /** The house copy law, over what this page letters of its own. */

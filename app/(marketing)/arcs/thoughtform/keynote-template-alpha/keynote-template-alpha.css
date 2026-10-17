@@ -312,56 +312,59 @@ html[data-theme="light"] .fa__dots {
   display: block;
   width: 100%;
   height: 100%;
-  /* the whole film, never cropped (owner, 2026-10-15) */
+  /* the whole film, never cropped (owner, 2026-10-15), on the card's own
+     ground (U8: no black blocks on parchment) */
   object-fit: contain;
-  background: #000;
+  background: rgb(var(--void-deep-rgb, 5, 4, 3));
 }
-.fa__worlds path {
+.fa__media-ground {
+  fill: rgb(var(--void-deep-rgb, 5, 4, 3));
+}
+/* The Readout card (U8): gold survey crosses on the picture's corners, the
+   readout's two ruled rows, a mono key and its value. */
+.fa__mark {
+  fill: none;
+  stroke: var(--gold-ink, #caa554);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.fa__row {
   fill: none;
   stroke: var(--arc-rule);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
-.fa__worlds text {
+.fa__mod-key,
+.fa__mod-val {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 13px;
+  font-size: 10.5px;
   letter-spacing: 0.2em;
+}
+.fa__mod-key,
+.fa__mod-val[data-dim] {
   fill: var(--arc-ink-50);
 }
-/* The mathematics card: the equations as they are written. */
-.fa__math-eq {
-  font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
-  font-style: italic;
-  font-size: 22px;
+.fa__mod-val {
   fill: var(--dawn, #ebe3d6);
 }
-.fa__math-key,
-.fa__math-note,
-.fa__math-chip {
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-}
-.fa__math-key,
-.fa__math-chip {
+.fa__mod-val[data-lit] {
   fill: var(--gold-ink, #caa554);
 }
-.fa__math-note {
-  fill: var(--arc-ink-50);
+/* The mathematics card's black hole (U8): its ground the card's, its ink
+   the page's, its photon ring the one gold. */
+.fa__hole {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgb(var(--void-deep-rgb, 5, 4, 3));
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.92);
+  --fa-hole-gold: var(--gold-ink, #caa554);
+  --fa-hole-warm: #f3e4c2;
+  --fa-hole-void: #000;
 }
-.fa__math-rule {
-  stroke: var(--arc-rule);
-}
-.fa__flow path,
-.fa__flow circle {
-  fill: none;
-  stroke: var(--arc-ink-50);
-  stroke-width: 1;
-}
-.fa__flow path[data-lit] {
-  stroke: var(--gold-ink, #caa554);
-  stroke-width: 1.6;
-}
-.fa__flow circle {
-  stroke: var(--dawn, #ebe3d6);
+html[data-theme="light"] .fa__hole {
+  --fa-hole-warm: var(--gold-ink, #6e5216);
+  --fa-hole-void: #0a0908;
 }
 /* The module: its head in the frame over its picture, as Unsiloed builds
    its cards; the middle beat's cards in the same make. */
@@ -476,12 +479,9 @@ html[data-theme="light"] .fa__dots {
 .fa[data-fa-phase="8"] .fa__head {
   visibility: inherit;
 }
-/* Over the stack: the wake-up call left on its own measure, as the hero's
-   H1 (U6, owner 2026-10-17: "we need to have an H1 text in the top left"). */
-.fa[data-fa-phase="0"] .fa__head {
-  justify-items: start;
-  text-align: left;
-}
+/* Over the stack: the wake-up call on its own measure (U6), centred like
+   every head with no paragraph beside it (U7, owner 2026-10-17: "the 'What
+   It Can Make' section title also needs to be centered"). */
 .fa[data-fa-phase="0"] .fa__title {
   max-width: 22ch;
 }
@@ -510,6 +510,7 @@ html[data-theme="light"] .fa__dots {
 /* Centred (owner: "I want to play around with centering it"; U6: "when we
    don't have a paragraph on the right ... keep [it] centered"): every head
    without a paragraph beside it, and the brain alone. */
+.fa[data-fa-phase="0"] .fa__head,
 .fa[data-fa-phase="1"] .fa__head,
 .fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
@@ -595,21 +596,14 @@ html[data-theme="light"] .fa__dots {
   text-transform: uppercase;
   color: var(--arc-ink-50);
 }
-/* Play with sound: the one thing on the act a reader can press. */
+/* Play with sound: the one thing on the act a reader can press. Since U8 it
+   is the facing card's own readout row, drawn in the card; this is its hit
+   area, seated over the drawn value, so it scales and stands with the card. */
 .fa__play {
   position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  translate: 0 -100%;
-  padding: var(--space-xs) var(--space-sm);
-  border: 1px solid rgba(var(--gold-rgb), 0.55);
-  background: rgba(var(--void-rgb), 0.72);
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: var(--type-xs);
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold-ink, #caa554);
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   pointer-events: auto;
   visibility: hidden;
@@ -617,9 +611,13 @@ html[data-theme="light"] .fa__dots {
 .fa[data-fa-phase="0"][data-fa-video] .fa__play {
   visibility: inherit;
 }
-.fa__play:hover,
+.fa__play:hover {
+  outline: 1px solid rgba(var(--gold-rgb), 0.45);
+  outline-offset: 2px;
+}
 .fa__play:focus-visible {
-  border-color: var(--gold-ink, #caa554);
+  outline: 1px solid var(--gold-ink, #caa554);
+  outline-offset: 2px;
 }
 /* The film over the viewport: not full screen, the page's own theatre,
    portalled to the body so nothing of the page draws over it. */

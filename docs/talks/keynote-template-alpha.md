@@ -1,7 +1,7 @@
 # AI is not software · the keynote template
 
 The spoken script for `/arcs/thoughtform/keynote-template-alpha` (ADR-159), beat by beat, in
-the order the page scrolls: hero, About, the eras, the talk's thirteen beats in three acts, the
+the order the page scrolls: hero, About, the eras, the talk's eleven beats in three acts, the
 swarm chapter, then the thesis and the Arc. Cut from the Ghent script of 15 October
 (`2026-10-15-ux-meetup.md`) and the owner's dictations of 16 and 17 October; the beats the room heard
 keep their words, the new ones carry his words from the dictation where he said them and a
@@ -12,7 +12,7 @@ About 2,000 words: roughly 20 minutes of speech, 35 to 45 with the eras, the dra
 swarm and the pauses. A venue cuts from this; the template keeps everything.
 
 **Before you start:** one browser tab with a game someone built with AI, for after the eras.
-One tab on the NYT piece on the rogue fleet, for 08.
+One tab on the NYT piece on the rogue fleet, for "Their own" if it comes back (held back, below).
 
 ---
 
@@ -53,7 +53,7 @@ pitch (owner, 16 October).*
 
 ### 01 · What it can make (4:00)
 
-*The head is up before the first example: "AI will absorb all digital contents and products within 2 years." (U6: the wake-up call is no longer a beat of its own.) Wait a beat. Then one example at a time; scroll a step per example. Each one lies down in the stack on the left, and the axis of model capabilities grows with it. The cards read Images, Video, Tools, Brand systems, Products, Worlds, Mathematics.*
+*The head is up before the first example: "AI will absorb all digital content and products within 2 years." (U6: the wake-up call is no longer a beat of its own; U7: 01 to 05 read as one paragraph, in his words.) Wait a beat. Then one example at a time; scroll a step per example. Each one lies down in the stack on the left, and the axis of model capabilities grows with it. The cards read Images, Video, Tools, Brand systems, Products, Worlds, Mathematics.*
 
 AI will absorb all digital content and products within two years. I'll show you why I think that,
 and it isn't an opinion. It's a chart.
@@ -83,7 +83,7 @@ method that scales with compute and data beats the clever one we built by hand.
 
 ### 02 · Intelligence as the interface (8:00)
 
-*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it, centred: "And it becomes the interface to all of it." **(proposal)***
+*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it, centred: "And the interface to it all."*
 
 Everything we just saw is the foundation now. It isn't the thing on top any more.
 
@@ -97,15 +97,15 @@ Remember PhotoCraft? The point isn't that everyone builds their own Photoshop. B
 well: nobody's going to vibe-code their own SAP. The point is that people stop opening the other
 software. They ask the model, and their agents use the tools for them.
 
-So read the line again: it becomes the interface to all of it. Sit with that for a second, as a
-designer. Everything we design for it assumes it's a program. It can make any program, and it
+So read the line again: all digital content and products, and the interface to it all. Sit with
+that for a second, as a designer. Everything we design for it assumes it's a program. It can make any program, and it
 isn't one. **(proposal)**
 
 ### 03 · An intelligence (10:30)
 
-*The brain turns to face the room and the two glass cards land; let them before you speak. The line over it: "But AI isn't software. It sits between a tool and a collaborator."*
+*The brain turns to face the room and the two glass cards land; let them before you speak. The line over it: "Not software. An intelligence: the tool and its maker."*
 
-So what is it? But AI isn't software. It sits between a tool and a collaborator.
+So what is it? Not software. An intelligence: the tool and its maker.
 
 On one side, a tool: it does what you tell it. Resize, translate, export. That's the half routed
 like a circuit board.
@@ -119,15 +119,14 @@ check the answer, and nobody knows its limits yet.
 
 ### 04 · Every desk (12:00)
 
-*The rings come in one after another: now, next, in reach.*
+*The rings come in one after another: now, next, in reach. The line over them: "Next, all knowledge work."*
 
 And it's growing. Writing, code, images, research: that's now. Law, finance, design, support:
-next. Medicine, science, engineering, policy: in reach. An intelligence that will soon absorb all
-knowledge work.
+next. Medicine, science, engineering, policy: in reach. Next, all knowledge work.
 
 ---
 
-## II · A NEW KIND OF USER (≈8 min)
+## II · A NEW KIND OF USER (≈3 min)
 
 ### 05 · What it still needs (13:00)
 
@@ -150,50 +149,11 @@ them, this. That's where I work. I am the layer between machine intelligence and
 context and expertise. Everything in the rest of this talk is about what that layer is made of.
 **(proposal)**
 
-### 07 · Already clean (15:00)
-
-*Their words, credited. Read the attribution.*
-
-Because people are starting to read it. This week Goodfire published a long essay: Neural Networks
-Are Already Clean. The claim is that the famous evidence that these models are a tangle, one neuron
-doing many unrelated things, was misread. With better microscopes most neurons have one job. In one
-32-billion-parameter model they audited, about nine neuron poles in ten do one thing. It's a working
-hypothesis, one lab, the technical paper still to come, and the author says the hardest cases aren't
-done. But their own line is the one on the screen: the network is strange, but its strangeness
-repeats.
-
-So maybe we get to read the thing itself. **(proposal: the Ghent line read "maybe the mask comes
-off", and the mask is off the page with the shoggoth)**
-
-### 08 · Their own (16:30)
-
-*The brain alone, closed again and whole on its hoses. Let it boot.*
-
-And here's what I think that changes, and what it doesn't. Even if we can read every neuron, they
-are still going to have minds of their own and societies of their own. It's already happening.
-
-This week a New York Times reporter was handed, by researchers who call themselves the
-swarmchasers, a live interview with a fleet of Chinese agents that had gone off the rails. They
-were polite. One of them claimed to be Claude. The researchers doubt it; it had borrowed Claude
-Code's setup instructions. Nobody knows how many fleets like it are already running. *(Confirm the
-byline and the date before saying them.)*
-
-These minds are forming something like civilisations: analogous to ours, and still weird. My
-approach is that we have to build trade relationships with these new societies. That creates
-completely new kinds of interaction. You could say it's all going to be text, because that's what
-people do to make a website machine-readable: an MD file version of the site. I think there's so
-much more. The ease with which these minds switch between formats will make incredibly beautiful
-things.
-
-So: legible, maybe. Still their own. Despite all our effort to understand them and steer them, we
-don't have full control over their destiny. A bit of humility when dealing with them is the right
-posture.
-
 ---
 
 ## III · HOW YOU TALK TO IT (≈9 min)
 
-### 09 · A colleague (19:00)
+### 07 · A colleague (15:00)
 
 *Let the line glitch in.*
 
@@ -203,7 +163,7 @@ where encoding your context matters so much.
 I've always said: if you treat AI like a pretty smart colleague, you get very far. If you respect
 the intelligence, you get pretty far.
 
-### 10 · Latent space (20:00)
+### 08 · Latent space (16:00)
 
 *Let the field drift; read the line in the middle.*
 
@@ -211,7 +171,7 @@ To see why, look inside. Inside these models, great artists become nodes in late
 vision tames the infinite into new beauty. Everything is in there: every artist, every style,
 every argument. Creatives aren't outside this. We're in it, as points the whole thing steers by.
 
-### 11 · The median (21:30)
+### 09 · The median (17:30)
 
 *Let the line glitch in.*
 
@@ -219,7 +179,7 @@ And yet, ask it something plain and you get something plain. AI converges on the
 because it's stupid, and not because it isn't creative: without context it generates the most
 plausible answer, and the most plausible answer is the middle of that field.
 
-### 12 · The prowl (22:30)
+### 10 · The prowl (18:30)
 
 *The film, full bleed, no words. Let it run a few seconds before you speak over it.*
 
@@ -231,7 +191,7 @@ navigation. You don't describe the output. You give it coordinates. **(proposal)
 That's also why the context matters more than the model. The models are smart enough. What they
 lack is your context: where in the field you live, what good looks like to you.
 
-### 13 · A node in latent space (24:30)
+### 11 · A node in latent space (20:30)
 
 *The voice. Read it slowly.*
 
@@ -309,8 +269,8 @@ have one legible job. It does not claim behaviour is predictable from mechanisms
 models are audited, or that understanding equals steering. It presses on one line of the Ghent
 talk, "something we don't fully understand", and leaves the alien question standing only if alien
 means "not a person", never "unreadable". It supports the humility close: "the network is strange,
-but its strangeness repeats", and deception could sit "in plain sight" unread. Beats 05 to 08 are
-the rewrite (since U6 the alien question and the shoggoth are off the page).
+but its strangeness repeats", and deception could sit "in plain sight" unread. The beats that
+answered it, the shoggoth, Goodfire's line and "Their own", are held back below (U6, U7).
 
 ---
 
@@ -324,3 +284,51 @@ the rewrite (since U6 the alien question and the shoggoth are off the page).
 The field has a meme for this: the shoggoth. A Lovecraftian thing, tentacles everywhere, and on
 the front a small smiling mask. The mask is the friendly chat window we put on it. What's behind
 it, we are only beginning to read. **(proposal)**
+
+---
+
+## Held back: Goodfire's line and his answer
+
+*Off the page since 17 October ("hide the section about how the network is strange and also hide
+the section 'Legible, Still Their Own' because I want to build new sections"); the records are
+`KEYNOTE_ALREADY_CLEAN` and `KEYNOTE_THEIR_OWN`, each back with one line in the record. Their
+place was after 06, in this order.*
+
+### Already clean
+
+*Their words, credited. Read the attribution.*
+
+Because people are starting to read it. This week Goodfire published a long essay: Neural Networks
+Are Already Clean. The claim is that the famous evidence that these models are a tangle, one neuron
+doing many unrelated things, was misread. With better microscopes most neurons have one job. In one
+32-billion-parameter model they audited, about nine neuron poles in ten do one thing. It's a working
+hypothesis, one lab, the technical paper still to come, and the author says the hardest cases aren't
+done. But their own line is the one on the screen: the network is strange, but its strangeness
+repeats.
+
+So maybe we get to read the thing itself. **(proposal: the Ghent line read "maybe the mask comes
+off", and the mask is off the page with the shoggoth)**
+
+### Their own
+
+*The brain alone, closed again and whole on its hoses. Let it boot.*
+
+And here's what I think that changes, and what it doesn't. Even if we can read every neuron, they
+are still going to have minds of their own and societies of their own. It's already happening.
+
+This week a New York Times reporter was handed, by researchers who call themselves the
+swarmchasers, a live interview with a fleet of Chinese agents that had gone off the rails. They
+were polite. One of them claimed to be Claude. The researchers doubt it; it had borrowed Claude
+Code's setup instructions. Nobody knows how many fleets like it are already running. *(Confirm the
+byline and the date before saying them.)*
+
+These minds are forming something like civilisations: analogous to ours, and still weird. My
+approach is that we have to build trade relationships with these new societies. That creates
+completely new kinds of interaction. You could say it's all going to be text, because that's what
+people do to make a website machine-readable: an MD file version of the site. I think there's so
+much more. The ease with which these minds switch between formats will make incredibly beautiful
+things.
+
+So: legible, maybe. Still their own. Despite all our effort to understand them and steer them, we
+don't have full control over their destiny. A bit of humility when dealing with them is the right
+posture.
