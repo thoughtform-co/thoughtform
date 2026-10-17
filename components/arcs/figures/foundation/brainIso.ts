@@ -48,22 +48,22 @@ export const BRAIN_VIEW_ISO: BrainView = { azimuth: 45, elevation: 35.264 };
     top (owner, 2026-10-16: "the frontal view while still maintaining a 3D
     POV"). */
 export const BRAIN_VIEW_FRONT: BrainView = { azimuth: 0, elevation: 22 };
-const projOf = (v: BrainView): Projection => ({ origin: [0, 0], scale: K / UNIT, azimuth: v.azimuth, elevation: v.elevation });
+export const projOf = (v: BrainView): Projection => ({ origin: [0, 0], scale: K / UNIT, azimuth: v.azimuth, elevation: v.elevation });
 const P: Projection = projOf(BRAIN_VIEW_ISO);
 
 const R2 = Math.SQRT1_2;
 /** A point in brain axes to the kit's world. The brain is squared to the
     stack's own axes (its cards run along x and y), so it is seen corner on,
     as they are: L (left to right) is −y, F (back to front) is +x. */
-const W = (l: number, f: number, z: number): Point3 => [f, -l, z];
+export const W = (l: number, f: number, z: number): Point3 => [f, -l, z];
 const WP = (l: number, f: number): Plane => [f, -l];
 void R2;
 
 /** The hemisphere's true numbers. */
-const HEMI = { a: 104, b: 142, up: 150, down: 58, gap: 8, medial: 0.36, n: 2.4 } as const;
+export const HEMI = { a: 104, b: 142, up: 150, down: 58, gap: 8, medial: 0.36, n: 2.4 } as const;
 /** Where the crown is cut, as a share of the dome. */
 const DECK_AT = 0.7;
-const LC = HEMI.gap / 2 + HEMI.medial * HEMI.a;
+export const LC = HEMI.gap / 2 + HEMI.medial * HEMI.a;
 
 const sgnPow = (v: number, p: number) => Math.sign(v) * Math.abs(v) ** p;
 
@@ -76,7 +76,7 @@ const DIE_L = HEMI.gap / 2 + 1;
     drifts with height, so the terraces fold the way gyri do; the medial wall
     stays flat. `flat` (U7) makes it a plane, its front and back ends kept
     round. */
-function contourPoint(side: -1 | 1, s: number, t: number, z = 0, flat = false): [number, number] {
+export function contourPoint(side: -1 | 1, s: number, t: number, z = 0, flat = false): [number, number] {
   const ph = z * 0.045;
   let u = HEMI.a * sgnPow(Math.cos(t), 2 / HEMI.n);
   const sv = sgnPow(Math.sin(t), 2 / HEMI.n);
@@ -95,15 +95,15 @@ function contourPoint(side: -1 | 1, s: number, t: number, z = 0, flat = false): 
 }
 
 /** One hemisphere's contour at scale `s`, as brain-axis points. */
-function contour(side: -1 | 1, s: number, steps = 96, z = 0, flat = false): [number, number][] {
+export function contour(side: -1 | 1, s: number, steps = 96, z = 0, flat = false): [number, number][] {
   const out: [number, number][] = [];
   for (let i = 0; i < steps; i++) out.push(contourPoint(side, s, (i / steps) * Math.PI * 2, z, flat));
   return side > 0 ? out : out.reverse();
 }
 
 /** The dome's scale at height z (above the equator, then below it). */
-const upScale = (z: number) => Math.max(0, 1 - (z / HEMI.up) ** 2.3) ** 0.5;
-const downScale = (z: number) => Math.max(0.5, Math.sqrt(Math.max(0, 1 - (z / HEMI.down) ** 2)));
+export const upScale = (z: number) => Math.max(0, 1 - (z / HEMI.up) ** 2.3) ** 0.5;
+export const downScale = (z: number) => Math.max(0.5, Math.sqrt(Math.max(0, 1 - (z / HEMI.down) ** 2)));
 
 interface Item {
   depth: number;
