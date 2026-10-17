@@ -2,6 +2,8 @@
   "id": "samako",
   "client": "Samako",
   "nav": "Autumn films · Samako",
+  "project": "Autumn films",
+  "glyph": "pair",
   "workstream": "Creative production",
   "piece": "Two 15-second autumn films, from one brief",
   "date": "6 Oct 2026",
@@ -30,6 +32,7 @@
       "n": 1,
       "id": "ask",
       "kick": "The ask",
+      "nav": "Ask",
       "title": ["One message.", "The brief answered the rest."],
       "sub": "The skill has four standing questions. This time the brief and the message answered all four, so Claude asked none.",
       "thought": [
@@ -97,6 +100,7 @@
       "n": 2,
       "id": "look",
       "kick": "Look first",
+      "nav": "Look",
       "title": ["The brief's references.", "Then round 1, honestly."],
       "sub": "Round 1 was right on every rule and looked like one template four times. The paper film described autumn instead of telling a story.",
       "thought": [
@@ -162,6 +166,7 @@
       "n": 3,
       "id": "idea",
       "kick": "The idea",
+      "nav": "Idea",
       "title": ["Two films, two hinges.", "Both a joke the persona would tell."],
       "sub": "A: autumn walks into the house, and the household's boss shrugs. B: the room tidies itself, and the whole range hops in, because the offer is on everything.",
       "thought": [
@@ -228,6 +233,7 @@
       "n": 4,
       "id": "house",
       "kick": "One house",
+      "nav": "House",
       "title": ["Draw the house once.", "Then shoot it six ways."],
       "sub": "Four stills were drawn first and attached to every keyframe after, so every cut is the same house, dog and person.",
       "thought": [
@@ -291,6 +297,7 @@
       "n": 5,
       "id": "animate",
       "kick": "Animate",
+      "nav": "Animate",
       "title": ["Two models on the hard shots.", "Keep one, show what went."],
       "sub": "Kling with start and end frames, Veo for wind and water, Seedance as a second opinion. The film uses one or two seconds of each take.",
       "thought": [
@@ -341,6 +348,7 @@
       "n": 6,
       "id": "product",
       "kick": "The product",
+      "nav": "Product",
       "title": ["No model draws a Samako machine.", "They hop in as photographs."],
       "sub": "Every machine is the photographer's original with its background removed. On screen it only moves across the frame, on twos, landing on the beat.",
       "thought": [
@@ -396,6 +404,7 @@
       "n": 7,
       "id": "cut",
       "kick": "The cut",
+      "nav": "Cut",
       "title": ["Every beat on a frame.", "Cuts land where the music hits."],
       "sub": "The tempo was picked so the maths is exact. In film A, the track's own one-beat silence falls on her sip.",
       "thought": [
@@ -495,6 +504,7 @@
       "n": 8,
       "id": "make",
       "kick": "Making it",
+      "nav": "Make",
       "title": ["Footage from the models.", "Everything else in code."],
       "sub": "The video models made the house come alive. Code put the type, the product, the stop-motion and the grain on every one of the 360 frames.",
       "thought": [
@@ -548,6 +558,7 @@
       "n": 9,
       "id": "check",
       "kick": "Check",
+      "nav": "Check",
       "title": ["A stranger watched it.", "Three times, cold."],
       "sub": "A Gemini model watched each film with sound, three times, and said what it is for and what it read. Only what all three runs agreed on was acted on.",
       "thought": [
@@ -596,6 +607,7 @@
       "n": 10,
       "id": "next",
       "kick": "Next time",
+      "nav": "Next time",
       "title": ["Now it's in the skill.", "Just ask."],
       "sub": "Everything in this case is the visuals skill's motion lane, in Samako's own plugin. Open a chat and say what you want.",
       "thought": [],

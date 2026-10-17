@@ -128,7 +128,7 @@ imports from them.
 ## Checked
 
 - `npx tsc --noEmit` clean; `npx vitest run tests/lib/proposal-swarm-v2.test.ts
-  tests/lib/proposal-swarm.test.ts` 81 of 81 (30 new, the swarm's 51);
+tests/lib/proposal-swarm.test.ts` 81 of 81 (30 new, the swarm's 51);
   `npx eslint` on the lab, the test and the script: nothing.
 - `curl` 200 on the page, `?cut=full`, `?case=suri`, `?case=samako&cut=full`.
 - By eye in Chrome at the owner's window: the column holds while figures pass,
@@ -170,7 +170,149 @@ imports from them.
   the before/after stills are not published.
 - Long: about six screens a case in the short cut. The full cut is longer.
 - Light theme follows the brand tokens; judged on four stills only.
-- Nothing is committed or pushed; the branch is local.
+- Pushed to `origin/main` on 2026-10-17 on the owner's word (`bbfdc03d`).
 - The swarm's `ResizeObserver` rebuilds its world on any height change below
   it; every figure has a fixed height on desktop, so the dossier does not move
   the page once laid out.
+
+# Round 02 (2026-10-17): one block of words, the clients as a switch
+
+## Why
+
+The owner, on round 01: "I don't think we need two text blocks on the left. I
+think we can have the client title and maybe use little labels, etc., so it's
+super clear. We can use a divider … labels, maybe with little subtle icons
+using our particle system, for the project title and the type of thing
+(Creative Production, Creative Ops). Each text element that appears and
+corresponds with the card should be super informative: not too small, not too
+much, and not many conflicting things … I think we also need a toggle
+somewhere, or a bar, that allows us to switch between clients. Really think
+about it from an information architecture perspective."
+
+## What it does
+
+The held column is one block, read top to bottom, in two halves split by a
+divider:
+
+- **Above the divider, the case (held while it lasts).**
+  - The clients: `[01] Loop Earplugs  [02] Samako  [03] Suri` in one row,
+    the case in view in ink with a flat gold lip under it, the others dim.
+    The row is the title and the switch at once.
+  - Two labels, square chips with a particle icon each: the project
+    ("Motion ad", "Autumn films", "Asset library") and the type of work
+    ("Creative production", "Creative operations").
+  - One quiet mono line: the date and the case's one number.
+  - The divider, its first 32px at datum weight, as a ruler's zero.
+- **Below the divider, the figure in the middle (crossfades with it).** The
+  chapter (`[04]`, kick, two-line title, one sentence), the model's trace under
+  a "The model" label with its own particle icon, the call under the green
+  diamond. A step larger than round 01 (the trace 13–15px, the call to 18px).
+- **The chapter index at the foot** replaces round 01's ticks: the chapters by
+  number and name (`03 Ask  04 Look  05 Idea …`), the one in view in ink with a
+  datum underline, each a link to its figure.
+
+The switch:
+
+- **One case at a time, switched in place.** The page is one case long; the
+  reader picks the next from the client names, from **Next case** at the foot
+  of each case (a framed way on, with the next case's labels), or on a phone
+  from a bar of the client names held at the top of the dossier.
+- A switch starts the case from its piece and writes the case into the address
+  (`#case-samako`), so a link opens on it; `?case=` picks the first shown.
+- The menu points at the dossier ("The cases", a chapter of the page) and no
+  longer at each case; the second line keeps its sentence and hands its menu
+  entry to the dossier.
+
+## How it is built
+
+- `dossier/Glyph.tsx` — the particle icons: a 7 × 7 field of square grains,
+  each with a fixed small variance in tone; `play` (production), `flow`
+  (operations), `film`, `pair`, `grid` (projects), `model` (the trace).
+- `dossier/CaseSwitch.tsx` (client) — which case is shown: the reader's pick,
+  else the address's hash (read as a store, so it never sets state in an
+  effect), else `?case=`; renders the clients row, the phone's bar and the one
+  `CaseRun`.
+- `dossier/CaseRun.tsx` — the one-block held column, the chapter index, Next
+  case (observed with the figures, so the last chapter's words stay as it
+  passes the middle).
+- `dossier/CaseDossier.tsx` — builds every case's run on the server and hands
+  them to the switch; the index strip of round 01 is gone.
+- Case records gain `project` and `glyph`; each chapter a one-to-three-word
+  `nav` for the index.
+- `splice.ts` — `DOSSIER_ENTRY` (`#cases`, "The cases", primary) in the jobs'
+  place.
+- `CaseBar` keeps the cut only (the case is the dossier's own switch).
+- The capture opens each case by its address and shoots it in turn.
+
+## Checked
+
+- `npx tsc --noEmit` clean; `npx eslint` on the lab, the test and the script:
+  nothing; `npx vitest run tests/lib/proposal-swarm-v2.test.ts
+tests/lib/proposal-swarm.test.ts` 86 of 86.
+- In Chrome: the switch shows Samako on one click and starts it at its piece,
+  the address follows, the menu reads "The cases" inside the dossier, Next case
+  reads at the foot.
+- Stills in `round-02/` (dark, 1920×1247, 1280×720, 390×844).
+
+## Decisions taken without asking
+
+- One case at a time rather than three stacked: the switch is the reader's way
+  between them, and the page stays one case long.
+- The client row replaces a separate client title (the lit name is the title).
+- The case's sentence and its big number left the head: the sentence is the
+  piece's own title (`[00]`), the number sits in the quiet meta line.
+- Chapter names in the index keep their full-cut numbers, as the figures do.
+- The `.csd-bar` class was the cost bar's already; the phone's bar is
+  `.csd-switchbar`.
+
+## Known and not fixed
+
+- The phone's bar is held at the top of the dossier; it is not yet judged
+  against the site header on a real phone.
+- More than four or five clients would wrap the row; then it wants a compact
+  form (a menu), not decided.
+
+# Round 03 (2026-10-17): the job panels' numbered cards
+
+## Why
+
+The owner, on round 02: "With the Loop Earplugs, etc., and Motion ads, the
+items are at the top and the text is further down, which is confusing. I don't
+know what to look at. It needs to be all integrated nicely, with the text on
+the left side … there's too much text. This should be super clear. Use the
+static cards we had on the former swarm page with the numbers. It needs to be a
+super clear visual from an information architecture point of view."
+
+## What it does
+
+- **One group, in the middle of the screen.** The client names, the two
+  labels, and right under them the case's cards, read as one thing; no space
+  between the case and its words, no divider, no date line.
+- **The cards are the job panels' numbered steps** (`01 · Navigate`,
+  `02 · Encode` …, `components/arcs/ArcJob.tsx`, `job-stack.css`), redrawn in
+  the lab: a hairline box with a double hairline, a tab in its top-left corner
+  (`03 · Look first`), the chapter's two short sentences inside, a centre line
+  to the next card. One card a figure, in order.
+- **The card of the figure in the middle is lit:** gold tab, ink, its two
+  sentences on two lines, and under a dashed rule one line of the model's
+  thinking with the particle icon. The other cards stay dim on one line; each
+  is a link to its figure. In the full cut (more than eight cards) the dim ones
+  keep their tab only.
+- **The numbers run 01, 02, 03 … in the cut shown**, and each figure's `FIG.`
+  number is its card's, so a card and its picture pair at a glance.
+- **Less text:** the big chapter title, its sentence, the four-line trace, the
+  call, the chapter index and the date line are gone from the left. What a card
+  says is its two sentences; what the model thought is one line.
+
+## Decisions taken without asking
+
+- Calls (where a person decided) are off the left this round; they stay in the
+  case records for a later place (the figure, or the lit card).
+- The lit card's model line is the chapter's first recorded thought.
+- Numbering follows the cut shown, so a chapter's number differs between the
+  short and the full cut (round 01 numbered by the full cut and left gaps).
+
+## Known and not fixed
+
+- The lit card grows by a line or two as it lights, so the cards under it move;
+  quick, not animated.

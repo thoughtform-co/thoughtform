@@ -13,6 +13,8 @@
  * frame, the line law and the one lit object.
  */
 
+import type { GlyphName } from "./Glyph";
+
 export type Cut = "short" | "full";
 
 /** A person's decision, named by role, never by name. */
@@ -152,6 +154,8 @@ export interface Chapter {
   n: number;
   id: string;
   kick: string;
+  /** The chapter's name in the index, one word ("Ask"); else the kick. */
+  nav?: string;
   title: readonly [string, string];
   sub: string;
   thought: readonly string[];
@@ -168,7 +172,10 @@ export interface Case {
   client: string;
   /** The menu's words for it ("Motion ad · Loop"). */
   nav: string;
-  /** The workstream it proves. */
+  /** The project, as a label ("Motion ad"), and its particle icon. */
+  project: string;
+  glyph: GlyphName;
+  /** The workstream it proves ("Creative production"); its icon follows. */
   workstream: string;
   /** The piece, in one line. */
   piece: string;

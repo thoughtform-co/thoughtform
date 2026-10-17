@@ -9,9 +9,12 @@
  * Each size also reports what a still cannot show: whether the held column
  * fits the screen, and whether anything is wider than the page.
  *
+ * The dossier shows one case at a time (round 02), so each case is opened by
+ * its own address (`?case=`) and shot in turn.
+ *
  * Usage (dev server already running):
  *   node scripts/capture-proposal-swarm-v2.mjs --port 3031
- *     [--cut short|full] [--case loop|samako|suri]
+ *     [--cut short|full] [--case loop,samako,suri]
  *     [--sizes 1920x1247,1976x966,1280x720,390x844] [--themes dark,light]
  *     [--out docs/design/proposal-swarm-v2/round-01] [--only case-loop-ask,…]
  *     [--twice]
@@ -29,7 +32,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3031");
 const CUT = argOf("--cut", "short");
-const CASE = argOf("--case", "");
+const CASES = argOf("--case", "loop,samako,suri").split(",").filter(Boolean);
 const OUT = argOf("--out", "docs/design/proposal-swarm-v2/round-01");
 const ONLY = argOf("--only", "").split(",").filter(Boolean);
 const SIZES = argOf("--sizes", "1920x1247")
@@ -38,10 +41,11 @@ const SIZES = argOf("--sizes", "1920x1247")
 const THEMES = argOf("--themes", "dark").split(",");
 const TWICE = args.includes("--twice");
 
-const query = new URLSearchParams({ still: "1" });
-if (CUT !== "short") query.set("cut", CUT);
-if (CASE) query.set("case", CASE);
-const URL = `http://localhost:${PORT}/test/proposal-swarm-v2?${query}`;
+const urlOf = (c) => {
+  const query = new URLSearchParams({ still: "1", case: c });
+  if (CUT !== "short") query.set("cut", CUT);
+  return `http://localhost:${PORT}/test/proposal-swarm-v2?${query}`;
+};
 
 async function shoot(browser, dir) {
   await mkdir(dir, { recursive: true });
@@ -62,80 +66,96 @@ async function shoot(browser, dir) {
       }, theme);
       const page = await ctx.newPage();
       page.on("pageerror", (e) => console.log(`! page error: ${e.message}`));
-      await page.goto(URL, { waitUntil: "load" });
-      await page.waitForSelector(".csd-run", { timeout: 240000 });
-      await page.evaluate(() => document.fonts.ready);
-      await page.addStyleTag({
-        content:
-          "nextjs-portal{display:none!important} html{scroll-behavior:auto!important} *,*::before,*::after{transition:none!important;animation:none!important}",
-      });
-      const panels = await page.$$eval(".csd-panel", (els) =>
-        els.map((el) => ({ id: el.id, i: Number(el.dataset.csI) }))
-      );
       const wide = w > 960;
       const sub = path.join(dir, `${theme}-${w}x${h}`);
       await mkdir(sub, { recursive: true });
       const fits = [];
-      for (const p of panels) {
-        if (ONLY.length && !ONLY.includes(p.id)) continue;
-        /* a phone's panel is taller than the screen: shoot it from its top */
-        await page.evaluate(
-          ({ id, block }) => {
-            document.getElementById(id)?.scrollIntoView({ block, behavior: "instant" });
-          },
-          { id: p.id, block: wide ? "center" : "start" }
+      const panels = [];
+      for (const c of CASES) {
+        await page.goto(urlOf(c), { waitUntil: "load" });
+        await page.waitForSelector(`#case-${c}`, { timeout: 240000 });
+        await page.evaluate(() => document.fonts.ready);
+        await page.addStyleTag({
+          content:
+            "nextjs-portal{display:none!important} html{scroll-behavior:auto!important} *,*::before,*::after{transition:none!important;animation:none!important}",
+        });
+        const these = await page.$$eval(".csd-panel", (els) =>
+          els.map((el) => ({ id: el.id, i: Number(el.dataset.csI) }))
         );
-        if (wide) {
-          await page
-            .waitForFunction(
-              ({ id, i }) => {
-                const run = document.getElementById(id)?.closest(".csd-run");
-                return run && Number(run.getAttribute("data-cs-at")) === i;
-              },
-              p,
-              { timeout: 4000 }
-            )
-            .catch(() => console.log(`! ${p.id}: the held column did not change`));
-        }
-        /* the pictures in view, with a limit: a lazy one below the fold never loads */
-        await page.evaluate(async (id) => {
-          const imgs = [...(document.getElementById(id)?.querySelectorAll("img") ?? [])];
-          const loaded = Promise.all(
-            imgs.map((im) =>
-              im.complete
-                ? null
-                : new Promise((r) => {
-                    im.addEventListener("load", r, { once: true });
-                    im.addEventListener("error", r, { once: true });
-                  })
-            )
-          );
-          await Promise.race([loaded, new Promise((r) => setTimeout(r, 3000))]);
-        }, p.id);
-        await page.waitForTimeout(120);
-        const fit = await page.evaluate((id) => {
-          const run = document.getElementById(id)?.closest(".csd-run");
-          const stick = run?.querySelector(".csd-run__stick");
-          const on = run?.querySelector(".csd-run__stack > .csd-ch[data-on]");
-          const sb = stick?.getBoundingClientRect();
-          const ob = on?.getBoundingClientRect();
-          return {
-            over: stick ? stick.scrollHeight - stick.clientHeight : 0,
-            words: sb && ob ? Math.round(ob.bottom - sb.bottom) : 0,
-            wider: document.documentElement.scrollWidth - window.innerWidth,
-          };
-        }, p.id);
-        fits.push({ id: p.id, ...fit });
-        const file = path.join(sub, `${p.id}.png`);
-        await page.screenshot({ path: file });
-        shot.push(file);
+        panels.push(...these);
+        await shootPanels(these);
       }
-      const bad = fits.filter((f) => (wide && (f.over > 0 || f.words > 0)) || f.wider > 0);
+      async function shootPanels(list) {
+        for (const p of list) {
+          if (ONLY.length && !ONLY.includes(p.id)) continue;
+          /* a phone's panel is taller than the screen: shoot it from its top */
+          await page.evaluate(
+            ({ id, block }) => {
+              document.getElementById(id)?.scrollIntoView({ block, behavior: "instant" });
+            },
+            { id: p.id, block: wide ? "center" : "start" }
+          );
+          if (wide) {
+            await page
+              .waitForFunction(
+                ({ id, i }) => {
+                  const run = document.getElementById(id)?.closest(".csd-run");
+                  return run && Number(run.getAttribute("data-cs-at")) === i;
+                },
+                p,
+                { timeout: 4000 }
+              )
+              .catch(() => console.log(`! ${p.id}: the held column did not change`));
+          }
+          /* the pictures in view, with a limit: a lazy one below the fold never loads */
+          await page.evaluate(async (id) => {
+            const imgs = [...(document.getElementById(id)?.querySelectorAll("img") ?? [])];
+            const loaded = Promise.all(
+              imgs.map((im) =>
+                im.complete
+                  ? null
+                  : new Promise((r) => {
+                      im.addEventListener("load", r, { once: true });
+                      im.addEventListener("error", r, { once: true });
+                    })
+              )
+            );
+            await Promise.race([loaded, new Promise((r) => setTimeout(r, 3000))]);
+          }, p.id);
+          await page.waitForTimeout(120);
+          const fit = await page.evaluate((id) => {
+            const run = document.getElementById(id)?.closest(".csd-run");
+            const stick = run?.querySelector(".csd-run__stick");
+            const sb = stick?.getBoundingClientRect();
+            /* the group (the case and its cards) must sit wholly on the screen,
+               and the lit card must be the one of the figure in the middle */
+            const gb = run?.querySelector(".csd-group")?.getBoundingClientRect();
+            const lit = run?.querySelectorAll(".csd-cards .csd-card[data-on]").length ?? 0;
+            const clash =
+              gb && sb
+                ? Math.round(Math.max(sb.top - gb.top, gb.bottom - window.innerHeight, 0))
+                : 0;
+            return {
+              over: stick ? stick.scrollHeight - stick.clientHeight : 0,
+              words: lit === 1 ? 0 : 1,
+              clash,
+              wider: document.documentElement.scrollWidth - window.innerWidth,
+            };
+          }, p.id);
+          fits.push({ id: p.id, ...fit });
+          const file = path.join(sub, `${p.id}.png`);
+          await page.screenshot({ path: file });
+          shot.push(file);
+        }
+      }
+      const bad = fits.filter(
+        (f) => (wide && (f.over > 0 || f.words > 0 || f.clash > 0)) || f.wider > 0
+      );
       report.push(
         `${theme} ${w}x${h}: ${fits.length} panels` +
           (bad.length
-            ? `; ${bad.map((f) => `${f.id} (column over ${f.over}px, words past ${f.words}px, page wider by ${f.wider}px)`).join("; ")}`
-            : "; the held column fits and nothing is wider than the page")
+            ? `; ${bad.map((f) => `${f.id} (column over ${f.over}px, lit cards wrong: ${f.words ? "yes" : "no"}, group off the screen by ${f.clash}px, page wider by ${f.wider}px)`).join("; ")}`
+            : "; the held column fits, nothing overlaps in it, nothing is wider than the page")
       );
       await ctx.close();
     }

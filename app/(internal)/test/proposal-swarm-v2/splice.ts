@@ -18,12 +18,18 @@ export const JOB_IDS = ["job-production", "job-ops", "job-review", "job-strategy
 export const BEFORE_ID = "proof-brands";
 export const AFTER_ID = "offer";
 
-/** The dossier's own anchors; the menu lists the cases, never the wrapper,
- *  because nested elements cross the active band together and flicker. */
+/** What the menu lists where the jobs were. Round 02 switches the cases in
+ *  place, so it is the dossier itself ("The cases", a chapter of the page),
+ *  and never both the dossier and a case inside it: nested elements cross the
+ *  active band together and flicker. */
 export interface DossierEntry {
   id: string;
   label: string;
+  primary?: boolean;
 }
+
+/** The dossier's own menu entry. */
+export const DOSSIER_ENTRY: DossierEntry = { id: "cases", label: "The cases", primary: true };
 
 export interface Spliced {
   /** Sections drawn before the dossier (from the third on). */
@@ -37,7 +43,6 @@ export interface Spliced {
 }
 
 export const LINE = { pre: "How we've made brands", em: "self-sufficient with AI." } as const;
-export const LINE_LABEL = "The cases";
 
 export function spliceCases(
   sections: readonly ArcSection[],
@@ -59,16 +64,20 @@ export function spliceCases(
   }
   if (at < drawn) throw new Error("proposal-swarm-v2: the jobs moved into the drawn opening");
 
+  /* the line keeps its sentence but for "other"; its menu entry passes to
+     what is put in the jobs' place */
   const relined = sections.map((s) =>
     s.id === BEFORE_ID && s.kind === "interstitial"
-      ? ({ ...s, line: { ...LINE }, menuLabel: LINE_LABEL } as ArcSection)
+      ? ({ ...s, line: { ...LINE }, menuLabel: undefined, menuPrimary: undefined } as ArcSection)
       : s
   );
 
   const menu: ArcMenuItem[] = [];
   relined.forEach((s, i) => {
     if (i >= at && i < end) {
-      if (i === at) for (const c of cases) menu.push({ id: c.id, label: c.label });
+      if (i === at) {
+        for (const c of cases) menu.push({ id: c.id, label: c.label, primary: c.primary });
+      }
       return;
     }
     if (s.menuLabel) menu.push({ id: s.id, label: s.menuLabel, primary: s.menuPrimary });

@@ -2,6 +2,8 @@
   "id": "loop",
   "client": "Loop Earplugs",
   "nav": "Motion ad · Loop",
+  "project": "Motion ad",
+  "glyph": "film",
   "workstream": "Creative production",
   "piece": "A 10-second Halloween ad, from one prompt",
   "date": "1 Oct 2026",
@@ -30,6 +32,7 @@
       "n": 1,
       "id": "setup",
       "kick": "The setup",
+      "nav": "Setup",
       "title": ["Where it lives.", "A skill, in a plugin, on Loop's shelf."],
       "sub": "Nobody installs anything by hand. Turn the plugin on once, and the skill is there in every Claude app.",
       "thought": [
@@ -101,6 +104,7 @@
       "n": 2,
       "id": "runs",
       "kick": "How it runs",
+      "nav": "How it runs",
       "title": ["You ask in your own words.", "The skill does the rest."],
       "sub": "Claude picks the right skill, follows its steps, checks its own work, and hands you the decision.",
       "thought": [
@@ -166,6 +170,7 @@
       "n": 3,
       "id": "ask",
       "kick": "The ask",
+      "nav": "Ask",
       "title": ["You send one message.", "Claude asks four questions."],
       "sub": "Each one comes with a recommended answer. You click, and the work starts.",
       "thought": [
@@ -232,6 +237,7 @@
       "n": 4,
       "id": "look",
       "kick": "Look first",
+      "nav": "Look",
       "title": ["Look before drawing.", "Your ads first, then the world."],
       "sub": "Loop's own approved ads set the rules. Outside trends set the mood.",
       "thought": [
@@ -298,6 +304,7 @@
       "n": 5,
       "id": "idea",
       "kick": "The idea",
+      "nav": "Idea",
       "title": ["One idea, one hinge.", "The earplug is the O."],
       "sub": "A matte paper world. The only shiny, real thing in it is the product.",
       "thought": [
@@ -384,6 +391,7 @@
       "n": 6,
       "id": "plan",
       "kick": "The plan",
+      "nav": "Plan",
       "title": ["Every beat on a frame.", "Before anything moves."],
       "sub": "The tempo was picked so the maths is exact. Cuts land where the music really hits.",
       "thought": [
@@ -508,6 +516,7 @@
       "n": 7,
       "id": "ingredients",
       "kick": "Ingredients",
+      "nav": "Ingredients",
       "title": ["Generate a little.", "Never redraw the product."],
       "sub": "Only paper and sound were generated. Everything else is code, or Loop's own files.",
       "thought": [
@@ -597,6 +606,7 @@
       "n": 8,
       "id": "make",
       "kick": "Making it",
+      "nav": "Make",
       "title": ["Drawn in code, frame by frame.", "Like stop-motion on a table."],
       "sub": "No video model. Code draws all 240 frames, the same way every time.",
       "thought": [
@@ -656,6 +666,7 @@
       "n": 9,
       "id": "sound",
       "kick": "Sound",
+      "nav": "Sound",
       "title": ["The claim, made audible.", "Noise drops 17 dB as the earplug lands."],
       "sub": "The music keeps playing, clear. Every effect lands on its frame.",
       "thought": [
@@ -734,6 +745,7 @@
       "n": 10,
       "id": "check",
       "kick": "Check",
+      "nav": "Check",
       "title": ["Look. Fix. Look again.", "Nine rounds of stills."],
       "sub": "If something reads wrong, it goes, however long it took to build.",
       "thought": [
@@ -818,6 +830,7 @@
       "n": 11,
       "id": "cost",
       "kick": "Cost",
+      "nav": "Cost",
       "title": ["About $27.", "Mostly Claude."],
       "sub": "The evening of 1 October, at published prices. No video model, so no video bill.",
       "thought": [
@@ -887,6 +900,7 @@
       "n": 12,
       "id": "next",
       "kick": "Next time",
+      "nav": "Next time",
       "title": ["Now it's a skill.", "Just ask."],
       "sub": "Everything in this case is written down in one skill, in the studio's plugin. Open a chat and say what you want.",
       "thought": [

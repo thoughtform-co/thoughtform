@@ -5,6 +5,11 @@ import { describe, expect, it } from "vitest";
 
 import { CASES } from "@/app/(internal)/test/proposal-swarm-v2/dossier/cases";
 import {
+  GLYPH_NAMES,
+  GLYPHS,
+  workstreamGlyph,
+} from "@/app/(internal)/test/proposal-swarm-v2/dossier/Glyph";
+import {
   ASSET_PREFIXES,
   assertCase,
   cutCase,
@@ -19,9 +24,9 @@ import type { Case } from "@/app/(internal)/test/proposal-swarm-v2/dossier/types
 import {
   AFTER_ID,
   BEFORE_ID,
+  DOSSIER_ENTRY,
   JOB_IDS,
   LINE,
-  LINE_LABEL,
   spliceCases,
 } from "@/app/(internal)/test/proposal-swarm-v2/splice";
 import { X_BIONIC_PROPOSAL_ARC as PROD } from "@/lib/arcs/content/x-bionic-proposal";
@@ -50,7 +55,7 @@ function files(dir: string): string[] {
 const PEOPLE = /\b(Katia|Rita|Job|Vince|Alexander|Marco|Kate|Nick|Lottie|Adam|Rob|Nadine)\b/;
 
 describe("the splice", () => {
-  const entries = CASES.map((c) => ({ id: `case-${c.id}`, label: c.nav }));
+  const entries = [DOSSIER_ENTRY];
   const s = spliceCases(PROD.sections, 2, entries);
 
   it("takes out exactly the four job panels and nothing else", () => {
@@ -70,19 +75,20 @@ describe("the splice", () => {
     expect(s.head[s.head.length - 1].id).toBe(BEFORE_ID);
   });
 
-  it("keeps the line's sentence but for 'other', and labels it 'The cases'", () => {
+  it("keeps the line's sentence but for 'other', and hands its menu entry on", () => {
     const line = s.head.find((x) => x.id === BEFORE_ID);
     expect(line && "line" in line ? line.line : null).toEqual(LINE);
-    expect(s.menu.find((m) => m.id === BEFORE_ID)?.label).toBe(LINE_LABEL);
+    expect(s.menu.find((m) => m.id === BEFORE_ID)).toBeUndefined();
     const original = PROD.sections.find((x) => x.id === BEFORE_ID);
     expect(original && "line" in original ? original.line.pre : "").toContain("other brands");
   });
 
-  it("lists the cases where the jobs were, never the wrapper", () => {
+  it("lists the dossier, a chapter of the page, where the jobs were; never a case", () => {
     const ids = s.menu.map((m) => m.id);
-    const at = ids.indexOf(BEFORE_ID);
-    expect(ids.slice(at + 1, at + 1 + entries.length)).toEqual(entries.map((e) => e.id));
-    expect(ids).not.toContain("cases");
+    const dossier = s.menu.find((m) => m.id === DOSSIER_ENTRY.id);
+    expect(dossier).toEqual({ id: "cases", label: "The cases", primary: true });
+    expect(ids.indexOf(DOSSIER_ENTRY.id)).toBe(ids.indexOf(AFTER_ID) - 1);
+    expect(ids.some((id) => id.startsWith("case-"))).toBe(false);
     for (const id of JOB_IDS) expect(ids).not.toContain(id);
   });
 
@@ -101,6 +107,17 @@ describe("the cases", () => {
     describe(c.id, () => {
       it("hold the template's own checks", () => {
         expect(() => assertCase(c)).not.toThrow();
+      });
+
+      it("carry their labels: a project with an icon, a type of work, a name a chapter", () => {
+        expect(c.project.length).toBeGreaterThan(0);
+        expect(c.project.length).toBeLessThanOrEqual(18);
+        expect(GLYPH_NAMES).toContain(c.glyph);
+        expect(["play", "flow"]).toContain(workstreamGlyph(c.workstream));
+        for (const ch of c.chapters) {
+          expect(ch.nav, ch.id).toBeTruthy();
+          expect((ch.nav ?? "").split(" ").length, ch.id).toBeLessThanOrEqual(3);
+        }
       });
 
       it(`show ${SHORT_MIN} to ${SHORT_MAX} chapters in the short cut, every one in the full`, () => {
@@ -147,6 +164,21 @@ describe("the cases", () => {
     walk(samako, "samako", (s, at) => {
       expect(/[$€]\s?\d/.test(s), `${at}: "${s}"`).toBe(false);
     });
+  });
+});
+
+describe("the particle icons", () => {
+  it("are 7 × 7 fields of grains", () => {
+    for (const name of GLYPH_NAMES) {
+      const rows = GLYPHS[name];
+      expect(rows, name).toHaveLength(7);
+      for (const r of rows) expect(r, name).toMatch(/^[#.]{7}$/);
+    }
+  });
+
+  it("tell production and operations apart", () => {
+    expect(workstreamGlyph("Creative production")).toBe("play");
+    expect(workstreamGlyph("Creative operations")).toBe("flow");
   });
 });
 

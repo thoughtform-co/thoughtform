@@ -2,6 +2,8 @@
   "id": "suri",
   "client": "Suri",
   "nav": "Asset library · Suri",
+  "project": "Asset library",
+  "glyph": "grid",
   "workstream": "Creative operations",
   "piece": "An asset library that reads every file",
   "date": "7 to 13 Oct 2026",
@@ -50,6 +52,7 @@
       "n": 1,
       "id": "stall",
       "kick": "The stall",
+      "nav": "Stall",
       "title": ["Every search", "began in a folder."],
       "sub": "The files were all there, but the folders did not say what was in them.",
       "thought": [
@@ -104,6 +107,7 @@
       "n": 2,
       "id": "read",
       "kick": "Read",
+      "nav": "Read",
       "title": ["The whole Drive,", "read by a vision model."],
       "sub": "Every unique video and real image was looked at, and anything that could not be read was listed with its reason.",
       "thought": [
@@ -157,6 +161,7 @@
       "n": 3,
       "id": "grouped",
       "kick": "Grouped",
+      "nav": "Grouped",
       "title": ["Sorted by", "what each file shows."],
       "sub": "Each read became a point, and points that read alike sit together, in 60 groups.",
       "thought": [
@@ -199,6 +204,7 @@
       "n": 4,
       "id": "joined",
       "kick": "Joined",
+      "nav": "Joined",
       "title": ["Briefs and designs", "on the same map."],
       "sub": "Every readable Monday board and the Figma files it links were laid out beside the Drive.",
       "thought": [
@@ -256,6 +262,7 @@
       "n": 5,
       "id": "meaning",
       "kick": "By meaning",
+      "nav": "Search",
       "title": ["Ask in words,", "land on the moment."],
       "sub": "A question is read, searched three ways, and the top frames are checked before anything counts as a match.",
       "thought": [

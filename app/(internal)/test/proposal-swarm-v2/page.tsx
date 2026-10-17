@@ -15,11 +15,11 @@ import { GRAINS } from "../proposal-swarm/engine/lattice";
 import { type Mark, MARKS } from "../proposal-swarm/engine/mark";
 import { SwarmAct } from "../proposal-swarm/SwarmAct";
 import { CaseBar } from "./CaseBar";
-import { caseAnchor, CaseDossier } from "./dossier/CaseDossier";
+import { CaseDossier } from "./dossier/CaseDossier";
 import { CASES } from "./dossier/cases";
 import { cutCase } from "./dossier/story";
 import type { Cut } from "./dossier/types";
-import { spliceCases } from "./splice";
+import { DOSSIER_ENTRY, spliceCases } from "./splice";
 
 /* ⚠ STYLESHEET ORDER IS LOAD-BEARING: the swarm page's chain verbatim (itself
    the travelling copy's, itself the arc leaf route's), then the swarm's own
@@ -101,7 +101,7 @@ export default async function ProposalSwarmV2Route({
     ? (one(q.cut) as Cut)
     : "short";
   const only = one(q.case);
-  const cases = CASES.filter((c) => !only || c.id === only).map((c) => cutCase(c, cut));
+  const cases = CASES.map((c) => cutCase(c, cut));
 
   if (PROD.sections[0].id !== DRAWN[0] || PROD.sections[1].id !== DRAWN[1]) {
     throw new Error(
@@ -113,11 +113,9 @@ export default async function ProposalSwarmV2Route({
   if (motion === "terminal") {
     throw new Error("proposal-swarm-v2: the canvas and the dossier need the sections in flow");
   }
-  const spliced = spliceCases(
-    PROD.sections,
-    DRAWN.length,
-    cases.map((c) => ({ id: caseAnchor(c), label: c.nav }))
-  );
+  /* the cases are switched inside the dossier, one at a time, so the menu
+     points at the dossier ("The cases") and not at each case */
+  const spliced = spliceCases(PROD.sections, DRAWN.length, [DOSSIER_ENTRY]);
   const slice = sliceV7Sections([]);
   return (
     <ArcShell
@@ -176,13 +174,13 @@ export default async function ProposalSwarmV2Route({
 
       {/* the cases, where the four job panels were */}
       <ArcBeat
-        id="cases"
+        id={DOSSIER_ENTRY.id}
         kind="proof-card"
         className="arc-section"
-        ariaLabel="The cases"
+        ariaLabel={DOSSIER_ENTRY.label}
         motion={motion}
       >
-        <CaseDossier cases={cases} still={still} />
+        <CaseDossier cases={cases} initial={only} still={still} />
       </ArcBeat>
 
       <ArcSectionRenderer
@@ -190,7 +188,7 @@ export default async function ProposalSwarmV2Route({
         motion={motion}
         indexOffset={spliced.tailOffset}
       />
-      {still ? null : <CaseBar cut={cut} only={only} fly={fly} n={n} mark={mark} />}
+      {still ? null : <CaseBar cut={cut} fly={fly} n={n} mark={mark} />}
     </ArcShell>
   );
 }
