@@ -177,6 +177,9 @@ export interface Case {
   glyph: GlyphName;
   /** The workstream it proves ("Creative production"); its icon follows. */
   workstream: string;
+  /** What it saved, as the job panels' result: before, now, and whether the
+   *  before is an estimate. */
+  saved: { label: string; before?: string; now: string; estimated?: boolean };
   /** The piece, in one line. */
   piece: string;
   date: string;

@@ -200,122 +200,185 @@
   color: var(--csd-ink-2);
 }
 
-/* ── the cards: the job panels' numbered steps, one a figure ───────── */
-.csd-cards {
-  --cv: clamp(8px, 1.4svh, 14px);
+/* ── the step: a thin bar of steps, then the one in view ───────────── */
+.csd-step {
   display: grid;
-  gap: var(--cv);
+  gap: 14px;
 }
-.csd-cards > li {
-  position: relative;
+.csd-step__bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-/* the centre line from the card above, as between the job panel's steps */
-.csd-cards > li + li::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 1px;
-  height: var(--cv);
-  background: var(--csd-seam);
+.csd-steps {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 4px;
 }
+.csd-steps li {
+  flex: 1 1 0;
+}
+/* a segment: a hairline, taller and gold for the step in view, datum for
+   the ones already passed; each is a link to its figure */
+.csd-steps button {
+  display: block;
+  width: 100%;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(var(--csd-rule), var(--csd-rule)) center / 100% 2px no-repeat;
+  cursor: pointer;
+  transition: background 300ms;
+}
+.csd-steps li[data-past] button {
+  background-image: linear-gradient(var(--csd-datum), var(--csd-datum));
+}
+.csd-steps li[data-on] button {
+  background-image: linear-gradient(var(--csd-gold), var(--csd-gold));
+  background-size: 100% 3px;
+}
+.csd-steps button:hover {
+  background-image: linear-gradient(var(--csd-ink-2), var(--csd-ink-2));
+}
+.csd-steps button:focus-visible {
+  outline: 1px solid var(--csd-gold);
+  outline-offset: 2px;
+}
+.csd-step__count {
+  flex: none;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+/* the one card: every step's card in one cell, only the one in view shown,
+   a short fade between them (subtle by ask) */
+.csd-step__stack {
+  display: grid;
+}
+.csd-step__stack > .csd-card {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition:
+    opacity 360ms cubic-bezier(0.65, 0, 0.35, 1),
+    transform 360ms cubic-bezier(0.65, 0, 0.35, 1),
+    visibility 0s linear 360ms;
+}
+.csd-step__stack > .csd-card[data-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 360ms cubic-bezier(0.65, 0, 0.35, 1) 60ms,
+    transform 360ms cubic-bezier(0.65, 0, 0.35, 1) 60ms,
+    visibility 0s;
+}
+
+/* the card: the job panels' numbered step, a gold tab in its top-left corner */
 .csd-card {
   position: relative;
   display: grid;
-  gap: 8px;
-  width: 100%;
+  align-content: start;
   margin: 0;
-  padding: 30px 14px 12px;
-  border: 1px solid var(--csd-rule);
+  padding: 34px 18px 18px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.24);
   background: var(--csd-plate);
   /* the double hairline: a second line 4px inside */
   box-shadow:
     inset 0 0 0 3px rgba(var(--void-deep-rgb), 0.92),
     inset 0 0 0 4px rgba(var(--dawn-rgb), 0.06);
-  color: var(--csd-ink-3);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    color 240ms,
-    border-color 240ms;
+  color: var(--csd-ink);
 }
 .csd-card__tab {
   position: absolute;
   top: -1px;
   left: -1px;
   padding: 5px 8px;
-  border: 1px solid var(--csd-rule);
-  background: var(--csd-tint);
+  border: 1px solid rgba(var(--gold-rgb, 202, 165, 84), 0.5);
+  background: rgba(var(--gold-rgb, 202, 165, 84), 0.12);
   font-family: var(--csd-mono);
   font-size: 12px;
   line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--csd-ink-3);
+  color: var(--csd-gold);
 }
 .csd-card__text {
-  overflow: hidden;
-  font-size: 15px;
-  line-height: 1.4;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.csd-card__lead {
-  display: none;
-}
-.csd-card:not([data-on]):hover {
-  border-color: var(--csd-seam);
-  color: var(--csd-ink-2);
-}
-.csd-card:focus-visible {
-  outline: 1px solid var(--csd-gold);
-  outline-offset: 2px;
-}
-/* the card of the figure in the middle: lit, whole, with the model's line */
-.csd-card[data-on] {
-  border-color: rgba(var(--dawn-rgb), 0.24);
-  color: var(--csd-ink);
-  cursor: default;
-}
-.csd-card[data-on] .csd-card__tab {
-  border-color: rgba(var(--gold-rgb, 202, 165, 84), 0.5);
-  background: rgba(var(--gold-rgb, 202, 165, 84), 0.12);
-  color: var(--csd-gold);
-}
-.csd-card[data-on] .csd-card__text {
-  font-size: min(var(--type-xl, 22px), 2.8svh);
+  display: grid;
+  font-size: min(var(--type-xl, 22px), 2.9svh);
   line-height: 1.3;
-  white-space: normal;
   text-wrap: balance;
 }
-.csd-card[data-on] .csd-card__text > span {
-  display: block;
-}
-.csd-card[data-on] .csd-card__em {
+.csd-card__em {
   color: var(--csd-gold);
 }
-.csd-card[data-on] .csd-card__lead {
+
+/* ── what it saved: before and now, the job panels' result, small ──── */
+/* a quiet card: the step's hairline box, no tab, no gold edge */
+.csd-saved {
+  display: grid;
+  gap: 10px;
+  padding: 14px 18px 16px;
+  border: 1px solid var(--csd-rule);
+  background: var(--csd-plate);
+  box-shadow:
+    inset 0 0 0 3px rgba(var(--void-deep-rgb), 0.92),
+    inset 0 0 0 4px rgba(var(--dawn-rgb), 0.05);
+}
+.csd-saved__k {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(var(--dawn-rgb), 0.14);
+  gap: 8px;
+  margin: 0;
   font-family: var(--csd-mono);
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--csd-ink-2);
 }
-/* many cards (the full cut): the dim ones keep their tab only */
-.csd-cards[data-dense] .csd-card:not([data-on]) {
-  min-height: 26px;
-  padding: 0;
-  border-color: transparent;
-  background: none;
-  box-shadow: none;
+.csd-saved__k span {
+  margin-left: auto;
+  color: var(--csd-ink-3);
 }
-.csd-cards[data-dense] .csd-card:not([data-on]) .csd-card__text {
-  display: none;
+.csd-saved__row {
+  display: grid;
+  grid-template-columns: 7ch minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+}
+.csd-saved__when {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+/* the bars: the old way long and quiet, the new way short and gold */
+.csd-saved__row i {
+  display: block;
+  height: 6px;
+}
+.csd-saved__row[data-row="before"] i {
+  width: 100%;
+  background: repeating-linear-gradient(90deg, var(--csd-seam) 0 2px, transparent 2px 5px);
+}
+.csd-saved__row[data-row="now"] i {
+  width: 14%;
+  min-width: 18px;
+  background: var(--csd-gold);
+}
+.csd-saved__what {
+  grid-column: 2;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--csd-ink-2);
+}
+.csd-saved__row[data-row="now"] .csd-saved__what {
+  color: var(--csd-ink);
 }
 
 /* next case: the foot of each case, a framed way on */
@@ -487,6 +550,25 @@
     1px 1px
   );
 }
+/* the frame's one gold: a cross on each square corner, inside the hairlines */
+.csd-x {
+  position: absolute;
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--csd-gold), var(--csd-gold)) center / 100% 1px no-repeat,
+    linear-gradient(var(--csd-gold), var(--csd-gold)) center / 1px 100% no-repeat;
+}
+.csd-x[data-corner="tl"] {
+  top: 9px;
+  left: 9px;
+}
+.csd-x[data-corner="br"] {
+  right: 9px;
+  bottom: 9px;
+}
 .csd-frame__head {
   display: flex;
   align-items: baseline;
@@ -494,7 +576,7 @@
   gap: 8px 20px;
   flex-wrap: wrap;
   margin: 4px 4px 0;
-  padding: 12px calc(var(--ch) + 10px) 10px 16px;
+  padding: 12px calc(var(--ch) + 10px) 10px 26px;
   border-bottom: 1px solid var(--csd-rule);
   color: var(--csd-ink-2);
 }
@@ -1478,7 +1560,8 @@
 }
 
 /* ── a still: nothing moves ────────────────────────────────────────── */
-.csd[data-still] .csd-card,
+.csd[data-still] .csd-step__stack > .csd-card,
+.csd[data-still] .csd-steps button,
 .csd[data-still] .csd-clients button {
   transition: none;
 }
@@ -1515,6 +1598,7 @@
     display: grid;
   }
   .csd-run__head-flow {
+    gap: var(--space-md, 16px);
     margin-bottom: var(--space-lg, 24px);
   }
   .csd-run__card-flow {
@@ -1533,8 +1617,11 @@
     flex: none;
     aspect-ratio: var(--r, 1 / 1);
   }
+  /* a frame of no fixed height: the film takes its own, not a share of none */
   .csd-film {
+    flex: 1 1 auto;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
   }
   .csd-film__screen {
     height: auto;
@@ -1585,10 +1672,10 @@
   }
 }
 
-/* ── a short screen (the site's compact rung): the same cards, closer ── */
+/* ── a short screen (the site's compact rung): the same, closer ───── */
 @media (max-height: 800px) and (min-width: 961px) {
   .csd-group {
-    gap: 14px;
+    gap: 16px;
   }
   .csd-head {
     gap: 8px;
@@ -1597,21 +1684,22 @@
     padding-block: 4px;
   }
   .csd-card {
-    gap: 6px;
-    padding: 26px 12px 9px;
+    padding: 30px 14px 14px;
   }
-  .csd-card__text {
+  .csd-saved {
+    gap: 8px;
+    padding: 12px 14px 12px;
+  }
+  .csd-saved__what {
     font-size: 14px;
-  }
-  .csd-card[data-on] .csd-card__lead {
-    padding-top: 7px;
-    font-size: 12px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .csd-card,
+  .csd-step__stack > .csd-card,
+  .csd-steps button,
   .csd-clients button {
     transition: none;
+    transform: none;
   }
 }

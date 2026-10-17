@@ -4,16 +4,22 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Glyph, type GlyphName, workstreamGlyph } from "./Glyph";
 
-/** One card of the held column: one figure's number, name and two lines. */
+/** One step of the case: one figure's number, name and two short lines. */
 export interface Words {
   /** The anchor of this figure's panel. */
   id: string;
-  /** The card's number and its figure's (01 = the piece). */
+  /** The step's number and its figure's (01 = the piece). */
   n: number;
   kick: string;
   title: readonly [string, string];
-  /** The model's thinking at this step, in one line (the lit card only). */
-  lead?: string;
+}
+
+/** What a case saved, as the job panels' result. */
+export interface Saved {
+  label: string;
+  before?: string;
+  now: string;
+  estimated?: boolean;
 }
 
 /** One case, as the run draws it. */
@@ -26,32 +32,31 @@ export interface Run {
   project: string;
   glyph: GlyphName;
   workstream: string;
+  saved: Saved;
   words: readonly Words[];
   figures: readonly ReactNode[];
 }
 
 const two = (n: number) => String(n).padStart(2, "0");
 
-/** More cards than this and the dim ones show their tab only. */
-const DENSE = 8;
-
 /**
- * One case: one group of words held on the left, the figures scrolling on the
- * right. The group is the job panels' numbered cards made into the case's
- * index (owner, 2026-10-17: "Use the static cards we had on the former swarm
- * page with the numbers … there's too much text. This should be super
- * clear"):
+ * One case: a simple held column, the figures scrolling on the right. Three
+ * things on the left and no more (owner, 2026-10-17: "simple, with steps,
+ * what we've saved … We don't have to show everything … the left side needs
+ * to change depending on the slide you're in but make it subtle … I don't
+ * like that it's all stacked"):
  *
- *   clients   the client names, the one in view lit; the title and the switch
- *   labels    the project and the type of work, each with a particle icon
- *   cards     one numbered card a figure, joined by centre lines; the card of
- *             the figure in the middle of the screen is lit and carries one
- *             line of the model's thinking; the others stay dim on one line.
- *             Each card is a link to its figure.
+ *   case    the client names (the one in view lit) and the case's two labels
+ *   step    a thin bar, a segment a figure, then ONE card: the step of the
+ *           figure in the middle of the screen, its number, its name, its two
+ *           lines. It changes quietly as the figures pass (a short fade).
+ *   saved   what the case saved, before and now, as the job panels drew it;
+ *           it holds for the whole case.
  *
- * The card's number is its figure's (`FIG. 03` ↔ `03`). Under 960px the group
- * steps aside: each figure carries its own card above it, and the clients ride
- * a bar at the top of the dossier.
+ * The step's number is its figure's (`FIG. 03` ↔ `03`); a segment is a link
+ * to its figure. Under 960px the column steps aside: the case and what it
+ * saved open the case, each figure carries its step card above it, and the
+ * clients ride a bar at the top of the dossier.
  */
 export function CaseRun({
   run,
@@ -80,7 +85,7 @@ export function CaseRun({
       { rootMargin: "-50% 0px -50% 0px" }
     );
     for (const el of panels.current) if (el) io.observe(el);
-    /* past the last figure, the way on keeps the last card lit */
+    /* past the last figure, the way on keeps the last step */
     if (tail.current) io.observe(tail.current);
     return () => io.disconnect();
   }, []);
@@ -91,6 +96,8 @@ export function CaseRun({
     const calm = still || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" });
   };
+
+  const total = run.words.length;
 
   return (
     <article
@@ -106,17 +113,35 @@ export function CaseRun({
               {clients}
               <Labels run={run} />
             </header>
-            <ol
-              className="csd-cards"
-              data-dense={run.words.length > DENSE ? "" : undefined}
-              aria-label={`${run.client}, step by step`}
-            >
-              {run.words.map((w, i) => (
-                <li key={w.id}>
-                  <Card w={w} on={i === at} onGo={() => go(i)} />
-                </li>
-              ))}
-            </ol>
+            <div className="csd-step">
+              <div className="csd-step__bar">
+                <ol className="csd-steps" aria-label={`${run.client}, ${total} steps`}>
+                  {run.words.map((w, i) => (
+                    <li
+                      key={w.id}
+                      data-on={i === at ? "" : undefined}
+                      data-past={i < at ? "" : undefined}
+                    >
+                      <button
+                        type="button"
+                        aria-label={`Step ${two(w.n)}, ${w.kick}`}
+                        aria-current={i === at ? "step" : undefined}
+                        onClick={() => go(i)}
+                      />
+                    </li>
+                  ))}
+                </ol>
+                <span className="csd-step__count">
+                  {two(run.words[at]?.n ?? 1)} of {two(total)}
+                </span>
+              </div>
+              <div className="csd-step__stack">
+                {run.words.map((w, i) => (
+                  <StepCard key={w.id} w={w} on={i === at} />
+                ))}
+              </div>
+            </div>
+            <SavedCard saved={run.saved} />
           </div>
         </div>
       </div>
@@ -134,10 +159,11 @@ export function CaseRun({
             {i === 0 ? (
               <div className="csd-run__head-flow">
                 <Labels run={run} />
+                <SavedCard saved={run.saved} />
               </div>
             ) : null}
             <div className="csd-run__card-flow">
-              <Card w={run.words[i]} on />
+              <StepCard w={run.words[i]} on />
             </div>
             {fig}
           </div>
@@ -179,44 +205,43 @@ function Labels({ run }: { run: Run }) {
   );
 }
 
-/**
- * A numbered card, after the job panels' steps: a gold tab in the top-left
- * corner, two short lines inside a double hairline. Lit, it carries one line
- * of the model's thinking; dim, it holds one line and links to its figure.
- */
-function Card({ w, on, onGo }: { w: Words; on: boolean; onGo?: () => void }) {
-  const body = (
-    <>
+/** The step in view, after the job panels' numbered steps: a gold tab in the
+ *  top-left corner, two short lines inside a double hairline. */
+function StepCard({ w, on }: { w: Words; on: boolean }) {
+  return (
+    <div className="csd-card" data-on={on ? "" : undefined} aria-hidden={on ? undefined : true}>
       <span className="csd-card__tab">
         {two(w.n)} · {w.kick}
       </span>
       <span className="csd-card__text">
         <span>{w.title[0]}</span> <span className="csd-card__em">{w.title[1]}</span>
       </span>
-      {w.lead ? (
-        <span className="csd-card__lead">
-          <Glyph name="model" />
-          {w.lead}
-        </span>
-      ) : null}
-    </>
+    </div>
   );
-  if (!onGo) {
-    return (
-      <div className="csd-card" data-on="">
-        {body}
-      </div>
-    );
-  }
+}
+
+/** What it saved: the old way as a long, quiet bar, the new way as a short gold
+ *  one, the job panels' result drawn small. */
+function SavedCard({ saved }: { saved: Saved }) {
   return (
-    <button
-      type="button"
-      className="csd-card"
-      data-on={on ? "" : undefined}
-      aria-current={on ? "step" : undefined}
-      onClick={onGo}
-    >
-      {body}
-    </button>
+    <section className="csd-saved" aria-label={saved.label}>
+      <p className="csd-saved__k">
+        <Glyph name="clock" />
+        {saved.label}
+        {saved.estimated ? <span>Estimated</span> : null}
+      </p>
+      {saved.before ? (
+        <p className="csd-saved__row" data-row="before">
+          <span className="csd-saved__when">Before</span>
+          <i aria-hidden="true" />
+          <span className="csd-saved__what">{saved.before}</span>
+        </p>
+      ) : null}
+      <p className="csd-saved__row" data-row="now">
+        <span className="csd-saved__when">Now</span>
+        <i aria-hidden="true" />
+        <span className="csd-saved__what">{saved.now}</span>
+      </p>
+    </section>
   );
 }

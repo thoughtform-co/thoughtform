@@ -316,3 +316,55 @@ super clear visual from an information architecture point of view."
 
 - The lit card grows by a line or two as it lights, so the cards under it move;
   quick, not animated.
+- Pushed to `origin/main` with round 02 on 2026-10-17 on the owner's word
+  (`e165efca`).
+
+# Round 04 (2026-10-17): one step, and what it saved
+
+## Why
+
+The owner, on round 03: "the left side is too busy. Too much is happening and
+I think it needs to be simple, with steps, what we've saved, etc. We don't have
+to show everything. On the pin side, the left side needs to change depending on
+the slide you're in but make it subtle … I like the right cards. I do think
+they can use a golden accent … I don't like that it's all stacked."
+
+## What it does
+
+- **Three things on the left, no stack.**
+  - The case: the client names (the one shown lit) and its two labels.
+  - The step: a thin bar, a segment a figure (passed ones at datum weight, the
+    one in view in gold, each a link to its figure), `02 of 07` beside it, and
+    one card, the step of the figure in the middle, its gold tab and its two
+    lines. Only this card changes as the figures pass: a 360ms fade with a 4px
+    rise, the same card in place.
+  - What it saved: the job panels' result drawn small, in a quiet card. The old
+    way a long hatched bar, the new way a short gold one, the words under each;
+    "Estimated" where the before is an estimate. It holds for the whole case.
+- **Gone from the left:** the other cards, the model's line.
+- **The right frames' golden accent:** a gold cross on each of the frame's two
+  square corners (top left, bottom right), inside the hairlines, the brand's
+  "gold crosses on a visual's corners".
+- **Phone:** the case and what it saved open the case; each figure carries its
+  step card above it. The film's frame no longer collapses there.
+
+## Where the saved words come from
+
+- Samako: the job panel's own result (`jobs.ts`, the production job), "Days
+  of motion design for each ad" to "Two films from one brief, in a day",
+  labelled "The return", as the panel had it.
+- Suri: the job panel's result, "Weeks opening folders by hand" to "Two days
+  to map the whole Drive" (round 01's correction of "read"), estimated.
+- Loop: no job panel; the before is the motion-ad baseline the owner wrote for
+  Samako's panel, the now is Loop's measured 1 h 51 min. Marked estimated.
+  **To confirm with the owner.**
+
+## Checked
+
+- `npx tsc --noEmit`, `npx eslint`: clean; `npx vitest run
+tests/lib/proposal-swarm-v2.test.ts tests/lib/proposal-swarm.test.ts` 89 of 89.
+- The client tabs, clicked headlessly: each shows its case, starts it at its
+  piece, writes `#case-…`; Next case moves on.
+- Stills in `round-04/` (dark, 1920×1247, 1280×720, 390×844); the capture's
+  report: the group sits on the screen, one card lit, nothing wider than the
+  page, at every size.

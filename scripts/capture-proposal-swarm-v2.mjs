@@ -130,7 +130,7 @@ async function shoot(browser, dir) {
             /* the group (the case and its cards) must sit wholly on the screen,
                and the lit card must be the one of the figure in the middle */
             const gb = run?.querySelector(".csd-group")?.getBoundingClientRect();
-            const lit = run?.querySelectorAll(".csd-cards .csd-card[data-on]").length ?? 0;
+            const lit = run?.querySelectorAll(".csd-step__stack .csd-card[data-on]").length ?? 0;
             const clash =
               gb && sb
                 ? Math.round(Math.max(sb.top - gb.top, gb.bottom - window.innerHeight, 0))

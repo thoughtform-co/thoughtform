@@ -109,6 +109,12 @@ describe("the cases", () => {
         expect(() => assertCase(c)).not.toThrow();
       });
 
+      it("say what they saved, before and now, and mark a time saved as estimated", () => {
+        expect(c.saved.now.length).toBeGreaterThan(0);
+        expect(c.saved.now.length).toBeLessThanOrEqual(48);
+        if (c.saved.label === "Time saved") expect(c.saved.estimated).toBe(true);
+      });
+
       it("carry their labels: a project with an icon, a type of work, a name a chapter", () => {
         expect(c.project.length).toBeGreaterThan(0);
         expect(c.project.length).toBeLessThanOrEqual(18);

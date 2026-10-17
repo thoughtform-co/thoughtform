@@ -5,6 +5,12 @@
   "project": "Asset library",
   "glyph": "grid",
   "workstream": "Creative operations",
+  "saved": {
+    "label": "Time saved",
+    "before": "Weeks opening folders by hand",
+    "now": "Two days to map the whole Drive",
+    "estimated": true
+  },
   "piece": "An asset library that reads every file",
   "date": "7 to 13 Oct 2026",
   "number": {

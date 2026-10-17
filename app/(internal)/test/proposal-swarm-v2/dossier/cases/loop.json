@@ -5,6 +5,12 @@
   "project": "Motion ad",
   "glyph": "film",
   "workstream": "Creative production",
+  "saved": {
+    "label": "Time saved",
+    "before": "Days of motion design for each ad",
+    "now": "One ad from one prompt in 1 h 51 min",
+    "estimated": true
+  },
   "piece": "A 10-second Halloween ad, from one prompt",
   "date": "1 Oct 2026",
   "number": {
