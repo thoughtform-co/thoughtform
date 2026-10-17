@@ -18,7 +18,7 @@ import {
   type BrainView,
 } from "@/components/arcs/figures/foundation/brainIso";
 import { tendrilFiles, type TendrilFile } from "@/components/arcs/figures/foundation/layerTendrils";
-import { holeSeed, holeStep, paintHole } from "@/components/arcs/figures/foundation/mathHole";
+import { holeScreen, holeSeed, holeStep, paintHole, type HoleScreen } from "@/components/arcs/figures/foundation/mathHole";
 import type { Flat } from "@/components/arcs/figures/foundation/isoKit";
 import { latticeAt, pickLattice } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
 import { COVER, coverOf, engraved, LIP_REACH } from "@/app/(internal)/test/proposal-swarm/engine/mark";
@@ -113,17 +113,17 @@ const chamferPts = (w: number, h: number, cut: number, x = 0, y = 0): [number, n
 const chamferOf = (pts: [number, number][]) => `M${pts.map(([x, y]) => `${x} ${y}`).join(" L")} Z`;
 const OUTER = chamferPts(W, H, CUT);
 const chamfer = chamferOf(OUTER);
-/** The Readout card's geometry (U8), in card units (560 × 540): its margins
-    (the right one clears the cut), the picture at 16:9 under the head, and
-    the two readout rows at the foot. The talk's `MEDIA` is the Ghent card's
-    and stays as it was. */
-const PAD = 27;
-const PAD_R = 43;
-const KMEDIA = { x: PAD, y: 93, w: 506, h: 285 } as const;
-const ROWS = { top: 455, h: 29, base: 19, val: 120 } as const;
-const media = `M${KMEDIA.x} ${KMEDIA.y} H${KMEDIA.x + KMEDIA.w} V${KMEDIA.y + KMEDIA.h} H${KMEDIA.x} Z`;
-/** The frame's second hairline, inset (Tensorlake's double line). */
-const innerChamfer = chamferOf(chamferPts(W - 10, H - 10, CUT, 5, 5));
+/** The card's geometry (U10, owner 2026-10-17: "why is it so small? I like
+    the full bleed ... these cards need to feel like full-bleed interfaces:
+    minimalistic"), in card units (560 × 540): a slim head (the title and its
+    line), the picture full bleed under it to the card's three other edges,
+    and one button on a film, the plate `PLAY` at the picture's foot. The
+    talk's `MEDIA` is the Ghent card's and stays as it was. */
+const PAD = 24;
+const HEAD = 86;
+const PLAY = { x: PAD, y: H - PAD - 34, w: 112, h: 34 } as const;
+/** The picture's clip: the card's own chamfer, so the bleed meets its cut. */
+const media = chamfer;
 const mat = (m: M6) => `matrix(${m.map((v) => v.toFixed(4)).join(" ")})`;
 const apply = (m: M6, x: number, y: number): P2 => ({ x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] });
 
@@ -253,7 +253,7 @@ function rootsAt(c: Cam): Flat[] {
   return r;
 }
 /** The middle beat's two cards, in the viewBox. */
-const SIDE = { w: 300, h: 196, y: 352, tool: 98, collab: 1042 } as const;
+const SIDE = { w: 340, h: 158, y: 400, tool: 70, collab: 1030 } as const;
 
 type Card = {
   id: string;
@@ -877,14 +877,23 @@ export function FoundationAct() {
       player.currentTime = 0;
       theatre.toggleAttribute("data-open", true);
       void player.play().catch(() => undefined);
+      // U10: full screen ("a simple elegant button where I can show the video
+      // full screen"); where the browser refuses, the theatre still fills the
+      // viewport.
+      void theatre.requestFullscreen?.().catch(() => undefined);
       closeRef.current?.focus();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && theatreRef.current?.hasAttribute("data-open")) closeTheatre();
     };
+    // Leaving full screen (Escape included) leaves the theatre with it.
+    const onFullscreen = () => {
+      if (!document.fullscreenElement && theatreRef.current?.hasAttribute("data-open")) closeTheatre();
+    };
     const playBtn = playRef.current;
     playBtn?.addEventListener("click", onPlay);
     window.addEventListener("keydown", onKey);
+    document.addEventListener("fullscreenchange", onFullscreen);
 
     let raf = 0;
     const loop = (t: number) => {
@@ -905,18 +914,21 @@ export function FoundationAct() {
       mo.disconnect();
       playBtn?.removeEventListener("click", onPlay);
       window.removeEventListener("keydown", onKey);
+      document.removeEventListener("fullscreenchange", onFullscreen);
       window.removeEventListener("pointermove", onPointer);
       talk?.removeAttribute("data-act");
     };
   }, [cards, n, middle, knowledge, latent, eyebrows, heads, axes]);
 
-  /** Leave the theatre: the film stops and lets go of its source. */
+  /** Leave the theatre: the film stops and lets go of its source, and full
+      screen ends with it. */
   function closeTheatre() {
     const player = playerRef.current;
     player?.pause();
     player?.removeAttribute("src");
     player?.load();
     theatreRef.current?.toggleAttribute("data-open", false);
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   }
   const client = useSyncExternalStore(
     () => () => undefined,
@@ -924,14 +936,13 @@ export function FoundationAct() {
     () => false
   );
   const s = FACING.s;
-  // U8: the button is the facing card's own "Play with sound" row, a hit area
-  // over the drawn value, so it scales and seats with the card.
-  const playRow = ROWS.top + ROWS.h;
+  // U10: the button is the facing card's own PLAY plate, a hit area seated
+  // over the drawn plate, so it scales and stands with the card.
   const playAt = {
-    left: `${((FACING.x + (ROWS.val - 6) * s) / VB.w) * 100}%`,
-    top: `${((FACING.y + (playRow + 2) * s) / VB.h) * 100}%`,
-    width: `${((210 * s) / VB.w) * 100}%`,
-    height: `${(((ROWS.h - 4) * s) / VB.h) * 100}%`,
+    left: `${((FACING.x + PLAY.x * s) / VB.w) * 100}%`,
+    top: `${((FACING.y + PLAY.y * s) / VB.h) * 100}%`,
+    width: `${((PLAY.w * s) / VB.w) * 100}%`,
+    height: `${((PLAY.h * s) / VB.h) * 100}%`,
   };
   return (
     <div ref={rootRef} className="fa">
@@ -977,15 +988,15 @@ export function FoundationAct() {
                 </g>
                 <path ref={(el) => void (joinRefs.current[i] = el)} className="fa__join" />
                 <g ref={(el) => void (sheetRefs.current[i] = el)} className="fa__sheet">
-                  <Module card={c} index={i} count={n} />
+                  <Module card={c} />
                 </g>
               </g>
             ))}
           </g>
           {middle ? (
             <g className="fa__cards">
-              <SideCard x={SIDE.tool} y={SIDE.y - SIDE.h / 2} mark="A" spec={middle.tool} kind="tool" />
-              <SideCard x={SIDE.collab} y={SIDE.y - SIDE.h / 2} mark="B" spec={middle.collaborator} kind="collab" />
+              <SideCard x={SIDE.tool} y={SIDE.y - SIDE.h / 2} spec={middle.tool} kind="tool" />
+              <SideCard x={SIDE.collab} y={SIDE.y - SIDE.h / 2} spec={middle.collaborator} kind="collab" />
             </g>
           ) : null}
         </svg>
@@ -1032,93 +1043,86 @@ export function FoundationAct() {
 }
 
 /**
- * One example as one module, the Readout card (ADR-159 U8, his pick of three
- * on the Claude Design canvas): a double hairline frame; the title and the
- * count on ONE line, the caption under them; the picture at 16:9 with gold
- * survey crosses on its corners; a readout of two ruled rows at the foot,
- * where a film's "Play with sound" is a row, never an overlay. Every part
- * stands in the same seat on every card, whatever the picture.
+ * One example as one module, a full-bleed screen (ADR-159 U10, owner
+ * 2026-10-17: "I want a simple elegant button where I can show the video
+ * full screen. Maybe that little explanation would be nice but we don't need
+ * the date either"): the title and its line in a slim head, the picture
+ * filling the rest of the card to its edges and its cut, and on a film one
+ * plate, PLAY, at the picture's foot, which opens the film full screen. The
+ * survey crosses stand on the card's own corners, as they did before U8.
  */
-function Module({ card, index, count }: { card: Card; index: number; count: number }) {
+function Module({ card }: { card: Card }) {
   const film = card.media?.type === "video";
   const maths = card.kind === "mathematics";
-  const { x, y, w, h } = KMEDIA;
-  const arm = 6;
-  const crosses = [
-    [x, y],
-    [x + w, y],
-    [x, y + h],
-    [x + w, y + h],
-  ]
-    .map(([cx, cy]) => `M${cx - arm} ${cy} H${cx + arm} M${cx} ${cy - arm} V${cy + arm}`)
-    .join(" ");
-  const row = (i: number) => ROWS.top + i * ROWS.h;
+  const y = HEAD;
+  const h = H - HEAD;
   return (
     <>
       <path className="fa__ground" d={chamfer} />
-      {/* No eyebrow on a module (owner, 2026-10-15): the title is the head. */}
-      <text className="fa__mod-title" x={PAD} y="52">
-        {card.title}
-      </text>
-      <text className="fa__mod-count" x={W - PAD_R} y="52" textAnchor="end">
-        {String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")} · {card.year}
-      </text>
-      <text className="fa__mod-line" x={PAD} y="78">
-        {card.caption}
-      </text>
       <g clipPath="url(#fa-media)">
-        <rect className="fa__media-ground" x={x} y={y} width={w} height={h} />
-        {card.media?.type === "image" ? <image href={card.media.src} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid slice" /> : null}
+        {card.media?.type === "image" ? <image href={card.media.src} x={0} y={y} width={W} height={h} preserveAspectRatio="xMidYMid slice" /> : null}
         {film && card.media ? (
-          <foreignObject x={x} y={y} width={w} height={h}>
+          <foreignObject x={0} y={y} width={W} height={h}>
             <video className="fa__video" src={card.media.src} poster={card.media.poster} muted loop autoPlay playsInline preload="metadata" />
           </foreignObject>
         ) : null}
         {maths ? (
-          <foreignObject x={x} y={y} width={w} height={h}>
+          <foreignObject x={0} y={y} width={W} height={h}>
             <MathHoleCanvas />
           </foreignObject>
         ) : null}
       </g>
-      <path className="fa__mark" d={crosses} />
-      <path className="fa__row" d={`M${PAD} ${row(0)} H${W - PAD_R} M${PAD} ${row(1)} H${W - PAD_R}`} />
-      <text className="fa__mod-key" x={PAD} y={row(0) + ROWS.base}>
-        KIND
+      {/* No eyebrow on a module (owner, 2026-10-15): the title is the head. */}
+      <text className="fa__mod-title" x={PAD} y="44">
+        {card.title}
       </text>
-      <text className="fa__mod-val" x={ROWS.val} y={row(0) + ROWS.base}>
-        {film ? "FILM" : maths ? "DRAWING" : "IMAGE"}
+      <text className="fa__mod-line" x={PAD} y="69">
+        {card.caption}
       </text>
-      <text className="fa__mod-key" x={PAD} y={row(1) + ROWS.base}>
-        {film ? "SOUND" : "SHOWN"}
-      </text>
-      <text className="fa__mod-val" data-lit={film ? "" : undefined} data-dim={film ? undefined : ""} x={ROWS.val} y={row(1) + ROWS.base}>
-        {film ? "▶ PLAY WITH SOUND" : maths ? "◇ LIVE" : "◇ STILL"}
-      </text>
+      <path className="fa__inset" d={`M0 ${HEAD} H${W}`} />
+      {film ? (
+        <g className="fa__play-plate">
+          <rect x={PLAY.x} y={PLAY.y} width={PLAY.w} height={PLAY.h} />
+          <text x={PLAY.x + PLAY.w / 2} y={PLAY.y + PLAY.h / 2 + 4} textAnchor="middle">
+            ▶  PLAY
+          </text>
+        </g>
+      ) : null}
       <path className="fa__edge" d={chamfer} />
-      <path className="fa__inset" d={innerChamfer} />
+      {[
+        [0, 0],
+        [W, H],
+        [0, H],
+      ].map(([cx, cy], j) => (
+        <path key={j} className="fa__cross" d={`M${cx - 7} ${cy} L${cx + 7} ${cy} M${cx} ${cy - 7} L${cx} ${cy + 7}`} />
+      ))}
     </>
   );
 }
 
-/** A card of the middle beat, in the modules' own make: a slab with its head
-    and its rows, the tool's an instruction log, the collaborator's a talk. */
-function SideCard({
-  x,
-  y,
-  mark,
-  spec,
-  kind,
-}: {
-  x: number;
-  y: number;
-  mark: string;
-  spec: { label: string; line: string; rows: readonly string[] };
-  kind: "tool" | "collab";
-}) {
+/** A line set on two, split at the word nearest its middle. */
+function twoLines(line: string): [string, string] {
+  const words = line.split(" ");
+  const split = (i: number): [string, string] => [words.slice(0, i).join(" "), words.slice(i).join(" ")];
+  let best = 1;
+  for (let i = 2; i < words.length; i++) {
+    const [a, b] = split(i);
+    const [c, d] = split(best);
+    if (Math.abs(a.length - b.length) < Math.abs(c.length - d.length)) best = i;
+  }
+  return split(best);
+}
+
+/** A card of the middle beat, in the modules' own make: a glass slab with
+    its name and its one line, read at a glance (U10, owner 2026-10-17: "the
+    text on them and the placement are really distracting because they feel
+    flat and too small ... skip shit"). The talk's rows are not drawn. */
+function SideCard({ x, y, spec, kind }: { x: number; y: number; spec: { label: string; line: string }; kind: "tool" | "collab" }) {
   const w = SIDE.w;
   const h = SIDE.h;
   const outer = chamferPts(w, h, 16, x, y);
   const back = chamferPts(w, h, 16, x + 12, y - 9);
+  const [first, second] = twoLines(spec.line);
   return (
     <g className="fa__side" data-kind={kind}>
       <path className="fa__side-back" d={chamferOf(back)} />
@@ -1127,36 +1131,15 @@ function SideCard({
       <path className="fa__edge" d={chamferOf(outer)} />
       {/* The sheen: a hairline of light along the top edge of the glass. */}
       <path className="fa__side-sheen" d={`M${x + 1} ${y + 0.5} L${x + w - 16} ${y + 0.5}`} />
-      <text className="fa__mod-eyebrow" x={x + 18} y={y + 28}>
-        {mark} · {spec.label.toUpperCase()}
+      <text className="fa__side-label" x={x + 24} y={y + 38}>
+        {spec.label.toUpperCase()}
       </text>
-      <text className="fa__side-title" x={x + 18} y={y + 60}>
-        {spec.line}
+      <text className="fa__side-title" x={x + 24} y={y + 86}>
+        {first}
       </text>
-      <path className="fa__inset" d={`M${x + 18} ${y + 78} L${x + w - 18} ${y + 78}`} />
-      {spec.rows.map((r, i) =>
-        kind === "tool" ? (
-          <g key={r}>
-            <text className="fa__side-row" x={x + 18} y={y + 104 + i * 26}>
-              <tspan className="fa__side-mark">›</tspan> {r}
-            </text>
-            <text className="fa__side-ok" x={x + w - 18} y={y + 104 + i * 26} textAnchor="end">
-              DONE
-            </text>
-          </g>
-        ) : (
-          <text
-            key={r}
-            className="fa__side-row"
-            data-voice={i % 2 ? "b" : "a"}
-            x={i % 2 ? x + w - 18 : x + 18}
-            y={y + 108 + i * 34}
-            textAnchor={i % 2 ? "end" : "start"}
-          >
-            {r}
-          </text>
-        )
-      )}
+      <text className="fa__side-title" x={x + 24} y={y + 122}>
+        {second}
+      </text>
       {[
         [x, y],
         [x + w, y + h],
@@ -1988,11 +1971,13 @@ function paintField(ctx: CanvasRenderingContext2D, f: Field, o: { k: number; dpr
 }
 
 /**
- * The mathematics card's picture (U8): the black hole of mathematics
- * (`mathHole.ts`), live in the card's media rect. It runs only while the act
- * is up, and rasterises at the size the card is drawn on screen, so the
- * glyphs stay sharp on the facing card.
+ * The mathematics card's picture (U8, U9): the black hole of mathematics on
+ * a terminal (`mathHole.ts`), live in the card's media rect. It runs only
+ * while the act is up, and rasterises at the size the card is drawn on
+ * screen, so the characters stay sharp on the facing card. Its cells are
+ * the page's mono, `HOLE_CELL` CSS px high.
  */
+const HOLE_CELL = 9;
 function MathHoleCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -2007,6 +1992,8 @@ function MathHoleCanvas() {
     let last = performance.now();
     let frame = 0;
     let scale = 1;
+    let screen: HoleScreen | null = null;
+    let screenKey = "";
     const loop = (t: number) => {
       raf = requestAnimationFrame(loop);
       const dt = Math.min(0.05, (t - last) / 1000);
@@ -2025,27 +2012,45 @@ function MathHoleCanvas() {
         c.height = H;
       }
       const cs = getComputedStyle(c);
-      if (!still) holeStep(parts, dt);
+      const font = cs.fontFamily || '"PT Mono", ui-monospace, monospace';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // the grid: the mono's own advance at the cell's size
+      const key = `${w}|${h}|${font}`;
+      if (!screen || key !== screenKey) {
+        ctx.font = `${Math.round(HOLE_CELL * 0.92)}px ${font}`;
+        screen = holeScreen(w, h, HOLE_CELL, Math.max(4, ctx.measureText("M").width));
+        screenKey = key;
+      }
+      if (!still) holeStep(parts, dt);
       paintHole(
         ctx,
         parts,
+        screen,
         w,
         h,
         {
           ground: cs.backgroundColor || "rgb(5, 4, 3)",
           ink: cs.color || "rgb(235, 227, 214)",
-          warm: cs.getPropertyValue("--fa-hole-warm").trim() || "#f3e4c2",
           gold: cs.getPropertyValue("--fa-hole-gold").trim() || "#caa554",
-          void: cs.getPropertyValue("--fa-hole-void").trim() || "#000",
         },
-        '"STIX Two Math", "Cambria Math", "Times New Roman", serif',
-        // the card is small: a larger horizon, the disk running past the frame
-        { size: 0.105, tilt: 0.27 }
+        font,
+        t,
+        still ? 0 : dt,
+        // a larger horizon, the disk running past the frame and lying open
+        // enough to read as a disk in cells this size; the prompt in from the
+        // card's cut corner, on the card's own margin
+        { size: 0.105, tilt: 0.34, inset: PAD }
       );
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, []);
-  return <canvas ref={ref} className="fa__hole" role="img" aria-label="A black hole made of mathematics: glyphs and equations on an accretion disk, falling into a dark horizon ringed in gold" />;
+  return (
+    <canvas
+      ref={ref}
+      className="fa__hole"
+      role="img"
+      aria-label="A black hole made of mathematics on a terminal: an accretion disk of characters falling into a blank horizon ringed in gold, the card's equations typed at a prompt"
+    />
+  );
 }

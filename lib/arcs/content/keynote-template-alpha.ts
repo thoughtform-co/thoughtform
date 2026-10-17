@@ -25,10 +25,10 @@ import { UX_MEETUP_ARC, UX_MEETUP_HERO, UX_MEETUP_PROOF_LEDES } from "./ux-meetu
  *   I   the reality      01 what it can make (headed by the claim, U6) ·
  *                        02 the interface · 03 an intelligence ·
  *                        04 every desk
- *   II  a new kind of    05 what it still needs · 06 the layer
- *       user
- *   III how you talk     07 a colleague · 08 latent space · 09 the median ·
- *       to it            10 the prowl · 11 a node in latent space
+ *   II  a new kind of    05 the layer, headed "But it still needs context,
+ *       user             nuance and taste." (U10)
+ *   III how you talk     06 a colleague · 07 latent space · 08 the median ·
+ *       to it            09 the prowl · 10 a node in latent space
  * then the swarm chapter (the page's, not a beat), the corridor's thesis,
  * the Arc, the proof and the close. 01 to 05 read as one paragraph (U7).
  * Held back, records kept: the shoggoth (U6, `KEYNOTE_SHOGGOTH`), Goodfire's
@@ -39,7 +39,7 @@ import { UX_MEETUP_ARC, UX_MEETUP_HERO, UX_MEETUP_PROOF_LEDES } from "./ux-meetu
  * on the Ghent shoggoth line, "something we don't fully understand": if nine
  * neurons in ten have one readable job, that line ages in months. The beats
  * that answered it are held back with the shoggoth, so none of that line
- * is on the page. The swarm chapter after 11 is the picture of the node
+ * is on the page. The swarm chapter after 10 is the picture of the node
  * agents flow through; its words are still the proposal's.
  *
  * Every line marked (proposal) in ADR-159 is his to rewrite.
@@ -164,39 +164,26 @@ export const KEYNOTE_ARC: ArcDef = {
     reworded("an-intelligence", "03 · An intelligence", "Not software. An intelligence: the tool and its maker."),
     relined("every-desk", "04 · Every desk", "Next, all knowledge work."),
 
-    /* ── II · A new kind of user. */
-    {
-      /* His line (U6, 2026-10-17), in place of "How do you design
-         experiences and interfaces for a user that isn't a person?": "but it
-         still needs context, nuance and taste" (dictated "new ones"). */
-      id: "an-alien",
-      kind: "interstitial",
-      variant: "quote",
-      frame: "marks",
-      menuLabel: "Context and taste",
-      eyebrow: "05 · What it still needs",
-      line: {
-        pre: "But it still needs",
-        em: "context, nuance and taste.",
-      },
-    },
-    /* The shoggoth is hidden for now (U6, owner: "hide the shoggoth section
-       for now"): its record is `KEYNOTE_SHOGGOTH`, off the page. */
+    /* ── II · A new kind of user. The shoggoth is hidden for now (U6,
+       `KEYNOTE_SHOGGOTH`). */
     {
       /* The layer (owner, 2026-10-16, U5): "hide the mask on the shoggoth
          for a bit. This is where I want to reveal the brain, move the two
          parts left and right respectively, and place our Thoughtform-encoded
-         layer that we built for the swarm page in between". U6 (2026-10-17):
-         no words ("we don't need the 'I am the layer' text, just the brain
-         opened in the middle"), and the plate stands upright between the
-         halves. */
+         layer that we built for the swarm page in between". U6: the plate
+         stands upright between the halves. U10 (2026-10-17): his line is its
+         head, its own interstitial gone ("we can move it to the section
+         where the brain opens and put it above there. That way we save time
+         and we can remove an interstitial section"); "nuance" read from his
+         dictated "new ones". */
       id: "the-layer",
       kind: "figure",
       menuLabel: "The layer",
-      eyebrow: "06 · The layer",
+      eyebrow: "05 · The layer",
       figure: {
         id: "layer",
         alt: "The machine brain's two hemispheres moved apart, and standing upright between them a slab of gold dots with the Thoughtform mark cut into its face: the layer.",
+        title: "But it still needs context, nuance and taste.",
       },
     },
     /* Goodfire's line and "Legible. Still their own." are held back (U7,
@@ -215,13 +202,13 @@ export const KEYNOTE_ARC: ArcDef = {
       glitch: true,
       menuLabel: "A colleague",
       menuPrimary: true,
-      eyebrow: "07 · A colleague",
+      eyebrow: "06 · A colleague",
       line: {
         pre: "Treat it like a pretty smart colleague.",
         em: "Respect the intelligence.",
       },
     },
-    moved("latent-space", "08 · Latent space"),
+    moved("latent-space", "07 · Latent space"),
     {
       /* "AI often converges on the median, not because it is stupid or not
          creative, but because without context it just generates the most
@@ -231,7 +218,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "statement",
       glitch: true,
       menuLabel: "The median",
-      eyebrow: "09 · The median",
+      eyebrow: "08 · The median",
       line: {
         pre: "Without context it gives the most plausible answer.",
         em: "The median.",
@@ -240,7 +227,7 @@ export const KEYNOTE_ARC: ArcDef = {
     /* The wolf (owner: "that visual of a wolf ... to talk about the semantic
        navigation prompting techniques"): the film carries the point, the
        script says it. */
-    moved("prowl", "10 · The prowl"),
+    moved("prowl", "09 · The prowl"),
     {
       /* "Really try to convert yourself as a node in the latent space
          through which agents can flow. That's what I'm trying to do with
@@ -250,7 +237,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "Yourself as a node",
-      eyebrow: "11 · A node in latent space",
+      eyebrow: "10 · A node in latent space",
       line: {
         pre: "Convert yourself into a node in latent space",
         em: "that agents flow through.",

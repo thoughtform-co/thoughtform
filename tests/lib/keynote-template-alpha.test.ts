@@ -56,13 +56,13 @@ const MOUNT = "home-corridor-mount";
 
 /** The order the owner set on 16 October, cut on the 17th: the wake-up call
     is the stack's head and the shoggoth is off the page (U6); Goodfire's
-    line and his answer are held back for new sections (U7). */
+    line and his answer are held back for new sections (U7); what it still
+    needs heads the layer beat, its interstitial gone (U10). */
 const ORDER = [
   "capability",
   "the-interface",
   "an-intelligence",
   "every-desk",
-  "an-alien",
   "the-layer",
   "colleague",
   "latent-space",
@@ -257,8 +257,8 @@ describe("the keynote template (ADR-159)", () => {
       ghentDesk?.kind === "figure" && ghentDesk.figure.id === "knowledge" ? ghentDesk.figure.layers : undefined
     );
     for (const [id, n] of [
-      ["latent-space", "08"],
-      ["prowl", "10"],
+      ["latent-space", "07"],
+      ["prowl", "09"],
     ] as const) {
       const a = here(id);
       const b = ghent(id);
@@ -269,7 +269,7 @@ describe("the keynote template (ADR-159)", () => {
     }
     const midHere = here("an-intelligence");
     expect(midHere?.kind === "figure" ? midHere.eyebrow?.slice(0, 2) : "", "the middle, renumbered").toBe("03");
-    for (const id of ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "the-layer", "colleague", "the-median", "encode-yourself"]) {
+    for (const id of ["capability", "the-interface", "an-intelligence", "every-desk", "the-layer", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
     }
@@ -316,11 +316,9 @@ describe("the keynote template (ADR-159)", () => {
     expect(chapters.length).toBeLessThanOrEqual(5);
     expect(chapters, "the third act opens a chapter").toContain("colleague");
 
-    // U6: his line in place of the question; the shoggoth kept off the page.
-    const alien = sections.find((s) => s.id === "an-alien");
-    expect(alien?.kind === "interstitial" ? `${alien.line.pre} ${alien.line.em}` : "").toBe(
-      "But it still needs context, nuance and taste."
-    );
+    // U10: his line heads the layer beat, its own interstitial gone; the
+    // shoggoth kept off the page (U6).
+    expect(sections.some((s) => s.id === "an-alien"), "the line moved onto the layer").toBe(false);
     expect(sections.some((s) => s.id === "shoggoth"), "hidden for now").toBe(false);
     expect(KEYNOTE_SHOGGOTH.id).toBe("shoggoth");
     const shog = KEYNOTE_SHOGGOTH;
@@ -338,11 +336,12 @@ describe("the keynote template (ADR-159)", () => {
     const theirOwn = KEYNOTE_THEIR_OWN;
     expect(theirOwn.id).toBe("their-own");
     expect(theirOwn.kind === "figure" ? theirOwn.figure.id : "").toBe("brain");
-    // U5, U6: the layer, straight after what it still needs, and wordless.
+    // U5, U10: the layer, straight after the rings, headed by his line.
     const layer = sections.find((s) => s.id === "the-layer");
     expect(layer?.kind === "figure" ? layer.figure.id : "").toBe("layer");
-    expect(layer?.kind === "figure" && layer.figure.id === "layer" ? (layer.figure.title ?? "") + (layer.figure.line ?? "") : null).toBe("");
-    expect(sections.findIndex((s) => s.id === "the-layer"), "after the line").toBe(sections.findIndex((s) => s.id === "an-alien") + 1);
+    expect(layer?.kind === "figure" && layer.figure.id === "layer" ? layer.figure.title : null).toBe("But it still needs context, nuance and taste.");
+    expect(layer?.kind === "figure" && layer.figure.id === "layer" ? layer.figure.line : null, "no line under it").toBeUndefined();
+    expect(sections.findIndex((s) => s.id === "the-layer"), "after the rings").toBe(sections.findIndex((s) => s.id === "every-desk") + 1);
     const latent = sections.find((s) => s.id === "latent-space");
     expect(latent?.kind === "figure" && latent.menuPrimary, "the field is never a chapter").toBeFalsy();
   });
@@ -409,18 +408,25 @@ describe("the keynote template (ADR-159)", () => {
       /half\(near > 0 \? -1 : 1\);[\s\S]*paintFiles\(ctx, files, "far", lay\);\s*paintLayer\(ctx, D,[\s\S]*paintFiles\(ctx, files, "near", lay\);\s*half\(near\);/
     );
     expect(act, "the files grow once the slab has printed").toContain("const grown = smooth((brain.apart - 0.82) / 0.18);");
-    // U8: the Readout card (his pick): the count on the title's line, the
-    // picture at 16:9 with gold crosses, two readout rows, the film's play a
-    // row with its hit area over it; the mathematics a black hole, never the
-    // old board.
-    expect(act, "the picture at 16:9").toContain("const KMEDIA = { x: PAD, y: 93, w: 506, h: 285 } as const;");
-    expect(act, "title and count on one line").toMatch(/className="fa__mod-title" x=\{PAD\} y="52"[\s\S]*className="fa__mod-count" x=\{W - PAD_R\} y="52"/);
-    expect(act, "gold crosses on the picture").toContain('<path className="fa__mark" d={crosses} />');
-    expect(act, "the readout rows").toContain("{film ? \"▶ PLAY WITH SOUND\" : maths ? \"◇ LIVE\" : \"◇ STILL\"}");
-    expect(act, "the play is the row").toContain('<button ref={playRef} type="button" className="fa__play" style={playAt} aria-label="Play with sound" />');
-    expect(act, "the double hairline").toContain("const innerChamfer = chamferOf(chamferPts(W - 10, H - 10, CUT, 5, 5));");
-    expect(act, "the black hole").toContain("<MathHoleCanvas />");
-    expect(act, "never the old board").not.toContain("MathBoard");
+    // U10 (owner: "why is it so small? I like the full bleed"): the card a
+    // full-bleed screen under a slim head, no count, no date, no readout;
+    // one PLAY plate on a film that opens it full screen, its hit area the
+    // plate; the crosses back on the card's corners; the mathematics a black
+    // hole, full bleed too.
+    expect(act, "a slim head").toContain("const HEAD = 86;");
+    expect(act, "the picture full bleed").toContain("<image href={card.media.src} x={0} y={y} width={W} height={h} preserveAspectRatio=\"xMidYMid slice\" />");
+    expect(act, "the black hole full bleed").toMatch(/<foreignObject x=\{0\} y=\{y\} width=\{W\} height=\{h\}>\s*<MathHoleCanvas \/>/);
+    for (const gone of ["fa__mod-count", "fa__mod-key", "fa__mod-val", "fa__mark", "PLAY WITH SOUND", "innerChamfer", "MathBoard"]) {
+      expect(act, `no ${gone}`).not.toContain(gone);
+    }
+    expect(act, "one plate").toContain('<g className="fa__play-plate">');
+    expect(act, "the play is the plate").toContain('<button ref={playRef} type="button" className="fa__play" style={playAt} aria-label="Play with sound" />');
+    expect(act, "its hit area from the plate").toContain("left: `${((FACING.x + PLAY.x * s) / VB.w) * 100}%`,");
+    expect(act, "full screen").toContain("theatre.requestFullscreen?.()");
+    expect(act, "crosses on the card's corners").toMatch(/\[0, 0\],\s*\[W, H\],\s*\[0, H\],\s*\]\.map\(\(\[cx, cy\], j\) => \(\s*<path key=\{j\} className="fa__cross"/);
+    // U10: the middle's cards read at a glance: a name and one line, large.
+    expect(act, "the side card's name").toContain('className="fa__side-label"');
+    expect(act, "no rows on the side cards").not.toContain("fa__side-row");
     expect(act, "the brain's machining").toMatch(/const BRAIN_CHIP: BrainChip = \{[^}]*\};/);
     expect(act).toContain("chip: BRAIN_CHIP,");
     const sheet = own("keynote-template-alpha.css");
@@ -546,19 +552,24 @@ describe("the keynote template (ADR-159)", () => {
   });
 
   /**
-   * U8: the black hole of mathematics is seeded (the same disk every time),
-   * carries the card's own equations on its outer orbits, and falls in.
+   * U8, U9: the black hole of mathematics is seeded (the same disk every
+   * time) and falls in; since U9 it is a terminal, its cells the mono's
+   * advance, its prompt typing the card's own equations.
    */
-  it("seeds the black hole of mathematics and lets it fall", async () => {
-    const { holeSeed, holeStep } = await import("@/components/arcs/figures/foundation/mathHole");
+  it("seeds the black hole of mathematics, lets it fall, and lays its terminal", async () => {
+    const { holeSeed, holeStep, holeScreen, HOLE_EQUATIONS } = await import("@/components/arcs/figures/foundation/mathHole");
     const a = holeSeed();
     const b = holeSeed();
     expect(a).toEqual(b);
-    expect(a.length).toBe(820);
-    const equations = a.filter((p) => p.frag).map((p) => p.g);
-    expect(equations).toContain("∇·u = 0");
-    expect(equations).toContain("4/n = 1/x + 1/y + 1/z");
-    for (const p of a.filter((q) => q.frag)) expect(p.r, "equations ride the outer orbits").toBeGreaterThanOrEqual(4.4);
+    expect(a.length).toBe(900);
+    expect([...HOLE_EQUATIONS], "the card's own equations at the prompt").toEqual(["∂u/∂t + (u·∇)u = −∇p + νΔu", "∇·u = 0", "4/n = 1/x + 1/y + 1/z"]);
+    const screen = holeScreen(506, 285, 9, 5.4);
+    expect(screen.cols).toBe(93);
+    expect(screen.rows).toBe(31);
+    expect(screen.light.length).toBe(93 * 31);
+    const act = own("FoundationAct.tsx");
+    expect(act, "the cells in the page's mono").toContain("const font = cs.fontFamily");
+    expect(own("keynote-template-alpha.css"), "the hole's mono").toMatch(/\.fa__hole \{[^}]*font-family: var\(--font-pt-mono/);
     const r0 = a.map((p) => p.r);
     holeStep(a, 0.5, () => 0.5);
     let fell = 0;

@@ -1,7 +1,7 @@
 # AI is not software · the keynote template
 
 The spoken script for `/arcs/thoughtform/keynote-template-alpha` (ADR-159), beat by beat, in
-the order the page scrolls: hero, About, the eras, the talk's eleven beats in three acts, the
+the order the page scrolls: hero, About, the eras, the talk's ten beats in three acts, the
 swarm chapter, then the thesis and the Arc. Cut from the Ghent script of 15 October
 (`2026-10-15-ux-meetup.md`) and the owner's dictations of 16 and 17 October; the beats the room heard
 keep their words, the new ones carry his words from the dictation where he said them and a
@@ -53,7 +53,7 @@ pitch (owner, 16 October).*
 
 ### 01 · What it can make (4:00)
 
-*The head is up before the first example: "AI will absorb all digital content and products within 2 years." (U6: the wake-up call is no longer a beat of its own; U7: 01 to 05 read as one paragraph, in his words.) Wait a beat. Then one example at a time; scroll a step per example. Each one lies down in the stack on the left, and the axis of model capabilities grows with it. The cards read Images, Video, Tools, Brand systems, Products, Worlds, Mathematics.*
+*The head is up before the first example: "AI will absorb all digital content and products within 2 years." (U6: the wake-up call is no longer a beat of its own; U7: 01 to 05 read as one paragraph, in his words.) Wait a beat. Then one example at a time; scroll a step per example. Each one lies down in the stack on the left, and the axis of model capabilities grows with it. The cards read Images, Video, Tools, Brand systems, Products, Worlds, Mathematics, each picture full bleed under its name (U10); a film's PLAY opens it full screen.*
 
 AI will absorb all digital content and products within two years. I'll show you why I think that,
 and it isn't an opinion. It's a chart.
@@ -126,23 +126,20 @@ next. Medicine, science, engineering, policy: in reach. Next, all knowledge work
 
 ---
 
-## II · A NEW KIND OF USER (≈3 min)
+## II · A NEW KIND OF USER (≈2 min)
 
-### 05 · What it still needs (13:00)
+### 05 · The layer (13:00)
 
-*Read it slowly. His line (17 October), in place of "How do you design experiences and interfaces for a user that isn't a person?"*
+*The head over it: "But it still needs context, nuance and taste." (U10: his line, moved here
+from a beat of its own.) The brain turns back to its corner and opens: its two halves move apart
+and the layer rises between them, standing upright, the same plate of gold dots the swarm chapter
+stands on with the Thoughtform mark cut into its face, and its dots run into both halves. Let it
+finish before you speak.*
 
-But it still needs context, nuance and taste.
-
-If the frontier labs absorb all software and commoditise every digital product, you could say
-design is solved. I disagree. Everything it makes comes out of what it's given, and what it can't
-give itself is context, nuance and taste. Somebody has to put those in. **(proposal)**
-
-### 06 · The layer (14:00)
-
-*The brain turns back to its corner and opens: its two halves move apart and the layer rises
-between them, standing upright, the same plate of gold dots the swarm chapter stands on with the
-Thoughtform mark cut into its face. No words on the screen. Let it finish before you speak.*
+But it still needs context, nuance and taste. If the frontier labs absorb all software and
+commoditise every digital product, you could say design is solved. I disagree. Everything it
+makes comes out of what it's given, and what it can't give itself is context, nuance and taste.
+Somebody has to put those in. **(proposal)**
 
 Open it up and look at what's actually there: two halves of a machine for thinking, and between
 them, this. That's where I work. I am the layer between machine intelligence and human taste,
@@ -153,7 +150,7 @@ context and expertise. Everything in the rest of this talk is about what that la
 
 ## III · HOW YOU TALK TO IT (≈9 min)
 
-### 07 · A colleague (15:00)
+### 06 · A colleague (14:30)
 
 *Let the line glitch in.*
 
@@ -163,7 +160,7 @@ where encoding your context matters so much.
 I've always said: if you treat AI like a pretty smart colleague, you get very far. If you respect
 the intelligence, you get pretty far.
 
-### 08 · Latent space (16:00)
+### 07 · Latent space (15:30)
 
 *Let the field drift; read the line in the middle.*
 
@@ -171,7 +168,7 @@ To see why, look inside. Inside these models, great artists become nodes in late
 vision tames the infinite into new beauty. Everything is in there: every artist, every style,
 every argument. Creatives aren't outside this. We're in it, as points the whole thing steers by.
 
-### 09 · The median (17:30)
+### 08 · The median (17:00)
 
 *Let the line glitch in.*
 
@@ -179,7 +176,7 @@ And yet, ask it something plain and you get something plain. AI converges on the
 because it's stupid, and not because it isn't creative: without context it generates the most
 plausible answer, and the most plausible answer is the middle of that field.
 
-### 10 · The prowl (18:30)
+### 09 · The prowl (18:00)
 
 *The film, full bleed, no words. Let it run a few seconds before you speak over it.*
 
@@ -191,7 +188,7 @@ navigation. You don't describe the output. You give it coordinates. **(proposal)
 That's also why the context matters more than the model. The models are smart enough. What they
 lack is your context: where in the field you live, what good looks like to you.
 
-### 11 · A node in latent space (20:30)
+### 10 · A node in latent space (20:00)
 
 *The voice. Read it slowly.*
 

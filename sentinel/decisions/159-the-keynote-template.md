@@ -1,7 +1,7 @@
 # ADR-159: The keynote template is the UX meetup talk, copied and retold
 
 - **Status:** Proposed (2026-10-16, owner), built and guarded on branch
-  `arc/keynote-template-alpha`; on main through U8 (pushed 2026-10-17 on his word). Flips
+  `arc/keynote-template-alpha`; on main through U10 (pushed 2026-10-17 on his word). Flips
   to Accepted once the owner has read the page live and ruled on the lines marked (proposal).
 - **Surface:** `/arcs/thoughtform/keynote-template-alpha` (an OWN ROUTE,
   `app/(marketing)/arcs/thoughtform/keynote-template-alpha/**`,
@@ -499,6 +499,71 @@ Verified: `tsc` and `eslint` clean; the keynote test (11), `ux-meetup`, `arcs-re
 dark and light (through the switch): the Tools card's rows and the hit area over its value, the
 mathematics card's hole with ∑, π, θ, ∞ legible round the gold ring. No console error from a
 fresh load through every phase.
+
+## U9 · The black hole on a terminal (2026-10-17, owner)
+
+U7 and U8 went to main as one commit on his word (`be6df9f0`: the two touched the same act and
+sheet). His read of U8's hole: "really this is just like a circle with things rolling around.
+Particle system, terminal retrofuturistic. That's the briefing."
+
+- **The same physics, drawn as a terminal draws** (`mathHole.ts`, rewritten): a grid of
+  monospace cells in the page's mono (`HOLE_CELL` 9 CSS px, the advance measured), nothing drawn
+  between them. The disk's 900 particles orbit and fall as before; each lights the cell it is
+  over (the far half also a lensed cell over the top of the horizon, and faintly under it); a
+  cell's light decays like phosphor, so the orbits leave trails; a cell shows the character its
+  light buys, from a dot to mathematics (`· : - = + × ≈ ∫ ∑ ∂ ∇ ∞`). The cells inside the
+  horizon stay blank; the cells on the photon ring burn in gold (`○`, `∞` where the light is
+  hot), the one gold; scanlines every three pixels. At the foot a prompt types the card's own
+  equations (`HOLE_EQUATIONS`) one after another, a block cursor blinking.
+- The disk lies more open in the card (`tilt` 0.34) so it reads as a disk at this cell size; the
+  first cut saturated the inner disk into gold blocks and drowned the ring, so a cell's light
+  is capped below gold and only the ring is gold.
+
+Verified: `tsc` and `eslint` clean; the keynote test (11), `ux-meetup`, `arcs-registry`,
+`arc-terminal-markup` and `proposal-swarm` green (142). Read headed in his Chrome at 2131×1270:
+the mathematics card's terminal, the gold ring round the blank horizon, the prompt typing
+"∂u/∂t +". No console error from a fresh load through every phase.
+
+## U10 · Full bleed, one button, cards at a glance, the line on the layer (2026-10-17, owner)
+
+His read of U8's card, on his own screen: "I don't like the crosses near the visual. I like the
+crosses around the frame ... This is one of the ugliest cards I've ever seen in my life. Why is
+it so small? I like the full bleed. This is a pattern that I really hate about AI: just add shit
+that I don't really like. 'Kind films,' 'sound play with sound': why do you need that? This is
+just a showcase ... I want a simple elegant button where I can show the video full screen. Maybe
+that little explanation would be nice but we don't need the date either ... These cards need to
+feel like full-bleed interfaces: minimalistic." Of the middle's cards: "the text on them and the
+placement are really distracting because they feel flat and too small. Really make something
+where you can see everything at a glance please. Skip shit." And: move "it still needs context
+..." onto the beat where the brain opens and drop its interstitial. The black hole of U9 "looks
+great"; full bleed too.
+
+- **The card is a full-bleed screen**: a slim head (`HEAD` 86: the title and its line, the
+  "little explanation"), the picture filling the rest of the card to its three other edges and
+  its cut (the clip is the card's own chamfer), stills and films alike. No count, no date, no
+  KIND/SOUND rows, no crosses on the picture, no second hairline. The survey crosses are back on
+  the card's corners. **Films now fill the card (`cover`): his "I like the full bleed" sets aside
+  the 2026-10-15 "whole film, never cropped" for the card**; the whole film is what PLAY shows.
+  The tool's film is a screen recording with its words on the left, so it keeps that side.
+- **One button**: on a film, a PLAY plate at the picture's foot (Tensor Gold edges and text, the
+  house's allowed small label), its hit area seated over it from `FACING`; it opens the theatre
+  and asks the browser for full screen (`requestFullscreen` on the theatre; leaving full screen
+  leaves the theatre, closing it leaves full screen).
+- **The black hole full bleed** (U9's terminal, unchanged but for its size): the prompt inset by
+  the card's margin, clear of the cut corner.
+- **The middle's cards read at a glance**: a mono name in gold (TOOL, COLLABORATOR, no "A ·") over
+  the one line set at 31 on two lines (`twoLines`), on a larger card seated on the brain's middle
+  (`SIDE` 340 × 158 at y 400); the talk's rows (the instruction log, the talk) are not drawn.
+- **His line heads the layer beat**: "But it still needs context, nuance and taste." is the
+  layer figure's title, centred over the opened brain; `an-alien` is gone from the page, so the
+  talk is ten beats and act II is the layer alone.
+
+Verified: `tsc` and `eslint` clean; the keynote test (11), `ux-meetup`, `arcs-registry`,
+`arc-terminal-markup` and `proposal-swarm` green (142). Read headed in his Chrome at 2131×1270:
+the Tools card full bleed with Vesper's words kept and the PLAY plate under the hit area
+(measured identical boxes), the Mathematics card full bleed with the prompt on the margin, the
+middle's two cards, the layer beat under its head; ten beats. No console error from a fresh load
+through every phase.
 
 ## Left open
 

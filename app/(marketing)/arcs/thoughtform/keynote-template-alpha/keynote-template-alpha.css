@@ -312,75 +312,50 @@ html[data-theme="light"] .fa__dots {
   display: block;
   width: 100%;
   height: 100%;
-  /* the whole film, never cropped (owner, 2026-10-15), on the card's own
-     ground (U8: no black blocks on parchment) */
-  object-fit: contain;
+  /* full bleed (U10, owner 2026-10-17: "I like the full bleed"): the card
+     shows the film filling its picture; PLAY opens it whole, full screen */
+  object-fit: cover;
   background: rgb(var(--void-deep-rgb, 5, 4, 3));
 }
-.fa__media-ground {
-  fill: rgb(var(--void-deep-rgb, 5, 4, 3));
+/* The tool's film is a screen recording, its words on the left: the bleed
+   keeps that side. */
+g[data-kind="tool"] .fa__video {
+  object-position: left center;
 }
-/* The Readout card (U8): gold survey crosses on the picture's corners, the
-   readout's two ruled rows, a mono key and its value. */
-.fa__mark {
-  fill: none;
+/* The PLAY plate (U10): a small label with Tensor Gold edges and text, the
+   one control on a film's card, at the picture's foot. */
+.fa__play-plate rect {
+  fill: rgba(var(--void-deep-rgb, 5, 4, 3), 0.82);
   stroke: var(--gold-ink, #caa554);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-.fa__row {
-  fill: none;
-  stroke: var(--arc-rule);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.fa__mod-key,
-.fa__mod-val {
+.fa__play-plate text {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.2em;
-}
-.fa__mod-key,
-.fa__mod-val[data-dim] {
-  fill: var(--arc-ink-50);
-}
-.fa__mod-val {
-  fill: var(--dawn, #ebe3d6);
-}
-.fa__mod-val[data-lit] {
   fill: var(--gold-ink, #caa554);
 }
-/* The mathematics card's black hole (U8): its ground the card's, its ink
-   the page's, its photon ring the one gold. */
+/* The mathematics card's black hole, on a terminal (U8, U9): its ground the
+   card's, its characters the page's mono in the page's ink, its photon ring
+   the one gold. */
 .fa__hole {
   display: block;
   width: 100%;
   height: 100%;
   background: rgb(var(--void-deep-rgb, 5, 4, 3));
   color: rgba(var(--dawn-rgb, 235, 227, 214), 0.92);
-  --fa-hole-gold: var(--gold-ink, #caa554);
-  --fa-hole-warm: #f3e4c2;
-  --fa-hole-void: #000;
-}
-html[data-theme="light"] .fa__hole {
-  --fa-hole-warm: var(--gold-ink, #6e5216);
-  --fa-hole-void: #0a0908;
-}
-/* The module: its head in the frame over its picture, as Unsiloed builds
-   its cards; the middle beat's cards in the same make. */
-.fa__mod-eyebrow,
-.fa__mod-count,
-.fa__side-ok {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 10.5px;
+  --fa-hole-gold: var(--gold-ink, #caa554);
+}
+/* The module's head (its title and line over the full-bleed picture) and
+   the middle beat's cards (a name in gold mono over one line set large, U10:
+   read at a glance). */
+.fa__side-label {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 12px;
   letter-spacing: 0.2em;
-}
-.fa__mod-eyebrow {
   fill: var(--gold-ink, #caa554);
-}
-.fa__mod-count,
-.fa__side-ok {
-  fill: var(--arc-ink-50);
 }
 .fa__mod-title,
 .fa__side-title {
@@ -390,29 +365,12 @@ html[data-theme="light"] .fa__hole {
   fill: var(--dawn, #ebe3d6);
 }
 .fa__side-title {
-  font-size: 19px;
+  font-size: 31px;
 }
 .fa__mod-line {
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-size: 14px;
   fill: var(--arc-ink-70);
-}
-.fa__side-row {
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  fill: var(--arc-ink-80);
-}
-.fa__side[data-kind="collab"] .fa__side-row {
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: 15px;
-  letter-spacing: 0;
-}
-.fa__side-row[data-voice="b"] {
-  fill: var(--gold-ink, #caa554);
-}
-.fa__side-mark {
-  fill: var(--gold-ink, #caa554);
 }
 .fa__side-back {
   fill: var(--void, #0a0908);
@@ -447,9 +405,6 @@ html[data-theme="light"] .fa__hole {
   stroke: rgba(var(--dawn-rgb), 0.45);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-}
-.fa__side .fa__side-row {
-  fill: var(--arc-ink-70);
 }
 /* The head: an eyebrow, a title, a line, where the beat has one (the first
    beat's is in its modules). ON THE SCREEN'S TOP DATUM, NOT THE SCENE'S BOX
