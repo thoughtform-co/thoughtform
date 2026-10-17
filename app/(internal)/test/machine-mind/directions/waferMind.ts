@@ -285,7 +285,7 @@ function sheetOf(light: boolean, gold: string, lit: string, ground: string): str
         metalTop: "#99948b",
         tin: ["#a7a398", "#b6b2a7", "#c5c1b6", "#d4d0c5"],
         rubber: ["#4a4640", "#57534c", "#6a665e", "#7d7870"],
-        cable: { body: "#7a756c", shine: "#9b968b", shade: "#625e56", edge: "#3f3b35", alt: "#68645b", altShine: "#878277", altShade: "#524e47" },
+        cable: { body: "#bdb6a9", shine: "#d8d3c8", edge: "#8f897d", band: ["#aea79a", "#bdb6a9", "#cbc5b9", "#d8d3c8"] },
         white: "#c9c2b5",
         tract: "#a7a093",
       }
@@ -302,7 +302,7 @@ function sheetOf(light: boolean, gold: string, lit: string, ground: string): str
         metalTop: "#5f5b54",
         tin: ["#5f5c56", "#716d66", "#827e76", "#948f87"],
         rubber: ["#121110", "#1a1917", "#24221f", "#33302c"],
-        cable: { body: "#2a2825", shine: "#45423c", shade: "#181715", edge: "#5a564e", alt: "#1f1e1b", altShine: "#363430", altShade: "#121110" },
+        cable: { body: "#1f1e1c", shine: "#3a3833", edge: "#4b4842", band: ["#1f1e1c", "#292826", "#33312d", "#3e3b36"] },
         white: "#131211",
         tract: "#34312c",
       };
@@ -316,8 +316,9 @@ function sheetOf(light: boolean, gold: string, lit: string, ground: string): str
     `.gm-nut{--anatomy-top:${t.metal[3]}}`,
     `.gm-tin{${shades(t.tin, t.tin[3])};--anatomy-lo:${t.tin[1]};--anatomy-mid:${t.tin[1]}}`,
     `.gm-plastic{${shades(t.rubber, t.rubber[3])};--anatomy-lo:${t.rubber[3]};--anatomy-mid:${t.rubber[3]}}`,
-    `.gm-cable{--anatomy-shade-0:${t.cable.shade};--anatomy-shade-2:${t.cable.body};--anatomy-top:${t.cable.shine};--anatomy-lo:${t.cable.edge};--anatomy-mid:${t.cable.edge}}`,
-    `.gm-alt{--anatomy-shade-0:${t.cable.altShade};--anatomy-shade-2:${t.cable.alt};--anatomy-top:${t.cable.altShine}}`,
+    `.gm-cable{--anatomy-shade-2:${t.cable.body};--anatomy-top:${t.cable.shine};--anatomy-lo:${t.cable.edge};--anatomy-mid:${t.cable.edge}}`,
+    `.gm-cable .tb-shade{display:none}`,
+    `.gm-band{${shades(t.cable.band, t.cable.band[3])};--anatomy-lo:${t.cable.edge};--anatomy-mid:${t.cable.edge}}`,
     `.gm-seam{stroke:${t.metal[0]}!important}`,
     `.gm-screw .iso-dots circle{fill:${t.metal[0]};opacity:1}`,
     `.gm-pin{stroke:${gold}!important;stroke-width:1.2px}`,
@@ -712,12 +713,12 @@ function stemGroup(P: Projection): StemGroup {
     const { items: port, exit } = portItems(w3(l, f, zb), down, r, P);
     items.push(...port);
     const route = to(exit);
-    items.push(...cableItems(route, r, P, { style, collars, pitch: style === "segmented" ? 3.6 : 2.2 }));
+    items.push(...cableItems(route, r, P, { style, collars }));
     pts.push(...route);
     if (end === "plug") {
       const e = endOf(route);
       items.push(...endItems(e.p, e.t, r, P));
-      pts.push([e.p[0], e.p[1], e.p[2] - 16]);
+      pts.push([e.p[0], e.p[1], e.p[2] - 12]);
     }
   };
   /** A cable that leaves one port and hangs in a loop back into another. */
@@ -726,7 +727,7 @@ function stemGroup(P: Projection): StemGroup {
     const b = portItems(w3(b0[0], b0[1], zb), down, r, P);
     items.push(...a.items, ...b.items);
     const route = bezier(a.exit, [a.exit[0] + sway[0], a.exit[1] + sway[1], depth], [b.exit[0] + sway[0] * 0.6, b.exit[1] - sway[1], depth + sway[2]], b.exit, 50);
-    items.push(...cableItems(route, r, P, { style, collars, pitch: 2.2 }));
+    items.push(...cableItems(route, r, P, { style, collars }));
     pts.push(...route);
   };
   /** A hanging route: straight down out of the port, then swinging by
@@ -736,30 +737,25 @@ function stemGroup(P: Projection): StemGroup {
     return bezier(x, [x[0], x[1], x[2] - 26], [x[0] + (end[0] - x[0]) * swing, x[1] + (end[1] - x[1]) * swing, z + 34], [end[0], end[1], z], 40);
   };
   // the thick corrugated hose, the longest
-  hang(-13, F - 8, 3.6, fall(-14, -10, -222), "corrugated", "plug");
+  hang(-13, F - 8, 3.8, fall(-14, -10, -222), "corrugated", "plug");
   // a lighter corrugated hose, hanging in a loop
-  loop([-2, F - 10], [7.5, F - 10], 2.2, -150, [-4, -12, 6] as V3, "corrugated");
-  // the segmented cable, swinging out the other way
-  hang(17, F - 6, 2.4, fall(12, -16, -198), "segmented", "plug");
-  // a thick plain cable with its collars, forward and out
-  hang(13, F + 4, 3, fall(22, 14, -176, 0.7), "plain", "plug", [30, 70]);
-  // a thin plain cable, straight down, the second longest
-  hang(-15, F + 5, 1.4, fall(-6, 8, -208, 0.3), "plain", "plug", [52]);
-  // a plain cable with two collars, hanging in a deep loop
-  loop([-5, F + 8], [5, F + 9], 1.5, -202, [6, 10, 4] as V3, "plain", [26, 92]);
-  // two leave the hemispheres' undersides near the stem
+  loop([-2, F - 10], [8, F - 10], 2.4, -158, [-4, -12, 6] as V3, "corrugated");
+  // a thick plain cable with one collar, forward and out
+  hang(13, F + 4, 3.2, fall(22, 14, -186, 0.7), "plain", "plug", [44]);
+  // a thin plain cable, swinging back, the second longest
+  hang(15, F - 8, 1.6, fall(10, -16, -206, 0.4), "plain", "plug");
+  // a plain cable with one collar, hanging in a deep loop
+  loop([-6, F + 8], [4, F + 9], 1.7, -200, [6, 10, 4] as V3, "plain", [60]);
+  // one leaves the left hemisphere's underside near the stem
   const under = new Map<Side, string>();
-  for (const [side, l, f, r, style, dl, df, z] of [
-    [-1, -36, F - 14, 2, "segmented", -12, -6, -172],
-    [1, 40, F + 10, 2.4, "corrugated", 14, 8, -158],
-  ] as [Side, number, number, number, CableStyle, number, number, number][]) {
+  for (const [side, l, f, r, style, dl, df, z] of [[-1, -36, F - 14, 2.2, "plain", -12, -6, -170]] as [Side, number, number, number, CableStyle, number, number, number][]) {
     const zs = undersideZ(side, l, f);
     if (zs === null) continue;
     const { items: port, exit } = portItems(w3(l, f, zs), down, r, P);
     const route = fall(dl, df, z)(exit);
     const e = endOf(route);
-    under.set(side, `<g class="gm-cable">${paint([...port, ...cableItems(route, r, P, { style, pitch: style === "segmented" ? 3.6 : 2.2 }), ...endItems(e.p, e.t, r, P)])}</g>`);
-    pts.push(...route, [e.p[0], e.p[1], e.p[2] - 16]);
+    under.set(side, `<g class="gm-cable">${paint([...port, ...cableItems(route, r, P, { style }), ...endItems(e.p, e.t, r, P)])}</g>`);
+    pts.push(...route, [e.p[0], e.p[1], e.p[2] - 12]);
   }
   const behind = paint(items);
   // the stem itself, over the tops of the cables it holds

@@ -95,82 +95,41 @@ function even(pts: V3[], step: number): V3[] {
   return Array.from({ length: n + 1 }, (_, i) => at((total * i) / n).p);
 }
 
-/** How a cable is drawn, all in the kit's flat tones (a body, one lit band,
-    one shaded band, a hairline edge), never photoreal:
-      plain       one run, machined collars at `collars` (lengths along it)
-      corrugated  a hose of short rings in two alternating tones
-      segmented   vertebrae: short segments on a thin core, gaps between */
-export type CableStyle = "plain" | "corrugated" | "segmented";
+/** How a cable is drawn: as graphic as the wafers. One plain tube (a body
+    tone, one lit band, a hairline edge) and at most one bold move for its
+    kind (owner, 2026-10-17: the fine cables were "too high res"):
+      plain       nothing more, or one or two simple collars (`collars`)
+      corrugated  a few wide bands, spaced well over a cable's width apart */
+export type CableStyle = "plain" | "corrugated";
 
-export function cableItems(route: V3[], radius: number, P: Projection, { style = "plain", collars = [], pitch = 2.6 }: { style?: CableStyle; collars?: number[]; pitch?: number } = {}): Item[] {
-  const pts = even(route, 2.4);
+/** An octagonal prism along `t` at `p`, from s0 to s1: the faceted part every
+    collar, band, port and connector is made of. */
+function facet(p: V3, t: V3, half: number, s0: number, s1: number, P: Projection, cls = "gm-metal"): Item {
+  const F = frameAlong(p, t);
+  return { depth: depthOf(add(p, mul(t, (s0 + s1) / 2)) as Point3, P) + 0.3, svg: solidSvg(prismOf(F, chamferRect(half, half, half * 0.42), s0, s1, P), { tone: "mid", crease: "lo", className: cls }) };
+}
+
+export function cableItems(route: V3[], radius: number, P: Projection, { style = "plain", collars = [] }: { style?: CableStyle; collars?: number[] } = {}): Item[] {
+  const pts = even(route, 3);
   const { total, at } = walk(pts);
-  const out: Item[] = [];
-  const piece = (p: TubePiece, cls = "") => {
-    const svg = tubeSvg(p, { tone: "mid" });
-    out.push({ depth: depthOf(p.mid as Point3, P), svg: cls ? `<g class="${cls}">${svg}</g>` : svg });
-  };
-  if (style === "corrugated") {
-    // ridges of the full radius over a groove core: the hose's outline steps
-    // in and out, each ridge a short flat-toned band
-    const gaps: [number, number][] = [];
-    for (let s = pitch * 0.62; s < total - 1; s += pitch) gaps.push([s, s + pitch * 0.38]);
-    tubePieces(pts, radius * 0.8, P, { maxLength: 8, spacing: 1 }).forEach((p) => piece(p, "gm-alt"));
-    tubePieces(pts, radius, P, { maxLength: pitch, spacing: 0.6, gaps, caps: false }).forEach((p) => piece(p));
-    return out;
-  }
-  if (style === "segmented") {
-    const seg = pitch;
-    const gaps: [number, number][] = [];
-    for (let s = seg; s < total - 2; s += seg + 1.4) gaps.push([s, s + 1.4]);
-    tubePieces(pts, radius * 0.5, P, { maxLength: 8, spacing: 1 }).forEach((p) => piece(p, "gm-alt"));
-    tubePieces(pts, radius, P, { maxLength: seg + 0.5, spacing: 0.8, gaps }).forEach((p) => piece(p));
-    return out;
-  }
-  const gaps: [number, number][] = collars.map((c) => [c - 2.2, c + 2.2]);
-  tubePieces(pts, radius, P, { maxLength: 7, spacing: 1, gaps }).forEach((p) => piece(p));
-  for (const c of collars) {
-    const { p, t } = at(c);
-    const F = frameAlong(p, t);
-    const R = radius + 1.1;
-    const band: Meridian = [
-      [-2.6, 0],
-      [-2.6, radius + 0.4],
-      [-1.8, R],
-      [1.8, R],
-      [2.6, radius + 0.4],
-      [2.6, 0],
-    ];
-    out.push({ depth: depthOf(p as Point3, P) + 0.5, svg: solidSvg(latheOf(band, F, P), { tone: "mid", crease: "lo", className: "gm-metal" }) });
+  const out: Item[] = tubePieces(pts, radius, P, { maxLength: 14, spacing: 2 }).map((p) => ({ depth: depthOf(p.mid as Point3, P), svg: tubeSvg(p, { tone: "mid" }) }));
+  const marks = style === "corrugated" ? Array.from({ length: Math.floor(total / Math.max(16, radius * 6)) }, (_, i) => (i + 0.6) * Math.max(16, radius * 6)).filter((s) => s < total - 6) : collars;
+  for (const s of marks) {
+    const { p, t } = at(s);
+    const w = style === "corrugated" ? radius * 0.9 : 2.4;
+    out.push(facet(p, t, radius + (style === "corrugated" ? 0.8 : 1.1), -w / 2, w / 2, P, style === "corrugated" ? "gm-band" : "gm-metal"));
   }
   return out;
 }
 
-/** A port on the stem's underside a cable leaves by: a turned boss, a nut
-    and a ferrule along `n` (straight down). Returns where the cable starts. */
+/** A port on the stem's underside a cable leaves by: one faceted boss along
+    `n` (straight down). Returns where the cable starts. */
 export function portItems(o: V3, n: V3, r: number, P: Projection): { items: Item[]; exit: V3 } {
-  const F = frameAlong(o, n);
-  const R = r + 1.8;
-  const boss: Meridian = [
-    [0, 0],
-    [0, R + 0.6],
-    [1.6, R + 0.6],
-    [1.6, R],
-    [3.4, R],
-    [3.4, R - 0.5],
-    [4, R - 0.5],
-    [4, R + 0.2],
-    [5.6, R + 0.2],
-    [6.8, r + 0.5],
-    [6.8, 0],
-  ];
-  return { items: [{ depth: depthOf(add(o, mul(n, 3)) as Point3, P), svg: solidSvg(latheOf(boss, F, P), { tone: "mid", crease: "lo", className: "gm-metal" }) }], exit: add(o, mul(n, 6.6)) };
+  return { items: [facet(o, n, r + 1.6, 0, 4, P)], exit: add(o, mul(n, 3.6)) };
 }
 
 // ─── turned and prismatic parts ─────────────────────────────────────────────
 
-type Meridian = (number[] | [number, number] | [number, number, number])[];
-const latheOf = (meridian: Meridian, F: unknown, P: Projection) => (G.lathe as unknown as (m: Meridian, F: unknown, P: Projection, o?: Record<string, unknown>) => never)(meridian, F, P, {});
 const prismOf = (F: unknown, poly: LF[], s0: number, s1: number, P: Projection) => (G.prismOf as unknown as (F: unknown, p: LF[], a: number, b: number, P: Projection) => never)(F, poly, s0, s1, P);
 const frameAlong = (o: V3, a: V3) => (G.frameAlong as unknown as (o: V3, a: V3) => { o: V3; a: V3; u: V3; v: V3 })(o, a);
 
@@ -193,27 +152,8 @@ function chamferRect(hu: number, hv: number, c: number, top = c): LF[] {
     band and a metal tip with a gold contact pin. `p` is the cable's end, `t`
     its direction. */
 export function endItems(p: V3, t: V3, r: number, P: Projection): Item[] {
-  const F = frameAlong(p, t);
-  const R = r + 1.9;
-  const body: Meridian = [
-    [-0.6, 0],
-    [-0.6, r + 0.5],
-    [1.4, R - 0.3],
-    [1.4, R],
-    [6.5, R],
-    [6.5, R - 0.5],
-    [7.2, R - 0.5],
-    [7.2, R + 0.35],
-    [9.4, R + 0.35],
-    [9.4, R - 0.8],
-    [11.4, R - 1.1],
-    [11.4, 0],
-  ];
-  const items: Item[] = [{ depth: depthOf(add(p, mul(t, 5)) as Point3, P), svg: solidSvg(latheOf(body, F, P), { tone: "mid", crease: "lo", className: "gm-metal" }) }];
-  const tip = add(p, mul(t, 11.4));
-  const pin = add(p, mul(t, 13.6));
-  items.push({ depth: depthOf(pin as Point3, P), svg: lineSvg(pathOf([iso(tip as Point3, P), iso(pin as Point3, P)]), { tone: "lo", className: "gm-pin" }) });
-  return items;
+  // a blocky connector: a faceted body and a narrower nose, no turned detail
+  return [facet(p, t, r + 1.9, -0.5, 7, P), facet(p, t, r + 0.9, 7, 9.5, P)];
 }
 
 // ─── the USB-B receptacle and its plug ──────────────────────────────────────
@@ -240,37 +180,17 @@ export function plugItems(c: V3, n: V3, P: Projection): { items: Item[]; exit: V
   const grip = solidSvg(prismOf(F, flip(chamferRect(USB.w / 2 - 0.6, USB.h / 2 - 0.6, 1, USB.cut - 0.3)), 11, 13, P), { tone: "mid", crease: "lo", className: "gm-plastic" });
   items.push({ depth: depthOf(add(c, mul(n, 6)) as Point3, P), svg: housing });
   items.push({ depth: depthOf(add(c, mul(n, 12)) as Point3, P), svg: grip });
-  const relief: Meridian = [
-    [13, 0],
-    [13, 3.4],
-    [14.4, 3.4],
-    [14.4, 3],
-    [15.2, 3],
-    [15.2, 3.2],
-    [16.2, 3.1],
-    [16.2, 2.7],
-    [17, 2.7],
-    [17, 2.85],
-    [18, 2.75],
-    [20.5, 2],
-    [20.5, 0],
-  ];
-  items.push({ depth: depthOf(add(c, mul(n, 17)) as Point3, P), svg: solidSvg(latheOf(relief, F, P), { tone: "mid", crease: "lo", className: "gm-plastic" }) });
-  return { items, exit: add(c, mul(n, 20)) };
+  // a plain faceted strain relief, no ribs
+  const reliefItem = facet(c, n, 2.8, 13, 18, P, "gm-plastic");
+  items.push(reliefItem);
+  return { items, exit: add(c, mul(n, 17.5)) };
 }
 
 /** The far end of the USB cable: a USB-A plug hanging from it, its moulded
     body, the tin shell and the shell's two windows. */
 export function usbAItems(p: V3, t: V3, P: Projection): Item[] {
   const F = frameAlong(p, t);
-  const relief: Meridian = [
-    [-0.4, 0],
-    [-0.4, 2],
-    [2.5, 2.8],
-    [3.4, 2.8],
-    [3.4, 0],
-  ];
-  const items: Item[] = [{ depth: depthOf(add(p, mul(t, 1.5)) as Point3, P), svg: solidSvg(latheOf(relief, F, P), { tone: "mid", crease: "lo", className: "gm-plastic" }) }];
+  const items: Item[] = [facet(p, t, 2.4, -0.4, 3.4, P, "gm-plastic")];
   items.push({ depth: depthOf(add(p, mul(t, 7)) as Point3, P), svg: solidSvg(prismOf(F, chamferRect(4.6, 2.8, 0.6), 3.4, 11.5, P), { tone: "mid", crease: "lo", className: "gm-plastic" }) });
   items.push({ depth: depthOf(add(p, mul(t, 14)) as Point3, P), svg: solidSvg(prismOf(F, chamferRect(3.8, 1.5, 0.15), 11.5, 17.5, P), { tone: "mid", crease: "lo", className: "gm-tin" }) });
   return items;
