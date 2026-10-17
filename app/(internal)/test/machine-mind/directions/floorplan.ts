@@ -416,6 +416,7 @@ export function floorplanSvg(o: MindOptions): string {
 /** Floorplan (machine-mind lab, 2026-10-17). */
 export const floorplan: MindDirection = {
   id: "d2",
+  round: 1,
   name: "Floorplan",
   line: "The cortex laid out as a die: a few large blocks, channels in the sulci, a pad ring round the base and one lit core wired into the network.",
   svg: floorplanSvg,

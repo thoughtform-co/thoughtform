@@ -29,8 +29,11 @@ export interface MindLive {
 }
 
 export interface MindDirection {
-  /** `today`, `d1` … `d6`: the `?v=` value. */
+  /** `today`, `d1` … `d6`, `e1` …: the `?v=` value. */
   id: string;
+  /** The round it was drawn in (the page shows the newest first); today's
+      brain has none. */
+  round?: number;
   name: string;
   /** One sentence, under the figure. */
   line: string;

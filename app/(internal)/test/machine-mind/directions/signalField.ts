@@ -624,6 +624,7 @@ function live(o: MindOptions): MindLive {
 
 export const signalField: MindDirection = {
   id: "d6",
+  round: 1,
   name: "Signal Field",
   line: "The brain as square particles on one lattice, each sized by the light, with gold signals walking level and plumb routes between a few nuclei.",
   // the dots live on the canvas (`live`), snapped to the device grid; the

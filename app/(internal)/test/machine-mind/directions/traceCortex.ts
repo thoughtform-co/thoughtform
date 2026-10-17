@@ -464,6 +464,7 @@ function svg(o: MindOptions): string {
 
 export const traceCortex: MindDirection = {
   id: "d1",
+  round: 1,
   name: "Trace Cortex",
   line: "The whole brain drawn in gold traces on solder mask, dense where the light falls and fine in shadow, wired up into the core die on one crown and a smaller package on the other.",
   svg,

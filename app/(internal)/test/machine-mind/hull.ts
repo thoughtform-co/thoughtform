@@ -78,12 +78,69 @@ export interface HullShape {
   /** Sulci cut inward along the ripple's troughs: the radius lost at a
       trough's floor, as a share (0.04 is four per cent). */
   carve?: number;
+  /** A brain's anatomy over brainIso's outline (owner, 2026-10-17: "let's
+      make sure it looks a bit more like a brain"), 0 none … 1 whole: a
+      brain's proportions (longer and lower, widest behind the middle), the
+      temporal lobe swelling under a Sylvian fissure that rises toward the
+      back, the frontal lobe's underside tucked over the temporal pole. */
+  brain?: number;
+  /** With `brain`, the sulci cut into the surface along `sulcusAt`'s zero
+      line: the radius lost at a sulcus' floor, as a share. Needs a fine
+      grid (`BRAIN_GRID`); at the default grid draw `sulciPaths` instead. */
+  sulci?: number;
+}
+
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+const smooth = (a: number, b: number, x: number) => {
+  const k = clamp01((x - a) / (b - a));
+  return k * k * (3 - 2 * k);
+};
+const bell = (x: number, at: number, w: number) => Math.exp(-(((x - at) / w) ** 2));
+
+/** The anatomy `brain` adds at (t, z), as factors on the contour: `width`
+    on the lateral reach, `length` front to back, `groove` the Sylvian
+    fissure's cut, `drop` how far the point sinks (the temporal lobe hangs
+    lower), `height` the dome's scale. `fb` is −1 at the back, +1 at the
+    front. */
+export function anatomyAt(t: number, z: number, fb: number, k: number) {
+  const lat = Math.max(0, Math.cos(t));
+  // the temporal lobe: the lateral belly, front and middle, swelling under the fissure
+  const temporal = lat ** 1.4 * bell(fb, 0.22, 0.42) * bell(z, -22, 28);
+  // the Sylvian fissure: from the temporal pole, rising toward the back
+  const zf = 6 + 40 * clamp01((0.62 - fb) / 1.05);
+  const span = smooth(-0.5, -0.22, fb) * (1 - smooth(0.62, 0.82, fb));
+  const groove = lat ** 1.2 * span * bell(z, zf, 6.5);
+  // the frontal lobe's orbital underside, tucked up over the temporal pole
+  const orbital = smooth(0.4, 0.85, fb) * smooth(-4, -30, z) * (1 - 0.6 * lat);
+  return {
+    width: 1 + k * (-0.16 + 0.07 * -fb + 0.1 * temporal - 0.08 * orbital),
+    length: 1 + k * (0.06 - 0.05 * orbital),
+    groove: k * groove,
+    height: 1 - k * (z >= 0 ? 0.22 : 0.12),
+    drop: k * (5 * temporal - 4 * orbital),
+  };
+}
+
+/** The sulci's field on a brain hull: a smooth meander, warped in three
+    dimensions so its zero line wanders the way a cortex's sulci do (closed
+    loops and long folds, no grid). Negative and positive are gyri; the
+    sulcus is where it crosses zero. Read on the hull's unfolded point, so
+    both hemispheres and every grid see the same anatomy. */
+export function sulcusAt(side: Side, t: number, z: number): number {
+  const [l, f, h] = hullPoint(side, t, z, { fold: 0, brain: 1 });
+  const x = f / 34;
+  const y = h / 30;
+  const w = (l - side * LC) / 30 + side * 0.7;
+  const x2 = x + 0.85 * Math.sin(1.6 * y + 0.7 * w + 1.3);
+  const y2 = y + 0.85 * Math.sin(1.4 * x + 0.9 * w + 0.4);
+  const w2 = w + 0.6 * Math.sin(1.1 * x + 1.2 * y + 2.2);
+  return (Math.sin(1.9 * x2 + 0.6 * y2) * Math.cos(1.3 * y2 - 0.7 * w2) + 0.55 * Math.sin(2.6 * w2 + 1.1 * x2 - 0.8 * y2)) / 1.55;
 }
 
 /** A point on the hull at contour angle t and height z, in brain axes
     [l, f, z]. With `fold` 1 and `carve` 0 it is brainIso's
     `contourPoint(side, scaleAt(z), t, z)`. */
-export function hullPoint(side: Side, t: number, z: number, { fold = 1, carve = 0 }: HullShape = {}): V3 {
+export function hullPoint(side: Side, t: number, z: number, { fold = 1, carve = 0, brain = 0, sulci = 0 }: HullShape = {}): V3 {
   const s = scaleAt(z);
   let u = HEMI.a * sgnPow(Math.cos(t), 2 / HEMI.n);
   const sv = sgnPow(Math.sin(t), 2 / HEMI.n);
@@ -92,10 +149,21 @@ export function hullPoint(side: Side, t: number, z: number, { fold = 1, carve = 
   let lobe = 1 + fold * g + 0.025 * Math.sin(3 * t + 0.6);
   if (carve > 0) lobe -= carve * Math.max(0, -g / 0.075) ** 3;
   if (u < 0) u *= HEMI.medial;
-  u *= (1 - 0.12 * (v / HEMI.b)) * lobe;
+  const fb = v / HEMI.b;
+  u *= (1 - 0.12 * fb) * lobe;
   v *= lobe;
-  return [side * (LC + u * s), v * s, z];
+  if (brain <= 0) return [side * (LC + u * s), v * s, z];
+  const a = anatomyAt(t, z, fb, brain);
+  let cut = 1 - 0.1 * a.groove;
+  if (sulci > 0) cut -= sulci * bell(sulcusAt(side, t, z), 0, 0.13);
+  u *= a.width * cut;
+  v *= a.length * (1 - 0.35 * (1 - cut));
+  return [side * (LC + u * s), v * s, z * a.height - a.drop];
 }
+
+/** The grid a carved brain (`sulci`) needs so its grooves are drawn, not
+    aliased. */
+export const BRAIN_GRID = { cols: 280, lower: 18, upper: 72 };
 
 // ─── the camera and the light ───────────────────────────────────────────────
 
@@ -207,7 +275,8 @@ export interface HullOptions {
       `{ fold: 0.25 }` shades the brain as a smooth turned form while its
       outline and its folds stay the real ones, so the tone bands sweep the
       dome instead of breaking into blotches over every gyrus. Facing, depth
-      and the silhouette always come from the drawn shape. */
+      and the silhouette always come from the drawn shape. It inherits the
+      drawn shape's `brain` unless it sets its own. */
   lightShape?: HullShape;
 }
 
@@ -239,7 +308,9 @@ export function makeHull(side: Side, { view = BRAIN_VIEW_ISO, shape = {}, grid =
   const V = viewVector(view);
   const zs = rowHeights(grid);
   const C = grid.cols;
-  const litAt = (t: number, z: number, n: V3) => dot3(lightShape ? normalAt(side, t, z, lightShape) : n, L);
+  // the light's shape inherits the drawn one's anatomy (`brain`) unless it says otherwise
+  const lit = lightShape ? { brain: shape.brain, ...lightShape } : null;
+  const litAt = (t: number, z: number, n: V3) => dot3(lit ? normalAt(side, t, z, lit) : n, L);
   const vertex = (t: number, z: number): Vertex => {
     const b = hullPoint(side, t, z, shape);
     const w = W(...b);
@@ -576,6 +647,99 @@ export function patchOnHull(h: Hull, poly: readonly UW[], step = 2): Flat[] | nu
 export function padOnHull(h: Hull, u: number, w: number, r: number, n = 12): Flat[] | null {
   const ring: UW[] = Array.from({ length: n }, (_, i) => [u + r * Math.cos((i / n) * Math.PI * 2), w + r * Math.sin((i / n) * Math.PI * 2)] as const);
   return patchOnHull(h, ring, r);
+}
+
+/** The sulci as lines in (t, z): where `sulcusAt` crosses `level`, traced
+    by marching squares over a param grid and chained into polylines. View
+    free: map them with `sulciPaths`. */
+export function sulciLines(side: Side, { cols = 320, rows = 150, zMin = Z_FLOOR + 6, zMax = Z_CROWN - 6, level = 0 }: { cols?: number; rows?: number; zMin?: number; zMax?: number; level?: number } = {}): [number, number][][] {
+  const T = cols;
+  const zs = Array.from({ length: rows + 1 }, (_, i) => zMin + ((zMax - zMin) * i) / rows);
+  const ts = Array.from({ length: T }, (_, j) => (j / T) * Math.PI * 2);
+  const n = zs.map((z) => ts.map((t) => sulcusAt(side, t, z) - level));
+  // a crossing on an edge, keyed by the edge: "h i j" from (i, j) to (i, j+1), "v i j" from (i, j) to (i+1, j)
+  const cross = new Map<string, [number, number]>();
+  const at = (key: string): [number, number] | null => {
+    const known = cross.get(key);
+    if (known) return known;
+    const [kind, si, sj] = key.split(" ");
+    const i = Number(si);
+    const j = Number(sj);
+    const j1 = (j + 1) % T;
+    const [a, b, ta, tb, za, zb] = kind === "h" ? [n[i][j], n[i][j1], ts[j], j1 ? ts[j1] : Math.PI * 2, zs[i], zs[i]] : [n[i][j], n[i + 1][j], ts[j], ts[j], zs[i], zs[i + 1]];
+    if (a > 0 === b > 0) return null;
+    const k = a / (a - b);
+    const p: [number, number] = [(ta + (tb - ta) * k) % (Math.PI * 2), za + (zb - za) * k];
+    cross.set(key, p);
+    return p;
+  };
+  const links = new Map<string, string[]>();
+  const link = (a: string, b: string) => {
+    links.set(a, [...(links.get(a) ?? []), b]);
+    links.set(b, [...(links.get(b) ?? []), a]);
+  };
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < T; j++) {
+      const edges = [`h ${i} ${j}`, `v ${i} ${(j + 1) % T}`, `h ${i + 1} ${j}`, `v ${i} ${j}`].filter((e) => at(e));
+      if (edges.length === 2) link(edges[0], edges[1]);
+      else if (edges.length === 4) {
+        // a saddle: pair by the cell's centre
+        const j1 = (j + 1) % T;
+        const c = (n[i][j] + n[i][j1] + n[i + 1][j1] + n[i + 1][j]) / 4;
+        if (c > 0 === n[i][j] > 0) {
+          link(edges[0], edges[1]);
+          link(edges[2], edges[3]);
+        } else {
+          link(edges[0], edges[3]);
+          link(edges[1], edges[2]);
+        }
+      }
+    }
+  }
+  const used = new Set<string>();
+  const lines: [number, number][][] = [];
+  const walk = (start: string) => {
+    const keys = [start];
+    used.add(start);
+    for (let dir = 0; dir < 2; dir++) {
+      let cur = start;
+      for (;;) {
+        const next = (links.get(cur) ?? []).find((k) => !used.has(k));
+        if (!next) break;
+        used.add(next);
+        if (dir === 0) keys.push(next);
+        else keys.unshift(next);
+        cur = next;
+      }
+    }
+    // a loop closes on its first point
+    if (keys.length > 2 && (links.get(keys[keys.length - 1]) ?? []).includes(keys[0])) keys.push(keys[0]);
+    return keys.map((k) => cross.get(k)!);
+  };
+  // open chains first (ends with one link), then the closed loops
+  for (const [k, v] of links) if (!used.has(k) && v.length === 1) lines.push(walk(k));
+  for (const k of links.keys()) if (!used.has(k)) lines.push(walk(k));
+  return lines.filter((l) => l.length > 2);
+}
+
+/** The sulci of a brain hull, seen: `sulciLines` wrapped onto the hull,
+    split wherever a line faces away or a nearer fold covers it, as screen
+    polylines. */
+export function sulciPaths(h: Hull, opts: Parameters<typeof sulciLines>[1] = {}): Flat[][] {
+  const runs: Flat[][] = [];
+  for (const line of sulciLines(h.side, opts)) {
+    let run: Flat[] = [];
+    for (const p of line) {
+      const s = h.at(p[0], p[1]);
+      if (seen(h, s)) run.push(s.xy);
+      else {
+        if (run.length > 1) runs.push(run);
+        run = [];
+      }
+    }
+    if (run.length > 1) runs.push(run);
+  }
+  return runs;
 }
 
 export type Region = "frontal" | "parietal" | "temporal" | "occipital" | "medial";

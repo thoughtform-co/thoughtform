@@ -40,13 +40,16 @@ describe("machine-mind hull", () => {
 });
 
 describe("machine-mind directions", () => {
-  it("registers the six and today, ids unique", () => {
+  it("registers the rounds newest first, then today, ids unique", () => {
     const ids = DIRECTIONS.map((d) => d.id);
-    expect(ids).toEqual(["d1", "d2", "d3", "d4", "d5", "d6", "today"]);
+    expect(ids).toEqual(["e1", "e2", "e3", "d1", "d2", "d3", "d4", "d5", "d6", "today"]);
+    const rounds = DIRECTIONS.map((d) => d.round ?? 0);
+    expect(rounds).toEqual([...rounds].sort((a, b) => b - a));
   });
 
+  // twelve pictures a direction, and a carved brain costs facets: a minute each
   for (const d of DIRECTIONS) {
-    it(`${d.id} ${d.name} draws in both themes, both cameras and either half`, () => {
+    it(`${d.id} ${d.name} draws in both themes, both cameras and either half`, { timeout: 60_000 }, () => {
       for (const light of [false, true]) {
         for (const view of [BRAIN_VIEW_ISO, BRAIN_VIEW_FRONT]) {
           for (const only of [undefined, -1, 1] as const) {

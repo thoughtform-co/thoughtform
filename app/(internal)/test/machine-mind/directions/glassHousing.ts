@@ -782,6 +782,7 @@ function glassSvg({ view = BRAIN_VIEW_ISO, only, light, tones }: MindOptions): s
 
 export const glassHousing: MindDirection = {
   id: "d3",
+  round: 1,
   name: "Glass Housing",
   line: "A clear glass shell in the brain's shape, a stack of machined boards standing inside it, a corrugated conduit down the fissure into its foot.",
   svg: (o) => glassSvg(o),

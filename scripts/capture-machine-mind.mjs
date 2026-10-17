@@ -7,7 +7,7 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-machine-mind.mjs --port 3013
- *     [--only d1,d2,…,today]           some of them (default: all of them)
+ *     [--only e1,…,d1,…,today]           some of them (default: all of them)
  *     [--themes dark,light]
  *     [--views iso,front]
  *     [--parted]                       also each direction parted
@@ -31,7 +31,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3013");
 const OUT = argOf("--out", "docs/design/machine-mind/round-01");
-const ONLY = argOf("--only", "d1,d2,d3,d4,d5,d6,today").split(",").filter(Boolean);
+const ONLY = argOf("--only", "e1,e2,e3,d1,d2,d3,d4,d5,d6,today").split(",").filter(Boolean);
 const THEMES = argOf("--themes", "dark,light").split(",").filter(Boolean);
 const VIEWS = argOf("--views", "iso,front").split(",").filter(Boolean);
 const PARTED = args.includes("--parted");

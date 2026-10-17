@@ -611,6 +611,7 @@ function silicaSvg({ view, only, light, tones }: MindOptions): string {
 
 export const silica: MindDirection = {
   id: "d4",
+  round: 1,
   name: "Silica",
   line: "A white silica casting in a few panels, chip packages set flush in it and cable looms rising from the crown, gold only where metal touches.",
   svg: silicaSvg,

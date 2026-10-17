@@ -910,6 +910,7 @@ export function sandSvg({ view, only, light, tones }: MindOptions): string {
 
 export const sand: MindDirection = {
   id: "d5",
+  round: 1,
   name: "Sand",
   line: "The hero's sediment: a smooth stone brain in one raking light, worn away on its dark flank into raster and sand, gold circuitry beneath and gold seams in its strata.",
   svg: sandSvg,
