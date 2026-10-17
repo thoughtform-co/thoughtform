@@ -1,0 +1,930 @@
+{
+  "id": "loop",
+  "client": "Loop Earplugs",
+  "nav": "Motion ad · Loop",
+  "workstream": "Creative production",
+  "piece": "A 10-second Halloween ad, from one prompt",
+  "date": "1 Oct 2026",
+  "number": {
+    "value": "1 h 51 min",
+    "label": "from the prompt to the master"
+  },
+  "title": ["From one prompt", "to a 10-second ad."],
+  "sub": "Every step of one real video, in the order it happened.",
+  "opening": {
+    "head": "The piece",
+    "datum": "10.000 s · 24 fps",
+    "caption": "The finished loop, as it ran",
+    "figure": {
+      "kind": "film",
+      "src": "/arcs/prompt-to-loop/loop.mp4",
+      "poster": "/arcs/prompt-to-loop/ptl-02.jpg",
+      "ratio": "9/16",
+      "alt": "The finished 10-second loop: the word BOO, its two O's the gold earplugs",
+      "facts": ["9:16", "240 frames", "Loops forever"],
+      "sound": true
+    }
+  },
+  "chapters": [
+    {
+      "n": 1,
+      "id": "setup",
+      "kick": "The setup",
+      "title": ["Where it lives.", "A skill, in a plugin, on Loop's shelf."],
+      "sub": "Nobody installs anything by hand. Turn the plugin on once, and the skill is there in every Claude app.",
+      "thought": [
+        "Listed what it could reach before planning",
+        "Paper from Vesper, sound from ElevenLabs, Gemini to watch"
+      ],
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "Setup, bottom to top",
+        "datum": "Each layer sits on the one below",
+        "caption": "Where the skill lives",
+        "figure": {
+          "kind": "flow",
+          "stations": [
+            {
+              "k": "Organisation",
+              "title": "Loop's Claude",
+              "note": "Everyone signs in once with their Loop account."
+            },
+            {
+              "k": "Marketplace",
+              "title": "Loop AI Studio",
+              "note": "The shelf: one repository with the studio's plugins."
+            },
+            {
+              "k": "Plugin",
+              "title": "Loop Studio AI Motion",
+              "note": "One install, and it updates itself."
+            },
+            {
+              "k": "Skill",
+              "title": "What it knows, and what good looks like",
+              "lit": true,
+              "items": [
+                {
+                  "t": "The skill"
+                },
+                {
+                  "t": "Its evals"
+                },
+                {
+                  "t": "Its tools"
+                }
+              ]
+            },
+            {
+              "k": "Reaches",
+              "title": "The services it plugs into",
+              "items": [
+                {
+                  "t": "Figma"
+                },
+                {
+                  "t": "Vesper"
+                },
+                {
+                  "t": "ElevenLabs"
+                },
+                {
+                  "t": "Gemini"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 2,
+      "id": "runs",
+      "kick": "How it runs",
+      "title": ["You ask in your own words.", "The skill does the rest."],
+      "sub": "Claude picks the right skill, follows its steps, checks its own work, and hands you the decision.",
+      "thought": [
+        "Matched the one-line ask to the motion skill",
+        "The product had to be exact, so no video model",
+        "Drew the world in code; generated paper and sound"
+      ],
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "One request, five stations",
+        "datum": "Its evals: 15 of 15 runs pass with the skill",
+        "caption": "How a request runs",
+        "figure": {
+          "kind": "flow",
+          "stations": [
+            {
+              "k": "You ask",
+              "title": "A looping stop-motion Halloween video for Experience 2 Gold.",
+              "person": true
+            },
+            {
+              "k": "It picks",
+              "title": "Claude picks the skill",
+              "items": [
+                {
+                  "t": "The motion skill",
+                  "hit": true
+                },
+                {
+                  "t": "Three others, passed over"
+                }
+              ]
+            },
+            {
+              "k": "It follows",
+              "title": "Ask, look, idea, plan, ingredients, make, sound, check, cost",
+              "note": "The rest of this case, in order."
+            },
+            {
+              "k": "It checks",
+              "title": "It checks its own work",
+              "items": [
+                {
+                  "t": "Code measures timing, sound, colour"
+                },
+                {
+                  "t": "An AI viewer watches it"
+                }
+              ]
+            },
+            {
+              "k": "You decide",
+              "title": "Your call.",
+              "note": "Notes go back into the skill.",
+              "person": true,
+              "lit": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 3,
+      "id": "ask",
+      "kick": "The ask",
+      "title": ["You send one message.", "Claude asks four questions."],
+      "sub": "Each one comes with a recommended answer. You click, and the work starts.",
+      "thought": [
+        "Read the brief and planned four questions",
+        "Gave each a one-click recommended answer",
+        "After the treatment, drafted three endcard lines"
+      ],
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "The ask, as Claude showed it",
+        "datum": "1 message · 4 questions · 4 clicks",
+        "caption": "One message in, four questions back",
+        "figure": {
+          "kind": "exchange",
+          "crumb": ["Loop Studio", "Halloween loop for Experience 2"],
+          "who": "The studio lead",
+          "message": "A slick, looping stop-motion Halloween video for Experience 2 Gold. Cool text animation, and an endcard like our June ads.",
+          "thought": "Read the brief and planned four questions",
+          "question": {
+            "title": "Format and length?",
+            "of": "1 of 4",
+            "options": [
+              "9:16, a 10 s loop (Recommended)",
+              "9:16, 15 seconds",
+              "4:5 for the feed",
+              "Both 9:16 and 4:5"
+            ],
+            "selected": 0
+          },
+          "answers": {
+            "label": "The four answers, all as recommended",
+            "rows": [
+              {
+                "k": "Format",
+                "v": "9:16, a 10 s loop"
+              },
+              {
+                "k": "Product",
+                "v": "Experience 2 Gold"
+              },
+              {
+                "k": "Call to action",
+                "v": "You draft, I pick"
+              },
+              {
+                "k": "Sound",
+                "v": "ElevenLabs, your key"
+              }
+            ]
+          },
+          "result": {
+            "k": "Then the line, from three drafts",
+            "v": "MORE BOO / LESS RINGING"
+          }
+        }
+      },
+      "call": {
+        "who": "The studio lead",
+        "said": "9:16, a ten-second loop, Experience 2 Gold. You draft the line, I pick."
+      }
+    },
+    {
+      "n": 4,
+      "id": "look",
+      "kick": "Look first",
+      "title": ["Look before drawing.", "Your ads first, then the world."],
+      "sub": "Loop's own approved ads set the rules. Outside trends set the mood.",
+      "thought": [
+        "Read Loop's June endcards before drawing",
+        "Took the −17 dB claim from the product page",
+        "Measured the app's safe band on the 9:16 frame",
+        "Four trends agreed, so took them as a direction"
+      ],
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "Before a frame is drawn",
+        "datum": "9:16 · the app's own bands measured",
+        "caption": "Loop's ads set the rules, the trends the mood",
+        "figure": {
+          "kind": "plates",
+          "rows": [
+            [
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-03.jpg",
+                  "ratio": "720/634",
+                  "alt": "Two of Loop's June paid social ads: tall condensed headlines, a pill-shaped offer, small support lines"
+                },
+                "label": "Loop's June ads",
+                "note": "A tall condensed headline, a pill, a small support line, the product on a calm ground.",
+                "span": 1.3
+              },
+              {
+                "kind": "safe",
+                "label": "Where text may go",
+                "note": "Measured, not guessed.",
+                "span": 1
+              }
+            ],
+            [
+              {
+                "kind": "list",
+                "label": "Four trends that agreed",
+                "numbered": true,
+                "items": [
+                  {
+                    "b": "Paper cut-out craft"
+                  },
+                  {
+                    "b": "Type as the hero"
+                  },
+                  {
+                    "b": "A real product in a handmade world"
+                  },
+                  {
+                    "b": "Made for vertical"
+                  }
+                ],
+                "span": 1
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "n": 5,
+      "id": "idea",
+      "kick": "The idea",
+      "title": ["One idea, one hinge.", "The earplug is the O."],
+      "sub": "A matte paper world. The only shiny, real thing in it is the product.",
+      "thought": [
+        "One tension: matte paper, only the product shines",
+        "One shape for three jobs: letter, product, door",
+        "Made the loop's seam a dive through its own O"
+      ],
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "The hinge",
+        "datum": "One shape, three jobs",
+        "caption": "The O as a letter, the product and a door",
+        "figure": {
+          "kind": "plates",
+          "rows": [
+            [
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-04.jpg",
+                  "ratio": "9/16",
+                  "alt": "Frame 0: the word BOO, its two O's are the gold earplugs"
+                },
+                "label": "Frame 0",
+                "lit": true,
+                "span": 0.75
+              },
+              {
+                "kind": "list",
+                "label": "The O does three jobs",
+                "numbered": true,
+                "items": [
+                  {
+                    "b": "A letter",
+                    "s": "The O's in BOO, so you read the product before you see it."
+                  },
+                  {
+                    "b": "The product",
+                    "s": "Loop's real gold render, never redrawn."
+                  },
+                  {
+                    "b": "A door",
+                    "s": "The camera dives through it into the next scene."
+                  }
+                ],
+                "span": 1.4
+              }
+            ],
+            [
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-06.jpg",
+                  "ratio": "9/16",
+                  "alt": "Diving through the O"
+                },
+                "label": "Dive in"
+              },
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-07.jpg",
+                  "ratio": "9/16",
+                  "alt": "Haunted raves"
+                },
+                "label": "Next scene"
+              },
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-08.jpg",
+                  "ratio": "9/16",
+                  "alt": "Diving back through the endcard's O"
+                },
+                "label": "Dive back"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "n": 6,
+      "id": "plan",
+      "kick": "The plan",
+      "title": ["Every beat on a frame.", "Before anything moves."],
+      "sub": "The tempo was picked so the maths is exact. Cuts land where the music really hits.",
+      "thought": [
+        "Picked 144 bpm so one beat is exactly 10 frames",
+        "Music first: measured each candidate's beat grid",
+        "Count 4 had no kick, so moved the cuts onto kicks",
+        "Turned the track's two-beat break into the noise"
+      ],
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "240 frames on one line",
+        "datum": "144 bpm × 24 fps → 1 beat = 10 frames → 6 bars = 10.000 s",
+        "caption": "Eight scenes, a beat every 10 frames, two dives",
+        "figure": {
+          "kind": "track",
+          "length": 10,
+          "unit": "s",
+          "scale": [0, 2, 4, 6, 8, 10],
+          "grid": {
+            "minor": 0.4166667,
+            "major": 1.6666667
+          },
+          "lanes": [
+            {
+              "label": "Scenes",
+              "segments": [
+                {
+                  "from": 0,
+                  "to": 1.833,
+                  "label": "BOO"
+                },
+                {
+                  "from": 1.833,
+                  "to": 2.083,
+                  "label": "Dive",
+                  "lit": true
+                },
+                {
+                  "from": 2.083,
+                  "to": 3.333,
+                  "label": "Haunted raves"
+                },
+                {
+                  "from": 3.333,
+                  "to": 4.5,
+                  "label": "House parties"
+                },
+                {
+                  "from": 4.5,
+                  "to": 5.0,
+                  "label": "AAAAH"
+                },
+                {
+                  "from": 5.0,
+                  "to": 6.667,
+                  "label": "Less ringing"
+                },
+                {
+                  "from": 6.667,
+                  "to": 9.75,
+                  "label": "Endcard"
+                },
+                {
+                  "from": 9.75,
+                  "to": 10,
+                  "lit": true
+                }
+              ]
+            },
+            {
+              "label": "Kicks",
+              "ticks": [0, 0.833, 2.083, 3.333, 3.75, 4.167, 5.0, 5.417, 6.667, 7.5, 8.75]
+            }
+          ],
+          "frames": [
+            {
+              "still": {
+                "src": "/arcs/prompt-to-loop/ptl-09.jpg",
+                "ratio": "9/16",
+                "alt": "BOO"
+              },
+              "label": "BOO"
+            },
+            {
+              "still": {
+                "src": "/arcs/prompt-to-loop/ptl-10.jpg",
+                "ratio": "9/16",
+                "alt": "Haunted raves"
+              },
+              "label": "Raves"
+            },
+            {
+              "still": {
+                "src": "/arcs/prompt-to-loop/ptl-11.jpg",
+                "ratio": "9/16",
+                "alt": "House parties"
+              },
+              "label": "Parties"
+            },
+            {
+              "still": {
+                "src": "/arcs/prompt-to-loop/ptl-13.jpg",
+                "ratio": "9/16",
+                "alt": "Less ringing, minus 17 dB"
+              },
+              "label": "−17 dB"
+            },
+            {
+              "still": {
+                "src": "/arcs/prompt-to-loop/ptl-14.jpg",
+                "ratio": "9/16",
+                "alt": "The endcard"
+              },
+              "label": "Endcard"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 7,
+      "id": "ingredients",
+      "kick": "Ingredients",
+      "title": ["Generate a little.", "Never redraw the product."],
+      "sub": "Only paper and sound were generated. Everything else is code, or Loop's own files.",
+      "thought": [
+        "Generated four papers, recoloured them in code",
+        "One image model refused all four; switched",
+        "Five parallel calls failed; went one at a time",
+        "Wrote each effect as the thing that makes it"
+      ],
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "What went in",
+        "datum": "Generated: paper and sound · the rest: code and Loop's files",
+        "caption": "Four papers, the real render, one track, 19 sounds",
+        "figure": {
+          "kind": "plates",
+          "rows": [
+            [
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-15.jpg",
+                  "ratio": "1/1",
+                  "alt": "Black paper"
+                },
+                "label": "Black"
+              },
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-16.jpg",
+                  "ratio": "1/1",
+                  "alt": "Orange paper"
+                },
+                "label": "Orange"
+              },
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-17.jpg",
+                  "ratio": "1/1",
+                  "alt": "Cream paper"
+                },
+                "label": "Cream"
+              },
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-18.jpg",
+                  "ratio": "1/1",
+                  "alt": "Violet paper"
+                },
+                "label": "Violet"
+              }
+            ],
+            [
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-19.png",
+                  "ratio": "253/300",
+                  "alt": "Loop Experience 2 Gold, the real render"
+                },
+                "label": "The real render",
+                "note": "Placed untouched.",
+                "lit": true
+              },
+              {
+                "kind": "stat",
+                "label": "Music",
+                "big": "5 → 1",
+                "small": "tried, kept",
+                "note": "Cut on its own 32-beat loop."
+              },
+              {
+                "kind": "stat",
+                "label": "Effects",
+                "big": "19",
+                "small": "sounds",
+                "note": "Each placed on its frame."
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "n": 8,
+      "id": "make",
+      "kick": "Making it",
+      "title": ["Drawn in code, frame by frame.", "Like stop-motion on a table."],
+      "sub": "No video model. Code draws all 240 frames, the same way every time.",
+      "thought": [
+        "Made frame N a pure function of N",
+        "Paper on twos; only the dives on every frame",
+        "Pinned the product at its ring hole across angles",
+        "Sixteen key stills on a sheet before any render"
+      ],
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "The proof sheet",
+        "datum": "Every 4th frame of 240",
+        "caption": "The engine's four rules, and its frames",
+        "figure": {
+          "kind": "plates",
+          "rows": [
+            [
+              {
+                "kind": "still",
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-20.jpg",
+                  "ratio": "1400/1037",
+                  "alt": "Every fourth frame of the finished loop, in rows"
+                },
+                "label": "60 of 240 frames",
+                "span": 1.5
+              },
+              {
+                "kind": "list",
+                "label": "The engine's rules",
+                "items": [
+                  {
+                    "b": "Hand-cut edges",
+                    "s": "Each shape cut three ways, flickering between them."
+                  },
+                  {
+                    "b": "Shadows by height",
+                    "s": "Lift a piece and its shadow grows."
+                  },
+                  {
+                    "b": "12 poses a second",
+                    "s": "Paper moves on every other frame."
+                  },
+                  {
+                    "b": "One light",
+                    "s": "Lit from the top left, so the world holds."
+                  }
+                ],
+                "span": 1
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "n": 9,
+      "id": "sound",
+      "kick": "Sound",
+      "title": ["The claim, made audible.", "Noise drops 17 dB as the earplug lands."],
+      "sub": "The music keeps playing, clear. Every effect lands on its frame.",
+      "thought": [
+        "Generated what ears must recognise, coded the rest",
+        "Noise drops exactly 17 dB as the earplug lands",
+        "Played 22 beats, skipped 8, so the seam fits",
+        "Peak went over after encoding; lowered the ceiling"
+      ],
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "The mix, on the frame line",
+        "datum": "Level by lane · frame 120 at 5.000 s",
+        "caption": "The noise drops on the frame the earplug lands",
+        "figure": {
+          "kind": "track",
+          "length": 10,
+          "unit": "s",
+          "scale": [0, 2, 4, 6, 8, 10],
+          "lanes": [
+            {
+              "label": "Music",
+              "level": [
+                [0, 0.62],
+                [10, 0.62]
+              ]
+            },
+            {
+              "label": "Noise",
+              "level": [
+                [0, 0.06],
+                [2, 0.1],
+                [3.4, 0.38],
+                [4.3, 0.67],
+                [4.95, 0.88],
+                [5.0, 0.88],
+                [5.0, 0.13],
+                [5.85, 0.13],
+                [6.85, 0.02],
+                [10, 0.02]
+              ],
+              "marks": [
+                {
+                  "at": 5.0,
+                  "label": "−17 dB, the earplug lands",
+                  "lit": true
+                }
+              ]
+            },
+            {
+              "label": "Ringing",
+              "segments": [
+                {
+                  "from": 4.5,
+                  "to": 5.0,
+                  "label": "Stops dead"
+                }
+              ]
+            },
+            {
+              "label": "Effects",
+              "ticks": [
+                0, 0.5, 0.833, 0.875, 0.958, 1.333, 2.083, 2.167, 2.5, 2.917, 3.25, 3.333, 3.5,
+                3.75, 4.333, 4.417, 4.583, 5.0, 5.083, 5.417, 5.833, 6.583, 6.667, 6.958, 7.167,
+                7.833, 9.208, 9.792
+              ]
+            }
+          ]
+        }
+      },
+      "call": {
+        "who": "The studio lead",
+        "said": "The dive whoosh is too crisp; the earlier ones sounded better."
+      }
+    },
+    {
+      "n": 10,
+      "id": "check",
+      "kick": "Check",
+      "title": ["Look. Fix. Look again.", "Nine rounds of stills."],
+      "sub": "If something reads wrong, it goes, however long it took to build.",
+      "thought": [
+        "Judged every round on a sheet of stills",
+        "Killed the eyelids that read as tombstones",
+        "Sine waves read as stock vector; tore them as paper",
+        "Acted only on notes two blind runs agreed on"
+      ],
+      "call": {
+        "who": "The studio lead",
+        "said": "Version 3 is the one, and no logo. Both notes are rules now."
+      },
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "What went, and what replaced it",
+        "datum": "9 rounds of stills",
+        "caption": "Two fixes, and who checks what",
+        "figure": {
+          "kind": "pairs",
+          "pairs": [
+            {
+              "label": "Eyelids",
+              "sent": {
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-21.jpg",
+                  "ratio": "36/25",
+                  "alt": "Black paper lids over the earplugs"
+                },
+                "why": "Read as tombstones"
+              },
+              "kept": {
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-22.jpg",
+                  "ratio": "36/25",
+                  "alt": "Closed-eye arcs instead"
+                },
+                "note": "Closed eyes"
+              }
+            },
+            {
+              "label": "Sound waves",
+              "sent": {
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-23.jpg",
+                  "ratio": "9/16",
+                  "alt": "Smooth sine waves"
+                },
+                "why": "Read as stock vector"
+              },
+              "kept": {
+                "still": {
+                  "src": "/arcs/prompt-to-loop/ptl-24.jpg",
+                  "ratio": "9/16",
+                  "alt": "Torn paper zigzags"
+                },
+                "note": "Torn paper"
+              }
+            }
+          ],
+          "reviewers": [
+            {
+              "who": "Code",
+              "does": "Timing, sync, loudness, colours, safe area",
+              "ok": true
+            },
+            {
+              "who": "An AI viewer",
+              "does": "Asked what it is for; right on every run",
+              "ok": true
+            },
+            {
+              "who": "An AI critic",
+              "does": "Invented problems, ranked the favourite last",
+              "ok": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 11,
+      "id": "cost",
+      "kick": "Cost",
+      "title": ["About $27.", "Mostly Claude."],
+      "sub": "The evening of 1 October, at published prices. No video model, so no video bill.",
+      "thought": [
+        "Priced each part from the logs at public prices",
+        "Claude was 93%, mostly re-reading its context",
+        "Advised a fresh session for each new piece"
+      ],
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "Where the money went",
+        "datum": "Published prices, 1 Oct 2026",
+        "caption": "What it cost, and what it bought",
+        "figure": {
+          "kind": "ledger",
+          "bar": {
+            "label": "Where the money went",
+            "parts": [
+              {
+                "name": "Claude, thinking and building",
+                "value": 25.32,
+                "shown": "$25.32"
+              },
+              {
+                "name": "Gemini, watching and listening",
+                "value": 1.05,
+                "shown": "$1.05"
+              },
+              {
+                "name": "Music and sound effects",
+                "value": 0.69,
+                "shown": "$0.69"
+              },
+              {
+                "name": "Paper textures",
+                "value": 0.21,
+                "shown": "$0.21"
+              }
+            ]
+          },
+          "rows": [
+            {
+              "k": "Time",
+              "v": "1 h 51 min"
+            },
+            {
+              "k": "Master",
+              "v": "10 s, 1080 × 1920"
+            },
+            {
+              "k": "Copy for upload",
+              "v": "30 s, plays 3 times"
+            },
+            {
+              "k": "Plus",
+              "v": "The source code and the mix"
+            }
+          ],
+          "total": {
+            "k": "Total",
+            "v": "About $27.30"
+          }
+        }
+      }
+    },
+    {
+      "n": 12,
+      "id": "next",
+      "kick": "Next time",
+      "title": ["Now it's a skill.", "Just ask."],
+      "sub": "Everything in this case is written down in one skill, in the studio's plugin. Open a chat and say what you want.",
+      "thought": [
+        "Turned the pasted brief into the skill's default",
+        "Marked the routes it never tried as unconfirmed"
+      ],
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
+      "frame": {
+        "head": "The next ask",
+        "datum": "One sentence, the same nine steps",
+        "caption": "What the studio types next time",
+        "figure": {
+          "kind": "exchange",
+          "who": "The studio lead",
+          "message": "Hey, I want a motion design video for Loop Quiet.",
+          "answers": {
+            "label": "Runs on",
+            "rows": [
+              {
+                "k": "Skill",
+                "v": "The studio's motion skill"
+              },
+              {
+                "k": "Plugin",
+                "v": "Loop Studio AI Motion"
+              },
+              {
+                "k": "Steps",
+                "v": "Ask, look, idea, plan, ingredients, make, sound, check, cost"
+              }
+            ]
+          }
+        }
+      },
+      "call": {
+        "who": "The studio lead",
+        "said": "Nobody should have to paste that brief again."
+      }
+    }
+  ]
+}

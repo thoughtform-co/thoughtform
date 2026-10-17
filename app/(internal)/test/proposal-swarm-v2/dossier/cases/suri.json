@@ -1,0 +1,318 @@
+{
+  "id": "suri",
+  "client": "Suri",
+  "nav": "Asset library · Suri",
+  "workstream": "Creative operations",
+  "piece": "An asset library that reads every file",
+  "date": "7 to 13 Oct 2026",
+  "number": {
+    "value": "82,307",
+    "label": "items on one map"
+  },
+  "title": ["Every file in the Drive,", "found by what it shows."],
+  "sub": "How the marketing Drive became a library you can ask in words, in the order it was built.",
+  "opening": {
+    "head": "The result",
+    "datum": "Before, then now",
+    "caption": "What changed for the team",
+    "figure": {
+      "kind": "ledger",
+      "before": {
+        "k": "Before",
+        "v": "Weeks opening folders by hand"
+      },
+      "now": {
+        "k": "Now",
+        "v": "Two days to map the whole Drive, estimated"
+      },
+      "rows": [
+        {
+          "k": "Files tied to no campaign",
+          "v": "78%, now found by what they show"
+        },
+        {
+          "k": "Video read",
+          "v": "Each clip's first 10 s, then 97 h read whole"
+        },
+        {
+          "k": "A search lands on",
+          "v": "The second inside a clip, not the file"
+        },
+        {
+          "k": "Footage, briefs, designs",
+          "v": "Apart, now one map"
+        }
+      ]
+    }
+  },
+  "chapters": [
+    {
+      "n": 1,
+      "id": "stall",
+      "kick": "The stall",
+      "title": ["Every search", "began in a folder."],
+      "sub": "The files were all there, but the folders did not say what was in them.",
+      "thought": [
+        "Walked the Drive read-only and counted first",
+        "Asked whether a path names its campaign: 78% no",
+        "Kept the folders, planned a search over them"
+      ],
+      "call": {
+        "who": "The asset library owner",
+        "said": "Drive's folders stay where they are; the library searches over them."
+      },
+      "short": true,
+      "source": "eval-log 2026-10-07 (counts); FEATURES.md, decided 12 Oct (the call)",
+      "frame": {
+        "head": "How a file was found before",
+        "datum": "82,615 items · 3.1 TB · 78% tied to no campaign",
+        "caption": "Six hands-on steps for every file",
+        "figure": {
+          "kind": "flow",
+          "stations": [
+            {
+              "k": "Look",
+              "title": "Open folders one by one",
+              "lit": true
+            },
+            {
+              "k": "Fetch",
+              "title": "Download the file"
+            },
+            {
+              "k": "Edit",
+              "title": "Cut it to the brief"
+            },
+            {
+              "k": "Review",
+              "title": "Upload it for review"
+            },
+            {
+              "k": "Log",
+              "title": "Upload it to Monday"
+            },
+            {
+              "k": "Tell",
+              "title": "Tell the team it exists",
+              "person": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 2,
+      "id": "read",
+      "kick": "Read",
+      "title": ["The whole Drive,", "read by a vision model."],
+      "sub": "Every unique video and real image was looked at, and anything that could not be read was listed with its reason.",
+      "thought": [
+        "Drive is slow per request, not per byte",
+        "Fetched starts and ends, decoded keyframes only",
+        "Read clip openings first, then every clip whole",
+        "Could not read a file? Wrote down why"
+      ],
+      "call": {
+        "who": "Thoughtform",
+        "said": "Go ahead: read every clip whole."
+      },
+      "short": true,
+      "source": "eval-log 2026-10-07 to 10-13; suri-dam-map b47349c",
+      "frame": {
+        "head": "What was read",
+        "datum": "Read-only · overnight from 7 Oct",
+        "caption": "One overnight read, then every clip whole",
+        "figure": {
+          "kind": "ledger",
+          "rows": [
+            {
+              "k": "First read",
+              "v": "41,450 files: 25,404 images, 16,046 videos"
+            },
+            {
+              "k": "Per clip",
+              "v": "2 to 10 s, where it had taken minutes"
+            },
+            {
+              "k": "Not read",
+              "v": "193, each with its reason"
+            },
+            {
+              "k": "Whole clips",
+              "v": "9,350 clips cut into 21,496 scenes"
+            },
+            {
+              "k": "Library now",
+              "v": "57,517 assets"
+            }
+          ],
+          "total": {
+            "k": "Read whole",
+            "v": "97 hours of video"
+          }
+        }
+      }
+    },
+    {
+      "n": 3,
+      "id": "grouped",
+      "kick": "Grouped",
+      "title": ["Sorted by", "what each file shows."],
+      "sub": "Each read became a point, and points that read alike sit together, in 60 groups.",
+      "thought": [
+        "Embedded each description, label and folder",
+        "Found 60 groups, named each from its samples",
+        "Laid them out so near means alike"
+      ],
+      "short": true,
+      "source": "eval-log 2026-10-09 (embedding, groups, layout)",
+      "frame": {
+        "head": "The Drive as mapped",
+        "datum": "82,307 items · 60 groups · 1 grain ≈ 34 items",
+        "caption": "The map, one grain for every 34 items",
+        "figure": {
+          "kind": "field",
+          "map": "suri-drive",
+          "lit": 21,
+          "labels": [
+            {
+              "group": 18,
+              "text": "Ad statics"
+            },
+            {
+              "group": 21,
+              "text": "Shoot footage"
+            },
+            {
+              "group": 14,
+              "text": "Email designs"
+            },
+            {
+              "group": 8,
+              "text": "Product stills"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 4,
+      "id": "joined",
+      "kick": "Joined",
+      "title": ["Briefs and designs", "on the same map."],
+      "sub": "Every readable Monday board and the Figma files it links were laid out beside the Drive.",
+      "thought": [
+        "One model, one space for all three sources",
+        "They grouped by kind of text, not by subject",
+        "So kept each item's nearest in every source",
+        "And the 598 links the briefs already make"
+      ],
+      "call": {
+        "who": "Thoughtform",
+        "said": "Publish the public boards and creative requests; the rest stays out."
+      },
+      "short": true,
+      "source": "layout-all log; eval-log 2026-10-10; suri-ai-studio #18, #21",
+      "frame": {
+        "head": "Three sources, one layout",
+        "datum": "One embedding space for all three",
+        "caption": "Drive, Monday and Figma, laid out together",
+        "figure": {
+          "kind": "flow",
+          "stations": [
+            {
+              "k": "Drive",
+              "title": "41,450 files"
+            },
+            {
+              "k": "Monday",
+              "title": "17,415 items",
+              "note": "421 of 424 briefs resolved"
+            },
+            {
+              "k": "Figma",
+              "title": "23,442 frames",
+              "note": "From 11 of the 25 linked files"
+            },
+            {
+              "k": "One map",
+              "title": "82,307 items in 60 groups",
+              "lit": true
+            },
+            {
+              "k": "Ties",
+              "title": "598 links from briefs to files"
+            },
+            {
+              "k": "Scope",
+              "title": "Only what is published",
+              "note": "References to unpublished items cut to zero"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 5,
+      "id": "meaning",
+      "kick": "By meaning",
+      "title": ["Ask in words,", "land on the moment."],
+      "sub": "A question is read, searched three ways, and the top frames are checked before anything counts as a match.",
+      "thought": [
+        "Read the question: parts, colours, what's absent",
+        "Searched words, meaning and pictures; fused by rank",
+        "Checked the frame at the second it returned",
+        "Nothing holds? Said that nothing was found"
+      ],
+      "short": true,
+      "source": "docs-search-v2; eval-log 2026-10-12 to 10-14",
+      "frame": {
+        "head": "One question, end to end",
+        "datum": "0.45 to 0.7 s over 105,395 items · 7 to 9 s with the frame check",
+        "caption": "Three searches, one checked frame",
+        "figure": {
+          "kind": "flow",
+          "stations": [
+            {
+              "k": "Ask",
+              "title": "Product on a sink, nobody in the shot",
+              "person": true
+            },
+            {
+              "k": "Read",
+              "title": "The question, parsed in 2.6 s"
+            },
+            {
+              "k": "Search",
+              "title": "Three lists at once",
+              "items": [
+                {
+                  "t": "Words"
+                },
+                {
+                  "t": "Meaning"
+                },
+                {
+                  "t": "Pictures"
+                }
+              ]
+            },
+            {
+              "k": "Fuse",
+              "title": "Ranked together, filters inside each list"
+            },
+            {
+              "k": "Check",
+              "title": "The frame at the returned second, top 20",
+              "lit": true
+            },
+            {
+              "k": "Answer",
+              "title": "Kept, closest, or nothing found"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
