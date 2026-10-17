@@ -10,6 +10,7 @@ import { signalField } from "./signalField";
 import { silica } from "./silica";
 import { today } from "./today";
 import { traceCortex } from "./traceCortex";
+import { waferMind } from "./waferMind";
 import { waferTerraces } from "./waferTerraces";
 import type { MindDirection } from "./types";
 
@@ -19,6 +20,7 @@ export type { MindDirection, MindLive, MindOptions } from "./types";
     reference. Each lives in its own module; nothing else in the lab names
     one. */
 export const DIRECTIONS: readonly MindDirection[] = [
+  waferMind,
   waferTerraces,
   routedBoards,
   dieStack,
