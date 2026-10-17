@@ -370,6 +370,8 @@ function treadSvg(side: Side, w: Wafer, next: Wafer, P: Projection): string {
     if (pattern === "none") continue;
     const s0 = phase + (total * sIdx) / stretches;
     const s1 = phase + (total * (sIdx + 1)) / stretches;
+    // only on the flanks and the back: no gold on the front
+    if ([s0, (s0 + s1) / 2, s1].some((x) => pointAt(ring, uAt(x))[1] > 8)) continue;
     let offs: number[] = [];
     let best: [number, number] | null = null;
     const steps = 40;
@@ -418,7 +420,6 @@ function treadSvg(side: Side, w: Wafer, next: Wafer, P: Projection): string {
     hemisphere; mirrored for the left), how many traces and how many wafers
     each trace steps down. */
 const BUNDLES: { dir: LF; steps: number[] }[] = [
-  { dir: [0, 1], steps: [9, 9, 9, 9, 9] },
   { dir: [0, -1], steps: [2, 4, 5, 3, 2] },
   { dir: [1, 0], steps: [2, 3, 4, 3] },
   { dir: [-1, 0], steps: [3, 4, 5, 4] },
@@ -665,12 +666,13 @@ function sectionSvg(side: Side, wafers: Wafer[], P: Projection): string {
     }
   }
   out.push(`<path class="gm-tract" d="${tracts.join("")}"/>`);
-  out.push(`<path class="gm-core" d="${facePath([[core.l0, core.z0], [core.l1, core.z0], [core.l1, core.z1], [core.l0, core.z1]], F_CUT, P)}"/>`);
-  out.push(`<g class="gm-tract-via">${dotsSvg(tvias, { size: 0.42, tone: "hi" })}</g>`);
+  void tvias;
   // the cortex: two quiet gold lines hugging the outline, wrapping every
   // sulcus
   const cortex = [1.8, 3.4].map((d) => facePath(foldedRing(outline, d, folds, GAP_S), F_CUT, P));
-  out.push(`<path class="gm-cortex" d="${cortex.join("")}"/>`);
+  // (owner, 2026-10-17: "don't want the circuits to be on the front": the
+  // face keeps its plain section, no gold on it)
+  void cortex;
   // the sulci themselves: slits from the surface into the fold
   const slits: string[] = [];
   for (const f of folds) {
@@ -685,7 +687,7 @@ function sectionSvg(side: Side, wafers: Wafer[], P: Projection): string {
     const p: LF = [a[0] + tx * f.s, a[1] + ty * f.s];
     slits.push(facePath([[p[0] - nx * 0.9, p[1] - ny * 0.9], [p[0] + nx * f.depth, p[1] + ny * f.depth]], F_CUT, P, false));
   }
-  out.push(`<path class="gm-sulcus" d="${slits.join("")}"/>`);
+  void slits;
   return `<g class="gm-section">${out.join("")}</g>`;
 }
 
@@ -836,7 +838,8 @@ function hemisphere(side: Side, view: BrainView): string {
         if (len < 12 || onCut(a, b)) continue;
         const nx = (b[1] - a[1]) / len;
         const ny = -(b[0] - a[0]) / len;
-        if (ny * vx + -nx * vy <= 0.3) continue;
+        // never on a front-facing edge: no gold on the front
+        if (ny * vx + -nx * vy <= 0.3 || ny > 0.5) continue;
         for (const u of [0.42, 0.58]) {
           const q: LF = [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
           const foot: LF = [q[0] + nx * 1.8, q[1] + ny * 1.8];
