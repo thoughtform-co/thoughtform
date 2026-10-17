@@ -11,64 +11,73 @@
   },
   "tint": {
     "dots": "118, 176, 255",
-    "glow": "40, 104, 214"
+    "glow": "40, 104, 214",
+    "pattern": "grid"
   },
   "stats": [
     {
       "value": "2 days",
-      "label": "To map the Drive, down from weeks (est.)"
+      "label": "To map the whole Drive, vs weeks by hand (est.)"
     },
     {
-      "value": "82,307",
-      "label": "Items on one map"
+      "value": "57,517",
+      "label": "Assets you can search by what they show"
     },
     {
-      "value": "97 h",
-      "label": "Of video read whole"
+      "value": "~1 s",
+      "label": "To search the whole library"
     }
   ],
-  "brief": {
-    "who": "The ask",
-    "text": "Find anything in the marketing Drive by what it shows, without opening a folder."
-  },
-  "piece": "An asset library that reads every file",
+  "piece": "Suri's asset library: the Drive read, mapped and searchable by what it shows",
   "date": "7 to 13 Oct 2026",
   "number": {
-    "value": "82,307",
-    "label": "items on one map"
+    "value": "57,517",
+    "label": "assets in the library"
   },
-  "title": ["Every file in the Drive,", "found by what it shows."],
+  "title": ["Every file in Suri's Drive,", "found by what it shows."],
   "sub": "How the marketing Drive became a library you can ask in words, in the order it was built.",
   "opening": {
-    "head": "The result",
-    "datum": "Before, then now",
-    "caption": "What changed for the team",
+    "head": "The library, as the team uses it",
+    "datum": "Drawn from the app · no footage",
+    "caption": "Search for what's in the shot, land on the moment",
     "figure": {
-      "kind": "ledger",
-      "before": {
-        "k": "Before",
-        "v": "Weeks opening folders by hand"
-      },
-      "now": {
-        "k": "Now",
-        "v": "Two days to map the whole Drive, estimated"
-      },
-      "rows": [
+      "kind": "screen",
+      "layout": "search",
+      "app": "Notre-DAM",
+      "nav": ["All assets", "Needs review", "Collections"],
+      "foot": "Map of the library",
+      "query": "hands only close-up in the bathroom",
+      "action": "Ask",
+      "facets": ["Product", "Shot", "Talent"],
+      "status": "Searching words, meaning and pictures",
+      "tiles": [
         {
-          "k": "Files tied to no campaign",
-          "v": "78%, now found by what they show"
+          "ratio": "4/5",
+          "lit": true,
+          "verdict": "Shows it",
+          "hit": "0:12 Matching moment →"
         },
         {
-          "k": "Video read",
-          "v": "Each clip's first 10 s, then 97 h read whole"
+          "ratio": "4/5"
         },
         {
-          "k": "A search lands on",
-          "v": "The second inside a clip, not the file"
+          "ratio": "4/5",
+          "badge": "0:32"
         },
         {
-          "k": "Footage, briefs, designs",
-          "v": "Apart, now one map"
+          "ratio": "4/5"
+        },
+        {
+          "ratio": "4/5"
+        },
+        {
+          "ratio": "4/5"
+        },
+        {
+          "ratio": "4/5"
+        },
+        {
+          "ratio": "4/5"
         }
       ]
     }
@@ -79,13 +88,9 @@
       "id": "stall",
       "kick": "The stall",
       "nav": "Stall",
-      "title": ["Every search", "began in a folder."],
-      "sub": "The files were all there, but the folders did not say what was in them.",
-      "thought": [
-        "Counted first, read-only",
-        "78% of paths name no campaign",
-        "Folders kept, search on top"
-      ],
+      "title": ["Every search started", "by opening folders."],
+      "sub": "The files were all there, but the folder names didn't say what was in them, and 78% didn't point to any campaign.",
+      "thought": [],
       "call": {
         "who": "Asset library owner",
         "said": "The folders stay"
@@ -131,69 +136,12 @@
     },
     {
       "n": 2,
-      "id": "read",
-      "kick": "Read",
-      "nav": "Read",
-      "title": ["The whole Drive,", "read by a vision model."],
-      "sub": "Every unique video and real image was looked at, and anything that could not be read was listed with its reason.",
-      "thought": [
-        "Slow per request, not per byte",
-        "Keyframes only, starts and ends",
-        "Then every clip, whole"
-      ],
-      "call": {
-        "who": "Thoughtform",
-        "said": "Read every clip whole"
-      },
-      "short": true,
-      "source": "eval-log 2026-10-07 to 10-13; suri-dam-map b47349c",
-      "frame": {
-        "head": "What was read",
-        "datum": "Read-only · overnight from 7 Oct",
-        "caption": "One overnight read, then every clip whole",
-        "figure": {
-          "kind": "ledger",
-          "rows": [
-            {
-              "k": "First read",
-              "v": "41,450 files: 25,404 images, 16,046 videos"
-            },
-            {
-              "k": "Per clip",
-              "v": "2 to 10 s, where it had taken minutes"
-            },
-            {
-              "k": "Not read",
-              "v": "193, each with its reason"
-            },
-            {
-              "k": "Whole clips",
-              "v": "9,350 clips cut into 21,496 scenes"
-            },
-            {
-              "k": "Library now",
-              "v": "57,517 assets"
-            }
-          ],
-          "total": {
-            "k": "Read whole",
-            "v": "97 hours of video"
-          }
-        }
-      }
-    },
-    {
-      "n": 3,
-      "id": "grouped",
-      "kick": "Grouped",
-      "nav": "Grouped",
-      "title": ["Sorted by", "what each file shows."],
-      "sub": "Each read became a point, and points that read alike sit together, in 60 groups.",
-      "thought": [
-        "Embedded every description",
-        "60 groups, named from samples",
-        "Near means alike"
-      ],
+      "id": "map",
+      "kick": "Mapped",
+      "nav": "Map",
+      "title": ["First it read the whole Drive,", "then put every file on one map."],
+      "sub": "A vision model looked at every unique image and video, whole clips included, and files that show the same thing ended up next to each other, in 60 groups.",
+      "thought": ["41,450 files read in one night", "97 h of video, every clip whole"],
       "short": true,
       "source": "eval-log 2026-10-09 (embedding, groups, layout)",
       "frame": {
@@ -223,25 +171,25 @@
             }
           ]
         }
+      },
+      "call": {
+        "who": "Thoughtform",
+        "said": "Read every clip whole"
       }
     },
     {
-      "n": 4,
+      "n": 3,
       "id": "joined",
       "kick": "Joined",
       "nav": "Joined",
-      "title": ["Briefs and designs", "on the same map."],
-      "sub": "Every readable Monday board and the Figma files it links were laid out beside the Drive.",
-      "thought": [
-        "One space for three sources",
-        "Each item's nearest, everywhere",
-        "598 brief links kept"
-      ],
+      "title": ["Monday's briefs and Figma's designs", "went on the same map."],
+      "sub": "Every Monday board it could read, and the Figma files those boards link to, now sit beside the Drive.",
+      "thought": [],
       "call": {
         "who": "Thoughtform",
         "said": "Publish public boards only"
       },
-      "short": true,
+      "short": false,
       "source": "layout-all log; eval-log 2026-10-10; suri-ai-studio #18, #21",
       "frame": {
         "head": "Three sources, one layout",
@@ -283,17 +231,13 @@
       }
     },
     {
-      "n": 5,
+      "n": 4,
       "id": "meaning",
-      "kick": "By meaning",
+      "kick": "Search",
       "nav": "Search",
-      "title": ["Ask in words,", "land on the moment."],
-      "sub": "A question is read, searched three ways, and the top frames are checked before anything counts as a match.",
-      "thought": [
-        "Parts, colours, what's absent",
-        "Words, meaning, pictures, fused",
-        "The frame checked at the second"
-      ],
+      "title": ["You ask in words or with a picture,", "and land on the second in the clip."],
+      "sub": "The question is read, searched three ways at once, and a model checks the top frames before anything counts as a match.",
+      "thought": [],
       "short": true,
       "source": "docs-search-v2; eval-log 2026-10-12 to 10-14",
       "frame": {
@@ -341,6 +285,82 @@
               "title": "Kept, closest, or nothing found"
             }
           ]
+        }
+      }
+    },
+    {
+      "n": 5,
+      "id": "review",
+      "kick": "Review",
+      "nav": "Review",
+      "title": ["Open a clip and it plays", "from the moment you searched for."],
+      "sub": "The team pins feedback to a moment, moves the file from review to approved, and sees what the model read in it, down to what's said and what's on screen.",
+      "thought": [],
+      "short": true,
+      "source": "suri-dam: review/ReviewSheet.tsx, Stage.tsx, Panes.tsx; player 8c37f47 (2026-10-15)",
+      "frame": {
+        "head": "One clip, open",
+        "datum": "J / K / L · 0.5–2× · versions on one card",
+        "caption": "The moment, the note pinned on it, what the model read",
+        "figure": {
+          "kind": "screen",
+          "layout": "review",
+          "app": "Notre-DAM",
+          "open": "0:12",
+          "scenes": 9,
+          "sceneLit": 3,
+          "pin": "A note, pinned to this moment",
+          "title": "Video · 0:32 · Final",
+          "states": ["In review", "Changes", "Approved"],
+          "stateOn": 2,
+          "tabs": ["Feedback", "Tags", "Details"],
+          "tabOn": 1,
+          "lines": ["Summary, as a model read it", "Spoken", "On screen"]
+        }
+      }
+    },
+    {
+      "n": 6,
+      "id": "shipped",
+      "kick": "Shipped",
+      "nav": "Shipped",
+      "title": ["Twelve releases in four days,", "every one merged."],
+      "sub": "Search came first, then sign-in and feedback, its own player, the 3D map, version families, intake with usage terms and search by photo; a cut-list editor waits on a branch.",
+      "thought": [],
+      "short": true,
+      "source": "suri-dam git log, 2026-10-13 to 2026-10-16 (b0acc05 … 5976706); editor 6195da0, 43a2ec5 on branches",
+      "frame": {
+        "head": "What went live, by day",
+        "datum": "Merged to main · 13 to 16 Oct",
+        "caption": "From search to search by photo in four days",
+        "figure": {
+          "kind": "ledger",
+          "rows": [
+            {
+              "k": "13 Oct",
+              "v": "Search by words, meaning and pictures"
+            },
+            {
+              "k": "14 Oct",
+              "v": "Online behind sign-in, feedback pins, play from the scene"
+            },
+            {
+              "k": "15 Oct",
+              "v": "Suri's own look, its own player, the 3D map"
+            },
+            {
+              "k": "16 Oct",
+              "v": "Version families, role filter, intake, search by photo"
+            },
+            {
+              "k": "Branch",
+              "v": "A cut-list editor, not yet live"
+            }
+          ],
+          "total": {
+            "k": "Merged",
+            "v": "12 releases in 4 days"
+          }
         }
       }
     }

@@ -2,7 +2,7 @@ import { FigureView } from "./blocks/Figure";
 import type { Claim, Run, Words } from "./CaseRun";
 import { CaseSwitch } from "./CaseSwitch";
 import { ordinal } from "./story";
-import type { Case } from "./types";
+import type { Case, Head } from "./types";
 
 /** The anchor a case answers to, for the address and its own links. */
 export const caseAnchor = (c: Pick<Case, "id">) => `case-${c.id}`;
@@ -24,8 +24,8 @@ function stepClaims(thought: readonly string[], call?: { who: string; said: stri
  * the switch as nodes, one case shown at a time. Only the switch, the run's
  * observer and the film's sound are client.
  *
- * The first figure's words are the case's header (its numbers and its
- * briefing); every other figure's are its step. Steps and figures are
+ * The first figure's words are the case's header (what was made and its
+ * numbers); every other figure's are its step. Steps and figures are
  * numbered by their place in the cut shown, so a step's number and its
  * figure's `FIG.` number are always the same.
  *
@@ -35,21 +35,23 @@ function stepClaims(thought: readonly string[], call?: { who: string; said: stri
 export function CaseDossier({
   cases,
   initial,
+  head,
   still,
 }: {
   cases: readonly Case[];
   /** The case shown first (`?case=`), else the first. */
   initial?: string;
+  /** The case head's type (`?head=`). */
+  head: Head;
   still: boolean;
 }) {
   const runs: Run[] = cases.map((c, i) => {
     const anchor = caseAnchor(c);
     const header: Omit<Words, "n"> & { frame: Case["opening"] } = {
       id: `${anchor}-piece`,
-      kick: "The brief",
+      kick: "The result",
       title: c.title,
       stats: c.stats,
-      brief: c.brief,
       frame: c.opening,
     };
     const steps = c.chapters.map((ch) => ({
@@ -71,13 +73,13 @@ export function CaseDossier({
       glyph: c.glyph,
       workstream: c.workstream,
       logo: c.logo,
+      tint: c.tint,
       words,
       figures: all.map((s, k) => (
         <FigureView key={s.id} n={k + 1} framed={s.frame} still={still} />
       )),
     };
   });
-  const tints = Object.fromEntries(cases.map((c) => [c.id, c.tint]));
   const first = runs.some((r) => r.key === initial) ? (initial as string) : runs[0].key;
-  return <CaseSwitch runs={runs} tints={tints} initial={first} still={still} />;
+  return <CaseSwitch runs={runs} initial={first} head={head} still={still} />;
 }

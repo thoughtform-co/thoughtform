@@ -34,27 +34,26 @@
   padding-inline: var(--instrument-margin, var(--band-margin, var(--hud-content-inset, 48px)));
   color: var(--csd-ink);
 }
-.csd > .csd-switchbar,
-.csd > .csd-run {
-  position: relative;
-  z-index: 1;
-}
 
 /* ── the client's field: a gradient of particles in its colour ─────── */
-/* Held to the screen while the case scrolls: a sticky layer one screen tall
-   that gives that height back at once (a negative margin), so the page's
-   height never changes for it (the swarm rebuilds on any change). The
-   particles gather behind the words; only a glow reaches the figures. */
-.csd-field-bg {
+/* One per case, laid across the case's whole grid row and held to the screen
+   while the case scrolls (sticky in its own grid area, so it adds no height:
+   the swarm rebuilds on any change). At the case's last figure it leaves with
+   the case, and the next case brings its own: the colour and the pattern
+   change at the seam, through a dark band where both fade out. The particles
+   gather behind the words; only a glow reaches the figures. */
+.csd-run > .csd-field-bg {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  align-self: start;
   position: sticky;
   top: 0;
   z-index: 0;
   height: 100svh;
-  margin-bottom: -100svh;
   margin-inline: calc(-1 * var(--instrument-margin, var(--band-margin, 48px)));
   pointer-events: none;
-  opacity: 0;
-  animation: csd-field-in 900ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
   background:
     radial-gradient(
       ellipse 50% 55% at 78% 40%,
@@ -71,6 +70,7 @@
   content: "";
   position: absolute;
   inset: 0;
+  /* dots: two square lattices, one finer, offset */
   background-image:
     radial-gradient(circle, rgba(var(--tint-dots, 235, 227, 214), 0.7) 0 1px, transparent 1.5px),
     radial-gradient(circle, rgba(var(--tint-dots, 235, 227, 214), 0.45) 0 0.8px, transparent 1.3px);
@@ -94,10 +94,31 @@
   );
   opacity: 0.38;
 }
-@keyframes csd-field-in {
-  to {
-    opacity: 1;
-  }
+/* hex: one lattice of larger, softer grains, every other row half a step on */
+.csd-field-bg[data-pattern="hex"]::before {
+  background-image:
+    radial-gradient(circle, rgba(var(--tint-dots), 0.75) 0 1.3px, transparent 1.9px),
+    radial-gradient(circle, rgba(var(--tint-dots), 0.75) 0 1.3px, transparent 1.9px);
+  background-size:
+    20px 34px,
+    20px 34px;
+  background-position:
+    0 0,
+    10px 17px;
+  opacity: 0.3;
+}
+/* grid: a fine square of points, a brighter one every fifth */
+.csd-field-bg[data-pattern="grid"]::before {
+  background-image:
+    radial-gradient(circle, rgba(var(--tint-dots), 0.95) 0 1.2px, transparent 1.7px),
+    radial-gradient(circle, rgba(var(--tint-dots), 0.5) 0 0.6px, transparent 1px);
+  background-size:
+    45px 45px,
+    9px 9px;
+  background-position:
+    0 0,
+    0 0;
+  opacity: 0.42;
 }
 
 .csd p,
@@ -150,70 +171,6 @@
   fill: currentColor;
 }
 
-/* ── the clients: the title and the switch at once ─────────────────── */
-.csd-clients {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px clamp(16px, 1.8vw, 28px);
-}
-.csd-clients button {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 0 0 8px;
-  border: 0;
-  background: none;
-  color: var(--csd-ink-3);
-  cursor: pointer;
-  transition: color 240ms;
-}
-.csd-clients__n {
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-}
-/* sized to the column, so three names hold one row at a laptop's width */
-.csd-clients__name {
-  font-family: var(--csd-sans);
-  font-size: clamp(16px, min(1.25vw, 2.6svh), 21px);
-  line-height: 1.1;
-  letter-spacing: var(--track-display, -0.02em);
-}
-.csd-clients button:hover {
-  color: var(--csd-ink-2);
-}
-.csd-clients button[data-on] {
-  color: var(--csd-ink);
-  cursor: default;
-}
-/* the case in view: a flat gold lip under its name, the one gold of the head */
-.csd-clients button[data-on]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--csd-datum);
-}
-.csd-clients button[data-on] .csd-clients__n {
-  color: var(--csd-ink-2);
-}
-.csd-clients button:focus-visible {
-  outline: 1px solid var(--csd-gold);
-  outline-offset: 4px;
-}
-
-/* the clients: one row above the case, outside the held words */
-.csd-switchbar {
-  margin-bottom: clamp(8px, 2svh, 24px);
-}
-.csd-switchbar .csd-clients__name {
-  font-size: var(--type-xl, 24px);
-}
-
 /* ── one case: the held words and the figures ──────────────────────── */
 .csd-run {
   display: grid;
@@ -222,7 +179,51 @@
   align-items: start;
 }
 .csd-run__words {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  z-index: 1;
   align-self: stretch;
+}
+.csd-run__figs {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  z-index: 1;
+}
+
+/* the foot of the held words: the step dashes, and the quiet index of the
+   cases at the row's far end, the case in view lit */
+.csd-story__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.csd-index {
+  display: flex;
+  gap: 14px;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.csd-index a {
+  padding-bottom: 3px;
+  color: var(--csd-ink-3);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 240ms;
+}
+.csd-index a:hover {
+  color: var(--csd-ink-2);
+}
+.csd-index a[aria-current] {
+  color: var(--csd-ink);
+  border-bottom-color: var(--csd-datum);
+}
+.csd-index a:focus-visible {
+  outline: 1px solid var(--csd-gold);
+  outline-offset: 4px;
 }
 /* ── the held words: the Loop story's one group (proof-story.css) ──── */
 .csd-run__stick {
@@ -355,10 +356,17 @@
 }
 
 /* ── the case, held: the client's logo, what was made, the department ─ */
+/* One markup, three rows (client, project, team), each with a key only the
+   rows option shows; four type options while the owner picks (2026-10-17:
+   "don't like the font inconsistencies between the brand the project title
+   and workstream; please give me different options"). Every option is a
+   flex box, so the phone copy's show and hide stay one rule each. */
 .csd-case {
   position: relative;
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
   max-width: 38rem;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--csd-rule);
@@ -373,34 +381,173 @@
   height: 1px;
   background: var(--csd-datum);
 }
-.csd-case__what {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 16px;
+.csd-case__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
 }
+.csd-case__key {
+  display: none;
+}
 .csd-case__project {
-  font-family: var(--csd-sans);
-  font-size: min(var(--type-xl, 24px), 3svh);
-  line-height: 1.2;
-  letter-spacing: var(--track-display, -0.02em);
   color: var(--csd-ink);
 }
 .csd-case__dept {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--csd-ink-3);
 }
 .csd-case__dept .csd-glyph {
   width: 12px;
   height: 12px;
 }
+/* the separators of the one-line options */
+.csd[data-head="a"] .csd-case__row + .csd-case__row::before,
+.csd[data-head="b"] .csd-case__row + .csd-case__row::before {
+  content: "/";
+  margin-right: 4px;
+  color: var(--csd-seam);
+}
+
+/* a · one mono line: the figure heads' label voice, nothing in sans */
+.csd[data-head="a"] .csd-case {
+  gap: 8px 12px;
+}
+.csd[data-head="a"] .csd-case__row,
+.csd[data-head="a"] .csd-case .csd-logo__name {
+  font-family: var(--csd-mono);
+  font-size: 13px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.csd[data-head="a"] .csd-case .csd-logo__name {
+  color: var(--csd-ink);
+}
+.csd[data-head="a"] .csd-case__project {
+  color: var(--csd-ink-2);
+}
+.csd[data-head="a"] .csd-case .csd-logo__img {
+  height: 13px;
+}
+.csd[data-head="a"] .csd-case .csd-logo[data-mark] .csd-logo__img {
+  height: 15px;
+}
+
+/* b · one sans line: one size for all three, the team a shade quieter */
+.csd[data-head="b"] .csd-case {
+  gap: 8px 12px;
+}
+.csd[data-head="b"] .csd-case__row,
+.csd[data-head="b"] .csd-case .csd-logo__name {
+  font-family: var(--csd-sans);
+  font-size: min(20px, 2.6svh);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.csd[data-head="b"] .csd-case .csd-logo__name {
+  color: var(--csd-ink);
+}
+.csd[data-head="b"] .csd-case .csd-logo__img {
+  height: 15px;
+}
+.csd[data-head="b"] .csd-case .csd-logo[data-mark] .csd-logo__img {
+  height: 18px;
+}
+
+/* c · title-led: the project is the one sans title; who and which team
+   ride one mono row above it (sans is what we made, mono who made it for) */
+.csd[data-head="c"] .csd-case {
+  gap: 12px 14px;
+}
+.csd[data-head="c"] .csd-case__row[data-row="client"] {
+  order: 1;
+}
+.csd[data-head="c"] .csd-case__row[data-row="team"] {
+  order: 2;
+}
+.csd[data-head="c"] .csd-case__row[data-row="team"]::before {
+  content: "/";
+  margin-right: 4px;
+  color: var(--csd-seam);
+}
+.csd[data-head="c"] .csd-case__row[data-row="project"] {
+  order: 3;
+  flex-basis: 100%;
+}
+.csd[data-head="c"] .csd-case__row[data-row="client"],
+.csd[data-head="c"] .csd-case__row[data-row="team"],
+.csd[data-head="c"] .csd-case .csd-logo__name {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.csd[data-head="c"] .csd-case .csd-logo__name {
+  color: var(--csd-ink-2);
+}
+.csd[data-head="c"] .csd-case__project {
+  font-family: var(--csd-sans);
+  font-size: min(28px, 3.4svh);
+  line-height: 1.15;
+  letter-spacing: var(--track-display, -0.02em);
+}
+.csd[data-head="c"] .csd-case .csd-logo__img {
+  height: 13px;
+}
+.csd[data-head="c"] .csd-case .csd-logo[data-mark] .csd-logo__img {
+  height: 14px;
+}
+
+/* d · spec rows: mono keys, every value in one sans size, hairlines between
+   (the ledger figure's rows) */
+.csd[data-head="d"] .csd-case {
+  gap: 0;
+  padding-bottom: 0;
+}
+.csd[data-head="d"] .csd-case__row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  flex-basis: 100%;
+  min-height: 40px;
+  padding-block: 8px;
+}
+.csd[data-head="d"] .csd-case__row + .csd-case__row {
+  border-top: 1px solid var(--csd-rule);
+}
+.csd[data-head="d"] .csd-case__key {
+  display: block;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+.csd[data-head="d"] .csd-case__project,
+.csd[data-head="d"] .csd-case__dept,
+.csd[data-head="d"] .csd-case .csd-logo__name {
+  font-family: var(--csd-sans);
+  font-size: 17px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.csd[data-head="d"] .csd-case .csd-logo__name {
+  color: var(--csd-ink);
+}
+.csd[data-head="d"] .csd-case__dept {
+  color: var(--csd-ink-2);
+}
+.csd[data-head="d"] .csd-case .csd-logo__img {
+  height: 15px;
+}
+.csd[data-head="d"] .csd-case .csd-logo[data-mark] .csd-logo__img {
+  height: 17px;
+}
+
 /* the logo: the client's own file, white, tinted to the ink by a mask */
 .csd-logo {
   display: inline-flex;
@@ -426,7 +573,7 @@
   color: var(--csd-ink);
 }
 
-/* ── the header's words: the numbers, then the briefing ────────────── */
+/* ── the header's words: the numbers ─────────────────────────────────── */
 .csd-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -456,128 +603,6 @@
   line-height: 1.35;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--csd-ink-3);
-}
-.csd-brief {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-}
-.csd-brief figcaption {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--csd-ink-2);
-}
-.csd-brief blockquote {
-  margin: 0;
-  font-size: min(var(--type-lg, 20px), 2.4svh);
-  line-height: 1.45;
-  color: var(--csd-ink-2);
-  quotes: "“" "”";
-}
-.csd-brief blockquote::before {
-  content: open-quote;
-}
-.csd-brief blockquote::after {
-  content: close-quote;
-}
-
-/* next case: the foot of each case, a framed way on */
-.csd-next {
-  --ch: var(--csd-ch);
-  --in: calc(var(--csd-ch) - 0.586px);
-  position: relative;
-  display: grid;
-  gap: 12px;
-  justify-items: start;
-  width: 100%;
-  padding: 22px 24px 24px;
-  border: 0;
-  background: var(--csd-plate);
-  color: var(--csd-ink);
-  text-align: left;
-  cursor: pointer;
-  clip-path: polygon(
-    0 0,
-    calc(100% - var(--ch)) 0,
-    100% var(--ch),
-    100% 100%,
-    var(--ch) 100%,
-    0 calc(100% - var(--ch))
-  );
-}
-.csd-next::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: var(--csd-seam);
-  transition: background 240ms;
-  clip-path: polygon(
-    evenodd,
-    0 0,
-    calc(100% - var(--ch)) 0,
-    100% var(--ch),
-    100% 100%,
-    var(--ch) 100%,
-    0 calc(100% - var(--ch)),
-    0 0,
-    1px 1px,
-    calc(100% - 1px - var(--in)) 1px,
-    calc(100% - 1px) calc(1px + var(--in)),
-    calc(100% - 1px) calc(100% - 1px),
-    calc(1px + var(--in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--in)),
-    1px 1px
-  );
-}
-.csd-next:hover::before,
-.csd-next:focus-visible::before {
-  background: var(--csd-datum);
-}
-.csd-next:focus-visible {
-  outline: none;
-}
-.csd-next__k {
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--csd-ink-3);
-}
-.csd-next__client {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  font-family: var(--csd-sans);
-  font-size: var(--type-2xl, 28px);
-  line-height: 1.1;
-  letter-spacing: var(--track-display, -0.02em);
-}
-.csd-next__kind {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 20px;
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--csd-ink-3);
-}
-.csd-next__kind > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.csd-next__n {
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
   color: var(--csd-ink-3);
 }
 
@@ -1676,37 +1701,312 @@
   content: "› ";
 }
 
+/* ── screen: an interface the work shipped, drawn ───────────────────── */
+/* The client's own layout and labels; every picture is grain (its frames and
+   people stay private). The one lit thing is the matched moment. */
+.csd-scr {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  border: 1px solid var(--csd-rule);
+  background: rgba(var(--void-deep-rgb), 0.6);
+  overflow: hidden;
+}
+.csd-scr[data-layout="search"] {
+  grid-template-columns: minmax(128px, 22%) minmax(0, 1fr);
+}
+.csd-scr[data-layout="review"] {
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 34%);
+}
+.csd-scr__side,
+.csd-scr__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px 14px;
+  border-right: 1px solid var(--csd-rule);
+}
+.csd-scr__panel {
+  border-right: 0;
+  border-left: 1px solid var(--csd-rule);
+}
+.csd-scr__app {
+  font-family: var(--csd-sans);
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--csd-ink);
+}
+.csd-scr__nav {
+  display: grid;
+  gap: 10px;
+}
+.csd-scr__nav li {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-scr__nav li[data-on] {
+  color: var(--csd-ink);
+}
+.csd-scr__blank {
+  height: 6px;
+  width: calc(var(--w, 0.6) * 100%);
+  background: var(--csd-rule);
+}
+.csd-scr__foot {
+  margin-top: auto;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-2);
+}
+.csd-scr__main,
+.csd-scr__stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px;
+}
+.csd-scr__search {
+  display: flex;
+  gap: 8px;
+}
+.csd-scr__query {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--csd-seam);
+  font-family: var(--csd-sans);
+  font-size: 15px;
+  color: var(--csd-ink);
+}
+.csd-scr__lens {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--csd-ink-2);
+}
+.csd-scr__btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--csd-datum);
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink);
+}
+.csd-scr__facets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.csd-scr__facets li {
+  padding: 5px 10px;
+  border: 1px solid var(--csd-rule);
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-2);
+}
+.csd-scr__facets li.csd-scr__blank {
+  width: 56px;
+  height: auto;
+  background: none;
+}
+.csd-scr__status {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-scr__grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+  gap: 12px 10px;
+  overflow: hidden;
+}
+.csd-scr__tile {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+.csd-scr__pic,
+.csd-scr__player,
+.csd-scr__strip span {
+  position: relative;
+  display: block;
+  border: 1px solid var(--csd-rule);
+  background:
+    radial-gradient(circle, rgba(var(--dawn-rgb), var(--a, 0.16)) 0 1px, transparent 1.4px) 0 0 /
+      calc(var(--g, 6) * 1px) calc(var(--g, 6) * 1px),
+    rgba(var(--dawn-rgb), 0.035);
+}
+.csd-scr__pic {
+  aspect-ratio: var(--r, 4 / 5);
+}
+.csd-scr__tile[data-lit] .csd-scr__pic {
+  outline: 1px solid var(--csd-gold);
+  outline-offset: 2px;
+}
+.csd-scr__badge,
+.csd-scr__verdict {
+  position: absolute;
+  padding: 2px 6px;
+  background: rgba(var(--void-rgb), 0.85);
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--csd-ink);
+}
+.csd-scr__badge {
+  right: 6px;
+  bottom: 6px;
+}
+.csd-scr__verdict {
+  left: 6px;
+  top: 6px;
+}
+.csd-scr__hit {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-gold);
+}
+.csd-scr__name {
+  display: block;
+  height: 6px;
+  width: 70%;
+  margin-top: 4px;
+  background: var(--csd-rule);
+}
+/* review: the player, its scenes as the scrubber, a filmstrip */
+.csd-scr__player {
+  flex: 1;
+  min-height: 0;
+}
+.csd-scr__scenes {
+  display: flex;
+  gap: 3px;
+  height: 20px;
+}
+.csd-scr__scenes span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: rgba(var(--dawn-rgb), 0.1);
+}
+.csd-scr__scenes span[data-lit] {
+  background: var(--csd-gold-wash);
+  box-shadow: inset 0 2px 0 var(--csd-gold);
+}
+.csd-scr__strip {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 3px;
+  height: 36px;
+}
+.csd-scr__pin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--csd-ink-2);
+}
+.csd-scr__title {
+  font-family: var(--csd-sans);
+  font-size: 15px;
+  color: var(--csd-ink);
+}
+.csd-scr__states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.csd-scr__states li {
+  padding: 4px 8px;
+  border: 1px solid var(--csd-rule);
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-scr__states li[data-on] {
+  border-color: var(--csd-datum);
+  color: var(--csd-ink);
+}
+.csd-scr__tabs {
+  display: flex;
+  gap: 14px;
+  border-bottom: 1px solid var(--csd-rule);
+}
+.csd-scr__tabs li {
+  margin-bottom: -1px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid transparent;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-scr__tabs li[data-on] {
+  border-bottom-color: var(--csd-datum);
+  color: var(--csd-ink);
+}
+.csd-scr__lines {
+  display: grid;
+  gap: 14px;
+}
+.csd-scr__lines dt {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-scr__lines dd {
+  height: 6px;
+  width: calc(var(--w, 0.7) * 100%);
+  margin-top: 8px;
+  background: var(--csd-rule);
+}
+
 /* ── a still: nothing moves ────────────────────────────────────────── */
 .csd[data-still] .csd-story__stack > .csd-story,
 .csd[data-still] .csd-story__dashes li,
-.csd[data-still] .csd-clients button {
+.csd[data-still] .csd-index a {
   transition: none;
-}
-.csd[data-still] .csd-field-bg {
-  animation: none;
-  opacity: 1;
 }
 
 /* ── the phone: the words above their own figure, nothing held ─────── */
 @media (max-width: 960px) {
-  /* the clients ride a bar at the top of the dossier instead */
-  /* held just under the HUD's section label, which sits top right */
-  .csd-switchbar {
-    position: sticky;
-    top: calc(var(--hud-margin, 16px) + 30px);
-    z-index: 4;
-    display: block;
-    margin-inline: calc(-1 * var(--instrument-margin, var(--band-margin, 16px)));
-    padding: 14px var(--instrument-margin, var(--band-margin, 16px)) 0;
-    border-bottom: 1px solid var(--csd-rule);
-    background: rgb(var(--void-rgb));
-  }
-  .csd-switchbar .csd-clients__name {
-    font-size: var(--type-lg, 18px);
-  }
   .csd-run {
     grid-template-columns: minmax(0, 1fr);
   }
+  .csd-run__figs {
+    grid-column: 1;
+  }
+  .csd-scr[data-layout="search"],
+  .csd-scr[data-layout="review"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .csd-scr__side {
+    display: none;
+  }
+  .csd-scr__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .csd-scr__player {
+    flex: none;
+    aspect-ratio: 16 / 9;
+  }
+  .csd-scr__panel {
+    border-left: 0;
+    border-top: 1px solid var(--csd-rule);
+  }
+
   .csd-run__words {
     display: none;
   }
@@ -1719,7 +2019,7 @@
     margin-bottom: var(--space-lg, 24px);
   }
   .csd-case.csd-case--flow {
-    display: grid;
+    display: flex;
     margin-block: 8px var(--space-xl, 32px);
   }
   /* the result takes its own row, the other two numbers share the next */
@@ -1824,12 +2124,8 @@
 @media (prefers-reduced-motion: reduce) {
   .csd-story__stack > .csd-story,
   .csd-story__dashes li,
-  .csd-clients button {
+  .csd-index a {
     transition: none;
     transform: none;
-  }
-  .csd-field-bg {
-    animation: none;
-    opacity: 1;
   }
 }

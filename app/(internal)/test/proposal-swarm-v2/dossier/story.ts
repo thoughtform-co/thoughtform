@@ -1,4 +1,4 @@
-import type { Case, Cell, Chapter, Cut, Figure, FigureKind, Still } from "./types";
+import type { Case, Cell, Chapter, Cut, Figure, FigureKind, Head, Still } from "./types";
 
 /**
  * Reading a case: check it, then cut it. Pure; the tests run every case
@@ -14,6 +14,7 @@ export const KINDS: readonly FigureKind[] = [
   "ledger",
   "field",
   "flow",
+  "screen",
 ];
 
 /** Pictures come only from folders already published with the site. */
@@ -24,6 +25,10 @@ export const LETTER_CAP = 15;
 
 export const SHORT_MIN = 5;
 export const SHORT_MAX = 6;
+
+/** The case head options (`?head=`), the recommended one first. */
+export const HEADS: readonly Head[] = ["c", "a", "b", "d"];
+export const HEAD_DEFAULT: Head = "c";
 
 /** The chapters a cut shows, in order. */
 export function cutCase(c: Case, cut: Cut): Case {
@@ -103,6 +108,29 @@ export function letteredCount(f: Figure): number {
       return f.labels.length;
     case "flow":
       return f.stations.reduce((n, s) => n + 1 + (s.items?.length ?? 0), 0);
+    case "screen": {
+      const one = (x?: string) => (x ? 1 : 0);
+      const tiles = (f.tiles ?? []).reduce(
+        (n, t) => n + one(t.badge) + one(t.verdict) + one(t.hit),
+        0
+      );
+      return (
+        1 +
+        (f.nav?.length ?? 0) +
+        one(f.foot) +
+        one(f.query) +
+        one(f.action) +
+        (f.facets?.length ?? 0) +
+        one(f.status) +
+        tiles +
+        one(f.open) +
+        one(f.pin) +
+        one(f.title) +
+        (f.states?.length ?? 0) +
+        (f.tabs?.length ?? 0) +
+        (f.lines?.length ?? 0)
+      );
+    }
   }
 }
 

@@ -17,6 +17,18 @@ import type { GlyphName } from "./Glyph";
 
 export type Cut = "short" | "full";
 
+/** A client's field: dots on a square lattice, on a hex lattice, or a fine
+ *  grid with a brighter point every fifth. */
+export interface Tint {
+  dots: string;
+  glow: string;
+  pattern: "dots" | "hex" | "grid";
+}
+
+/** The case head's type, while the owner picks: one mono line, one sans
+ *  line, the project as the one title, or rows of keys and values. */
+export type Head = "a" | "b" | "c" | "d";
+
 /** A person's decision, named by role, never by name. */
 export interface Call {
   who: string;
@@ -124,6 +136,39 @@ export type Figure =
       lit?: number;
     }
   | {
+      /** An interface the work shipped, drawn from its own layout and
+       *  labels; pictures are grain, never footage. */
+      kind: "screen";
+      layout: "search" | "review";
+      app: string;
+      /** search: the sidebar's lettered views, the first in view */
+      nav?: readonly string[];
+      foot?: string;
+      query?: string;
+      action?: string;
+      facets?: readonly string[];
+      status?: string;
+      tiles?: readonly {
+        ratio: string;
+        badge?: string;
+        verdict?: string;
+        hit?: string;
+        lit?: boolean;
+      }[];
+      /** review: the open clip */
+      open?: string;
+      scenes?: number;
+      sceneLit?: number;
+      /** a person's note, pinned on the lit scene */
+      pin?: string;
+      title?: string;
+      states?: readonly string[];
+      stateOn?: number;
+      tabs?: readonly string[];
+      tabOn?: number;
+      lines?: readonly string[];
+    }
+  | {
       kind: "flow";
       stations: readonly {
         k: string;
@@ -180,13 +225,11 @@ export interface Case {
   /** The client's logo: a mark (shown with the client's name) or a wordmark,
    *  a white file tinted to the ink in CSS. */
   logo: { src: string; ratio: string; mark?: boolean };
-  /** The client's colour for the field behind the case: the particles, and
-   *  the glow under them (rgb triples). */
-  tint: { dots: string; glow: string };
+  /** The client's field behind the case: the particles' colour, the glow
+   *  under them (rgb triples), and the particles' pattern. */
+  tint: Tint;
   /** The header's numbers, the first the result: a value, a short label. */
   stats: readonly { value: string; label: string }[];
-  /** The briefing, as the header quotes it. */
-  brief: { who: string; text: string };
   /** The piece, in one line. */
   piece: string;
   date: string;

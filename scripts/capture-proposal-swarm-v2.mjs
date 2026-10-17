@@ -14,7 +14,7 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-proposal-swarm-v2.mjs --port 3031
- *     [--cut short|full] [--case loop,samako,suri]
+ *     [--cut short|full] [--case loop,samako,suri] [--head a|b|c|d]
  *     [--sizes 1920x1247,1976x966,1280x720,390x844] [--themes dark,light]
  *     [--out docs/design/proposal-swarm-v2/round-01] [--only case-loop-ask,…]
  *     [--twice]
@@ -33,6 +33,7 @@ const argOf = (flag, fallback) => {
 const PORT = argOf("--port", "3031");
 const CUT = argOf("--cut", "short");
 const CASES = argOf("--case", "loop,samako,suri").split(",").filter(Boolean);
+const HEAD = argOf("--head", "");
 const OUT = argOf("--out", "docs/design/proposal-swarm-v2/round-01");
 const ONLY = argOf("--only", "").split(",").filter(Boolean);
 const SIZES = argOf("--sizes", "1920x1247")
@@ -44,6 +45,7 @@ const TWICE = args.includes("--twice");
 const urlOf = (c) => {
   const query = new URLSearchParams({ still: "1", case: c });
   if (CUT !== "short") query.set("cut", CUT);
+  if (HEAD) query.set("head", HEAD);
   return `http://localhost:${PORT}/test/proposal-swarm-v2?${query}`;
 };
 
@@ -79,7 +81,8 @@ async function shoot(browser, dir) {
           content:
             "nextjs-portal{display:none!important} html{scroll-behavior:auto!important} *,*::before,*::after{transition:none!important;animation:none!important}",
         });
-        const these = await page.$$eval(".csd-panel", (els) =>
+        /* every case is on the page now: shoot only this one's panels */
+        const these = await page.$$eval(`#case-${c} .csd-panel`, (els) =>
           els.map((el) => ({ id: el.id, i: Number(el.dataset.csI) }))
         );
         panels.push(...these);

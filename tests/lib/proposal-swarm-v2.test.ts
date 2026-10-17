@@ -109,13 +109,13 @@ describe("the cases", () => {
         expect(() => assertCase(c)).not.toThrow();
       });
 
-      it("open on a header: three short numbers and one briefing", () => {
+      it("open on a header: three short numbers, no briefing (it lives in the steps)", () => {
         expect(c.stats).toHaveLength(3);
         for (const s of c.stats) {
           expect(s.value.length, s.label).toBeLessThanOrEqual(12);
           expect(s.label.length, s.label).toBeLessThanOrEqual(56);
         }
-        expect(c.brief.text.length).toBeLessThanOrEqual(140);
+        expect("brief" in c).toBe(false);
       });
 
       it("carry the client's logo (a file on disk) and its colour", () => {

@@ -12,34 +12,31 @@
   },
   "tint": {
     "dots": "176, 150, 255",
-    "glow": "118, 86, 214"
+    "glow": "118, 86, 214",
+    "pattern": "dots"
   },
   "stats": [
     {
       "value": "1 h 51 min",
-      "label": "Prompt to master, down from days (est.)"
+      "label": "Prompt to finished ad, vs days by hand (est.)"
     },
     {
       "value": "$27",
-      "label": "All in, at published prices"
+      "label": "All-in cost, at published prices"
     },
     {
       "value": "9",
-      "label": "Rounds of stills"
+      "label": "Rounds of review on stills"
     }
   ],
-  "brief": {
-    "who": "The studio lead",
-    "text": "A slick, looping stop-motion Halloween video for Experience 2 Gold. Cool text animation, and an endcard like our June ads."
-  },
-  "piece": "A 10-second Halloween ad, from one prompt",
+  "piece": "A Halloween ad for Loop, from one message",
   "date": "1 Oct 2026",
   "number": {
     "value": "1 h 51 min",
     "label": "from the prompt to the master"
   },
-  "title": ["From one prompt", "to a 10-second ad."],
-  "sub": "Every step of one real video, in the order it happened.",
+  "title": ["A Halloween ad for Loop,", "from one message to the master."],
+  "sub": "One real video, step by step, in the order it happened.",
   "opening": {
     "head": "The piece",
     "datum": "10.000 s · 24 fps",
@@ -60,9 +57,9 @@
       "id": "setup",
       "kick": "The setup",
       "nav": "Setup",
-      "title": ["Where it lives.", "A skill, in a plugin, on Loop's shelf."],
-      "sub": "Nobody installs anything by hand. Turn the plugin on once, and the skill is there in every Claude app.",
-      "thought": ["Mapped what it could reach", "Paper, sound, a watcher"],
+      "title": ["Before anyone asks,", "the skill already sits in Loop's plugin."],
+      "sub": "Nobody installs anything by hand: the studio switches the plugin on once, and the skill shows up in every Claude app they use.",
+      "thought": [],
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "Setup, bottom to top",
@@ -129,9 +126,9 @@
       "id": "runs",
       "kick": "How it runs",
       "nav": "How it runs",
-      "title": ["You ask in your own words.", "The skill does the rest."],
-      "sub": "Claude picks the right skill, follows its steps, checks its own work, and hands you the decision.",
-      "thought": ["Picked the motion skill", "No video model", "Only paper and sound generated"],
+      "title": ["You ask in your own words,", "and Claude finds the skill and follows it."],
+      "sub": "It picks the motion skill, works through its steps and checks its own output before it hands the decision back to you.",
+      "thought": [],
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "One request, five stations",
@@ -177,8 +174,8 @@
             },
             {
               "k": "You decide",
-              "title": "Your call.",
-              "note": "Notes go back into the skill.",
+              "title": "You decide what ships",
+              "note": "Your notes go back into the skill.",
               "person": true,
               "lit": true
             }
@@ -191,9 +188,9 @@
       "id": "ask",
       "kick": "The ask",
       "nav": "Ask",
-      "title": ["You send one message.", "Claude asks four questions."],
-      "sub": "Each one comes with a recommended answer. You click, and the work starts.",
-      "thought": ["Read the brief", "Four questions, one click each", "Three endcard drafts"],
+      "title": ["The studio sent one message;", "Claude came back with four questions."],
+      "sub": "Each question came with a recommended answer, so the studio lead clicked four times and the work started.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
@@ -243,10 +240,6 @@
             "v": "MORE BOO / LESS RINGING"
           }
         }
-      },
-      "call": {
-        "who": "Studio lead",
-        "said": "9:16, 10 s, Experience 2 Gold"
       }
     },
     {
@@ -254,9 +247,9 @@
       "id": "look",
       "kick": "Look first",
       "nav": "Look",
-      "title": ["Look before drawing.", "Your ads first, then the world."],
-      "sub": "Loop's own approved ads set the rules. Outside trends set the mood.",
-      "thought": ["Loop's June ads first", "Measured the app's safe band", "Four trends agreed"],
+      "title": ["Before drawing anything, it studied", "Loop's June ads, then the trends."],
+      "sub": "Loop's own approved ads set the rules for type and layout, while four outside trends set the mood.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
@@ -281,7 +274,7 @@
               {
                 "kind": "safe",
                 "label": "Where text may go",
-                "note": "Measured, not guessed.",
+                "note": "Measured from the app's own bands.",
                 "span": 1
               }
             ],
@@ -316,18 +309,14 @@
       "id": "idea",
       "kick": "The idea",
       "nav": "Idea",
-      "title": ["One idea, one hinge.", "The earplug is the O."],
-      "sub": "A matte paper world. The only shiny, real thing in it is the product.",
-      "thought": [
-        "Matte paper, one shiny product",
-        "One shape, three jobs",
-        "The loop dives through its O"
-      ],
+      "title": ["The whole ad hangs on one shape:", "the earplug is the O in BOO."],
+      "sub": "Everything is matte paper except the product, the only shiny, real thing in the frame.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The hinge",
-        "datum": "One shape, three jobs",
+        "datum": "Letter, product, door",
         "caption": "The O as a letter, the product and a door",
         "figure": {
           "kind": "plates",
@@ -403,13 +392,9 @@
       "id": "plan",
       "kick": "The plan",
       "nav": "Plan",
-      "title": ["Every beat on a frame.", "Before anything moves."],
-      "sub": "The tempo was picked so the maths is exact. Cuts land where the music really hits.",
-      "thought": [
-        "144 bpm: a beat is 10 frames",
-        "Cuts moved onto the kicks",
-        "The break became the noise"
-      ],
+      "title": ["Every beat sits on a frame", "before anything moves."],
+      "sub": "At 144 bpm and 24 fps a beat is exactly 10 frames, so every cut can land where the music actually hits.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
@@ -527,13 +512,9 @@
       "id": "ingredients",
       "kick": "Ingredients",
       "nav": "Ingredients",
-      "title": ["Generate a little.", "Never redraw the product."],
-      "sub": "Only paper and sound were generated. Everything else is code, or Loop's own files.",
-      "thought": [
-        "Four papers, recoloured in code",
-        "One image model swapped out",
-        "Each effect named by its source"
-      ],
+      "title": ["It generated paper and sound,", "and never redrew the product."],
+      "sub": "Everything else is code or Loop's own files, including the real gold render, which goes in untouched.",
+      "thought": ["Four papers, recoloured in code"],
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "What went in",
@@ -589,7 +570,7 @@
                   "alt": "Loop Experience 2 Gold, the real render"
                 },
                 "label": "The real render",
-                "note": "Placed untouched.",
+                "note": "Goes in untouched.",
                 "lit": true
               },
               {
@@ -616,9 +597,9 @@
       "id": "make",
       "kick": "Making it",
       "nav": "Make",
-      "title": ["Drawn in code, frame by frame.", "Like stop-motion on a table."],
-      "sub": "No video model. Code draws all 240 frames, the same way every time.",
-      "thought": ["Frame N, a function of N", "Paper on twos", "16 key stills before a render"],
+      "title": ["Code draws all 240 frames,", "like stop-motion on a table."],
+      "sub": "There's no video model in it: code draws every frame, and draws it the same way every time.",
+      "thought": ["16 key stills checked per render"],
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The proof sheet",
@@ -671,13 +652,9 @@
       "id": "sound",
       "kick": "Sound",
       "nav": "Sound",
-      "title": ["The claim, made audible.", "Noise drops 17 dB as the earplug lands."],
-      "sub": "The music keeps playing, clear. Every effect lands on its frame.",
-      "thought": [
-        "Generated what ears must know",
-        "−17 dB as the earplug lands",
-        "Peak fixed after encoding"
-      ],
+      "title": ["When the earplug lands,", "the noise drops 17 dB and the music stays."],
+      "sub": "Every effect lands on its own frame, and the music keeps playing clearly underneath.",
+      "thought": [],
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The mix, on the frame line",
@@ -749,13 +726,9 @@
       "id": "check",
       "kick": "Check",
       "nav": "Check",
-      "title": ["Look. Fix. Look again.", "Nine rounds of stills."],
-      "sub": "If something reads wrong, it goes, however long it took to build.",
-      "thought": [
-        "Every round on a sheet of stills",
-        "Tombstone eyelids out",
-        "Acted on notes two runs agreed on"
-      ],
+      "title": ["Nine rounds of stills,", "and anything that read wrong went."],
+      "sub": "However long a piece took to build, it went if it read wrong: the eyelids read as tombstones, the sound waves as stock vector.",
+      "thought": [],
       "call": {
         "who": "Studio lead",
         "said": "Version 3, no logo"
@@ -833,9 +806,9 @@
       "id": "cost",
       "kick": "Cost",
       "nav": "Cost",
-      "title": ["About $27.", "Mostly Claude."],
-      "sub": "The evening of 1 October, at published prices. No video model, so no video bill.",
-      "thought": ["Priced from the logs", "93% of it Claude", "A fresh session per piece"],
+      "title": ["About $27 for the evening,", "most of it Claude."],
+      "sub": "That's the evening of 1 October at published prices, and with no video model there was no video bill.",
+      "thought": ["Priced from the logs"],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
@@ -899,9 +872,9 @@
       "id": "next",
       "kick": "Next time",
       "nav": "Next time",
-      "title": ["Now it's a skill.", "Just ask."],
-      "sub": "Everything in this case is written down in one skill, in the studio's plugin. Open a chat and say what you want.",
-      "thought": ["The brief became the default", "Untried routes marked"],
+      "title": ["Now it's a skill,", "so next time the studio just asks."],
+      "sub": "Everything in this case is written down in one skill in the studio's plugin; open a chat and say what you want.",
+      "thought": [],
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The next ask",

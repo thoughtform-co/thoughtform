@@ -11,33 +11,30 @@
   },
   "tint": {
     "dots": "249, 241, 228",
-    "glow": "194, 187, 176"
+    "glow": "194, 187, 176",
+    "pattern": "hex"
   },
   "stats": [
     {
       "value": "1 day",
-      "label": "Two films from one brief, down from days per ad"
+      "label": "Brief to two finished films, vs days per ad"
     },
     {
       "value": "54 min",
-      "label": "The production turn"
+      "label": "Of that, the production itself"
     },
     {
       "value": "9 of 14",
-      "label": "Takes used"
+      "label": "Generated takes used in the films"
     }
   ],
-  "brief": {
-    "who": "The brief",
-    "text": "Autumn sale ads, in Dutch, with complete creative freedom. Round 2: films with a story, more angles, a little stop-motion."
-  },
-  "piece": "Two 15-second autumn films, from one brief",
+  "piece": "Two 15-second autumn films for Samako, from one brief",
   "date": "6 Oct 2026",
   "number": {
     "value": "54 min",
     "label": "for the production turn"
   },
-  "title": ["From one brief", "to two 15-second films."],
+  "title": ["Autumn sale ads for Samako,", "two 15-second films from one brief."],
   "sub": "Round 2 of an autumn sale brief: films with a story, more angles, a little stop-motion. Every step, in the order it happened.",
   "opening": {
     "head": "The piece",
@@ -59,9 +56,9 @@
       "id": "ask",
       "kick": "The ask",
       "nav": "Ask",
-      "title": ["One message.", "The brief answered the rest."],
-      "sub": "The skill has four standing questions. This time the brief and the message answered all four, so Claude asked none.",
-      "thought": ["Reread the brief and round 1", "All four questions answered", "Asked nothing"],
+      "title": ["Claude asked nothing this time:", "the brief had answered all four questions."],
+      "sub": "The brief asked for autumn sale ads in Dutch with complete creative freedom, and this round for films with a story; between it and one message, all four of the skill's questions were answered.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
@@ -123,13 +120,9 @@
       "id": "look",
       "kick": "Look first",
       "nav": "Look",
-      "title": ["The brief's references.", "Then round 1, honestly."],
-      "sub": "Round 1 was right on every rule and looked like one template four times. The paper film described autumn instead of telling a story.",
-      "thought": [
-        "Four references, four layouts",
-        "Round 1: one template, four times",
-        "A film with no story"
-      ],
+      "title": ["First the brief's four references,", "then what round 1 got wrong."],
+      "sub": "Round 1 followed every rule and still looked like one template used four times, and the paper film described autumn without telling a story.",
+      "thought": [],
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
         "head": "Before round 2",
@@ -160,7 +153,7 @@
               },
               {
                 "kind": "list",
-                "label": "Round 1, honestly",
+                "label": "What round 1 missed",
                 "items": [
                   {
                     "b": "Right on every rule"
@@ -189,9 +182,9 @@
       "id": "idea",
       "kick": "The idea",
       "nav": "Idea",
-      "title": ["Two films, two hinges.", "Both a joke the persona would tell."],
-      "sub": "A: autumn walks into the house, and the household's boss shrugs. B: the room tidies itself, and the whole range hops in, because the offer is on everything.",
-      "thought": ["A sale as a joke she would tell", "A: autumn walks in", "B: the room resets"],
+      "title": ["Two films, each built on a joke", "the persona would tell."],
+      "sub": "In A, autumn walks into the house and the household's boss shrugs; in B, the room tidies itself and the whole range hops in, because the offer is on everything.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
@@ -241,10 +234,6 @@
             ]
           ]
         }
-      },
-      "call": {
-        "who": "Brief owner",
-        "said": "Complete creative freedom"
       }
     },
     {
@@ -252,13 +241,9 @@
       "id": "house",
       "kick": "One house",
       "nav": "House",
-      "title": ["Draw the house once.", "Then shoot it six ways."],
-      "sub": "Four stills were drawn first and attached to every keyframe after, so every cut is the same house, dog and person.",
-      "thought": [
-        "Hall, room, dog, her: drawn first",
-        "All four on every keyframe",
-        "Her room redrawn once"
-      ],
+      "title": ["The house was drawn once,", "then shot six ways."],
+      "sub": "Four stills came first (the hall, the room, the dog and her) and went into every keyframe after, so every cut shows the same house.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
@@ -316,9 +301,9 @@
       "id": "animate",
       "kick": "Animate",
       "nav": "Animate",
-      "title": ["Two models on the hard shots.", "Keep one, show what went."],
-      "sub": "Kling with start and end frames, Veo for wind and water, Seedance as a second opinion. The film uses one or two seconds of each take.",
-      "thought": ["Two models on the hard shots", "Veo for the door", "The dog redrawn close"],
+      "title": ["The hard shots went to two models,", "and only one take stayed."],
+      "sub": "Kling got start and end frames, Veo the wind and water, Seedance a second opinion, and the film uses a second or two of each take.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
@@ -362,13 +347,9 @@
       "id": "product",
       "kick": "The product",
       "nav": "Product",
-      "title": ["No model draws a Samako machine.", "They hop in as photographs."],
-      "sub": "Every machine is the photographer's original with its background removed. On screen it only moves across the frame, on twos, landing on the beat.",
-      "thought": [
-        "No model draws the product",
-        "The photographer's originals",
-        "Moved only on the beat"
-      ],
+      "title": ["No model draws a Samako machine;", "they hop in as photographs."],
+      "sub": "Each machine is the photographer's original with its background removed, and it only moves across the frame, on twos, landing on the beat.",
+      "thought": [],
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
         "head": "The range",
@@ -418,13 +399,9 @@
       "id": "cut",
       "kick": "The cut",
       "nav": "Cut",
-      "title": ["Every beat on a frame.", "Cuts land where the music hits."],
-      "sub": "The tempo was picked so the maths is exact. In film A, the track's own one-beat silence falls on her sip.",
-      "thought": [
-        "144 bpm: a beat is 10 frames",
-        "Cuts on measured kicks",
-        "Silence lands on the sip"
-      ],
+      "title": ["Every cut sits on a beat,", "and the silence falls on her sip."],
+      "sub": "At 144 bpm a beat is exactly 10 frames, and in film A the track's own one-beat silence lands on her sip of tea.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
@@ -518,13 +495,9 @@
       "id": "make",
       "kick": "Making it",
       "nav": "Make",
-      "title": ["Footage from the models.", "Everything else in code."],
-      "sub": "The video models made the house come alive. Code put the type, the product, the stop-motion and the grain on every one of the 360 frames.",
-      "thought": [
-        "Footage from models, the rest code",
-        "12 or 8 poses a second",
-        "Type set in code"
-      ],
+      "title": ["The models made the footage,", "and code did everything else."],
+      "sub": "The video models brought the house to life, and code added the type, the product, the stop-motion and the grain on all 360 frames.",
+      "thought": [],
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
         "head": "The engine",
@@ -572,13 +545,9 @@
       "id": "check",
       "kick": "Check",
       "nav": "Check",
-      "title": ["A stranger watched it.", "Three times, cold."],
-      "sub": "A Gemini model watched each film with sound, three times, and said what it is for and what it read. Only what all three runs agreed on was acted on.",
-      "thought": [
-        "Three cold reads a film",
-        "What is it for, never what's wrong",
-        "Acted only on 3 of 3"
-      ],
+      "title": ["A model that never saw the brief", "watched each film three times."],
+      "sub": "Each time it said what the film was for and what it read, and only what all three runs agreed on got fixed.",
+      "thought": [],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
       "frame": {
@@ -605,7 +574,7 @@
               "v": "Got both stories every time; could not name the brand"
             },
             {
-              "k": "So",
+              "k": "The fix",
               "v": "Both end cards carry the logo"
             },
             {
@@ -621,8 +590,8 @@
       "id": "next",
       "kick": "Next time",
       "nav": "Next time",
-      "title": ["Now it's in the skill.", "Just ask."],
-      "sub": "Everything in this case is the visuals skill's motion lane, in Samako's own plugin. Open a chat and say what you want.",
+      "title": ["Now it's part of the skill,", "so the team just asks."],
+      "sub": "Everything in this case lives in the motion lane of the visuals skill, in Samako's own plugin; open a chat and say what you want.",
       "thought": [],
       "source": "story.json (autumn-02 showtell)",
       "frame": {

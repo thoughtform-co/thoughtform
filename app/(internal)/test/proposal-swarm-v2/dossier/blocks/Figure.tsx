@@ -7,6 +7,7 @@ import { Flow } from "./Flow";
 import { Ledger } from "./Ledger";
 import { Pairs } from "./Pairs";
 import { Plates } from "./Plates";
+import { Screen } from "./Screen";
 import { Track } from "./Track";
 
 /** One framed figure, by kind. Server; only the film's switch is client. */
@@ -42,6 +43,8 @@ export function FigureView({ n, framed, still }: { n: number; framed: Framed; st
         <Ledger figure={f} />
       ) : f.kind === "field" ? (
         <Field figure={f} />
+      ) : f.kind === "screen" ? (
+        <Screen figure={f} />
       ) : (
         <Flow figure={f} />
       )}

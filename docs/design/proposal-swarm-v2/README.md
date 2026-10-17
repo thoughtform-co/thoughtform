@@ -540,3 +540,120 @@ much of the same".
 - The logos live in `public/test/proposal-swarm-v2/logos/`, which the public
   repo will carry once pushed; all three marks are already public on the
   clients' own sites and ads.
+
+# Round 08 (2026-10-17): one type rule for the case head, the copy in his voice
+
+## Why
+
+The owner, on round 07: "don't like the font inconsistencies between the brand
+the project title and workstream; please give me different options and then
+also run the thoughtform tov to rewrite everything so it's less AI slop and
+really feels like a logical flow".
+
+## What it does
+
+- **Four case heads**, switchable with `?head=a|b|c|d` and the lab bar's Head
+  set (default c):
+  - a: one mono line, client / project / team, the figure heads' voice;
+  - b: one sans line at one size, the team a shade quieter;
+  - c: title-led: a mono row (logo, the client for a mark, the team) over the
+    project as the only sans; sans for what was made, mono for who;
+  - d: spec rows, mono keys CLIENT / PROJECT / TEAM, every value one sans size.
+  Stills in `round-08/heads/`.
+- **The copy, through the thoughtform-tov skill** (translate, then voice):
+  every step is now one sentence that follows from the last, split where the
+  quieter half starts; one longer line under it with its turn inside; claims
+  that state a fact. Gone: the two-beat taglines ("Look. Fix. Look again.",
+  "Generate a little. Never redraw the product.", "The claim, made audible."),
+  the slogan repeated across title, claim and figure ("One shape, three
+  jobs"), the candor frame ("Round 1, honestly"), the replacement contrasts
+  ("Measured, not guessed.", "What is it for, never what's wrong"). Quotes,
+  numbers and roles are unchanged.
+
+## Checked
+
+- tsc, eslint clean; vitest 41 of 41 in the lab suite.
+- Stills in `round-08/` at 1920×1247, 1280×720, 390×844: the held column fits
+  at all three (tight at 1280×720 on the longest Samako line).
+
+## Known and not fixed
+
+- The site's copy law fails any currency; Loop's $27 stays in the lab, as it
+  shipped in the Loop breakdown. "Self-sufficient" in the interstitial line is
+  the owner's own wording and stays.
+
+# Round 09 (2026-10-17): one scroll through the three cases
+
+## Why
+
+The owner, on round 08: "I don't think we need that eyebrow with the
+different clients here. We need another subtle way of doing it … when you
+finish with Loop 1 client, you immediately scroll into the other one, where
+the pattern and the gradient also change."
+
+## What it does
+
+- **No client row above the cases.** Loop, Samako and Suri follow each other
+  in one scroll; each case's held column leaves with its last figure and the
+  next case's arrives. "Next case" is gone with the switch.
+- **The quiet index**: `01 02 03` at the far end of the step dashes, the case
+  in view lit with a datum underline; each number is a link to its case.
+- **Each case brings its own field**, sticky in the case's grid row (no
+  height of its own) and faded at its top and bottom, so the seam is a dark
+  band where the colour and the pattern change: Loop violet dots on two
+  square lattices, Samako stone grains on a hex lattice, Suri blue points on a
+  fine grid with a brighter point every fifth.
+- `?case=` and `#case-…` open on a case further down.
+
+## Checked
+
+- tsc, eslint clean; vitest 41 of 41 in the lab suite.
+- Stills in `round-09/` (every figure at 1920×1247, 1280×720, 390×844) and
+  `round-09/scroll/` (the top of the run, the seams into Samako and Suri).
+
+# Round 10 (2026-10-17): one thing said once, and Suri as what was built
+
+## Why
+
+The owner, on round 09: "We don't need to show the briefing twice … let's
+make everything as clear as possible at a glance. Do a full sweep to make
+sure we're only conveying information that's relevant. This should actually
+convince clients." And on Suri: "we've actually built an interface … that
+cluster map should maybe be the second or third slide because that's what we
+did immediately. After that we built an interface … Please make it a bit more
+visible because it's too abstract. This is really a sales page."
+
+## What it does
+
+- **The header is the result**: `01 · THE RESULT`, the title, three numbers.
+  The brief quote is gone from it: Loop's lives in its Ask figure, Samako's
+  in its Ask line, Suri's was the title again.
+- **The sweep**: a line stays only if the title, the line under it and the
+  figure do not already say it. Loop keeps three calls and three facts across
+  twelve steps; Samako keeps the one call that changed the work. Stats labels
+  say plainly what the number is.
+- **Suri, rebuilt** from the DAM repo (suri-intelligence-architect/suri-dam):
+  - opens on the library itself: a new figure kind, `screen`, draws the
+    search screen from the app's own layout and labels (sidebar, the question
+    "hands only close-up in the bathroom", Ask, filters, results with the
+    best match lit at its matching moment); pictures are grain, never
+    footage, as the repo requires;
+  - 02 the stall, 03 the map (read and grouped: what was done first),
+    04 how a search runs, 05 one clip open in review (scenes as the scrubber,
+    a person's note pinned, status, what the model read), 06 twelve releases
+    merged 13 to 16 October; Monday and Figma move to the full cut, the read
+    ledger folds into the map.
+
+## Checked
+
+- tsc, eslint clean; vitest 92 of 92 with the swarm suite.
+- Stills in `round-10/` at 1920×1247, 1280×720, 390×844.
+
+## Known and not fixed
+
+- Real screenshots of the DAM would sell harder than the drawn screens, but
+  the repo forbids publishing its frames, map or judgments without Suri's
+  clearance; the drawn screens stand in until then.
+- The capture script frames each case's first figure late now that all three
+  cases are on one page; the opening stills in `round-10/` show the second
+  step's words.

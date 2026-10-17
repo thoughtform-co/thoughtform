@@ -17,8 +17,8 @@ import { SwarmAct } from "../proposal-swarm/SwarmAct";
 import { CaseBar } from "./CaseBar";
 import { CaseDossier } from "./dossier/CaseDossier";
 import { CASES } from "./dossier/cases";
-import { cutCase } from "./dossier/story";
-import type { Cut } from "./dossier/types";
+import { cutCase, HEAD_DEFAULT, HEADS } from "./dossier/story";
+import type { Cut, Head } from "./dossier/types";
 import { DOSSIER_ENTRY, spliceCases } from "./splice";
 
 /* ⚠ STYLESHEET ORDER IS LOAD-BEARING: the swarm page's chain verbatim (itself
@@ -76,6 +76,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  *
  *   ?cut=short|full          5–6 chapters a case, or every chapter (short)
  *   ?case=loop|samako|suri   one case only, for review (all three)
+ *   ?head=a|b|c|d            the case head's type, while the owner picks (c)
  *   ?still=1                 nothing rides a clock, posters stand: a still
  *   ?fly ?n ?mark ?at        the swarm's own switches, passed through
  */
@@ -100,6 +101,9 @@ export default async function ProposalSwarmV2Route({
   const cut = (CUTS as readonly string[]).includes(one(q.cut) ?? "")
     ? (one(q.cut) as Cut)
     : "short";
+  const head = (HEADS as readonly string[]).includes(one(q.head) ?? "")
+    ? (one(q.head) as Head)
+    : HEAD_DEFAULT;
   const only = one(q.case);
   const cases = CASES.map((c) => cutCase(c, cut));
 
@@ -180,7 +184,7 @@ export default async function ProposalSwarmV2Route({
         ariaLabel={DOSSIER_ENTRY.label}
         motion={motion}
       >
-        <CaseDossier cases={cases} initial={only} still={still} />
+        <CaseDossier cases={cases} initial={only} head={head} still={still} />
       </ArcBeat>
 
       <ArcSectionRenderer
@@ -188,7 +192,7 @@ export default async function ProposalSwarmV2Route({
         motion={motion}
         indexOffset={spliced.tailOffset}
       />
-      {still ? null : <CaseBar cut={cut} fly={fly} n={n} mark={mark} />}
+      {still ? null : <CaseBar cut={cut} head={head} fly={fly} n={n} mark={mark} />}
     </ArcShell>
   );
 }

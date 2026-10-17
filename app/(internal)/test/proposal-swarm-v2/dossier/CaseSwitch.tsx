@@ -1,113 +1,44 @@
 "use client";
 
-import { type CSSProperties, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 
 import { CaseRun, type Run } from "./CaseRun";
-
-/* the address's hash, read as a store: "" on the server and while hydrating */
-const onHash = (tell: () => void) => {
-  window.addEventListener("hashchange", tell);
-  return () => window.removeEventListener("hashchange", tell);
-};
-const hashNow = () => window.location.hash;
-const hashOnServer = () => "";
+import type { Head } from "./types";
 
 /**
- * Which case is shown. One at a time, switched in place (owner, 2026-10-17:
- * "I think we also need a toggle somewhere, or a bar, that allows us to
- * switch between clients"), so the page is one case long and the reader
- * picks the next: from the row of client names above the case, or from
- * "Next case" at the foot of each case.
+ * The cases, one after the other in a single scroll (owner, 2026-10-17: "when
+ * you finish with Loop 1 client, you immediately scroll into the other one,
+ * where the pattern and the gradient also change"). No row of client names
+ * above them: each case's held column carries a quiet index of the three
+ * beside its step dashes, and each case brings its own field.
  *
- * The case in view is in the address (`#case-samako`), so a link opens on it;
- * the server's `?case=` picks the first one shown.
+ * The case in view is in the address (`#case-samako`), which the browser
+ * scrolls to by itself; the server's `?case=` opens on a case the same way.
  */
 export function CaseSwitch({
   runs,
-  tints,
   initial,
+  head,
   still,
 }: {
   runs: readonly Run[];
-  /** Each case's colour for the field behind it (rgb triples). */
-  tints: Readonly<Record<string, { dots: string; glow: string }>>;
   initial: string;
+  /** The case head's type (`?head=`), read by the sheet. */
+  head: Head;
   still: boolean;
 }) {
-  /* a link to one case opens on it; a reader's pick outranks the link */
-  const hash = useSyncExternalStore(onHash, hashNow, hashOnServer);
-  const [chosen, setChosen] = useState<string | null>(null);
-  const [moved, setMoved] = useState(0);
-  const active = chosen ?? runs.find((r) => `#${r.id}` === hash)?.key ?? initial;
-
-  /* after a switch, start the case from its piece */
+  /* `?case=` names a case further down: open there, once */
   useEffect(() => {
-    if (!moved) return;
-    /* the row of clients, so the case starts with its name in view */
-    const run = document.getElementById(`case-${active}`);
-    const el = run?.parentElement?.querySelector(".csd-switchbar") ?? run;
-    if (!el) return;
-    const calm = still || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ block: "start", behavior: calm ? "auto" : "smooth" });
-  }, [moved, active, still]);
+    if (initial === runs[0]?.key || window.location.hash) return;
+    document.getElementById(`case-${initial}`)?.scrollIntoView({ block: "start" });
+  }, [initial, runs]);
 
-  const choose = (key: string) => {
-    if (key === active) return;
-    setChosen(key);
-    setMoved((m) => m + 1);
-    window.history.replaceState(null, "", `#case-${key}`);
-  };
-
-  const i = Math.max(
-    0,
-    runs.findIndex((r) => r.key === active)
-  );
-  const run = runs[i];
-  const after = runs.length > 1 ? runs[(i + 1) % runs.length] : undefined;
-
-  const clients = (
-    <ol className="csd-clients" aria-label="The cases">
-      {runs.map((r) => (
-        <li key={r.key}>
-          <button
-            type="button"
-            aria-pressed={r.key === active}
-            data-on={r.key === active ? "" : undefined}
-            onClick={() => choose(r.key)}
-          >
-            <span className="csd-clients__n">{r.ordinal}</span>
-            <span className="csd-clients__name">{r.client}</span>
-          </button>
-        </li>
-      ))}
-    </ol>
-  );
-
-  /* the clients sit above the case, outside the held column, so the column
-     stays the Loop story's one group; on a phone the row is held at the top.
-     Behind it all, the client's field: a gradient of particles in its colour,
-     held to the screen while the case scrolls (owner, 2026-10-17: "slightly
-     changed the background color using a gradient particle system to match
-     the client … That way it doesn't feel like too much of the same"). */
-  const tint = tints[run.key];
+  const index = runs.map((r) => ({ id: r.id, ordinal: r.ordinal, client: r.client }));
   return (
-    <div className="csd" data-still={still ? "" : undefined}>
-      <div
-        key={`field-${run.key}`}
-        className="csd-field-bg"
-        aria-hidden="true"
-        style={
-          tint
-            ? ({ "--tint-dots": tint.dots, "--tint-glow": tint.glow } as CSSProperties)
-            : undefined
-        }
-      />
-      <div className="csd-switchbar">{clients}</div>
-      <CaseRun
-        key={run.key}
-        run={run}
-        next={after ? { run: after, go: () => choose(after.key) } : undefined}
-      />
+    <div className="csd" data-head={head} data-still={still ? "" : undefined}>
+      {runs.map((run, i) => (
+        <CaseRun key={run.key} run={run} index={index} place={i} />
+      ))}
     </div>
   );
 }
