@@ -87,7 +87,7 @@ method that scales with compute and data beats the clever one we built by hand.
 
 ### 03 · Intelligence as the interface (9:00)
 
-*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it: "AI is both the tool and the builder of the tool."*
+*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it: "AI will become the interface."*
 
 Everything we just saw is the foundation now. It isn't the thing on top any more.
 
@@ -107,9 +107,9 @@ program, and it isn't one.
 
 ### 04 · An intelligence (11:30)
 
-*The brain turns to face the room and the two cards land; let them before you speak.*
+*The brain turns to face the room and the two glass cards land; let them before you speak. The line over it: "But AI isn't software. It sits between a tool and a collaborator."*
 
-So what is it? AI is an intelligence that sits in the middle.
+So what is it? But AI isn't software. It sits between a tool and a collaborator.
 
 On one side, a tool: it does what you tell it. Resize, translate, export. That's the half routed
 like a circuit board.

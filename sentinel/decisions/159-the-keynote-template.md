@@ -282,10 +282,36 @@ split brain and runs; the orbits crossing in depth round the front view; the sho
 display's smile, read close; the brain leaning with the pointer at the screen's two corners. No
 console error.
 
+## U4 · Two lines of his, planets, and a smile of particles (2026-10-16, owner: "looks good")
+
+- **The lines.** 03's head over the brain is "AI will become the interface." ("'AI is both the
+  tool and the builder of the tool.' It's too long"); 04's line is "But AI isn't software. It sits
+  between a tool and a collaborator." in place of the Ghent "AI is an intelligence that sits in the
+  middle." The cards and the drawings stay the talk's. The script follows.
+- **Planets on the orbits** ("we can do a bit more with the orbits. Maybe add some subtle light
+  effects. We have these orbits but also these dots, so make them a bit more like planets or
+  artifacts"). Each node is a small body: a radial fill lit from the upper left fading at its
+  limb, a soft glow round it, both scaled by depth; every third body on the inner orbit carries a
+  thin tilted ring, an artifact. Each ring's near run has a soft light under it and a glint, a
+  short bright arc travelling the ring ahead of its planets. The names stand clear of the bodies.
+- **The smile as particles** ("it doesn't really look like a smiley face so I don't want a frame
+  around it. I just want to use a particle system to create a smiley face"). The U3 display is
+  retired from the keynote (the option stays in `brainIso` unused; the Ghent faceplate is as it
+  was). The shoggoth is the whole brain, and the act draws the smile over it in the brain's own
+  front plane through `brainIsoPoint`, under the current camera: two closed, happy eyes and a
+  smile sampled along three arcs, each sample a gold particle with a soft glow, jittered once,
+  drifting a little and breathing. It gathers in after the tentacles.
+
+Verified: `tsc` and `eslint` clean; the keynote test (9), `ux-meetup` and `arcs-registry` green.
+Read headed in the owner's Chrome: 03 with the short head; 04 with his line over the glass
+cards; the orbits with their lit bodies, rings and glints; the shoggoth with the particle smile,
+no frame. No console error.
+
 ## Left open
 
 - Every line marked (proposal): 07's line, 13's spoken paragraph on semantic navigation, the
   wording of 06, 08's choice of quote, 09's title.
+- The planets' size and glow, the glint's pace and the smile's density are first values.
 - The orbits' angles and periods, the glass's two opacities, the lean's reach and the display's
   smile are first values; his to tune on the live page.
 - The hoses' make (U1) is a first cut against his two references; whether they want the glass

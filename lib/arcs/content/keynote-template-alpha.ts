@@ -66,6 +66,13 @@ function retitled(id: string, mind: string): Section {
   return { ...s, figure: { ...s.figure, mind } };
 }
 
+/** The middle beat at a new position with its line rewritten, the drawing and the cards the talk's. */
+function reworded(id: string, eyebrow: string, line: string): Section {
+  const s = ghent(id);
+  if (s.kind !== "figure" || s.figure.id !== "middle") throw new Error(`[keynote] #${id} is not the middle`);
+  return { ...s, eyebrow, figure: { ...s.figure, line } };
+}
+
 /** The rings' beat at a new position with its line rewritten, the drawing the talk's. */
 function relined(id: string, eyebrow: string, line: string): Section {
   const s = ghent(id);
@@ -119,12 +126,13 @@ export const KEYNOTE_ARC: ArcDef = {
     /* ── I · The reality. The Ghent beats, by reference. */
     ghent("the-claim"),
     ghent("capability"),
-    /* The owner, 2026-10-16 (U3): the interface beat says it itself, "AI is
-       both the tool and the builder of the tool", and the voice that
-       followed it ("AI can make any software, but isn't software itself.")
-       is gone, so the middle comes straight after. The drawing is the talk's. */
-    retitled("the-interface", "AI is both the tool and the builder of the tool."),
-    moved("an-intelligence", "04 · An intelligence"),
+    /* The owner, 2026-10-16 (U3, U4): the interface beat says it itself and
+       says it short ("AI will become the interface"); the voice that followed
+       it on the Ghent page is gone, so the middle comes straight after, and
+       the middle's line is his too: "But AI isn't software. It sits between a
+       tool and a collaborator." The drawings and the cards are the talk's. */
+    retitled("the-interface", "AI will become the interface."),
+    reworded("an-intelligence", "04 · An intelligence", "But AI isn’t software. It sits between a tool and a collaborator."),
     /* Owner, 2026-10-16: "reword it so it's more logical. It's like an
        intelligence that will soon absorb all knowledge work." The rings are
        the talk's; the line is his. */

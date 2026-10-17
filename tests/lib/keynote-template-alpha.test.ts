@@ -217,7 +217,16 @@ describe("the keynote template (ADR-159)", () => {
     const ghentIfc = ghent("the-interface");
     expect(ifc, "forked, not the talk's").not.toBe(ghentIfc);
     expect(ifc?.kind === "figure" && ifc.figure.id === "interface" ? ifc.figure.mind : "").toBe(
-      "AI is both the tool and the builder of the tool."
+      "AI will become the interface."
+    );
+    // U4: the middle's line is his, over the talk's cards.
+    const mid = here("an-intelligence");
+    const ghentMid = ghent("an-intelligence");
+    expect(mid?.kind === "figure" && mid.figure.id === "middle" ? mid.figure.line : "").toBe(
+      "But AI isn’t software. It sits between a tool and a collaborator."
+    );
+    expect(mid?.kind === "figure" && mid.figure.id === "middle" ? mid.figure.tool : null).toBe(
+      ghentMid?.kind === "figure" && ghentMid.figure.id === "middle" ? ghentMid.figure.tool : undefined
     );
     expect(ifc?.kind === "figure" && ifc.figure.id === "interface" ? ifc.figure.line : "").toBe(
       ghentIfc?.kind === "figure" && ghentIfc.figure.id === "interface" ? ghentIfc.figure.line : null
@@ -233,7 +242,6 @@ describe("the keynote template (ADR-159)", () => {
       ghentDesk?.kind === "figure" && ghentDesk.figure.id === "knowledge" ? ghentDesk.figure.layers : undefined
     );
     for (const [id, n] of [
-      ["an-intelligence", "04"],
       ["latent-space", "11"],
       ["prowl", "13"],
     ] as const) {
@@ -244,6 +252,8 @@ describe("the keynote template (ADR-159)", () => {
       );
       expect(a?.kind === "figure" ? a.eyebrow?.slice(0, 2) : "", `${id}: renumbered`).toBe(n);
     }
+    const midHere = here("an-intelligence");
+    expect(midHere?.kind === "figure" ? midHere.eyebrow?.slice(0, 2) : "", "the middle, renumbered").toBe("04");
     for (const id of ["the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
