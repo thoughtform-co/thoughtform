@@ -26,20 +26,22 @@ import { UX_MEETUP_ARC, UX_MEETUP_HERO, UX_MEETUP_PROOF_LEDES } from "./ux-meetu
  *                        interface (the tool and the builder of the tool) ·
  *                        04 an intelligence · 05 every desk
  *   II  a new kind of    06 a user that isn't a person · 07 the shoggoth ·
- *       user             08 already clean (Goodfire's line) · 09 their own
- *   III how you talk     10 a colleague · 11 latent space · 12 the median ·
- *       to it            13 the prowl · 14 a node in latent space
+ *       user             08 the layer (U5) · 09 already clean (Goodfire's
+ *                        line) · 10 their own
+ *   III how you talk     11 a colleague · 12 latent space · 13 the median ·
+ *       to it            14 the prowl · 15 a node in latent space
  * then the swarm chapter (the page's, not a beat), the corridor's thesis,
  * the Arc, the proof and the close.
  *
  * ⚠ GOODFIRE (Cammarata, "Neural Networks Are Already Clean", 2026) presses
  * on the Ghent shoggoth line, "something we don't fully understand": if nine
- * neurons in ten have one readable job, that line ages in months. So 07
+ * neurons in ten have one readable job, that line ages in months. So 06
  * asks about a user that isn't a person (his own phrase, the close of the
- * Ghent script), 08 says we are only beginning to read it, 09 is their line
- * in their words, credited, and 10 is his answer: legible, and still their
- * own. The swarm chapter after 15 is the picture of the node agents flow
- * through; its words are still the proposal's.
+ * Ghent script), 07 says we are only beginning to read it, 08 parts the
+ * brain and sets him between its halves as the layer (U5), 09 is their
+ * line in their words, credited, and 10 is his answer: legible, and still
+ * their own. The swarm chapter after 15 is the picture of the node agents
+ * flow through; its words are still the proposal's.
  *
  * Every line marked (proposal) in ADR-159 is his to rewrite.
  */
@@ -169,6 +171,25 @@ export const KEYNOTE_ARC: ArcDef = {
       },
     },
     {
+      /* The layer (owner, 2026-10-16, U5): "hide the mask on the shoggoth
+         for a bit. This is where I want to reveal the brain, move the two
+         parts left and right respectively, and place our Thoughtform-encoded
+         layer that we built for the swarm page in between ... I am the layer
+         between machine intelligence and human taste, context, and
+         expertise." The act parts the brain and prints the swarm page's
+         plate, with the mark cut into it, between its halves. */
+      id: "the-layer",
+      kind: "figure",
+      menuLabel: "The layer",
+      eyebrow: "08 · The layer",
+      figure: {
+        id: "layer",
+        alt: "The machine brain's two hemispheres moved apart, left and right, and between them a plate of gold dots with the Thoughtform mark cut into its top: the layer.",
+        title: "I am the layer.",
+        line: "Between machine intelligence and human taste, context and expertise.",
+      },
+    },
+    {
       /* Goodfire's own line, in their words and credited: the counter to
          the shoggoth, said by the people who looked inside. */
       id: "already-clean",
@@ -176,7 +197,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "Already clean",
-      eyebrow: "08 · Already clean",
+      eyebrow: "09 · Already clean",
       line: {
         pre: "The network is strange,",
         em: "but its strangeness repeats.",
@@ -191,7 +212,7 @@ export const KEYNOTE_ARC: ArcDef = {
       id: "their-own",
       kind: "figure",
       menuLabel: "Their own",
-      eyebrow: "09 · Their own",
+      eyebrow: "10 · Their own",
       figure: {
         id: "brain",
         alt: "The machine brain alone, no mask and no tentacles, its terraces lit, seen from the stack's own corner.",
@@ -211,13 +232,13 @@ export const KEYNOTE_ARC: ArcDef = {
       glitch: true,
       menuLabel: "A colleague",
       menuPrimary: true,
-      eyebrow: "10 · A colleague",
+      eyebrow: "11 · A colleague",
       line: {
         pre: "Treat it like a pretty smart colleague.",
         em: "Respect the intelligence.",
       },
     },
-    moved("latent-space", "11 · Latent space"),
+    moved("latent-space", "12 · Latent space"),
     {
       /* "AI often converges on the median, not because it is stupid or not
          creative, but because without context it just generates the most
@@ -227,7 +248,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "statement",
       glitch: true,
       menuLabel: "The median",
-      eyebrow: "12 · The median",
+      eyebrow: "13 · The median",
       line: {
         pre: "Without context it gives the most plausible answer.",
         em: "The median.",
@@ -236,7 +257,7 @@ export const KEYNOTE_ARC: ArcDef = {
     /* The wolf (owner: "that visual of a wolf ... to talk about the semantic
        navigation prompting techniques"): the film carries the point, the
        script says it. */
-    moved("prowl", "13 · The prowl"),
+    moved("prowl", "14 · The prowl"),
     {
       /* "Really try to convert yourself as a node in the latent space
          through which agents can flow. That's what I'm trying to do with
@@ -246,7 +267,7 @@ export const KEYNOTE_ARC: ArcDef = {
       variant: "quote",
       frame: "marks",
       menuLabel: "Yourself as a node",
-      eyebrow: "14 · A node in latent space",
+      eyebrow: "15 · A node in latent space",
       line: {
         pre: "Convert yourself into a node in latent space",
         em: "that agents flow through.",

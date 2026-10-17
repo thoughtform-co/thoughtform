@@ -54,7 +54,7 @@ interface Shape {
 /** The share of a site's own patch the mark must cover for the site to be
     the mark's. Its finest stroke, the ring's thin side, is under a site
     wide, so a site counts once a third of it is covered. */
-const COVER = 0.34;
+export const COVER = 0.34;
 /** How much of the plate the mark spans, by the reach of its furthest point
     from its middle against the plate's edge. */
 const REACH = 0.86;

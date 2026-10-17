@@ -2942,6 +2942,14 @@ export type ArcFigureSpec = {
       line: string;
     }
   | {
+      /** The layer (ADR-159 U5): the brain's two hemispheres parted, and the
+       *  Thoughtform layer, the swarm page's engraved plate, set between
+       *  them. Its words only; the drawing is the route's foundation act. */
+      id: "layer";
+      title: string;
+      line: string;
+    }
+  | {
       /** A film, full bleed and wordless (owner, 2026-10-15): the house's
        *  silent loop (`ArcClipLoop`) stretched edge to edge on its own beat. */
       id: "bleed";

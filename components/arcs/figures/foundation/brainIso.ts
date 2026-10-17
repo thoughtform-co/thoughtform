@@ -136,6 +136,13 @@ export function brainIsoRoots(view: BrainView = BRAIN_VIEW_ISO): Flat[] {
 }
 export const BRAIN_ISO_ROOTS: Flat[] = brainIsoRoots();
 
+/** A point in the brain's own axes (L across, F toward the viewer at the
+    isometric, z up), in screen px at scale 1, seen from `view` (ADR-159 U4:
+    the act draws the smile as particles in the face's plane). */
+export function brainIsoPoint(l: number, f: number, z: number, view: BrainView = BRAIN_VIEW_ISO): Flat {
+  return iso(W(l, f, z), projOf(view));
+}
+
 /** Points on the flanks, high, level and low, in screen px at scale 1. */
 export function brainIsoFlank(side: -1 | 1, j: number, view: BrainView = BRAIN_VIEW_ISO): Flat {
   const p = projOf(view);
@@ -417,6 +424,9 @@ export interface BrainIsoOptions {
   base?: BrainIsoBase;
   /** The camera (ADR-159 U2); absent, the stack's isometric. */
   view?: BrainView;
+  /** One hemisphere alone (ADR-159 U5: the act parts the two and sets the
+      layer between them); absent, both. */
+  only?: -1 | 1;
   /** How much of the brain is drawn, by build height: 0 nothing, 1 whole.
       The parts carry a level from the floor up (the base, the lower plates,
       the terraces, the machine on the crown, the mask), and a part is
@@ -433,7 +443,7 @@ interface Part {
 
 /** The brain at scale 1, as SVG markup (no `<svg>` wrapper). With the
     defaults the output is byte-identical to the picture before ADR-159 U1. */
-export function brainIsoMarkup({ split = false, mask = false, base = "manifold", reveal = 1, view = BRAIN_VIEW_ISO }: BrainIsoOptions = {}): string {
+export function brainIsoMarkup({ split = false, mask = false, base = "manifold", reveal = 1, view = BRAIN_VIEW_ISO, only }: BrainIsoOptions = {}): string {
   const p = projOf(view);
   const out: Part[] = [];
   const push = (level: number, ...svgs: string[]) => {
@@ -509,7 +519,8 @@ export function brainIsoMarkup({ split = false, mask = false, base = "manifold",
     return h;
   };
   const sides = ([-1, 1] as const).slice().sort((a, b) => depthOf(W(a * LC, 0, 0), p) - depthOf(W(b * LC, 0, 0), p));
-  out.push(...hemisphere(sides[0]), ...stem, ...hemisphere(sides[1]));
+  if (only !== undefined) out.push(...hemisphere(only));
+  else out.push(...hemisphere(sides[0]), ...stem, ...hemisphere(sides[1]));
   if (mask === "display") push(1, displayMarkup(p));
   else if (mask) push(1, maskMarkup(p));
   return out

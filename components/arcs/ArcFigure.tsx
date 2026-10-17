@@ -83,7 +83,7 @@ export function ArcFigure({
               ))}
             </div>
           ) : null}
-          {spec.id === "shoggoth" || spec.id === "brain" ? (
+          {spec.id === "shoggoth" || spec.id === "brain" || spec.id === "layer" ? (
             <p className="fa-static fa-static--line">
               <strong>{spec.title}</strong> {spec.line}
             </p>

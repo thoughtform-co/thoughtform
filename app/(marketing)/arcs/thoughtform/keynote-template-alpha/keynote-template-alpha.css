@@ -182,6 +182,7 @@
 .arc-root[data-act="live"] #an-intelligence .arc-fig__marks,
 .arc-root[data-act="live"] #every-desk .arc-fig__marks,
 .arc-root[data-act="live"] #shoggoth .arc-fig__marks,
+.arc-root[data-act="live"] #the-layer .arc-fig__marks,
 .arc-root[data-act="live"] #their-own .arc-fig__marks,
 .arc-root[data-act="live"] #latent-space .arc-fig__marks {
   visibility: hidden;
@@ -212,14 +213,14 @@ html[data-theme="light"] .fa__dots {
 .fa__quote {
   visibility: hidden;
 }
-/* The act's phases (ADR-159 U3): 0 the stack · 1 the interface (the tool
+/* The act's phases (ADR-159 U5): 0 the stack · 1 the interface (the tool
    and the builder of the tool) · 2 the middle · 3 every desk · 4 the alien
-   question (the brain behind the voice) · 5 the shoggoth · 6 Goodfire's
-   line (behind) · 7 their own · 8 latent space. */
+   question (the brain behind the voice) · 5 the shoggoth · 6 the layer ·
+   7 Goodfire's line (behind) · 8 their own · 9 latent space. */
 .fa[data-fa-phase="0"] .fa__stack,
 .fa[data-fa-phase="1"] .fa__stack,
 .fa[data-fa-phase="2"] .fa__cards,
-.fa[data-fa-phase="8"] .fa__quote {
+.fa[data-fa-phase="9"] .fa__quote {
   visibility: inherit;
 }
 .fa__cards {
@@ -470,7 +471,8 @@ html[data-theme="light"] .fa__dots {
 .fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
 .fa[data-fa-phase="5"] .fa__head,
-.fa[data-fa-phase="7"] .fa__head {
+.fa[data-fa-phase="6"] .fa__head,
+.fa[data-fa-phase="8"] .fa__head {
   visibility: inherit;
 }
 /* Over the stack: the title left on its own measure, as the hero's H1. */
@@ -504,14 +506,16 @@ html[data-theme="light"] .fa__dots {
   text-align: right;
 }
 /* Centred (owner: "I want to play around with centering it"): the middle,
-   the rings, the brain alone. */
+   the rings, the layer, the brain alone. */
 .fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
-.fa[data-fa-phase="7"] .fa__head {
+.fa[data-fa-phase="6"] .fa__head,
+.fa[data-fa-phase="8"] .fa__head {
   justify-items: center;
   text-align: center;
 }
-.fa[data-fa-phase="7"] .fa__line {
+.fa[data-fa-phase="6"] .fa__line,
+.fa[data-fa-phase="8"] .fa__line {
   max-width: 44ch;
 }
 /* The voices the brain stands behind (ADR-159 U1): their stage rises over

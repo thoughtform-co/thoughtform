@@ -307,10 +307,68 @@ Read headed in the owner's Chrome: 03 with the short head; 04 with his line over
 cards; the orbits with their lit bodies, rings and glints; the shoggoth with the particle smile,
 no frame. No console error.
 
+## U5 · The smile spread, the orbits still, the lean, the hoses machined, and the layer (2026-10-16, owner)
+
+His read of U4: the smile "too bloomy and too bright … spread the particles around a bit so it
+really feels like a face made out of particles"; the orbits "I really don't like … you can just
+restore the yellow ones. The rest is fine"; "the bottom part of the dotted-line orbits is cut
+off"; "when you move your mouse, I want to be able to rotate the brain a bit, not too much"; "in
+the orbits phase the orbit should remain still and it's only the brain that I want to be able to
+move"; the orbits appear "not with a simple opacity reveal, but by really starting to orbit
+around them with a nice speed ramp, not too fast"; the tentacles "a bit too organic … more
+robotic … wetware or biomechanical"; and a new beat after the shoggoth: "hide the mask … reveal
+the brain, move the two parts left and right respectively, and place our Thoughtform-encoded
+layer that we built for the swarm page in between … make sure it visually looks the same … I am
+the layer between machine intelligence and human taste, context, and expertise."
+
+- **The smile** is three particles a sample, spread wider, dimmer, its glow a tenth of U4's.
+- **The orbits.** The inner ring's bodies are the U3 squares again; the outer two keep their
+  planets. The three ellipses are fitted inside the scene's box, so no ring is cut at the floor.
+  Each ring appears by motion: it draws on round its own path as its bodies start to orbit, on a
+  ramp from still to pace, never an opacity. The rings hold on the brain's seat; only the brain
+  takes the pointer.
+- **The lean.** The pointer turns the camera, not the picture: a yaw of up to four steps and a
+  pitch of up to two, two degrees a step (`Cam { vi, py, pp }`), each lean a rasterised picture
+  of its own, primed once the brain stands at a station. The parallax under it is halved.
+- **The hoses** are machined: eleven joints a hose, a link with a gap between each, a gold core,
+  collar bars, a plug at the tip.
+- **The layer, a new beat `the-layer` after the shoggoth** (`08 · The layer`, the figure kind
+  `layer`, words only, like `brain`): "I am the layer." / "Between machine intelligence and
+  human taste, context and expertise." (his words). The act turns the brain back to the stack's
+  isometric; once it stands there its two hemispheres move apart along the brain's own L axis
+  (`brainIso`'s new `only: -1 | 1`, one hemisphere a picture; the defaults byte-identical) and the
+  swarm page's layer plate prints between them, row by row. **The plate is the swarm's own, dot
+  for dot**: its lattice from `proposal-swarm/engine/lattice.ts` (picked for a seat three tenths
+  of the act's width, so a laptop takes the 320px plate and a wide screen the 448px one), its
+  population `dots.ts`'s `layerPop` (the strata on the two near walls, every site of the top,
+  the rim lit), the mark cut into its top as `mark.ts` cuts it in `engrave` (`markCover`,
+  `lightOf`, `engraved`; `COVER` is exported for it), and its paint the engine's `paletteOf` in
+  the page's own tones over the ground the canvas sits on. Each hemisphere clears the plate's
+  edge by thirty-six brain units; the plate's top sits eighteen above the equator. Depth order
+  for this camera is far half, plate, near half: the plate's far corner lies over the far half's
+  foot and tucks behind the near half's dome (the first cut had it backwards and printed the
+  plate over the near half's deck; the two screen axes of the plan are sixty degrees apart, so
+  a plan clearance is not a screen clearance). No hoses, no smile.
+  Leaving the beat the halves close first and the camera holds the isometric until they have,
+  then turns. The beats after it renumber 09–15; the act's phases 6 the layer, 7 Goodfire's line
+  behind, 8 their own, 9 the field.
+- 06's line is left as it was: his to change ("it still needs context and taste").
+
+Verified: `tsc` and `eslint` clean; the keynote test (9), `ux-meetup` (11), `arcs-registry` (60)
+and `arc-terminal-markup` (9) green. Read headed in the owner's Chrome at 2131×1270: the
+orbits whole inside the box, the inner ring's squares back, the rings still under the pointer
+while the brain leans (`lean3,-1` in the readout); the shoggoth's spread smile over machined
+hoses; the layer beat with the 448px plate (`7:4 n4`, the readout `data-fa-layer`) between the
+parted halves, the far corner over the far half's foot and the near corner under the near
+half's dome; leaving it, the halves close at the isometric before the brain turns and recedes
+behind the Goodfire line; their own whole on its hoses after. No console error.
+
 ## Left open
 
-- Every line marked (proposal): 07's line, 13's spoken paragraph on semantic navigation, the
-  wording of 06, 08's choice of quote, 09's title.
+- Every line marked (proposal): 07's line, 08's spoken paragraph, 14's spoken paragraph on
+  semantic navigation, the wording of 06, 09's choice of quote, 10's title.
+- The layer's share of the act's width, the clearance and the plate's height are first values;
+  whether the hemispheres should keep their hoses in that beat is his read.
 - The planets' size and glow, the glint's pace and the smile's density are first values.
 - The orbits' angles and periods, the glass's two opacities, the lean's reach and the display's
   smile are first values; his to tune on the live page.

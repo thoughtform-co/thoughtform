@@ -1,7 +1,7 @@
 # AI is not software · the keynote template
 
 The spoken script for `/arcs/thoughtform/keynote-template-alpha` (ADR-159), beat by beat, in
-the order the page scrolls: hero, About, the eras, the talk's fourteen beats in three acts, the
+the order the page scrolls: hero, About, the eras, the talk's fifteen beats in three acts, the
 swarm chapter, then the thesis and the Arc. Cut from the Ghent script of 15 October
 (`2026-10-15-ux-meetup.md`) and the owner's dictation of 16 October; the beats the room heard
 keep their words, the new ones carry his words from the dictation where he said them and a
@@ -131,7 +131,7 @@ knowledge work.
 
 ---
 
-## II · A NEW KIND OF USER (≈8 min)
+## II · A NEW KIND OF USER (≈9 min)
 
 ### 06 · A user that isn't a person (14:00)
 
@@ -147,13 +147,24 @@ minds, and their societies. That would have sounded like science fiction a few m
 
 ### 07 · The shoggoth (15:30)
 
-*The tentacles unfurl; the display on its face lights a smile.*
+*The tentacles unfurl; a smile of gold particles gathers on its face.*
 
 The field has a meme for this: the shoggoth. A Lovecraftian thing, tentacles everywhere, and on
 the front a small smiling mask. The mask is the friendly chat window we put on it. What's behind
 it, we are only beginning to read. **(proposal)**
 
-### 08 · Already clean (16:30)
+### 08 · The layer (16:30)
+
+*The smile fades and the brain turns back to its corner. Once it stands still its two halves move
+apart, left and right, and the layer prints between them: the same plate of gold dots the swarm
+chapter stands on, the Thoughtform mark cut into its top. Let it finish before you speak.*
+
+Take the mask off for a second and look at what's actually there: two halves of a machine for
+thinking. And between them, this. That's where I work. I am the layer between machine
+intelligence and human taste, context and expertise. Everything in the rest of this talk is
+about what that layer is made of. **(proposal)**
+
+### 09 · Already clean (17:30)
 
 *Their words, credited. Read the attribution.*
 
@@ -167,7 +178,7 @@ repeats.
 
 So maybe the mask comes off. Maybe we get to read the thing behind it.
 
-### 09 · Their own (18:00)
+### 10 · Their own (19:00)
 
 *The brain alone: no mask, no tentacles. Let it boot.*
 
@@ -195,7 +206,7 @@ posture.
 
 ## III · HOW YOU TALK TO IT (≈9 min)
 
-### 10 · A colleague (20:30)
+### 11 · A colleague (21:30)
 
 *Let the line glitch in.*
 
@@ -205,7 +216,7 @@ where encoding your context matters so much.
 I've always said: if you treat AI like a pretty smart colleague, you get very far. If you respect
 the intelligence, you get pretty far.
 
-### 11 · Latent space (21:30)
+### 12 · Latent space (22:30)
 
 *Let the field drift; read the line in the middle.*
 
@@ -213,7 +224,7 @@ To see why, look inside. Inside these models, great artists become nodes in late
 vision tames the infinite into new beauty. Everything is in there: every artist, every style,
 every argument. Creatives aren't outside this. We're in it, as points the whole thing steers by.
 
-### 12 · The median (23:00)
+### 13 · The median (24:00)
 
 *Let the line glitch in.*
 
@@ -221,7 +232,7 @@ And yet, ask it something plain and you get something plain. AI converges on the
 because it's stupid, and not because it isn't creative: without context it generates the most
 plausible answer, and the most plausible answer is the middle of that field.
 
-### 13 · The prowl (24:00)
+### 14 · The prowl (25:00)
 
 *The film, full bleed, no words. Let it run a few seconds before you speak over it.*
 
@@ -233,7 +244,7 @@ navigation. You don't describe the output. You give it coordinates. **(proposal)
 That's also why the context matters more than the model. The models are smart enough. What they
 lack is your context: where in the field you live, what good looks like to you.
 
-### 14 · A node in latent space (26:00)
+### 15 · A node in latent space (27:00)
 
 *The voice. Read it slowly.*
 

@@ -8,6 +8,7 @@ import {
   BRAIN_VIEW_ISO,
   brainIsoBox,
   brainIsoFlank,
+  brainIsoPoint,
   brainIsoRoots,
   brainIsoSvg,
   type BrainIsoBox,
@@ -15,6 +16,11 @@ import {
   type BrainView,
 } from "@/components/arcs/figures/foundation/brainIso";
 import type { Flat } from "@/components/arcs/figures/foundation/isoKit";
+import { latticeAt, pickLattice } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
+import { COVER, engraved, lightOf, markCover } from "@/app/(internal)/test/proposal-swarm/engine/mark";
+import { paletteOf, parseRgb, type Rgb, type Tones } from "@/app/(internal)/test/proposal-swarm/engine/palette";
+import { PLATES, SIDE as PLATE_SIDE } from "@/app/(internal)/test/stack-forms/model";
+import { kOf, type Lattice, px as sitePx, py as sitePy, STYLE, tierSizes } from "@/app/(internal)/test/stack-forms/swarm/dots";
 import { type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
@@ -142,17 +148,29 @@ const POSES: Record<number, Pose> = {
   3: { x: 720, y: 360, s: 0.74, a: 1 },
   4: RECEDE,
   5: { x: 720, y: 330, s: 0.78, a: 1 },
-  6: RECEDE,
+  // the layer (U5): the two hemispheres parted, the plate between them
+  6: { x: 720, y: 390, s: 0.78, a: 1 },
+  7: RECEDE,
   // the brain alone (ADR-159), centred under its head
-  7: { x: 720, y: 400, s: 0.82, a: 1 },
+  8: { x: 720, y: 400, s: 0.82, a: 1 },
 };
-/** Which picture each beat shows: whole, split (the middle), masked (the shoggoth). */
-type Picture = "plain" | "split" | "mask";
-const PICTURE: Record<number, Picture> = { 1: "plain", 2: "split", 3: "plain", 4: "plain", 5: "mask", 6: "plain", 7: "plain" };
+/** Which picture each beat shows: whole, or split (the middle). The shoggoth
+    is the whole brain with its smile drawn live over it (U4), never a mask;
+    the layer beat draws the whole brain as its two halves (`left`, `right`). */
+type Picture = "plain" | "split" | "mask" | "left" | "right";
+const PICTURE: Record<number, Picture> = { 1: "plain", 2: "split", 3: "plain", 4: "plain", 5: "plain", 6: "plain", 7: "plain", 8: "plain" };
+/** The layer beat (U5). The plate is picked the swarm's way, for a seat
+    this share of the act's width; each hemisphere moves out along the
+    brain's own L axis until it stands `LAYER_CLEAR` brain units past the
+    plate's edge; the plate's top sits `LAYER_Z` brain units above the
+    brain's equator, between the two. */
+const LAYER_SHARE = 0.3;
+const LAYER_CLEAR = 36;
+const LAYER_Z = 18;
 /** How far the pointer moves the brain (owner, 2026-10-16: "when you move
     your mouse, the brain moved slightly ... just enough for a little fun"),
     in viewBox px at the brain's scale 1. */
-const PARALLAX = { x: 18, y: 11 } as const;
+const PARALLAX = { x: 12, y: 8 } as const;
 /** The manifest: the plates from the floor to the crown, in this many
     steps over this many seconds. */
 const STEPS = 12;
@@ -168,7 +186,7 @@ const MANIFEST = 0.9;
  * station on the path; the brain eases along it by the clock, and the
  * picture is rasterised at `VIEW_STEPS` frames a leg.
  */
-const VIEW_T: Record<number, number> = { 1: 0, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2 };
+const VIEW_T: Record<number, number> = { 1: 0, 2: 2, 3: 2, 4: 2, 5: 2, 6: 0, 7: 2, 8: 2 };
 const VIEW_STEPS = 12;
 function viewOf(t: number): BrainView {
   const u = Math.max(0, Math.min(2, t));
@@ -176,18 +194,41 @@ function viewOf(t: number): BrainView {
   const w = u - 1;
   return { azimuth: BRAIN_VIEW_FRONT.azimuth, elevation: BRAIN_VIEW_ISO.elevation + (BRAIN_VIEW_FRONT.elevation - BRAIN_VIEW_ISO.elevation) * w };
 }
-const viewAt = (vi: number): BrainView => viewOf(vi / VIEW_STEPS);
-/** The brain's bounds and roots at a frame of the path, once each. */
-const BOXES = new Map<number, BrainIsoBox>();
-const ROOTS = new Map<number, Flat[]>();
-function boxAt(vi: number): BrainIsoBox {
-  let b = BOXES.get(vi);
-  if (!b) BOXES.set(vi, (b = brainIsoBox(viewAt(vi))));
+/**
+ * A camera: a frame of the path, and the pointer's lean (ADR-159 U5, owner:
+ * "when you move your mouse, I want to be able to rotate the brain a bit,
+ * not too much"): the yaw and pitch steps the pointer adds, `LEAN_STEP`
+ * degrees each, at most `LEAN_YAW` and `LEAN_PITCH` steps either way, only
+ * once the brain stands whole at a station of the path. Each lean is a
+ * picture of its own, rasterised ahead a couple a frame.
+ */
+interface Cam {
+  vi: number;
+  py: number;
+  pp: number;
+}
+const LEAN_STEP = 2;
+const LEAN_YAW = 4;
+const LEAN_PITCH = 2;
+const FLAT = (vi: number): Cam => ({ vi, py: 0, pp: 0 });
+const camKey = (c: Cam) => `${c.vi}|${c.py}|${c.pp}`;
+const viewAt = (c: Cam): BrainView => {
+  const v = viewOf(c.vi / VIEW_STEPS);
+  return { azimuth: v.azimuth + c.py * LEAN_STEP, elevation: v.elevation + c.pp * LEAN_STEP };
+};
+/** The brain's bounds and roots at a camera, once each. */
+const BOXES = new Map<string, BrainIsoBox>();
+const ROOTS = new Map<string, Flat[]>();
+function boxAt(c: Cam): BrainIsoBox {
+  const key = camKey(c);
+  let b = BOXES.get(key);
+  if (!b) BOXES.set(key, (b = brainIsoBox(viewAt(c))));
   return b;
 }
-function rootsAt(vi: number): Flat[] {
-  let r = ROOTS.get(vi);
-  if (!r) ROOTS.set(vi, (r = brainIsoRoots(viewAt(vi))));
+function rootsAt(c: Cam): Flat[] {
+  const key = camKey(c);
+  let r = ROOTS.get(key);
+  if (!r) ROOTS.set(key, (r = brainIsoRoots(viewAt(c))));
   return r;
 }
 /** The middle beat's two cards, in the viewBox. */
@@ -204,7 +245,7 @@ type Card = {
 
 /** The act's beats in page order; their index is the act's phase. The
     voices between the drawn beats are the act's too, so the brain holds. */
-const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;
+const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "the-layer", "already-clean", "their-own", "latent-space"] as const;
 
 function findSpecs() {
   const s = IDS.map((id) => KEYNOTE_ARC.sections.find((x) => x.id === id));
@@ -218,11 +259,13 @@ function findSpecs() {
   const mid = fig(2, "middle");
   const know = fig(3, "knowledge");
   const shog = fig(5, "shoggoth");
-  const own = fig(7, "brain");
-  const lat = fig(8, "latent");
+  const lay = fig(6, "layer");
+  const own = fig(8, "brain");
+  const lat = fig(9, "latent");
   const middle = mid && mid.id === "middle" ? mid : null;
   const knowledge = know && know.id === "knowledge" ? know : null;
   const shoggoth = shog && shog.id === "shoggoth" ? shog : null;
+  const layer = lay && lay.id === "layer" ? lay : null;
   const theirOwn = own && own.id === "brain" ? own : null;
   const latent = lat && lat.id === "latent" ? lat : null;
   const eyebrows = s.map((x) => (x?.kind === "figure" ? (x.eyebrow ?? x.head?.eyebrow ?? "") : ""));
@@ -234,6 +277,7 @@ function findSpecs() {
     { title: knowledge?.line ?? "", line: "" },
     none,
     { title: shoggoth?.title ?? "", line: shoggoth?.line ?? "" },
+    { title: layer?.title ?? "", line: layer?.line ?? "" },
     none,
     { title: theirOwn?.title ?? "", line: theirOwn?.line ?? "" },
     none,
@@ -304,12 +348,19 @@ export function FoundationAct() {
        everything round it keeps its order. */
     const pictures = new Map<string, HTMLImageElement | null>();
     let gone = false;
-    const pictureOf = (kind: Picture, step = STEPS, vi = 0): HTMLImageElement | null => {
-      const key = `${kind}|${step}|${vi}|${light}`;
+    const pictureOf = (kind: Picture, step = STEPS, cam: Cam = FLAT(0)): HTMLImageElement | null => {
+      const key = `${kind}|${step}|${camKey(cam)}|${light}`;
       if (pictures.has(key)) return pictures.get(key) ?? null;
       pictures.set(key, null);
       const img = new Image();
-      const opts: BrainIsoOptions = { base: "tendrils", split: kind === "split", mask: kind === "mask" ? "display" : false, reveal: step / STEPS, view: viewAt(vi) };
+      const opts: BrainIsoOptions = {
+        base: "tendrils",
+        split: kind === "split",
+        mask: false,
+        reveal: step / STEPS,
+        view: viewAt(cam),
+        only: kind === "left" ? -1 : kind === "right" ? 1 : undefined,
+      };
       const url = URL.createObjectURL(new Blob([brainIsoSvg({ ...opts, light, ink: tone.ink, gold: tone.gold, lit: tone.lit, green: tone.green })], { type: "image/svg+xml" }));
       img.onload = () => {
         URL.revokeObjectURL(url);
@@ -318,31 +369,80 @@ export function FoundationAct() {
       img.src = url;
       return null;
     };
-    /** The highest build step loaded at or under `step`, at a frame. */
-    const readyUnder = (kind: Picture, step: number, vi: number): HTMLImageElement | null => {
+    /** The highest build step loaded at or under `step`, at a camera. */
+    const readyUnder = (kind: Picture, step: number, cam: Cam): HTMLImageElement | null => {
       for (let k = step; k >= 1; k--) {
-        const img = pictureOf(kind, k, vi);
+        const img = pictureOf(kind, k, cam);
         if (img) return img;
       }
       return null;
     };
-    /** Every step of a picture at a frame, asked for ahead of its manifest. */
-    const prime = (kind: Picture, vi: number) => {
-      for (let k = 1; k <= STEPS; k++) pictureOf(kind, k, vi);
+    /** Every step of a picture at a camera, asked for ahead of its manifest. */
+    const prime = (kind: Picture, cam: Cam) => {
+      for (let k = 1; k <= STEPS; k++) pictureOf(kind, k, cam);
     };
-    /** The frames of a turn, asked for a couple a frame so nothing stalls. */
-    const queue: [Picture, number][] = [];
+    /** Pictures asked for ahead, a couple a frame so nothing stalls: the
+        frames of a turn, and the leans at a station. */
+    const queue: [Picture, Cam][] = [];
     const primeTurn = (kind: Picture, from: number, to: number) => {
-      const a = Math.round(Math.min(from, to) * VIEW_STEPS);
-      const b = Math.round(Math.max(from, to) * VIEW_STEPS);
-      for (let vi = a; vi <= b; vi++) queue.push([kind, vi]);
+      // In the turn's own order, so the frames wanted first come first.
+      const a = Math.round(from * VIEW_STEPS);
+      const b = Math.round(to * VIEW_STEPS);
+      const d = b >= a ? 1 : -1;
+      for (let vi = a; d > 0 ? vi <= b : vi >= b; vi += d) queue.push([kind, FLAT(vi)]);
     };
-    prime("plain", 0);
+    const primeLeans = (kind: Picture, vi: number) => {
+      for (let py = -LEAN_YAW; py <= LEAN_YAW; py++) {
+        for (let pp = -LEAN_PITCH; pp <= LEAN_PITCH; pp++) {
+          if (py || pp) queue.push([kind, { vi, py, pp }]);
+        }
+      }
+    };
+    prime("plain", FLAT(0));
 
     /* The brain's live state: its seat eases toward the beat's pose, its
        camera along the path, its picture crossfades when the beat changes
        it, and it manifests the first time it is seen after being gone. */
-    const brain = { x: 0, y: 0, s: 0, a: 0, v: 0, vi: 0, seated: false, kind: "plain" as Picture, prev: null as Picture | null, fade: 1, shownAt: 0, last: 0 };
+    const brain = {
+      x: 0,
+      y: 0,
+      s: 0,
+      a: 0,
+      v: 0,
+      cam: FLAT(0),
+      seated: false,
+      kind: "plain" as Picture,
+      prev: null as Picture | null,
+      fade: 1,
+      shownAt: 0,
+      last: 0,
+      /** The stations whose leans have been asked for, by kind and frame. */
+      leaned: new Set<string>(),
+      /** How far the hemispheres stand apart, 0..1, eased by the clock (U5). */
+      apart: 0,
+    };
+    /* The layer (U5): the swarm page's plate, built once a lattice, in the
+       page's own tones over the ground the canvas sits on. */
+    let layerSeat: LayerDots | null = null;
+    let layerKey = "";
+    const layerAt = (widthCss: number): LayerDots => {
+      const pick = pickLattice(widthCss, dpr);
+      const key = `${pick.a}|${pick.b}|${pick.n}|${dpr}`;
+      if (!layerSeat || layerKey !== key) {
+        layerSeat = layerDots(latticeAt(pick, dpr));
+        layerKey = key;
+      }
+      return layerSeat;
+    };
+    const tones: Tones = { ground: [10, 9, 8], bone: [235, 227, 214], gold: [202, 165, 84], green: [122, 158, 106] };
+    /** The first painted ground under an element, as three numbers. */
+    const groundOf = (el: Element | null, fallback: Rgb): Rgb => {
+      for (let e = el; e; e = e.parentElement) {
+        const bg = getComputedStyle(e).backgroundColor;
+        if (bg && bg !== "transparent" && !/rgba\([^)]*,\s*0\)$/.test(bg)) return parseRgb(bg, fallback);
+      }
+      return fallback;
+    };
     /* The pointer, −1..1 across the screen, eased: the brain leans with it a
        little in every beat it is drawn (the hoses, cords, rings and runs
        read its seat, so they come along). */
@@ -366,9 +466,14 @@ export function FoundationAct() {
       tone.red = cs.getPropertyValue("--fa-red").trim() || tone.red;
       const was = light;
       light = document.documentElement.dataset.theme === "light";
+      tones.ground = groundOf(canvas.parentElement, light ? [239, 233, 220] : [10, 9, 8]);
+      tones.bone = parseRgb(tone.ink, tones.bone);
+      tones.gold = parseRgb(tone.gold, tones.gold);
+      tones.green = parseRgb(tone.green, tones.green);
       if (was !== light) {
         pictures.clear();
-        prime(brain.kind, brain.vi);
+        brain.leaned.clear();
+        prime(brain.kind, FLAT(brain.cam.vi));
       }
     };
     /**
@@ -378,7 +483,7 @@ export function FoundationAct() {
      * which paints it where the caller wants it in the stack of layers; or
      * null when the phase has no brain. Called once a frame.
      */
-    const brainAt = (now: number): { pl: Place; vi: number; manifest: number; alpha: number; draw: () => void } | null => {
+    const brainAt = (now: number): { pl: Place; seat: Place; cam: Cam; manifest: number; alpha: number; draw: () => void } | null => {
       const pose = POSES[phase];
       if (!pose) return null;
       if (!brain.seated) {
@@ -387,14 +492,15 @@ export function FoundationAct() {
         brain.s = pose.s;
         brain.a = 0;
         brain.v = VIEW_T[phase] ?? 0;
-        brain.vi = Math.round(brain.v * VIEW_STEPS);
+        brain.cam = FLAT(Math.round(brain.v * VIEW_STEPS));
         brain.seated = true;
         brain.shownAt = now;
         brain.kind = PICTURE[phase];
         brain.prev = null;
         brain.fade = 1;
         brain.last = now;
-        prime(brain.kind, brain.vi);
+        brain.apart = 0;
+        prime(brain.kind, brain.cam);
       }
       // By the clock, not the frame: a throttled tab still arrives.
       const dt = Math.min(0.25, Math.max(0, (now - brain.last) / 1000));
@@ -405,16 +511,25 @@ export function FoundationAct() {
       brain.s += (pose.s - brain.s) * e;
       brain.a += (pose.a - brain.a) * e;
       // The camera takes its time: a turn, then a tilt, each about a second.
+      // While the halves stand apart (U5) it holds the isometric, so they
+      // close before the next beat's turn.
+      const parting = phase === 6;
+      const target = brain.apart > 0 && !parting ? 0 : (VIEW_T[phase] ?? 0);
       const ev = 1 - Math.exp(-dt * 4.5);
-      brain.v += ((VIEW_T[phase] ?? 0) - brain.v) * ev;
+      brain.v += (target - brain.v) * ev;
       const vi = Math.round(brain.v * VIEW_STEPS);
-      brain.vi = vi;
+      const station = Math.round(target * VIEW_STEPS);
+      // The layer beat parts the brain once it stands whole at the isometric.
+      const wantApart = parting && vi === 0 && (VIEW_T[phase] ?? 0) === 0 && now - brain.shownAt >= MANIFEST * 1000;
+      brain.apart += ((wantApart ? 1 : 0) - brain.apart) * (1 - Math.exp(-dt * (wantApart ? 2.2 : 4)));
+      if (brain.apart < 0.003) brain.apart = 0;
+      else if (brain.apart > 0.997) brain.apart = 1;
       const want = PICTURE[phase];
       if (want !== brain.kind) {
         brain.prev = brain.kind;
         brain.kind = want;
         brain.fade = 0;
-        pictureOf(want, STEPS, Math.round((VIEW_T[phase] ?? 0) * VIEW_STEPS));
+        pictureOf(want, STEPS, FLAT(station));
       }
       if (brain.fade < 1) brain.fade = Math.min(1, brain.fade + dt / 0.45);
       const manifest = Math.min(1, (now - brain.shownAt) / 1000 / MANIFEST);
@@ -422,41 +537,104 @@ export function FoundationAct() {
       const k = canvas.width / VB.w;
       pointer.x += (pointer.tx - pointer.x) * e;
       pointer.y += (pointer.ty - pointer.y) * e;
+      // The pointer's lean: a turn of the camera, once the brain stands
+      // whole at its station (the frames between are the path's own).
+      const standing = vi === station && manifest >= 1;
+      const py = standing ? Math.max(-LEAN_YAW, Math.min(LEAN_YAW, Math.round(pointer.x * LEAN_YAW))) : 0;
+      const pp = standing ? Math.max(-LEAN_PITCH, Math.min(LEAN_PITCH, Math.round(-pointer.y * LEAN_PITCH))) : 0;
+      const cam: Cam = { vi, py, pp };
+      brain.cam = cam;
+      if (standing) {
+        const key = `${brain.kind}|${vi}`;
+        if (!brain.leaned.has(key)) {
+          brain.leaned.add(key);
+          primeLeans(brain.kind, vi);
+        }
+      }
+      const seat: Place = { x: brain.x, y: brain.y, s: brain.s };
       const pl: Place = { x: brain.x + pointer.x * PARALLAX.x * brain.s, y: brain.y + pointer.y * PARALLAX.y * brain.s, s: brain.s };
       const s = pl.s * ISO_S;
-      const draw = (img: HTMLImageElement, alpha: number, B: BrainIsoBox) => {
+      const draw = (img: HTMLImageElement, alpha: number, B: BrainIsoBox, dx = 0, dy = 0) => {
         ctx.globalAlpha = alpha;
-        ctx.drawImage(img, (pl.x + B.x0 * s) * k, (pl.y + B.y0 * s) * k, (B.x1 - B.x0) * s * k, (B.y1 - B.y0) * s * k);
+        ctx.drawImage(img, (pl.x + dx + B.x0 * s) * k, (pl.y + dy + B.y0 * s) * k, (B.x1 - B.x0) * s * k, (B.y1 - B.y0) * s * k);
       };
-      /** The whole picture at this frame of the path, or the nearest frame
-          that has loaded, with that frame's own bounds. */
+      /**
+       * The layer (U5, owner: "reveal the brain, move the two parts left
+       * and right respectively, and place our Thoughtform-encoded layer
+       * ... in between"): the two hemispheres, each moved out along the
+       * brain's own L axis until it clears the plate, and the swarm page's
+       * plate printed between them, its top a little above the equator.
+       * Painted in depth order for this camera: the plate's far corner lies
+       * over the far half's foot and tucks behind the near half's dome, so
+       * far half, plate, near half.
+       */
+      const drawParted = (left: HTMLImageElement, right: HTMLImageElement, alpha: number) => {
+        const open = smooth(brain.apart);
+        const V0 = viewAt(FLAT(0));
+        const o = brainIsoPoint(0, 0, 0, V0);
+        const l1 = brainIsoPoint(1, 0, 0, V0);
+        const ux = l1[0] - o[0];
+        const uy = l1[1] - o[1];
+        const ul = Math.hypot(ux, uy);
+        const D = layerAt((canvas.width / dpr) * LAYER_SHARE);
+        // the plate's side on screen, device px, as brain units along L
+        const side = D.L.m * D.L.g * Math.hypot(D.L.a, D.L.b);
+        const halfL = side / 2 / (ul * s * k);
+        const part = (halfL + LAYER_CLEAR) * open;
+        const B = boxAt(FLAT(0));
+        const near = uy > 0 ? 1 : -1;
+        // A readout for the walks: the plate picked and the parting, in brain units.
+        root.dataset.faLayer = `${D.L.a}:${D.L.b} n${D.L.n} g${D.L.g} side${side.toFixed(0)} halfL${halfL.toFixed(0)} part${part.toFixed(0)} u${ux.toFixed(2)},${uy.toFixed(2)} s${s.toFixed(3)} k${k.toFixed(3)}`;
+        const half = (dir: 1 | -1) => draw(dir > 0 ? right : left, alpha, B, dir * part * ux * s, dir * part * uy * s);
+        half(near > 0 ? -1 : 1);
+        const top = brainIsoPoint(0, 0, LAYER_Z, V0);
+        paintLayer(ctx, D, { cx: (pl.x + top[0] * s) * k, cy: (pl.y + top[1] * s) * k, tones, printed: smooth((brain.apart - 0.3) / 0.65), alpha });
+        half(near);
+      };
+      /** The whole picture at this camera, else at this frame of the path
+          without the lean, else at the nearest frame that has loaded, with
+          that picture's own bounds. */
       const whole = (kind: Picture): [HTMLImageElement, BrainIsoBox] | null => {
-        const exact = pictureOf(kind, STEPS, vi);
-        if (exact) return [exact, boxAt(vi)];
+        const exact = pictureOf(kind, STEPS, cam);
+        if (exact) return [exact, boxAt(cam)];
+        if (py || pp) {
+          const level = pictures.get(`${kind}|${STEPS}|${camKey(FLAT(vi))}|${light}`);
+          if (level) return [level, boxAt(FLAT(vi))];
+        }
         for (let d = 1; d <= 2 * VIEW_STEPS; d++) {
           for (const v of [vi - d, vi + d]) {
             if (v < 0 || v > 2 * VIEW_STEPS) continue;
-            const img = pictures.get(`${kind}|${STEPS}|${v}|${light}`);
-            if (img) return [img, boxAt(v)];
+            const img = pictures.get(`${kind}|${STEPS}|${camKey(FLAT(v))}|${light}`);
+            if (img) return [img, boxAt(FLAT(v))];
           }
         }
         return null;
       };
       const manifesting = manifest < 1;
-      const partial = manifesting ? readyUnder(brain.kind, step, vi) : null;
-      const cur: [HTMLImageElement, BrainIsoBox] | null = manifesting ? (partial ? [partial, boxAt(vi)] : null) : whole(brain.kind);
+      const partial = manifesting ? readyUnder(brain.kind, step, FLAT(vi)) : null;
+      const cur: [HTMLImageElement, BrainIsoBox] | null = manifesting ? (partial ? [partial, boxAt(FLAT(vi))] : null) : whole(brain.kind);
       const fading = brain.prev !== null && brain.fade < 1;
       const prev = fading ? whole(brain.prev as Picture) : null;
       const alpha = brain.a;
       const fade = brain.fade;
       // A readout for the walks: what the brain is doing this frame.
-      root.dataset.faBrain = `${brain.kind} ${cur ? "ready" : "loading"} a${alpha.toFixed(2)} f${fade.toFixed(2)} m${manifest.toFixed(2)} v${brain.v.toFixed(2)}`;
+      root.dataset.faBrain = `${brain.kind} ${cur ? "ready" : "loading"} a${alpha.toFixed(2)} f${fade.toFixed(2)} m${manifest.toFixed(2)} v${brain.v.toFixed(2)} lean${py},${pp}`;
       return {
         pl,
-        vi,
+        seat,
+        cam,
         manifest,
         alpha,
         draw: () => {
+          if (brain.apart > 0 && vi === 0) {
+            const left = pictureOf("left", STEPS, FLAT(0));
+            const right = pictureOf("right", STEPS, FLAT(0));
+            if (left && right) {
+              drawParted(left, right, alpha);
+              ctx.globalAlpha = 1;
+              return;
+            }
+          }
           if (prev) draw(prev[0], alpha * (1 - fade), prev[1]);
           if (cur) draw(cur[0], alpha * (fading ? fade : 1), cur[1]);
           ctx.globalAlpha = 1;
@@ -499,13 +677,15 @@ export function FoundationAct() {
         // frames between, and the beat's own picture at its station.
         if (POSES[phase] && brain.seated && VIEW_T[phase] !== brain.v) {
           primeTurn("plain", brain.v, VIEW_T[phase]);
-          if (PICTURE[phase] !== "plain") queue.push([PICTURE[phase], Math.round(VIEW_T[phase] * VIEW_STEPS)]);
+          if (PICTURE[phase] !== "plain") queue.push([PICTURE[phase], FLAT(Math.round(VIEW_T[phase] * VIEW_STEPS))]);
         }
+        // The layer beat parts the brain: its two halves, at the isometric.
+        if (phase === 6) queue.unshift(["left", FLAT(0)], ["right", FLAT(0)]);
       }
-      // The turn's frames, a couple a frame.
+      // The pictures asked for ahead, a couple a frame.
       for (let i = 0; i < 2 && queue.length; i++) {
-        const [kd, vi] = queue.shift() as [Picture, number];
-        pictureOf(kd, STEPS, vi);
+        const [kd, cam] = queue.shift() as [Picture, Cam];
+        pictureOf(kd, STEPS, cam);
       }
       const since = (now - landed) / 1000;
       const k = canvas.width / VB.w;
@@ -587,8 +767,8 @@ export function FoundationAct() {
             for (let i = 0; i < n; i++) {
               if (cordGrow(since, i) > 0) started.add(CORD_PLAN[i % CORD_PLAN.length].root);
             }
-            paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi, skip: started });
-            if (b.manifest >= 1) paintCords(ctx, b.pl, { k, dpr, tone, since, now, n, a, alpha: b.alpha, vi: b.vi });
+            paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, cam: b.cam, skip: started });
+            if (b.manifest >= 1) paintCords(ctx, b.pl, { k, dpr, tone, since, now, n, a, alpha: b.alpha, cam: b.cam });
             b.draw();
           }
         }
@@ -598,35 +778,45 @@ export function FoundationAct() {
         const stood = !!b && b.manifest >= 1 && brain.fade >= 1 && b.alpha > 0.9 && brain.v > 1.95;
         root.toggleAttribute("data-fa-cards", stood);
         if (b) {
-          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, cam: b.cam });
           b.draw();
-          if (stood) paintRuns(ctx, b.pl, { k, dpr, tone, since: since - 0.6, now, vi: b.vi });
+          if (stood) paintRuns(ctx, b.pl, { k, dpr, tone, since: since - 0.6, now, cam: b.cam });
         }
       } else if (phase === 3) {
+        // The orbits hold still round the brain's seat; only the brain leans
+        // with the pointer (U5).
         const b = brainAt(now);
         if (b) {
-          paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, false);
-          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
+          paintRings(ctx, knowledge?.layers ?? [], b.seat, { k, dpr, tone, since, now, light }, false);
+          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, cam: b.cam });
           b.draw();
-          paintRings(ctx, knowledge?.layers ?? [], b.pl, { k, dpr, tone, since, now, light }, true);
+          paintRings(ctx, knowledge?.layers ?? [], b.seat, { k, dpr, tone, since, now, light }, true);
         }
       } else if (phase === 5) {
-        // The shoggoth: its tentacles are its tendrils; the display is part
-        // of the machined picture (`brainIso.ts`).
+        // The shoggoth: its tentacles are its tendrils; the smile is
+        // particles in the face's plane, over the whole brain (U4).
         const b = brainAt(now);
         if (b) {
           paintTentacles(ctx, b.pl, { k, dpr, tone, since, now, light }, false);
           b.draw();
           paintTentacles(ctx, b.pl, { k, dpr, tone, since, now, light }, true);
+          paintSmile(ctx, b.pl, { k, dpr, tone, since, now, light, cam: b.cam });
         }
-      } else if (phase === 4 || phase === 6 || phase === 7) {
-        // Behind a voice (4, 6), receded; alone (7, ADR-159).
+      } else if (phase === 6) {
+        // The layer (U5): the brain turns back to the stack's isometric and
+        // parts; the plate prints between its halves (`drawParted`). No
+        // hoses, no smile, nothing under it.
+        const b = brainAt(now);
+        if (b) b.draw();
+      } else if (phase === 4 || phase === 7 || phase === 8) {
+        // Behind a voice (4, 7), receded; alone (8, ADR-159). After the
+        // layer the halves close first; the tendrils wait for the whole.
         const b = brainAt(now);
         if (b) {
-          paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, vi: b.vi });
+          if (brain.apart === 0) paintTendrils(ctx, b.pl, { k, dpr, tone, now, alpha: b.alpha, grow: b.manifest, cam: b.cam });
           b.draw();
         }
-      } else if (phase === 8) {
+      } else if (phase === 9) {
         paintField(ctx, field, { k, dpr, tone, since, now, light });
       }
       if (phase !== 2) root.toggleAttribute("data-fa-cards", false);
@@ -909,14 +1099,14 @@ function SideCard({
 const ISO_S = 1.02;
 /** A root's mouth in the viewBox at a frame of the camera's path: a hose
     hangs or a cord leaves here. */
-function isoRootAt(pl: Place, i: number, vi: number): P2 {
-  const roots = rootsAt(vi);
+function isoRootAt(pl: Place, i: number, cam: Cam): P2 {
+  const roots = rootsAt(cam);
   const [x, y] = roots[i % roots.length];
   return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
 }
 /** A point on a hemisphere's outer flank in the viewBox, high, level or low. */
-function isoFlankAt(pl: Place, side: -1 | 1, j: number, vi: number): P2 {
-  const [x, y] = brainIsoFlank(side, j, viewAt(vi));
+function isoFlankAt(pl: Place, side: -1 | 1, j: number, cam: Cam): P2 {
+  const [x, y] = brainIsoFlank(side, j, viewAt(cam));
   return { x: pl.x + x * pl.s * ISO_S, y: pl.y + y * pl.s * ISO_S };
 }
 /**
@@ -929,17 +1119,17 @@ function isoFlankAt(pl: Place, side: -1 | 1, j: number, vi: number): P2 {
 function paintTendrils(
   ctx: CanvasRenderingContext2D,
   pl: Place,
-  o: { k: number; dpr: number; tone: Tone; now: number; alpha: number; grow: number; vi: number; skip?: ReadonlySet<number> }
+  o: { k: number; dpr: number; tone: Tone; now: number; alpha: number; grow: number; cam: Cam; skip?: ReadonlySet<number> }
 ) {
   const { k, dpr, tone } = o;
   const grow = smooth(o.grow);
   if (grow <= 0 || o.alpha <= 0.01) return;
   ctx.save();
   ctx.lineCap = "round";
-  const roots = rootsAt(o.vi);
+  const roots = rootsAt(o.cam);
   for (let i = 0; i < roots.length; i++) {
     if (o.skip?.has(i)) continue;
-    const a = isoRootAt(pl, i, o.vi);
+    const a = isoRootAt(pl, i, o.cam);
     const len = (150 + ((i * 53) % 120)) * pl.s * grow;
     const sway = Math.sin(o.now / 2100 + i * 1.9) * 9 * pl.s;
     const side = i % 2 ? 1 : -1;
@@ -1003,6 +1193,163 @@ const cordGrow = (since: number, i: number) => smooth((since - MANIFEST - 0.1 - 
 const toneOf = (tone: Tone, name: string) =>
   name === "gold" ? tone.gold : name === "green" ? tone.green : name === "red" ? tone.red : tone.ink;
 
+/**
+ * The layer (ADR-159 U5): the swarm page's middle plate, dot for dot. The
+ * same lattice (`engine/lattice.ts`), the same population as `dots.ts`'s
+ * `layerPop` (the strata on its two near walls, every site of its top),
+ * and the mark cut into its top as `mark.ts`'s `setMark` cuts it in
+ * `engrave`: the groove sunk to dim gold, the lip that faces the light
+ * caught in brighter gold, the field as it stands, the rim lit. PURE: built
+ * once a lattice, in device px from the lattice's origin.
+ */
+interface LayerDots {
+  L: Lattice;
+  count: number;
+  x: Int32Array;
+  y: Int32Array;
+  tier: Uint8Array;
+  style: Uint8Array;
+  /** Its turn when the plate prints, 0..1: row by row down the screen. */
+  rank: Float32Array;
+  /** The top's centre site, in device px from the lattice's origin. */
+  centre: [number, number];
+}
+function layerDots(L: Lattice): LayerDots {
+  const plate = PLATES[1];
+  const m = L.m;
+  const kt = kOf(L, plate.top);
+  const raw: { x: number; y: number; tier: number; style: number }[] = [];
+  const rows: number[] = [];
+  for (const b of plate.body) {
+    const mid = Math.min(kt - 1, kOf(L, (b.z0 + b.z1) / 2));
+    rows.push(mid);
+    if (L.n >= 4 && mid + 1 < kt) rows.push(mid + 1);
+  }
+  for (const kk of new Set(rows)) {
+    for (let i = 0; i <= m; i++) raw.push({ x: sitePx(L, i, m), y: sitePy(L, i, m, kk), tier: 2, style: STYLE.layerLit });
+    for (let j = 0; j < m; j++) raw.push({ x: sitePx(L, m, j), y: sitePy(L, m, j, kk), tier: 1, style: STYLE.layer });
+  }
+  const c = PLATE_SIDE / 2;
+  const cover = markCover(m);
+  const lit = lightOf(m);
+  const on = (i: number, j: number) => (i < 0 || j < 0 || i > m || j > m ? false : cover[i * (m + 1) + j] >= COVER);
+  for (let i = 0; i <= m; i++) {
+    for (let j = 0; j <= m; j++) {
+      const rim = i === 0 || i === m || j === 0 || j === m;
+      const r = Math.hypot(i / L.n - c, j / L.n - c);
+      const [tier, style] = rim ? [2, STYLE.layerLit] : engraved(on(i, j), lit(i, j), [r < 3.5 ? 2 : 1, STYLE.layer]);
+      raw.push({ x: sitePx(L, i, j), y: sitePy(L, i, j, kt), tier, style });
+    }
+  }
+  const order = raw.map((_, at) => at).sort((p, q) => raw[p].y - raw[q].y || raw[p].x - raw[q].x);
+  const out: LayerDots = {
+    L,
+    count: raw.length,
+    x: new Int32Array(raw.length),
+    y: new Int32Array(raw.length),
+    tier: new Uint8Array(raw.length),
+    style: new Uint8Array(raw.length),
+    rank: new Float32Array(raw.length),
+    centre: [sitePx(L, m / 2, m / 2), sitePy(L, m / 2, m / 2, kt)],
+  };
+  raw.forEach((d, at) => {
+    out.x[at] = d.x;
+    out.y[at] = d.y;
+    out.tier[at] = d.tier;
+    out.style[at] = d.style;
+  });
+  order.forEach((at, i) => {
+    out.rank[at] = order.length > 1 ? i / (order.length - 1) : 0;
+  });
+  return out;
+}
+/** The plate on the canvas, the centre of its top at `cx, cy` (device px),
+    printed `printed` of the way, in the page's tones, at `alpha`. */
+function paintLayer(ctx: CanvasRenderingContext2D, D: LayerDots, o: { cx: number; cy: number; tones: Tones; printed: number; alpha: number }) {
+  if (o.printed <= 0 || o.alpha <= 0) return;
+  const pal = paletteOf([1, 1, 1], o.tones);
+  const sizes = tierSizes(D.L);
+  const ox = Math.round(o.cx - D.centre[0]);
+  const oy = Math.round(o.cy - D.centre[1]);
+  ctx.globalAlpha = o.alpha;
+  let style = -1;
+  for (let d = 0; d < D.count; d++) {
+    if (D.rank[d] > o.printed) continue;
+    if (D.style[d] !== style) {
+      style = D.style[d];
+      ctx.fillStyle = pal[style];
+    }
+    const size = sizes[D.tier[d]];
+    ctx.fillRect(ox + D.x[d] - (size >> 1), oy + D.y[d] - (size >> 1), size, size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** A tone at an alpha: the tones are the sheet's `rgb()` / `rgba()` strings. */
+function withAlpha(col: string, a: number): string {
+  const m = /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(col);
+  return m ? `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${a})` : col;
+}
+
+/**
+ * The smile (ADR-159 U4, owner: "it doesn't really look like a smiley face
+ * so I don't want a frame around it. I just want to use a particle system to
+ * create a smiley face"): two closed, happy eyes and a smile as gold
+ * particles in the brain's front plane, each with a soft glow, drifting a
+ * little and breathing; no panel, no bezel. Drawn over the whole brain.
+ */
+const SMILE_F = 150;
+const SMILE_STROKES: readonly { c: [number, number]; r: number; a0: number; a1: number; n: number }[] = [
+  { c: [-28, 76], r: 12, a0: 0.15 * Math.PI, a1: 0.85 * Math.PI, n: 16 },
+  { c: [28, 76], r: 12, a0: 0.15 * Math.PI, a1: 0.85 * Math.PI, n: 16 },
+  { c: [0, 54], r: 38, a0: 1.18 * Math.PI, a1: 1.82 * Math.PI, n: 44 },
+];
+function paintSmile(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number; light: boolean; cam: Cam }) {
+  const { k, tone } = o;
+  const show = smooth((o.since - 0.8) / 0.9);
+  if (show <= 0) return;
+  const view = viewAt(o.cam);
+  ctx.save();
+  ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  // Each sample of a stroke is three particles: one near the line and two
+  // scattered off it, dimmer, so the face is a cloud that happens to be a
+  // face (U5, owner: "too bloomy and too bright ... spread the particles
+  // around a bit so it really feels like a face made out of particles").
+  let i = 0;
+  for (const s of SMILE_STROKES) {
+    for (let j = 0; j <= s.n; j++) {
+      const t = s.a0 + ((s.a1 - s.a0) * j) / s.n;
+      const cl = s.c[0] + s.r * Math.cos(t);
+      const cz = s.c[1] + s.r * Math.sin(t);
+      for (let q = 0; q < 3; q++, i++) {
+        const spread = q === 0 ? 2.6 : 8;
+        const drift = Math.sin(o.now / 1700 + i * 1.3) * (q === 0 ? 1 : 2);
+        const l = cl + rnd() * spread + drift;
+        const z = cz + rnd() * spread;
+        const [x, y] = brainIsoPoint(l, SMILE_F, z, view);
+        const px = pl.x + x * pl.s * ISO_S;
+        const py = pl.y + y * pl.s * ISO_S;
+        const r = (q === 0 ? 0.9 + Math.abs(rnd()) * 0.7 : 0.55 + Math.abs(rnd()) * 0.5) * pl.s;
+        const weight = q === 0 ? 1 : 0.45;
+        const glow = ctx.createRadialGradient(px * k, py * k, 0, px * k, py * k, r * 2.4 * k);
+        glow.addColorStop(0, withAlpha(tone.lit, 0.1 * weight));
+        glow.addColorStop(1, withAlpha(tone.lit, 0));
+        ctx.globalAlpha = show;
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(px * k, py * k, r * 2.4 * k, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = (0.42 + 0.18 * Math.sin(o.now / 900 + i)) * weight * show;
+        ctx.fillStyle = tone.lit;
+        ctx.fillRect(px * k - r * k, py * k - r * k, 2 * r * k, 2 * r * k);
+      }
+    }
+  }
+  ctx.restore();
+}
+
 function strokePath(ctx: CanvasRenderingContext2D, pts: P2[], k: number, upto = pts.length - 1) {
   ctx.beginPath();
   ctx.moveTo(pts[0].x * k, pts[0].y * k);
@@ -1015,13 +1362,13 @@ function strokePath(ctx: CanvasRenderingContext2D, pts: P2[], k: number, upto = 
 function paintCords(
   ctx: CanvasRenderingContext2D,
   pl: Place,
-  o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number; alpha: number; vi: number }
+  o: { k: number; dpr: number; tone: Tone; since: number; now: number; n: number; a: number; alpha: number; cam: Cam }
 ) {
   const { k, dpr, tone, n } = o;
   for (let i = 0; i < n; i++) {
     const cord = CORDS[i % CORDS.length];
     const plan = CORD_PLAN[i % CORD_PLAN.length];
-    const from = isoRootAt(pl, plan.root, o.vi);
+    const from = isoRootAt(pl, plan.root, o.cam);
     const { at: to, out } = socketAt(i, n, plateOrigin(i, o.a), plan.edge);
     const reachOut = 80 + i * 22;
     // Down out of the brain first, then round the stack's side and in from
@@ -1063,14 +1410,14 @@ function paintCords(
 /** The middle beat's runs: from the brain's left to the tool's card, squared
     as a board routes; from its right to the collaborator's, loose streams of
     particles running both ways. */
-function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number; vi: number }) {
+function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number; cam: Cam }) {
   const { k, dpr, tone } = o;
   const grow = smooth(o.since / 0.8);
   if (grow <= 0) return;
   const widths = [2.2, 1.2, 1.8];
   const pinY = [-40, 0, 40];
   for (let j = 0; j < 3; j++) {
-    const a = isoFlankAt(pl, -1, j, o.vi);
+    const a = isoFlankAt(pl, -1, j, o.cam);
     const end = { x: SIDE.tool + SIDE.w + 1, y: SIDE.y + pinY[j] };
     const bend = (a.x + end.x) / 2 + (j - 1) * 14;
     const pts: P2[] = [a, { x: bend, y: a.y }, { x: bend, y: end.y }, end];
@@ -1095,7 +1442,7 @@ function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr
     }
   }
   for (let j = 0; j < 3; j++) {
-    const a = isoFlankAt(pl, 1, j, o.vi);
+    const a = isoFlankAt(pl, 1, j, o.cam);
     const end = { x: SIDE.collab - 1, y: SIDE.y + pinY[j] };
     const pts = cable(a, end, { x: 80, y: (j - 1) * 60 }, { x: -80, y: (1 - j) * 30 }, 40);
     const col = j === 1 ? tone.ink : tone.green;
@@ -1134,13 +1481,20 @@ function paintRuns(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr
  */
 const ORBITS = [
   { tilt: 1.2, roll: 0.0, prec: 70000, spin: 52000, dir: 1 },
-  { tilt: 0.9, roll: 0.42, prec: -95000, spin: 86000, dir: -1 },
-  { tilt: 0.62, roll: -0.55, prec: 120000, spin: 128000, dir: 1 },
+  { tilt: 1.0, roll: 0.42, prec: -95000, spin: 86000, dir: -1 },
+  { tilt: 0.9, roll: -0.55, prec: 120000, spin: 128000, dir: 1 },
 ] as const;
-const ORBIT_RX = [300, 420, 540] as const;
+/** The radii, held so the outer ring's near run stays inside the scene's
+    box (U5: "the bottom part of the dotted-line orbits is cut off"). */
+const ORBIT_RX = [300, 410, 500] as const;
 /** The eye's distance, in viewBox px: the near side of a ring grows, the far
     side shrinks, enough to read as depth and not enough to leave the box. */
 const ORBIT_EYE = 2600;
+/** The arrival (U5, owner: "not with a simple opacity reveal, but by really
+    starting to orbit around them with a nice speed ramp, not too fast"): the
+    planets swing in through this much of a turn, decelerating into their
+    cruise, while each ring draws on behind them. */
+const ORBIT_BURST = 1.1;
 function paintRings(
   ctx: CanvasRenderingContext2D,
   layers: readonly { label: string; domains: readonly string[] }[],
@@ -1167,18 +1521,27 @@ function paintRings(
   ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
   ctx.font = `${11 * k}px "PT Mono", ui-monospace, monospace`;
   layers.forEach((layer, li) => {
-    const show = smooth((o.since - 1.0 - li * 0.35) / 0.7);
+    const start = 0.2 + li * 0.3;
+    const show = smooth((o.since - start) / 0.4);
     if (show <= 0) return;
     const zmax = ORBIT_RX[li] * Math.sin(ORBITS[li].tilt);
-    // The ring: the runs of it on this side of the brain.
-    ctx.strokeStyle = li === 0 ? tone.gold : tone.ink;
+    const O = ORBITS[li];
+    const ringCol = li === 0 ? tone.gold : tone.ink;
+    /* The planets' swing in, decelerating; the ring drawn on behind them. */
+    const t0 = Math.max(0, o.since - start);
+    const swing = ORBIT_BURST * (1 - Math.exp(-t0 / 1.1));
+    const drawn = smooth(t0 / 1.6);
+    const aStart = li * 0.4 + Math.PI * 0.5;
+    // The ring: the runs of it on this side of the brain, as far as drawn.
+    ctx.strokeStyle = ringCol;
     ctx.lineWidth = (li === 0 ? 1.3 : 1) * dpr;
     ctx.setLineDash(li === 2 ? [3 * dpr, 6 * dpr] : []);
     ctx.globalAlpha = (near ? 0.75 : 0.22) * show * (li === 2 ? 0.8 : 1);
     ctx.beginPath();
     let pen = false;
-    for (let j = 0; j <= 144; j++) {
-      const q = at(li, (j / 144) * Math.PI * 2);
+    const steps = Math.round(144 * drawn);
+    for (let j = 0; j <= steps; j++) {
+      const q = at(li, aStart + O.dir * (j / 144) * Math.PI * 2);
       if ((q.z >= 0) !== near) {
         pen = false;
         continue;
@@ -1189,23 +1552,72 @@ function paintRings(
     }
     ctx.stroke();
     ctx.setLineDash([]);
-    // Its nodes and their names, running round it.
-    const O = ORBITS[li];
+    if (near && li > 0 && drawn >= 1) {
+      // A soft light under the near run (U4: "some subtle light effects"),
+      // and a glint travelling the ring ahead of its planets.
+      ctx.globalAlpha = 0.07 * show;
+      ctx.lineWidth = (li === 0 ? 9 : 7) * dpr;
+      ctx.stroke();
+      const ga = (o.now / (O.spin * 0.55)) * O.dir + li * 1.7;
+      ctx.beginPath();
+      let on = false;
+      for (let j = -7; j <= 7; j++) {
+        const q = at(li, ga + j * 0.011);
+        if (q.z < 0) {
+          on = false;
+          continue;
+        }
+        if (on) ctx.lineTo(q.x * k, q.y * k);
+        else ctx.moveTo(q.x * k, q.y * k);
+        on = true;
+      }
+      ctx.strokeStyle = tone.lit;
+      ctx.lineWidth = (li === 0 ? 2.2 : 1.6) * dpr;
+      ctx.globalAlpha = 0.5 * show;
+      ctx.stroke();
+    }
+    // Its nodes and their names, running round it. The two outer orbits
+    // carry small planets, each a body lit from the upper left with a soft
+    // glow (U4); the inner, gold orbit keeps its plain lit marks (U5, owner:
+    // "just restore the yellow ones ... the rest is fine").
     const m = layer.domains.length;
     layer.domains.forEach((d, j) => {
-      const t = (j / m) * Math.PI * 2 + (o.now / O.spin) * O.dir + li * 0.4;
+      const t = (j / m) * Math.PI * 2 + ((o.now / O.spin) + swing) * O.dir + li * 0.4;
       const q = at(li, t);
       if ((q.z >= 0) !== near) return;
       const depth = 0.35 + 0.65 * ((q.z / zmax + 1) / 2);
-      ctx.globalAlpha = show * depth;
-      ctx.fillStyle = li === 0 ? tone.lit : tone.ink;
-      const r = (li === 0 ? 4 : 3) * q.sc * dpr;
-      ctx.fillRect(q.x * k - r / 2, q.y * k - r / 2, r, r);
+      const col = li === 0 ? tone.lit : tone.ink;
+      let reach = 10;
+      if (li === 0) {
+        ctx.globalAlpha = show * depth;
+        ctx.fillStyle = col;
+        const r = 4 * q.sc * dpr;
+        ctx.fillRect(q.x * k - r / 2, q.y * k - r / 2, r, r);
+      } else {
+        const R = 4 * q.sc;
+        reach = R * 2.4 + 4;
+        const glow = ctx.createRadialGradient(q.x * k, q.y * k, 0, q.x * k, q.y * k, R * 3 * k);
+        glow.addColorStop(0, withAlpha(col, 0.26));
+        glow.addColorStop(1, withAlpha(col, 0));
+        ctx.globalAlpha = show * depth;
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(q.x * k, q.y * k, R * 3 * k, 0, Math.PI * 2);
+        ctx.fill();
+        const body = ctx.createRadialGradient((q.x - R * 0.35) * k, (q.y - R * 0.35) * k, 0, q.x * k, q.y * k, R * k);
+        body.addColorStop(0, withAlpha(col, 1));
+        body.addColorStop(0.55, withAlpha(col, 0.85));
+        body.addColorStop(1, withAlpha(col, 0.18));
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(q.x * k, q.y * k, R * k, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.globalAlpha = show * depth * 0.9;
-      ctx.fillStyle = li === 0 ? tone.gold : tone.ink;
+      ctx.fillStyle = ringCol;
       const left = q.x < pl.x;
       ctx.textAlign = left ? "right" : "left";
-      ctx.fillText(d.toUpperCase(), (q.x + (left ? -10 : 10)) * k, (q.y + 4) * k);
+      ctx.fillText(d.toUpperCase(), (q.x + (left ? -reach : reach)) * k, (q.y + 4) * k);
     });
     // The ring's name, in the legend under the figure.
     if (near) {
@@ -1229,9 +1641,13 @@ function paintRings(
 }
 
 /**
- * The shoggoth's tentacles: twelve from under and around the brain, each a
- * chain that tapers to its tip and curls, a slow wave running out along it,
- * suckers in gold along its underside. Far ones first, under the brain.
+ * The shoggoth's tentacles, as articulated arms (U5, owner: "a bit too
+ * organic. Can we make it a bit more robotic? It can be wetware or
+ * biomechanical"): twelve from under and around the brain, each a chain of
+ * straight links tapering to its tip, a collar at every joint, a thin gold
+ * core running through, a plug at the end; the same slow wave runs out
+ * along the chain, but it bends only at the joints. Far ones first, under
+ * the brain.
  */
 function paintTentacles(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number; dpr: number; tone: Tone; since: number; now: number; light: boolean }, near: boolean) {
   const { k, dpr, tone } = o;
@@ -1239,8 +1655,9 @@ function paintTentacles(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number
   if (grow <= 0) return;
   ctx.save();
   ctx.globalCompositeOperation = o.light ? "source-over" : "lighter";
-  ctx.lineCap = "round";
+  ctx.lineCap = "butt";
   const N = 12;
+  const JOINTS = 11;
   for (let i = 0; i < N; i++) {
     const isNear = i % 3 !== 0;
     if (isNear !== near) continue;
@@ -1250,47 +1667,68 @@ function paintTentacles(ctx: CanvasRenderingContext2D, pl: Place, o: { k: number
       ? { x: pl.x + (u - 0.5) * 300 * pl.s, y: pl.y + (110 + 70 * Math.sin(u * Math.PI)) * pl.s }
       : { x: pl.x + (u - 0.5) * 380 * pl.s, y: pl.y - 40 * pl.s };
     const ang0 = isNear ? Math.PI / 2 - (u - 0.5) * 3.0 : -Math.PI / 2 + (u - 0.5) * 2.8;
-    const len = (isNear ? 420 + 160 * Math.sin(i * 2.3) : 330 + 90 * Math.cos(i)) * pl.s * grow;
-    const segs = 60;
-    const step = len / segs;
+    const len = (isNear ? 400 + 150 * Math.sin(i * 2.3) : 320 + 80 * Math.cos(i)) * pl.s * grow;
+    const step = len / JOINTS;
     const pts: P2[] = [root];
     let p = root;
-    for (let s = 1; s <= segs; s++) {
-      const f = s / segs;
-      // The heading is set, not summed: a wave travels out along it and the
-      // tip curls, but the fan holds.
-      const ang = ang0 + 0.32 * Math.sin(o.now / 1400 - f * 5 + i * 1.3) * (0.25 + f) + (f > 0.55 ? (i % 2 ? 1 : -1) * (f - 0.55) * 2.6 : 0);
+    for (let s = 1; s <= JOINTS; s++) {
+      const f = s / JOINTS;
+      // The heading is set at each joint, not summed: a wave travels out
+      // along the arm and the tip curls, but the fan holds.
+      const ang = ang0 + 0.3 * Math.sin(o.now / 1500 - f * 5 + i * 1.3) * (0.25 + f) + (f > 0.55 ? (i % 2 ? 1 : -1) * (f - 0.55) * 2.4 : 0);
       p = { x: p.x + Math.cos(ang) * step, y: p.y + Math.sin(ang) * step };
       pts.push(p);
     }
-    const base = (isNear ? 8 : 5) * pl.s;
+    const base = (isNear ? 9 : 6) * pl.s;
+    const dim = isNear ? 1 : 0.5;
     for (let s = 1; s < pts.length; s++) {
-      const f = s / segs;
-      const w = base * (1 - f) + 0.6;
-      ctx.strokeStyle = f > 0.55 ? tone.gold : tone.ink;
-      ctx.globalAlpha = (isNear ? 0.38 : 0.18) * (1 - 0.5 * f);
+      const f = s / JOINTS;
+      const w = base * (1 - 0.8 * f) + 1.2;
+      const a = pts[s - 1];
+      const b = pts[s];
+      // The link, a shade shorter than the joint to joint, so the collar
+      // reads as a hinge between two parts.
+      const gap = 0.1;
+      const ax = a.x + (b.x - a.x) * gap;
+      const ay = a.y + (b.y - a.y) * gap;
+      const bx = b.x - (b.x - a.x) * gap;
+      const by = b.y - (b.y - a.y) * gap;
+      ctx.strokeStyle = tone.ink;
+      ctx.globalAlpha = 0.34 * dim * (1 - 0.4 * f);
       ctx.lineWidth = w * dpr;
       ctx.beginPath();
-      ctx.moveTo(pts[s - 1].x * k, pts[s - 1].y * k);
-      ctx.lineTo(pts[s].x * k, pts[s].y * k);
+      ctx.moveTo(ax * k, ay * k);
+      ctx.lineTo(bx * k, by * k);
       ctx.stroke();
-      // Suckers along the underside, in gold, shrinking to the tip.
-      if (s % 4 === 0 && f < 0.85) {
-        const a = pts[s - 1];
-        const b = pts[s];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const l = Math.hypot(dx, dy) || 1;
-        const sx = b.x + (-dy / l) * w * 0.9;
-        const sy = b.y + (dx / l) * w * 0.9;
-        ctx.globalAlpha = (isNear ? 0.85 : 0.35) * (1 - f);
-        ctx.strokeStyle = tone.gold;
-        ctx.lineWidth = 0.9 * dpr;
-        ctx.beginPath();
-        ctx.arc(sx * k, sy * k, Math.max(0.8, w * 0.45) * k, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      // The core, gold, the whole way.
+      ctx.strokeStyle = tone.gold;
+      ctx.globalAlpha = 0.55 * dim * (1 - 0.3 * f);
+      ctx.lineWidth = Math.max(0.6, w * 0.22) * dpr;
+      ctx.beginPath();
+      ctx.moveTo(a.x * k, a.y * k);
+      ctx.lineTo(b.x * k, b.y * k);
+      ctx.stroke();
+      // The collar at the joint: a short bar across the arm.
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const l = Math.hypot(dx, dy) || 1;
+      const nx = -dy / l;
+      const ny = dx / l;
+      const cw = w * 0.75;
+      ctx.strokeStyle = tone.gold;
+      ctx.globalAlpha = 0.8 * dim * (1 - 0.3 * f);
+      ctx.lineWidth = 1.6 * dpr;
+      ctx.beginPath();
+      ctx.moveTo((a.x - nx * cw) * k, (a.y - ny * cw) * k);
+      ctx.lineTo((a.x + nx * cw) * k, (a.y + ny * cw) * k);
+      ctx.stroke();
     }
+    // The plug at the tip.
+    const tip = pts[pts.length - 1];
+    const pr = (2.4 + 1.2 * dim) * pl.s;
+    ctx.fillStyle = tone.gold;
+    ctx.globalAlpha = 0.9 * dim;
+    ctx.fillRect(tip.x * k - pr * k, tip.y * k - pr * k, 2 * pr * k, 2 * pr * k);
   }
   ctx.restore();
 }

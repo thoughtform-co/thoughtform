@@ -60,6 +60,7 @@ const ORDER = [
   "every-desk",
   "an-alien",
   "shoggoth",
+  "the-layer",
   "already-clean",
   "their-own",
   "colleague",
@@ -242,8 +243,8 @@ describe("the keynote template (ADR-159)", () => {
       ghentDesk?.kind === "figure" && ghentDesk.figure.id === "knowledge" ? ghentDesk.figure.layers : undefined
     );
     for (const [id, n] of [
-      ["latent-space", "11"],
-      ["prowl", "13"],
+      ["latent-space", "12"],
+      ["prowl", "14"],
     ] as const) {
       const a = here(id);
       const b = ghent(id);
@@ -254,7 +255,7 @@ describe("the keynote template (ADR-159)", () => {
     }
     const midHere = here("an-intelligence");
     expect(midHere?.kind === "figure" ? midHere.eyebrow?.slice(0, 2) : "", "the middle, renumbered").toBe("04");
-    for (const id of ["the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
+    for (const id of ["the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "the-layer", "already-clean", "their-own", "colleague", "the-median", "encode-yourself"]) {
       expect(here(id), `${id}: on the page`).toBeDefined();
       expect(here(id), `${id}: this record's own`).not.toBe(ghent(id));
     }
@@ -312,6 +313,11 @@ describe("the keynote template (ADR-159)", () => {
     expect(clean?.kind === "interstitial" ? clean.frame : "").toBe("marks");
     const theirOwn = sections.find((s) => s.id === "their-own");
     expect(theirOwn?.kind === "figure" ? theirOwn.figure.id : "").toBe("brain");
+    // U5: the layer, straight after the shoggoth, his line.
+    const layer = sections.find((s) => s.id === "the-layer");
+    expect(layer?.kind === "figure" ? layer.figure.id : "").toBe("layer");
+    expect(layer?.kind === "figure" && layer.figure.id === "layer" ? layer.figure.title : "").toBe("I am the layer.");
+    expect(sections.findIndex((s) => s.id === "the-layer"), "after the shoggoth").toBe(sections.findIndex((s) => s.id === "shoggoth") + 1);
     const latent = sections.find((s) => s.id === "latent-space");
     expect(latent?.kind === "figure" && latent.menuPrimary, "the field is never a chapter").toBeFalsy();
   });
@@ -328,26 +334,42 @@ describe("the keynote template (ADR-159)", () => {
     expect(act, "reads this record").toContain('from "@/lib/arcs/content/keynote-template-alpha"');
     expect(act, "never the talk's").not.toContain("UX_MEETUP_ARC");
     expect(act).toContain(
-      'const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "already-clean", "their-own", "latent-space"] as const;'
+      'const IDS = ["capability", "the-interface", "an-intelligence", "every-desk", "an-alien", "shoggoth", "the-layer", "already-clean", "their-own", "latent-space"] as const;'
     );
-    expect(act, "a pose behind every voice").toMatch(/4: RECEDE,[\s\S]*6: RECEDE,/);
+    expect(act, "a pose behind every voice").toMatch(/4: RECEDE,[\s\S]*7: RECEDE,/);
     expect(act, "no block under the brain").toContain('base: "tendrils"');
     expect(act, "the manifest through the build height").toContain("reveal: step / STEPS");
     expect(act, "no scanline").not.toContain("behind a scanline");
     expect(act, "the cords from three edges").toMatch(/edge: "left"[\s\S]*edge: "back"/);
-    expect(act, "the field on the last phase").toContain("phase === 8");
+    expect(act, "the field on the last phase").toContain("phase === 9");
     // U2: the camera turns to face the reader between the interface and the
     // middle, and the head stands on the screen's top datum.
     expect(act, "the camera's path").toMatch(/const VIEW_T: Record<number, number> = \{ 1: 0, 2: 2, 3: 2/);
     expect(act).toContain("BRAIN_VIEW_FRONT");
     expect(act, "the head outside the scene's box").toMatch(/<\/div>\s*\{\/\* The head stands on the screen's own top datum/);
-    // U3: the LED display on the shoggoth, the orbits in 3D, the pointer.
-    expect(act, "the display, never the faceplate").toContain('mask: kind === "mask" ? "display" : false');
+    // U3: the orbits in 3D, the pointer. U4: the smile as particles, no
+    // mask in the picture; the planets lit, the rings with a glint.
+    expect(act, "no mask on the keynote's brain").toMatch(/const PICTURE: Record<number, Picture> = \{ 1: "plain", 2: "split", 3: "plain", 4: "plain", 5: "plain", 6: "plain", 7: "plain", 8: "plain" \}/);
+    expect(act, "the smile as particles in the face's plane").toContain("paintSmile(ctx, b.pl,");
+    expect(act).toContain("brainIsoPoint(l, SMILE_F, z, view)");
     expect(act, "orbits in their own planes").toMatch(/const ORBITS = \[[\s\S]*tilt: [\d.]+, roll: [-\d.]+, prec: [-\d]+, spin: \d+, dir: -?1/);
     expect(act, "a perspective on the rings").toContain("ORBIT_EYE / (ORBIT_EYE - z)");
+    expect(act, "planets lit from a side, with a glow").toMatch(/createRadialGradient\(\(q\.x - R \* 0\.35\) \* k/);
+    expect(act, "a glint on the ring").toContain("O.spin * 0.55");
     expect(act, "the pointer leans the brain").toContain('window.addEventListener("pointermove", onPointer');
     expect(act, "and lets go").toContain('window.removeEventListener("pointermove", onPointer)');
     expect(act, "the glass").toContain('<linearGradient id="fa-glass"');
+    // U5: the layer. The brain turns back to the isometric and parts; the
+    // swarm page's plate, the mark cut into it, prints between its halves
+    // through the swarm's own lattice, mark and palette.
+    expect(act, "the layer beat at the isometric").toMatch(/const VIEW_T: Record<number, number> = \{ 1: 0, 2: 2, 3: 2, 4: 2, 5: 2, 6: 0, 7: 2, 8: 2 \}/);
+    expect(act, "one hemisphere a picture").toContain('only: kind === "left" ? -1 : kind === "right" ? 1 : undefined');
+    expect(act, "the swarm's lattice").toContain('from "@/app/(internal)/test/proposal-swarm/engine/lattice"');
+    expect(act, "the swarm's mark").toContain("engraved(on(i, j), lit(i, j), [r < 3.5 ? 2 : 1, STYLE.layer])");
+    expect(act, "the swarm's paint").toContain("paletteOf([1, 1, 1], o.tones)");
+    expect(act, "the rim lit, as there").toContain("rim ? [2, STYLE.layerLit] : engraved(");
+    expect(act, "far half, plate, near half").toMatch(/half\(near > 0 \? -1 : 1\);[\s\S]*paintLayer\(ctx, D,[\s\S]*half\(near\);/);
+    expect(act, "the halves close before the next turn").toContain("const target = brain.apart > 0 && !parting ? 0 : (VIEW_T[phase] ?? 0);");
     const sheet = own("keynote-template-alpha.css");
     expect(sheet, "the scene inside the instrument band").toContain("var(--instrument-margin");
     expect(sheet, "the voices read over the brain").toContain("#an-alien .arc-stage");
@@ -355,7 +377,9 @@ describe("the keynote template (ADR-159)", () => {
     expect(sheet, "the head on a top datum").toContain("--fa-head-top: clamp(");
     expect(sheet, "no head seated by the box").not.toContain("top: calc(40 / 820 * 100%)");
     expect(sheet, "the cards as glass").toContain("fill: url(#fa-glass)");
-    expect(sheet, "the field's quote on the last phase").toContain('.fa[data-fa-phase="8"] .fa__quote');
+    expect(sheet, "the field's quote on the last phase").toContain('.fa[data-fa-phase="9"] .fa__quote');
+    expect(sheet, "the layer's head, centred").toContain('.fa[data-fa-phase="6"] .fa__head');
+    expect(sheet, "the act hides the layer beat's marks").toContain("#the-layer .arc-fig__marks");
   });
 
   /**
@@ -400,6 +424,14 @@ describe("the keynote template (ADR-159)", () => {
     expect(plate).toContain("fa-mask-slot");
     expect(plate).not.toContain("fa-display");
     expect(brainIsoMarkup({ base: "tendrils", reveal: 0 }).length, "the floor plates stand at level 0").toBeGreaterThan(0);
+    // U5: one hemisphere alone is that hemisphere's own markup; the two
+    // together, in the camera's depth order, are the tendril picture whole.
+    const left = brainIsoMarkup({ base: "tendrils", only: -1 });
+    const right = brainIsoMarkup({ base: "tendrils", only: 1 });
+    expect(left.length).toBeGreaterThan(1000);
+    expect(right.length).toBeGreaterThan(1000);
+    expect(left).not.toBe(right);
+    expect([left + right, right + left], "the halves make the whole").toContain(tendrils);
     expect(BRAIN_ISO_ROOTS.length).toBe(8);
     for (let i = 1; i < BRAIN_ISO_ROOTS.length; i++) expect(BRAIN_ISO_ROOTS[i][0]).toBeGreaterThanOrEqual(BRAIN_ISO_ROOTS[i - 1][0]);
     expect(BRAIN_ISO_PORTS.length).toBe(7);
