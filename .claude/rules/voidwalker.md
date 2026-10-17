@@ -458,7 +458,9 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
   decorative projector bloom under the figure's feet.
 - ⚠ **THE ERA FIGURES ARE GENERATED IN-REPO NOW (ADR-082 U24,
   `scripts/voidwalker-avatar/`, its own README).** Nano Banana Pro still → Veo
-  3.1 idle → `geq` luma key → five deliveries at 720×1280. The offline skill
+  3.1 idle → `geq` luma key → five deliveries at 720×1280. (2026-10-07: the
+  idle lane is now Gemini Omni Flash, because the Veo 3.1 previews shut down
+  2026-10-22; `vid.py` says what moved.) The offline skill
   that holds the original chain is on the owner's Windows machine; this is a
   rebuild from the surviving record, on the same wave layout so a sync merges.
   ⚠ **THE GATE THAT MATTERS IS SILHOUETTE FRAGMENTATION** — opaque RUNS per hem
