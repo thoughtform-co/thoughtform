@@ -109,10 +109,21 @@ describe("the cases", () => {
         expect(() => assertCase(c)).not.toThrow();
       });
 
-      it("say what they saved, before and now, and mark a time saved as estimated", () => {
-        expect(c.saved.now.length).toBeGreaterThan(0);
-        expect(c.saved.now.length).toBeLessThanOrEqual(48);
-        if (c.saved.label === "Time saved") expect(c.saved.estimated).toBe(true);
+      it("open on a header: three short numbers and one briefing", () => {
+        expect(c.stats).toHaveLength(3);
+        for (const s of c.stats) {
+          expect(s.value.length, s.label).toBeLessThanOrEqual(12);
+          expect(s.label.length, s.label).toBeLessThanOrEqual(56);
+        }
+        expect(c.brief.text.length).toBeLessThanOrEqual(140);
+      });
+
+      it("carry the client's logo (a file on disk) and its colour", () => {
+        expect(c.logo.src.startsWith("/test/proposal-swarm-v2/logos/")).toBe(true);
+        expect(existsSync(join(ROOT, "public", c.logo.src))).toBe(true);
+        for (const rgb of [c.tint.dots, c.tint.glow]) {
+          expect(rgb).toMatch(/^\d{1,3}, \d{1,3}, \d{1,3}$/);
+        }
       });
 
       it("carry their labels: a project with an icon, a type of work, a name a chapter", () => {
@@ -156,10 +167,11 @@ describe("the cases", () => {
         });
       });
 
-      it("keep the thinking short: at most four lines, each one line", () => {
+      it("keep the claims concise: at most three, each a few words, a call short too", () => {
         for (const ch of c.chapters) {
-          expect(ch.thought.length).toBeLessThanOrEqual(4);
-          for (const t of ch.thought) expect(t.length).toBeLessThanOrEqual(60);
+          expect(ch.thought.length).toBeLessThanOrEqual(3);
+          for (const t of ch.thought) expect(t.length, t).toBeLessThanOrEqual(36);
+          if (ch.call) expect(`${ch.call.who}: ${ch.call.said}`.length).toBeLessThanOrEqual(48);
         }
       });
     });

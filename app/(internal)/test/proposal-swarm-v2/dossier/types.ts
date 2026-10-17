@@ -177,9 +177,16 @@ export interface Case {
   glyph: GlyphName;
   /** The workstream it proves ("Creative production"); its icon follows. */
   workstream: string;
-  /** What it saved, as the job panels' result: before, now, and whether the
-   *  before is an estimate. */
-  saved: { label: string; before?: string; now: string; estimated?: boolean };
+  /** The client's logo: a mark (shown with the client's name) or a wordmark,
+   *  a white file tinted to the ink in CSS. */
+  logo: { src: string; ratio: string; mark?: boolean };
+  /** The client's colour for the field behind the case: the particles, and
+   *  the glow under them (rgb triples). */
+  tint: { dots: string; glow: string };
+  /** The header's numbers, the first the result: a value, a short label. */
+  stats: readonly { value: string; label: string }[];
+  /** The briefing, as the header quotes it. */
+  brief: { who: string; text: string };
   /** The piece, in one line. */
   piece: string;
   date: string;

@@ -1,25 +1,30 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Glyph, type GlyphName, workstreamGlyph } from "./Glyph";
 
-/** One step of the case: one figure's number, name and two short lines. */
+/** One short line under a step, with its icon (a person's call takes the
+ *  green diamond). */
+export interface Claim {
+  text: string;
+  glyph?: GlyphName;
+  person?: boolean;
+}
+
+/** What the held column says while one figure is in the middle. The first is
+ *  the case's header: its numbers and its briefing; the rest are its steps. */
 export interface Words {
   /** The anchor of this figure's panel. */
   id: string;
-  /** The step's number and its figure's (01 = the piece). */
+  /** The step's number and its figure's (01 = the header). */
   n: number;
   kick: string;
   title: readonly [string, string];
-}
-
-/** What a case saved, as the job panels' result. */
-export interface Saved {
-  label: string;
-  before?: string;
-  now: string;
-  estimated?: boolean;
+  lede?: string;
+  claims?: readonly Claim[];
+  stats?: readonly { value: string; label: string }[];
+  brief?: { who: string; text: string };
 }
 
 /** One case, as the run draws it. */
@@ -32,7 +37,7 @@ export interface Run {
   project: string;
   glyph: GlyphName;
   workstream: string;
-  saved: Saved;
+  logo: { src: string; ratio: string; mark?: boolean };
   words: readonly Words[];
   figures: readonly ReactNode[];
 }
@@ -40,36 +45,32 @@ export interface Run {
 const two = (n: number) => String(n).padStart(2, "0");
 
 /**
- * One case: a simple held column, the figures scrolling on the right. Three
- * things on the left and no more (owner, 2026-10-17: "simple, with steps,
- * what we've saved … We don't have to show everything … the left side needs
- * to change depending on the slide you're in but make it subtle … I don't
- * like that it's all stacked"):
+ * One case, in the Loop story's grammar (`components/arcs/ArcProofStory.tsx`),
+ * which the owner came back to on 2026-10-17, with his round-07 notes: "the
+ * title of what we did here … and then the department … should be sticky.
+ * Then the actual numbers … only … in the first section before you start
+ * scrolling because that's basically the header … then you scroll down and
+ * see the different steps."
  *
- *   case    the client names (the one in view lit) and the case's two labels
- *   step    a thin bar, a segment a figure, then ONE card: the step of the
- *           figure in the middle of the screen, its number, its name, its two
- *           lines. It changes quietly as the figures pass (a short fade).
- *   saved   what the case saved, before and now, as the job panels drew it;
- *           it holds for the whole case.
+ *   left   one group in the middle of the screen, held:
+ *          the case: the client's logo, what was made, the department; it
+ *            holds for the whole case;
+ *          the words of the figure in view, which change as it reaches the
+ *            middle: on the first, the header (its numbers, its briefing);
+ *            on every other, the step (its label, its line, one sentence,
+ *            up to four short claims);
+ *          a dash a figure, the one in view lit.
+ *   right  the figures, one after the other; they scroll, the words stay.
  *
- * The step's number is its figure's (`FIG. 03` ↔ `03`); a segment is a link
- * to its figure. Under 960px the column steps aside: the case and what it
- * saved open the case, each figure carries its step card above it, and the
- * clients ride a bar at the top of the dossier.
+ * Below 960px the case opens the run and the words sit above their figures.
  */
 export function CaseRun({
   run,
-  clients,
   next,
-  still,
 }: {
   run: Run;
-  /** The client switch, drawn by the dossier (it owns which case is shown). */
-  clients: ReactNode;
   /** The next case, offered at the foot of this one. */
   next?: { run: Run; go: () => void };
-  still: boolean;
 }) {
   const [at, setAt] = useState(0);
   const panels = useRef<(HTMLDivElement | null)[]>([]);
@@ -85,19 +86,10 @@ export function CaseRun({
       { rootMargin: "-50% 0px -50% 0px" }
     );
     for (const el of panels.current) if (el) io.observe(el);
-    /* past the last figure, the way on keeps the last step */
+    /* past the last figure, the way on keeps the last step's words */
     if (tail.current) io.observe(tail.current);
     return () => io.disconnect();
   }, []);
-
-  const go = (i: number) => {
-    const el = panels.current[i];
-    if (!el) return;
-    const calm = still || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ block: "center", behavior: calm ? "auto" : "smooth" });
-  };
-
-  const total = run.words.length;
 
   return (
     <article
@@ -108,41 +100,17 @@ export function CaseRun({
     >
       <div className="csd-run__words">
         <div className="csd-run__stick">
-          <div className="csd-group">
-            <header className="csd-head">
-              {clients}
-              <Labels run={run} />
-            </header>
-            <div className="csd-step">
-              <div className="csd-step__bar">
-                <ol className="csd-steps" aria-label={`${run.client}, ${total} steps`}>
-                  {run.words.map((w, i) => (
-                    <li
-                      key={w.id}
-                      data-on={i === at ? "" : undefined}
-                      data-past={i < at ? "" : undefined}
-                    >
-                      <button
-                        type="button"
-                        aria-label={`Step ${two(w.n)}, ${w.kick}`}
-                        aria-current={i === at ? "step" : undefined}
-                        onClick={() => go(i)}
-                      />
-                    </li>
-                  ))}
-                </ol>
-                <span className="csd-step__count">
-                  {two(run.words[at]?.n ?? 1)} of {two(total)}
-                </span>
-              </div>
-              <div className="csd-step__stack">
-                {run.words.map((w, i) => (
-                  <StepCard key={w.id} w={w} on={i === at} />
-                ))}
-              </div>
-            </div>
-            <SavedCard saved={run.saved} />
+          <CaseHead run={run} />
+          <div className="csd-story__stack">
+            {run.words.map((w, i) => (
+              <StoryWords key={w.id} w={w} on={i === at} />
+            ))}
           </div>
+          <ol className="csd-story__dashes" aria-hidden="true">
+            {run.words.map((w, i) => (
+              <li key={w.id} data-on={i === at ? "" : undefined} />
+            ))}
+          </ol>
         </div>
       </div>
       <div className="csd-run__figs">
@@ -156,15 +124,9 @@ export function CaseRun({
               panels.current[i] = el;
             }}
           >
-            {i === 0 ? (
-              <div className="csd-run__head-flow">
-                <Labels run={run} />
-                <SavedCard saved={run.saved} />
-              </div>
-            ) : null}
-            <div className="csd-run__card-flow">
-              <StepCard w={run.words[i]} on />
-            </div>
+            {/* the phone: the case opens the run, the words sit above their figure */}
+            {i === 0 ? <CaseHead run={run} flow /> : null}
+            <StoryWords w={run.words[i]} on flow />
             {fig}
           </div>
         ))}
@@ -177,11 +139,14 @@ export function CaseRun({
             onClick={next.go}
           >
             <span className="csd-next__k">Next case</span>
-            <span className="csd-next__client">
-              <span className="csd-next__n">{next.run.ordinal}</span>
-              {next.run.client}
+            <Logo run={next.run} />
+            <span className="csd-next__kind">
+              <span>{next.run.project}</span>
+              <span>
+                <Glyph name={workstreamGlyph(next.run.workstream)} />
+                {next.run.workstream}
+              </span>
             </span>
-            <Labels run={next.run} />
           </button>
         ) : null}
       </div>
@@ -189,59 +154,90 @@ export function CaseRun({
   );
 }
 
-/** What the case is, and what kind of work: two labels, nothing more. */
-function Labels({ run }: { run: Run }) {
+/** The client's logo, a white file tinted to the ink; a mark carries the
+ *  client's name beside it, a wordmark is the name. */
+function Logo({ run }: { run: Run }) {
   return (
-    <p className="csd-labels">
-      <span className="csd-label">
-        <Glyph name={run.glyph} />
-        {run.project}
-      </span>
-      <span className="csd-label">
-        <Glyph name={workstreamGlyph(run.workstream)} />
-        {run.workstream}
-      </span>
-    </p>
+    <span className="csd-logo" data-mark={run.logo.mark ? "" : undefined}>
+      <span
+        className="csd-logo__img"
+        role="img"
+        aria-label={run.client}
+        style={
+          {
+            "--logo": `url("${run.logo.src}")`,
+            "--r": run.logo.ratio.replace("/", " / "),
+          } as CSSProperties
+        }
+      />
+      {run.logo.mark ? <span className="csd-logo__name">{run.client}</span> : null}
+    </span>
   );
 }
 
-/** The step in view, after the job panels' numbered steps: a gold tab in the
- *  top-left corner, two short lines inside a double hairline. */
-function StepCard({ w, on }: { w: Words; on: boolean }) {
+/** The case, held for its whole length: who, what was made, which team. */
+function CaseHead({ run, flow = false }: { run: Run; flow?: boolean }) {
   return (
-    <div className="csd-card" data-on={on ? "" : undefined} aria-hidden={on ? undefined : true}>
-      <span className="csd-card__tab">
+    <header className={flow ? "csd-case csd-case--flow" : "csd-case"}>
+      <Logo run={run} />
+      <p className="csd-case__what">
+        <span className="csd-case__project">{run.project}</span>
+        <span className="csd-case__dept">
+          <Glyph name={workstreamGlyph(run.workstream)} />
+          {run.workstream}
+        </span>
+      </p>
+    </header>
+  );
+}
+
+/** The words of one figure: the header (numbers, briefing) or a step. */
+function StoryWords({ w, on, flow = false }: { w: Words; on: boolean; flow?: boolean }) {
+  return (
+    <div
+      className={flow ? "csd-story csd-story--flow" : "csd-story"}
+      data-on={on ? "" : undefined}
+      data-header={w.stats ? "" : undefined}
+      aria-hidden={flow || on ? undefined : true}
+    >
+      <p className="csd-story__label">
         {two(w.n)} · {w.kick}
-      </span>
-      <span className="csd-card__text">
-        <span>{w.title[0]}</span> <span className="csd-card__em">{w.title[1]}</span>
-      </span>
-    </div>
-  );
-}
-
-/** What it saved: the old way as a long, quiet bar, the new way as a short gold
- *  one, the job panels' result drawn small. */
-function SavedCard({ saved }: { saved: Saved }) {
-  return (
-    <section className="csd-saved" aria-label={saved.label}>
-      <p className="csd-saved__k">
-        <Glyph name="clock" />
-        {saved.label}
-        {saved.estimated ? <span>Estimated</span> : null}
       </p>
-      {saved.before ? (
-        <p className="csd-saved__row" data-row="before">
-          <span className="csd-saved__when">Before</span>
-          <i aria-hidden="true" />
-          <span className="csd-saved__what">{saved.before}</span>
-        </p>
+      <h3 className="csd-story__title">
+        {w.title[0]} <span className="csd-story__em">{w.title[1]}</span>
+      </h3>
+      {w.stats ? (
+        <dl className="csd-stats">
+          {w.stats.map((s) => (
+            <div key={s.label}>
+              <dt>{s.value}</dt>
+              <dd>{s.label}</dd>
+            </div>
+          ))}
+        </dl>
       ) : null}
-      <p className="csd-saved__row" data-row="now">
-        <span className="csd-saved__when">Now</span>
-        <i aria-hidden="true" />
-        <span className="csd-saved__what">{saved.now}</span>
-      </p>
-    </section>
+      {w.brief ? (
+        <figure className="csd-brief">
+          <figcaption>
+            <i className="csd-dia" aria-hidden="true" />
+            {w.brief.who}
+          </figcaption>
+          <blockquote>{w.brief.text}</blockquote>
+        </figure>
+      ) : null}
+      {w.lede ? <p className="csd-story__lede">{w.lede}</p> : null}
+      {w.claims?.length ? (
+        <ul className="csd-story__claims">
+          {w.claims.map((c) => (
+            <li key={c.text} data-person={c.person ? "" : undefined}>
+              <span className="csd-story__icon" aria-hidden="true">
+                {c.person ? <i className="csd-dia" /> : <Glyph name={c.glyph ?? "model"} />}
+              </span>
+              {c.text}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }

@@ -368,3 +368,175 @@ tests/lib/proposal-swarm-v2.test.ts tests/lib/proposal-swarm.test.ts` 89 of 89.
 - Stills in `round-04/` (dark, 1920×1247, 1280×720, 390×844); the capture's
   report: the group sits on the screen, one card lit, nothing wider than the
   page, at every size.
+- Pushed to `origin/main` on 2026-10-17 on the owner's word (`75eb310b`).
+
+# Round 05 (2026-10-17): two anchors, no frames
+
+## Why
+
+The owner, on round 04: "I still think too much is happening on the left side,
+and it feels confusing. Maybe we don't need frames, just a text element that we
+nicely align … the time saved (the return) is an important one. Because it
+looks the same as the card above, people will think it also needs to change …
+I think we need to cluster things and make them more minimalistic … Think about
+it from a frontend design perspective … How do we make sure that every element
+has enough room to breathe?" With seventeen sites to study.
+
+## The study
+
+Four agents loaded each site at 1440×900, scrolled it, measured the pinned
+columns in the DOM and read the screenshots (kept in the session scratchpad,
+not committed). What all seventeen agree on, measured:
+
+- **Pinned text is never framed.** Frames go on the visuals; hairlines and one
+  shared left edge carry the text (Unsiloed, Griffin, Arrakis, Spade, Euclid,
+  VoidZero; Augustus's one product chip is the only boxed label).
+- **Two anchors and air between them.** The story at the top, the payoff at
+  the bottom, 250–600px of a 900px screen left empty (Enerblock 468px, NoGood
+  306px, Augustus's top chip and bottom dashes).
+- **Progress in one quiet channel:** a 1px track with a lit segment (Cluster,
+  Spade), a filling underline (Dispatch), opacity on a list (Unsiloed, Arrakis).
+  Never a bar, a counter and a card together.
+- **One step at a time,** swapped by a 0.2–0.3s fade, positions held.
+- **A result is a different kind of thing from a step:** one large number with
+  a small caption (sstr's "−48%" at 96px over a 12px "[ 27 → 14 kN·m ]",
+  Rollups' "35%", Lighthouse's counters), still while the story moves.
+- **Three type sizes, a 20/40/80px rhythm, 35–55 characters a line.** The
+  counter-example, Prime Intellect: 59 text items, 8 sizes, 16 tones, 4px gaps.
+
+## What it does
+
+- **Top:** the clients as a plain index (`[01] Loop Earplugs  [02] Samako
+[03] Suri`, 16–21px, the one shown in ink with an ink hairline under it); the
+  case's kind in one 12px mono line with its two particle icons; 40–80px of air;
+  a 1px track, a segment a figure, the one in view lit gold (it slides, 360ms;
+  each segment a link to its figure); the step: `05 THE PLAN` in mono and the
+  two-tone line ("Every beat on a frame." in ink, "Before anything moves." quieter),
+  swapped with a 320ms fade.
+- **Bottom:** what it saved, behind one hairline: `TIME SAVED · ESTIMATED`, the
+  value in gold at 40–64px ("1 h 51 min", "1 day", "2 days"), one line under it
+  ("From one prompt to a finished ad, down from days of motion design"). It
+  never moves.
+- **Gone:** every frame on the left, the step card and its tab, the counter,
+  the segmented bar, the label chips, the before/now bars.
+- **Gold on the left:** the track's segment, the step's number, the result's
+  value. The client underline is ink now.
+
+## Elorian
+
+The owner added an `ELORIAN` key (Elorian, a visual-reasoning lab; model
+`elorian-1-agent` at `https://api.elorian.ai/v1`, OpenAI-style chat
+completions) to use its vision model on the sites. A first read-only call
+listed the model; the next was refused by the session's permission classifier
+(the key sent to an endpoint found by web search). Not used for this round;
+waiting on the owner's confirmation of the endpoint.
+
+## Checked
+
+- `npx tsc --noEmit`, `npx eslint`: clean; vitest 89 of 89.
+- Stills in `round-05/` at 1920×1247, 1280×720, 390×844: the top and the result
+  both on the screen and never meeting, one step shown, nothing wider than the
+  page.
+
+# Round 06 (2026-10-17): back to the Loop story
+
+## Why
+
+The owner, on round 05: "I do not like what you've created. You've spread it
+out all the way and that just confuses people. They're looking at a thing
+moving on the right, and on the left side they have to look at three different
+sections. I still think the one from Loop, that information architecture, is
+the cleanest. Maybe I was overthinking it. We should do it like that."
+
+## What it does
+
+- **The held column is the Loop story's group** (`components/arcs/ArcProofStory.tsx`,
+  `proof-story.css`, "The way there"), redrawn in the lab with its own sizes:
+  one group in the middle of the screen, changing whole as each figure reaches
+  the middle (420ms fade, 8px rise), nothing pinned to the top or the bottom.
+  - the step's label in gold mono with the case's particle icon
+    (`02 · THE ASK`), as the Loop story's workstream label;
+  - the step's line, its two sentences (the second a shade quieter), at
+    `min(--type-display, 5.4svh)`;
+  - its one sentence, at `min(--type-lg, 2.5svh)`;
+  - up to four claims between hairlines, a 44px icon column: what the model
+    reasoned at that step (the particle burst), and where a person decided (the
+    green diamond, "The studio lead: …"); on the piece, the case's facts: the
+    time saved, what it came down from, the project, the type of work;
+  - a dash a step under it, the one in view gold.
+- **The clients** are one row above the case, outside the held column; on a
+  phone the row is held at the top. A switch starts the case at that row.
+- **Gone:** round 05's track, step slot, result block and kind line.
+
+## Checked
+
+- `npx tsc --noEmit`, `npx eslint`: clean; vitest 89 of 89.
+- Stills in `round-06/` at 1920×1247, 1280×720, 390×844: the words and their
+  dashes wholly on the screen, one group shown, nothing wider than the page.
+
+# Round 07 (2026-10-17): the case held, the numbers in the header
+
+## Why
+
+The owner, on round 06 ("much better"): the title of what was made and the
+department "should be sticky"; the numbers "only … in the first section before
+you start scrolling because that's basically the header … the numbers and the
+briefing"; the bullet points "a bit more concise"; "include the client logo,
+nicely integrated"; and "slightly changed the background color using a
+gradient particle system to match the client … so it doesn't feel like too
+much of the same".
+
+## What it does
+
+- **The case is held** at the top of the column for the whole case: the
+  client's logo, what was made ("Motion ad"), and the department with its
+  particle icon ("Creative production"), over a hairline with a lit start.
+  Under it the words change, step by step, as before.
+- **The first step is the header**: its line, three numbers (the result first,
+  in gold; the time saved says what it came down from), then the briefing as a
+  quote with who gave it. No step after it repeats the numbers.
+- **Shorter claims**: at most three model lines a step, each 36 characters or
+  fewer, plus a call when a person decided (48 characters or fewer).
+- **The logos**: Loop's mark (with the name beside it), Samako's wordmark,
+  Suri's wordmark; each a white file masked to the ink, so it follows the
+  theme. In the column, at the head of the phone's run, and on the next-case
+  button.
+- **The client's field**: behind each case, a held gradient and a dot field in
+  the client's colour: Loop purple, Samako warm stone, Suri blue. It fades in
+  on each switch and never changes the page's height.
+
+## Where the logos come from
+
+- Loop: `loop_aether/public/loop-logo.svg`, cropped to the mark.
+- Samako: the wordmark used in the wave-12 renders on Drive
+  (`20260904_Samako/…/wave-12-clean-detect-pro-v6/composited/_wordmark-used.svg`),
+  its viewBox cut to the letters.
+- Suri: lifted from the published end card
+  (`public/arcs/suri/under-the-glass/end_logo.webp`) as a 96px-high PNG; a
+  stand-in until the official file is in hand.
+
+## Checked
+
+- `npx tsc --noEmit`, `npx eslint`: clean; vitest 92 of 92 (the header's three
+  numbers and briefing, the logo files on disk, the tint triples, the shorter
+  claims).
+- Stills in `round-07/` at 1920×1247, 1280×720, 390×844 (dark), and three at
+  1280×720 light: the held column fits, nothing overlaps, nothing is wider
+  than the page.
+
+## Decisions taken without asking
+
+- Samako's field is its palette's stone and cream (`#C2BBB0`, `#F9F1E4`),
+  not its navy: a navy next to Suri's blue would read as the same colour twice.
+- The phone puts the result on its own row, the other two numbers beside each
+  other under it.
+- Loop's three numbers: 1 h 51 min (est.), $27, 9 rounds of stills. Samako's:
+  1 day, 54 min, 9 of 14 takes (no money). Suri's: 2 days (est.), 82,307
+  items, 97 h of video.
+
+## Known and not fixed
+
+- The Suri wordmark is a lift from a photographed card, not the brand file.
+- The logos live in `public/test/proposal-swarm-v2/logos/`, which the public
+  repo will carry once pushed; all three marks are already public on the
+  clients' own sites and ads.

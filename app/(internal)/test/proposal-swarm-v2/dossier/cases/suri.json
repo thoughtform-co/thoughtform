@@ -5,11 +5,31 @@
   "project": "Asset library",
   "glyph": "grid",
   "workstream": "Creative operations",
-  "saved": {
-    "label": "Time saved",
-    "before": "Weeks opening folders by hand",
-    "now": "Two days to map the whole Drive",
-    "estimated": true
+  "logo": {
+    "src": "/test/proposal-swarm-v2/logos/suri.png",
+    "ratio": "493/96"
+  },
+  "tint": {
+    "dots": "118, 176, 255",
+    "glow": "40, 104, 214"
+  },
+  "stats": [
+    {
+      "value": "2 days",
+      "label": "To map the Drive, down from weeks (est.)"
+    },
+    {
+      "value": "82,307",
+      "label": "Items on one map"
+    },
+    {
+      "value": "97 h",
+      "label": "Of video read whole"
+    }
+  ],
+  "brief": {
+    "who": "The ask",
+    "text": "Find anything in the marketing Drive by what it shows, without opening a folder."
   },
   "piece": "An asset library that reads every file",
   "date": "7 to 13 Oct 2026",
@@ -62,13 +82,13 @@
       "title": ["Every search", "began in a folder."],
       "sub": "The files were all there, but the folders did not say what was in them.",
       "thought": [
-        "Walked the Drive read-only and counted first",
-        "Asked whether a path names its campaign: 78% no",
-        "Kept the folders, planned a search over them"
+        "Counted first, read-only",
+        "78% of paths name no campaign",
+        "Folders kept, search on top"
       ],
       "call": {
-        "who": "The asset library owner",
-        "said": "Drive's folders stay where they are; the library searches over them."
+        "who": "Asset library owner",
+        "said": "The folders stay"
       },
       "short": true,
       "source": "eval-log 2026-10-07 (counts); FEATURES.md, decided 12 Oct (the call)",
@@ -117,14 +137,13 @@
       "title": ["The whole Drive,", "read by a vision model."],
       "sub": "Every unique video and real image was looked at, and anything that could not be read was listed with its reason.",
       "thought": [
-        "Drive is slow per request, not per byte",
-        "Fetched starts and ends, decoded keyframes only",
-        "Read clip openings first, then every clip whole",
-        "Could not read a file? Wrote down why"
+        "Slow per request, not per byte",
+        "Keyframes only, starts and ends",
+        "Then every clip, whole"
       ],
       "call": {
         "who": "Thoughtform",
-        "said": "Go ahead: read every clip whole."
+        "said": "Read every clip whole"
       },
       "short": true,
       "source": "eval-log 2026-10-07 to 10-13; suri-dam-map b47349c",
@@ -171,9 +190,9 @@
       "title": ["Sorted by", "what each file shows."],
       "sub": "Each read became a point, and points that read alike sit together, in 60 groups.",
       "thought": [
-        "Embedded each description, label and folder",
-        "Found 60 groups, named each from its samples",
-        "Laid them out so near means alike"
+        "Embedded every description",
+        "60 groups, named from samples",
+        "Near means alike"
       ],
       "short": true,
       "source": "eval-log 2026-10-09 (embedding, groups, layout)",
@@ -214,14 +233,13 @@
       "title": ["Briefs and designs", "on the same map."],
       "sub": "Every readable Monday board and the Figma files it links were laid out beside the Drive.",
       "thought": [
-        "One model, one space for all three sources",
-        "They grouped by kind of text, not by subject",
-        "So kept each item's nearest in every source",
-        "And the 598 links the briefs already make"
+        "One space for three sources",
+        "Each item's nearest, everywhere",
+        "598 brief links kept"
       ],
       "call": {
         "who": "Thoughtform",
-        "said": "Publish the public boards and creative requests; the rest stays out."
+        "said": "Publish public boards only"
       },
       "short": true,
       "source": "layout-all log; eval-log 2026-10-10; suri-ai-studio #18, #21",
@@ -272,10 +290,9 @@
       "title": ["Ask in words,", "land on the moment."],
       "sub": "A question is read, searched three ways, and the top frames are checked before anything counts as a match.",
       "thought": [
-        "Read the question: parts, colours, what's absent",
-        "Searched words, meaning and pictures; fused by rank",
-        "Checked the frame at the second it returned",
-        "Nothing holds? Said that nothing was found"
+        "Parts, colours, what's absent",
+        "Words, meaning, pictures, fused",
+        "The frame checked at the second"
       ],
       "short": true,
       "source": "docs-search-v2; eval-log 2026-10-12 to 10-14",

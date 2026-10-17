@@ -127,13 +127,16 @@ async function shoot(browser, dir) {
             const run = document.getElementById(id)?.closest(".csd-run");
             const stick = run?.querySelector(".csd-run__stick");
             const sb = stick?.getBoundingClientRect();
-            /* the group (the case and its cards) must sit wholly on the screen,
-               and the lit card must be the one of the figure in the middle */
-            const gb = run?.querySelector(".csd-group")?.getBoundingClientRect();
-            const lit = run?.querySelectorAll(".csd-step__stack .csd-card[data-on]").length ?? 0;
+            /* the words in view and their dashes must sit wholly on the screen;
+               one group of words shown at a time */
+            const on = run?.querySelector(".csd-story__stack > .csd-story[data-on]");
+            const ob = on?.getBoundingClientRect();
+            const db = run?.querySelector(".csd-story__dashes")?.getBoundingClientRect();
+            const lit =
+              run?.querySelectorAll(".csd-story__stack > .csd-story[data-on]").length ?? 0;
             const clash =
-              gb && sb
-                ? Math.round(Math.max(sb.top - gb.top, gb.bottom - window.innerHeight, 0))
+              ob && db && sb
+                ? Math.round(Math.max(sb.top - ob.top, db.bottom - window.innerHeight, 0))
                 : 0;
             return {
               over: stick ? stick.scrollHeight - stick.clientHeight : 0,
