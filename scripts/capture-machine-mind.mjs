@@ -31,7 +31,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3013");
 const OUT = argOf("--out", "docs/design/machine-mind/round-01");
-const ONLY = argOf("--only", "g1,f1,f2,f3,e1,e2,e3,d1,d2,d3,d4,d5,d6,today").split(",").filter(Boolean);
+const ONLY = argOf("--only", "h1,g1,f1,f2,f3,e1,e2,e3,d1,d2,d3,d4,d5,d6,today").split(",").filter(Boolean);
 const THEMES = argOf("--themes", "dark,light").split(",").filter(Boolean);
 const VIEWS = argOf("--views", "iso,front").split(",").filter(Boolean);
 const PARTED = args.includes("--parted");
