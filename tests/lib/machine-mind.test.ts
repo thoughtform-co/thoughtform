@@ -42,7 +42,7 @@ describe("machine-mind hull", () => {
 describe("machine-mind directions", () => {
   it("registers the rounds newest first, then today, ids unique", () => {
     const ids = DIRECTIONS.map((d) => d.id);
-    expect(ids).toEqual(["e1", "e2", "e3", "d1", "d2", "d3", "d4", "d5", "d6", "today"]);
+    expect(ids).toEqual(["f1", "f2", "f3", "e1", "e2", "e3", "d1", "d2", "d3", "d4", "d5", "d6", "today"]);
     const rounds = DIRECTIONS.map((d) => d.round ?? 0);
     expect(rounds).toEqual([...rounds].sort((a, b) => b - a));
   });

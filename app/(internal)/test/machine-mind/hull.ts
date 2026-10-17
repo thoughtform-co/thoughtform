@@ -742,6 +742,120 @@ export function sulciPaths(h: Hull, opts: Parameters<typeof sulciLines>[1] = {})
   return runs;
 }
 
+// ─── layers: level sections and routed edges ───────────────────────────────
+
+/** The hull's point on contour angle `t` at WORLD height `H` (the parameter
+    solved by bisection; height rises monotonically along a meridian even
+    through the temporal lobe's drop). Clamped to the floor and the crown. */
+export function atHeight(side: Side, t: number, H: number, shape: HullShape = {}): { p: V3; z: number } {
+  let lo: number = Z_FLOOR;
+  let hi: number = Z_CROWN;
+  if (H <= hullPoint(side, t, lo, shape)[2]) return { p: hullPoint(side, t, lo, shape), z: lo };
+  if (H >= hullPoint(side, t, hi, shape)[2]) return { p: hullPoint(side, t, hi, shape), z: hi };
+  for (let k = 0; k < 22; k++) {
+    const m = (lo + hi) / 2;
+    if (hullPoint(side, t, m, shape)[2] < H) lo = m;
+    else hi = m;
+  }
+  const z = (lo + hi) / 2;
+  return { p: hullPoint(side, t, z, shape), z };
+}
+
+/** The world height range of a shape: its floor (the lowest point of the
+    belly) and its crown. */
+export function heightRange(shape: HullShape = {}): [number, number] {
+  let floor = Infinity;
+  for (let i = 0; i < 48; i++) floor = Math.min(floor, hullPoint(1, (i / 48) * Math.PI * 2, Z_FLOOR, shape)[2]);
+  return [floor, hullPoint(1, 0, Z_CROWN, shape)[2]];
+}
+
+/** The hull's level section at world height `H`: a closed ring of brain-axis
+    [l, f] points, one per contour angle, with each point's parameter height.
+    A layer, a wafer or a board is this ring extruded. */
+export function sectionAt(side: Side, H: number, shape: HullShape = {}, steps = 240): { ring: [number, number][]; zs: number[] } {
+  const ring: [number, number][] = [];
+  const zs: number[] = [];
+  for (let i = 0; i < steps; i++) {
+    const { p, z } = atHeight(side, (i / steps) * Math.PI * 2, H, shape);
+    ring.push([p[0], p[1]]);
+    zs.push(z);
+  }
+  return { ring, zs };
+}
+
+type P2 = [number, number];
+
+/** Douglas–Peucker on a closed ring: the fewest vertices within `eps`. */
+function simplifyRing(ring: readonly P2[], eps: number): P2[] {
+  const dp = (pts: P2[]): P2[] => {
+    if (pts.length < 3) return pts;
+    const [a, b] = [pts[0], pts[pts.length - 1]];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    let worst = 0;
+    let at = 0;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const d = Math.abs((b[0] - a[0]) * (a[1] - pts[i][1]) - (a[0] - pts[i][0]) * (b[1] - a[1])) / len;
+      if (d > worst) {
+        worst = d;
+        at = i;
+      }
+    }
+    if (worst <= eps) return [a, b];
+    const left = dp(pts.slice(0, at + 1));
+    return [...left.slice(0, -1), ...dp(pts.slice(at))];
+  };
+  // split the ring at its two farthest-apart points so both halves are open runs
+  let far = 0;
+  for (let i = 1; i < ring.length; i++) if (Math.hypot(ring[i][0] - ring[0][0], ring[i][1] - ring[0][1]) > Math.hypot(ring[far][0] - ring[0][0], ring[far][1] - ring[0][1])) far = i;
+  const one = dp(ring.slice(0, far + 1) as P2[]);
+  const two = dp([...ring.slice(far), ring[0]] as P2[]);
+  return [...one.slice(0, -1), ...two.slice(0, -1)];
+}
+
+/** A closed outline redrawn as a routed board edge: long runs, every one
+    level, plumb or at 45° in the plane's own axes (brain axes L and F, so
+    squared to the stage), hugging the outline within about `tolerance`
+    units. The outline is simplified, each edge's direction snapped to the
+    nearest eighth of a turn, and neighbouring edges re-joined at their
+    lines' crossing, so a curve becomes the cut, chamfered edge of a board
+    (never a pixel staircase). A larger tolerance is blockier. */
+export function routedOutline(ring: readonly [number, number][], tolerance: number): [number, number][] {
+  const poly = simplifyRing(ring, tolerance);
+  type Line = { p: P2; k: number };
+  const dirOf = (k: number): P2 => [Math.cos((k * Math.PI) / 4), Math.sin((k * Math.PI) / 4)];
+  let lines: Line[] = poly.map((a, i) => {
+    const b = poly[(i + 1) % poly.length];
+    const k = ((Math.round(Math.atan2(b[1] - a[1], b[0] - a[0]) / (Math.PI / 4)) % 8) + 8) % 8;
+    return { p: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], k };
+  });
+  // merge neighbours that snapped to one direction (their lines averaged), drop reversals
+  for (let pass = 0; pass < 8; pass++) {
+    const next: Line[] = [];
+    for (const l of lines) {
+      const prev = next[next.length - 1];
+      if (prev && prev.k === l.k) {
+        const d = dirOf(l.k);
+        const off = ((l.p[0] - prev.p[0]) * -d[1] + (l.p[1] - prev.p[1]) * d[0]) / 2;
+        prev.p = [prev.p[0] - d[1] * off, prev.p[1] + d[0] * off];
+      } else if (prev && (prev.k + 4) % 8 === l.k) continue;
+      else next.push({ ...l });
+    }
+    if (next.length > 1 && next[0].k === next[next.length - 1].k) next.pop();
+    const done = next.length === lines.length;
+    lines = next;
+    if (done) break;
+  }
+  const cross = (a: Line, b: Line): P2 => {
+    const da = dirOf(a.k);
+    const db = dirOf(b.k);
+    const den = da[0] * db[1] - da[1] * db[0];
+    if (Math.abs(den) < 1e-9) return [(a.p[0] + b.p[0]) / 2, (a.p[1] + b.p[1]) / 2];
+    const s = ((b.p[0] - a.p[0]) * db[1] - (b.p[1] - a.p[1]) * db[0]) / den;
+    return [a.p[0] + da[0] * s, a.p[1] + da[1] * s];
+  };
+  return lines.map((l, i) => cross(lines[(i - 1 + lines.length) % lines.length], l));
+}
+
 export type Region = "frontal" | "parietal" | "temporal" | "occipital" | "medial";
 
 /** The lobe a point of the hull lies in, coarsely: enough to give each block

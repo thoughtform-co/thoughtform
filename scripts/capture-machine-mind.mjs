@@ -31,7 +31,7 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3013");
 const OUT = argOf("--out", "docs/design/machine-mind/round-01");
-const ONLY = argOf("--only", "e1,e2,e3,d1,d2,d3,d4,d5,d6,today").split(",").filter(Boolean);
+const ONLY = argOf("--only", "f1,f2,f3,e1,e2,e3,d1,d2,d3,d4,d5,d6,today").split(",").filter(Boolean);
 const THEMES = argOf("--themes", "dark,light").split(",").filter(Boolean);
 const VIEWS = argOf("--views", "iso,front").split(",").filter(Boolean);
 const PARTED = args.includes("--parted");
@@ -60,6 +60,10 @@ for (const [w, h] of SIZES) {
             /* the test layout renders nothing until the session has loaded */
             await page.waitForSelector("canvas[data-mm-stage][data-mm-ready]", { timeout: 240000 });
             await page.addStyleTag({ content: "nextjs-portal{display:none!important}" });
+            /* the dev env banner (components/dev/DevEnvBanner.tsx) is page chrome, not the drawing */
+            await page.evaluate(() => {
+              for (const el of document.querySelectorAll("div")) if (el.textContent?.startsWith("DEV: Supabase env missing")) el.style.display = "none";
+            });
             await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
             await page.waitForTimeout(300);
             const shot = {};
