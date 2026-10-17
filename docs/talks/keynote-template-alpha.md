@@ -1,9 +1,9 @@
 # AI is not software · the keynote template
 
 The spoken script for `/arcs/thoughtform/keynote-template-alpha` (ADR-159), beat by beat, in
-the order the page scrolls: hero, About, the eras, the talk's fifteen beats in three acts, the
+the order the page scrolls: hero, About, the eras, the talk's thirteen beats in three acts, the
 swarm chapter, then the thesis and the Arc. Cut from the Ghent script of 15 October
-(`2026-10-15-ux-meetup.md`) and the owner's dictation of 16 October; the beats the room heard
+(`2026-10-15-ux-meetup.md`) and the owner's dictations of 16 and 17 October; the beats the room heard
 keep their words, the new ones carry his words from the dictation where he said them and a
 proposal where he did not. **(proposal)** marks a line that is Claude's to a first draft and his
 to rewrite. Lines in *italics* are stage directions, not things to say.
@@ -12,7 +12,7 @@ About 2,000 words: roughly 20 minutes of speech, 35 to 45 with the eras, the dra
 swarm and the pauses. A venue cuts from this; the template keeps everything.
 
 **Before you start:** one browser tab with a game someone built with AI, for after the eras.
-One tab on the NYT piece on the rogue fleet, for 10.
+One tab on the NYT piece on the rogue fleet, for 08.
 
 ---
 
@@ -51,43 +51,39 @@ and a way to check its own frames, and I trusted it. I spent my time judging, no
 *The talk starts straight after the eras now: the purpose first, or the rest reads as a sales
 pitch (owner, 16 October).*
 
-### 01 · The wake-up call (4:00)
+### 01 · What it can make (4:00)
 
-*Let the line glitch in. Wait a beat.*
+*The head is up before the first example: "AI will absorb all digital contents and products within 2 years." (U6: the wake-up call is no longer a beat of its own.) Wait a beat. Then one example at a time; scroll a step per example. Each one lies down in the stack on the left, and the axis of model capabilities grows with it. The cards read Images, Video, Tools, Brand systems, Products, Worlds, Mathematics.*
 
-AI will absorb all digital content and products within two years.
+AI will absorb all digital content and products within two years. I'll show you why I think that,
+and it isn't an opinion. It's a chart.
 
-I'll show you why I think that, and it isn't an opinion. It's a chart.
+2022: images. A picture from a prompt. Strange, and I couldn't stop looking. **(proposal: the
+spoken run below drops the Ghent script's "then" before every example)**
 
-### 02 · What it can make (5:00)
+By 2024, video. This is Loop's AI film, running as paid media next to the live-action spots.
 
-*One example at a time. Scroll a step per example; each one lies down in the stack on the left, and the axis of model capabilities grows with it.*
-
-2022: an image. A picture from a prompt. Strange, and I couldn't stop looking.
-
-Then a film. This is Loop's AI film, running as paid media next to the live-action spots.
-
-Then the tools. Vesper is the image and video tool I built at Loop, for the team: one engine with
+In 2025, tools. Vesper is the image and video tool I built at Loop, for the team: one engine with
 the studio's know-how, reachable from every tool around it.
 
-Then brand systems. Tom on the Moon: one world, its editors and writers, its spaces and its
+This year, brand systems. Tom on the Moon: one world, its editors and writers, its spaces and its
 palette, all from one system. Play it with sound if there's time.
 
-Then a whole product. This is PhotoCraft: one developer rebuilt Photoshop with Claude, and Word,
-Excel and PowerPoint a week later.
+Whole products. This is PhotoCraft: one developer rebuilt Photoshop with Claude, and Word, Excel
+and PowerPoint a week later.
 
-Then hyperpersonalised content. Players mod Halo into new games and worlds of their own.
+Worlds. Players mod Halo into new games and worlds of their own: hyperpersonalised content.
 
-And mathematics: gold at the International Maths Olympiad, then open problems solved that had stood
+And mathematics: gold at the International Maths Olympiad, and open problems solved that had stood
 for decades.
 
 Every year the stack gets taller, and it climbs because compute does: training compute for frontier
 models grows four to five times a year. Rich Sutton called it the bitter lesson in 2019: the general
 method that scales with compute and data beats the clever one we built by hand.
 
-### 03 · Intelligence as the interface (9:00)
+### 02 · Intelligence as the interface (8:00)
 
-*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it: "AI will become the interface."*
+*One scroll: the grid falls away, the stack slides in layer by layer, and the model and its cords are there as it lands. The head over it, centred: "And it becomes the interface to all of it." **(proposal)***
 
 Everything we just saw is the foundation now. It isn't the thing on top any more.
 
@@ -101,11 +97,11 @@ Remember PhotoCraft? The point isn't that everyone builds their own Photoshop. B
 well: nobody's going to vibe-code their own SAP. The point is that people stop opening the other
 software. They ask the model, and their agents use the tools for them.
 
-So read the line again. AI is both the tool and the builder of the tool. Sit with that for a
-second, as a designer. Everything we design for it assumes it's a program. It can make any
-program, and it isn't one.
+So read the line again: it becomes the interface to all of it. Sit with that for a second, as a
+designer. Everything we design for it assumes it's a program. It can make any program, and it
+isn't one. **(proposal)**
 
-### 04 · An intelligence (11:30)
+### 03 · An intelligence (10:30)
 
 *The brain turns to face the room and the two glass cards land; let them before you speak. The line over it: "But AI isn't software. It sits between a tool and a collaborator."*
 
@@ -121,7 +117,7 @@ And for anyone frowning: this isn't about consciousness or feelings. Every earli
 automation did steps you could write down. This one works wherever there's enough data and you can
 check the answer, and nobody knows its limits yet.
 
-### 05 · Every desk (13:00)
+### 04 · Every desk (12:00)
 
 *The rings come in one after another: now, next, in reach.*
 
@@ -131,40 +127,30 @@ knowledge work.
 
 ---
 
-## II · A NEW KIND OF USER (≈9 min)
+## II · A NEW KIND OF USER (≈8 min)
 
-### 06 · A user that isn't a person (14:00)
+### 05 · What it still needs (13:00)
 
-*Read it slowly.*
+*Read it slowly. His line (17 October), in place of "How do you design experiences and interfaces for a user that isn't a person?"*
 
-How do you design experiences and interfaces for a user that isn't a person?
+But it still needs context, nuance and taste.
 
-Because that's who is on the other side now. Most content on the internet is already made by AI.
-More of the interactions online are being handed to agents and agentic workflows. If the frontier
-labs absorb all software and commoditise every digital product, you could say UX is solved. I
-disagree. You just have to build interfaces for new kinds of intelligences, new kinds of digital
-minds, and their societies. That would have sounded like science fiction a few months ago.
+If the frontier labs absorb all software and commoditise every digital product, you could say
+design is solved. I disagree. Everything it makes comes out of what it's given, and what it can't
+give itself is context, nuance and taste. Somebody has to put those in. **(proposal)**
 
-### 07 · The shoggoth (15:30)
+### 06 · The layer (14:00)
 
-*The tentacles unfurl; a smile of gold particles gathers on its face.*
+*The brain turns back to its corner and opens: its two halves move apart and the layer rises
+between them, standing upright, the same plate of gold dots the swarm chapter stands on with the
+Thoughtform mark cut into its face. No words on the screen. Let it finish before you speak.*
 
-The field has a meme for this: the shoggoth. A Lovecraftian thing, tentacles everywhere, and on
-the front a small smiling mask. The mask is the friendly chat window we put on it. What's behind
-it, we are only beginning to read. **(proposal)**
+Open it up and look at what's actually there: two halves of a machine for thinking, and between
+them, this. That's where I work. I am the layer between machine intelligence and human taste,
+context and expertise. Everything in the rest of this talk is about what that layer is made of.
+**(proposal)**
 
-### 08 · The layer (16:30)
-
-*The smile fades and the brain turns back to its corner. Once it stands still its two halves move
-apart, left and right, and the layer prints between them: the same plate of gold dots the swarm
-chapter stands on, the Thoughtform mark cut into its top. Let it finish before you speak.*
-
-Take the mask off for a second and look at what's actually there: two halves of a machine for
-thinking. And between them, this. That's where I work. I am the layer between machine
-intelligence and human taste, context and expertise. Everything in the rest of this talk is
-about what that layer is made of. **(proposal)**
-
-### 09 · Already clean (17:30)
+### 07 · Already clean (15:00)
 
 *Their words, credited. Read the attribution.*
 
@@ -176,11 +162,12 @@ hypothesis, one lab, the technical paper still to come, and the author says the 
 done. But their own line is the one on the screen: the network is strange, but its strangeness
 repeats.
 
-So maybe the mask comes off. Maybe we get to read the thing behind it.
+So maybe we get to read the thing itself. **(proposal: the Ghent line read "maybe the mask comes
+off", and the mask is off the page with the shoggoth)**
 
-### 10 · Their own (19:00)
+### 08 · Their own (16:30)
 
-*The brain alone: no mask, no tentacles. Let it boot.*
+*The brain alone, closed again and whole on its hoses. Let it boot.*
 
 And here's what I think that changes, and what it doesn't. Even if we can read every neuron, they
 are still going to have minds of their own and societies of their own. It's already happening.
@@ -206,7 +193,7 @@ posture.
 
 ## III · HOW YOU TALK TO IT (≈9 min)
 
-### 11 · A colleague (21:30)
+### 09 · A colleague (19:00)
 
 *Let the line glitch in.*
 
@@ -216,7 +203,7 @@ where encoding your context matters so much.
 I've always said: if you treat AI like a pretty smart colleague, you get very far. If you respect
 the intelligence, you get pretty far.
 
-### 12 · Latent space (22:30)
+### 10 · Latent space (20:00)
 
 *Let the field drift; read the line in the middle.*
 
@@ -224,7 +211,7 @@ To see why, look inside. Inside these models, great artists become nodes in late
 vision tames the infinite into new beauty. Everything is in there: every artist, every style,
 every argument. Creatives aren't outside this. We're in it, as points the whole thing steers by.
 
-### 13 · The median (24:00)
+### 11 · The median (21:30)
 
 *Let the line glitch in.*
 
@@ -232,7 +219,7 @@ And yet, ask it something plain and you get something plain. AI converges on the
 because it's stupid, and not because it isn't creative: without context it generates the most
 plausible answer, and the most plausible answer is the middle of that field.
 
-### 14 · The prowl (25:00)
+### 12 · The prowl (22:30)
 
 *The film, full bleed, no words. Let it run a few seconds before you speak over it.*
 
@@ -244,7 +231,7 @@ navigation. You don't describe the output. You give it coordinates. **(proposal)
 That's also why the context matters more than the model. The models are smart enough. What they
 lack is your context: where in the field you live, what good looks like to you.
 
-### 15 · A node in latent space (27:00)
+### 13 · A node in latent space (24:30)
 
 *The voice. Read it slowly.*
 
@@ -322,5 +309,18 @@ have one legible job. It does not claim behaviour is predictable from mechanisms
 models are audited, or that understanding equals steering. It presses on one line of the Ghent
 talk, "something we don't fully understand", and leaves the alien question standing only if alien
 means "not a person", never "unreadable". It supports the humility close: "the network is strange,
-but its strangeness repeats", and deception could sit "in plain sight" unread. Beats 06 to 09 are
-the rewrite.
+but its strangeness repeats", and deception could sit "in plain sight" unread. Beats 05 to 08 are
+the rewrite (since U6 the alien question and the shoggoth are off the page).
+
+---
+
+## Held back: the shoggoth
+
+*Off the page since 17 October ("hide the shoggoth section for now"); its record is
+`KEYNOTE_SHOGGOTH`, back with one line in the record. Its place would be after 05.*
+
+*The tentacles unfurl; a smile of gold particles gathers on its face.*
+
+The field has a meme for this: the shoggoth. A Lovecraftian thing, tentacles everywhere, and on
+the front a small smiling mask. The mask is the friendly chat window we put on it. What's behind
+it, we are only beginning to read. **(proposal)**

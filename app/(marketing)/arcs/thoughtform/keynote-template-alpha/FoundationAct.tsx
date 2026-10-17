@@ -17,10 +17,10 @@ import {
 } from "@/components/arcs/figures/foundation/brainIso";
 import type { Flat } from "@/components/arcs/figures/foundation/isoKit";
 import { latticeAt, pickLattice } from "@/app/(internal)/test/proposal-swarm/engine/lattice";
-import { COVER, engraved, lightOf, markCover } from "@/app/(internal)/test/proposal-swarm/engine/mark";
+import { COVER, coverOf, engraved, LIP_REACH } from "@/app/(internal)/test/proposal-swarm/engine/mark";
 import { paletteOf, parseRgb, type Rgb, type Tones } from "@/app/(internal)/test/proposal-swarm/engine/palette";
 import { PLATES, SIDE as PLATE_SIDE } from "@/app/(internal)/test/stack-forms/model";
-import { kOf, type Lattice, px as sitePx, py as sitePy, STYLE, tierSizes } from "@/app/(internal)/test/stack-forms/swarm/dots";
+import { kOf, type Lattice, STYLE, tierSizes } from "@/app/(internal)/test/stack-forms/swarm/dots";
 import { type Place, type Tone } from "@/components/arcs/figures/foundation/paintBrain";
 import {
   CARD,
@@ -148,8 +148,9 @@ const POSES: Record<number, Pose> = {
   3: { x: 720, y: 360, s: 0.74, a: 1 },
   4: RECEDE,
   5: { x: 720, y: 330, s: 0.78, a: 1 },
-  // the layer (U5): the two hemispheres parted, the plate between them
-  6: { x: 720, y: 390, s: 0.78, a: 1 },
+  // the layer (U5): the two hemispheres parted, the plate standing between
+  // them; no head over it since U6, so it sits on the box's middle
+  6: { x: 720, y: 410, s: 0.78, a: 1 },
   7: RECEDE,
   // the brain alone (ADR-159), centred under its head
   8: { x: 720, y: 400, s: 0.82, a: 1 },
@@ -159,14 +160,15 @@ const POSES: Record<number, Pose> = {
     the layer beat draws the whole brain as its two halves (`left`, `right`). */
 type Picture = "plain" | "split" | "mask" | "left" | "right";
 const PICTURE: Record<number, Picture> = { 1: "plain", 2: "split", 3: "plain", 4: "plain", 5: "plain", 6: "plain", 7: "plain", 8: "plain" };
-/** The layer beat (U5). The plate is picked the swarm's way, for a seat
-    this share of the act's width; each hemisphere moves out along the
-    brain's own L axis until it stands `LAYER_CLEAR` brain units past the
-    plate's edge; the plate's top sits `LAYER_Z` brain units above the
-    brain's equator, between the two. */
-const LAYER_SHARE = 0.3;
-const LAYER_CLEAR = 36;
-const LAYER_Z = 18;
+/** The layer beat (U5, U6). The plate stands upright in the gap the two
+    hemispheres open (U6, owner: "this Thoughtform stack should stand
+    upright, not horizontally"): its face square to the brain's L axis,
+    about `LAYER_SIDE` brain units a side (the swarm's lattice nearest that
+    size), its middle `LAYER_Z` brain units above the equator; each
+    hemisphere moves `LAYER_PART` brain units out along L. */
+const LAYER_SIDE = 210;
+const LAYER_PART = 175;
+const LAYER_Z = 22;
 /** How far the pointer moves the brain (owner, 2026-10-16: "when you move
     your mouse, the brain moved slightly ... just enough for a little fun"),
     in viewBox px at the brain's scale 1. */
@@ -271,7 +273,8 @@ function findSpecs() {
   const eyebrows = s.map((x) => (x?.kind === "figure" ? (x.eyebrow ?? x.head?.eyebrow ?? "") : ""));
   const none = { title: "", line: "" };
   const heads: { title: string; line: string }[] = [
-    none,
+    // U6: the wake-up call, moved onto the stack as its head
+    { title: cap && cap.id === "capability" ? (cap.title ?? "") : "", line: "" },
     { title: ifc && ifc.id === "interface" ? ifc.mind : "", line: "" },
     { title: middle?.line ?? "", line: "" },
     { title: knowledge?.line ?? "", line: "" },
@@ -561,12 +564,13 @@ export function FoundationAct() {
       /**
        * The layer (U5, owner: "reveal the brain, move the two parts left
        * and right respectively, and place our Thoughtform-encoded layer
-       * ... in between"): the two hemispheres, each moved out along the
-       * brain's own L axis until it clears the plate, and the swarm page's
-       * plate printed between them, its top a little above the equator.
-       * Painted in depth order for this camera: the plate's far corner lies
-       * over the far half's foot and tucks behind the near half's dome, so
-       * far half, plate, near half.
+       * ... in between"; U6: "just the brain opened in the middle ... this
+       * Thoughtform stack should stand upright"): the two hemispheres, each
+       * moved out along the brain's own L axis, and the swarm page's plate
+       * standing in the gap, its face square to L. The brain's isometric is
+       * the lattice's, so L runs along the lattice's j and the plate's
+       * thickness with it. Painted in depth order for this camera: the far
+       * half, the plate over it, the near half over the plate's foot.
        */
       const drawParted = (left: HTMLImageElement, right: HTMLImageElement, alpha: number) => {
         const open = smooth(brain.apart);
@@ -575,20 +579,20 @@ export function FoundationAct() {
         const l1 = brainIsoPoint(1, 0, 0, V0);
         const ux = l1[0] - o[0];
         const uy = l1[1] - o[1];
-        const ul = Math.hypot(ux, uy);
-        const D = layerAt((canvas.width / dpr) * LAYER_SHARE);
-        // the plate's side on screen, device px, as brain units along L
+        // a brain unit on screen, device px (the isometric draws every axis alike)
+        const unit = Math.hypot(ux, uy) * s * k;
+        // the swarm's plate width for a face this side: its width is its side over cos 30
+        const D = layerAt((1.73 * LAYER_SIDE * unit) / dpr);
         const side = D.L.m * D.L.g * Math.hypot(D.L.a, D.L.b);
-        const halfL = side / 2 / (ul * s * k);
-        const part = (halfL + LAYER_CLEAR) * open;
+        const part = LAYER_PART * open;
         const B = boxAt(FLAT(0));
         const near = uy > 0 ? 1 : -1;
-        // A readout for the walks: the plate picked and the parting, in brain units.
-        root.dataset.faLayer = `${D.L.a}:${D.L.b} n${D.L.n} g${D.L.g} side${side.toFixed(0)} halfL${halfL.toFixed(0)} part${part.toFixed(0)} u${ux.toFixed(2)},${uy.toFixed(2)} s${s.toFixed(3)} k${k.toFixed(3)}`;
+        // A readout for the walks: the plate picked, its side and the parting, in brain units.
+        root.dataset.faLayer = `${D.L.a}:${D.L.b} n${D.L.n} g${D.L.g} side${(side / unit).toFixed(0)} part${part.toFixed(0)} u${ux.toFixed(2)},${uy.toFixed(2)} s${s.toFixed(3)} k${k.toFixed(3)}`;
         const half = (dir: 1 | -1) => draw(dir > 0 ? right : left, alpha, B, dir * part * ux * s, dir * part * uy * s);
         half(near > 0 ? -1 : 1);
-        const top = brainIsoPoint(0, 0, LAYER_Z, V0);
-        paintLayer(ctx, D, { cx: (pl.x + top[0] * s) * k, cy: (pl.y + top[1] * s) * k, tones, printed: smooth((brain.apart - 0.3) / 0.65), alpha });
+        const mid = brainIsoPoint(0, 0, LAYER_Z, V0);
+        paintLayer(ctx, D, { cx: (pl.x + mid[0] * s) * k, cy: (pl.y + mid[1] * s) * k, tones, printed: smooth((brain.apart - 0.3) / 0.65), alpha });
         half(near);
       };
       /** The whole picture at this camera, else at this frame of the path
@@ -1194,13 +1198,20 @@ const toneOf = (tone: Tone, name: string) =>
   name === "gold" ? tone.gold : name === "green" ? tone.green : name === "red" ? tone.red : tone.ink;
 
 /**
- * The layer (ADR-159 U5): the swarm page's middle plate, dot for dot. The
- * same lattice (`engine/lattice.ts`), the same population as `dots.ts`'s
- * `layerPop` (the strata on its two near walls, every site of its top),
- * and the mark cut into its top as `mark.ts`'s `setMark` cuts it in
- * `engrave`: the groove sunk to dim gold, the lip that faces the light
- * caught in brighter gold, the field as it stands, the rim lit. PURE: built
- * once a lattice, in device px from the lattice's origin.
+ * The layer (ADR-159 U5, U6): the swarm page's middle plate, dot for dot,
+ * STANDING UPRIGHT (U6). The same lattice (`engine/lattice.ts`), the same
+ * population as `dots.ts`'s `layerPop` turned a quarter onto its side: its
+ * top is the face that looks at the reader now, the strata run through its
+ * thickness and show on its two near edges (the top edge lit, as the near
+ * wall was, the end plain), and the mark is cut into the face as `mark.ts`
+ * cuts it in `engrave` (the same `coverOf`, read square to the face): the
+ * groove sunk to dim gold, the lip that faces the light caught in brighter
+ * gold, the field as it stands, the rim lit. The slab is solid: its
+ * silhouette takes the ground, so the far half does not show through.
+ *
+ * In lattice terms the face runs along `i` and up, the thickness along `j`
+ * (0 the far face, the plate's floor; `th` the near face, its top). PURE:
+ * built once a lattice, in device px from the lattice's origin.
  */
 interface LayerDots {
   L: Lattice;
@@ -1209,39 +1220,57 @@ interface LayerDots {
   y: Int32Array;
   tier: Uint8Array;
   style: Uint8Array;
-  /** Its turn when the plate prints, 0..1: row by row down the screen. */
+  /** Its turn when the plate prints, 0..1: row by row up the screen. */
   rank: Float32Array;
-  /** The top's centre site, in device px from the lattice's origin. */
+  /** The slab's middle, in device px from the lattice's origin. */
   centre: [number, number];
+  /** The slab's silhouette, in device px from the lattice's origin. */
+  outline: [number, number][];
 }
 function layerDots(L: Lattice): LayerDots {
   const plate = PLATES[1];
-  const m = L.m;
+  const { m, n } = L;
+  const A = L.a * L.g;
+  const Bv = L.b * L.g;
+  // A point of the slab, `I` along the face, `J` through it, `T` up it.
+  const at = (I: number, J: number, T: number): [number, number] => [(I - J) * A, (I + J - 2 * T) * Bv];
+  // The thickness and the strata, in the swarm's half-site rows (`kOf`).
   const kt = kOf(L, plate.top);
-  const raw: { x: number; y: number; tier: number; style: number }[] = [];
+  const th = kt / 2;
   const rows: number[] = [];
   for (const b of plate.body) {
     const mid = Math.min(kt - 1, kOf(L, (b.z0 + b.z1) / 2));
     rows.push(mid);
-    if (L.n >= 4 && mid + 1 < kt) rows.push(mid + 1);
+    if (n >= 4 && mid + 1 < kt) rows.push(mid + 1);
   }
+  const raw: { x: number; y: number; tier: number; style: number }[] = [];
+  const push = ([x, y]: [number, number], tier: number, style: number) => raw.push({ x: Math.round(x), y: Math.round(y), tier, style });
   for (const kk of new Set(rows)) {
-    for (let i = 0; i <= m; i++) raw.push({ x: sitePx(L, i, m), y: sitePy(L, i, m, kk), tier: 2, style: STYLE.layerLit });
-    for (let j = 0; j < m; j++) raw.push({ x: sitePx(L, m, j), y: sitePy(L, m, j, kk), tier: 1, style: STYLE.layer });
+    const J = kk / 2;
+    for (let I = 0; I <= m; I++) push(at(I, J, m), 2, STYLE.layerLit);
+    for (let T = 0; T < m; T++) push(at(m, J, T), 1, STYLE.layer);
   }
   const c = PLATE_SIDE / 2;
-  const cover = markCover(m);
-  const lit = lightOf(m);
-  const on = (i: number, j: number) => (i < 0 || j < 0 || i > m || j > m ? false : cover[i * (m + 1) + j] >= COVER);
-  for (let i = 0; i <= m; i++) {
-    for (let j = 0; j <= m; j++) {
-      const rim = i === 0 || i === m || j === 0 || j === m;
-      const r = Math.hypot(i / L.n - c, j / L.n - c);
-      const [tier, style] = rim ? [2, STYLE.layerLit] : engraved(on(i, j), lit(i, j), [r < 3.5 ? 2 : 1, STYLE.layer]);
-      raw.push({ x: sitePx(L, i, j), y: sitePy(L, i, j, kt), tier, style });
+  const half = m / 2;
+  const cover = coverOf(m);
+  // The mark square to the face: across the face is `I`, up it is `T`.
+  const face = (I: number, T: number) => {
+    const X = I - half;
+    const Y = half - T;
+    return cover(half + (X + Y) / Math.SQRT2, half + (Y - X) / Math.SQRT2);
+  };
+  const on = (I: number, T: number) => face(I, T) >= COVER;
+  // The light from the top left of the screen: on the face, less `I`.
+  const lit = (I: number, T: number) => face(I - LIP_REACH, T) - face(I + LIP_REACH, T);
+  for (let I = 0; I <= m; I++) {
+    for (let T = 0; T <= m; T++) {
+      const rim = I === 0 || I === m || T === 0 || T === m;
+      const r = Math.hypot(I / n - c, T / n - c);
+      const [tier, style] = rim ? [2, STYLE.layerLit] : engraved(on(I, T), lit(I, T), [r < 3.5 ? 2 : 1, STYLE.layer]);
+      push(at(I, th, T), tier, style);
     }
   }
-  const order = raw.map((_, at) => at).sort((p, q) => raw[p].y - raw[q].y || raw[p].x - raw[q].x);
+  const order = raw.map((_, i) => i).sort((p, q) => raw[q].y - raw[p].y || raw[p].x - raw[q].x);
   const out: LayerDots = {
     L,
     count: raw.length,
@@ -1250,27 +1279,50 @@ function layerDots(L: Lattice): LayerDots {
     tier: new Uint8Array(raw.length),
     style: new Uint8Array(raw.length),
     rank: new Float32Array(raw.length),
-    centre: [sitePx(L, m / 2, m / 2), sitePy(L, m / 2, m / 2, kt)],
+    centre: at(half, th / 2, half),
+    outline: [at(0, th, 0), at(m, th, 0), at(m, 0, 0), at(m, 0, m), at(0, 0, m), at(0, th, m)],
   };
-  raw.forEach((d, at) => {
-    out.x[at] = d.x;
-    out.y[at] = d.y;
-    out.tier[at] = d.tier;
-    out.style[at] = d.style;
+  raw.forEach((d, i) => {
+    out.x[i] = d.x;
+    out.y[i] = d.y;
+    out.tier[i] = d.tier;
+    out.style[i] = d.style;
   });
-  order.forEach((at, i) => {
-    out.rank[at] = order.length > 1 ? i / (order.length - 1) : 0;
+  order.forEach((i, r) => {
+    out.rank[i] = order.length > 1 ? r / (order.length - 1) : 0;
   });
   return out;
 }
-/** The plate on the canvas, the centre of its top at `cx, cy` (device px),
-    printed `printed` of the way, in the page's tones, at `alpha`. */
+/** The plate on the canvas, its middle at `cx, cy` (device px), printed
+    `printed` of the way from its foot up, in the page's tones, at `alpha`. */
 function paintLayer(ctx: CanvasRenderingContext2D, D: LayerDots, o: { cx: number; cy: number; tones: Tones; printed: number; alpha: number }) {
   if (o.printed <= 0 || o.alpha <= 0) return;
   const pal = paletteOf([1, 1, 1], o.tones);
   const sizes = tierSizes(D.L);
   const ox = Math.round(o.cx - D.centre[0]);
   const oy = Math.round(o.cy - D.centre[1]);
+  // The slab's body, risen as far as it has printed, in the page's ground.
+  const pad = sizes[2];
+  const ys = D.outline.map(([, y]) => y);
+  const y0 = Math.min(...ys) - pad;
+  const y1 = Math.max(...ys) + pad;
+  const cut = y1 - (y1 - y0) * Math.min(1, o.printed * 1.15);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, oy + cut, ctx.canvas.width, oy + y1 - (oy + cut) + 1);
+  ctx.clip();
+  ctx.beginPath();
+  D.outline.forEach(([x, y], i) => {
+    const cx = ox + x + Math.sign(x - D.centre[0]) * pad;
+    const cy = oy + y + Math.sign(y - D.centre[1]) * pad;
+    if (i) ctx.lineTo(cx, cy);
+    else ctx.moveTo(cx, cy);
+  });
+  ctx.closePath();
+  ctx.globalAlpha = o.alpha;
+  ctx.fillStyle = `rgb(${o.tones.ground.join(", ")})`;
+  ctx.fill();
+  ctx.restore();
   ctx.globalAlpha = o.alpha;
   let style = -1;
   for (let d = 0; d < D.count; d++) {

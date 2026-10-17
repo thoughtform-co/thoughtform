@@ -83,7 +83,7 @@ export function ArcFigure({
               ))}
             </div>
           ) : null}
-          {spec.id === "shoggoth" || spec.id === "brain" || spec.id === "layer" ? (
+          {(spec.id === "shoggoth" || spec.id === "brain" || spec.id === "layer") && spec.title ? (
             <p className="fa-static fa-static--line">
               <strong>{spec.title}</strong> {spec.line}
             </p>
@@ -98,6 +98,11 @@ export function ArcFigure({
               <p>{spec.quote}</p>
               <cite>{spec.source.label}</cite>
             </blockquote>
+          ) : null}
+          {spec.id === "capability" && spec.title ? (
+            <p className="fa-static fa-static--line">
+              <strong>{spec.title}</strong>
+            </p>
           ) : null}
           {spec.id === "capability" ? (
             <ol className="fa-static">

@@ -213,9 +213,9 @@ html[data-theme="light"] .fa__dots {
 .fa__quote {
   visibility: hidden;
 }
-/* The act's phases (ADR-159 U5): 0 the stack · 1 the interface (the tool
-   and the builder of the tool) · 2 the middle · 3 every desk · 4 the alien
-   question (the brain behind the voice) · 5 the shoggoth · 6 the layer ·
+/* The act's phases (ADR-159 U5): 0 the stack · 1 the interface · 2 the
+   middle · 3 every desk · 4 what it still needs (the brain behind the
+   voice) · 5 the shoggoth (off the page since U6) · 6 the layer ·
    7 Goodfire's line (behind) · 8 their own · 9 latent space. */
 .fa[data-fa-phase="0"] .fa__stack,
 .fa[data-fa-phase="1"] .fa__stack,
@@ -467,6 +467,7 @@ html[data-theme="light"] .fa__dots {
   gap: var(--space-sm);
   visibility: hidden;
 }
+.fa[data-fa-phase="0"] .fa__head,
 .fa[data-fa-phase="1"] .fa__head,
 .fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
@@ -475,12 +476,13 @@ html[data-theme="light"] .fa__dots {
 .fa[data-fa-phase="8"] .fa__head {
   visibility: inherit;
 }
-/* Over the stack: the title left on its own measure, as the hero's H1. */
-.fa[data-fa-phase="1"] .fa__head {
+/* Over the stack: the wake-up call left on its own measure, as the hero's
+   H1 (U6, owner 2026-10-17: "we need to have an H1 text in the top left"). */
+.fa[data-fa-phase="0"] .fa__head {
   justify-items: start;
   text-align: left;
 }
-.fa[data-fa-phase="1"] .fa__title {
+.fa[data-fa-phase="0"] .fa__title {
   max-width: 22ch;
 }
 /* The shoggoth (owner, 2026-10-15): the title on the left, its line on the
@@ -505,8 +507,10 @@ html[data-theme="light"] .fa__dots {
   max-width: 24ch;
   text-align: right;
 }
-/* Centred (owner: "I want to play around with centering it"): the middle,
-   the rings, the layer, the brain alone. */
+/* Centred (owner: "I want to play around with centering it"; U6: "when we
+   don't have a paragraph on the right ... keep [it] centered"): every head
+   without a paragraph beside it, and the brain alone. */
+.fa[data-fa-phase="1"] .fa__head,
 .fa[data-fa-phase="2"] .fa__head,
 .fa[data-fa-phase="3"] .fa__head,
 .fa[data-fa-phase="6"] .fa__head,

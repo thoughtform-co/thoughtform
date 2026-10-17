@@ -1,8 +1,8 @@
 # ADR-159: The keynote template is the UX meetup talk, copied and retold
 
 - **Status:** Proposed (2026-10-16, owner), built and guarded on branch
-  `arc/keynote-template-alpha`, not pushed. Flips to Accepted once the owner has read the page
-  live and ruled on the lines marked (proposal).
+  `arc/keynote-template-alpha`; on main through U6 (pushed 2026-10-17 on his word). Flips
+  to Accepted once the owner has read the page live and ruled on the lines marked (proposal).
 - **Surface:** `/arcs/thoughtform/keynote-template-alpha` (an OWN ROUTE,
   `app/(marketing)/arcs/thoughtform/keynote-template-alpha/**`,
   `lib/arcs/content/keynote-template-alpha.ts`); one figure id (`brain`) on `ArcFigureSpec` and
@@ -363,12 +363,67 @@ parted halves, the far corner over the far half's foot and the near corner under
 half's dome; leaving it, the halves close at the isometric before the brain turns and recedes
 behind the Goodfire line; their own whole on its hoses after. No console error.
 
+## U6 · The claim on the stack, one connection, his line, the shoggoth held back, the layer standing (2026-10-17, owner)
+
+U4 and U5 went to main first, on his "push to main", as two commits (`db3b7144` his two lines,
+`3750fa02` the rest: U5 had rewritten U4's planets and smile in the same file, so U4's code
+landed with U5). Then his notes on the stack: "we need to have an H1 text in the top left,
+something that nicely connects with the next section"; "maybe we don't need that interstitial
+but we can just use that title in the section with the different phases, the stacks, image,
+film"; "instead of 'an image' ... images, video, tools. I don't want to use the word 'then'
+every time"; "when we don't have a paragraph on the right ... keep [it] centered"; 06 "should
+be replaced with 'but it still needs context, nuance and taste'" (dictated "new ones"); "hide
+the shoggoth section for now"; "we don't need the 'I am the layer' text, just the brain opened
+in the middle: the Thoughtform stack. This Thoughtform stack should stand upright, not
+horizontally."
+
+- **The wake-up call is the stack's head.** `the-claim` is off the keynote; its words, as the
+  room heard them ("AI will absorb all digital contents and products within 2 years."), are the
+  capability figure's new optional `title`, the act's head for phase 0, set left on the top datum
+  as the hero's H1 (22ch, two lines at his viewport, clear of the stack and the facing card).
+  The beat is forked on the record (`absorbed`), its media the talk's by reference, its cards
+  named as one run: Images, Video, Tools, Brand systems, Products, Worlds, Mathematics, and the
+  one caption with a "then" in it reworded. The beats renumber 01-13; the hero's links point at
+  `#capability` and `#the-layer`.
+- **The interface's head connects to it**: "And it becomes the interface to all of it."
+  (proposal), centred. Every head with no paragraph beside it is centred now; the stack's alone
+  stays left, as an H1.
+- **05 is his line**: "But it still needs context, nuance and taste." (eyebrow "What it still
+  needs", menu "Context and taste": the registry caps a menu label at 18).
+- **The shoggoth is held back**, not deleted: its record is `KEYNOTE_SHOGGOTH`, off the page;
+  the act keeps its phase 5, so putting it back is one line in `sections`.
+- **The layer is wordless and the plate stands.** The figure's `title` and `line` are optional
+  and the keynote's beat has neither (the static fallback letters nothing). The act turns the
+  brain to the isometric and parts it as before, each half `LAYER_PART` (175) brain units out
+  along L; the swarm's plate stands upright in the gap, its face square to L (the brain's
+  isometric is the lattice's, so L runs along the lattice's `j` and the plate's thickness with
+  it). `layerDots` is `layerPop` turned a quarter onto its side: the old top is the face that
+  looks at the reader, engraved through `mark.ts`'s own `coverOf` read square to the face
+  (`coverOf` and `LIP_REACH` exported for it), the rim lit; the strata run through the thickness
+  and show on the two near edges (the top edge lit as the near wall was, the end plain). The
+  lattice is picked for a face of about `LAYER_SIDE` (210) brain units, the brain's own height
+  and a bit, its middle `LAYER_Z` (22) above the equator. The slab is solid: its silhouette
+  takes the page's ground, so the far half does not show through, and it prints from its foot
+  up. Depth order far half, slab, near half. The pose sits on the box's middle (y 410).
+
+Verified: `tsc` and `eslint` clean; the keynote test (9), `ux-meetup` (11), `arcs-registry` (60)
+and `arc-terminal-markup` (9) green. Read headed in the owner's Chrome at 2131×1270: the stack
+with its H1 top left and "Worlds" on the facing card; the interface's head centred on one line,
+clear of the brain; the layer with the 5:3 n4 plate (`side198`, `part175` in `data-fa-layer`)
+standing between the halves, the near half clear of its face and the mark legible on it. No
+console error. The quote and statement lines did not type in under the automated drive, on this
+page and on the frozen Ghent page alike (their text is in the DOM); a manual scroll is the
+check.
+
 ## Left open
 
-- Every line marked (proposal): 07's line, 08's spoken paragraph, 14's spoken paragraph on
-  semantic navigation, the wording of 06, 09's choice of quote, 10's title.
-- The layer's share of the act's width, the clearance and the plate's height are first values;
-  whether the hemispheres should keep their hoses in that beat is his read.
+- Every line marked (proposal): 02's head and the closing paragraph of its script, 01's spoken
+  run without "then", 05's spoken paragraph, 06's spoken paragraph, 07's last line (the mask is
+  off the page), 12's spoken paragraph on semantic navigation, 07's choice of quote, 08's title.
+- "Nuance" is read from his dictation ("new ones").
+- Act II is still called "a new kind of user", though the question that named it is off the page.
+- The layer's side, parting and height (`LAYER_SIDE`, `LAYER_PART`, `LAYER_Z`) are first
+  values; whether the hemispheres should keep their hoses in that beat is his read.
 - The planets' size and glow, the glint's pace and the smile's density are first values.
 - The orbits' angles and periods, the glass's two opacities, the lean's reach and the display's
   smile are first values; his to tune on the live page.
@@ -379,4 +434,3 @@ behind the Goodfire line; their own whole on its hoses after. No console error.
 - The NYT byline and date in the script (Freedman, 14 October 2026, from secondary coverage; the
   article itself was not opened).
 - Whether the swarm's labels get a keynote variant now or later; whether the thesis stays.
-- The push: nothing on this branch has left the machine.

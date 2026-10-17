@@ -2946,8 +2946,9 @@ export type ArcFigureSpec = {
        *  Thoughtform layer, the swarm page's engraved plate, set between
        *  them. Its words only; the drawing is the route's foundation act. */
       id: "layer";
-      title: string;
-      line: string;
+      /** Its words, if any: since U6 the keynote's beat is wordless. */
+      title?: string;
+      line?: string;
     }
   | {
       /** A film, full bleed and wordless (owner, 2026-10-15): the house's
@@ -2967,6 +2968,9 @@ export type ArcFigureSpec = {
       /** What AI could make, one card at a time, each settling into the
        *  stack (ADR-156 U4). */
       id: "capability";
+      /** A head over the stack (ADR-159 U6: the keynote's wake-up call,
+       *  moved onto this beat). The talk's beat has none. */
+      title?: string;
       cards: readonly {
         id: string;
         kind: "image" | "video" | "tool" | "brand" | "product" | "worlds" | "mathematics";

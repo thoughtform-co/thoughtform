@@ -62,7 +62,7 @@ const REACH = 0.86;
 const SUB = 5;
 /** How far towards and away from the light the engraving reads the mark
     either side of a site, in sites. */
-const LIP_REACH = 0.6;
+export const LIP_REACH = 0.6;
 /** How much more of the mark towards the light than away from it makes a
     site the lip of the cut. */
 const LIP = 0.3;
@@ -98,7 +98,7 @@ function inShape(s: Shape, x: number, y: number): boolean {
  * sites a side, at any `i`, `j` (not only a site's own). The mark's middle
  * is its ring's, on the plate's middle.
  */
-function coverOf(m: number): (i: number, j: number) => number {
+export function coverOf(m: number): (i: number, j: number) => number {
   const S = markShapes();
   /* the ring is the second path; its box's middle is the mark's */
   const ring = S[1];
