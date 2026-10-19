@@ -12,6 +12,7 @@ import { Chain } from "./Chain";
 import { Cloud } from "./Cloud";
 import { Screen } from "./Screen";
 import { Sheet } from "./Sheet";
+import { Tools } from "./Tools";
 import { Sprawl } from "./Sprawl";
 import { Track } from "./Track";
 
@@ -70,6 +71,8 @@ export function FigureView({
         <Anatomy figure={f} />
       ) : f.kind === "chain" ? (
         <Chain figure={f} />
+      ) : f.kind === "tools" ? (
+        <Tools figure={f} />
       ) : (
         <Flow figure={f} />
       )}

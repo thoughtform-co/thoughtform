@@ -1,8 +1,8 @@
 {
   "id": "samako",
   "client": "Samako",
-  "nav": "Briefs and ad names · Samako",
-  "project": "Briefs and ad names, from a sheet into ClickUp",
+  "nav": "Briefing flow · Samako",
+  "project": "One briefing flow across Motion, ClickUp and Figma",
   "glyph": "flow",
   "workstream": "Creative operations",
   "logo": {
@@ -16,37 +16,33 @@
   },
   "intro": {
     "line": [
-      "1,108 ads named by hand in a sheet,",
-      "every brief in its own template."
+      "The work behind every brief",
+      "was spread across separate tools."
     ],
     "facts": [
       {
-        "value": "1,108",
-        "label": "Ads, named by hand in one sheet"
+        "value": "Motion",
+        "label": "Where the ad results were"
       },
       {
-        "value": "~28",
-        "label": "New ads a week"
+        "value": "ClickUp",
+        "label": "Where the briefs were"
       },
       {
-        "value": "5",
-        "label": "Tools to launch one ad"
+        "value": "Figma",
+        "label": "Where the designs were"
       }
     ]
   },
   "result": {
     "title": [
-      "One template.",
-      "Names built for you."
+      "Claude now drafts briefs",
+      "from all the tools at once."
     ],
-    "before": "A brief meant building the ad name in a sheet, pasting it into a task, renaming files by hand and pinging the agency on Slack.",
-    "allows": "A strategist pastes raw notes and gets the team's brief, its ad name and a place in the launch queue."
+    "before": "A strategist read the results in Motion, wrote the brief in ClickUp in their own template, found the design in Figma and named the ad by hand.",
+    "allows": "Strategists ask for briefs on a concept and get several drafts, so their time goes into the best one."
   },
   "stats": [
-    {
-      "value": "1,363",
-      "label": "Ads moved from the sheet into ClickUp"
-    },
     {
       "value": "1",
       "label": "Template for every brief"
@@ -54,11 +50,15 @@
     {
       "value": "0",
       "label": "Ad names typed by hand"
+    },
+    {
+      "value": "1,363",
+      "label": "Past ads moved into ClickUp"
     }
   ],
   "opening": {
-    "head": "Paid social / Launch register",
-    "datum": "1,363 ads · one task each",
+    "head": "ClickUp / Launch register",
+    "datum": "One task per ad",
     "figure": {
       "kind": "screen",
       "layout": "list",
@@ -149,177 +149,274 @@
   "chapters": [
     {
       "n": 1,
-      "id": "sheet",
+      "id": "apart",
       "kick": "The problem",
       "nav": "Problem",
       "title": [
-        "One sheet, five tools,",
-        "every brief its own."
+        "Each brief meant a trip",
+        "through four tools."
       ],
-      "sub": "Each ad was named by hand in a Google Sheet, pasted into a task, its files renamed and the agency pinged on Slack. Every strategist wrote briefs in their own template, so production read each one differently.",
+      "sub": "The last results were in Motion, the brief in ClickUp, the designs in Figma and the ad names in a Google Sheet. Strategists carried each brief between them by hand, and each wrote it in their own template.",
       "points": [
         {
-          "text": "Names drifted across 1,108 ads"
-        },
-        {
-          "text": "Creative lead: our holy grail",
-          "person": true
+          "text": "1,108 ads named by hand"
         }
       ],
       "short": true,
-      "source": "launch-sheet.md and naming.md, samako-ai-studio; the vault, 1 Oct 2026",
+      "source": "the vault, 24 Sep and 1 Oct 2026; launch-sheet.md, samako-ai-studio",
       "frame": {
-        "head": "Google Sheets / Launch sheet",
-        "datum": "1,108 ads",
+        "head": "Before / Four tools",
+        "datum": "Every path is done by hand",
         "figure": {
-          "kind": "sheet",
-          "file": "Launch sheet",
-          "tab": "Launch",
-          "columns": [
+          "kind": "tools",
+          "mode": "apart",
+          "tools": [
             {
-              "label": "Concept"
+              "name": "Motion",
+              "holds": "Results",
+              "tone": "#a78bfa",
+              "lines": [
+                "Top ads, last 30 days",
+                "Hook rate by concept",
+                "Spend per ad set"
+              ]
             },
             {
-              "label": "Market"
+              "name": "ClickUp",
+              "holds": "Briefs",
+              "tone": "#7b68ee",
+              "lines": [
+                "A template per strategist",
+                "Status set by hand",
+                "Assets linked by hand"
+              ]
             },
             {
-              "label": "Format"
+              "name": "Figma",
+              "holds": "Designs",
+              "tone": "#f24e1e",
+              "lines": [
+                "Approved ad templates",
+                "Autumn statics",
+                "Product packshots"
+              ]
             },
             {
-              "label": "Description",
-              "w": 2.2
-            },
-            {
-              "label": "Week"
-            },
-            {
-              "label": "Status",
-              "w": 1.3
-            },
-            {
-              "label": "Launch date",
-              "w": 1.6
+              "name": "Google Sheets",
+              "holds": "Names",
+              "tone": "#0f9d58",
+              "lines": [
+                "1,108 ad names",
+                "Typed one by one",
+                "Sent on to the agency"
+              ]
             }
           ],
-          "rows": [
-            [
-              "158.3",
-              "DACH",
-              "Video",
-              "Dog hates clean",
-              "2026 W39",
-              "Launched",
-              "22 Sep"
-            ],
-            [
-              "158.4",
-              "NL",
-              "Static",
-              "Xmas gift",
-              "W48",
-              "Ready",
-              "launch after QA"
-            ],
-            [
-              "158.5",
-              "DACH",
-              "Video",
-              "Sticky floor, childeren",
-              "2026 W39",
-              "Ready",
-              ""
-            ],
-            [
-              "158.6",
-              "",
-              "Static",
-              "Autumn deals",
-              "2026 W40",
-              "Briefed",
-              "ask the agency"
-            ],
-            [
-              "158.7",
-              "NL",
-              "UGC",
-              "Hair on the sofa",
-              "2026 W40",
-              "Ready",
-              ""
-            ],
-            [
-              "158.8",
-              "DACH",
-              "Static",
-              "Allergy season",
-              "2026 W40",
-              "Briefed",
-              ""
-            ]
-          ],
-          "marks": [
-            {
-              "row": 1,
-              "col": 4,
-              "n": 1
-            },
-            {
-              "row": 2,
-              "col": 3,
-              "n": 2
-            },
-            {
-              "row": 3,
-              "col": 1,
-              "n": 3
-            },
-            {
-              "row": 1,
-              "col": 6,
-              "n": 4
-            }
-          ],
-          "notes": [
-            {
-              "n": 1,
-              "text": "A week without its year"
-            },
-            {
-              "n": 2,
-              "text": "A typo, carried into the name"
-            },
-            {
-              "n": 3,
-              "text": "A field left empty"
-            },
-            {
-              "n": 4,
-              "text": "Notes where a date should be"
-            }
+          "center": {
+            "name": "Strategist",
+            "note": "Carries it all"
+          },
+          "carry": [
+            "Copy",
+            "Paste",
+            "Rename",
+            "Retype"
           ]
         }
       }
     },
     {
       "n": 2,
-      "id": "brief",
-      "kick": "The brief",
-      "nav": "Brief",
+      "id": "joined",
+      "kick": "The connector",
+      "nav": "Connector",
       "title": [
-        "Raw notes in,",
-        "the team's brief out."
+        "One connector lets Claude",
+        "read all four."
       ],
-      "sub": "The strategist pastes notes in their own words. Claude fills the team's template in its order, keeps their words, leaves anything missing in brackets, composes the ad name, and files the task only after a yes.",
+      "sub": "It runs inside Claude, without opening the tools. Claude reads the results, the brief template, the designs and the naming rules, along with the skills that hold how Samako writes.",
       "points": [
         {
-          "text": "One template per format"
+          "text": "Works in any Claude app"
         },
         {
-          "text": "Gaps stay [in brackets]"
+          "text": "Reads Samako's own skills"
         }
       ],
       "short": true,
-      "source": "templates.md and the clickup skill, samako-ai-studio (5ce14af); the video template of 24 Sep 2026",
+      "source": "the clickup and creative-ops skills, samako-ai-studio; the owner, 19 Oct 2026",
+      "frame": {
+        "head": "After / One connector",
+        "datum": "Read in one place",
+        "figure": {
+          "kind": "tools",
+          "mode": "joined",
+          "tools": [
+            {
+              "name": "Motion",
+              "holds": "Results",
+              "tone": "#a78bfa",
+              "lines": [
+                "Top ads, last 30 days",
+                "Hook rate by concept",
+                "Spend per ad set"
+              ]
+            },
+            {
+              "name": "ClickUp",
+              "holds": "Briefs",
+              "tone": "#7b68ee",
+              "lines": [
+                "A template per strategist",
+                "Status set by hand",
+                "Assets linked by hand"
+              ]
+            },
+            {
+              "name": "Figma",
+              "holds": "Designs",
+              "tone": "#f24e1e",
+              "lines": [
+                "Approved ad templates",
+                "Autumn statics",
+                "Product packshots"
+              ]
+            },
+            {
+              "name": "Google Sheets",
+              "holds": "Names",
+              "tone": "#0f9d58",
+              "lines": [
+                "1,108 ad names",
+                "Typed one by one",
+                "Sent on to the agency"
+              ]
+            }
+          ],
+          "center": {
+            "name": "Claude",
+            "note": "Samako's connector"
+          }
+        }
+      }
+    },
+    {
+      "n": 3,
+      "id": "drafts",
+      "kick": "The drafts",
+      "nav": "Drafts",
+      "title": [
+        "Ask for briefs on a concept",
+        "and get several drafts."
+      ],
+      "sub": "The strategist names a concept. Claude writes one draft per angle in the team's template, each built on what it read and with a suggested ad name.",
+      "points": [
+        {
+          "text": "Drafts to choose from, never final"
+        }
+      ],
+      "short": true,
+      "source": "the clickup skill, samako-ai-studio; the owner, 19 Oct 2026",
+      "frame": {
+        "head": "Claude / New briefs",
+        "datum": "An example request",
+        "figure": {
+          "kind": "screen",
+          "layout": "chat",
+          "skin": "claude",
+          "app": "Claude",
+          "ask": "I need new briefs for the autumn deals concept, static and video, for DACH.",
+          "reply": "I read last month's results in Motion, the autumn templates in Figma and the video template in ClickUp. Three drafts, one angle each:",
+          "drafts": [
+            {
+              "title": "The dog who hates the vacuum",
+              "lines": [
+                {
+                  "k": "Format",
+                  "v": "AI video"
+                },
+                {
+                  "k": "Angle",
+                  "v": "Pets"
+                },
+                {
+                  "k": "Hook",
+                  "v": "[three options]"
+                }
+              ],
+              "refs": [
+                "Motion · best hook",
+                "Figma · template",
+                "Ad name suggested"
+              ],
+              "lit": true
+            },
+            {
+              "title": "Autumn deals, almost gone",
+              "lines": [
+                {
+                  "k": "Format",
+                  "v": "Static"
+                },
+                {
+                  "k": "Angle",
+                  "v": "Offer"
+                },
+                {
+                  "k": "Hook",
+                  "v": "[claim to confirm]"
+                }
+              ],
+              "refs": [
+                "Motion · top static",
+                "Figma · offer layout",
+                "Ad name suggested"
+              ]
+            },
+            {
+              "title": "Allergy season starts at home",
+              "lines": [
+                {
+                  "k": "Format",
+                  "v": "Static"
+                },
+                {
+                  "k": "Angle",
+                  "v": "Hygiene"
+                },
+                {
+                  "k": "Hook",
+                  "v": "[hook]"
+                }
+              ],
+              "refs": [
+                "Motion · problem angle",
+                "Figma · stills",
+                "Ad name suggested"
+              ]
+            }
+          ],
+          "close": "Which one should I file in ClickUp?"
+        }
+      }
+    },
+    {
+      "n": 4,
+      "id": "refine",
+      "kick": "The strategist",
+      "nav": "Strategist",
+      "title": [
+        "The strategist keeps the best one",
+        "and makes it sharper."
+      ],
+      "sub": "It does not replace the strategist. It gives them more variations to choose from, so their experience goes into refining the strongest one, and each edit goes back into the skills.",
+      "points": [
+        {
+          "text": "Edits shape the next drafts"
+        }
+      ],
+      "short": true,
+      "source": "the clickup and strategy skills, samako-ai-studio; the owner, 19 Oct 2026",
       "frame": {
         "head": "ClickUp / Paid ads internal",
         "datum": "Filed after a yes",
@@ -334,10 +431,10 @@
             "🇩🇪 Paid ads internal"
           ],
           "raw": {
-            "who": "Creative strategist",
-            "text": "New brief for DACH. AI video, Pixar-like: a cat that hates the vacuum. Audience: cat moms. Product aware. Concept 171.0."
+            "who": "The strategist's edits",
+            "text": "Make the dog older and grumpier.\nHook 2: no claim.\nAudience: add cat moms."
           },
-          "title": "171.0 · Cat hates clean · AI video",
+          "title": "171.0 · The dog who hates the vacuum · AI video",
           "status": "pending",
           "fields": [
             {
@@ -370,11 +467,11 @@
               "h": "Instructions",
               "lines": [
                 {
-                  "v": "An AI video, Pixar-like: a cat tells the camera why it hates the vacuum."
+                  "v": "An AI video: an older, grumpy dog tells the camera why it hates the vacuum."
                 },
                 {
                   "k": "Reference",
-                  "v": "[link to the reference]"
+                  "v": "Figma · autumn template"
                 }
               ]
             },
@@ -383,7 +480,7 @@
               "lines": [
                 {
                   "k": "Audience",
-                  "v": "Pet owners (\"cat moms\")"
+                  "v": "Pet owners, cat moms included"
                 },
                 {
                   "k": "Insight",
@@ -412,161 +509,11 @@
                 },
                 {
                   "k": "Hook 2",
-                  "v": "[hook]"
+                  "v": "[hook, no claim]"
                 },
                 {
                   "k": "Hook 3",
                   "v": "[hook]"
-                }
-              ]
-            }
-          ]
-        }
-      }
-    },
-    {
-      "n": 3,
-      "id": "insight",
-      "kick": "The insight",
-      "nav": "Insight",
-      "title": [
-        "One insight,",
-        "with its source."
-      ],
-      "sub": "Before a brief, the strategy skill reads the market, the reviews Samako may quote and the last results, then writes one insight in a sentence with where it came from. An insight nobody can point at is an opinion.",
-      "points": [
-        {
-          "text": "Every brief names its metric"
-        }
-      ],
-      "short": true,
-      "source": "the strategy skill and its rubric, samako-ai-studio (56ff3a0, 45c1fbc)",
-      "frame": {
-        "head": "Strategy / From read to brief",
-        "datum": "One variable per ad set",
-        "figure": {
-          "kind": "chain",
-          "links": [
-            {
-              "k": "Read",
-              "v": "Reviews, the last results, the market",
-              "src": "Before every brief"
-            },
-            {
-              "k": "Insight",
-              "v": "One sentence a colleague can point at",
-              "src": "With its source",
-              "lit": true
-            },
-            {
-              "k": "Audience",
-              "v": "Who it is for, and how aware they are",
-              "src": "From the team's own personas"
-            },
-            {
-              "k": "Metric",
-              "v": "How the ad set will be judged",
-              "src": "Or [metric]"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "n": 5,
-      "id": "queue",
-      "kick": "The launch",
-      "nav": "Launch",
-      "title": [
-        "A launch queue,",
-        "not a Slack message."
-      ],
-      "sub": "When an ad is ready, its task moves to the launch queue with everything on it, and Claude leaves a comment for the media buyer. Nobody copies a row, renames a file or sends a Slack message.",
-      "points": [
-        {
-          "text": "Moved, not copied: one task per ad"
-        },
-        {
-          "text": "The import checked before it ran"
-        }
-      ],
-      "short": true,
-      "source": "docs/CLICKUP.md and launch_sheet_import.py, samako-ai-studio (1a79bcd, 7e0514b)",
-      "frame": {
-        "head": "Paid social / Launch queue",
-        "datum": "Ready · needs edit · launched",
-        "figure": {
-          "kind": "screen",
-          "layout": "list",
-          "skin": "clickup",
-          "app": "Samako",
-          "crumbs": [
-            "Samako",
-            "Paid social",
-            "🚀 Launch queue"
-          ],
-          "columns": [
-            "Market",
-            "Format",
-            "Assignee"
-          ],
-          "groups": [
-            {
-              "status": "ready for launch",
-              "tone": "#1090e0",
-              "rows": [
-                {
-                  "name": "171.0 · Cat hates clean · AI video",
-                  "cells": [
-                    "DACH",
-                    "AI video",
-                    "Media buyer"
-                  ],
-                  "lit": true
-                },
-                {
-                  "name": "170.2 · Autumn deals · Static",
-                  "cells": [
-                    "EU",
-                    "Static",
-                    "Media buyer"
-                  ]
-                }
-              ]
-            },
-            {
-              "status": "needs edit",
-              "tone": "#e16b16",
-              "rows": [
-                {
-                  "name": "170.1 · Allergy season · Static",
-                  "cells": [
-                    "NL",
-                    "Static",
-                    "Strategist"
-                  ]
-                }
-              ]
-            },
-            {
-              "status": "launched",
-              "tone": "#008844",
-              "rows": [
-                {
-                  "name": "169.4 · Hair on the sofa · UGC",
-                  "cells": [
-                    "NL",
-                    "UGC",
-                    "Media buyer"
-                  ]
-                },
-                {
-                  "name": "169.3 · Weekend deal · Static",
-                  "cells": [
-                    "DACH",
-                    "Static",
-                    "Media buyer"
-                  ]
                 }
               ]
             }

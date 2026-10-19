@@ -130,10 +130,20 @@ export type Figure =
       /** An interface the work shipped, drawn from its own layout and
        *  labels; pictures are grain, never footage. */
       kind: "screen";
-      layout: "search" | "review" | "list" | "task";
-      /** "suri" / "clickup": the app's own look (its palette, type and
-       *  radii), redrawn; else the house grammar. */
-      skin?: "suri" | "clickup";
+      layout: "search" | "review" | "list" | "task" | "chat";
+      /** "suri" / "clickup" / "claude": the app's own look (its palette,
+       *  type and radii), redrawn; else the house grammar. */
+      skin?: "suri" | "clickup" | "claude";
+      /** claude chat: the ask, the reply, the drafts it returned */
+      ask?: string;
+      reply?: string;
+      drafts?: readonly {
+        title: string;
+        lines: readonly { k: string; v: string }[];
+        refs: readonly string[];
+        lit?: boolean;
+      }[];
+      close?: string;
       /** clickup: the path in the app's header */
       crumbs?: readonly string[];
       /** clickup list: the columns after the name, and the rows by status */
@@ -239,6 +249,17 @@ export type Figure =
       parts: readonly { v: string; k: string; src: "list" | "text" | "fixed" }[];
       rules: readonly { label: string; note: string }[];
       fail?: { v: string; note: string };
+    }
+  | {
+      /** The tools a piece of work runs through: apart (a person carrying
+       *  it between them) or joined (one model reading them all). */
+      kind: "tools";
+      mode: "apart" | "joined";
+      tools: readonly { name: string; holds: string; tone: string; lines: readonly string[] }[];
+      /** apart: who carries the work; joined: what reads it all */
+      center: { name: string; note: string };
+      /** apart: what the carrying is, on the paths */
+      carry?: readonly string[];
     }
   | {
       /** A chain read left to right, each link a step with its source. */

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { Figure } from "../types";
+import { ClaudeScreen } from "./ClaudeScreen";
 import { ClickUpScreen } from "./ClickUpScreen";
 import { SuriScreen } from "./SuriScreen";
 
@@ -25,6 +26,7 @@ const seed = (i: number) => ((i * 7919 + 104729) % 97) / 97;
 export function Screen({ figure }: { figure: ScreenFigure }) {
   if (figure.skin === "suri") return <SuriScreen figure={figure} />;
   if (figure.skin === "clickup") return <ClickUpScreen figure={figure} />;
+  if (figure.skin === "claude") return <ClaudeScreen figure={figure} />;
   return figure.layout === "search" ? <Search f={figure} /> : <Review f={figure} />;
 }
 

@@ -78,7 +78,7 @@
           "text": "Tested: 15 of 15 runs pass"
         }
       ],
-      "short": true,
+      "short": null,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "Setup, bottom to top",
@@ -209,7 +209,7 @@
       "kick": "The ask",
       "nav": "Ask",
       "title": [
-        "You send one message,",
+        "You send one message.",
         "Claude asks four questions."
       ],
       "sub": "The studio sent one message. Each question came with a recommended answer, so the studio lead clicked four times and the work started.",
@@ -273,14 +273,14 @@
       "kick": "Look first",
       "nav": "Look",
       "title": [
-        "Look first:",
-        "Loop's ads, then the trends."
+        "First it read",
+        "Loop's own ads in Figma."
       ],
-      "sub": "Loop's own approved ads set the rules for type and layout, while four outside trends set the mood.",
-      "short": null,
+      "sub": "Loop's approved June ads set the rules for type, layout and where text may go, measured rather than guessed. Four outside trends that agreed set the mood.",
+      "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
-        "head": "Before a frame is drawn",
+        "head": "Figma / Loop's June ads",
         "datum": "9:16 · clear of the app's buttons",
         "figure": {
           "kind": "plates",
@@ -328,27 +328,32 @@
             ]
           ]
         }
-      }
+      },
+      "points": [
+        {
+          "text": "Four trends that agree: a direction"
+        }
+      ]
     },
     {
       "n": 5,
       "id": "idea",
-      "kick": "The idea",
-      "nav": "Idea",
+      "kick": "The concept",
+      "nav": "Concept",
       "title": [
-        "The earplug is",
-        "the O in BOO."
+        "Its concept: the earplug",
+        "is the O in BOO."
       ],
-      "sub": "The whole ad hangs on one shape. Everything is matte paper except the product, the only shiny, real thing in the frame.",
+      "sub": "One idea, one hinge. In a matte paper world the only shiny, real thing is the product, so the O is a letter, the product and a door the camera dives through.",
       "points": [
         {
-          "text": "The real gold render, never redrawn"
+          "text": "Loop's real gold render, never redrawn"
         }
       ],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
-        "head": "The O in BOO",
+        "head": "The concept / One hinge",
         "datum": "Letter, product, door",
         "figure": {
           "kind": "plates",
@@ -849,17 +854,14 @@
       "kick": "Check",
       "nav": "Check",
       "title": [
-        "Look, fix, look again:",
-        "nine rounds of stills."
+        "It looked again",
+        "and fixed what read wrong."
       ],
-      "sub": "If something reads wrong, it goes, however long it took to build: the eyelids read as tombstones, the sound waves as stock vector.",
+      "sub": "Code checked timing, sound and the safe area. An AI viewer said what the ad was for. The skill's evals and the studio's own feedback decided what went, over nine rounds of stills.",
       "points": [
         {
           "text": "Studio lead: no logo, a softer whoosh",
           "person": true
-        },
-        {
-          "text": "Both are now rules in the skill"
         }
       ],
       "short": true,
@@ -933,38 +935,45 @@
     {
       "n": 12,
       "id": "next",
-      "kick": "Next time",
-      "nav": "Next time",
+      "kick": "The skill",
+      "nav": "Skill",
       "title": [
-        "Now it's a skill.",
-        "Just ask."
+        "Both notes are now rules,",
+        "so the next ad starts here."
       ],
-      "sub": "Everything in this case is written down in one skill in the studio's plugin: open a chat and say what you want.",
+      "sub": "The studio picked version 3 and asked for no logo and a softer whoosh. Both are written into the motion skill in Loop's plugin, with its evals, so the next request starts from them.",
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
-        "head": "The next ask",
-        "datum": "One sentence, the same nine steps",
+        "head": "Loop Studio AI Motion / The skill",
+        "datum": "Two new rules, from this ad",
         "figure": {
-          "kind": "exchange",
-          "who": "The studio lead",
-          "message": "Hey, I want a motion design video for Loop Quiet.",
-          "answers": {
-            "label": "Runs on",
-            "rows": [
-              {
-                "k": "Skill",
-                "v": "The studio's motion skill"
-              },
-              {
-                "k": "Plugin",
-                "v": "Loop Studio AI Motion"
-              },
-              {
-                "k": "Steps",
-                "v": "Ask, look, idea, plan, ingredients, make, sound, check, cost"
-              }
-            ]
+          "kind": "ledger",
+          "rows": [
+            {
+              "k": "First",
+              "v": "Read Loop's own ads in Figma"
+            },
+            {
+              "k": "Product",
+              "v": "Loop's real render, never redrawn"
+            },
+            {
+              "k": "Timing",
+              "v": "Every cut lands on a beat"
+            },
+            {
+              "k": "Layout",
+              "v": "Text stays inside the safe area"
+            }
+          ],
+          "before": {
+            "k": "Until this ad",
+            "v": "A logo on the end card, any whoosh"
+          },
+          "now": {
+            "k": "Now a rule",
+            "v": "No logo on the end card, a soft whoosh"
           }
         }
       }
