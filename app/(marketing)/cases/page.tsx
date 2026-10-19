@@ -55,6 +55,7 @@ import "@/components/xb-proposal/network/network-org.css";
 import "@/app/(internal)/test/proposal-swarm/proposal-swarm.css";
 import "@/components/arcs/case-dossier/dossier.css";
 import "@/components/arcs/case-dossier/suri-screen.css";
+import "@/components/arcs/case-dossier/app-screens.css";
 
 export const metadata: Metadata = {
   title: ARC.meta.title,

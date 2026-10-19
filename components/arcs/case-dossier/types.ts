@@ -130,10 +130,24 @@ export type Figure =
       /** An interface the work shipped, drawn from its own layout and
        *  labels; pictures are grain, never footage. */
       kind: "screen";
-      layout: "search" | "review";
-      /** "suri": the app's own look (its palette, type and radii), drawn from
-       *  its source; else the house grammar. */
-      skin?: "suri";
+      layout: "search" | "review" | "list" | "task";
+      /** "suri" / "clickup": the app's own look (its palette, type and
+       *  radii), redrawn; else the house grammar. */
+      skin?: "suri" | "clickup";
+      /** clickup: the path in the app's header */
+      crumbs?: readonly string[];
+      /** clickup list: the columns after the name, and the rows by status */
+      columns?: readonly string[];
+      groups?: readonly {
+        status: string;
+        tone: string;
+        rows: readonly { name: string; cells: readonly string[]; lit?: boolean }[];
+      }[];
+      /** clickup task: its status (`status`), custom fields, the brief's
+       *  sections, and the strategist's raw notes it was written from */
+      fields?: readonly { k: string; v: string }[];
+      sections?: readonly { h: string; lines: readonly { k?: string; v: string }[] }[];
+      raw?: { who: string; text: string };
       app: string;
       /** search: the views' counts beside the sidebar's names, where known */
       counts?: readonly (string | null)[];
@@ -205,6 +219,29 @@ export type Figure =
       note: string;
       /** the groups the list names: the group index and generic words */
       named: readonly { group: number; text: string }[];
+    }
+  | {
+      /** A spreadsheet as it was: its columns, a few rows, the faults marked
+       *  by number and named under it. */
+      kind: "sheet";
+      file: string;
+      tab: string;
+      columns: readonly { label: string; w?: number }[];
+      rows: readonly (readonly string[])[];
+      marks: readonly { row: number; col: number; n: number }[];
+      notes: readonly { n: number; text: string }[];
+    }
+  | {
+      /** A name taken apart: each part with the field it comes from. */
+      kind: "anatomy";
+      parts: readonly { v: string; k: string; src: "list" | "text" | "fixed" }[];
+      rules: readonly { label: string; note: string }[];
+      fail?: { v: string; note: string };
+    }
+  | {
+      /** A chain read left to right, each link a step with its source. */
+      kind: "chain";
+      links: readonly { k: string; v: string; src?: string; lit?: boolean }[];
     }
   | {
       kind: "flow";

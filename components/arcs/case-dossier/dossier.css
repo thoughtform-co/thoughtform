@@ -2334,3 +2334,208 @@
     font-size: 22px;
   }
 }
+
+/* ── a name taken apart: the whole name, its parts on tiles, its rules ─ */
+.csd-anat {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+}
+.csd-anat__whole {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--csd-rule);
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+  color: var(--csd-ink);
+}
+.csd-anat__whole i {
+  font-style: normal;
+  color: var(--csd-ink-3);
+}
+.csd-anat__whole span[data-src="list"] {
+  color: var(--csd-gold);
+}
+.csd-anat__whole span[data-src="fixed"] {
+  color: var(--csd-ink-2);
+}
+.csd-anat__parts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--csd-rule);
+  border: 1px solid var(--csd-rule);
+  min-height: 0;
+}
+.csd-anat__parts li {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--csd-ground, #0b0a09);
+}
+.csd-anat__parts li[data-src="list"] {
+  box-shadow: inset 0 2px 0 var(--csd-gold);
+}
+.csd-anat__parts li[data-src="fixed"] {
+  box-shadow: inset 0 2px 0 var(--csd-ink-3);
+}
+.csd-anat__n {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-anat__v {
+  overflow: hidden;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--csd-ink);
+}
+.csd-anat__k {
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--csd-ink-2);
+}
+.csd-anat__foot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.csd-anat__key,
+.csd-anat__rules {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--csd-ink-2);
+}
+.csd-anat__key {
+  font-family: var(--csd-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.csd-anat__key li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.csd-anat__key i {
+  width: 14px;
+  height: 2px;
+  background: var(--csd-rule);
+}
+.csd-anat__key li[data-src="list"] i {
+  background: var(--csd-gold);
+}
+.csd-anat__key li[data-src="fixed"] i {
+  background: var(--csd-ink-3);
+}
+.csd-anat__rules li {
+  display: grid;
+  grid-template-columns: minmax(0, 13em) minmax(0, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+.csd-anat__rules b {
+  font-weight: 400;
+  color: var(--csd-ink);
+}
+.csd-anat__rules li[data-fail] b {
+  font-family: var(--csd-mono);
+  color: var(--csd-ink-3);
+  text-decoration: line-through;
+}
+
+/* ── a chain, read left to right on one hairline ───────────────────── */
+.csd-chain {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: center;
+  gap: 0;
+  margin: 0;
+  padding: 0 4px;
+  list-style: none;
+}
+.csd-chain li {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 0 14px 0 0;
+}
+.csd-chain li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 33px;
+  height: 1px;
+  background: var(--csd-seam);
+}
+.csd-chain__n {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  color: var(--csd-ink-3);
+}
+.csd-chain__node {
+  position: relative;
+  z-index: 1;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--csd-ink-2);
+  background: var(--csd-ground, #0b0a09);
+}
+.csd-chain li[data-lit] .csd-chain__node {
+  border-color: var(--csd-gold);
+  background: var(--csd-gold);
+}
+.csd-chain__k {
+  margin-top: 6px;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+.csd-chain li[data-lit] .csd-chain__k {
+  color: var(--csd-gold);
+}
+.csd-chain__v {
+  font-size: min(17px, 2.2svh);
+  line-height: 1.35;
+  color: var(--csd-ink);
+  text-wrap: pretty;
+}
+.csd-chain__src {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--csd-ink-3);
+}
+@media (max-width: 960px) {
+  .csd-anat__parts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .csd-chain {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 22px;
+  }
+  .csd-chain li::before {
+    display: none;
+  }
+}

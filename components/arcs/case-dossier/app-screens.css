@@ -1,0 +1,477 @@
+/*
+ * Two more apps in their own look inside a case window: ClickUp (`.cku`)
+ * and a Google sheet (`.gsh`). Their own sheet, like `suri-screen.css`,
+ * because these apps round corners and the dossier's grammar does not.
+ * `--u` is one app pixel: each app is drawn 960 wide and fitted to the
+ * window's width (its body is a size container).
+ */
+
+.cku,
+.gsh {
+  --u: calc(100cqw / 960);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  font-size: calc(14 * var(--u));
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+.cku p,
+.cku ul,
+.cku ol,
+.cku dl,
+.cku dd,
+.gsh p,
+.gsh ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── ClickUp ─────────────────────────────────────────────────────────── */
+.cku {
+  --cku-ink: #292d34;
+  --cku-ink-2: #646a73;
+  --cku-line: #e9ebf0;
+  --cku-side: #f7f8f9;
+  --cku-violet: #7b68ee;
+  display: flex;
+  font-family: "Inter Variable", "Inter", "Helvetica Neue", Arial, sans-serif;
+  color: var(--cku-ink);
+  background: #fff;
+}
+.cku-side {
+  width: calc(232 * var(--u));
+  flex: none;
+  box-sizing: border-box;
+  padding: calc(18 * var(--u)) calc(12 * var(--u));
+  background: var(--cku-side);
+  border-right: 1px solid var(--cku-line);
+}
+.cku-ws {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  padding: 0 calc(8 * var(--u)) calc(18 * var(--u)) !important;
+  font-weight: 600;
+}
+.cku-ws b {
+  display: grid;
+  place-items: center;
+  width: calc(26 * var(--u));
+  height: calc(26 * var(--u));
+  border-radius: calc(6 * var(--u));
+  background: var(--cku-violet);
+  color: #fff;
+  font-size: calc(13 * var(--u));
+}
+.cku-tree li {
+  display: flex;
+  align-items: center;
+  height: calc(32 * var(--u));
+  padding: 0 calc(10 * var(--u)) 0 calc(22 * var(--u));
+  border-radius: calc(6 * var(--u));
+  color: var(--cku-ink-2);
+  white-space: nowrap;
+}
+.cku-tree li.cku-tree__space {
+  padding-left: calc(8 * var(--u));
+  color: var(--cku-ink);
+  font-weight: 600;
+}
+.cku-tree li[data-on] {
+  background: #ecebfd;
+  color: var(--cku-violet);
+  font-weight: 500;
+}
+.cku-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cku-top {
+  display: flex;
+  align-items: center;
+  gap: calc(24 * var(--u));
+  height: calc(52 * var(--u));
+  flex: none;
+  padding: 0 calc(24 * var(--u));
+  border-bottom: 1px solid var(--cku-line);
+}
+.cku-crumbs {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+  font-weight: 500;
+}
+.cku-crumbs i {
+  margin-right: calc(8 * var(--u));
+  font-style: normal;
+  color: #b9bec7;
+}
+.cku-views {
+  display: flex;
+  gap: calc(18 * var(--u));
+  height: 100%;
+  color: var(--cku-ink-2);
+}
+.cku-views li {
+  display: flex;
+  align-items: center;
+}
+.cku-views li[data-on] {
+  color: var(--cku-ink);
+  box-shadow: inset 0 calc(-2 * var(--u)) 0 var(--cku-violet);
+}
+.cku-toolbar {
+  display: flex;
+  gap: calc(10 * var(--u));
+  padding: calc(12 * var(--u)) calc(24 * var(--u));
+  color: var(--cku-ink-2);
+  font-size: calc(13 * var(--u));
+}
+.cku-toolbar span {
+  padding: calc(4 * var(--u)) calc(10 * var(--u));
+  border: 1px solid var(--cku-line);
+  border-radius: calc(6 * var(--u));
+}
+.cku-search {
+  margin-left: auto;
+  min-width: calc(200 * var(--u));
+}
+.cku-list {
+  display: grid;
+  gap: calc(22 * var(--u));
+  padding: calc(6 * var(--u)) calc(24 * var(--u));
+  overflow: hidden;
+}
+.cku-group__head {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  padding-bottom: calc(8 * var(--u)) !important;
+}
+.cku-group__head em {
+  font-style: normal;
+  color: var(--cku-ink-2);
+  font-size: calc(13 * var(--u));
+}
+.cku-pill {
+  display: inline-flex;
+  align-items: center;
+  height: calc(24 * var(--u));
+  padding: 0 calc(10 * var(--u));
+  border-radius: calc(5 * var(--u));
+  color: #fff;
+  font-size: calc(12 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.cku-row {
+  display: grid;
+  grid-template-columns: minmax(0, 3.4fr) repeat(var(--cols, 4), minmax(0, 1fr));
+  align-items: center;
+  gap: calc(10 * var(--u));
+  min-height: calc(38 * var(--u));
+  padding: 0 calc(8 * var(--u));
+  border-bottom: 1px solid var(--cku-line);
+}
+.cku-row--head {
+  min-height: calc(30 * var(--u));
+  color: var(--cku-ink-2);
+  font-size: calc(12 * var(--u));
+}
+.cku-row[data-lit] {
+  background: #f5f3ff;
+  box-shadow: inset calc(3 * var(--u)) 0 0 var(--cku-violet);
+}
+.cku-name {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  min-width: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: calc(12.5 * var(--u));
+}
+.cku-name span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cku-dot {
+  flex: none;
+  width: calc(12 * var(--u));
+  height: calc(12 * var(--u));
+  border: calc(2 * var(--u)) solid;
+  border-radius: 50%;
+}
+.cku-cell b {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: calc(2 * var(--u)) calc(8 * var(--u));
+  border-radius: calc(4 * var(--u));
+  background: #f0f1f3;
+  font-weight: 500;
+  font-size: calc(12 * var(--u));
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cku-empty {
+  color: #b9bec7;
+  font-style: normal;
+}
+
+.cku-task {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.cku-raw {
+  width: calc(330 * var(--u));
+  flex: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: calc(12 * var(--u));
+  padding: calc(20 * var(--u));
+  background: #f5f4ef;
+  border-right: 1px solid var(--cku-line);
+  font-size: calc(13.5 * var(--u));
+}
+.cku-raw__who {
+  font-size: calc(12 * var(--u));
+  font-weight: 600;
+  color: #8a6a3c;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cku-raw__msg {
+  padding: calc(12 * var(--u)) calc(14 * var(--u)) !important;
+  border-radius: calc(12 * var(--u));
+  background: #e9e6dc;
+  white-space: pre-line;
+}
+.cku-raw__reply {
+  color: var(--cku-ink);
+}
+.cku-raw__yes {
+  align-self: flex-end;
+  padding: calc(6 * var(--u)) calc(14 * var(--u)) !important;
+  border-radius: calc(12 * var(--u));
+  background: #e9e6dc;
+}
+.cku-doc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(14 * var(--u));
+  padding: calc(22 * var(--u)) calc(28 * var(--u));
+  overflow: hidden;
+}
+.cku-title {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: calc(17 * var(--u));
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-all;
+}
+.cku-pill--status {
+  background: var(--cku-violet);
+}
+.cku-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(6 * var(--u)) calc(24 * var(--u));
+  padding: calc(12 * var(--u)) 0 !important;
+  border-top: 1px solid var(--cku-line);
+  border-bottom: 1px solid var(--cku-line);
+}
+.cku-fields > div {
+  display: grid;
+  grid-template-columns: calc(120 * var(--u)) minmax(0, 1fr);
+  align-items: center;
+  min-height: calc(28 * var(--u));
+}
+.cku-fields dt {
+  color: var(--cku-ink-2);
+  font-size: calc(13 * var(--u));
+}
+.cku-fields dd {
+  font-size: calc(13 * var(--u));
+  font-weight: 500;
+}
+.cku-desc {
+  display: grid;
+  gap: calc(14 * var(--u));
+}
+.cku-sec__h {
+  margin-bottom: calc(6 * var(--u)) !important;
+  font-size: calc(15 * var(--u));
+  font-weight: 700;
+}
+.cku-sec li {
+  position: relative;
+  padding-left: calc(16 * var(--u));
+  font-size: calc(13.5 * var(--u));
+  line-height: 1.5;
+}
+.cku-sec li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--cku-ink-2);
+}
+.cku-gap {
+  padding: 0 calc(3 * var(--u));
+  border-radius: calc(3 * var(--u));
+  background: #fff1cc;
+  color: #8a5a00;
+}
+
+/* ── a Google sheet ──────────────────────────────────────────────────── */
+.gsh {
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, "Helvetica Neue", sans-serif;
+  color: #202124;
+  background: #fff;
+}
+.gsh-bar {
+  display: grid;
+  gap: calc(8 * var(--u));
+  padding: calc(14 * var(--u)) calc(18 * var(--u)) calc(10 * var(--u));
+  background: #f9fbfd;
+  border-bottom: 1px solid #e1e3e6;
+}
+.gsh-file {
+  font-size: calc(17 * var(--u));
+}
+.gsh-fx {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  padding: calc(6 * var(--u)) calc(10 * var(--u));
+  border-radius: calc(16 * var(--u));
+  background: #edf2fa;
+  font-size: calc(13 * var(--u));
+}
+.gsh-fx i {
+  font-style: italic;
+  color: #5f6368;
+}
+.gsh-fx code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.gsh-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.gsh table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: calc(12.5 * var(--u));
+}
+.gsh th,
+.gsh td {
+  position: relative;
+  height: calc(30 * var(--u));
+  padding: 0 calc(7 * var(--u));
+  border: 1px solid #e1e3e6;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gsh th {
+  width: calc(var(--w, 1) * 70 * var(--u));
+  background: #f8f9fa;
+  color: #5f6368;
+  font-weight: 400;
+  text-align: center;
+}
+.gsh th.gsh-corner,
+.gsh td.gsh-n {
+  width: calc(40 * var(--u));
+  background: #f8f9fa;
+  color: #5f6368;
+  text-align: center;
+}
+.gsh tr.gsh-head td {
+  background: #ffe9a8;
+  font-weight: 700;
+}
+.gsh td span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gsh td[data-mark] {
+  background: #fce8e6;
+  box-shadow: inset 0 0 0 calc(2 * var(--u)) #d93025;
+}
+.gsh-mark {
+  display: inline-grid;
+  place-items: center;
+  width: calc(18 * var(--u));
+  height: calc(18 * var(--u));
+  border-radius: 50%;
+  background: #d93025;
+  color: #fff;
+  font-size: calc(11 * var(--u));
+  font-weight: 700;
+}
+.gsh td .gsh-mark {
+  position: absolute;
+  top: calc(5 * var(--u));
+  right: calc(4 * var(--u));
+}
+.gsh-foot {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(24 * var(--u));
+  padding: calc(10 * var(--u)) calc(18 * var(--u)) calc(14 * var(--u));
+  background: #f8f9fa;
+  border-top: 1px solid #e1e3e6;
+}
+.gsh-tab {
+  flex: none;
+  padding: calc(5 * var(--u)) calc(12 * var(--u));
+  border-radius: calc(4 * var(--u));
+  background: #e1f0e6;
+  color: #137333;
+  font-size: calc(13 * var(--u));
+  font-weight: 600;
+}
+.gsh-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(6 * var(--u)) calc(20 * var(--u));
+  font-size: calc(13 * var(--u));
+}
+.gsh-notes li {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+}
+
+/* the phone: no fixed height there, so each app takes a screen's aspect */
+@media (max-width: 960px) {
+  .csd-fig[data-kind="sheet"] .csd-frame__body {
+    container-type: inline-size;
+  }
+  .cku,
+  .gsh {
+    --u: calc(100cqw / 760);
+    flex: none;
+    aspect-ratio: 760 / 640;
+  }
+  .cku-side,
+  .cku-raw {
+    display: none;
+  }
+}

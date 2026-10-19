@@ -3,7 +3,14 @@ import type { ReactNode } from "react";
 import type { FigureKind, Framed } from "./types";
 
 /** The figures that are a picture of the whole thing fill the window. */
-const BLEED: ReadonlySet<FigureKind> = new Set(["screen", "cloud", "sprawl", "plates", "exchange"]);
+const BLEED: ReadonlySet<FigureKind> = new Set([
+  "screen",
+  "cloud",
+  "sprawl",
+  "plates",
+  "exchange",
+  "sheet",
+]);
 
 const two = (n: number) => String(n).padStart(2, "0");
 

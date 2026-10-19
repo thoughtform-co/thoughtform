@@ -7,8 +7,11 @@ import { Flow } from "./Flow";
 import { Ledger } from "./Ledger";
 import { Pairs } from "./Pairs";
 import { Plates } from "./Plates";
+import { Anatomy } from "./Anatomy";
+import { Chain } from "./Chain";
 import { Cloud } from "./Cloud";
 import { Screen } from "./Screen";
+import { Sheet } from "./Sheet";
 import { Sprawl } from "./Sprawl";
 import { Track } from "./Track";
 
@@ -61,6 +64,12 @@ export function FigureView({
         <Sprawl figure={f} />
       ) : f.kind === "cloud" ? (
         <Cloud figure={f} still={still} />
+      ) : f.kind === "sheet" ? (
+        <Sheet figure={f} />
+      ) : f.kind === "anatomy" ? (
+        <Anatomy figure={f} />
+      ) : f.kind === "chain" ? (
+        <Chain figure={f} />
       ) : (
         <Flow figure={f} />
       )}

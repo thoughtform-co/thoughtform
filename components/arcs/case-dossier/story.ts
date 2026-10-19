@@ -17,6 +17,9 @@ export const KINDS: readonly FigureKind[] = [
   "screen",
   "sprawl",
   "cloud",
+  "sheet",
+  "anatomy",
+  "chain",
 ];
 
 /** Pictures come only from folders already published with the site. */
@@ -120,6 +123,12 @@ export function letteredCount(f: Figure): number {
       return f.labels.length;
     case "sprawl":
       return f.key.length;
+    case "sheet":
+      return 2 + f.notes.length;
+    case "anatomy":
+      return 1 + f.rules.length + (f.fail ? 1 : 0);
+    case "chain":
+      return f.links.length;
     case "cloud":
       return 2 + f.named.length;
     case "flow":
@@ -127,7 +136,7 @@ export function letteredCount(f: Figure): number {
     case "screen": {
       /* the client's own app, redrawn as it is built: one picture, its
          chrome the app's, not words the case adds */
-      if (f.skin === "suri") return 1;
+      if (f.skin === "suri" || f.skin === "clickup") return 1;
       const one = (x?: string) => (x ? 1 : 0);
       const tiles = (f.tiles ?? []).reduce(
         (n, t) => n + one(t.badge) + one(t.verdict) + one(t.hit),

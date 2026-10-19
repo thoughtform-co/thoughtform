@@ -69,11 +69,17 @@
       "kick": "The setup",
       "nav": "Setup",
       "title": [
-        "Before anyone asks,",
-        "the know-how is in place."
+        "A skill, in a plugin,",
+        "on Loop's shelf."
       ],
+      "sub": "Nobody installs anything by hand: the studio turns the plugin on once, and the skill is there in every Claude app they use.",
+      "points": [
+        {
+          "text": "Tested: 15 of 15 runs pass"
+        }
+      ],
+      "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
-      "sub": "Nobody installs anything by hand: the studio switches the plugin on once, and the skill shows up in every Claude app they use.",
       "frame": {
         "head": "Setup, bottom to top",
         "datum": "Each layer sits on the one below",
@@ -142,8 +148,9 @@
         "You ask in your own words;",
         "Claude follows the steps."
       ],
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "It picks the motion skill, works through its steps and checks its own output before it hands the decision back.",
+      "short": null,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "From request to sign-off",
         "datum": "Tested: 15 of 15 runs pass",
@@ -202,12 +209,12 @@
       "kick": "The ask",
       "nav": "Ask",
       "title": [
-        "Claude answered",
-        "with four questions."
+        "You send one message,",
+        "Claude asks four questions."
       ],
+      "sub": "The studio sent one message. Each question came with a recommended answer, so the studio lead clicked four times and the work started.",
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
-      "sub": "The studio sent one message. Each question came with a recommended answer, so the studio lead clicked four times and the work started.",
       "frame": {
         "head": "The ask",
         "figure": {
@@ -269,9 +276,9 @@
         "Look first:",
         "Loop's ads, then the trends."
       ],
-      "short": true,
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "Loop's own approved ads set the rules for type and layout, while four outside trends set the mood.",
+      "short": null,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "Before a frame is drawn",
         "datum": "9:16 · clear of the app's buttons",
@@ -332,14 +339,14 @@
         "The earplug is",
         "the O in BOO."
       ],
-      "short": true,
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "The whole ad hangs on one shape. Everything is matte paper except the product, the only shiny, real thing in the frame.",
       "points": [
         {
           "text": "The real gold render, never redrawn"
         }
       ],
+      "short": true,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The O in BOO",
         "datum": "Letter, product, door",
@@ -421,9 +428,9 @@
         "Every beat",
         "sits on a frame."
       ],
-      "short": true,
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "At 144 bpm and 24 fps a beat is exactly 10 frames, so every cut lands where the music actually hits.",
+      "short": null,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "240 frames on one line",
         "datum": "144 bpm · 1 beat = 10 frames",
@@ -561,8 +568,9 @@
         "It generated paper and sound,",
         "never the product."
       ],
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "Everything else is code or Loop's own files, including the real gold render, which goes in untouched.",
+      "short": null,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "What went in",
         "datum": "Generated: paper and sound · the rest: code and Loop's files",
@@ -647,8 +655,9 @@
         "Code draws all 240 frames,",
         "like stop-motion on a table."
       ],
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "There's no video model in it: code draws every frame, and draws it the same way every time.",
+      "short": null,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The proof sheet",
         "datum": "Every 4th frame of 240",
@@ -703,8 +712,9 @@
         "When the earplug lands,",
         "the noise drops 17 dB."
       ],
-      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "sub": "Every effect lands on its own frame, and the music keeps playing clearly underneath.",
+      "short": null,
+      "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
       "frame": {
         "head": "The mix, on the frame line",
         "datum": "Level by lane · frame 120 at 5 s",
@@ -839,18 +849,21 @@
       "kick": "Check",
       "nav": "Check",
       "title": [
-        "If it reads wrong,",
-        "it goes."
+        "Look, fix, look again:",
+        "nine rounds of stills."
+      ],
+      "sub": "If something reads wrong, it goes, however long it took to build: the eyelids read as tombstones, the sound waves as stock vector.",
+      "points": [
+        {
+          "text": "Studio lead: no logo, a softer whoosh",
+          "person": true
+        },
+        {
+          "text": "Both are now rules in the skill"
+        }
       ],
       "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
-      "sub": "However long a piece took to build, it went if it read wrong: the eyelids read as tombstones, the sound waves as stock vector.",
-      "points": [
-        {
-          "text": "Studio lead: Version 3, no logo",
-          "person": true
-        }
-      ],
       "frame": {
         "head": "The check",
         "figure": {
@@ -923,11 +936,12 @@
       "kick": "Next time",
       "nav": "Next time",
       "title": [
-        "Written down now,",
-        "so next time the studio just asks."
+        "Now it's a skill.",
+        "Just ask."
       ],
+      "sub": "Everything in this case is written down in one skill in the studio's plugin: open a chat and say what you want.",
+      "short": true,
       "source": "rebuilt from the harvest note written from the 1 Oct session (2026-10-02) and the session's treatment; the transcript itself is not on this machine",
-      "sub": "Everything in this case is written down in the studio's plugin; open a chat and say what you want.",
       "frame": {
         "head": "The next ask",
         "datum": "One sentence, the same nine steps",

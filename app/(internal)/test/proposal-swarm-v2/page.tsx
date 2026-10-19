@@ -62,6 +62,7 @@ import "@/components/xb-proposal/network/network-org.css";
 import "../proposal-swarm/proposal-swarm.css";
 import "@/components/arcs/case-dossier/dossier.css";
 import "@/components/arcs/case-dossier/suri-screen.css";
+import "@/components/arcs/case-dossier/app-screens.css";
 
 /* The two sections the swarm draws itself, by the ids the proposal gives them. */
 const DRAWN = ["vision", "adoption"] as const;

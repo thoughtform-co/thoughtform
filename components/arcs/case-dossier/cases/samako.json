@@ -1,10 +1,10 @@
 {
   "id": "samako",
   "client": "Samako",
-  "nav": "Autumn films · Samako",
-  "project": "Two autumn sale films from one brief",
-  "glyph": "pair",
-  "workstream": "Creative production",
+  "nav": "Briefs and ad names · Samako",
+  "project": "Briefs and ad names, from a sheet into ClickUp",
+  "glyph": "flow",
+  "workstream": "Creative operations",
   "logo": {
     "src": "/arcs/cases/logos/samako.svg",
     "ratio": "204.75/28.75"
@@ -15,680 +15,309 @@
     "pattern": "hex"
   },
   "intro": {
-    "line": [
-      "A sale every season,",
-      "and every motion ad took days."
-    ],
+    "line": ["1,108 ads named by hand in a sheet,", "every brief in its own template."],
     "facts": [
-      {
-        "value": "Round 2",
-        "label": "Of the autumn sale brief"
-      },
-      {
-        "value": "Dutch",
-        "label": "Copy and voice"
-      },
-      {
-        "value": "0",
-        "label": "Products a model may redraw"
-      }
+      { "value": "1,108", "label": "Ads in the launch sheet" },
+      { "value": "~28", "label": "New ads a week" },
+      { "value": "318", "label": "Names with a stray space" }
     ]
   },
   "result": {
-    "title": [
-      "Two films from one brief,",
-      "in a day."
-    ],
-    "before": "Every motion ad took days of a designer's time, so few were made.",
-    "allows": "Motion ads in the variety ad platforms reward, cheap enough to run several versions."
+    "title": ["One template.", "Names built for you."],
+    "before": "A brief meant building the ad name in a sheet, pasting it into a task, renaming files by hand and pinging the agency on Slack.",
+    "allows": "A strategist pastes raw notes and gets the team's brief, its ad name and a place in the launch queue."
   },
   "stats": [
-    {
-      "value": "1 day",
-      "label": "Brief to both films, days per ad by hand (est.)"
-    },
-    {
-      "value": "54 min",
-      "label": "The production itself"
-    },
-    {
-      "value": "0",
-      "label": "Products redrawn by a model"
-    }
+    { "value": "1,363", "label": "Rows moved from the sheet into ClickUp" },
+    { "value": "0", "label": "Differences across 83 rebuilt names" },
+    { "value": "18", "label": "Name parts, written by ClickUp" }
   ],
   "opening": {
-    "head": "Film A",
-    "datum": "15 s · 24 fps · in Dutch",
+    "head": "Paid social / Launch register",
+    "datum": "1,363 rows · 37 fields",
     "figure": {
-      "kind": "film",
-      "src": "/arcs/samako/autumn-a.mp4",
-      "poster": "/arcs/samako/autumn-a-poster.webp",
-      "ratio": "9/16",
-      "alt": "Autumn walks in: the front door opens on falling leaves, a wet dog shakes on the sofa, paw prints land on a cushion, and the vacuum cleaner hops in to set it right.",
-      "facts": [
-        "9:16",
-        "360 frames",
-        "Two films"
-      ],
-      "sound": true
-    },
-    "state": "Sound on"
+      "kind": "screen",
+      "layout": "list",
+      "skin": "clickup",
+      "app": "Samako",
+      "crumbs": ["Samako", "Paid social", "📋 Launch register"],
+      "columns": ["Store", "Product", "Persona", "Awareness", "Week"],
+      "groups": [
+        {
+          "status": "ready for launch",
+          "tone": "#1090e0",
+          "rows": [
+            { "name": "171.0_DACH_PCP_CS_VIDAI_Skit_PETS_DOG MOMS_A4_CAT HATES CLEAN_26W42_CS_ED_SMK_PDP_EVERGREEN", "cells": ["DACH", "PCP", "DOG MOMS", "A4", "26W42"], "lit": true },
+            { "name": "170.2_EU_CD_CS_IMG_Offer_OFFER_HOUSEHOLD CEO_A5_AUTUMN DEALS_26W41_CS_AI_SMK_SALE_C-TIER", "cells": ["EU", "CD", "HOUSEHOLD CEO", "A5", "26W41"] },
+            { "name": "170.1_NL_CD_CS_IMG_Problem_HYGIENE_DEEP CLEANER_A2_ALLERGY SEASON_26W41_CS_AI_SMK_PDP_EVERGREEN", "cells": ["NL", "CD", "DEEP CLEANER", "A2", "26W41"] }
+          ]
+        },
+        {
+          "status": "launched",
+          "tone": "#008844",
+          "rows": [
+            { "name": "169.4_NL_PCP_CS_VIDUGC_Testimonial_PETS_DOG MOMS_A3_HAIR ON SOFA_26W40_CS_ED_SMK_PDP_EVERGREEN", "cells": ["NL", "PCP", "DOG MOMS", "A3", "26W40"] },
+            { "name": "169.3_DACH_CD_CS_IMG_Offer_OFFER_BUSY MOMS_A5_WEEKEND DEAL_26W40_CS_AI_SMK_SALE_C-TIER", "cells": ["DACH", "CD", "BUSY MOMS", "A5", "26W40"] },
+            { "name": "169.2_EU_PCP_CS_VIDUI_Productdemonstration_CAR_PRACTICAL HOMEOWNER_A3_CAR SEATS_26W40_CS_ED_SMK_PDP_EVERGREEN", "cells": ["EU", "PCP", "PRACTICAL HOMEOWNER", "A3", "26W40"] }
+          ]
+        }
+      ]
+    }
   },
   "chapters": [
     {
       "n": 1,
-      "id": "look",
+      "id": "sheet",
       "kick": "The problem",
       "nav": "Problem",
-      "title": [
-        "Round 1 was right,",
-        "and still dull."
-      ],
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "Round 1 followed every rule and still looked like one template used four times, and the paper film described autumn without telling a story.",
+      "title": ["Every name typed by hand,", "every brief its own."],
+      "sub": "The ad names lived in a Google Sheet: built by formula, pasted into a task, the files renamed by hand and the agency pinged on Slack. Across 1,108 ads the names drifted.",
       "points": [
-        {
-          "text": "Thoughtform: Correct but dull",
-          "person": true
-        }
+        { "text": "785 week codes without a year" },
+        { "text": "155 of the last 250 over 100 characters" },
+        { "text": "Creative lead: our holy grail", "person": true }
       ],
+      "short": true,
+      "source": "launch-sheet.md and naming.md, samako-ai-studio; the vault, 1 Oct 2026",
       "frame": {
-        "head": "Round 1",
-        "datum": "4 references · 4 statics",
+        "head": "Google Sheets / Launch sheet",
+        "datum": "1,108 ads · 18 parts a name",
         "figure": {
-          "kind": "plates",
+          "kind": "sheet",
+          "file": "Mediabuying Launch Sheet",
+          "tab": "MB Name Generator",
+          "columns": [
+            { "label": "Concept" },
+            { "label": "Store" },
+            { "label": "Product" },
+            { "label": "Ad type" },
+            { "label": "Angle", "w": 1.2 },
+            { "label": "Awareness" },
+            { "label": "Description", "w": 1.8 },
+            { "label": "Week" },
+            { "label": "Ad name", "w": 3.4 },
+            { "label": "Launchdate", "w": 1.4 }
+          ],
           "rows": [
-            [
-              {
-                "kind": "list",
-                "label": "The references",
-                "numbered": true,
-                "items": [
-                  {
-                    "b": "Type as the whole ad"
-                  },
-                  {
-                    "b": "The range as a grid"
-                  },
-                  {
-                    "b": "Ticker banners"
-                  },
-                  {
-                    "b": "A tape across the frame"
-                  }
-                ]
-              },
-              {
-                "kind": "list",
-                "label": "What round 1 missed",
-                "items": [
-                  {
-                    "b": "Right on every rule"
-                  },
-                  {
-                    "b": "One template, four times",
-                    "s": "Headline on top, machine in the middle."
-                  },
-                  {
-                    "b": "A film about autumn",
-                    "s": "It described the season and told no story."
-                  }
-                ]
-              }
-            ]
+            ["158.3", "DACH", "PCP", "VIDUI", "PETS", "A4", "DOG HATES CLEAN", "26W39", "158.3_DACH_PCP_CS_VIDUI_Productdemonstration_PETS_A4_DOG HATES CLEAN_26W39_CS_ED_SMK_PDP_EVERGREEN", ""],
+            ["158.4", "NL", "CD", "IMG", "GIFTING ", "A5", "XMAS GIFT", "W48", "158.4_NL_CD_CS_IMG_Offer_GIFTING _A5_XMAS GIFT_W48_CS_AI_SMK_SALE", "launch after QA"],
+            ["158.5", "DACH", "PCP", "VIDM", "CHILDEREN", "A2", "STICKY FLOOR", "26W39", "158.5_DACH_PCP_CS_VIDM_Problem_CHILDEREN_A2_STICKY FLOOR_26W39_CS_ED_SMK_PDP_EVERGREEN", ""],
+            ["158.6", "EU", "CD", "IMG", "OFFER", "A5", "AUTUMN DEALS BEST SELLERS FINAL V2", "26W40", "158.6_EU_CD_CS_IMG_Offer_OFFER_A5_AUTUMN DEALS BEST SELLERS FINAL V2_26W40_CS_AI_SMK_SALE_C-TIER", ""],
+            ["158.7", "NL", "PCP", "VIDUGC", "PETS", "", "HAIR ON SOFA", "26W40", "158.7_NL_PCP_CS_VIDUGC_Testimonial_PETS__HAIR ON SOFA_26W40_CS_ED_SMK_PDP", "ask the agency"],
+            ["158.8", "DACH", "CD", "IMG", "HYGIENE", "A2", "ALLERGY SEASON", "26W40", "158.8_DACH_CD_CS_IMG_Problem_HYGIENE_A2_ALLERGY SEASON_26W40_CS_AI_SMK_PDP_EVERGREEN", ""]
+          ],
+          "marks": [
+            { "row": 1, "col": 4, "n": 1 },
+            { "row": 1, "col": 7, "n": 2 },
+            { "row": 2, "col": 4, "n": 3 },
+            { "row": 3, "col": 8, "n": 4 },
+            { "row": 4, "col": 5, "n": 5 },
+            { "row": 1, "col": 9, "n": 6 }
+          ],
+          "notes": [
+            { "n": 1, "text": "A stray space before a separator · 318 names" },
+            { "n": 2, "text": "A week without its year · 785" },
+            { "n": 3, "text": "A typo in a code" },
+            { "n": 4, "text": "Over 100 characters · 155 of the last 250" },
+            { "n": 5, "text": "A part left empty" },
+            { "n": 6, "text": "Launchdate never held a date" }
           ]
         }
-      },
-      "short": true
+      }
     },
     {
       "n": 2,
-      "id": "ask",
-      "kick": "The ask",
-      "nav": "Ask",
-      "title": [
-        "Claude asked nothing:",
-        "the brief had answered."
+      "id": "brief",
+      "kick": "The brief",
+      "nav": "Brief",
+      "title": ["Raw notes in,", "the team's brief out."],
+      "sub": "The strategist pastes notes in their own words. Claude fills the team's template in its order, keeps their words, leaves anything missing in brackets, composes the ad name, and files the task only after a yes.",
+      "points": [
+        { "text": "Three templates: static, video, UGC" },
+        { "text": "Gaps stay [in brackets]" }
       ],
       "short": true,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "The brief asked for autumn sale ads in Dutch and, this round, films with a story. Between it and one message, all four of the skill's questions were answered.",
+      "source": "templates.md and the clickup skill, samako-ai-studio (5ce14af); the video template of 24 Sep 2026",
       "frame": {
-        "head": "The ask",
+        "head": "ClickUp / Paid ads internal",
+        "datum": "Filed after a yes",
         "figure": {
-          "kind": "exchange",
-          "crumb": [
-            "Samako AI Studio",
-            "Autumn Deals 160.1"
+          "kind": "screen",
+          "layout": "task",
+          "skin": "clickup",
+          "app": "Samako",
+          "crumbs": ["Samako", "Paid social", "🇩🇪 Paid ads internal"],
+          "raw": {
+            "who": "Creative strategist",
+            "text": "Nieuwe brief voor DACH. AI-video, Pixar-achtig: een kat die de stofzuiger haat. Persona: cat moms. Product aware. Concept 171.0."
+          },
+          "title": "171.0_DACH_PCP_CS_VIDAI_Skit_PETS_DOG MOMS_A4_CAT HATES CLEAN_26W42_CS_ED_SMK_PDP_EVERGREEN",
+          "status": "pending",
+          "fields": [
+            { "k": "Store", "v": "DACH" },
+            { "k": "Product", "v": "PCP" },
+            { "k": "Persona", "v": "DOG MOMS (cat moms)" },
+            { "k": "Awareness", "v": "A4" },
+            { "k": "Creator type", "v": "AI" },
+            { "k": "Ad week", "v": "26W42" }
           ],
-          "who": "Thoughtform",
-          "message": "I want a proper motion video, different angles, a bit of stop motion, a real narrative. Let's do two variants, and create a breakdown.",
-          "thought": "Read the brief and round 1; answered the four questions from them",
-          "question": {
-            "title": "Format and length?",
-            "of": "1 of 4",
-            "options": [
-              "9:16, 15 s, two films (Recommended)",
-              "9:16, a 10 s loop",
-              "4:5 for the feed",
-              "Both 9:16 and 4:5"
-            ],
-            "selected": 0
-          },
-          "illustrative": true,
-          "answers": {
-            "label": "The four answers",
-            "rows": [
-              {
-                "k": "Format",
-                "v": "9:16, 15 s, two films",
-                "tag": "From the message"
-              },
-              {
-                "k": "Product",
-                "v": "The whole range",
-                "tag": "From the brief"
-              },
-              {
-                "k": "Words",
-                "v": "The brief's copy; three short lines proposed",
-                "tag": "From the brief"
-              },
-              {
-                "k": "Sound",
-                "v": "ElevenLabs, music and effects",
-                "tag": "From the message"
-              }
-            ]
-          },
-          "result": {
-            "k": "Then the line, for film A",
-            "v": "DE HERFST LOOPT BINNEN. / PRIMA."
-          }
-        },
-        "state": "Answered from the brief"
+          "sections": [
+            {
+              "h": "Instructions",
+              "lines": [
+                { "v": "An AI video, Pixar-like: a cat tells the camera why it hates the PowerClean Pro." },
+                { "k": "Ref style", "v": "[link to the reference]" }
+              ]
+            },
+            {
+              "h": "Intro/Context",
+              "lines": [
+                { "k": "Angle", "v": "Pets" },
+                { "k": "Persona", "v": "Dog Moms & Pet Owners (\"cat moms\")" },
+                { "k": "Desire / Pain point", "v": "[one line]" },
+                { "k": "Awareness", "v": "Product aware, A4" }
+              ]
+            },
+            {
+              "h": "AI guidelines",
+              "lines": [
+                { "k": "Product", "v": "Indigo navy body, two clear tanks, one hand tool on a hose" }
+              ]
+            },
+            {
+              "h": "Script",
+              "lines": [
+                { "k": "V1", "v": "[hook 1]" },
+                { "k": "V2", "v": "[hook 2]" },
+                { "k": "V3", "v": "[hook 3]" }
+              ]
+            }
+          ]
+        }
       }
     },
     {
       "n": 3,
-      "id": "idea",
-      "kick": "The idea",
-      "nav": "Idea",
-      "title": [
-        "Two films,",
-        "two jokes."
+      "id": "insight",
+      "kick": "The insight",
+      "nav": "Insight",
+      "title": ["One insight,", "with its source."],
+      "sub": "Before a brief, the strategy skill reads the market, the reviews Samako may quote and the last results, then writes one insight in a sentence with where it came from. An insight nobody can point at is an opinion.",
+      "points": [
+        { "text": "Personas from the Creative Data Bank" },
+        { "text": "Every brief names its metric" }
       ],
       "short": true,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "In A, autumn walks into the house and the household's boss shrugs. In B, the room tidies itself and the whole range hops in, because the offer is on everything.",
+      "source": "the strategy skill and its rubric, samako-ai-studio (56ff3a0, 45c1fbc)",
       "frame": {
-        "head": "Two jokes",
+        "head": "Strategy / From read to brief",
+        "datum": "One variable per ad set",
         "figure": {
-          "kind": "plates",
-          "rows": [
-            [
-              {
-                "kind": "still",
-                "still": {
-                  "src": "/arcs/samako/kf-a3b-dog-close.webp",
-                  "ratio": "360/645",
-                  "alt": "A wet golden dog shaking itself on a pale sofa"
-                },
-                "label": "A · photoreal, generated",
-                "note": "De herfst loopt binnen. Prima.",
-                "lit": true
-              },
-              {
-                "kind": "list",
-                "label": "The two jokes",
-                "items": [
-                  {
-                    "b": "A: autumn walks in",
-                    "s": "The door blows open, a wet dog shakes on the sofa. She sips her tea: Prima."
-                  },
-                  {
-                    "b": "B: the room resets",
-                    "s": "Leaves file out, cushions hop back, then six machines hop in, one a beat."
-                  }
-                ],
-                "span": 1.3
-              },
-              {
-                "kind": "still",
-                "still": {
-                  "src": "/arcs/samako/autumn-b-poster.webp",
-                  "ratio": "9/16",
-                  "alt": "Film B: autumn leaves across a living room before the room tidies itself"
-                },
-                "label": "B · stop-motion",
-                "note": "Alles op z'n plek. Op alles."
-              }
-            ]
+          "kind": "chain",
+          "links": [
+            { "k": "Read", "v": "Reviews Samako may quote, the last results, the market", "src": "Creative Data Bank" },
+            { "k": "Insight", "v": "One sentence a colleague can point at", "src": "With its source", "lit": true },
+            { "k": "Audience", "v": "A persona and an awareness stage", "src": "Household CEO · A4" },
+            { "k": "Variable", "v": "Exactly one thing changes", "src": "Across the ad set" },
+            { "k": "Metric", "v": "How the ad set is judged", "src": "Or [metric]" }
           ]
-        },
-        "datum": "One per film"
+        }
       }
     },
     {
       "n": 4,
-      "id": "house",
-      "kick": "One house",
-      "nav": "House",
-      "title": [
-        "One house,",
-        "drawn once."
+      "id": "name",
+      "kick": "The name",
+      "nav": "Name",
+      "title": ["The ad name", "writes itself."],
+      "sub": "Every part of the name is a field. Two ClickUp rules rebuild it whenever a field changes, one with a creator and one without, because a rule cannot skip an empty part the way the sheet's formula did.",
+      "points": [
+        { "text": "Renamed within 4 seconds" },
+        { "text": "Persona is part 8, since 6 Oct" }
       ],
       "short": true,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "Four stills came first, the hall, the room, the dog and her, and went into every keyframe after, so every cut shows the same house.",
+      "source": "naming.md and docs/CLICKUP.md, samako-ai-studio (d7995cf, a8bcce9, 0a3a89a)",
       "frame": {
-        "head": "One house",
-        "datum": "One room, every shot",
+        "head": "ClickUp / The ad name",
+        "datum": "18 parts, 18 fields",
         "figure": {
-          "kind": "plates",
-          "rows": [
-            [
-              {
-                "kind": "still",
-                "still": {
-                  "src": "/arcs/samako/kf-a1-door.webp",
-                  "ratio": "360/645",
-                  "alt": "The front door open on a hall, autumn leaves blowing in over the rug"
-                },
-                "label": "The door"
-              },
-              {
-                "kind": "still",
-                "still": {
-                  "src": "/arcs/samako/kf-a3b-dog-close.webp",
-                  "ratio": "360/645",
-                  "alt": "A wet golden dog shaking itself on a pale sofa"
-                },
-                "label": "The dog"
-              },
-              {
-                "kind": "still",
-                "still": {
-                  "src": "/arcs/samako/kf-a4-cushion-paws.webp",
-                  "ratio": "360/645",
-                  "alt": "Muddy paw prints across a linen cushion"
-                },
-                "label": "The mess"
-              },
-              {
-                "kind": "still",
-                "still": {
-                  "src": "/arcs/samako/kf-a7-after.webp",
-                  "ratio": "360/645",
-                  "alt": "The living room in the evening, clean, the dog asleep on the sofa"
-                },
-                "label": "After",
-                "lit": true
-              }
-            ]
-          ]
+          "kind": "anatomy",
+          "parts": [
+            { "v": "171.0", "k": "Concept number", "src": "fixed" },
+            { "v": "DACH", "k": "Store", "src": "list" },
+            { "v": "PCP", "k": "Product code", "src": "list" },
+            { "v": "CS", "k": "Production", "src": "list" },
+            { "v": "VIDAI", "k": "Ad type", "src": "list" },
+            { "v": "Skit", "k": "Hook", "src": "list" },
+            { "v": "PETS", "k": "Angle", "src": "list" },
+            { "v": "DOG MOMS", "k": "Persona", "src": "list" },
+            { "v": "A4", "k": "Awareness", "src": "list" },
+            { "v": "CAT HATES CLEAN", "k": "Short description", "src": "text" },
+            { "v": "CREATOR", "k": "Creator name", "src": "text" },
+            { "v": "26W42", "k": "Ad week", "src": "fixed" },
+            { "v": "F", "k": "Creator gender", "src": "list" },
+            { "v": "CS", "k": "Copywriter", "src": "list" },
+            { "v": "ED", "k": "Editor", "src": "list" },
+            { "v": "SMK", "k": "Page", "src": "list" },
+            { "v": "PDP", "k": "Landing page", "src": "list" },
+            { "v": "EVERGREEN", "k": "Offer", "src": "list" }
+          ],
+          "rules": [
+            { "label": "Ad name · with creator", "note": "All 18 parts" },
+            { "label": "Ad name · no creator", "note": "16 parts: the creator's two left out" }
+          ],
+          "fail": { "v": "…_26W42__CS_…", "note": "What a single rule made of an empty part" }
         }
       }
     },
     {
       "n": 5,
-      "id": "animate",
-      "kick": "Animate",
-      "nav": "Animate",
-      "title": [
-        "Three models,",
-        "and only the take that worked."
+      "id": "queue",
+      "kick": "The launch",
+      "nav": "Launch",
+      "title": ["A launch queue,", "not a Slack message."],
+      "sub": "When an ad is ready, its task moves to the launch queue with its id and all 37 fields, and Claude leaves a comment for the media buyer. Before the import, a check caught eight faults a person reading the screen had missed.",
+      "points": [
+        { "text": "Moved, not copied: one task id" },
+        { "text": "8 faults caught before the import" }
       ],
       "short": true,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "Kling got start and end frames, Veo the wind and water, Seedance a second opinion. The film uses a second or two of each take.",
+      "source": "docs/CLICKUP.md and launch_sheet_import.py, samako-ai-studio (1a79bcd, 7e0514b)",
       "frame": {
-        "head": "The takes",
-        "datum": "14 takes · 3 models · 9 used",
+        "head": "Paid social / Launch queue",
+        "datum": "pending · ready · needs edit · launched",
         "figure": {
-          "kind": "plates",
-          "rows": [
-            [
-              {
-                "kind": "stat",
-                "label": "Takes",
-                "big": "14 → 9",
-                "small": "made, used",
-                "note": "Kling with start and end frames, Veo for wind and water, Seedance as a second opinion.",
-                "span": 0.9
-              },
-              {
-                "kind": "list",
-                "label": "What went",
-                "items": [
-                  {
-                    "b": "The door",
-                    "s": "Kling closed it. Veo blew it open, and that take stayed."
-                  },
-                  {
-                    "b": "The dog",
-                    "s": "Wide, a howl and then a white blob. Redrawn close: the shake."
-                  }
-                ],
-                "span": 1.2
-              }
-            ]
-          ]
-        }
-      }
-    },
-    {
-      "n": 6,
-      "id": "product",
-      "kick": "The product",
-      "nav": "Product",
-      "title": [
-        "No machine is redrawn:",
-        "they hop in as photos."
-      ],
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "Each machine is the photographer's original with its background removed, and it only moves across the frame, on twos, landing on the beat.",
-      "frame": {
-        "head": "The range",
-        "datum": "From the Drive, cut out, never redrawn",
-        "figure": {
-          "kind": "plates",
-          "rows": [
-            [
-              {
-                "kind": "list",
-                "label": "The range, from the Drive",
-                "items": [
-                  {
-                    "b": "Aqualis S1"
-                  },
-                  {
-                    "b": "CleanDetect"
-                  },
-                  {
-                    "b": "PowerClean Pro"
-                  },
-                  {
-                    "b": "Halo"
-                  },
-                  {
-                    "b": "NanoDetect Pro"
-                  },
-                  {
-                    "b": "Care"
-                  }
-                ],
-                "span": 1.4
-              },
-              {
-                "kind": "stat",
-                "label": "Frames where a model drew the product",
-                "big": "0"
-              }
-            ]
-          ]
-        }
-      }
-    },
-    {
-      "n": 7,
-      "id": "cut",
-      "kick": "The cut",
-      "nav": "Cut",
-      "title": [
-        "Every cut on a beat,",
-        "the silence on her sip."
-      ],
-      "short": null,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "At 144 bpm a beat is exactly 10 frames, and in film A the track's own one-beat silence lands on her sip of tea.",
-      "frame": {
-        "head": "Film A on one line",
-        "datum": "144 bpm × 24 fps → 1 beat = 10 frames → 9 bars = 15 s",
-        "figure": {
-          "kind": "track",
-          "length": 15,
-          "unit": "s",
-          "scale": [
-            0,
-            3,
-            6,
-            9,
-            12,
-            15
-          ],
-          "grid": {
-            "minor": 0.4166667,
-            "major": 1.6666667
-          },
-          "lanes": [
+          "kind": "screen",
+          "layout": "list",
+          "skin": "clickup",
+          "app": "Samako",
+          "crumbs": ["Samako", "Paid social", "🚀 Launch queue"],
+          "columns": ["Store", "Persona", "Week", "Assignee"],
+          "groups": [
             {
-              "label": "Scenes",
-              "segments": [
-                {
-                  "from": 0,
-                  "to": 1.667,
-                  "label": "Door"
-                },
-                {
-                  "from": 1.667,
-                  "to": 3.333,
-                  "label": "Wellies"
-                },
-                {
-                  "from": 3.333,
-                  "to": 5,
-                  "label": "Dog"
-                },
-                {
-                  "from": 5,
-                  "to": 6.667,
-                  "label": "Prints"
-                },
-                {
-                  "from": 6.667,
-                  "to": 8.75,
-                  "label": "Her"
-                },
-                {
-                  "from": 8.75,
-                  "to": 10,
-                  "label": "Machine",
-                  "lit": true
-                },
-                {
-                  "from": 10,
-                  "to": 11.667,
-                  "label": "Evening"
-                },
-                {
-                  "from": 11.667,
-                  "to": 15,
-                  "label": "End card"
-                }
+              "status": "ready for launch",
+              "tone": "#1090e0",
+              "rows": [
+                { "name": "171.0_DACH_PCP_CS_VIDAI_Skit_PETS_DOG MOMS_A4_CAT HATES CLEAN_26W42_CS_ED_SMK_PDP_EVERGREEN", "cells": ["DACH", "DOG MOMS", "26W42", "Media buyer"], "lit": true },
+                { "name": "170.2_EU_CD_CS_IMG_Offer_OFFER_HOUSEHOLD CEO_A5_AUTUMN DEALS_26W41_CS_AI_SMK_SALE_C-TIER", "cells": ["EU", "HOUSEHOLD CEO", "26W41", "Media buyer"] }
               ]
             },
             {
-              "label": "Cuts",
-              "ticks": [
-                0,
-                1.667,
-                3.333,
-                5,
-                6.667,
-                8.75,
-                10,
-                11.667
+              "status": "needs edit",
+              "tone": "#e16b16",
+              "rows": [
+                { "name": "170.1_NL_CD_CS_IMG_Problem_HYGIENE_DEEP CLEANER_A2_ALLERGY SEASON_26W41_CS_AI_SMK_PDP_EVERGREEN", "cells": ["NL", "DEEP CLEANER", "26W41", "Strategist"] }
               ]
             },
             {
-              "label": "Music",
-              "level": [
-                [
-                  0,
-                  0.7
-                ],
-                [
-                  6.6,
-                  0.7
-                ],
-                [
-                  6.67,
-                  0.08
-                ],
-                [
-                  7.08,
-                  0.08
-                ],
-                [
-                  7.12,
-                  0.7
-                ],
-                [
-                  14,
-                  0.7
-                ],
-                [
-                  15,
-                  0.2
-                ]
-              ],
-              "marks": [
-                {
-                  "at": 6.67,
-                  "label": "1 beat of silence, on her sip"
-                }
+              "status": "launched",
+              "tone": "#008844",
+              "rows": [
+                { "name": "169.4_NL_PCP_CS_VIDUGC_Testimonial_PETS_DOG MOMS_A3_HAIR ON SOFA_26W40_CS_ED_SMK_PDP_EVERGREEN", "cells": ["NL", "DOG MOMS", "26W40", "Media buyer"] },
+                { "name": "169.3_DACH_CD_CS_IMG_Offer_OFFER_BUSY MOMS_A5_WEEKEND DEAL_26W40_CS_AI_SMK_SALE_C-TIER", "cells": ["DACH", "BUSY MOMS", "26W40", "Media buyer"] }
               ]
             }
           ]
-        }
-      }
-    },
-    {
-      "n": 8,
-      "id": "make",
-      "kick": "Making it",
-      "nav": "Make",
-      "title": [
-        "The models made the footage,",
-        "code did the rest."
-      ],
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "The video models brought the house to life, and code added the type, the product, the stop-motion and the grain on all 360 frames.",
-      "frame": {
-        "head": "The engine",
-        "datum": "Any frame can be redrawn on its own",
-        "figure": {
-          "kind": "plates",
-          "rows": [
-            [
-              {
-                "kind": "list",
-                "label": "The rules",
-                "items": [
-                  {
-                    "b": "Stop-motion from video",
-                    "s": "Takes cut back to 12 or 8 poses a second."
-                  },
-                  {
-                    "b": "The product on twos",
-                    "s": "A hop lands on the beat; its shadow grows as it lifts."
-                  },
-                  {
-                    "b": "Type set in code",
-                    "s": "Letters landing one pose apart. No model writes a word."
-                  },
-                  {
-                    "b": "Any frame re-renders alone",
-                    "s": "Four cuts rendered in three minutes."
-                  }
-                ],
-                "span": 1.6
-              },
-              {
-                "kind": "stat",
-                "label": "Frames, film A",
-                "big": "360"
-              }
-            ]
-          ]
-        }
-      }
-    },
-    {
-      "n": 9,
-      "id": "check",
-      "kick": "Check",
-      "nav": "Check",
-      "title": [
-        "Checked before",
-        "anyone sees it."
-      ],
-      "short": true,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "sub": "A model that never saw the brief watched each film three times and said what it was for and what it read. Only what all three runs agreed on got fixed; a person made the call.",
-      "frame": {
-        "head": "The check",
-        "datum": "Acted on 3 of 3",
-        "figure": {
-          "kind": "ledger",
-          "before": {
-            "k": "Was “Prima.” readable?",
-            "v": "0 of 3 runs: 14 frames on screen, cut off at the edge"
-          },
-          "now": {
-            "k": "After the fix",
-            "v": "3 of 3 runs: 36 frames on screen, clear of the edge"
-          },
-          "rows": [
-            {
-              "k": "Code",
-              "v": "Sync within 6.3 ms, loudness, true peak, length"
-            },
-            {
-              "k": "An AI viewer",
-              "v": "Got both stories every time; could not name the brand"
-            },
-            {
-              "k": "The fix",
-              "v": "Both end cards carry the logo"
-            }
-          ]
-        },
-        "state": "3 of 3"
-      }
-    },
-    {
-      "n": 10,
-      "id": "next",
-      "kick": "Next time",
-      "nav": "Next time",
-      "title": [
-        "Now it's part of the skill,",
-        "so the team just asks."
-      ],
-      "source": "story.json (autumn-02 showtell)",
-      "sub": "Everything in this case lives in Samako's own plugin; open a chat and say what you want.",
-      "frame": {
-        "head": "The next ask",
-        "datum": "One sentence, the same steps",
-        "figure": {
-          "kind": "exchange",
-          "who": "The brand team",
-          "message": "A Black Friday film for the Halo, same way as Autumn Deals 02.",
-          "answers": {
-            "label": "Runs on",
-            "rows": [
-              {
-                "k": "Skill",
-                "v": "The visuals skill, its motion part"
-              },
-              {
-                "k": "Plugin",
-                "v": "Samako's own"
-              }
-            ]
-          }
         }
       }
     }

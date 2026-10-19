@@ -768,3 +768,24 @@ it on the left.
 - The case head: the client's logo, then the project in mono at 12px and the
   type of work beside it, left.
 - Titles at most 56 characters, paragraphs 240, points 40 (tested).
+
+# Round 14 (2026-10-19): Samako's case becomes the briefing flow; Loop re-cut
+
+The owner: Suri stays the DAM; Loop is Prompt to Loop, cut from the original
+document (`~/Downloads/Prompt_to_Loop.html`); Samako becomes the briefing
+flow built in samako-ai-studio (the ClickUp skills, the ad name, one
+template, insights), "super clear and super visual".
+
+- **Samako** (creative operations): intro (1,108 ads named by hand, every
+  brief its own template) → result ("One template. Names built for you.",
+  the ClickUp launch register) → the sheet before (its faults marked) → raw
+  notes to the team's brief (a ClickUp task beside the strategist's message)
+  → one insight with its source (`chain`) → the ad name taken apart
+  (`anatomy`, 18 parts, two rules) → the launch queue. New figure kinds
+  `sheet`, `anatomy`, `chain`, and the `clickup` skin (`ClickUpScreen.tsx`,
+  `app-screens.css`). People are roles, codes placeholders (`CS`, `ED`);
+  no claims, prices or ids from the source. No time saving is claimed: none
+  was measured.
+- **Loop**, short cut from the original: setup · ask · idea · check · next
+  time ("Now it's a skill. Just ask."), so the case reads as a system the
+  studio runs, not a one-off render.
