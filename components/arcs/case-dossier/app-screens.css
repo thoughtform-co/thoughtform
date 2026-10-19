@@ -230,7 +230,7 @@
   display: flex;
 }
 .cku-raw {
-  width: calc(330 * var(--u));
+  width: calc(270 * var(--u));
   flex: none;
   box-sizing: border-box;
   display: flex;
@@ -292,7 +292,7 @@
 }
 .cku-fields > div {
   display: grid;
-  grid-template-columns: calc(120 * var(--u)) minmax(0, 1fr);
+  grid-template-columns: calc(92 * var(--u)) minmax(0, 1fr);
   align-items: center;
   min-height: calc(28 * var(--u));
 }
@@ -303,6 +303,9 @@
 .cku-fields dd {
   font-size: calc(13 * var(--u));
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cku-desc {
   display: grid;

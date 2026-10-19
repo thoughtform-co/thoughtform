@@ -226,6 +226,8 @@ export type Figure =
       kind: "sheet";
       file: string;
       tab: string;
+      /** the formula bar's contents, if any */
+      fx?: string;
       columns: readonly { label: string; w?: number }[];
       rows: readonly (readonly string[])[];
       marks: readonly { row: number; col: number; n: number }[];

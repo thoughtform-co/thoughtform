@@ -20,7 +20,7 @@ export function Sheet({ figure }: { figure: SheetFigure }) {
         <span className="gsh-file">{figure.file}</span>
         <span className="gsh-fx">
           <i>fx</i>
-          <code>=TEXTJOIN(&quot;_&quot;, TRUE, A2:R2)</code>
+          {figure.fx ? <code>{figure.fx}</code> : null}
         </span>
       </div>
       <div className="gsh-grid">

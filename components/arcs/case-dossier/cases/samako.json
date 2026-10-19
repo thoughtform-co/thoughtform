@@ -15,50 +15,132 @@
     "pattern": "hex"
   },
   "intro": {
-    "line": ["1,108 ads named by hand in a sheet,", "every brief in its own template."],
+    "line": [
+      "1,108 ads named by hand in a sheet,",
+      "every brief in its own template."
+    ],
     "facts": [
-      { "value": "1,108", "label": "Ads in the launch sheet" },
-      { "value": "~28", "label": "New ads a week" },
-      { "value": "318", "label": "Names with a stray space" }
+      {
+        "value": "1,108",
+        "label": "Ads, named by hand in one sheet"
+      },
+      {
+        "value": "~28",
+        "label": "New ads a week"
+      },
+      {
+        "value": "5",
+        "label": "Tools to launch one ad"
+      }
     ]
   },
   "result": {
-    "title": ["One template.", "Names built for you."],
+    "title": [
+      "One template.",
+      "Names built for you."
+    ],
     "before": "A brief meant building the ad name in a sheet, pasting it into a task, renaming files by hand and pinging the agency on Slack.",
     "allows": "A strategist pastes raw notes and gets the team's brief, its ad name and a place in the launch queue."
   },
   "stats": [
-    { "value": "1,363", "label": "Rows moved from the sheet into ClickUp" },
-    { "value": "0", "label": "Differences across 83 rebuilt names" },
-    { "value": "18", "label": "Name parts, written by ClickUp" }
+    {
+      "value": "1,363",
+      "label": "Ads moved from the sheet into ClickUp"
+    },
+    {
+      "value": "1",
+      "label": "Template for every brief"
+    },
+    {
+      "value": "0",
+      "label": "Ad names typed by hand"
+    }
   ],
   "opening": {
     "head": "Paid social / Launch register",
-    "datum": "1,363 rows · 37 fields",
+    "datum": "1,363 ads · one task each",
     "figure": {
       "kind": "screen",
       "layout": "list",
       "skin": "clickup",
       "app": "Samako",
-      "crumbs": ["Samako", "Paid social", "📋 Launch register"],
-      "columns": ["Store", "Product", "Persona", "Awareness", "Week"],
+      "crumbs": [
+        "Samako",
+        "Paid social",
+        "📋 Launch register"
+      ],
+      "columns": [
+        "Market",
+        "Format",
+        "Audience",
+        "Week"
+      ],
       "groups": [
         {
           "status": "ready for launch",
           "tone": "#1090e0",
           "rows": [
-            { "name": "171.0_DACH_PCP_CS_VIDAI_Skit_PETS_DOG MOMS_A4_CAT HATES CLEAN_26W42_CS_ED_SMK_PDP_EVERGREEN", "cells": ["DACH", "PCP", "DOG MOMS", "A4", "26W42"], "lit": true },
-            { "name": "170.2_EU_CD_CS_IMG_Offer_OFFER_HOUSEHOLD CEO_A5_AUTUMN DEALS_26W41_CS_AI_SMK_SALE_C-TIER", "cells": ["EU", "CD", "HOUSEHOLD CEO", "A5", "26W41"] },
-            { "name": "170.1_NL_CD_CS_IMG_Problem_HYGIENE_DEEP CLEANER_A2_ALLERGY SEASON_26W41_CS_AI_SMK_PDP_EVERGREEN", "cells": ["NL", "CD", "DEEP CLEANER", "A2", "26W41"] }
+            {
+              "name": "171.0 · Cat hates clean · AI video",
+              "cells": [
+                "DACH",
+                "AI video",
+                "Pet owners",
+                "W42"
+              ],
+              "lit": true
+            },
+            {
+              "name": "170.2 · Autumn deals · Static",
+              "cells": [
+                "EU",
+                "Static",
+                "Families",
+                "W41"
+              ]
+            },
+            {
+              "name": "170.1 · Allergy season · Static",
+              "cells": [
+                "NL",
+                "Static",
+                "Deep cleaners",
+                "W41"
+              ]
+            }
           ]
         },
         {
           "status": "launched",
           "tone": "#008844",
           "rows": [
-            { "name": "169.4_NL_PCP_CS_VIDUGC_Testimonial_PETS_DOG MOMS_A3_HAIR ON SOFA_26W40_CS_ED_SMK_PDP_EVERGREEN", "cells": ["NL", "PCP", "DOG MOMS", "A3", "26W40"] },
-            { "name": "169.3_DACH_CD_CS_IMG_Offer_OFFER_BUSY MOMS_A5_WEEKEND DEAL_26W40_CS_AI_SMK_SALE_C-TIER", "cells": ["DACH", "CD", "BUSY MOMS", "A5", "26W40"] },
-            { "name": "169.2_EU_PCP_CS_VIDUI_Productdemonstration_CAR_PRACTICAL HOMEOWNER_A3_CAR SEATS_26W40_CS_ED_SMK_PDP_EVERGREEN", "cells": ["EU", "PCP", "PRACTICAL HOMEOWNER", "A3", "26W40"] }
+            {
+              "name": "169.4 · Hair on the sofa · UGC",
+              "cells": [
+                "NL",
+                "UGC",
+                "Pet owners",
+                "W40"
+              ]
+            },
+            {
+              "name": "169.3 · Weekend deal · Static",
+              "cells": [
+                "DACH",
+                "Static",
+                "Families",
+                "W40"
+              ]
+            },
+            {
+              "name": "169.2 · Car seats · Demo video",
+              "cells": [
+                "EU",
+                "Video",
+                "Homeowners",
+                "W40"
+              ]
+            }
           ]
         }
       ]
@@ -70,57 +152,150 @@
       "id": "sheet",
       "kick": "The problem",
       "nav": "Problem",
-      "title": ["Every name typed by hand,", "every brief its own."],
-      "sub": "The ad names lived in a Google Sheet: built by formula, pasted into a task, the files renamed by hand and the agency pinged on Slack. Across 1,108 ads the names drifted.",
+      "title": [
+        "One sheet, five tools,",
+        "every brief its own."
+      ],
+      "sub": "Each ad was named by hand in a Google Sheet, pasted into a task, its files renamed and the agency pinged on Slack. Every strategist wrote briefs in their own template, so production read each one differently.",
       "points": [
-        { "text": "785 week codes without a year" },
-        { "text": "155 of the last 250 over 100 characters" },
-        { "text": "Creative lead: our holy grail", "person": true }
+        {
+          "text": "Names drifted across 1,108 ads"
+        },
+        {
+          "text": "Creative lead: our holy grail",
+          "person": true
+        }
       ],
       "short": true,
       "source": "launch-sheet.md and naming.md, samako-ai-studio; the vault, 1 Oct 2026",
       "frame": {
         "head": "Google Sheets / Launch sheet",
-        "datum": "1,108 ads · 18 parts a name",
+        "datum": "1,108 ads",
         "figure": {
           "kind": "sheet",
-          "file": "Mediabuying Launch Sheet",
-          "tab": "MB Name Generator",
+          "file": "Launch sheet",
+          "tab": "Launch",
           "columns": [
-            { "label": "Concept" },
-            { "label": "Store" },
-            { "label": "Product" },
-            { "label": "Ad type" },
-            { "label": "Angle", "w": 1.2 },
-            { "label": "Awareness" },
-            { "label": "Description", "w": 1.8 },
-            { "label": "Week" },
-            { "label": "Ad name", "w": 3.4 },
-            { "label": "Launchdate", "w": 1.4 }
+            {
+              "label": "Concept"
+            },
+            {
+              "label": "Market"
+            },
+            {
+              "label": "Format"
+            },
+            {
+              "label": "Description",
+              "w": 2.2
+            },
+            {
+              "label": "Week"
+            },
+            {
+              "label": "Status",
+              "w": 1.3
+            },
+            {
+              "label": "Launch date",
+              "w": 1.6
+            }
           ],
           "rows": [
-            ["158.3", "DACH", "PCP", "VIDUI", "PETS", "A4", "DOG HATES CLEAN", "26W39", "158.3_DACH_PCP_CS_VIDUI_Productdemonstration_PETS_A4_DOG HATES CLEAN_26W39_CS_ED_SMK_PDP_EVERGREEN", ""],
-            ["158.4", "NL", "CD", "IMG", "GIFTING ", "A5", "XMAS GIFT", "W48", "158.4_NL_CD_CS_IMG_Offer_GIFTING _A5_XMAS GIFT_W48_CS_AI_SMK_SALE", "launch after QA"],
-            ["158.5", "DACH", "PCP", "VIDM", "CHILDEREN", "A2", "STICKY FLOOR", "26W39", "158.5_DACH_PCP_CS_VIDM_Problem_CHILDEREN_A2_STICKY FLOOR_26W39_CS_ED_SMK_PDP_EVERGREEN", ""],
-            ["158.6", "EU", "CD", "IMG", "OFFER", "A5", "AUTUMN DEALS BEST SELLERS FINAL V2", "26W40", "158.6_EU_CD_CS_IMG_Offer_OFFER_A5_AUTUMN DEALS BEST SELLERS FINAL V2_26W40_CS_AI_SMK_SALE_C-TIER", ""],
-            ["158.7", "NL", "PCP", "VIDUGC", "PETS", "", "HAIR ON SOFA", "26W40", "158.7_NL_PCP_CS_VIDUGC_Testimonial_PETS__HAIR ON SOFA_26W40_CS_ED_SMK_PDP", "ask the agency"],
-            ["158.8", "DACH", "CD", "IMG", "HYGIENE", "A2", "ALLERGY SEASON", "26W40", "158.8_DACH_CD_CS_IMG_Problem_HYGIENE_A2_ALLERGY SEASON_26W40_CS_AI_SMK_PDP_EVERGREEN", ""]
+            [
+              "158.3",
+              "DACH",
+              "Video",
+              "Dog hates clean",
+              "2026 W39",
+              "Launched",
+              "22 Sep"
+            ],
+            [
+              "158.4",
+              "NL",
+              "Static",
+              "Xmas gift",
+              "W48",
+              "Ready",
+              "launch after QA"
+            ],
+            [
+              "158.5",
+              "DACH",
+              "Video",
+              "Sticky floor, childeren",
+              "2026 W39",
+              "Ready",
+              ""
+            ],
+            [
+              "158.6",
+              "",
+              "Static",
+              "Autumn deals",
+              "2026 W40",
+              "Briefed",
+              "ask the agency"
+            ],
+            [
+              "158.7",
+              "NL",
+              "UGC",
+              "Hair on the sofa",
+              "2026 W40",
+              "Ready",
+              ""
+            ],
+            [
+              "158.8",
+              "DACH",
+              "Static",
+              "Allergy season",
+              "2026 W40",
+              "Briefed",
+              ""
+            ]
           ],
           "marks": [
-            { "row": 1, "col": 4, "n": 1 },
-            { "row": 1, "col": 7, "n": 2 },
-            { "row": 2, "col": 4, "n": 3 },
-            { "row": 3, "col": 8, "n": 4 },
-            { "row": 4, "col": 5, "n": 5 },
-            { "row": 1, "col": 9, "n": 6 }
+            {
+              "row": 1,
+              "col": 4,
+              "n": 1
+            },
+            {
+              "row": 2,
+              "col": 3,
+              "n": 2
+            },
+            {
+              "row": 3,
+              "col": 1,
+              "n": 3
+            },
+            {
+              "row": 1,
+              "col": 6,
+              "n": 4
+            }
           ],
           "notes": [
-            { "n": 1, "text": "A stray space before a separator · 318 names" },
-            { "n": 2, "text": "A week without its year · 785" },
-            { "n": 3, "text": "A typo in a code" },
-            { "n": 4, "text": "Over 100 characters · 155 of the last 250" },
-            { "n": 5, "text": "A part left empty" },
-            { "n": 6, "text": "Launchdate never held a date" }
+            {
+              "n": 1,
+              "text": "A week without its year"
+            },
+            {
+              "n": 2,
+              "text": "A typo, carried into the name"
+            },
+            {
+              "n": 3,
+              "text": "A field left empty"
+            },
+            {
+              "n": 4,
+              "text": "Notes where a date should be"
+            }
           ]
         }
       }
@@ -130,11 +305,18 @@
       "id": "brief",
       "kick": "The brief",
       "nav": "Brief",
-      "title": ["Raw notes in,", "the team's brief out."],
+      "title": [
+        "Raw notes in,",
+        "the team's brief out."
+      ],
       "sub": "The strategist pastes notes in their own words. Claude fills the team's template in its order, keeps their words, leaves anything missing in brackets, composes the ad name, and files the task only after a yes.",
       "points": [
-        { "text": "Three templates: static, video, UGC" },
-        { "text": "Gaps stay [in brackets]" }
+        {
+          "text": "One template per format"
+        },
+        {
+          "text": "Gaps stay [in brackets]"
+        }
       ],
       "short": true,
       "source": "templates.md and the clickup skill, samako-ai-studio (5ce14af); the video template of 24 Sep 2026",
@@ -146,50 +328,96 @@
           "layout": "task",
           "skin": "clickup",
           "app": "Samako",
-          "crumbs": ["Samako", "Paid social", "🇩🇪 Paid ads internal"],
+          "crumbs": [
+            "Samako",
+            "Paid social",
+            "🇩🇪 Paid ads internal"
+          ],
           "raw": {
             "who": "Creative strategist",
-            "text": "Nieuwe brief voor DACH. AI-video, Pixar-achtig: een kat die de stofzuiger haat. Persona: cat moms. Product aware. Concept 171.0."
+            "text": "New brief for DACH. AI video, Pixar-like: a cat that hates the vacuum. Audience: cat moms. Product aware. Concept 171.0."
           },
-          "title": "171.0_DACH_PCP_CS_VIDAI_Skit_PETS_DOG MOMS_A4_CAT HATES CLEAN_26W42_CS_ED_SMK_PDP_EVERGREEN",
+          "title": "171.0 · Cat hates clean · AI video",
           "status": "pending",
           "fields": [
-            { "k": "Store", "v": "DACH" },
-            { "k": "Product", "v": "PCP" },
-            { "k": "Persona", "v": "DOG MOMS (cat moms)" },
-            { "k": "Awareness", "v": "A4" },
-            { "k": "Creator type", "v": "AI" },
-            { "k": "Ad week", "v": "26W42" }
+            {
+              "k": "Market",
+              "v": "DACH"
+            },
+            {
+              "k": "Format",
+              "v": "AI video"
+            },
+            {
+              "k": "Audience",
+              "v": "Pet owners"
+            },
+            {
+              "k": "Awareness",
+              "v": "Product aware"
+            },
+            {
+              "k": "Week",
+              "v": "W42"
+            },
+            {
+              "k": "Ad name",
+              "v": "Automatic"
+            }
           ],
           "sections": [
             {
               "h": "Instructions",
               "lines": [
-                { "v": "An AI video, Pixar-like: a cat tells the camera why it hates the PowerClean Pro." },
-                { "k": "Ref style", "v": "[link to the reference]" }
+                {
+                  "v": "An AI video, Pixar-like: a cat tells the camera why it hates the vacuum."
+                },
+                {
+                  "k": "Reference",
+                  "v": "[link to the reference]"
+                }
               ]
             },
             {
-              "h": "Intro/Context",
+              "h": "Context",
               "lines": [
-                { "k": "Angle", "v": "Pets" },
-                { "k": "Persona", "v": "Dog Moms & Pet Owners (\"cat moms\")" },
-                { "k": "Desire / Pain point", "v": "[one line]" },
-                { "k": "Awareness", "v": "Product aware, A4" }
+                {
+                  "k": "Audience",
+                  "v": "Pet owners (\"cat moms\")"
+                },
+                {
+                  "k": "Insight",
+                  "v": "[one line, with its source]"
+                },
+                {
+                  "k": "Awareness",
+                  "v": "Product aware"
+                }
               ]
             },
             {
-              "h": "AI guidelines",
+              "h": "Product",
               "lines": [
-                { "k": "Product", "v": "Indigo navy body, two clear tanks, one hand tool on a hose" }
+                {
+                  "v": "The product as it really is, from its file: no invented parts"
+                }
               ]
             },
             {
               "h": "Script",
               "lines": [
-                { "k": "V1", "v": "[hook 1]" },
-                { "k": "V2", "v": "[hook 2]" },
-                { "k": "V3", "v": "[hook 3]" }
+                {
+                  "k": "Hook 1",
+                  "v": "[hook]"
+                },
+                {
+                  "k": "Hook 2",
+                  "v": "[hook]"
+                },
+                {
+                  "k": "Hook 3",
+                  "v": "[hook]"
+                }
               ]
             }
           ]
@@ -201,11 +429,15 @@
       "id": "insight",
       "kick": "The insight",
       "nav": "Insight",
-      "title": ["One insight,", "with its source."],
+      "title": [
+        "One insight,",
+        "with its source."
+      ],
       "sub": "Before a brief, the strategy skill reads the market, the reviews Samako may quote and the last results, then writes one insight in a sentence with where it came from. An insight nobody can point at is an opinion.",
       "points": [
-        { "text": "Personas from the Creative Data Bank" },
-        { "text": "Every brief names its metric" }
+        {
+          "text": "Every brief names its metric"
+        }
       ],
       "short": true,
       "source": "the strategy skill and its rubric, samako-ai-studio (56ff3a0, 45c1fbc)",
@@ -215,58 +447,28 @@
         "figure": {
           "kind": "chain",
           "links": [
-            { "k": "Read", "v": "Reviews Samako may quote, the last results, the market", "src": "Creative Data Bank" },
-            { "k": "Insight", "v": "One sentence a colleague can point at", "src": "With its source", "lit": true },
-            { "k": "Audience", "v": "A persona and an awareness stage", "src": "Household CEO · A4" },
-            { "k": "Variable", "v": "Exactly one thing changes", "src": "Across the ad set" },
-            { "k": "Metric", "v": "How the ad set is judged", "src": "Or [metric]" }
+            {
+              "k": "Read",
+              "v": "Reviews, the last results, the market",
+              "src": "Before every brief"
+            },
+            {
+              "k": "Insight",
+              "v": "One sentence a colleague can point at",
+              "src": "With its source",
+              "lit": true
+            },
+            {
+              "k": "Audience",
+              "v": "Who it is for, and how aware they are",
+              "src": "From the team's own personas"
+            },
+            {
+              "k": "Metric",
+              "v": "How the ad set will be judged",
+              "src": "Or [metric]"
+            }
           ]
-        }
-      }
-    },
-    {
-      "n": 4,
-      "id": "name",
-      "kick": "The name",
-      "nav": "Name",
-      "title": ["The ad name", "writes itself."],
-      "sub": "Every part of the name is a field. Two ClickUp rules rebuild it whenever a field changes, one with a creator and one without, because a rule cannot skip an empty part the way the sheet's formula did.",
-      "points": [
-        { "text": "Renamed within 4 seconds" },
-        { "text": "Persona is part 8, since 6 Oct" }
-      ],
-      "short": true,
-      "source": "naming.md and docs/CLICKUP.md, samako-ai-studio (d7995cf, a8bcce9, 0a3a89a)",
-      "frame": {
-        "head": "ClickUp / The ad name",
-        "datum": "18 parts, 18 fields",
-        "figure": {
-          "kind": "anatomy",
-          "parts": [
-            { "v": "171.0", "k": "Concept number", "src": "fixed" },
-            { "v": "DACH", "k": "Store", "src": "list" },
-            { "v": "PCP", "k": "Product code", "src": "list" },
-            { "v": "CS", "k": "Production", "src": "list" },
-            { "v": "VIDAI", "k": "Ad type", "src": "list" },
-            { "v": "Skit", "k": "Hook", "src": "list" },
-            { "v": "PETS", "k": "Angle", "src": "list" },
-            { "v": "DOG MOMS", "k": "Persona", "src": "list" },
-            { "v": "A4", "k": "Awareness", "src": "list" },
-            { "v": "CAT HATES CLEAN", "k": "Short description", "src": "text" },
-            { "v": "CREATOR", "k": "Creator name", "src": "text" },
-            { "v": "26W42", "k": "Ad week", "src": "fixed" },
-            { "v": "F", "k": "Creator gender", "src": "list" },
-            { "v": "CS", "k": "Copywriter", "src": "list" },
-            { "v": "ED", "k": "Editor", "src": "list" },
-            { "v": "SMK", "k": "Page", "src": "list" },
-            { "v": "PDP", "k": "Landing page", "src": "list" },
-            { "v": "EVERGREEN", "k": "Offer", "src": "list" }
-          ],
-          "rules": [
-            { "label": "Ad name · with creator", "note": "All 18 parts" },
-            { "label": "Ad name · no creator", "note": "16 parts: the creator's two left out" }
-          ],
-          "fail": { "v": "…_26W42__CS_…", "note": "What a single rule made of an empty part" }
         }
       }
     },
@@ -275,46 +477,97 @@
       "id": "queue",
       "kick": "The launch",
       "nav": "Launch",
-      "title": ["A launch queue,", "not a Slack message."],
-      "sub": "When an ad is ready, its task moves to the launch queue with its id and all 37 fields, and Claude leaves a comment for the media buyer. Before the import, a check caught eight faults a person reading the screen had missed.",
+      "title": [
+        "A launch queue,",
+        "not a Slack message."
+      ],
+      "sub": "When an ad is ready, its task moves to the launch queue with everything on it, and Claude leaves a comment for the media buyer. Nobody copies a row, renames a file or sends a Slack message.",
       "points": [
-        { "text": "Moved, not copied: one task id" },
-        { "text": "8 faults caught before the import" }
+        {
+          "text": "Moved, not copied: one task per ad"
+        },
+        {
+          "text": "The import checked before it ran"
+        }
       ],
       "short": true,
       "source": "docs/CLICKUP.md and launch_sheet_import.py, samako-ai-studio (1a79bcd, 7e0514b)",
       "frame": {
         "head": "Paid social / Launch queue",
-        "datum": "pending · ready · needs edit · launched",
+        "datum": "Ready · needs edit · launched",
         "figure": {
           "kind": "screen",
           "layout": "list",
           "skin": "clickup",
           "app": "Samako",
-          "crumbs": ["Samako", "Paid social", "🚀 Launch queue"],
-          "columns": ["Store", "Persona", "Week", "Assignee"],
+          "crumbs": [
+            "Samako",
+            "Paid social",
+            "🚀 Launch queue"
+          ],
+          "columns": [
+            "Market",
+            "Format",
+            "Assignee"
+          ],
           "groups": [
             {
               "status": "ready for launch",
               "tone": "#1090e0",
               "rows": [
-                { "name": "171.0_DACH_PCP_CS_VIDAI_Skit_PETS_DOG MOMS_A4_CAT HATES CLEAN_26W42_CS_ED_SMK_PDP_EVERGREEN", "cells": ["DACH", "DOG MOMS", "26W42", "Media buyer"], "lit": true },
-                { "name": "170.2_EU_CD_CS_IMG_Offer_OFFER_HOUSEHOLD CEO_A5_AUTUMN DEALS_26W41_CS_AI_SMK_SALE_C-TIER", "cells": ["EU", "HOUSEHOLD CEO", "26W41", "Media buyer"] }
+                {
+                  "name": "171.0 · Cat hates clean · AI video",
+                  "cells": [
+                    "DACH",
+                    "AI video",
+                    "Media buyer"
+                  ],
+                  "lit": true
+                },
+                {
+                  "name": "170.2 · Autumn deals · Static",
+                  "cells": [
+                    "EU",
+                    "Static",
+                    "Media buyer"
+                  ]
+                }
               ]
             },
             {
               "status": "needs edit",
               "tone": "#e16b16",
               "rows": [
-                { "name": "170.1_NL_CD_CS_IMG_Problem_HYGIENE_DEEP CLEANER_A2_ALLERGY SEASON_26W41_CS_AI_SMK_PDP_EVERGREEN", "cells": ["NL", "DEEP CLEANER", "26W41", "Strategist"] }
+                {
+                  "name": "170.1 · Allergy season · Static",
+                  "cells": [
+                    "NL",
+                    "Static",
+                    "Strategist"
+                  ]
+                }
               ]
             },
             {
               "status": "launched",
               "tone": "#008844",
               "rows": [
-                { "name": "169.4_NL_PCP_CS_VIDUGC_Testimonial_PETS_DOG MOMS_A3_HAIR ON SOFA_26W40_CS_ED_SMK_PDP_EVERGREEN", "cells": ["NL", "DOG MOMS", "26W40", "Media buyer"] },
-                { "name": "169.3_DACH_CD_CS_IMG_Offer_OFFER_BUSY MOMS_A5_WEEKEND DEAL_26W40_CS_AI_SMK_SALE_C-TIER", "cells": ["DACH", "BUSY MOMS", "26W40", "Media buyer"] }
+                {
+                  "name": "169.4 · Hair on the sofa · UGC",
+                  "cells": [
+                    "NL",
+                    "UGC",
+                    "Media buyer"
+                  ]
+                },
+                {
+                  "name": "169.3 · Weekend deal · Static",
+                  "cells": [
+                    "DACH",
+                    "Static",
+                    "Media buyer"
+                  ]
+                }
               ]
             }
           ]
