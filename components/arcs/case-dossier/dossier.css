@@ -511,49 +511,10 @@
 /* c · title-led: the project is the one sans title; who and which team
    ride one mono row above it (sans is what we made, mono who made it for) */
 /* c · the client and the type of work on one line, the project under
-   them at a title's size, the three in the windows' own notched hairline
-   (owner, 2026-10-19: "the workstream and the client logo … on the same
-   line above the title … a subtle frame that's part of our system") */
+   them at a title's size; no frame, so the head sits on the column's own
+   left edge with the words under it (owner, 2026-10-19) */
 .csd[data-head="c"] .csd-case {
-  --ch: 12px;
   gap: 14px 16px;
-  padding: 18px 20px 20px;
-  border-bottom: 0;
-  background: rgba(var(--void-deep-rgb), 0.35);
-  clip-path: polygon(
-    0 0,
-    calc(100% - var(--ch)) 0,
-    100% var(--ch),
-    100% 100%,
-    var(--ch) 100%,
-    0 calc(100% - var(--ch))
-  );
-}
-.csd[data-head="c"] .csd-case::after {
-  inset: 0;
-  left: 0;
-  bottom: 0;
-  width: auto;
-  height: auto;
-  background: rgba(var(--dawn-rgb), 0.16);
-  pointer-events: none;
-  clip-path: polygon(
-    evenodd,
-    0 0,
-    calc(100% - var(--ch)) 0,
-    100% var(--ch),
-    100% 100%,
-    var(--ch) 100%,
-    0 calc(100% - var(--ch)),
-    0 0,
-    1px 1px,
-    calc(100% - var(--ch) - 0.414px) 1px,
-    calc(100% - 1px) calc(var(--ch) + 0.414px),
-    calc(100% - 1px) calc(100% - 1px),
-    calc(var(--ch) + 0.414px) calc(100% - 1px),
-    1px calc(100% - var(--ch) - 0.414px),
-    1px 1px
-  );
 }
 .csd[data-head="c"] .csd-case__row[data-row="client"] {
   order: 1;
