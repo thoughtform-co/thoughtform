@@ -14,7 +14,7 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-proposal-swarm-v2.mjs --port 3031
- *     [--path /arcs/thoughtform/cases]   (the lab by default)
+ *     [--path /cases]   (the lab by default)
  *     [--cut short|full] [--case suri,samako,loop] [--head a|b|c|d]
  *     [--sizes 1920x1247,1976x966,1280x720,390x844] [--themes dark,light]
  *     [--out docs/design/proposal-swarm-v2/round-01] [--only case-loop-ask,…]

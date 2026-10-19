@@ -94,6 +94,9 @@ const nextConfig = {
             // The agents file (ADR-157) is plural in both proposals that
             // exist; the singular is how people say it, and the owner did.
             { source: "/agent.txt", destination: "/agents.txt", permanent: true },
+            // The cases page was an arc for a day (2026-10-19) and the link
+            // may be in an inbox; it is public at the root now.
+            { source: "/arcs/thoughtform/cases", destination: "/cases", permanent: true },
             // Every address an arc page had and no longer has (the Loop arc's
             // first slug, the Trinny pitch's first route, and every flat
             // engagement ADR-142 nested under its group). An arc is an

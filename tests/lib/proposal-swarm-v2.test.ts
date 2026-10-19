@@ -262,8 +262,8 @@ describe("the dossier stays self-contained", () => {
   });
 });
 
-describe("the cases page (/arcs/thoughtform/cases)", () => {
-  const page = read(join(ROOT, "app/(marketing)/arcs/thoughtform/cases/page.tsx"));
+describe("the cases page (/cases)", () => {
+  const page = read(join(ROOT, "app/(marketing)/cases/page.tsx"));
 
   it("letters the swarm's opening for no client", () => {
     expect(page).toMatch(/<NetworkOrg[^>]*org=\{null\}/);
@@ -271,9 +271,9 @@ describe("the cases page (/arcs/thoughtform/cases)", () => {
   });
 
   it("names no client of a proposal in its record or its cases", async () => {
-    const { THOUGHTFORM_CASES_ARC } = await import("@/lib/arcs/content/thoughtform-cases");
+    const { CASES_PAGE } = await import("@/lib/cases-page");
     const OTHERS = /X-Bionic|XB \/|Pandora|Trinny|Plopsa|Perfect Ted|Hungry Minds|Ganesh/;
-    walk([THOUGHTFORM_CASES_ARC, ...CASES], "cases", (s, at) => {
+    walk([CASES_PAGE, ...CASES], "cases", (s, at) => {
       expect(OTHERS.test(s), `${at}: "${s}"`).toBe(false);
     });
   });
@@ -284,5 +284,16 @@ describe("the cases page (/arcs/thoughtform/cases)", () => {
     expect(bin.length).toBe(4 + n * 6 + n);
     const data = read(join(DOSSIER, "data/suriCase.ts"));
     expect(data).not.toMatch(/@|https?:|drive\.google|\.mp4|\.jpg/i);
+  });
+});
+
+describe("the cases page is public", () => {
+  it("sits at the root, indexed, in the sitemap, and the old arc address forwards to it", () => {
+    const page = read(join(ROOT, "app/(marketing)/cases/page.tsx"));
+    expect(page).not.toMatch(/index:\s*false/);
+    expect(read(join(ROOT, "app/sitemap.ts"))).toMatch(/thoughtform\.co\/cases/);
+    expect(read(join(ROOT, "next.config.mjs"))).toMatch(
+      /source: "\/arcs\/thoughtform\/cases", destination: "\/cases"/
+    );
   });
 });

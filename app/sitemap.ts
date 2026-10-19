@@ -25,6 +25,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     /* The sheet pages (ADR-114): public and listed, unlike anything under
        `/arcs`. A musing joins when it is published (`draft: false`). */
+    /* The cases (2026-10-19): the approach and three brands where it runs. */
+    {
+      url: "https://thoughtform.co/cases",
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
     {
       url: "https://thoughtform.co/home-sessions",
       lastModified,

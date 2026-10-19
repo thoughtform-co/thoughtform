@@ -1,21 +1,23 @@
-import type { ArcDef } from "../types";
+import type { ArcDef } from "@/lib/arcs/types";
 
 /**
- * The approach and the cases, as a house arc (owner, 2026-10-19): the swarm
+ * The cases page (`/cases`, owner, 2026-10-19): the swarm
  * proposal's opening (the layer, the three steps, Marketing then every team)
  * and the case dossier, for no client, so it can be sent to anyone as "an
  * overview of what we've been doing".
  *
- * ⚠ AN OWN ROUTE (`app/(marketing)/arcs/thoughtform/cases/`): the opening is
+ * ⚠ A PUBLIC PAGE, NOT AN ARC (owner, 2026-10-19: "this is basically a
+ * public page"): it sits at the root, unlisted in the arcs registry, with
+ * no password, and is indexed. It borrows the arc record's shape (`ArcDef`)
+ * so `ArcShell`, `ArcHero` and `ArcSectionRenderer` draw it; the opening is
  * the swarm's drawn sections and the cases are the dossier
- * (`components/arcs/case-dossier/`), neither of them a section kind. The
- * beats that ARE the house's kinds (the line, the close) are authored here.
+ * (`components/arcs/case-dossier/`). The old arc address 308s here.
  *
  * ⚠ NO CLIENT NAMED BUT THE CASES' OWN: the opening is lettered for no one
  * (`NetworkOrg org={null}`, `EmbedStack house`), and the route's test walks
  * the rendered page for any other client's name.
  */
-export const THOUGHTFORM_CASES_ARC: ArcDef = {
+export const CASES_PAGE: ArcDef = {
   slug: "thoughtform-cases",
   leaf: "cases",
   format: "portfolio",
@@ -30,7 +32,7 @@ export const THOUGHTFORM_CASES_ARC: ArcDef = {
     "The approach in three steps, then three brands where it runs: an asset library, two films and a motion ad.",
   cardImage: { src: "/images/services/embedded.webp", alt: "" },
   hero: {
-    eyebrow: "Thoughtform · Approach and cases · October 2026",
+    eyebrow: "Thoughtform · Cases · October 2026",
     title: { pre: "AI capability", em: "your teams own." },
     // One sentence, at most 120 characters: the homepage's measure (copyLaw.ts).
     lede: "How the approach works, then three brands where it runs today, step by step.",
@@ -48,7 +50,7 @@ export const THOUGHTFORM_CASES_ARC: ArcDef = {
     ],
   },
   meta: {
-    title: "Approach and cases — Thoughtform",
+    title: "Cases — Thoughtform",
     description:
       "How Thoughtform makes a team self-sufficient with AI, and three brands where it runs today.",
   },
@@ -78,7 +80,7 @@ export const THOUGHTFORM_CASES_ARC: ArcDef = {
           primary: true,
         },
       ],
-      footerLine: "Thoughtform · Approach and cases · October 2026",
+      footerLine: "Thoughtform · Cases · October 2026",
       signature: "Vince Buyssens",
     },
   ],

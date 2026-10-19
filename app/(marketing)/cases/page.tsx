@@ -12,7 +12,7 @@ import { cutCase, HEAD_DEFAULT } from "@/components/arcs/case-dossier/story";
 import { EmbedStack } from "@/components/xb-proposal/embed/EmbedStack";
 import { NetworkOrg } from "@/components/xb-proposal/network/NetworkOrg";
 import { StackFlow } from "@/components/xb-proposal/stack/StackFlow";
-import { THOUGHTFORM_CASES_ARC as ARC } from "@/lib/arcs/content/thoughtform-cases";
+import { CASES_PAGE as ARC } from "@/lib/cases-page";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 /* The sheets in the swarm lab's order (`/test/proposal-swarm-v2`), which the
@@ -59,8 +59,8 @@ import "@/components/arcs/case-dossier/suri-screen.css";
 export const metadata: Metadata = {
   title: ARC.meta.title,
   description: ARC.meta.description,
-  // A link handed to a reader, like every page under /arcs.
-  robots: { index: false, follow: false },
+  // A public page, meant to be found (unlike the arcs).
+  alternates: { canonical: "https://thoughtform.co/cases" },
 };
 
 type Query = Record<string, string | string[] | undefined>;
@@ -73,7 +73,7 @@ const section = (id: string) => {
 };
 
 /**
- * /arcs/thoughtform/cases — the approach and the cases (owner, 2026-10-19:
+ * /cases — the approach and the cases (owner, 2026-10-19:
  * "a generic approach-cases page … send the URL and say, this is an overview
  * of what we've been doing"). The swarm proposal's opening, lettered for no
  * client, then the case dossier:
@@ -86,8 +86,8 @@ const section = (id: string) => {
  * sections and a pinned beat would clip it (the swarm routes throw on
  * `terminal` for the same reason).
  *
- * ⚠ AN OWN ROUTE under `[slug]`'s namespace, filtered from `[slug]/[leaf]`
- * (`OWN_ROUTE_SLUGS`); behind the arcs' password like every page under /arcs.
+ * ⚠ PUBLIC: at the root, no password, indexed and in the sitemap; the old
+ * arc address (`/arcs/thoughtform/cases`) 308s here (`next.config.mjs`).
  *
  *   ?still=1   nothing rides a clock, posters stand: a still (the capture)
  *   ?case=…    open on that case

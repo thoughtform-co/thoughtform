@@ -20,7 +20,6 @@ import { THOUGHTFORM_ARMADA_ARC } from "./content/thoughtform-armada";
 import { UX_MEETUP_ARC } from "./content/ux-meetup";
 import { KEYNOTE_ARC } from "./content/keynote-template-alpha";
 import { THOUGHTFORM_PORTFOLIO_ARC } from "./content/thoughtform-portfolio";
-import { THOUGHTFORM_CASES_ARC } from "./content/thoughtform-cases";
 import { AI_STORYTELLING_ARC } from "./content/ai-storytelling";
 import { AI_STORYTELLING_CLASS_1_ARC } from "./content/ai-storytelling-class-1";
 import { AP_HOGESCHOOL_ARC } from "./content/ap-hogeschool";
@@ -82,9 +81,6 @@ export const ARCS: readonly ArcDef[] = [
   /* The portfolio (2026-10-15): Prompt to Loop converted into the register
      of the X-Bionic proposal and the talk, on its own route. */
   THOUGHTFORM_PORTFOLIO_ARC,
-  /* The approach and the cases (2026-10-19): the swarm's opening and the
-     case dossier, lettered for no client, to send to anyone. */
-  THOUGHTFORM_CASES_ARC,
   /* Its technical companion (ADR-146): one piece of work through the
      machinery, from the configuration to the next team. */
   THOUGHTFORM_ARMADA_ARC,
