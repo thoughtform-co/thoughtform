@@ -135,6 +135,7 @@ const OWN_ROUTE_SLUGS: ReadonlySet<string> = new Set([
   "thoughtform-ux-meetup",
   "thoughtform-keynote-template-alpha",
   "thoughtform-portfolio",
+  "thoughtform-cases",
 ]);
 
 export function generateStaticParams() {

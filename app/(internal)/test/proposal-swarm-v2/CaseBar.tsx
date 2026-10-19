@@ -6,8 +6,8 @@
 
 import type { Fly } from "../proposal-swarm/engine/flight";
 import type { Mark } from "../proposal-swarm/engine/mark";
-import { HEAD_DEFAULT, HEADS } from "./dossier/story";
-import type { Cut, Head } from "./dossier/types";
+import { HEAD_DEFAULT, HEADS } from "@/components/arcs/case-dossier/story";
+import type { Cut, Head } from "@/components/arcs/case-dossier/types";
 
 const CUTS: readonly Cut[] = ["short", "full"];
 

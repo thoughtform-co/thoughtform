@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { Figure } from "../types";
+import { SuriScreen } from "./SuriScreen";
 
 type ScreenFigure = Extract<Figure, { kind: "screen" }>;
 
@@ -21,6 +22,7 @@ const seed = (i: number) => ((i * 7919 + 104729) % 97) / 97;
  *           of status, tabs and what the model read
  */
 export function Screen({ figure }: { figure: ScreenFigure }) {
+  if (figure.skin === "suri") return <SuriScreen figure={figure} />;
   return figure.layout === "search" ? <Search f={figure} /> : <Review f={figure} />;
 }
 

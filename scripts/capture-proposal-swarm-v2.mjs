@@ -14,7 +14,8 @@
  *
  * Usage (dev server already running):
  *   node scripts/capture-proposal-swarm-v2.mjs --port 3031
- *     [--cut short|full] [--case loop,samako,suri] [--head a|b|c|d]
+ *     [--path /arcs/thoughtform/cases]   (the lab by default)
+ *     [--cut short|full] [--case suri,samako,loop] [--head a|b|c|d]
  *     [--sizes 1920x1247,1976x966,1280x720,390x844] [--themes dark,light]
  *     [--out docs/design/proposal-swarm-v2/round-01] [--only case-loop-ask,…]
  *     [--twice]
@@ -32,7 +33,8 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3031");
 const CUT = argOf("--cut", "short");
-const CASES = argOf("--case", "loop,samako,suri").split(",").filter(Boolean);
+const ROUTE = argOf("--path", "/test/proposal-swarm-v2");
+const CASES = argOf("--case", "suri,samako,loop").split(",").filter(Boolean);
 const HEAD = argOf("--head", "");
 const OUT = argOf("--out", "docs/design/proposal-swarm-v2/round-01");
 const ONLY = argOf("--only", "").split(",").filter(Boolean);
@@ -46,7 +48,7 @@ const urlOf = (c) => {
   const query = new URLSearchParams({ still: "1", case: c });
   if (CUT !== "short") query.set("cut", CUT);
   if (HEAD) query.set("head", HEAD);
-  return `http://localhost:${PORT}/test/proposal-swarm-v2?${query}`;
+  return `http://localhost:${PORT}${ROUTE}?${query}`;
 };
 
 async function shoot(browser, dir) {
@@ -81,6 +83,18 @@ async function shoot(browser, dir) {
           content:
             "nextjs-portal{display:none!important} html{scroll-behavior:auto!important} *,*::before,*::after{transition:none!important;animation:none!important}",
         });
+        /* the page opens on `?case=` itself once it hydrates: let it, so
+           its scroll does not land after ours */
+        await page.waitForTimeout(1500);
+        /* the panel that introduces the case */
+        const intro = await page.$(`#case-${c}-intro`);
+        if (intro) {
+          await intro.scrollIntoViewIfNeeded();
+          await page.evaluate((id) => document.getElementById(id)?.scrollIntoView({ block: "start", behavior: "instant" }), `case-${c}-intro`);
+          await page.waitForTimeout(300);
+          await page.screenshot({ path: path.join(sub, `case-${c}-intro.png`) });
+          shot.push(`case-${c}-intro`);
+        }
         /* every case is on the page now: shoot only this one's panels */
         const these = await page.$$eval(`#case-${c} .csd-panel`, (els) =>
           els.map((el) => ({ id: el.id, i: Number(el.dataset.csI) }))

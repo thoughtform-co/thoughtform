@@ -10,7 +10,7 @@ import suri from "./suri.json";
  * a drawing over the letter cap or a short cut of the wrong length stops the
  * page rather than shipping a broken case.
  */
-export const CASES: readonly Case[] = [loop, samako, suri].map((c) =>
+export const CASES: readonly Case[] = [suri, samako, loop].map((c) =>
   assertCase(c as unknown as Case)
 );
 

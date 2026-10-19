@@ -39,6 +39,7 @@ import { pickLattice, plateWidth } from "@/app/(internal)/test/proposal-swarm/en
 import { rowAt } from "@/app/(internal)/test/proposal-swarm/engine/pool";
 import { buildWorld, type Metrics } from "@/app/(internal)/test/proposal-swarm/engine/world";
 import { isStraight } from "@/components/xb-proposal/kit/trace";
+import { T as NET } from "@/components/xb-proposal/network/NetworkOrg";
 import { STYLE } from "@/app/(internal)/test/stack-forms/swarm/dots";
 
 /* /test/proposal-swarm plays the travelling proposal's three sections with one
@@ -56,7 +57,7 @@ import { STYLE } from "@/app/(internal)/test/stack-forms/swarm/dots";
 const METRICS: Metrics = {
   vh: 1247,
   dpr: 1,
-  runways: { esTop: 2494, esH: 3242, xnTop: 5736, xnH: 5362 },
+  runways: { esTop: 2494, esH: 3242, xnTop: 5736, xnH: 4240 },
   flowStage: { x: 746, y: 495, w: 392, h: 392 },
   flowFig: { x: 300, y: 440, w: 1284, h: 492.2 },
   esStage: { x: 881, y: 329, w: 645, h: 918 },
@@ -588,7 +589,7 @@ describe("the bars", () => {
     expect(worded.length).toBeGreaterThan(30);
     /* the courses stand whole from the end of the hop until the view
        begins to draw back */
-    for (const p of [BARS_BY, 0.27, 0.34, 0.4]) {
+    for (const p of [BARS_BY, (BARS_BY + NET.zoom[0]) / 2, NET.zoom[0]]) {
       const F = shot(R.xnTop + p * (R.xnH - METRICS.vh), "march").F;
       for (const d of worded) {
         expect(F.show[d]).toBe(SHOW.window);
@@ -676,13 +677,13 @@ describe("the line that writes the bars", () => {
     expect(networkAt(LETTERED.frame[1], LETTERED.frame).frame).toBe(1);
     const { F } = shot(Y("bars"), "fall");
     C.words.forEach((word, i) => expect(typedOf(C, i, F.front, F.erase)).toBe(word.length));
-    /* and the view draws back well after the name is typed */
-    expect(LETTERED.name[1]).toBeLessThan(0.4);
+    /* and the view draws back once the name is typed, not before */
+    expect(LETTERED.name[1]).toBeLessThan(NET.zoom[0]);
   });
 
   it("erases each course from its end as the view draws back, and gives its dots back behind the head", () => {
     /* a third of the way through the erase */
-    let p = 0.4;
+    let p = NET.zoom[0];
     while (networkAt(p).zoom < 0.22 / 3) p += 0.0005;
     const { F } = shot(pAt(p), "fall");
     expect(F.state).toBe("network");

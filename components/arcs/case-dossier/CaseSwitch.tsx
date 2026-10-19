@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 
-import { CaseRun, type Run } from "./CaseRun";
+import { CaseIntro, CaseRun, type Run } from "./CaseRun";
 import type { Head } from "./types";
 
 /**
@@ -37,7 +37,10 @@ export function CaseSwitch({
   return (
     <div className="csd" data-head={head} data-still={still ? "" : undefined}>
       {runs.map((run, i) => (
-        <CaseRun key={run.key} run={run} index={index} place={i} />
+        <Fragment key={run.key}>
+          <CaseIntro run={run} />
+          <CaseRun run={run} index={index} place={i} />
+        </Fragment>
       ))}
     </div>
   );

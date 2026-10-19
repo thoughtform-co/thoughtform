@@ -2,11 +2,11 @@
   "id": "samako",
   "client": "Samako",
   "nav": "Autumn films · Samako",
-  "project": "Autumn films",
+  "project": "Two autumn sale films from one brief",
   "glyph": "pair",
   "workstream": "Creative production",
   "logo": {
-    "src": "/test/proposal-swarm-v2/logos/samako.svg",
+    "src": "/arcs/cases/logos/samako.svg",
     "ratio": "204.75/28.75"
   },
   "tint": {
@@ -14,120 +14,87 @@
     "glow": "194, 187, 176",
     "pattern": "hex"
   },
+  "intro": {
+    "line": [
+      "A sale every season,",
+      "and every motion ad took days."
+    ],
+    "facts": [
+      {
+        "value": "Round 2",
+        "label": "Of the autumn sale brief"
+      },
+      {
+        "value": "Dutch",
+        "label": "Copy and voice"
+      },
+      {
+        "value": "0",
+        "label": "Products a model may redraw"
+      }
+    ]
+  },
+  "result": {
+    "title": [
+      "Two films from one brief,",
+      "in a day."
+    ],
+    "before": "Every motion ad took days of a designer's time, so few were made.",
+    "allows": "Motion ads in the variety ad platforms reward, cheap enough to run several versions."
+  },
   "stats": [
     {
       "value": "1 day",
-      "label": "Brief to two finished films, vs days per ad"
+      "label": "Brief to both films, days per ad by hand (est.)"
     },
     {
       "value": "54 min",
-      "label": "Of that, the production itself"
+      "label": "The production itself"
     },
     {
-      "value": "9 of 14",
-      "label": "Generated takes used in the films"
+      "value": "0",
+      "label": "Products redrawn by a model"
     }
   ],
-  "piece": "Two 15-second autumn films for Samako, from one brief",
-  "date": "6 Oct 2026",
-  "number": {
-    "value": "54 min",
-    "label": "for the production turn"
-  },
-  "title": ["Autumn sale ads for Samako,", "two 15-second films from one brief."],
-  "sub": "Round 2 of an autumn sale brief: films with a story, more angles, a little stop-motion. Every step, in the order it happened.",
   "opening": {
-    "head": "The piece",
-    "datum": "15.000 s · 24 fps · in Dutch",
-    "caption": "Film A, the clean cut",
+    "head": "Film A",
+    "datum": "15 s · 24 fps · in Dutch",
     "figure": {
       "kind": "film",
       "src": "/arcs/samako/autumn-a.mp4",
       "poster": "/arcs/samako/autumn-a-poster.webp",
       "ratio": "9/16",
       "alt": "Autumn walks in: the front door opens on falling leaves, a wet dog shakes on the sofa, paw prints land on a cushion, and the vacuum cleaner hops in to set it right.",
-      "facts": ["9:16", "360 frames", "Two films"],
+      "facts": [
+        "9:16",
+        "360 frames",
+        "Two films"
+      ],
       "sound": true
-    }
+    },
+    "state": "Sound on"
   },
   "chapters": [
     {
       "n": 1,
-      "id": "ask",
-      "kick": "The ask",
-      "nav": "Ask",
-      "title": ["Claude asked nothing this time:", "the brief had answered all four questions."],
-      "sub": "The brief asked for autumn sale ads in Dutch with complete creative freedom, and this round for films with a story; between it and one message, all four of the skill's questions were answered.",
-      "thought": [],
-      "short": true,
-      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
-      "frame": {
-        "head": "The ask",
-        "datum": "1 message · 4 questions · 0 asked",
-        "caption": "Four answers, found in the brief and the message",
-        "figure": {
-          "kind": "exchange",
-          "crumb": ["Samako AI Studio", "Autumn Deals 160.1"],
-          "who": "Thoughtform",
-          "message": "I want a proper motion video, different angles, a bit of stop motion, a real narrative. Let's do two variants, and create a breakdown.",
-          "thought": "Read the brief, round 1 and the Loop case; answered the four questions from them",
-          "question": {
-            "title": "Format and length?",
-            "of": "1 of 4",
-            "options": [
-              "9:16, 15 s, two films (Recommended)",
-              "9:16, a 10 s loop",
-              "4:5 for the feed",
-              "Both 9:16 and 4:5"
-            ],
-            "selected": 0
-          },
-          "illustrative": true,
-          "answers": {
-            "label": "The four answers",
-            "rows": [
-              {
-                "k": "Format",
-                "v": "9:16, 15 s, two films",
-                "tag": "From the message"
-              },
-              {
-                "k": "Product",
-                "v": "The whole range",
-                "tag": "From the brief"
-              },
-              {
-                "k": "Words",
-                "v": "The brief's copy; three short lines proposed",
-                "tag": "From the brief"
-              },
-              {
-                "k": "Sound",
-                "v": "ElevenLabs, music and effects",
-                "tag": "From the message"
-              }
-            ]
-          },
-          "result": {
-            "k": "Then the line, for film A",
-            "v": "DE HERFST LOOPT BINNEN. / PRIMA."
-          }
-        }
-      }
-    },
-    {
-      "n": 2,
       "id": "look",
-      "kick": "Look first",
-      "nav": "Look",
-      "title": ["First the brief's four references,", "then what round 1 got wrong."],
-      "sub": "Round 1 followed every rule and still looked like one template used four times, and the paper film described autumn without telling a story.",
-      "thought": [],
+      "kick": "The problem",
+      "nav": "Problem",
+      "title": [
+        "Round 1 was right,",
+        "and still dull."
+      ],
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "Round 1 followed every rule and still looked like one template used four times, and the paper film described autumn without telling a story.",
+      "points": [
+        {
+          "text": "Thoughtform: Correct but dull",
+          "person": true
+        }
+      ],
       "frame": {
-        "head": "Before round 2",
-        "datum": "4 references · 4 round-1 statics",
-        "caption": "What the references asked for, and what round 1 missed",
+        "head": "Round 1",
+        "datum": "4 references · 4 statics",
         "figure": {
           "kind": "plates",
           "rows": [
@@ -172,9 +139,74 @@
           ]
         }
       },
-      "call": {
-        "who": "Thoughtform",
-        "said": "Correct but dull; see the Loop work"
+      "short": true
+    },
+    {
+      "n": 2,
+      "id": "ask",
+      "kick": "The ask",
+      "nav": "Ask",
+      "title": [
+        "Claude asked nothing:",
+        "the brief had answered."
+      ],
+      "short": true,
+      "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "The brief asked for autumn sale ads in Dutch and, this round, films with a story. Between it and one message, all four of the skill's questions were answered.",
+      "frame": {
+        "head": "The ask",
+        "figure": {
+          "kind": "exchange",
+          "crumb": [
+            "Samako AI Studio",
+            "Autumn Deals 160.1"
+          ],
+          "who": "Thoughtform",
+          "message": "I want a proper motion video, different angles, a bit of stop motion, a real narrative. Let's do two variants, and create a breakdown.",
+          "thought": "Read the brief and round 1; answered the four questions from them",
+          "question": {
+            "title": "Format and length?",
+            "of": "1 of 4",
+            "options": [
+              "9:16, 15 s, two films (Recommended)",
+              "9:16, a 10 s loop",
+              "4:5 for the feed",
+              "Both 9:16 and 4:5"
+            ],
+            "selected": 0
+          },
+          "illustrative": true,
+          "answers": {
+            "label": "The four answers",
+            "rows": [
+              {
+                "k": "Format",
+                "v": "9:16, 15 s, two films",
+                "tag": "From the message"
+              },
+              {
+                "k": "Product",
+                "v": "The whole range",
+                "tag": "From the brief"
+              },
+              {
+                "k": "Words",
+                "v": "The brief's copy; three short lines proposed",
+                "tag": "From the brief"
+              },
+              {
+                "k": "Sound",
+                "v": "ElevenLabs, music and effects",
+                "tag": "From the message"
+              }
+            ]
+          },
+          "result": {
+            "k": "Then the line, for film A",
+            "v": "DE HERFST LOOPT BINNEN. / PRIMA."
+          }
+        },
+        "state": "Answered from the brief"
       }
     },
     {
@@ -182,15 +214,15 @@
       "id": "idea",
       "kick": "The idea",
       "nav": "Idea",
-      "title": ["Two films, each built on a joke", "the persona would tell."],
-      "sub": "In A, autumn walks into the house and the household's boss shrugs; in B, the room tidies itself and the whole range hops in, because the offer is on everything.",
-      "thought": [],
+      "title": [
+        "Two films,",
+        "two jokes."
+      ],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "In A, autumn walks into the house and the household's boss shrugs. In B, the room tidies itself and the whole range hops in, because the offer is on everything.",
       "frame": {
-        "head": "Two hinges",
-        "datum": "One joke each, one product beat each",
-        "caption": "Film A in live action, film B in stop-motion",
+        "head": "Two jokes",
         "figure": {
           "kind": "plates",
           "rows": [
@@ -202,7 +234,7 @@
                   "ratio": "360/645",
                   "alt": "A wet golden dog shaking itself on a pale sofa"
                 },
-                "label": "A · live action",
+                "label": "A · photoreal, generated",
                 "note": "De herfst loopt binnen. Prima.",
                 "lit": true
               },
@@ -233,7 +265,8 @@
               }
             ]
           ]
-        }
+        },
+        "datum": "One per film"
       }
     },
     {
@@ -241,15 +274,16 @@
       "id": "house",
       "kick": "One house",
       "nav": "House",
-      "title": ["The house was drawn once,", "then shot six ways."],
-      "sub": "Four stills came first (the hall, the room, the dog and her) and went into every keyframe after, so every cut shows the same house.",
-      "thought": [],
+      "title": [
+        "One house,",
+        "drawn once."
+      ],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "Four stills came first, the hall, the room, the dog and her, and went into every keyframe after, so every cut shows the same house.",
       "frame": {
-        "head": "Keyframes, one house",
-        "datum": "4 references on every keyframe",
-        "caption": "The same hall, room, dog and person in every shot",
+        "head": "One house",
+        "datum": "One room, every shot",
         "figure": {
           "kind": "plates",
           "rows": [
@@ -301,15 +335,16 @@
       "id": "animate",
       "kick": "Animate",
       "nav": "Animate",
-      "title": ["The hard shots went to two models,", "and only one take stayed."],
-      "sub": "Kling got start and end frames, Veo the wind and water, Seedance a second opinion, and the film uses a second or two of each take.",
-      "thought": [],
+      "title": [
+        "Three models,",
+        "and only the take that worked."
+      ],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "Kling got start and end frames, Veo the wind and water, Seedance a second opinion. The film uses a second or two of each take.",
       "frame": {
         "head": "The takes",
-        "datum": "14 takes × 3 models → 9 used",
-        "caption": "Fourteen takes made, nine used, two shots fought over",
+        "datum": "14 takes · 3 models · 9 used",
         "figure": {
           "kind": "plates",
           "rows": [
@@ -347,14 +382,15 @@
       "id": "product",
       "kick": "The product",
       "nav": "Product",
-      "title": ["No model draws a Samako machine;", "they hop in as photographs."],
-      "sub": "Each machine is the photographer's original with its background removed, and it only moves across the frame, on twos, landing on the beat.",
-      "thought": [],
+      "title": [
+        "No machine is redrawn:",
+        "they hop in as photos."
+      ],
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "Each machine is the photographer's original with its background removed, and it only moves across the frame, on twos, landing on the beat.",
       "frame": {
         "head": "The range",
         "datum": "From the Drive, cut out, never redrawn",
-        "caption": "Six machines, each the original photograph",
         "figure": {
           "kind": "plates",
           "rows": [
@@ -399,20 +435,28 @@
       "id": "cut",
       "kick": "The cut",
       "nav": "Cut",
-      "title": ["Every cut sits on a beat,", "and the silence falls on her sip."],
-      "sub": "At 144 bpm a beat is exactly 10 frames, and in film A the track's own one-beat silence lands on her sip of tea.",
-      "thought": [],
-      "short": true,
+      "title": [
+        "Every cut on a beat,",
+        "the silence on her sip."
+      ],
+      "short": null,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "At 144 bpm a beat is exactly 10 frames, and in film A the track's own one-beat silence lands on her sip of tea.",
       "frame": {
         "head": "Film A on one line",
-        "datum": "144 bpm × 24 fps → 1 beat = 10 frames → 9 bars = 15.000 s",
-        "caption": "Eight scenes on the beat, the silence on the sip",
+        "datum": "144 bpm × 24 fps → 1 beat = 10 frames → 9 bars = 15 s",
         "figure": {
           "kind": "track",
           "length": 15,
           "unit": "s",
-          "scale": [0, 3, 6, 9, 12, 15],
+          "scale": [
+            0,
+            3,
+            6,
+            9,
+            12,
+            15
+          ],
           "grid": {
             "minor": 0.4166667,
             "major": 1.6666667
@@ -433,11 +477,11 @@
                 },
                 {
                   "from": 3.333,
-                  "to": 5.0,
+                  "to": 5,
                   "label": "Dog"
                 },
                 {
-                  "from": 5.0,
+                  "from": 5,
                   "to": 6.667,
                   "label": "Prints"
                 },
@@ -448,36 +492,66 @@
                 },
                 {
                   "from": 8.75,
-                  "to": 10.0,
+                  "to": 10,
                   "label": "Machine",
                   "lit": true
                 },
                 {
-                  "from": 10.0,
+                  "from": 10,
                   "to": 11.667,
                   "label": "Evening"
                 },
                 {
                   "from": 11.667,
-                  "to": 15.0,
+                  "to": 15,
                   "label": "End card"
                 }
               ]
             },
             {
               "label": "Cuts",
-              "ticks": [0, 1.667, 3.333, 5.0, 6.667, 8.75, 10.0, 11.667]
+              "ticks": [
+                0,
+                1.667,
+                3.333,
+                5,
+                6.667,
+                8.75,
+                10,
+                11.667
+              ]
             },
             {
               "label": "Music",
               "level": [
-                [0, 0.7],
-                [6.6, 0.7],
-                [6.67, 0.08],
-                [7.08, 0.08],
-                [7.12, 0.7],
-                [14, 0.7],
-                [15, 0.2]
+                [
+                  0,
+                  0.7
+                ],
+                [
+                  6.6,
+                  0.7
+                ],
+                [
+                  6.67,
+                  0.08
+                ],
+                [
+                  7.08,
+                  0.08
+                ],
+                [
+                  7.12,
+                  0.7
+                ],
+                [
+                  14,
+                  0.7
+                ],
+                [
+                  15,
+                  0.2
+                ]
               ],
               "marks": [
                 {
@@ -495,14 +569,15 @@
       "id": "make",
       "kick": "Making it",
       "nav": "Make",
-      "title": ["The models made the footage,", "and code did everything else."],
-      "sub": "The video models brought the house to life, and code added the type, the product, the stop-motion and the grain on all 360 frames.",
-      "thought": [],
+      "title": [
+        "The models made the footage,",
+        "code did the rest."
+      ],
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "The video models brought the house to life, and code added the type, the product, the stop-motion and the grain on all 360 frames.",
       "frame": {
         "head": "The engine",
-        "datum": "Frame N is a function of N",
-        "caption": "Four rules, the same on every frame",
+        "datum": "Any frame can be redrawn on its own",
         "figure": {
           "kind": "plates",
           "rows": [
@@ -545,24 +620,25 @@
       "id": "check",
       "kick": "Check",
       "nav": "Check",
-      "title": ["A model that never saw the brief", "watched each film three times."],
-      "sub": "Each time it said what the film was for and what it read, and only what all three runs agreed on got fixed.",
-      "thought": [],
+      "title": [
+        "Checked before",
+        "anyone sees it."
+      ],
       "short": true,
       "source": "rebuilt from the breakdown and the eval log; the 6 Oct session ran on another machine",
+      "sub": "A model that never saw the brief watched each film three times and said what it was for and what it read. Only what all three runs agreed on got fixed; a person made the call.",
       "frame": {
-        "head": "Three cold reads",
-        "datum": "Acted on only when 3 of 3 agree",
-        "caption": "The fix three cold reads asked for, and who checks what",
+        "head": "The check",
+        "datum": "Acted on 3 of 3",
         "figure": {
           "kind": "ledger",
           "before": {
-            "k": "Prima., read",
-            "v": "0 of 3 runs: 14 frames, off the edge"
+            "k": "Was “Prima.” readable?",
+            "v": "0 of 3 runs: 14 frames on screen, cut off at the edge"
           },
           "now": {
             "k": "After the fix",
-            "v": "3 of 3 runs: 36 frames, on the wall"
+            "v": "3 of 3 runs: 36 frames on screen, clear of the edge"
           },
           "rows": [
             {
@@ -576,13 +652,10 @@
             {
               "k": "The fix",
               "v": "Both end cards carry the logo"
-            },
-            {
-              "k": "A list of problems",
-              "v": "Never asked for: a quota makes a model invent them"
             }
           ]
-        }
+        },
+        "state": "3 of 3"
       }
     },
     {
@@ -590,14 +663,15 @@
       "id": "next",
       "kick": "Next time",
       "nav": "Next time",
-      "title": ["Now it's part of the skill,", "so the team just asks."],
-      "sub": "Everything in this case lives in the motion lane of the visuals skill, in Samako's own plugin; open a chat and say what you want.",
-      "thought": [],
+      "title": [
+        "Now it's part of the skill,",
+        "so the team just asks."
+      ],
       "source": "story.json (autumn-02 showtell)",
+      "sub": "Everything in this case lives in Samako's own plugin; open a chat and say what you want.",
       "frame": {
         "head": "The next ask",
         "datum": "One sentence, the same steps",
-        "caption": "What the team types next time",
         "figure": {
           "kind": "exchange",
           "who": "The brand team",
@@ -607,7 +681,7 @@
             "rows": [
               {
                 "k": "Skill",
-                "v": "The visuals skill, its motion lane"
+                "v": "The visuals skill, its motion part"
               },
               {
                 "k": "Plugin",

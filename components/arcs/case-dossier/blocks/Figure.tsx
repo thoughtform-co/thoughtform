@@ -7,14 +7,26 @@ import { Flow } from "./Flow";
 import { Ledger } from "./Ledger";
 import { Pairs } from "./Pairs";
 import { Plates } from "./Plates";
+import { Cloud } from "./Cloud";
 import { Screen } from "./Screen";
+import { Sprawl } from "./Sprawl";
 import { Track } from "./Track";
 
 /** One framed figure, by kind. Server; only the film's switch is client. */
-export function FigureView({ n, framed, still }: { n: number; framed: Framed; still: boolean }) {
+export function FigureView({
+  n,
+  client,
+  framed,
+  still,
+}: {
+  n: number;
+  client: string;
+  framed: Framed;
+  still: boolean;
+}) {
   const f = framed.figure;
   return (
-    <Frame n={n} framed={framed}>
+    <Frame n={n} client={client} framed={framed}>
       {f.kind === "film" ? (
         <div className="csd-film">
           <FilmPlayer
@@ -45,6 +57,10 @@ export function FigureView({ n, framed, still }: { n: number; framed: Framed; st
         <Field figure={f} />
       ) : f.kind === "screen" ? (
         <Screen figure={f} />
+      ) : f.kind === "sprawl" ? (
+        <Sprawl figure={f} />
+      ) : f.kind === "cloud" ? (
+        <Cloud figure={f} still={still} />
       ) : (
         <Flow figure={f} />
       )}

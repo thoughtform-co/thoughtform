@@ -104,15 +104,19 @@ export const Z0 = (FR.x1 - FR.x0) / NODE.w;
 
 /* -- the scroll's four acts ---------------------------------------------- */
 
+/* Retuned 2026-10-19 (owner: "you have to scroll one or two times … that
+   should be almost instant and the next scroll should be the zoom-out so you
+   don't lose your momentum"): the module is whole about 45svh into the pin
+   and the view draws back straight after, with no beat of stillness; the
+   pin is 240svh (was 330) and the teams keep their pace in svh. */
 export const T = {
-  turn: [0.03, 0.27],
-  frame: [0.25, 0.34],
-  /* a beat on the finished module, then the view draws back */
-  zoom: [0.4, 0.6],
-  ribs: 0.61,
-  step: 0.054,
-  draw: 0.07,
-  grow: 0.045,
+  turn: [0.02, 0.11],
+  frame: [0.1, 0.15],
+  zoom: [0.19, 0.44],
+  ribs: 0.45,
+  step: 0.074,
+  draw: 0.096,
+  grow: 0.062,
 } as const;
 
 export function moment(p: number, frame: readonly [number, number] = T.frame) {
@@ -134,7 +138,7 @@ type Reading = {
 };
 
 /** Marketing's name on its band, before the view draws back. */
-const MKT_NAME = "X-Bionic · Marketing";
+const ORG = "X-Bionic";
 
 /** For a page that letters the module itself (the swarm lab): when
     Marketing's frame comes on, and the stretch its name is typed over, on
@@ -145,7 +149,16 @@ export type Lettered = {
   name: readonly [number, number];
 };
 
-export function NetworkOrg({ lettered }: { lettered?: Lettered } = {}) {
+export function NetworkOrg({
+  lettered,
+  org = ORG,
+}: {
+  lettered?: Lettered;
+  /** The organisation the drawing names; `null` for a page read by anyone
+      (the cases page): Marketing alone, and "The organisation" on its housing. */
+  org?: string | null;
+} = {}) {
+  const MKT_NAME = org ? `${org} · Marketing` : "Marketing";
   const runway = useRef<HTMLDivElement>(null);
   const fig = useRef<HTMLDivElement>(null);
   const [r, setR] = useState<Reading>({ p: 0, q: 0, from: null });
@@ -269,7 +282,7 @@ export function NetworkOrg({ lettered }: { lettered?: Lettered } = {}) {
             viewBox={`0 0 ${W} ${H}`}
             className="xn-svg"
             role="img"
-            aria-label="The stack of three plates, your team, the layer and your agents, travels down from the section above and turns to face the reader as one module of three courses, inside a notched frame: X-Bionic Marketing. Then the view draws back: Marketing is one node inside the organisation's frame, and circuit ribbons run from it to the six other teams, each of which grows into the same module and starts its own Navigate next: product design, sales, customer care, technology, operations and finance."
+            aria-label={`The stack of three plates, your team, the layer and your agents, travels down from the section above and turns to face the reader as one module of three courses, inside a notched frame: ${MKT_NAME}. Then the view draws back: Marketing is one node inside the organisation's frame, and circuit ribbons run from it to the six other teams, each of which grows into the same module and starts its own Navigate next: product design, sales, customer care, technology, operations and finance.`}
           >
             <defs>
               {/* what arrives from outside the frame arrives through its edge */}
@@ -490,7 +503,7 @@ export function NetworkOrg({ lettered }: { lettered?: Lettered } = {}) {
                 opacity: seg(z, 0.7, 1),
               }}
             >
-              X-Bionic
+              {org ?? "The organisation"}
             </span>
             <span
               className="xn-band xn-state xno-word"

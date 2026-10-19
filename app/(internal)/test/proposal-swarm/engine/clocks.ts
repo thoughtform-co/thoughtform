@@ -117,8 +117,11 @@ export const arriveLight = (q1: number) => 1 - seg(q1, ARRIVE_LIT, 1);
 
 /** Where the second hop ends, on the network's pin: the line that writes the
     bars, and types the courses on them, has crossed the last column
-    (`TURN.sweep`). Marketing's frame comes on from here (round 08). */
-export const BARS_BY = 0.25;
+    (`TURN.sweep`). Marketing's frame comes on from here (round 08). About
+    30svh into a 240svh pin (owner, 2026-10-19: the land, the scanline and
+    the frame "should be one smooth thing … almost instant and the next
+    scroll should be the zoom-out"); it was 0.25 of 330svh, 82svh. */
+export const BARS_BY = 0.125;
 
 /** The second hop's one clock: most of it while the network's runway rises
     through the screen, so every plate has left the stack well before the
@@ -204,17 +207,17 @@ export function stopY(name: Stop, vh: number, r: Runways): number {
     case "hop2-50":
       return hop2(0.9);
     case "hop2-75":
-      return xn(0.09);
+      return xn(0.045);
     case "typing":
-      return xn(0.16);
+      return xn(0.08);
     case "bars":
       return xn(BARS_BY);
     case "module":
-      return xn(0.36);
+      return xn(0.18);
     case "drawback":
-      return xn(0.5);
+      return xn(0.31);
     case "org":
-      return xn(0.605);
+      return xn(0.45);
     case "teams-1":
       return xn(turnOf(TURNS[0]) + TURN_LEN * 0.55);
     case "teams-3":

@@ -139,7 +139,7 @@
 /* the mono label every part of the dossier shares */
 .csd-k,
 .csd-frame__head,
-.csd-cap,
+.csd-frame__foot,
 .csd-cell__k,
 .csd-track__k,
 .csd-stn__k {
@@ -280,10 +280,12 @@
   width: 16px;
   height: 16px;
 }
+/* one text a step, between the display and the lede (owner, 2026-10-19:
+   "just one text and maybe a font size that's in between") */
 .csd-story__title {
   margin: 0;
   font-family: var(--csd-sans);
-  font-size: min(var(--type-display, 48px), 5.4svh);
+  font-size: min(var(--type-display, 48px), 5.2svh);
   font-weight: var(--weight-text, 400);
   line-height: 1.08;
   letter-spacing: var(--track-display, -0.02em);
@@ -293,6 +295,13 @@
 .csd-story__em {
   color: var(--csd-ink-2);
 }
+/* the result's title is the solution, in gold, at the steps' size */
+.csd-story[data-header] .csd-story__title {
+  color: var(--csd-gold);
+}
+.csd-story[data-header] .csd-story__em {
+  color: color-mix(in srgb, var(--csd-gold) 62%, transparent);
+}
 .csd-story__lede {
   margin: 0;
   font-size: min(var(--type-lg, 20px), 2.5svh);
@@ -300,7 +309,8 @@
   color: var(--csd-ink-2);
   text-wrap: pretty;
 }
-/* the claims: one short line each, its icon before it, between hairlines */
+/* the points: one short line each, its icon before it, between hairlines
+   (the Loop story's list) */
 .csd-story__claims {
   display: grid;
   margin: 0;
@@ -332,6 +342,40 @@
   width: 9px;
   height: 9px;
   margin-left: 5px;
+}
+/* the result: before, then what it now allows, the same in every case;
+   between hairlines, the ledger's rows */
+.csd-result {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--csd-rule);
+}
+.csd-result__row {
+  display: grid;
+  gap: 8px;
+  padding: clamp(12px, 2svh, 18px) 0;
+  border-bottom: 1px solid var(--csd-rule);
+}
+.csd-result__k {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+.csd-result__row[data-now] .csd-result__k {
+  color: var(--csd-gold);
+}
+.csd-result__v {
+  margin: 0;
+  font-size: min(19px, 2.4svh);
+  line-height: 1.4;
+  color: var(--csd-ink-2);
+  text-wrap: pretty;
+}
+.csd-result__row[data-now] .csd-result__v {
+  color: var(--csd-ink);
 }
 /* the dashes: one a step, the one in view lit (augustus' own marker) */
 .csd-story__dashes {
@@ -393,15 +437,22 @@
 .csd-case__project {
   color: var(--csd-ink);
 }
+/* the type of work: a chip in the case's tint, seen but not loud (owner,
+   2026-10-19: "I don't want it to be too dominant but … right now it's a
+   bit too subtle") */
 .csd-case__dept {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--csd-ink-3);
+  padding: 5px 10px 5px 8px;
+  border: 1px solid rgba(var(--tint-dots, 202, 165, 74), 0.5);
+  background: rgba(var(--tint-dots, 202, 165, 74), 0.1);
+  color: var(--csd-ink);
 }
 .csd-case__dept .csd-glyph {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
+  color: rgb(var(--tint-dots, 202, 165, 74));
 }
 /* the separators of the one-line options */
 .csd[data-head="a"] .csd-case__row + .csd-case__row::before,
@@ -464,18 +515,13 @@
 }
 .csd[data-head="c"] .csd-case__row[data-row="client"] {
   order: 1;
+  flex-basis: 100%;
 }
 .csd[data-head="c"] .csd-case__row[data-row="team"] {
-  order: 2;
-}
-.csd[data-head="c"] .csd-case__row[data-row="team"]::before {
-  content: "/";
-  margin-right: 4px;
-  color: var(--csd-seam);
+  order: 3;
 }
 .csd[data-head="c"] .csd-case__row[data-row="project"] {
-  order: 3;
-  flex-basis: 100%;
+  order: 2;
 }
 .csd[data-head="c"] .csd-case__row[data-row="client"],
 .csd[data-head="c"] .csd-case__row[data-row="team"],
@@ -489,11 +535,16 @@
 .csd[data-head="c"] .csd-case .csd-logo__name {
   color: var(--csd-ink-2);
 }
+/* the project at the type of work's own size, beside it (owner,
+   2026-10-19: "the name of the project … the same size as … Creative
+   operations"); the step's title is the one big line */
 .csd[data-head="c"] .csd-case__project {
-  font-family: var(--csd-sans);
-  font-size: min(28px, 3.4svh);
-  line-height: 1.15;
-  letter-spacing: var(--track-display, -0.02em);
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink-2);
 }
 .csd[data-head="c"] .csd-case .csd-logo__img {
   height: 13px;
@@ -578,23 +629,19 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
-  border-top: 1px solid var(--csd-rule);
 }
 .csd-stats > div {
   display: grid;
   align-content: start;
   gap: 8px;
-  padding: 16px 16px 0 0;
+  padding: 0 16px 0 0;
 }
 .csd-stats dt {
   font-family: var(--csd-sans);
-  font-size: min(36px, 4.4svh);
+  font-size: min(28px, 3.4svh);
   line-height: 1;
   letter-spacing: -0.02em;
   color: var(--csd-ink);
-}
-.csd-stats > div:first-child dt {
-  color: var(--csd-gold);
 }
 .csd-stats dd {
   margin: 0;
@@ -621,144 +668,120 @@
   display: grid;
   gap: 12px;
 }
+/* the window (owner, 2026-10-19, frame H of the case explorations): one
+   hairline with the top-right notch, the notch's diagonal the one gold edge,
+   a head row (the path and a state), the figure, a foot row (its number
+   and its datum). No plate wash, no corner crosses. */
 .csd-frame {
-  --ch: var(--csd-ch);
-  --in: calc(var(--csd-ch) - 0.586px);
+  --ch: 18px;
   position: relative;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: 36px minmax(0, 1fr) 36px;
   height: var(--csd-fig-h);
   min-height: 440px;
-  background: var(--csd-plate);
-  clip-path: polygon(
-    0 0,
-    calc(100% - var(--ch)) 0,
-    100% var(--ch),
-    100% 100%,
-    var(--ch) 100%,
-    0 calc(100% - var(--ch))
-  );
+  background: rgba(var(--void-deep-rgb), 0.35);
+  clip-path: polygon(0 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% 100%, 0 100%);
 }
-/* the edge: a closed evenodd ring, a clip never strokes a border */
 .csd-frame::before,
 .csd-frame::after {
   content: "";
   position: absolute;
   pointer-events: none;
 }
+/* the edge: a closed evenodd ring, a clip never strokes a border */
 .csd-frame::before {
   inset: 0;
-  background: var(--csd-seam);
+  z-index: 2;
+  background: rgba(var(--dawn-rgb), 0.16);
   clip-path: polygon(
     evenodd,
     0 0,
     calc(100% - var(--ch)) 0,
     100% var(--ch),
     100% 100%,
-    var(--ch) 100%,
-    0 calc(100% - var(--ch)),
+    0 100%,
     0 0,
     1px 1px,
-    calc(100% - 1px - var(--in)) 1px,
-    calc(100% - 1px) calc(1px + var(--in)),
+    calc(100% - var(--ch) - 0.414px) 1px,
+    calc(100% - 1px) calc(var(--ch) + 0.414px),
     calc(100% - 1px) calc(100% - 1px),
-    calc(1px + var(--in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--in)),
+    1px calc(100% - 1px),
     1px 1px
   );
 }
-/* the double hairline: a second ring 4px inside, its cut shortened by
-   4px·(2 − √2) so the two diagonals run parallel */
+/* the notch's diagonal, gold */
 .csd-frame::after {
-  --c4: calc(var(--csd-ch) - 2.343px);
-  --i4: calc(var(--c4) - 0.586px);
-  inset: 4px;
-  background: var(--csd-rule);
-  clip-path: polygon(
-    evenodd,
-    0 0,
-    calc(100% - var(--c4)) 0,
-    100% var(--c4),
-    100% 100%,
-    var(--c4) 100%,
-    0 calc(100% - var(--c4)),
-    0 0,
-    1px 1px,
-    calc(100% - 1px - var(--i4)) 1px,
-    calc(100% - 1px) calc(1px + var(--i4)),
-    calc(100% - 1px) calc(100% - 1px),
-    calc(1px + var(--i4)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--i4)),
-    1px 1px
+  top: 0;
+  right: 0;
+  z-index: 3;
+  width: var(--ch);
+  height: var(--ch);
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 0.75px),
+    var(--csd-gold) calc(50% - 0.75px),
+    var(--csd-gold) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px)
   );
 }
-/* the frame's one gold: a cross on each square corner, inside the hairlines */
-.csd-x {
-  position: absolute;
-  z-index: 2;
-  width: 11px;
-  height: 11px;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--csd-gold), var(--csd-gold)) center / 100% 1px no-repeat,
-    linear-gradient(var(--csd-gold), var(--csd-gold)) center / 1px 100% no-repeat;
-}
-.csd-x[data-corner="tl"] {
-  top: 9px;
-  left: 9px;
-}
-.csd-x[data-corner="br"] {
-  right: 9px;
-  bottom: 9px;
+.csd-frame__head,
+.csd-frame__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--csd-ink-3);
 }
 .csd-frame__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px 20px;
-  flex-wrap: wrap;
-  margin: 4px 4px 0;
-  padding: 12px calc(var(--ch) + 10px) 10px 26px;
+  padding: 0 calc(var(--ch) + 14px) 0 14px;
   border-bottom: 1px solid var(--csd-rule);
+}
+.csd-frame__foot {
+  justify-content: space-between;
+  padding: 0 14px;
+  border-top: 1px solid var(--csd-rule);
+}
+.csd-frame__caret {
+  color: var(--csd-gold);
+}
+.csd-frame__sep {
+  color: var(--csd-rule);
+}
+.csd-frame__k {
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--csd-ink-2);
 }
-.csd-frame__datum {
-  color: var(--csd-ink-3);
-  text-transform: none;
-  letter-spacing: 0.02em;
+.csd-frame__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.csd-frame__state i {
+  width: 6px;
+  height: 6px;
+  background: var(--csd-gold);
 }
 .csd-frame__body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 16px 20px max(20px, calc(var(--ch) * 0.75));
+  padding: 16px 20px;
   container-type: size;
 }
-.csd-cap {
-  position: relative;
-  display: flex;
-  gap: 12px;
-  padding-left: 16px;
-  color: var(--csd-ink-3);
+/* a picture that is the whole figure fills the window */
+.csd-fig[data-bleed] .csd-frame__body {
+  padding: 0;
 }
-.csd-cap::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 2px;
-  width: 8px;
-  height: 8px;
-  border-left: 1px solid var(--csd-seam);
-  border-bottom: 1px solid var(--csd-seam);
+/* a figure of cells meets the window's edges: its own outer line goes, the
+   lines between its cells stay */
+.csd-fig[data-bleed] .csd-plates,
+.csd-fig[data-bleed] .csd-ex {
+  border: 0;
 }
-.csd-cap__n {
-  color: var(--csd-ink-2);
-}
-.csd-cap__t {
-  text-transform: none;
-  letter-spacing: 0.02em;
-}
-
 /* pictures: shown whole on the plate, in a fixed box */
 .csd-cell__pic,
 .csd-pair__pic,
@@ -949,15 +972,18 @@
   gap: 24px;
   overflow: hidden;
 }
+/* the drawing gives way before its keys do: an svg keeps its aspect inside
+   a narrower box (meet), a key cut mid-word reads as broken ("App b") */
 .csd-safe svg {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   height: 100%;
   width: auto;
   aspect-ratio: 180 / 320;
 }
 .csd-safe__keys {
-  flex: 1 1 auto;
-  min-width: 12ch;
+  flex: 1 0 14ch;
+  min-width: 14ch;
 }
 .csd-safe__frame {
   fill: none;
@@ -2022,15 +2048,11 @@
     display: flex;
     margin-block: 8px var(--space-xl, 32px);
   }
-  /* the result takes its own row, the other two numbers share the next */
   .csd-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .csd-stats > div:first-child {
-    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .csd-stats dt {
-    font-size: 32px;
+    font-size: 24px;
   }
   .csd-frame {
     height: auto;
@@ -2054,6 +2076,12 @@
   .csd-film__screen {
     height: auto;
     width: min(100%, 320px);
+  }
+  /* a frame of no fixed height: each row takes its own, never a share of
+     none (a row of lists alone measured zero and printed through the frame) */
+  .csd-plates,
+  .csd-plates__row {
+    flex: none;
   }
   .csd-plates__row {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -2109,15 +2137,15 @@
   .csd-story {
     gap: 14px;
   }
+  .csd-result__row {
+    padding-block: 10px;
+  }
   .csd-story__claims li {
     padding-block: 8px;
   }
   .csd-case {
     gap: 8px;
     padding-bottom: 12px;
-  }
-  .csd-stats > div {
-    padding-top: 12px;
   }
 }
 
@@ -2127,5 +2155,190 @@
   .csd-index a {
     transition: none;
     transform: none;
+  }
+}
+
+/* ── the sprawl: a collection before anything read it ──────────────────
+   folders as nested rectangles, files as grains, the duplicates lit */
+.csd-sprawl {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px;
+}
+.csd-sprawl svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.csd-sprawl__dir {
+  fill: none;
+  stroke: var(--csd-rule);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.csd-sprawl__dir[data-d="2"] {
+  stroke: rgba(var(--dawn-rgb), 0.2);
+}
+.csd-sprawl__dir[data-d="1"] {
+  stroke: var(--csd-seam);
+}
+.csd-sprawl__grain {
+  fill: rgba(var(--dawn-rgb), 0.34);
+}
+.csd-sprawl__grain--lit {
+  fill: var(--csd-gold);
+}
+.csd-sprawl__key {
+  padding: 0 14px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--csd-ink-2);
+}
+.csd-sprawl__key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.csd-sprawl__key i {
+  width: 6px;
+  height: 6px;
+  background: rgba(var(--dawn-rgb), 0.5);
+}
+.csd-sprawl__key li[data-lit] {
+  color: var(--csd-ink);
+}
+.csd-sprawl__key li[data-lit] i {
+  background: var(--csd-gold);
+}
+
+/* ── the panel before a case: the client and its challenge ────────────
+   one screen, the case's glow behind it; no frame, no figure */
+.csd-intro {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: 100svh;
+  padding: 12svh var(--hud-margin, 48px);
+  box-sizing: border-box;
+  background: radial-gradient(
+    ellipse 55% 60% at 32% 50%,
+    rgba(var(--tint-glow, 118, 176, 255), 0.1),
+    transparent 72%
+  );
+}
+.csd-intro__in {
+  display: grid;
+  gap: clamp(28px, 5svh, 48px);
+  width: min(100%, 980px);
+  margin: 0 auto;
+}
+.csd-intro__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin: 0;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+.csd-intro__meta > i {
+  width: 40px;
+  height: 1px;
+  background: var(--csd-seam);
+}
+.csd-intro__n {
+  color: var(--csd-gold);
+}
+.csd-intro__meta .csd-logo__img {
+  height: 15px;
+}
+.csd-intro__meta .csd-logo__name {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--csd-ink-2);
+}
+.csd-intro__line {
+  margin: 0;
+  font-family: var(--csd-sans);
+  font-size: clamp(36px, 6.4svh, 64px);
+  font-weight: 300;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--csd-ink);
+  text-wrap: balance;
+}
+.csd-intro__em {
+  color: var(--csd-ink-3);
+}
+.csd-intro__quote {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+}
+.csd-intro__who {
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+.csd-intro__facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-self: start;
+  margin: 0;
+  border: 1px solid rgba(var(--dawn-rgb), 0.16);
+}
+.csd-intro__facts > div {
+  display: grid;
+  gap: 6px;
+  padding: 16px 30px 16px 20px;
+  border-right: 1px solid var(--csd-rule);
+}
+.csd-intro__facts > div:last-child {
+  border-right: 0;
+}
+.csd-intro__facts dt {
+  font-family: var(--csd-sans);
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--csd-ink);
+}
+.csd-intro__facts > div[data-last] dt {
+  color: var(--csd-gold);
+}
+.csd-intro__facts dd {
+  margin: 0;
+  font-family: var(--csd-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--csd-ink-3);
+}
+@media (max-width: 960px) {
+  .csd-intro {
+    min-height: 80svh;
+    padding: 14svh 20px;
+  }
+  .csd-intro__facts > div {
+    padding: 12px 18px 12px 14px;
+  }
+  .csd-intro__facts dt {
+    font-size: 22px;
   }
 }

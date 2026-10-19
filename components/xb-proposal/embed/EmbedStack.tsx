@@ -79,6 +79,14 @@ const HEAD: MastheadCopy = {
   },
 };
 
+/* The house's own page (the cases page, 2026-10-19) letters the same
+   section for no client: its survey marks are the house's, and the first
+   step names no count of workstreams. */
+const HEAD_HOUSE: MastheadCopy = {
+  ...HEAD,
+  survey: { ...HEAD.survey, title: "TF / STEPS · 02", brief: "TF / BRIEF · 02" },
+};
+
 type StepId = (typeof PLUG_STEPS)[number]["id"];
 const LINE: Record<StepId, string> = {
   embed: "Learn with Claude in your own work.",
@@ -94,6 +102,10 @@ const BODY: Record<StepId, string> = {
   encode:
     "How each team works is written into a layer an agent can read: the context, the skills and the evals.",
   run: "Each person hands the work to their own agents on that layer, and the team reviews what comes back.",
+};
+const BODY_HOUSE: Record<StepId, string> = {
+  ...BODY,
+  embed: "Thoughtform works inside your creative workstreams while the team uses Claude on real briefs.",
 };
 
 /* ── geometry helpers ──────────────────────────────────────────────────── */
@@ -535,7 +547,14 @@ const BRIEF_IN = 0.78;
  * section's own state at the top of its pin (`stack/travel.ts`). Absent, the
  * section is exactly as the proposal ships it.
  */
-export function EmbedStack({ arrive = false }: { arrive?: boolean } = {}) {
+export function EmbedStack({
+  arrive = false,
+  house = false,
+}: {
+  arrive?: boolean;
+  /** Lettered for no client (the cases page). */
+  house?: boolean;
+} = {}) {
   const runway = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const travel = useRef<SVGGElement>(null);
@@ -688,7 +707,7 @@ export function EmbedStack({ arrive = false }: { arrive?: boolean } = {}) {
         <div className="es-pin">
           {/* the head and the steps hold still through the section (owner:
               "once you enter … the title should remain static") */}
-          <Masthead copy={HEAD} />
+          <Masthead copy={house ? HEAD_HOUSE : HEAD} />
           <div className="es-body">
             <div className="es-left">
               <ol className="es-lines">
@@ -705,7 +724,7 @@ export function EmbedStack({ arrive = false }: { arrive?: boolean } = {}) {
                       </span>
                       <span className="es-line">{LINE[st.id]}</span>
                       <span className="es-say">
-                        <span className="es-say__in">{BODY[st.id]}</span>
+                        <span className="es-say__in">{(house ? BODY_HOUSE : BODY)[st.id]}</span>
                       </span>
                     </a>
                   </li>

@@ -174,6 +174,7 @@ export const HERO_ROUTES = [
   "/arcs/thoughtform/ux-meetup",
   "/arcs/thoughtform/keynote-template-alpha",
   "/arcs/thoughtform/portfolio",
+  "/arcs/thoughtform/cases",
   "/arcs/thoughtform/armada",
   "/arcs/thoughtform/ai-storytelling",
   "/arcs/thoughtform/ai-storytelling-class-1",

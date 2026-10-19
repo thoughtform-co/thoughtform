@@ -15,10 +15,10 @@ import { GRAINS } from "../proposal-swarm/engine/lattice";
 import { type Mark, MARKS } from "../proposal-swarm/engine/mark";
 import { SwarmAct } from "../proposal-swarm/SwarmAct";
 import { CaseBar } from "./CaseBar";
-import { CaseDossier } from "./dossier/CaseDossier";
-import { CASES } from "./dossier/cases";
-import { cutCase, HEAD_DEFAULT, HEADS } from "./dossier/story";
-import type { Cut, Head } from "./dossier/types";
+import { CaseDossier } from "@/components/arcs/case-dossier/CaseDossier";
+import { CASES } from "@/components/arcs/case-dossier/cases";
+import { cutCase, HEAD_DEFAULT, HEADS } from "@/components/arcs/case-dossier/story";
+import type { Cut, Head } from "@/components/arcs/case-dossier/types";
 import { DOSSIER_ENTRY, spliceCases } from "./splice";
 
 /* ⚠ STYLESHEET ORDER IS LOAD-BEARING: the swarm page's chain verbatim (itself
@@ -60,7 +60,8 @@ import "@/components/xb-proposal/kit/kit.css";
 import "@/components/xb-proposal/stack/stack-hero.css";
 import "@/components/xb-proposal/network/network-org.css";
 import "../proposal-swarm/proposal-swarm.css";
-import "./dossier/dossier.css";
+import "@/components/arcs/case-dossier/dossier.css";
+import "@/components/arcs/case-dossier/suri-screen.css";
 
 /* The two sections the swarm draws itself, by the ids the proposal gives them. */
 const DRAWN = ["vision", "adoption"] as const;

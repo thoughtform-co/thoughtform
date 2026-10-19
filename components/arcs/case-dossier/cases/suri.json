@@ -1,0 +1,395 @@
+{
+  "id": "suri",
+  "client": "Suri",
+  "nav": "Asset library · Suri",
+  "project": "The marketing Drive, turned into a searchable DAM",
+  "glyph": "grid",
+  "workstream": "Creative operations",
+  "logo": {
+    "src": "/arcs/cases/logos/suri.png",
+    "ratio": "493/96"
+  },
+  "tint": {
+    "dots": "118, 176, 255",
+    "glow": "40, 104, 214",
+    "pattern": "grid"
+  },
+  "intro": {
+    "line": [
+      "Years of shoots in one Drive,",
+      "and no way to find a single shot in it."
+    ],
+    "facts": [
+      {
+        "value": "75,777",
+        "label": "Files"
+      },
+      {
+        "value": "6,838",
+        "label": "Folders"
+      },
+      {
+        "value": "78%",
+        "label": "Tied to no campaign"
+      }
+    ]
+  },
+  "result": {
+    "title": [
+      "A searchable library",
+      "on top of the Drive."
+    ],
+    "before": "Finding a shot meant opening folders and asking who filmed it.",
+    "allows": "Ask for a moment in words or with a picture, and land on the second in the clip."
+  },
+  "stats": [
+    {
+      "value": "2 days",
+      "label": "To map the Drive, weeks by hand (est.)"
+    },
+    {
+      "value": "~1 s",
+      "label": "A search, across the library"
+    },
+    {
+      "value": "57,517",
+      "label": "Assets searchable by what they show"
+    }
+  ],
+  "opening": {
+    "head": "Notre-DAM / Library",
+    "datum": "47,201 assets",
+    "figure": {
+      "kind": "screen",
+      "layout": "search",
+      "skin": "suri",
+      "app": "Notre-DAM",
+      "query": "hands only close-up in the bedroom",
+      "results": "Matching moments first",
+      "tiles": [
+        {
+          "ratio": "9/16",
+          "src": "/arcs/suri/iterations/photo.webp",
+          "badge": "0:30",
+          "name": "SURI_FINAL_CORE_BEDROOM_HANDS.mp4",
+          "meta": "Final · Core · Bedroom",
+          "hit": "0:12",
+          "lit": true
+        },
+        {
+          "ratio": "9/16",
+          "src": "/arcs/suri/iterations/route-2-i2.webp",
+          "badge": "0:24",
+          "name": "SURI_RAW_CORE_HANDS_TAKE2.mp4",
+          "meta": "Raw · Core · Bedroom",
+          "hit": "0:04"
+        },
+        {
+          "ratio": "9/16",
+          "src": "/arcs/suri/iterations/route-2-i1.webp",
+          "badge": "0:15",
+          "versions": "3",
+          "name": "SURI_FINAL_CORE_QUOTE_v3.mp4",
+          "meta": "Final · Core · Ads",
+          "hit": "1:51"
+        },
+        {
+          "ratio": "9/16",
+          "src": "/arcs/suri/iterations/route-2-i4.webp",
+          "badge": "0:12",
+          "name": "SURI_SELECTS_CORE_DUVET.mp4",
+          "meta": "Selects · Core · Bedroom",
+          "hit": "0:07"
+        },
+        {
+          "ratio": "9/16",
+          "src": "/arcs/suri/iterations/route-2-i3.webp",
+          "badge": "0:10",
+          "name": "SURI_FINAL_CORE_WINDOW.mp4",
+          "meta": "Final · Core · Bathroom",
+          "hit": "0:22"
+        },
+        {
+          "ratio": "9/16",
+          "src": "/arcs/suri/iterations/route-1-ground.webp",
+          "badge": "0:09",
+          "name": "SURI_RAW_CORE_GROUND.mp4",
+          "meta": "Raw · Core · Ads",
+          "hit": "0:37"
+        }
+      ],
+      "more": [
+        "/arcs/suri/under-the-glass/teaser-poster.webp",
+        "/arcs/suri/no-reflection-poster.jpg",
+        "/arcs/suri/under-the-glass/end_logo.webp",
+        "/arcs/suri/under-the-glass/cut_b.webp",
+        "/arcs/suri/iterations/route-2-i2.webp",
+        "/arcs/suri/iterations/photo.webp"
+      ]
+    },
+    "state": "In use"
+  },
+  "chapters": [
+    {
+      "n": 1,
+      "id": "before",
+      "kick": "The problem",
+      "nav": "Problem",
+      "short": true,
+      "title": [
+        "No one could say",
+        "what was in the Drive."
+      ],
+      "source": "Drive walk, 7 Oct 2026",
+      "sub": "75,777 files across 6,838 folders, up to 13 levels deep. The folder names didn't say what was in them, and 78% pointed to no campaign.",
+      "points": [
+        {
+          "text": "19,827 duplicates, 657 GB"
+        },
+        {
+          "text": "Asset library owner: The folders stay",
+          "person": true
+        }
+      ],
+      "frame": {
+        "head": "Google Drive / 3- Marketing",
+        "datum": "6,838 folders · 3.1 TB",
+        "figure": {
+          "kind": "sprawl",
+          "map": "suri-drive",
+          "key": [
+            "One grain ≈ 30 files",
+            "Duplicates: 19,827 files, 657 GB"
+          ]
+        },
+        "state": "Walked 7 Oct"
+      }
+    },
+    {
+      "n": 2,
+      "id": "map",
+      "kick": "The map",
+      "nav": "Map",
+      "short": true,
+      "title": [
+        "A model read every file",
+        "and put it on one map."
+      ],
+      "source": "map-all, 9 Oct 2026",
+      "sub": "A vision model looked at every unique image and video, whole clips included. Files that show the same thing landed side by side, in 60 groups, with Monday's briefs and Figma's designs on the same map.",
+      "points": [
+        {
+          "text": "41,450 files read in one night"
+        },
+        {
+          "text": "97 h of video, every clip whole"
+        }
+      ],
+      "frame": {
+        "head": "Notre-DAM / Map of the library",
+        "datum": "82,307 items · 60 groups",
+        "figure": {
+          "kind": "cloud",
+          "map": "suri-library",
+          "title": "Map of the library",
+          "note": "Every file in the Drive, Monday.com and Figma, placed by what it shows: close together means alike.",
+          "named": [
+            {
+              "group": 18,
+              "text": "Ad statics"
+            },
+            {
+              "group": 21,
+              "text": "Bathroom routines"
+            },
+            {
+              "group": 14,
+              "text": "Email designs"
+            },
+            {
+              "group": 8,
+              "text": "Product stills"
+            },
+            {
+              "group": 2,
+              "text": "Creator videos"
+            },
+            {
+              "group": 50,
+              "text": "3D renders"
+            }
+          ]
+        },
+        "state": "Live"
+      }
+    },
+    {
+      "n": 3,
+      "id": "search",
+      "kick": "Search",
+      "nav": "Search",
+      "short": true,
+      "title": [
+        "Ask in words,",
+        "or with a picture."
+      ],
+      "source": "search-v2 eval log",
+      "sub": "The question is searched by words, meaning and pictures at once, and a model checks the top frames before anything counts as a match. Each result opens at the matching second.",
+      "points": [
+        {
+          "text": "About a second across the library"
+        }
+      ],
+      "frame": {
+        "head": "Notre-DAM / Search by picture",
+        "datum": "Words, meaning, pictures",
+        "figure": {
+          "kind": "screen",
+          "layout": "search",
+          "skin": "suri",
+          "app": "Notre-DAM",
+          "picture": "black-friday-teaser.png",
+          "pictureSrc": "/arcs/suri/under-the-glass/lens_comp.webp",
+          "results": "Closest first",
+          "tiles": [
+            {
+              "ratio": "1/1",
+              "src": "/arcs/suri/under-the-glass/lens_comp.webp",
+              "badge": "0:20",
+              "versions": "4",
+              "name": "SURI_EDIT_BLACKFRIDAY_LENS.mp4",
+              "meta": "Edit · Black Friday · Ads",
+              "hit": "0:04",
+              "lit": true
+            },
+            {
+              "ratio": "9/16",
+              "src": "/arcs/suri/under-the-glass/cut_b.webp",
+              "badge": "0:08",
+              "name": "SURI_EDIT_BLACKFRIDAY_CARD.mp4",
+              "meta": "Edit · Black Friday · Ads",
+              "hit": "0:02"
+            },
+            {
+              "ratio": "9/16",
+              "src": "/arcs/suri/under-the-glass/teaser-poster.webp",
+              "badge": "0:06",
+              "name": "SURI_FINAL_BLACKFRIDAY_TEASER.mp4",
+              "meta": "Final · Black Friday",
+              "hit": "0:01"
+            },
+            {
+              "ratio": "9/16",
+              "src": "/arcs/suri/iterations/route-1-ground.webp",
+              "badge": "0:09",
+              "name": "SURI_RAW_BLACKFRIDAY_WALL.mp4",
+              "meta": "Raw · Black Friday",
+              "hit": "0:05"
+            },
+            {
+              "ratio": "9/16",
+              "src": "/arcs/suri/under-the-glass/end_logo.webp",
+              "badge": "0:04",
+              "name": "SURI_FINAL_ENDCARD_LOGO.mp4",
+              "meta": "Final · End card",
+              "hit": "0:03"
+            }
+          ],
+          "more": [
+            "/arcs/suri/no-reflection-poster.jpg",
+            "/arcs/suri/iterations/photo.webp",
+            "/arcs/suri/iterations/route-2-i1.webp",
+            "/arcs/suri/iterations/route-2-i3.webp",
+            "/arcs/suri/iterations/route-2-i4.webp",
+            "/arcs/suri/iterations/route-2-i2.webp"
+          ]
+        },
+        "state": "In use"
+      }
+    },
+    {
+      "n": 4,
+      "id": "review",
+      "kick": "Review",
+      "nav": "Review",
+      "short": true,
+      "title": [
+        "Tag it once,",
+        "and the file names itself."
+      ],
+      "source": "review sheet, 14 to 16 Oct 2026",
+      "sub": "A clip opens at the moment you searched for. The team pins feedback to that moment, moves the file to approved, and the tags write the file name the DAM expects.",
+      "frame": {
+        "head": "Notre-DAM / Review",
+        "figure": {
+          "kind": "screen",
+          "layout": "review",
+          "skin": "suri",
+          "app": "Notre-DAM",
+          "crumb": "Shoot footage  /  Selects",
+          "open": "0:12",
+          "playerSrc": "/arcs/suri/iterations/photo.webp",
+          "pin": "Keep the hand in frame here, it sells the grip.",
+          "scene": "Scene 2 of 4 · 0:12–0:31 · Hands only, close-up",
+          "scenes": 4,
+          "sceneLit": 1,
+          "strip": [
+            {
+              "src": "/arcs/suri/iterations/route-2-i1.webp",
+              "at": "0:00"
+            },
+            {
+              "src": "/arcs/suri/iterations/photo.webp",
+              "at": "0:12"
+            },
+            {
+              "src": "/arcs/suri/iterations/route-2-i2.webp",
+              "at": "0:31"
+            },
+            {
+              "src": "/arcs/suri/iterations/route-2-i4.webp",
+              "at": "0:44"
+            }
+          ],
+          "title": "SURI_SELECTS_CORE_HANDS_BEDROOM.mp4",
+          "sub": "Video · 0:58 · Selects",
+          "states": [
+            "In review",
+            "Changes",
+            "Approved"
+          ],
+          "stateOn": 2,
+          "tabs": [
+            "Feedback",
+            "Tags",
+            "Details"
+          ],
+          "tabOn": 1,
+          "summary": "A hand lifts a dark green Core off a checked quilt, close-up, soft morning light.",
+          "tags": [
+            {
+              "label": "Content",
+              "chips": [
+                "Hands only",
+                "Close-up"
+              ]
+            },
+            {
+              "label": "Look",
+              "chips": [
+                "Bedroom",
+                "Vertical 9:16"
+              ]
+            }
+          ],
+          "naming": {
+            "label": "File name from these tags",
+            "value": "SURI_SELECTS_HANDS_CLOSEUP"
+          }
+        },
+        "state": "Approved",
+        "datum": "Named from its tags"
+      }
+    }
+  ]
+}

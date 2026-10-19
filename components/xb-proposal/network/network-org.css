@@ -2,9 +2,10 @@
    organisation. Everything it shares with `NetworkPlug` is `network.css`'s;
    this sheet holds only what the drawn-back view adds. */
 
-/* one more act than the proposal's section, so a longer runway */
+/* one more act than the proposal's section, so a longer runway; a 240svh
+   pin since 2026-10-19 (was 330), the module whole before the first third */
 .xn.xno {
-  height: 430svh;
+  height: 340svh;
 }
 
 /* the world the camera pulls back through: its hairlines stay hairlines at

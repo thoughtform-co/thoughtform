@@ -657,3 +657,114 @@ visible because it's too abstract. This is really a sales page."
 - The capture script frames each case's first figure late now that all three
   cases are on one page; the opening stills in `round-10/` show the second
   step's words.
+
+# Round 11 (2026-10-19): one template, Suri as built, a page to send
+
+## Why
+
+The owner, on round 10: the network transition took "one or two" scrolls too
+many ("the transformation of the text with the scanline effect and the frame
+around it should be one smooth thing … almost instant and the next scroll
+should be the zoom-out"); the FIG captions are slop; the result needs time
+saved and what it allows; "where the money went" goes; the category is too
+subtle; one text on the left, at a middle size; Suri must show the DAM as it
+looks (from the Suri GitHub account), the chaos before, the real cluster map in
+3D, the search in the DAM's own UI; "12 releases in 4 days" goes. And a page he
+can send today, generic, as "an overview of what we've been doing".
+
+## What it does
+
+- **The transition (every swarm page, incl. the keynote and the UX meetup):**
+  `BARS_BY` 0.25 → 0.125, `NetworkOrg`'s `T` retuned (turn [0.02, 0.11],
+  frame [0.1, 0.15], zoom [0.19, 0.44], ribs from 0.45), `.xn.xno` 430 → 340svh.
+  From the pin: the scan writes the bars by ~30svh, the frame and the name by
+  ~45svh, and the view draws back straight after (was 132svh to the zoom).
+- **The template:** no caption under a figure; one sentence a step (no lede,
+  no claims, no call); the type of work a chip in the case's tint; the project
+  a line that says what was asked (≤52); the result fixed: Before → Now
+  ("Time saved · estimated"), What it now allows, three facts that are not the
+  time. Loop's cost chapter is gone ($27 is a result fact).
+- **Order:** Suri, Samako, Loop. Result first, the problem second where the
+  record has one (Samako: round 1).
+- **Suri, rebuilt:** the library, search by picture and the review sheet drawn
+  in the app's own look (`blocks/SuriScreen.tsx`, `suri-screen.css`: its
+  palette, Inter, radii, layout, read from suri-dam `library/app/src`; pictures
+  are the app's own demo shapes, never its frames); the Drive before as a
+  treemap of its folders with the duplicates lit (`sprawl`); the library's map
+  in 3D (`cloud`, three.js by `import()` near the panel, paused offscreen, a
+  still under reduced motion). Data from `scripts/arcs/prep-suri-case.mjs`:
+  shapes and counts only, the map stripped to x, y, z and a group (owner,
+  2026-10-19).
+- **The page to send:** `/arcs/thoughtform/cases` (own route, house arc
+  `thoughtform-cases`): the swarm's opening lettered for no client
+  (`NetworkOrg org={null}`, `EmbedStack house`), the line, the dossier, a close.
+  The dossier moved to `components/arcs/case-dossier/` so the lab and the page
+  share one copy; the logos to `public/arcs/cases/logos/` (`/test/*` 404s in
+  production, files included).
+- **Critics:** a buyer's-eye pass and a voice pass, applied, then a second
+  buyer pass (go, after its two fixes, applied).
+
+## Checked
+
+- tsc, eslint clean; vitest 196 files, 3,531 tests; production build.
+- Stills at 1440×900, 1280×720, 390×844 (`--path /arcs/thoughtform/cases`).
+
+## Known and not fixed
+
+- Loop has no "problem" chapter in its record; it opens result → ask.
+- Samako's film A carries a generated person.
+- The three Suri counts (75,777 files in the Drive, 57,517 searchable assets,
+  82,307 items on the map) are each as filed, and the page doesn't reconcile them.
+
+# Round 12 (2026-10-19): the window, the panel before each case, the DAM as built
+
+## Why
+
+The owner, on round 11 and the case explorations canvas
+(claude.ai/artifact/A6NmfqbQzd7EanVVqiSZaY): the workstream to the right; the
+step text quieter than the title; an interstitial before each client; the
+result as "before" and "what it now allows" only; the DAM mockup "one of the
+ugliest … absolutely not what the DAM looks like"; then, from the canvas's
+third round, frame H ("this looks beautiful … because we have a full-bleed
+visual").
+
+## What it does
+
+- **The window (frame H)** round every figure: one hairline, the top-right
+  notch with its diagonal in gold, a head row (`▸ client / what it is` and an
+  optional state), a foot row (`Fig. NN` and the datum). No plate wash, no
+  corner crosses. Screens, the map, the Drive, plates and the ask fill the
+  window; their own outer lines go.
+- **The panel before each case** (`intro`): case number, client, type of
+  work, the challenge in one sentence (Loop's in the studio lead's words) and
+  at most three facts as filed.
+- **The result**: Before, What it now allows, then the numbers (time saved
+  among them, marked estimated). No result title: the project line says it.
+- **The step line** at min(23px, 3svh), light; the project title stays 28px.
+- **The type of work** right-aligned on the client row.
+- **The DAM, as built**: `SuriScreen.tsx` redrawn from suri-dam's components
+  at app pixels (`--u` = window width / 1280), the live library's counts, and
+  Suri's own published campaign stills (`public/arcs/suri/`) for pictures,
+  never frames from the library.
+
+## Checked
+
+- tsc, eslint clean; vitest 196 files, 3,531 tests.
+- Stills at 1440×900 and 390×844, the intros included (the capture now waits
+  for hydration, which had framed Samako and Loop off-centre).
+
+# Round 13 (2026-10-19): the Loop story's grammar on every step
+
+The owner, on round 12: "the most elegant one is still the Loop one … one
+title that explains the section, a bit of a paragraph, and then some bullet
+points"; the project title must not stay big and fixed while the line that
+changes is small; the project at the workstream's size, the workstream beside
+it on the left.
+
+- Each step: its label, a two-tone title at the display size (it changes with
+  the step), a short paragraph (`sub`), at most three points (`points`, a
+  person's decision on the green diamond). The result slide keeps Before,
+  What it now allows and the numbers.
+- The case head: the client's logo, then the project in mono at 12px and the
+  type of work beside it, left.
+- Titles at most 56 characters, paragraphs 240, points 40 (tested).

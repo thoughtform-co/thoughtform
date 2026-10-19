@@ -3,12 +3,12 @@ import { join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { CASES } from "@/app/(internal)/test/proposal-swarm-v2/dossier/cases";
+import { CASES } from "@/components/arcs/case-dossier/cases";
 import {
   GLYPH_NAMES,
   GLYPHS,
   workstreamGlyph,
-} from "@/app/(internal)/test/proposal-swarm-v2/dossier/Glyph";
+} from "@/components/arcs/case-dossier/Glyph";
 import {
   ASSET_PREFIXES,
   assertCase,
@@ -19,8 +19,8 @@ import {
   SHORT_MAX,
   SHORT_MIN,
   stillsOf,
-} from "@/app/(internal)/test/proposal-swarm-v2/dossier/story";
-import type { Case } from "@/app/(internal)/test/proposal-swarm-v2/dossier/types";
+} from "@/components/arcs/case-dossier/story";
+import type { Case } from "@/components/arcs/case-dossier/types";
 import {
   AFTER_ID,
   BEFORE_ID,
@@ -32,7 +32,7 @@ import {
 import { X_BIONIC_PROPOSAL_ARC as PROD } from "@/lib/arcs/content/x-bionic-proposal";
 
 const ROOT = resolve(__dirname, "../..");
-const LAB = join(ROOT, "app/(internal)/test/proposal-swarm-v2");
+const DOSSIER = join(ROOT, "components/arcs/case-dossier");
 const read = (p: string) => readFileSync(p, "utf8").replace(/\r\n/g, "\n");
 
 /** Every string in a value, with where it sits. */
@@ -99,8 +99,8 @@ describe("the splice", () => {
 });
 
 describe("the cases", () => {
-  it("are Loop, Samako and Suri, in that order", () => {
-    expect(CASES.map((c) => c.id)).toEqual(["loop", "samako", "suri"]);
+  it("are Suri, Samako and Loop, in that order (operations first)", () => {
+    expect(CASES.map((c) => c.id)).toEqual(["suri", "samako", "loop"]);
   });
 
   for (const c of CASES) {
@@ -109,7 +109,13 @@ describe("the cases", () => {
         expect(() => assertCase(c)).not.toThrow();
       });
 
-      it("open on a header: three short numbers, no briefing (it lives in the steps)", () => {
+      it("open on a panel that names the challenge, then the result: before, what it now allows", () => {
+        expect(c.intro.line).toHaveLength(2);
+        expect((c.intro.facts ?? []).length).toBeLessThanOrEqual(3);
+        expect(Object.keys(c.result).sort()).toEqual(["allows", "before", "title"]);
+        expect(c.result.before.length).toBeGreaterThan(0);
+        expect(c.result.allows.length).toBeLessThanOrEqual(110);
+        expect("title" in c).toBe(false);
         expect(c.stats).toHaveLength(3);
         for (const s of c.stats) {
           expect(s.value.length, s.label).toBeLessThanOrEqual(12);
@@ -119,7 +125,7 @@ describe("the cases", () => {
       });
 
       it("carry the client's logo (a file on disk) and its colour", () => {
-        expect(c.logo.src.startsWith("/test/proposal-swarm-v2/logos/")).toBe(true);
+        expect(c.logo.src.startsWith("/arcs/cases/logos/")).toBe(true);
         expect(existsSync(join(ROOT, "public", c.logo.src))).toBe(true);
         for (const rgb of [c.tint.dots, c.tint.glow]) {
           expect(rgb).toMatch(/^\d{1,3}, \d{1,3}, \d{1,3}$/);
@@ -128,7 +134,7 @@ describe("the cases", () => {
 
       it("carry their labels: a project with an icon, a type of work, a name a chapter", () => {
         expect(c.project.length).toBeGreaterThan(0);
-        expect(c.project.length).toBeLessThanOrEqual(18);
+        expect(c.project.length).toBeLessThanOrEqual(52);
         expect(GLYPH_NAMES).toContain(c.glyph);
         expect(["play", "flow"]).toContain(workstreamGlyph(c.workstream));
         for (const ch of c.chapters) {
@@ -167,12 +173,17 @@ describe("the cases", () => {
         });
       });
 
-      it("keep the claims concise: at most three, each a few words, a call short too", () => {
+      it("tell each step the Loop story's way: a title, a short paragraph, at most three points", () => {
         for (const ch of c.chapters) {
-          expect(ch.thought.length).toBeLessThanOrEqual(3);
-          for (const t of ch.thought) expect(t.length, t).toBeLessThanOrEqual(36);
-          if (ch.call) expect(`${ch.call.who}: ${ch.call.said}`.length).toBeLessThanOrEqual(48);
+          const keys = Object.keys(ch);
+          for (const k of ["thought", "call"]) expect(keys, `${ch.id}.${k}`).not.toContain(k);
+          expect(Object.keys(ch.frame), ch.id).not.toContain("caption");
+          expect(ch.title.join(" ").length, ch.id).toBeLessThanOrEqual(56);
+          expect((ch.sub ?? "").length, ch.id).toBeLessThanOrEqual(240);
+          expect((ch.points ?? []).length, ch.id).toBeLessThanOrEqual(3);
+          for (const pt of ch.points ?? []) expect(pt.text.length, pt.text).toBeLessThanOrEqual(40);
         }
+        expect(Object.keys(c.opening)).not.toContain("caption");
       });
     });
   }
@@ -200,8 +211,8 @@ describe("the particle icons", () => {
   });
 });
 
-describe("the lab stays self-contained", () => {
-  const dossier = files(join(LAB, "dossier")).filter((p) => /\.(ts|tsx)$/.test(p));
+describe("the dossier stays self-contained", () => {
+  const dossier = files(DOSSIER).filter((p) => /\.(ts|tsx)$/.test(p));
   const ALLOWED = /^(react|\.{1,2}\/.*|@\/lib\/arcs\/content\/shared\/suriDriveMap)$/;
 
   it("imports nothing from the arcs, the landing or the lattice components", () => {
@@ -212,7 +223,7 @@ describe("the lab stays self-contained", () => {
     }
   });
 
-  const css = read(join(LAB, "dossier/dossier.css"));
+  const css = read(join(DOSSIER, "dossier.css"));
 
   it("letters nothing under 12px", () => {
     for (const m of css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)) {
@@ -242,11 +253,36 @@ describe("the lab stays self-contained", () => {
     }
   });
 
-  it("cuts its frame with the TR + BL pair only", () => {
+  it("cuts its window at the top right only (frame H)", () => {
     const at = css.indexOf(".csd-frame {");
     const block = css.slice(at, css.indexOf("}", at));
     expect(block).toMatch(/calc\(100% - var\(--ch\)\) 0/);
-    expect(block).toMatch(/var\(--ch\) 100%/);
-    expect(block).not.toMatch(/0 var\(--ch\),/);
+    expect(block).toMatch(/100% var\(--ch\)/);
+    expect(block).not.toMatch(/var\(--ch\) 100%/);
+  });
+});
+
+describe("the cases page (/arcs/thoughtform/cases)", () => {
+  const page = read(join(ROOT, "app/(marketing)/arcs/thoughtform/cases/page.tsx"));
+
+  it("letters the swarm's opening for no client", () => {
+    expect(page).toMatch(/<NetworkOrg[^>]*org=\{null\}/);
+    expect(page).toMatch(/<EmbedStack[^>]*\bhouse\b/);
+  });
+
+  it("names no client of a proposal in its record or its cases", async () => {
+    const { THOUGHTFORM_CASES_ARC } = await import("@/lib/arcs/content/thoughtform-cases");
+    const OTHERS = /X-Bionic|XB \/|Pandora|Trinny|Plopsa|Perfect Ted|Hungry Minds|Ganesh/;
+    walk([THOUGHTFORM_CASES_ARC, ...CASES], "cases", (s, at) => {
+      expect(OTHERS.test(s), `${at}: "${s}"`).toBe(false);
+    });
+  });
+
+  it("publishes the Suri map stripped: positions and a group, nothing else", () => {
+    const bin = readFileSync(join(ROOT, "public/arcs/suri/map-3d.bin"));
+    const n = bin.readUInt32LE(0);
+    expect(bin.length).toBe(4 + n * 6 + n);
+    const data = read(join(DOSSIER, "data/suriCase.ts"));
+    expect(data).not.toMatch(/@|https?:|drive\.google|\.mp4|\.jpg/i);
   });
 });

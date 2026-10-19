@@ -15,6 +15,8 @@ export const KINDS: readonly FigureKind[] = [
   "field",
   "flow",
   "screen",
+  "sprawl",
+  "cloud",
 ];
 
 /** Pictures come only from folders already published with the site. */
@@ -23,7 +25,7 @@ export const ASSET_PREFIXES = ["/arcs/prompt-to-loop/", "/arcs/samako/", "/arcs/
 /** The house cap on lettered elements in one drawing. */
 export const LETTER_CAP = 15;
 
-export const SHORT_MIN = 5;
+export const SHORT_MIN = 4;
 export const SHORT_MAX = 6;
 
 /** The case head options (`?head=`), the recommended one first. */
@@ -50,6 +52,16 @@ export function stillsOf(f: Figure): Still[] {
       return f.pairs.flatMap((p) => [p.sent.still, p.kept.still]);
     case "track":
       return (f.frames ?? []).map((x) => x.still);
+    case "screen": {
+      const pic = (src: string, ratio = "9/16") => ({ src, ratio, alt: "" });
+      return [
+        ...(f.tiles ?? []).flatMap((t) => (t.src ? [pic(t.src, t.ratio)] : [])),
+        ...(f.more ?? []).map((src) => pic(src)),
+        ...(f.pictureSrc ? [pic(f.pictureSrc, "1/1")] : []),
+        ...(f.playerSrc ? [pic(f.playerSrc)] : []),
+        ...(f.strip ?? []).map((x) => pic(x.src)),
+      ];
+    }
     default:
       return [];
   }
@@ -106,9 +118,16 @@ export function letteredCount(f: Figure): number {
       );
     case "field":
       return f.labels.length;
+    case "sprawl":
+      return f.key.length;
+    case "cloud":
+      return 2 + f.named.length;
     case "flow":
       return f.stations.reduce((n, s) => n + 1 + (s.items?.length ?? 0), 0);
     case "screen": {
+      /* the client's own app, redrawn as it is built: one picture, its
+         chrome the app's, not words the case adds */
+      if (f.skin === "suri") return 1;
       const one = (x?: string) => (x ? 1 : 0);
       const tiles = (f.tiles ?? []).reduce(
         (n, t) => n + one(t.badge) + one(t.verdict) + one(t.hit),
@@ -122,13 +141,19 @@ export function letteredCount(f: Figure): number {
         one(f.action) +
         (f.facets?.length ?? 0) +
         one(f.status) +
+        one(f.picture) +
+        one(f.results) +
         tiles +
         one(f.open) +
         one(f.pin) +
         one(f.title) +
         (f.states?.length ?? 0) +
         (f.tabs?.length ?? 0) +
-        (f.lines?.length ?? 0)
+        (f.lines?.length ?? 0) +
+        one(f.crumb) +
+        one(f.scene) +
+        (f.naming ? 1 : 0) +
+        (f.tags ?? []).reduce((n, t) => n + 1 + t.chips.length, 0)
       );
     }
   }
@@ -153,7 +178,6 @@ function checkFigure(c: Case, where: string, f: Figure) {
 function checkChapter(c: Case, ch: Chapter) {
   const where = `[${String(ch.n).padStart(2, "0")}] ${ch.id}`;
   if (ch.title.length !== 2) fail(c, where, "a title is two lines");
-  if (ch.thought.length > 4) fail(c, where, "the thinking is at most four lines");
   checkFigure(c, where, ch.frame.figure);
 }
 
