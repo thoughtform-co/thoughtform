@@ -173,43 +173,47 @@
           "tools": [
             {
               "name": "Motion",
-              "holds": "Results",
+              "holds": "Ad results",
               "tone": "#a78bfa",
               "lines": [
-                "Top ads, last 30 days",
-                "Hook rate by concept",
-                "Spend per ad set"
-              ]
+                "Pet skit, AI video",
+                "Autumn offer, static",
+                "Allergy, static"
+              ],
+              "look": "motion"
             },
             {
               "name": "ClickUp",
               "holds": "Briefs",
               "tone": "#7b68ee",
               "lines": [
-                "A template per strategist",
-                "Status set by hand",
-                "Assets linked by hand"
-              ]
+                "Brief · own template",
+                "Brief · another template",
+                "Brief · in review"
+              ],
+              "look": "clickup"
             },
             {
               "name": "Figma",
               "holds": "Designs",
               "tone": "#f24e1e",
               "lines": [
-                "Approved ad templates",
                 "Autumn statics",
-                "Product packshots"
-              ]
+                "Offer layout",
+                "Packshots"
+              ],
+              "look": "figma"
             },
             {
               "name": "Google Sheets",
-              "holds": "Names",
+              "holds": "Ad names",
               "tone": "#0f9d58",
               "lines": [
-                "1,108 ad names",
-                "Typed one by one",
-                "Sent on to the agency"
-              ]
+                "Ad name, typed",
+                "Ad name, typed",
+                "Ad name, typed"
+              ],
+              "look": "sheets"
             }
           ],
           "center": {
@@ -254,43 +258,47 @@
           "tools": [
             {
               "name": "Motion",
-              "holds": "Results",
+              "holds": "Ad results",
               "tone": "#a78bfa",
               "lines": [
-                "Top ads, last 30 days",
-                "Hook rate by concept",
-                "Spend per ad set"
-              ]
+                "Pet skit, AI video",
+                "Autumn offer, static",
+                "Allergy, static"
+              ],
+              "look": "motion"
             },
             {
               "name": "ClickUp",
               "holds": "Briefs",
               "tone": "#7b68ee",
               "lines": [
-                "A template per strategist",
-                "Status set by hand",
-                "Assets linked by hand"
-              ]
+                "Brief · own template",
+                "Brief · another template",
+                "Brief · in review"
+              ],
+              "look": "clickup"
             },
             {
               "name": "Figma",
               "holds": "Designs",
               "tone": "#f24e1e",
               "lines": [
-                "Approved ad templates",
                 "Autumn statics",
-                "Product packshots"
-              ]
+                "Offer layout",
+                "Packshots"
+              ],
+              "look": "figma"
             },
             {
               "name": "Google Sheets",
-              "holds": "Names",
+              "holds": "Ad names",
               "tone": "#0f9d58",
               "lines": [
-                "1,108 ad names",
-                "Typed one by one",
-                "Sent on to the agency"
-              ]
+                "Ad name, typed",
+                "Ad name, typed",
+                "Ad name, typed"
+              ],
+              "look": "sheets"
             }
           ],
           "center": {

@@ -76,22 +76,72 @@ export function Tools({ figure }: { figure: ToolsFigure }) {
         return (
           <div
             key={t.name}
-            className="csd-tools__app"
+            className="csd-tools__app mini"
+            data-look={t.look}
             style={{ left: `${x}%`, top: `${y}%`, "--tone": t.tone } as CSSProperties}
           >
-            <p className="csd-tools__bar">
+            <p className="mini-bar">
               <i aria-hidden="true" />
               <b>{t.name}</b>
               <span>{t.holds}</span>
             </p>
-            <ul>
-              {t.lines.map((l) => (
-                <li key={l}>{l}</li>
-              ))}
-            </ul>
+            <MiniBody look={t.look} lines={t.lines} />
           </div>
         );
       })}
     </div>
+  );
+}
+
+/** The inside of each small window, in its app's own look: a report of
+ *  ads by hook rate, a list of briefs by status, a canvas of frames, a
+ *  grid. Its lines are the labels; the rest is drawn. */
+function MiniBody({ look, lines }: { look: string; lines: readonly string[] }) {
+  if (look === "motion")
+    return (
+      <ul className="mini-motion">
+        {lines.map((l, i) => (
+          <li key={l}>
+            <i className="mini-thumb" />
+            <span>{l}</span>
+            <em style={{ width: `${70 - i * 16}%` } as CSSProperties} />
+          </li>
+        ))}
+      </ul>
+    );
+  if (look === "clickup")
+    return (
+      <ul className="mini-clickup">
+        {lines.map((l, i) => (
+          <li key={i}>
+            <i data-s={i} />
+            <span>{l}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  if (look === "figma")
+    return (
+      <div className="mini-figma">
+        {lines.map((l) => (
+          <span key={l}>
+            <i />
+            <b>{l}</b>
+          </span>
+        ))}
+      </div>
+    );
+  return (
+    <table className="mini-sheets">
+      <tbody>
+        {lines.map((l, i) => (
+          <tr key={i}>
+            <td>{i + 1}</td>
+            <td>{l}</td>
+            <td />
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

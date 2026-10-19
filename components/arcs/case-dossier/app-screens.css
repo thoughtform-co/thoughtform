@@ -602,3 +602,154 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+/* ── small app windows, for the tools a piece of work runs through ───── */
+.mini {
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 8px;
+  background: #fff !important;
+  color: #292d34;
+  font-family: "Inter Variable", "Inter", "Helvetica Neue", Arial, sans-serif;
+  box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.8);
+}
+.mini p,
+.mini ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px !important;
+  border-bottom: 1px solid #ebedf0;
+  background: #f7f8f9;
+  font-size: 12px;
+}
+.mini-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--tone);
+}
+.mini-bar b {
+  font-weight: 600;
+}
+.mini-bar span {
+  margin-left: auto;
+  color: #8a9099;
+  font-size: 11px;
+}
+.mini-motion,
+.mini-clickup {
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px !important;
+  font-size: 11px;
+}
+.mini-motion li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-rows: auto 5px;
+  column-gap: 7px;
+  row-gap: 3px;
+  align-items: center;
+}
+.mini-thumb {
+  grid-row: span 2;
+  width: 18px;
+  height: 22px;
+  border-radius: 3px;
+  background: linear-gradient(160deg, #d9d2f5, #a78bfa);
+}
+.mini-motion span,
+.mini-clickup span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mini-motion em {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--tone);
+}
+.mini-clickup li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #f0f1f3;
+}
+.mini-clickup i {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #87909e;
+  border-radius: 50%;
+}
+.mini-clickup i[data-s="0"] {
+  border-color: #1090e0;
+}
+.mini-clickup i[data-s="1"] {
+  border-color: #e16b16;
+}
+.mini-figma {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px !important;
+  background: #e5e5e5;
+}
+.mini-figma span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.mini-figma i {
+  aspect-ratio: 4 / 5;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: inset 0 -12px 0 #f4ece2;
+}
+.mini-figma b {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 500;
+  color: #555;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mini-sheets {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+.mini-sheets td {
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid #e1e3e6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.mini-sheets td:first-child {
+  width: 18px;
+  background: #f8f9fa;
+  color: #5f6368;
+  text-align: center;
+}
+.mini-sheets td:last-child {
+  width: 22%;
+}
+/* the dark figure's own list rules must not reach inside the app windows */
+.csd-tools__app.mini ul {
+  padding: 9px 10px;
+}
+.csd-tools__app.mini li {
+  color: #3c4049;
+  font-size: 11px;
+}

@@ -130,7 +130,13 @@ export type Figure =
       /** An interface the work shipped, drawn from its own layout and
        *  labels; pictures are grain, never footage. */
       kind: "screen";
-      layout: "search" | "review" | "list" | "task" | "chat";
+      layout: "search" | "review" | "list" | "task" | "chat" | "edit";
+      /** suri edit: the chat with Claude, the versions playing side by
+       *  side, the version cards and the shots of the cut */
+      chat?: readonly { who: "you" | "claude"; text: string }[];
+      players?: readonly { label: string; src: string }[];
+      versions?: readonly { n: number; label: string; by: string; note: string; kept?: boolean }[];
+      shots?: readonly { src: string; out?: boolean }[];
       /** "suri" / "clickup" / "claude": the app's own look (its palette,
        *  type and radii), redrawn; else the house grammar. */
       skin?: "suri" | "clickup" | "claude";
@@ -255,7 +261,14 @@ export type Figure =
        *  it between them) or joined (one model reading them all). */
       kind: "tools";
       mode: "apart" | "joined";
-      tools: readonly { name: string; holds: string; tone: string; lines: readonly string[] }[];
+      tools: readonly {
+        name: string;
+        holds: string;
+        tone: string;
+        /** which app's look the small window takes */
+        look: "motion" | "clickup" | "figma" | "sheets";
+        lines: readonly string[];
+      }[];
       /** apart: who carries the work; joined: what reads it all */
       center: { name: string; note: string };
       /** apart: what the carrying is, on the paths */

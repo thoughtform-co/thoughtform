@@ -95,7 +95,65 @@ const I = {
  *           the tags write
  */
 export function SuriScreen({ figure }: { figure: ScreenFigure }) {
+  if (figure.layout === "edit") return <Edit f={figure} />;
   return figure.layout === "search" ? <Library f={figure} /> : <Review f={figure} />;
+}
+
+/** The clip editor (`components/edit`): the chat with Claude on the left;
+ *  two versions playing side by side; the version cards; the shots. */
+function Edit({ f }: { f: ScreenFigure }) {
+  return (
+    <div className="sdm" data-layout="edit">
+      <aside className="sdm-chat">
+        <ul className="sdm-chat__log">
+          {(f.chat ?? []).map((c, i) => (
+            <li key={i} data-who={c.who}>
+              {c.text}
+            </li>
+          ))}
+        </ul>
+        <p className="sdm-chat__box">Ask for a cut-down, an iteration, a change…</p>
+      </aside>
+      <div className="sdm-edit">
+        <header className="sdm-edit__top">
+          <Ico d={<path d="M19 12H5M12 19l-7-7 7-7" />} />
+          <span className="sdm-edit__title">{f.title}</span>
+          <span className="sdm-edit__state">
+            <i aria-hidden="true" />
+            {f.status}
+          </span>
+        </header>
+        <div className="sdm-edit__players">
+          {(f.players ?? []).map((p) => (
+            <figure key={p.label} className="sdm-edit__player">
+              <img src={p.src} alt="" />
+              <figcaption>{p.label}</figcaption>
+            </figure>
+          ))}
+        </div>
+        <ol className="sdm-edit__versions">
+          {(f.versions ?? []).map((v) => (
+            <li key={v.n} data-kept={v.kept ? "" : undefined}>
+              <span className="sdm-edit__vhead">
+                <b>{v.n}</b>
+                {v.by}
+              </span>
+              <span className="sdm-edit__vlabel">{v.label}</span>
+              <span className="sdm-edit__vnote">✓ {v.note}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="sdm-edit__shots" aria-hidden="true">
+          {(f.shots ?? []).map((s, i) => (
+            <span key={i} data-out={s.out ? "" : undefined}>
+              <img src={s.src} alt="" loading="lazy" />
+              <b>{i + 1}</b>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const NAV: readonly { label: string; count: string; icon: ReactNode }[] = [

@@ -390,6 +390,103 @@
         "state": "Approved",
         "datum": "Named from its tags"
       }
+    },
+    {
+      "n": 5,
+      "id": "iterate",
+      "kick": "Iterate",
+      "nav": "Iterate",
+      "title": [
+        "New versions of an ad",
+        "from footage it already has."
+      ],
+      "sub": "In the library's editor, Claude proposes cut-downs and recuts of a clip, checks each version before it is saved, and can re-voice a line for another market. Versions play side by side with no render, then open in Premiere or Final Cut.",
+      "points": [
+        {
+          "text": "Every version checked before it saves"
+        },
+        {
+          "text": "Opens in Premiere or Final Cut"
+        }
+      ],
+      "short": true,
+      "source": "suri-dam #52, #53, #55, #56, #57 (the clip editor, cut-downs, re-voicing)",
+      "frame": {
+        "head": "Notre-DAM / Edit",
+        "datum": "Versions play with no render",
+        "figure": {
+          "kind": "screen",
+          "layout": "edit",
+          "skin": "suri",
+          "app": "Notre-DAM",
+          "title": "Edit · SURI_FINAL_CORE_QUOTE_v3.mp4",
+          "status": "Studio laptop on",
+          "chat": [
+            {
+              "who": "you",
+              "text": "Make a 6-second cut-down for Reels, and a version with the line in German."
+            },
+            {
+              "who": "claude",
+              "text": "Two versions:\n2 · 6 s, the hook and the end card\n3 · the line re-voiced in German\nBoth checked against the cut list."
+            }
+          ],
+          "players": [
+            {
+              "label": "Version 1 · 0:15",
+              "src": "/arcs/suri/iterations/route-2-i1.webp"
+            },
+            {
+              "label": "Version 2 · 0:06",
+              "src": "/arcs/suri/iterations/route-2-i3.webp"
+            }
+          ],
+          "versions": [
+            {
+              "n": 1,
+              "label": "The original",
+              "by": "Editor",
+              "note": "Valid"
+            },
+            {
+              "n": 2,
+              "label": "6 s cut-down for Reels",
+              "by": "Claude",
+              "note": "Valid",
+              "kept": true
+            },
+            {
+              "n": 3,
+              "label": "Line re-voiced in German",
+              "by": "Claude",
+              "note": "Valid"
+            }
+          ],
+          "shots": [
+            {
+              "src": "/arcs/suri/iterations/route-2-i1.webp"
+            },
+            {
+              "src": "/arcs/suri/iterations/photo.webp",
+              "out": true
+            },
+            {
+              "src": "/arcs/suri/iterations/route-2-i2.webp",
+              "out": true
+            },
+            {
+              "src": "/arcs/suri/iterations/route-2-i4.webp",
+              "out": true
+            },
+            {
+              "src": "/arcs/suri/iterations/route-2-i3.webp"
+            },
+            {
+              "src": "/arcs/suri/under-the-glass/end_logo.webp"
+            }
+          ]
+        }
+      }
     }
   ]
 }

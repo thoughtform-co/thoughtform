@@ -64,6 +64,8 @@ export function stillsOf(f: Figure): Still[] {
         ...(f.pictureSrc ? [pic(f.pictureSrc, "1/1")] : []),
         ...(f.playerSrc ? [pic(f.playerSrc)] : []),
         ...(f.strip ?? []).map((x) => pic(x.src)),
+        ...(f.players ?? []).map((x) => pic(x.src)),
+        ...(f.shots ?? []).map((x) => pic(x.src)),
       ];
     }
     default:
