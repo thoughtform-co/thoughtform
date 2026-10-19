@@ -10,10 +10,10 @@ const two = (n: number) => String(n).padStart(2, "0");
 /**
  * The window round one figure (owner, 2026-10-19, frame H of the case
  * explorations: "this looks beautiful … because we have a full-bleed
- * visual"): one hairline with the top-right notch, its diagonal the one gold
- * edge; a head row that is the figure's path (the client, then what the
- * figure is) with an optional state on the right; the figure; a foot row
- * with its number and its datum. The words of the step stay in the held
+ * visual"): one hairline with the top-right and bottom-left notch pair, no
+ * gold on it (owner, 2026-10-19); words only in the top-left corner (the
+ * figure's path: the client, then what it is) and the bottom-right (its
+ * datum). The words of the step stay in the held
  * column, so the window carries only labels, never a sentence.
  *
  * Server; the geometry is CSS (`dossier.css`, `.csd-frame`).
@@ -43,16 +43,9 @@ export function Frame({
             /
           </span>
           <span className="csd-frame__k">{framed.head}</span>
-          {framed.state ? (
-            <span className="csd-frame__state">
-              <i aria-hidden="true" />
-              {framed.state}
-            </span>
-          ) : null}
         </div>
         <div className="csd-frame__body">{children}</div>
-        <div className="csd-frame__foot">
-          <span>Fig. {two(n)}</span>
+        <div className="csd-frame__foot" data-fig={two(n)}>
           {framed.datum ? <span className="csd-frame__datum">{framed.datum}</span> : null}
         </div>
       </div>

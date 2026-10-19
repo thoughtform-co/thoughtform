@@ -253,12 +253,13 @@ describe("the dossier stays self-contained", () => {
     }
   });
 
-  it("cuts its window at the top right only (frame H)", () => {
+  it("cuts its window with the TR + BL pair, no gold on its edge", () => {
     const at = css.indexOf(".csd-frame {");
     const block = css.slice(at, css.indexOf("}", at));
     expect(block).toMatch(/calc\(100% - var\(--ch\)\) 0/);
-    expect(block).toMatch(/100% var\(--ch\)/);
-    expect(block).not.toMatch(/var\(--ch\) 100%/);
+    expect(block).toMatch(/var\(--ch\) 100%/);
+    expect(block).not.toMatch(/0 var\(--ch\),/);
+    expect(css).not.toMatch(/\.csd-frame::after/);
   });
 });
 

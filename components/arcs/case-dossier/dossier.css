@@ -510,18 +510,60 @@
 
 /* c · title-led: the project is the one sans title; who and which team
    ride one mono row above it (sans is what we made, mono who made it for) */
+/* c · the client and the type of work on one line, the project under
+   them at a title's size, the three in the windows' own notched hairline
+   (owner, 2026-10-19: "the workstream and the client logo … on the same
+   line above the title … a subtle frame that's part of our system") */
 .csd[data-head="c"] .csd-case {
-  gap: 12px 14px;
+  --ch: 12px;
+  gap: 14px 16px;
+  padding: 18px 20px 20px;
+  border-bottom: 0;
+  background: rgba(var(--void-deep-rgb), 0.35);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch))
+  );
+}
+.csd[data-head="c"] .csd-case::after {
+  inset: 0;
+  left: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  background: rgba(var(--dawn-rgb), 0.16);
+  pointer-events: none;
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch)),
+    0 0,
+    1px 1px,
+    calc(100% - var(--ch) - 0.414px) 1px,
+    calc(100% - 1px) calc(var(--ch) + 0.414px),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(var(--ch) + 0.414px) calc(100% - 1px),
+    1px calc(100% - var(--ch) - 0.414px),
+    1px 1px
+  );
 }
 .csd[data-head="c"] .csd-case__row[data-row="client"] {
   order: 1;
-  flex-basis: 100%;
 }
 .csd[data-head="c"] .csd-case__row[data-row="team"] {
-  order: 3;
+  order: 2;
 }
 .csd[data-head="c"] .csd-case__row[data-row="project"] {
-  order: 2;
+  order: 3;
+  flex-basis: 100%;
 }
 .csd[data-head="c"] .csd-case__row[data-row="client"],
 .csd[data-head="c"] .csd-case__row[data-row="team"],
@@ -535,16 +577,14 @@
 .csd[data-head="c"] .csd-case .csd-logo__name {
   color: var(--csd-ink-2);
 }
-/* the project at the type of work's own size, beside it (owner,
-   2026-10-19: "the name of the project … the same size as … Creative
-   operations"); the step's title is the one big line */
+/* the project a size up from the labels, still well under the step's
+   title, which is the one big line */
 .csd[data-head="c"] .csd-case__project {
-  font-family: var(--csd-mono);
-  font-size: 12px;
-  line-height: 1.3;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--csd-ink-2);
+  font-family: var(--csd-sans);
+  font-size: min(22px, 2.8svh);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--csd-ink);
 }
 .csd[data-head="c"] .csd-case .csd-logo__img {
   height: 13px;
@@ -680,48 +720,39 @@
   height: var(--csd-fig-h);
   min-height: 440px;
   background: rgba(var(--void-deep-rgb), 0.35);
-  clip-path: polygon(0 0, calc(100% - var(--ch)) 0, 100% var(--ch), 100% 100%, 0 100%);
-}
-.csd-frame::before,
-.csd-frame::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ch)) 0,
+    100% var(--ch),
+    100% 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch))
+  );
 }
 /* the edge: a closed evenodd ring, a clip never strokes a border */
 .csd-frame::before {
+  content: "";
+  position: absolute;
   inset: 0;
   z-index: 2;
-  background: rgba(var(--dawn-rgb), 0.16);
+  pointer-events: none;
+  background: rgba(var(--dawn-rgb), 0.18);
   clip-path: polygon(
     evenodd,
     0 0,
     calc(100% - var(--ch)) 0,
     100% var(--ch),
     100% 100%,
-    0 100%,
+    var(--ch) 100%,
+    0 calc(100% - var(--ch)),
     0 0,
     1px 1px,
     calc(100% - var(--ch) - 0.414px) 1px,
     calc(100% - 1px) calc(var(--ch) + 0.414px),
     calc(100% - 1px) calc(100% - 1px),
-    1px calc(100% - 1px),
+    calc(var(--ch) + 0.414px) calc(100% - 1px),
+    1px calc(100% - var(--ch) - 0.414px),
     1px 1px
-  );
-}
-/* the notch's diagonal, gold */
-.csd-frame::after {
-  top: 0;
-  right: 0;
-  z-index: 3;
-  width: var(--ch);
-  height: var(--ch);
-  background: linear-gradient(
-    to top right,
-    transparent calc(50% - 0.75px),
-    var(--csd-gold) calc(50% - 0.75px),
-    var(--csd-gold) calc(50% + 0.75px),
-    transparent calc(50% + 0.75px)
   );
 }
 .csd-frame__head,
@@ -739,8 +770,8 @@
   border-bottom: 1px solid var(--csd-rule);
 }
 .csd-frame__foot {
-  justify-content: space-between;
-  padding: 0 14px;
+  justify-content: flex-end;
+  padding: 0 14px 0 calc(var(--ch) + 14px);
   border-top: 1px solid var(--csd-rule);
 }
 .csd-frame__caret {
