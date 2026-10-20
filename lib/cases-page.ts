@@ -29,7 +29,7 @@ export const CASES_PAGE: ArcDef = {
   date: "2026-10-19",
   cardTitle: "Approach and cases",
   cardLede:
-    "The approach in three steps, then three brands where it runs: an asset library, two films and a motion ad.",
+    "The approach in three steps, then three brands where it runs: an asset library, a briefing flow and a motion ad.",
   cardImage: { src: "/images/services/embedded.webp", alt: "" },
   hero: {
     eyebrow: "Thoughtform · Cases · October 2026",
