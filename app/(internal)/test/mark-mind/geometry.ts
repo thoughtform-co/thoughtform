@@ -25,14 +25,21 @@ export type P2 = [number, number];
 export const MARK = { cx: 209.3, cy: 229.4, unit: 2.1 } as const;
 
 export const R = 100; // the drum's radius
-export const SLICE = 4.5; // one contour slice
-export const H = SLICE * 12; // the drum's height
-export const BASE = SLICE * 3; // the channel floor: the mark is cut down to here
+export const SLICE = 9.75; // one contour slice, one storey
+export const H = SLICE * 10; // ten storeys: at the default 38° camera the whole drum's
+// silhouette is a circle (2R(1 − sin e)/cos e), the circle the mark's ring hugs
+export const BASE = 0; // the bars are cut through the whole drum: black voids
 
 export const toPlane = ([mx, my]: P2): P2 => [(mx - MARK.cx) / MARK.unit, (my - MARK.cy) / MARK.unit];
 
-/** The level bar's band, plane v. */
-export const LEVEL = { v0: (219.0 - MARK.cy) / MARK.unit, v1: (236.2 - MARK.cy) / MARK.unit } as const;
+/** The channels are the bars a little widened, so the cut faces read at an
+    angle (1 is the mark exact). */
+export const GAP = 0.04; // the slots are cut in screen space now (paint.ts, screenMark); these only part the prisms
+
+const levelMid = ((219.0 + 236.2) / 2 - MARK.cy) / MARK.unit;
+const levelHalf = ((236.2 - 219.0) / 2 / MARK.unit) * GAP;
+/** The level bar's band, plane v; it runs out past the rim to the mark's x 431. */
+export const LEVEL = { v0: levelMid - levelHalf, v1: levelMid + levelHalf, uEnd: (431 - MARK.cx) / MARK.unit } as const;
 
 const slantA = toPlane([238.75, 20]);
 const slantB = toPlane([169.5, 400]);
@@ -43,7 +50,9 @@ export const SLANT = {
   at: slantA,
   dir: [(slantB[0] - slantA[0]) / slantLen, (slantB[1] - slantA[1]) / slantLen] as P2,
   normal: [(slantB[1] - slantA[1]) / slantLen, -(slantB[0] - slantA[0]) / slantLen] as P2,
-  half: 23.12 / 2 / MARK.unit,
+  half: (23.12 / 2 / MARK.unit) * GAP,
+  /** where it runs out past the rim at the top: the mark's y 0 */
+  vEnd: (0 - MARK.cy) / MARK.unit,
 };
 /** Signed distance across the slanted bar, + toward the machine side. */
 export const across = ([u, v]: P2) => (u - SLANT.at[0]) * SLANT.normal[0] + (v - SLANT.at[1]) * SLANT.normal[1];
@@ -56,9 +65,10 @@ export const CROSSING: P2 = (() => {
   return [SLANT.at[0] + SLANT.dir[0] * t, v];
 })();
 
-/** The stepped block, the well at the crossing: the bar path's own outline
-    there (mark units), so the cut is the mark's. */
-export const WELL: P2[] = (
+/** The stepped block at the crossing: the bar path's own outline there (mark
+    units), widened with the channels about the crossing. In the mark it is
+    solid gold; here it is a gold pillar standing in the channels. */
+export const BLOCK: P2[] = (
   [
     [174, 205.1],
     [192.5, 205.1],
@@ -75,7 +85,65 @@ export const WELL: P2[] = (
     [161.2, 218.9],
     [171.5, 218.8],
   ] as P2[]
-).map(toPlane);
+)
+  .map(toPlane)
+  .map(([u, v]) => [CROSSING[0] + (u - CROSSING[0]) * GAP, CROSSING[1] + (v - CROSSING[1]) * GAP] as P2);
+
+/** The ring of the mark, measured from the logo every 4° round the ring's
+    centre (angle from the right, clockwise as seen, y down): its inner and
+    outer radius in mark units, 0 where it is broken (where the bars leave). */
+const RING: [number, number, number][] = [
+  [0, 0, 0], [4, 0, 0], [8, 188.5, 202.8], [12, 189.8, 202.5], [16, 190.8, 202.5], [20, 192, 202.2], [24, 193, 202.2], [28, 194.2, 202.2],
+  [32, 195.2, 202.2], [36, 196.2, 202.2], [40, 196.8, 202.5], [44, 197.5, 202.8], [48, 198, 203], [52, 198.5, 203.2], [56, 198.8, 203.8],
+  [60, 199, 204], [64, 199, 204.5], [68, 198.8, 204.8], [72, 198.5, 205], [76, 197.5, 205.2], [80, 196.8, 205.5], [84, 195.5, 205.8],
+  [88, 194.2, 206.2], [92, 192.5, 206.5], [96, 191.2, 206.8], [100, 189.2, 207], [104, 187.8, 207.5], [108, 186.2, 207.8], [112, 184.8, 207.8],
+  [116, 183.5, 208.2], [120, 182.5, 208.5], [124, 181.5, 208.8], [128, 180.8, 208.8], [132, 180.2, 209.2], [136, 179.8, 209.5], [140, 179.8, 209.8],
+  [144, 179.8, 209.8], [148, 180, 210], [152, 180.2, 210], [156, 180.8, 210], [160, 181.2, 210], [164, 182.2, 210], [168, 183.5, 209.8],
+  [172, 184.5, 209.8], [176, 185.8, 209.5], [180, 187.2, 209.5], [184, 188.5, 208.8], [188, 189.8, 208.5], [192, 191.2, 208.2], [196, 193, 207.8],
+  [200, 194, 207.2], [204, 195.2, 206.8], [208, 196.5, 206.2], [212, 197.5, 206], [216, 198.2, 205.8], [220, 198.5, 205.5], [224, 199, 205.2],
+  [228, 199.2, 205], [232, 199.2, 205], [236, 199.2, 205.2], [240, 199.2, 205.2], [244, 198.8, 205.2], [248, 198, 205.5], [252, 197.2, 205.5],
+  [256, 196, 205.8], [260, 195, 206], [264, 193.5, 206], [268, 192.5, 206.2], [272, 0, 0], [276, 0, 0], [280, 0, 0], [284, 0, 0],
+  [288, 186.2, 206.8], [292, 185.2, 206.8], [296, 184.5, 206.8], [300, 183.5, 206.8], [304, 183, 206.8], [308, 182.8, 206.5], [312, 182.2, 206.5],
+  [316, 182, 206.2], [320, 182, 206.2], [324, 182, 206], [328, 182, 205.8], [332, 182.2, 205.8], [336, 182.2, 205.2], [340, 182.8, 205],
+  [344, 183.2, 204.5], [348, 183.8, 204.2], [352, 186.2, 203.8], [356, 0, 0],
+];
+
+/** The crescent as plane polygons, the ring thinned toward its outer edge by
+    `thin` (1 is the logo's own band) and set on the drum's rim: one polygon
+    per unbroken run, each its outer edge out and its inner edge back. */
+export function crescentOf(thin: number): P2[][] {
+  const runs: P2[][] = [];
+  let outer: P2[] = [];
+  let inner: P2[] = [];
+  const flush = () => {
+    if (outer.length > 1) runs.push([...outer, ...inner.reverse()]);
+    outer = [];
+    inner = [];
+  };
+  const scale = R / 206;
+  for (let i = 0; i <= RING.length * 4; i++) {
+    const deg = i % 360;
+    const a = Math.floor(deg / 4);
+    const b = (a + 1) % RING.length;
+    const f = (deg % 4) / 4;
+    const [, i0, o0] = RING[a]!;
+    const [, i1, o1] = RING[b]!;
+    if (!o0 || !o1) {
+      flush();
+      if (i >= 360) break;
+      continue;
+    }
+    const ro = Math.min(R, (o0 + (o1 - o0) * f) * scale);
+    const ri = (i0 + (i1 - i0) * f) * scale;
+    const rIn = ro - (ro - ri) * thin;
+    const t = (deg * Math.PI) / 180;
+    outer.push([Math.cos(t) * ro, Math.sin(t) * ro]);
+    inner.push([Math.cos(t) * rIn, Math.sin(t) * rIn]);
+    if (i >= 360 && deg === 8) break;
+  }
+  flush();
+  return runs;
+}
 
 /** Keep the part of a polygon where f(p) <= 0 (Sutherland–Hodgman). */
 export function clip(poly: P2[], f: (p: P2) => number): P2[] {
@@ -158,6 +226,7 @@ export function sectorsOf(floorsMode: "section" | "terrace"): Sector[] {
       const poly = sectorPoly(side, upper);
       let floors: Floor[] = [{ poly, z0: BASE, z: H }];
       if (side === "people" && floorsMode === "terrace") {
+        // one storey a step
         floors = [0, 1, 2].map((k) => ({
           poly: k === 0 ? poly : clip(poly, (q) => across(q) + SLANT.half + TERRACE_STEP * k),
           z0: k === 0 ? BASE : H - SLICE * (3 - k),

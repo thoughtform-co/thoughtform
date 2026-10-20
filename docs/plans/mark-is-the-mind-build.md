@@ -64,3 +64,15 @@ This avoids the kit's 3D turn mode (`kit/turn.mjs`). That mode is beta, SVG-only
 2. **The mark's depth:** light (d4), channels (d3), blades (d2) or band (d1). Channels and blades suit the turn best: both are fixed cuts the contents flow past.
 3. **The turn:** contents flow through a fixed mark (recommended), or the whole object spins.
 4. **The direction:** clockwise, people into machine across the slanted bar, back across the level bar.
+
+## Status, 2026-10-19
+
+Built in the lab, `app/(internal)/test/mark-mind/` (http://localhost:3031/test/mark-mind while the shared dev server runs on 3031), new files only:
+
+- `geometry.ts`: the mark measured from the logo at 4 px a unit (slanted bar 79.7°, level bar y 219–236.2, the stepped block from the bar path's own outline), the four sector prisms, terraces. Channels are the bars widened 1.3× (`GAP`) so the cut faces read at an angle.
+- `contents.ts`: seeded offices (bays, walls with doors, desks, meeting tables, people, a few green) and circuits (routed traces on a 45° grid, vias, dies), laid out in the drum's turning frame.
+- `paint.ts`: one canvas painter in the kit's grammar. The parts that do not turn (halo, base, sector bodies and tops, the section faces; the gold) are cached offscreen per size, theme and state; each frame draws only the turning contents, the dot stream across the slanted channel (bone into gold at the top, gold into bone at the bottom), the breathing light and the raster lines.
+- `?floors=section|terrace`, `?theme=light`, `?el=35.264`, `?part=0..1`, `?detail=0..1`, `?mode=scroll` (hero → section → deep), `?still=1&t=`.
+- `scripts/capture-mark-mind.mjs`: stills; `docs/design/mark-mind/final/` holds the 1920 set.
+
+Measured in headless Chrome (software canvas): 390 px phone at 60 fps; 1440 at 1.5× density about 19 ms a frame in section mode, about 31 ms with terraces. Not yet done: the fraying as a real swarm formation (it is procedural raster lines), a GL glow (a canvas radial for now), the depth treatment beyond a gold slice (d3 channels are cut; the crescent is the logo's flat gold), the port into `StackFlow`.

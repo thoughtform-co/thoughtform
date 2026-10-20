@@ -1,0 +1,7 @@
+{
+  "id": "s1",
+  "title": "The mark exact",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-4/c4a_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change ONE thing: the gold structure must match the Thoughtform brand mark in the second image exactly in its geometry. The thin gold outer circle becomes the mark's crescent: noticeably thicker along the lower left, tapering thin toward the top, and broken open at the upper right where the steep slanted gap leaves it. The level gap runs out past the circle on the right, as the mark's level bar does, and the circle has a short break there. The notched, stepped block where the two gaps cross keeps its shape. Keep exactly: the camera, the near-black ground, the palette (bone white, muted gold, sage green only), the hairline line weight, the offices with people in the left sectors, the gold circuits in the right sectors, and the raster lines fraying away at the upper left, and everything inside the four sectors. No words or letters."
+}

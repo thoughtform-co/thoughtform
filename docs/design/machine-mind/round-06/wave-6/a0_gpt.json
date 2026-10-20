@@ -1,0 +1,7 @@
+{
+  "id": "a0",
+  "title": "The clean base",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-5/s2_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change only these three small things, nothing else: (1) the level gap runs out past the circle on the right as the brand mark's level bar does, with a short break in the crescent there; (2) the stepped block where the two gaps cross glows softly warm gold-white, the one lit point, with a small halo; (3) the small green trees and plants are removed. Keep exactly: the drum of stacked slices and its walls, the four sectors and their contents (offices with people on the left, gold circuits on the right), the gold crescent, the two gaps and the stepped block, the fraying raster lines at the upper left, the camera, the near-black ground, the palette (bone white, muted gold, sage green only) and the hairline line weight, and the amount of detail in the offices. No words or letters."
+}
