@@ -1,0 +1,7 @@
+{
+  "id": "s4",
+  "title": "The star",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-5/s3_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change ONE thing: the stepped block where the two gaps cross becomes the one lit thing in the picture. It glows warm gold-white with a small soft halo, and a few fine dotted rays run a short way along the two gaps. Nothing else becomes brighter. Keep exactly everything else: the silhouette, the walls, the crescent, the sectors and their contents, the fraying, the palette and the camera. No words or letters."
+}

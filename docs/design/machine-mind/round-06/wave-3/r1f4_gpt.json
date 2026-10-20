@@ -1,0 +1,10 @@
+{
+  "id": "r1f4",
+  "title": "The ring lies down into the stack · frame 4",
+  "model": "gpt-image-2-2026-04-21",
+  "refs": [
+    "docs/design/machine-mind/round-06/wave-3/r1f3_gpt.png",
+    "mark"
+  ],
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly, engraved into the top face of the central gold dot plate, lying flat on the plate and foreshortened with it.\n\nFRAME 4 OF 4, THE DEEP VIEW. Edit the base image. Keep exactly: the camera, the near-black ground, the palette (bone white, muted gold, sage green only), the hairline line weight, the square-dot language of the plates, and the gold central plate with the engraved Thoughtform mark in the same place and size. No words or letters anywhere. Change one thing: the ghost arcs are gone and the three plates pull apart vertically, far apart, joined by thin dotted vertical lines; from the top plate thin dotted lines run out to the left edge, from the bottom plate thin dotted lines run out to the right edge, each ending in a small empty square outline. Sparse and calm: this is the simplest frame."
+}

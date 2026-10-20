@@ -1,0 +1,7 @@
+{
+  "id": "d3",
+  "title": "Channels",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-6/a0_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change ONE thing: give the brand mark depth by cutting it into the drum. The two gaps become channels sunk into the drum, with visible inner walls made of the stacked slices and a fine gold line running along each channel floor; the stepped block is a sunken, stepped well at the crossing with the lit point at its bottom. The crescent gains a slight thickness, like a gold rim on the drum's top edge. Restrained. Keep exactly everything else: the drum of stacked slices and its walls, the four sectors and their contents (offices with people on the left, gold circuits on the right), the gold crescent, the two gaps and the stepped block, the fraying raster lines at the upper left, the camera, the near-black ground, the palette (bone white, muted gold, sage green only) and the hairline line weight. No words or letters."
+}

@@ -1,0 +1,7 @@
+{
+  "id": "s5",
+  "title": "The hero frame",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-5/s4_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change ONE thing: set the object in a wide landscape frame with generous black on both sides. The object stays exactly as it is, the same shape, detail, proportions and lighting, centred in the frame and filling about 70 percent of the frame's height. No words or letters."
+}

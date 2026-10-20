@@ -1,0 +1,7 @@
+{
+  "id": "s2",
+  "title": "One solid",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-5/s1_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change ONE thing: the four sectors become four parts of one solid drum built of stacked thin contour slices. Every sector gets the same outer wall of stacked slices, the same height and the same number of slices, seen from the same slightly-above isometric view, so the right-hand sectors gain the wall the left-hand sectors already have. The tops of the sectors keep their etched contents. Keep exactly: the gold crescent, the two gaps, the stepped block and the point of light where they are, and the camera, the near-black ground, the palette (bone white, muted gold, sage green only), the hairline line weight, the offices with people in the left sectors, the gold circuits in the right sectors, and the raster lines fraying away at the upper left. No words or letters."
+}

@@ -1,0 +1,7 @@
+{
+  "id": "s3",
+  "title": "Restraint",
+  "model": "gpt-image-2-2026-04-21",
+  "base": "docs/design/machine-mind/round-06/wave-5/s2_gpt.png",
+  "prompt": "REFERENCE IMAGE ROLES:\n— the previous frame of this storyboard. BASE IMAGE: edit it as instructed; everything the instruction does not change stays exactly as it is.\n— a gold emblem on black: an open circle broken at the upper right, crossed by a level bar and a steep slanted bar that meet in a small stepped block. OBJECT REFERENCE: this is the Thoughtform brand mark. Reproduce its shape exactly.\n\nEdit the base image. Change ONE thing: halve the amount of detail. On the left, keep the office walls and desks but show people only as single tiny bone-white dots, and remove every green tree and plant. On the right, keep fewer and cleaner gold circuit traces and only a few die blocks, with more black between them. Neither emptier than a sketch nor as busy as the base. Keep exactly: the silhouette, the drum walls, the gold crescent, the two gaps, the stepped block, the fraying at the upper left, the palette and the camera. No words or letters."
+}

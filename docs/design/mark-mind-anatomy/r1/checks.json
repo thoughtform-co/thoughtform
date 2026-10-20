@@ -1,0 +1,28 @@
+{
+  "weights": {
+    "1": 36
+  },
+  "weightCount": 1,
+  "round": "r1",
+  "stage": "blockout",
+  "port": "3031",
+  "query": null,
+  "at": "2026-10-20T07:30:18.275Z",
+  "silhouetteIoU": 0.8545,
+  "topLogoIoU": 0.9324,
+  "topLogoPixels512": {
+    "both": 24711,
+    "logoOnly": 242,
+    "oursOnly": 1549
+  },
+  "integration": {
+    "sectorsWithMark": 4,
+    "sectorsWithoutMark": 1,
+    "noMarkNoSectors": true,
+    "markHiddenByDrum": 0.406,
+    "partHidden": true,
+    "sharedLight": "structural: the crescent, keys, block and drum walls all take their tone from one toneIndex(normal) under one LIGHT (scene.ts)"
+  },
+  "squintCorrelation": 0.352,
+  "silhouetteIoUChannelsClosed": 0.918
+}
