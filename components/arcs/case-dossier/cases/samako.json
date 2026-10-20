@@ -16,8 +16,8 @@
   },
   "intro": {
     "line": [
-      "Four tools behind every brief,",
-      "and a strategist carrying it between them."
+      "Writing one brief meant",
+      "copy-pasting between four tools."
     ],
     "facts": [
       {
@@ -218,7 +218,7 @@
           ],
           "center": {
             "name": "Strategist",
-            "note": "Carries it all"
+            "note": "Does it all by hand"
           },
           "carry": [
             "Copy",
@@ -238,7 +238,7 @@
         "One connector lets Claude",
         "read all four."
       ],
-      "sub": "It runs inside Claude, without opening the tools. Claude reads the results, the brief template, the designs and the naming rules, along with the skills that hold how Samako writes.",
+      "sub": "It works inside Claude, so nobody has to open the tools. Claude reads the results, the brief template, the designs and the naming rules, plus Samako's own writing guidelines, saved as skills.",
       "points": [
         {
           "text": "Works in any Claude app"

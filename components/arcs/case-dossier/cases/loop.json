@@ -69,10 +69,10 @@
       "kick": "The setup",
       "nav": "Setup",
       "title": [
-        "A skill, in a plugin,",
-        "on Loop's shelf."
+        "The motion skill comes as a plugin",
+        "Loop turns on once."
       ],
-      "sub": "Nobody installs anything by hand: the studio turns the plugin on once, and the skill is there in every Claude app they use.",
+      "sub": "Nobody installs anything by hand, and the skill shows up in every Claude app the studio uses.",
       "points": [
         {
           "text": "Tested: 15 of 15 runs pass"
@@ -344,7 +344,7 @@
         "Its concept: the earplug",
         "is the O in BOO."
       ],
-      "sub": "One idea, one hinge. In a matte paper world the only shiny, real thing is the product, so the O is a letter, the product and a door the camera dives through.",
+      "sub": "The whole ad hangs on one idea. Everything is matte paper except the product, which is real and shiny, so the O can be a letter, the earplug and a door the camera dives through.",
       "points": [
         {
           "text": "Loop's real gold render, never redrawn"
