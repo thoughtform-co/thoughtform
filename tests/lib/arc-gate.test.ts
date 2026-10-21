@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  OPEN_ARC_KEYS,
   arcGateKey,
   arcPassCookieName,
   arcPassToken,
   arcPasswordFor,
   safeArcNext,
 } from "@/lib/arcs/arcGate";
+import { UX_MEETUP_ARC } from "@/lib/arcs/content/ux-meetup";
+import { arcHref } from "@/lib/arcs/routes";
 
 /**
  * The arcs' password (ADR-135). The gate is only as good as its idea of what
@@ -53,6 +56,16 @@ describe("the arcs' password (ADR-135)", () => {
     expect(arcPasswordFor("SURI_PROPOSAL", env)).toBe("shared");
     expect(arcPasswordFor("SURI_PROPOSAL", {})).toBeNull();
     expect(arcPasswordFor("PANDORA_PROPOSAL", { ARCS_PASSWORD: "" })).toBeNull();
+  });
+
+  it("leaves an open page without a password, whatever the environment says", () => {
+    const env = { ARC_PASSWORD_THOUGHTFORM_UX_MEETUP: "own", ARCS_PASSWORD: "shared" };
+    expect(arcPasswordFor("THOUGHTFORM_UX_MEETUP", env)).toBeNull();
+    expect(arcPasswordFor("THOUGHTFORM_WORKSHOP_V3", env)).toBe("shared");
+  });
+
+  it("keys every open page at an address the router serves (the UX meetup talk)", () => {
+    expect([...OPEN_ARC_KEYS]).toEqual([arcGateKey(arcHref(UX_MEETUP_ARC))]);
   });
 
   it("keeps the pass to a hash, per page", async () => {
@@ -121,6 +134,19 @@ describe("the gate, end to end (ADR-135)", () => {
       // Another arc has no password of its own and no shared one: open.
       const other = await proxy(new NextRequest("http://localhost/arcs/suri-proposal"));
       expect(other.headers.get("location")).toBeNull();
+    });
+  });
+
+  it("serves an open page under the shared password, its payload too", async () => {
+    const { NextRequest } = await import("next/server");
+    const { proxy } = await import("@/proxy");
+    await withEnv({ ARCS_PASSWORD: "shared" }, async () => {
+      for (const path of ["/arcs/thoughtform/ux-meetup", "/arcs/thoughtform/ux-meetup.rsc"]) {
+        const res = await proxy(new NextRequest(`http://localhost${path}`));
+        expect(res.headers.get("location")).toBeNull();
+      }
+      const gated = await proxy(new NextRequest("http://localhost/arcs/thoughtform/workshop-v3"));
+      expect(gated.status).toBe(307);
     });
   });
 

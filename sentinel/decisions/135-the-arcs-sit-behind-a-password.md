@@ -116,6 +116,22 @@ next=/arcs/x` sent a Windows path and the route answered as if `next` were
   `NODE_ENV=production` the pass is `Secure`; send it as a header to probe a
   local build. Chromium treats `localhost` as secure and keeps it.
 
+## U1 — an open page (2026-10-21, owner)
+
+> Can you remove the login gate for the UX meetup page … so I can share it?
+
+`ARCS_PASSWORD` is set in production and covers every arc, and an empty
+`ARC_PASSWORD_<KEY>` falls through to it, so no variable can open one page.
+`OPEN_ARC_KEYS` in `lib/arcs/arcGate.ts` is the list of pages that have no
+password whatever the environment says; `arcPasswordFor` returns `null` for
+them before it reads a variable, so the proxy serves them and the unlock route
+sends a reader straight on. The first row is `THOUGHTFORM_UX_MEETUP`
+(`/arcs/thoughtform/ux-meetup`, ADR-156), its payloads with it. The page keeps
+`noindex`: public by link, not listed. `arc-gate.test.ts` pins the precedence,
+the page served under the shared password with another arc still gated, and
+each open key against the arc's live address (`arcHref`), so a moved arc fails
+here instead of quietly closing.
+
 ## Left open
 
 - `ARCS_PASSWORD` is the owner's to set. Until he does, every arc but the
