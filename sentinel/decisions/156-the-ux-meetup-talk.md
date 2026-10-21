@@ -181,6 +181,7 @@ agent. I want my agent to use your tool.", unattributed by the owner's choice) �
 contact. The alternation law (ADR-155) counts the act as one unit.
 
 **Nothing travels in.**
+
 - The talk runs the terminal grammar (ADR-057) on its own frames: one READER (`useTalkFrame`, a
   passive listener and one rAF) feeds `useArcTerminalMotion`'s `onFrame` and a route-scoped bus;
   `LandingPage` keeps the scroll writer. `useArcTerminalMotion` takes an opt-in `observeDocument`
@@ -201,6 +202,7 @@ drop their own void and read on it: recorded here as this page's exception to AD
 (`components/arcs/figures/`), all on the framing's ONE projection (`framing/iso.ts`), words as DOM
 spans on leaders, one gold object each, a model module per drawing with its true numbers (the
 anatomy skill's method; its filled-solid style is not taken, it fights the house wireframe):
+
 - **The timeline.** Two lanes, digital content in front and digital products behind, January 2023
   to December 2026. A milestone's height is the capability curve that month (METR: task length
   doubles every seven months); the gold rail behind both is training compute on the same scale
@@ -543,7 +545,44 @@ Vesper): a new figure id, `bleed`, which `ArcFigure` renders as the house's sile
 padding so it is exactly one screen and pins at 0. Numbered 09 (the marks hidden), latent space
 10; `ux-meetup.test.ts` pins the new order.
 
+## U15 · The swarm chapter on a phone (2026-10-21, owner: "the mobile version looks bad")
+
+Below the frame tier the swarm does not run (`SwarmAct` mounts at ≥961), so the three sections
+fell back to the proposal's desktop drawings. At 390px those cut their teams off both edges,
+printed their tabs and labels through each other, squeezed the steps into two columns, and let
+the network's title print over the steps. The owner's stills were of `/cases`, which mounts the
+same three components, so the fix is in the components and reaches every page that mounts them
+(`/cases`, this talk, the keynote template), at ≤960 only:
+
+- **`StackFlow`** (`stack-hero.css`) reads as StackHero's phone does: the stack, then each part
+  as plain rows under its own tab, in the flow's order (the four workstreams, Context · Skills ·
+  Evals, the four cards). The line work goes; every word and card is the frame's own element,
+  re-laid by `order`, never a second copy.
+- **`EmbedStack`** reads plain below 961 as under reduced motion: no runway and no hand-over,
+  the steps all open, the closed stack under them cropped to its ink (`embed.css`). The plain
+  branch now clears what the arrival wrote before the query matched (hydration reads it false
+  first): `--es-brief` would otherwise hold the brief at opacity 0.
+- **The masthead** (`masthead.css`) stacks its brief under its title; at a third of 390px the
+  brief's designation and its state had printed through each other.
+- **`NetworkOrg`** reads its last frame below 961 (no scroll reader, so it never takes the
+  steps' stack) and swaps the camera for `.xno-phone`: Marketing's module and its three
+  courses, then the six teams in two columns on one ribbon down the gutter, from the same
+  records (`MKT_NAME`, `COURSES`, `SEATS`).
+- This page's chapter bleeds full width on a phone (`ux-meetup.css`): `.stations` pads 32px a
+  side there and the chapter is not a station.
+
+Verified at 390×844 and 430×932 on `/cases` and this page (no element past either edge but the
+eras' carousel and the gateway), and at 1440×900 on both: every box in the chapter and the
+document height identical to `main`.
+
 ## Left open
+
+- The keynote template's swarm chapter has the same 32px phone gutters this page had, but its
+  sheet cannot take the one-line bleed yet: the pre-commit hook formats a staged sheet whole,
+  and `keynote-template-alpha.test.ts` pins `#an-alien .arc-stage` as written, which Prettier
+  splits. The test or the sheet's formatting has to move first.
+- The X-Bionic proposal's own network (`NetworkPlug`) and plug flow (`PlugFlow`) are still the
+  desktop drawings on a phone; only its steps (`EmbedStack`) took U15.
 
 - The corridor's thesis after the talk still reads "AI sits somewhere between tool and
   collaborator", now an echo of section 05; the owner decides whether it stays.

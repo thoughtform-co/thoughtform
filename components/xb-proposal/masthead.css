@@ -155,3 +155,26 @@
   transform: translate(50%, -50%);
   color: var(--xm-mark-dawn);
 }
+
+/* Below the frame tier the brief goes under the title (owner, 2026-10-21,
+   on a phone: at a third of 390px the brief's designation and its state
+   printed through each other). The crosses come in to stay on screen, and
+   the title's stamp goes: it would sit where the brief's designation
+   rises, and the brief's own stamp closes the head. */
+@media (max-width: 960px) {
+  .xm {
+    --xm-mark-out: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--xm-label-rise) + 24px);
+  }
+  .xm--title {
+    gap: 0;
+  }
+  .xm__brief {
+    justify-self: stretch;
+    max-width: none;
+  }
+  .xm__lead .xm__coord {
+    display: none;
+  }
+}

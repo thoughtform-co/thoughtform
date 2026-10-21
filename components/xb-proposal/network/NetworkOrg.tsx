@@ -167,10 +167,12 @@ export function NetworkOrg({
      seat in the steps' section for the hand-over */
   useEffect(() => {
     const fp = new URLSearchParams(window.location.search).get("netp");
+    /* below the frame tier the section draws its last frame for the column
+       (`.xno-phone`), so nothing reads the scroll or takes the steps' stack */
     const fixedP =
       fp !== null
         ? clamp01(Number(fp))
-        : window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        : window.matchMedia("(prefers-reduced-motion: reduce), (max-width: 960px)").matches
           ? 1
           : null;
     const el = runway.current;
@@ -562,6 +564,44 @@ export function NetworkOrg({
               ];
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Below the frame tier (owner, 2026-10-21, on a phone): the camera's
+          frame is 1200 units wide with every team's words seated over it, so
+          at 390px they ran off both edges and through each other. There the
+          section is its last frame laid out for the column: Marketing's
+          module and its three courses, then the six teams on one ribbon,
+          each its band, its three courses and "Navigate next". The same
+          records, never a second copy. */}
+      <div className="xno-phone">
+        <MastheadTitle lines={TITLE} />
+        <div className="xno-phone__fig">
+          <div className="xno-phone__mod" data-lit="">
+            <span className="xno-phone__band">{MKT_NAME}</span>
+            <ol className="xno-phone__courses">
+              {COURSES.map((c, i) => (
+                <li key={c} data-tone={i}>
+                  {c}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <ul className="xno-phone__teams">
+            {SEATS.map((s) => (
+              <li key={s.name}>
+                <div className="xno-phone__mod">
+                  <span className="xno-phone__band">{s.name}</span>
+                  <span className="xno-phone__slots" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="xno-phone__next">Navigate next</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

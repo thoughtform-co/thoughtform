@@ -98,7 +98,12 @@
      beat whose slot holds the scroll; every other beat's plane is withheld,
      whatever its words are doing, so a drawing never vanishes on the way
      back up and two never stand on each other. */
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat]:not([data-uxm-active]) > .arc-stage > .arc-plane {
+  .tw-root[data-tw-order="talk-first"]
+    #workshop
+    .arc-root[data-motion="terminal"]
+    [data-arc-beat]:not([data-uxm-active])
+    > .arc-stage
+    > .arc-plane {
     visibility: hidden;
   }
 }
@@ -120,10 +125,18 @@
   .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] {
     --uxm-tail: 120svh;
   }
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat] > .arc-beat__tail {
+  .tw-root[data-tw-order="talk-first"]
+    #workshop
+    .arc-root[data-motion="terminal"]
+    [data-arc-beat]
+    > .arc-beat__tail {
     height: var(--uxm-tail);
   }
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] [data-arc-beat] ~ [data-arc-beat] {
+  .tw-root[data-tw-order="talk-first"]
+    #workshop
+    .arc-root[data-motion="terminal"]
+    [data-arc-beat]
+    ~ [data-arc-beat] {
     margin-top: calc(-100svh - 0.38 * var(--uxm-tail));
   }
 }
@@ -132,10 +145,18 @@
    Four cards in one beat: a longer hold than the talk's 120svh, and the next
    beat welded to it by the same rule on this beat's own tail. */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #capability > .arc-beat__tail {
+  .tw-root[data-tw-order="talk-first"]
+    #workshop
+    .arc-root[data-motion="terminal"]
+    #capability
+    > .arc-beat__tail {
     height: 420svh;
   }
-  .tw-root[data-tw-order="talk-first"] #workshop .arc-root[data-motion="terminal"] #capability + [data-arc-beat] {
+  .tw-root[data-tw-order="talk-first"]
+    #workshop
+    .arc-root[data-motion="terminal"]
+    #capability
+    + [data-arc-beat] {
     margin-top: calc(-100svh - 0.38 * 420svh);
   }
 }
@@ -491,14 +512,22 @@ html[data-theme="light"] .fa__dots {
   gap: var(--space-sm);
   text-align: center;
   background:
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 18px 1px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 1px 18px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 18px 1px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 1px 18px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 18px 1px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 1px 18px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 18px 1px no-repeat,
-    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 1px 18px no-repeat;
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 18px 1px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top left / 1px 18px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 18px 1px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) top right / 1px 18px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 18px 1px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom left / 1px 18px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 18px 1px
+      no-repeat,
+    linear-gradient(var(--gold-ink, #caa554), var(--gold-ink, #caa554)) bottom right / 1px 18px
+      no-repeat;
 }
 .fa__quote blockquote {
   margin: 0;
@@ -606,6 +635,13 @@ html[data-theme="light"] .fa__dots {
 }
 .tw-root[data-tw-order="talk-first"] #uxm-swarm .arc-root {
   background: var(--void, #0a0908);
+}
+/* full bleed on a phone, as every station is: `.stations` pads 32px a side
+   there, and the chapter is not a station (owner, 2026-10-21, on a phone) */
+@media (max-width: 960px) {
+  .tw-root[data-tw-order="talk-first"] #uxm-swarm {
+    margin-inline: calc(50% - 50vw);
+  }
 }
 @supports (animation-timeline: scroll(root block)) {
   @media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {

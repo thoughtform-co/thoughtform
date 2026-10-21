@@ -105,7 +105,8 @@ const BODY: Record<StepId, string> = {
 };
 const BODY_HOUSE: Record<StepId, string> = {
   ...BODY,
-  embed: "Thoughtform works inside your creative workstreams while the team uses Claude on real briefs.",
+  embed:
+    "Thoughtform works inside your creative workstreams while the team uses Claude on real briefs.",
 };
 
 /* ── geometry helpers ──────────────────────────────────────────────────── */
@@ -562,7 +563,11 @@ export function EmbedStack({
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [stacked, setStacked] = useState(false);
   const [arriving, setArriving] = useState(false);
-  const plain = useMediaQuery("(prefers-reduced-motion: reduce)");
+  /* Below the frame tier too (owner, 2026-10-21, on a phone): a pinned
+     stage of two columns does not fit a phone's screen, so there it reads
+     as reduced motion does, the steps listed and the stack closed, with no
+     runway and no hand-over (`embed.css` lays it out in one column). */
+  const plain = useMediaQuery("(prefers-reduced-motion: reduce), (max-width: 960px)");
 
   useEffect(() => {
     const el = runway.current;
@@ -573,6 +578,15 @@ export function EmbedStack({
         g?.setAttribute("transform", `translate(0 ${i * GAP.closed})`)
       );
       s.style.transform = "";
+      /* and nothing the arrival wrote before the query matched (hydration
+         reads it false first): the brief's clock, the donor's hand-over */
+      if (arrive) {
+        travel.current?.removeAttribute("transform");
+        el.parentElement?.style.removeProperty("--es-brief");
+        const donor = document.querySelector<HTMLElement>(".sh");
+        donor?.removeAttribute("data-handed");
+        donor?.style.removeProperty("--sh-away");
+      }
       return;
     }
     let raf = 0;
