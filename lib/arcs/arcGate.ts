@@ -15,6 +15,9 @@
  * every local dev server, serves the arcs as before; the gate arms the moment
  * a variable is set. That is deliberate — failing closed would lock every
  * forwarded link on the push — and it is stated wherever the gate is.
+ * ⚠ A PAGE IN `OPEN_ARC_KEYS` HAS NO PASSWORD WHATEVER THE ENVIRONMENT SAYS:
+ * `ARCS_PASSWORD` covers every arc, so opening one page takes a row here, not
+ * a variable (an empty `ARC_PASSWORD_<KEY>` falls through to the shared one).
  * ⚠ `/arcs` ITSELF IS NOT GATED HERE: the overview is the owner's page and has
  * its own gate (`assertOwner`, ADR-117). ⚠ STATIC FILES UNDER `/arcs/` ARE NOT
  * GATED: the homepage's own pictures live in `public/arcs/`, and a path with a
@@ -66,8 +69,17 @@ export function arcGateKey(rawPathname: string): string | null {
 
 type Env = Record<string, string | undefined>;
 
-/** The password for a key, most specific first; `null` when none is set. */
+/**
+ * The arc pages that are public by link, never gated. The UX meetup talk
+ * (owner, 2026-10-21: "remove the login gate for the UX meetup page … so I
+ * can share it"): given in a room on 15 October, now handed round after it.
+ */
+export const OPEN_ARC_KEYS: ReadonlySet<string> = new Set(["THOUGHTFORM_UX_MEETUP"]);
+
+/** The password for a key, most specific first; `null` when none is set or
+ *  the page is open. */
 export function arcPasswordFor(key: string, env: Env): string | null {
+  if (OPEN_ARC_KEYS.has(key)) return null;
   const own = env[`ARC_PASSWORD_${key}`];
   if (own) return own;
   return env.ARCS_PASSWORD || null;
