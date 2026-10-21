@@ -274,3 +274,146 @@
     color: var(--xb-text-2);
   }
 }
+
+/* ---- the phone stage (ADR-160) ---- */
+
+/* (owner, 2026-10-21: keep "our cool transitions" on a phone) On a phone
+   with room for it, a page that asks for it (`phone="stage"`) pins the
+   column figure for the stage's travel and plays the desktop's acts on it:
+   as the band rises, Marketing's name and its three courses type in; then
+   the ribbon runs down the gutter and every team grows from its band into
+   the module as its stub lands, in the desktop's order (`TURNS`), "Navigate
+   next" lit once it has. A team grows by its housing's own floor moving, so
+   no box ever reflows. Tightened to fit a 640px frame. */
+.xno-travel {
+  display: none;
+}
+@media (max-width: 960px) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+  .xn.xno[data-phone="stage"] {
+    padding-top: 24px;
+    padding-bottom: 0;
+  }
+  .xno[data-phone="stage"] .xno-phone {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    box-sizing: border-box;
+    height: 100dvh;
+    align-content: center;
+    gap: 20px;
+    margin: 0 -24px;
+    padding: calc(var(--mobile-chrome-top, 56px) + 8px) 24px
+      calc(var(--mobile-chrome-bottom, 56px) + 8px);
+    background: var(--xb-ground);
+  }
+  .xno[data-phone="stage"] .xno-phone__fig {
+    --team-h: 80px;
+    gap: 24px;
+  }
+  .xno[data-phone="stage"] .xno-phone__courses li {
+    height: 24px;
+  }
+  .xno[data-phone="stage"] .xno-phone__teams {
+    gap: 12px 24px;
+  }
+  .xno[data-phone="stage"] .xno-phone__slots {
+    gap: 3px;
+    padding: 8px 10px 6px;
+  }
+  .xno[data-phone="stage"] .xno-phone__slots i {
+    height: 5px;
+  }
+  .xno[data-phone="stage"] .xno-phone__next {
+    padding-bottom: 8px;
+    transition: opacity 300ms ease;
+  }
+
+  /* a team grows from its band once its ribbon lands: the housing's floor */
+  .xno[data-phone="stage"] .xno-phone__teams .xno-phone__mod {
+    --bot: calc(var(--mod-band) + (100% - var(--mod-band)) * var(--grow, 1));
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--mod-cut)) 0,
+      100% var(--mod-cut),
+      100% var(--bot),
+      0 var(--bot)
+    );
+  }
+  .xno[data-phone="stage"] .xno-phone__teams .xno-phone__mod::after {
+    clip-path: polygon(
+      evenodd,
+      0 0,
+      calc(100% - var(--mod-cut)) 0,
+      100% var(--mod-cut),
+      100% var(--bot),
+      0 var(--bot),
+      0 0,
+      1px 1px,
+      1px calc(var(--bot) - 1px),
+      calc(100% - 1px) calc(var(--bot) - 1px),
+      calc(100% - 1px) calc(var(--mod-cut) + 0.414px),
+      calc(100% - var(--mod-cut) - 0.414px) 1px,
+      1px 1px
+    );
+  }
+
+  /* the ribbon, drawn down the gutter as far as the lowest team it reached */
+  .xno[data-phone="stage"] .xno-phone__teams::before {
+    transform-origin: top;
+    transform: scaleY(var(--trunk, 1));
+  }
+  .xno[data-phone="stage"] .xno-phone__teams::after {
+    opacity: clamp(0, var(--trunk, 1) * 20, 1);
+  }
+  /* a team's stub, out of the ribbon, and its port once it has landed */
+  .xno[data-phone="stage"] .xno-phone__teams > li::before {
+    transform: scaleX(clamp(0, (var(--rib, 1) - 0.5) * 2, 1));
+  }
+  .xno[data-phone="stage"] .xno-phone__teams > li:nth-child(odd)::before {
+    transform-origin: right;
+  }
+  .xno[data-phone="stage"] .xno-phone__teams > li:nth-child(even)::before {
+    transform-origin: left;
+  }
+  .xno[data-phone="stage"] .xno-phone__teams > li::after {
+    opacity: clamp(0, (var(--rib, 1) - 0.9) * 10, 1);
+  }
+  /* quiet until its ribbon lands, as the desktop's own team band */
+  .xno[data-phone="stage"] .xno-phone__teams > li:not([data-on]) .xno-phone__band {
+    color: color-mix(in srgb, var(--xb-gold) 45%, transparent);
+  }
+  .xno[data-phone="stage"] .xno-phone__teams > li:not([data-on]) .xno-phone__next {
+    opacity: 0;
+  }
+  .xno[data-phone="stage"] .xno-phone__teams > li:not([data-on]) .xno-phone__slots i:first-child {
+    border-color: color-mix(in srgb, var(--tone) 40%, transparent);
+    background: var(--xb-ground-2);
+  }
+
+  /* the head of a word being typed: a block a character wide */
+  .xno[data-phone="stage"] .xno-phone__tw[data-typing]::after {
+    content: "";
+    display: inline-block;
+    width: 0.6em;
+    height: 1em;
+    margin-left: 1px;
+    vertical-align: -0.15em;
+    background: currentColor;
+  }
+
+  /* the band's travel, and a seat at every dwell */
+  .xno[data-phone="stage"] .xno-travel {
+    position: relative;
+    display: block;
+    height: var(--xno-travel);
+  }
+  .xno[data-phone="stage"] .xno-seat {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--seat) - 100dvh);
+    height: var(--seat-len);
+    pointer-events: none;
+    scroll-snap-align: start;
+  }
+}

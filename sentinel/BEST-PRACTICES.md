@@ -1918,6 +1918,15 @@ clip, and must draw a rule. **A material gate outlives the shape gate**, because
 it fails on the deleted thing COMING BACK rather than on the shape it happened
 to have.
 
+## A stage gated in CSS and in JS is gated by one literal (ADR-160, 2026-10-21)
+
+The phone stages switch a section's box (a sticky band, a travel spacer) in CSS and its reader
+(the scrub, the observer) in JS. Two hand-written queries that disagree by one clause leave a
+range where the box is pinned and nothing writes to it, or the writer scrubs a box that flows.
+**One exported constant is the hook's query and each sheet's `@media` line, character for
+character**, and a source test reads the sheets for it. The fallback below the gate is then the
+media query alone: no JS decides which layout a short phone or reduced motion gets.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.

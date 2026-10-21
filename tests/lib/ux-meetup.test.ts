@@ -7,13 +7,15 @@ import { UX_MEETUP_JOURNEY_ORDER } from "@/app/(marketing)/arcs/thoughtform/ux-m
 import { moveTalkBeforeCorridor } from "@/app/(marketing)/arcs/thoughtform/ux-meetup/order";
 import { workshopV3Tracks } from "@/app/(marketing)/arcs/thoughtform/workshop-v3/WorkshopProof";
 import { BRAIN, brainModel, inside } from "@/components/arcs/figures/foundation/brain";
-import { CARDS_END, STACK_C, axesAt, plateOrigin, sheetPoses } from "@/components/arcs/figures/foundation/scene";
-import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
 import {
-  UX_MEETUP_ARC,
-  UX_MEETUP_HERO,
-  UX_MEETUP_PROOF_LEDES,
-} from "@/lib/arcs/content/ux-meetup";
+  CARDS_END,
+  STACK_C,
+  axesAt,
+  plateOrigin,
+  sheetPoses,
+} from "@/components/arcs/figures/foundation/scene";
+import { WORKSHOP_INTRO } from "@/lib/arcs/content/shared/workshopIntro";
+import { UX_MEETUP_ARC, UX_MEETUP_HERO, UX_MEETUP_PROOF_LEDES } from "@/lib/arcs/content/ux-meetup";
 import { heroMeasureFaults, PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import { getThoughtformWorkshopContent } from "@/lib/v7-parse";
 import { VOIDWALKER_HOLOGRAM_EXIT_WINDOW } from "@/lib/voidwalker/voidwalkerHologramClock";
@@ -244,15 +246,31 @@ describe("the UX meetup talk (ADR-156)", () => {
   it("faces one example at a time, then stacks them in the pose the interface keeps", () => {
     const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
     const cards = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards : [];
-    expect(cards.map((c) => c.kind)).toEqual(["image", "video", "tool", "brand", "product", "worlds", "mathematics"]);
+    expect(cards.map((c) => c.kind)).toEqual([
+      "image",
+      "video",
+      "tool",
+      "brand",
+      "product",
+      "worlds",
+      "mathematics",
+    ]);
     // Vesper's own demo shows another company's brand mid-way: the talk
     // plays its own cut, from the part that is Loop's alone.
-    expect(cards.find((c) => c.kind === "tool")?.media?.src).toBe("/arcs/ux-meetup/vesper-loop.mp4");
+    expect(cards.find((c) => c.kind === "tool")?.media?.src).toBe(
+      "/arcs/ux-meetup/vesper-loop.mp4"
+    );
     for (const c of cards) {
       if (c.media) {
-        expect(existsSync(join(process.cwd(), "public", c.media.src)), `${c.media.src} on disk`).toBe(true);
+        expect(
+          existsSync(join(process.cwd(), "public", c.media.src)),
+          `${c.media.src} on disk`
+        ).toBe(true);
         if (c.media.poster) {
-          expect(existsSync(join(process.cwd(), "public", c.media.poster)), `${c.media.poster} on disk`).toBe(true);
+          expect(
+            existsSync(join(process.cwd(), "public", c.media.poster)),
+            `${c.media.poster} on disk`
+          ).toBe(true);
         }
       }
     }
@@ -308,9 +326,11 @@ describe("the UX meetup talk (ADR-156)", () => {
     }
     expect(m.ports.length).toBe(BRAIN.ports);
     const cap = UX_MEETUP_ARC.sections.find((s) => s.id === "capability");
-    const n = cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards.length : 0;
+    const n =
+      cap?.kind === "figure" && cap.figure.id === "capability" ? cap.figure.cards.length : 0;
     expect(m.ports.length, "a port for every plate").toBeGreaterThanOrEqual(n);
-    for (const c of m.cables) expect(m.ports.some((p) => p.x === c.path[0].x && p.y === c.path[0].y)).toBe(true);
+    for (const c of m.cables)
+      expect(m.ports.some((p) => p.x === c.path[0].x && p.y === c.path[0].y)).toBe(true);
     const ifc = UX_MEETUP_ARC.sections.find((s) => s.id === "the-interface");
     expect(ifc?.kind === "figure" && ifc.head, "no head and no paragraph").toBeFalsy();
   });
@@ -334,10 +354,17 @@ describe("the UX meetup talk (ADR-156)", () => {
     // The beats after it: the brain's layers, the alien user, the
     // shoggoth, latent space with its line and its source.
     const desk = UX_MEETUP_ARC.sections.find((s) => s.id === "every-desk");
-    expect(desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.layers.length : 0).toBe(3);
+    expect(
+      desk?.kind === "figure" && desk.figure.id === "knowledge" ? desk.figure.layers.length : 0
+    ).toBe(3);
     const latent = UX_MEETUP_ARC.sections.find((s) => s.id === "latent-space");
-    expect(latent?.kind === "figure" && latent.figure.id === "latent" ? latent.figure.source.label : "").toMatch(/Markov/);
-    expect(latent?.kind === "figure" && latent.menuPrimary, "the exit is never a chapter").toBeFalsy();
+    expect(
+      latent?.kind === "figure" && latent.figure.id === "latent" ? latent.figure.source.label : ""
+    ).toMatch(/Markov/);
+    expect(
+      latent?.kind === "figure" && latent.menuPrimary,
+      "the exit is never a chapter"
+    ).toBeFalsy();
   });
 
   /** The house copy law, over what this page letters of its own. */
@@ -354,10 +381,70 @@ describe("the UX meetup talk (ADR-156)", () => {
     scanStrings(UX_MEETUP_HERO, "hero", visit);
     for (const section of sections) {
       const own = section as unknown as Record<string, unknown>;
-      for (const key of ["menuLabel", "eyebrow", "head", "line", "subline", "media", "caption", "figure"]) {
+      for (const key of [
+        "menuLabel",
+        "eyebrow",
+        "head",
+        "line",
+        "subline",
+        "media",
+        "caption",
+        "figure",
+      ]) {
         scanStrings(own[key], `${section.id}.${key}`, visit);
       }
     }
     expect(faults).toEqual([]);
+  });
+});
+
+/**
+ * The talk on a phone (ADR-156 U16, ADR-160). The swarm chapter plays the
+ * opening sections as phone stages, the talk's station paints its own ground
+ * so nothing behind it shows through, and the proof pile splits the way the
+ * homepage's does — on this route alone.
+ */
+describe("the talk on a phone (ADR-156 U16)", () => {
+  it("splits the proof pile on the talk alone", () => {
+    expect(routeFile("thoughtform", "ux-meetup", "WorkshopPortals.tsx")).toMatch(
+      /<WorkshopProof[^>]*\bsplit\b/
+    );
+    for (const route of [
+      ["thoughtform", "workshop-v1"],
+      ["thoughtform", "workshop-v2"],
+      ["thoughtform", "workshop-v3"],
+      ["thoughtform", "keynote-template-alpha"],
+      ["suri", "lunch-and-learn"],
+      ["ap-hogeschool", "lecture"],
+    ]) {
+      const src = routeFile(...route, "WorkshopPortals.tsx");
+      expect(src, route.join("/")).not.toMatch(/<WorkshopProof[^>]*\bsplit\b/);
+    }
+    const proof = routeFile("thoughtform", "workshop-v3", "WorkshopProof.tsx");
+    expect(proof).toContain("PROOF_STACK_SPLIT_MEDIA");
+    expect(proof).toMatch(/split = false/);
+  });
+
+  it("paints the station's own ground at phone widths, keyed on the talk's order", () => {
+    const css = routeFile("thoughtform", "ux-meetup", "ux-meetup.css");
+    expect(css).toMatch(
+      /@media \(max-width: 960px\) \{\s*\.tw-root\[data-tw-order="talk-first"\] #workshop\.station\.tw-arc \{\s*background: var\(--void, #0a0908\);/
+    );
+  });
+
+  it("plays the swarm chapter's three sections as phone stages", () => {
+    const chapter = routeFile("thoughtform", "ux-meetup", "SwarmChapter.tsx");
+    for (const name of ["StackFlow", "EmbedStack", "NetworkOrg"]) {
+      expect(chapter, name).toMatch(new RegExp(`<${name}[^>]*phone="stage"`));
+    }
+  });
+
+  it("stills the talk's mark and its beat clock below the motion tier", () => {
+    expect(routeFile("thoughtform", "ux-meetup", "TalkMarkField.tsx")).toContain(
+      '"(prefers-reduced-motion: reduce), (max-width: 960px)"'
+    );
+    expect(routeFile("thoughtform", "ux-meetup", "WorkshopTail.tsx")).toMatch(
+      /matchMedia\(ARC_TERMINAL_MEDIA\)/
+    );
   });
 });

@@ -2046,9 +2046,17 @@
   .csd-stats dt {
     font-size: 24px;
   }
+  /* the frame on its own near-opaque ground: on a phone a frame is the
+     width of the field, and at .35 the case's dots printed through every
+     figure (ADR-160, owner 2026-10-21: no bleed) */
   .csd-frame {
     height: auto;
     min-height: 0;
+    background: rgba(var(--void-deep-rgb), 0.9);
+  }
+  .csd-field-bg::before,
+  .csd-field-bg[data-pattern]::before {
+    opacity: 0.22;
   }
   .csd-frame__body {
     container-type: normal;

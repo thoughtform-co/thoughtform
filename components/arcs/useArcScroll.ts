@@ -49,6 +49,7 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
   const scrolledRef = useRef(false);
   const entryRef = useRef(false);
   const reduceQuery = useRef<MediaQueryList | null>(null);
+  const phoneQuery = useRef<MediaQueryList | null>(null);
 
   const frame = useCallback(() => {
     rafId.current = null;
@@ -83,7 +84,11 @@ export function useArcScroll({ variant, rootRef, onFrame }: ArcScrollOptions) {
           scrollY >= vh - 0.5 || scrollY > vh * HERO_CURTAIN_RELEASE_VH ? "hidden" : "";
       }
 
-      if (!reduceMotion) {
+      /* ⚠ NOT ON A PHONE, as the landing (ADR-115; useLandingScroll's own
+         gate): a per-frame rect read and a translate layer on the hero
+         plate, the main-thread follower mobile-sections.md keeps off it. */
+      phoneQuery.current ??= window.matchMedia("(max-width: 960px)");
+      if (!reduceMotion && !phoneQuery.current.matches) {
         const viewportCenter = scrollY + vh / 2;
         root.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {
           const speed = parseFloat(el.dataset.parallax || "0") || 0;

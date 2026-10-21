@@ -50,11 +50,24 @@ export default function UxMeetupTail() {
     ground: null,
     active: null,
   });
+  const wide = useRef<MediaQueryList | null>(null);
   const onFrame = useCallback(
     (scrollY: number, vh: number) => {
       onBeatFrame(scrollY, vh);
       const root = rootRef.current;
       if (!root) return;
+      /* Below the terminal tier the page flows and every beat is plainly
+         there, so the ground is simply on: the talk reads on its own void
+         and mark from its first beat to its last, and nothing behind it
+         shows through between them (ADR-160). No beat to find per frame. */
+      wide.current ??= window.matchMedia(ARC_TERMINAL_MEDIA);
+      if (!wide.current.matches) {
+        if (state.current.ground !== true) {
+          state.current.ground = true;
+          root.setAttribute("data-uxm-ground", "on");
+        }
+        return;
+      }
       const beats = Array.from(root.querySelectorAll<HTMLElement>(":scope > [data-arc-beat]"));
       const rects = beats.map((b) => b.getBoundingClientRect());
       let active: HTMLElement | null = null;

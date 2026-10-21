@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
+
 /**
  * The talk's one scroll READER (ADR-156 U3).
  *
@@ -37,7 +39,9 @@ export function useTalkFrame(onFrame: TalkFrame): void {
     const run = () => {
       raf = 0;
       const y = window.scrollY;
-      const vh = window.innerHeight || 1;
+      /* the layout viewport's height (ADR-113): `innerHeight` moves with the
+         phone's toolbar while the thumb is still */
+      const vh = layoutViewportHeight();
       ref.current(y, vh);
       for (const fn of bus) fn(y, vh);
     };

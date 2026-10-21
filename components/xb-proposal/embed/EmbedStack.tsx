@@ -35,6 +35,8 @@ import { LayerSlab } from "../LayerSlab";
 import { Masthead, type MastheadCopy } from "../Masthead";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
+import { readBand, usePhoneStage } from "../phone/usePhoneStage";
+import { clockAt, seatsOf, STEPS_PHONE_LEGS, travelOf } from "../phone/stageClock";
 import { PLUG_STEPS, stepAnchor } from "../plugSteps";
 import { arrivalQ, arrive as arriveAt, HERO_BOX, poseIn, STACK } from "../stack/travel";
 
@@ -551,28 +553,98 @@ const BRIEF_IN = 0.78;
 export function EmbedStack({
   arrive = false,
   house = false,
+  phone,
 }: {
   arrive?: boolean;
   /** Lettered for no client (the cases page). */
   house?: boolean;
+  /** `"stage"`: on a phone with room for it, the section plays its steps in
+      a pinned portrait band (ADR-160): the plates up top, opening and
+      closing as on desktop, the step in view below with its counter.
+      Absent, a phone reads the section plain. */
+  phone?: "stage";
 } = {}) {
   const runway = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const travel = useRef<SVGGElement>(null);
+  const band = useRef<HTMLDivElement>(null);
+  const spacer = useRef<HTMLSpanElement>(null);
   const plates = useRef<(SVGGElement | null)[]>([]);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [stacked, setStacked] = useState(false);
   const [arriving, setArriving] = useState(false);
+  const stage = usePhoneStage(phone === "stage");
   /* Below the frame tier too (owner, 2026-10-21, on a phone): a pinned
      stage of two columns does not fit a phone's screen, so there it reads
      as reduced motion does, the steps listed and the stack closed, with no
-     runway and no hand-over (`embed.css` lays it out in one column). */
-  const plain = useMediaQuery("(prefers-reduced-motion: reduce), (max-width: 960px)");
+     runway and no hand-over (`embed.css` lays it out in one column), unless
+     the page asked for the phone stage and the phone has room for it. */
+  const plain = useMediaQuery("(prefers-reduced-motion: reduce), (max-width: 960px)") && !stage;
 
   useEffect(() => {
     const el = runway.current;
     const s = svg.current;
     if (!el || !s) return;
+    if (stage) {
+      const b = band.current;
+      const t = spacer.current;
+      if (!b || !t) return;
+      /* nothing the desktop's arrival wrote before the query matched */
+      if (arrive) {
+        travel.current?.removeAttribute("transform");
+        el.parentElement?.style.removeProperty("--es-brief");
+        const donor = document.querySelector<HTMLElement>(".sh");
+        donor?.removeAttribute("data-handed");
+        donor?.style.removeProperty("--sh-away");
+      }
+      let raf = 0;
+      let last = { step: -1, stacked: false, arriving: false };
+      /* THE PHONE STAGE (ADR-160). The desktop's own reading, `read(p)`, on
+         the stage's clock: dwells on Navigate, Encode and Build, passes
+         between. As the band rises to its pin the stack the section above
+         left closed opens in place, all three plates lit, so the seam reads
+         as one stack answering the other. */
+      const frame = () => {
+        raf = 0;
+        const at = readBand(b, t);
+        if (!at.onScreen) return;
+        const p = clockAt(STEPS_PHONE_LEGS, at.travelled);
+        const col = s.parentElement!.getBoundingClientRect();
+        const k = s.getBoundingClientRect().width / VB_W;
+        const room = col.height / (2 * k) - (FACE_MID - INK_TOP) - AIR;
+        const open = Math.min(GAP.open, Math.max(GAP.min, room));
+        const st = read(p, open);
+        const gap = GAP.closed + (st.gap - GAP.closed) * ease(at.arrival);
+        const centred = col.height * 0.5 - k * (FACE_MID + st.centre * gap);
+        const ty = Math.max(centred, k * (AIR - INK_TOP));
+        plates.current.forEach((g, i) =>
+          g?.setAttribute("transform", `translate(0 ${(i * gap).toFixed(1)})`)
+        );
+        s.style.transform = `translateY(${ty.toFixed(1)}px)`;
+        const lit = at.arrival < ARRIVE_LIT;
+        if (lit !== last.arriving) {
+          last.arriving = lit;
+          setArriving(lit);
+        }
+        if (st.step !== last.step || st.stacked !== last.stacked) {
+          last = { ...last, step: st.step, stacked: st.stacked };
+          setStep(st.step);
+          setStacked(st.stacked);
+        }
+      };
+      const on = () => {
+        if (!raf) raf = requestAnimationFrame(frame);
+      };
+      frame();
+      window.addEventListener("scroll", on, { passive: true });
+      window.addEventListener("resize", on);
+      return () => {
+        window.removeEventListener("scroll", on);
+        window.removeEventListener("resize", on);
+        if (raf) cancelAnimationFrame(raf);
+        s.style.transform = "";
+      };
+    }
     if (plain) {
       plates.current.forEach((g, i) =>
         g?.setAttribute("transform", `translate(0 ${i * GAP.closed})`)
@@ -680,7 +752,7 @@ export function EmbedStack({
       window.removeEventListener("resize", on);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [plain, arrive]);
+  }, [plain, arrive, stage]);
 
   const lit = (i: number) => plain || stacked || arriving || step === i;
   /* painted bottom plate first: the upper plate sits in front */
@@ -706,7 +778,7 @@ export function EmbedStack({
     ));
 
   return (
-    <div className="es" data-plain={plain ? "" : undefined}>
+    <div className="es" data-plain={plain ? "" : undefined} data-phone={phone}>
       <div className="es-runway" ref={runway}>
         {/* one anchor per step on the runway, for the flow's labels */}
         {PLUG_STEPS.map((st, i) => (
@@ -722,7 +794,7 @@ export function EmbedStack({
           {/* the head and the steps hold still through the section (owner:
               "once you enter … the title should remain static") */}
           <Masthead copy={house ? HEAD_HOUSE : HEAD} />
-          <div className="es-body">
+          <div className="es-body" ref={band}>
             <div className="es-left">
               <ol className="es-lines">
                 {PLUG_STEPS.map((st, i) => (
@@ -744,6 +816,7 @@ export function EmbedStack({
                   </li>
                 ))}
               </ol>
+              {phone === "stage" && <StageCount step={step} />}
             </div>
 
             <div className="es-right">
@@ -760,8 +833,54 @@ export function EmbedStack({
               </div>
             </div>
           </div>
+          {phone === "stage" && (
+            /* the band's travel on a phone, after it in flow, and a seat at
+               every dwell (ADR-160); nothing on desktop */
+            <span
+              ref={spacer}
+              className="es-travel"
+              aria-hidden
+              style={{ "--es-travel": `${travelOf(STEPS_PHONE_LEGS)}svh` } as CSSProperties}
+            >
+              {seatsOf(STEPS_PHONE_LEGS).map((seat) => (
+                <span
+                  key={seat.id}
+                  className="es-seat"
+                  data-es-seat={seat.id}
+                  style={
+                    { "--seat": `${seat.at}svh`, "--seat-len": `${seat.len}svh` } as CSSProperties
+                  }
+                />
+              ))}
+            </span>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The step in view on the phone stage (ADR-160): its tone, "01 / 03" and
+    its word, a stepper lit up to it, and its two callouts as words (the
+    drawing's own would print under 12px at a phone's scale). */
+function StageCount({ step }: { step: 0 | 1 | 2 }) {
+  const st = PLUG_STEPS[step];
+  return (
+    <div className="es-ph" aria-hidden>
+      <span className="es-count" data-tone={st.tone}>
+        <i />
+        {st.n} / {PLUG_STEPS[PLUG_STEPS.length - 1].n} · {st.step}
+      </span>
+      <span className="es-dots">
+        {PLUG_STEPS.map((p, i) => (
+          <i key={p.id} data-tone={p.tone} data-on={i <= step ? "" : undefined} />
+        ))}
+      </span>
+      <span className="es-tags" data-tone={st.tone}>
+        {CALLOUTS[step].map((c) => (
+          <span key={c.lines.join(" ")}>{c.lines.join(" ")}</span>
+        ))}
+      </span>
     </div>
   );
 }

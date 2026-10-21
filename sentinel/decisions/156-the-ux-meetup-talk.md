@@ -575,6 +575,35 @@ Verified at 390×844 and 430×932 on `/cases` and this page (no element past eit
 eras' carousel and the gateway), and at 1440×900 on both: every box in the chapter and the
 document height identical to `main`.
 
+## U16 · The talk on a phone, past the swarm chapter (2026-10-21, owner: "a full mobile sweep")
+
+U15 made the chapter readable; the owner then asked that the phone version not be "a shitty
+version of our desktop page": keep the opening's transitions, make the proof clear, and stop the
+sections bleeding into each other. The chapter's three sections take the phone stages of
+[ADR-160](160-the-cases-page-and-the-swarm-chapter-on-a-phone.md) (`phone="stage"` on all three in
+`SwarmChapter.tsx`); what is this talk's own:
+
+- **The station paints its own ground at ≤960** (`ux-meetup.css`, keyed
+  `.tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc`): the beats are transparent and
+  the ground layer is the beat clock's to turn on, so a phone without the clock showed what was
+  under the station. `WorkshopTail`'s frame skips the beat-rect loop below
+  `ARC_TERMINAL_MEDIA` and stamps `data-uxm-ground="on"` once, so the ground is always up there.
+- **The talk's mark field draws one still frame on a phone** (`TalkMarkField`, the reduced-motion
+  query widened to `(max-width: 960px)`), and `useTalkFrame` reads `layoutViewportHeight()`
+  (ADR-113), not `innerHeight`, so its consumers measure against the frame their svh runways do.
+- **The proof pile splits on a phone, here alone** (`WorkshopProof split`, gated by
+  `PROOF_STACK_SPLIT_MEDIA` and remounted by `key`, as on `/`): it showed four whole cards where
+  the homepage shows its split pile. v1, v2, v3, the keynote template, Suri and AP pass nothing
+  and render as before (`ux-meetup.test.ts` pins both ends).
+- **The hero's parallax is off on a phone on every arc** (`useArcScroll`, the landing's own gate,
+  ADR-115): a per-frame rect read and a translate layer on the hero plate.
+- **The corridor's dock behind the proof pile was looked at and left**: on a phone it is the
+  homepage's ambient, and a route-scoped opt-out would be a second rule for one surface.
+
+Verified at 390×844, 390×640 and 430×932 in both themes: the ground on from the eras' release to
+`#contact`, no gold through the station at the talk's start or end, the pile split. At 1440×900
+the page is `main`'s but for the About orbit's time-driven boxes, which differ in a self-diff too.
+
 ## Left open
 
 - The keynote template's swarm chapter has the same 32px phone gutters this page had, but its
@@ -582,7 +611,10 @@ document height identical to `main`.
   and `keynote-template-alpha.test.ts` pins `#an-alien .arc-stage` as written, which Prettier
   splits. The test or the sheet's formatting has to move first.
 - The X-Bionic proposal's own network (`NetworkPlug`) and plug flow (`PlugFlow`) are still the
-  desktop drawings on a phone; only its steps (`EmbedStack`) took U15.
+  desktop drawings on a phone; only its steps (`EmbedStack`) took U15, and it does not opt into
+  U16's stages.
+- The network's letters on this page are X-Bionic's ("X-Bionic · Marketing"); `/cases` passes
+  `org={null}` for the house's. Whether the talk should letter the house's is the owner's call.
 
 - The corridor's thesis after the talk still reads "AI sits somewhere between tool and
   collaborator", now an echo of section 05; the owner decides whether it stays.

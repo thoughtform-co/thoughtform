@@ -25,21 +25,29 @@ import { StackFlow } from "@/components/xb-proposal/stack/StackFlow";
 export default function SwarmChapter() {
   return (
     <div className="arc-root arc-root--detail uxm-swarm__root">
-      <section id="uxm-vision" className="arc-section arc-xb-port" aria-label="AI capability your teams own">
+      <section
+        id="uxm-vision"
+        className="arc-section arc-xb-port"
+        aria-label="AI capability your teams own"
+      >
         <div className="psw-hold">
           <div className="xb xb-in-frame xb-sec psw">
-            <StackFlow />
+            <StackFlow phone="stage" />
             <canvas className="psw-seat" aria-hidden />
           </div>
         </div>
       </section>
-      <section id="uxm-adoption" className="arc-section arc-xb-port" aria-label="Navigate, encode, build">
+      <section
+        id="uxm-adoption"
+        className="arc-section arc-xb-port"
+        aria-label="Navigate, encode, build"
+      >
         <SwarmAct fly="fall" mark="engrave" still={false} />
         <div className="xb xb-in-frame psw">
-          <EmbedStack arrive />
+          <EmbedStack arrive phone="stage" />
         </div>
         <div className="xb xb-in-frame psw">
-          <NetworkOrg lettered={LETTERED} />
+          <NetworkOrg lettered={LETTERED} phone="stage" />
         </div>
       </section>
     </div>

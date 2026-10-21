@@ -128,7 +128,7 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
       >
         <div className="psw-hold">
           <div className="xb xb-in-frame xb-sec psw">
-            <StackFlow />
+            <StackFlow phone="stage" />
             <canvas className="psw-seat" aria-hidden />
           </div>
         </div>
@@ -144,16 +144,22 @@ export default async function CasesPage({ searchParams }: { searchParams: Promis
       >
         <SwarmAct fly="fall" mark="engrave" still={still} />
         <div className="xb xb-in-frame psw">
-          <EmbedStack arrive house />
+          <EmbedStack arrive house phone="stage" />
         </div>
         <div className="xb xb-in-frame psw">
-          <NetworkOrg lettered={LETTERED} org={null} />
+          <NetworkOrg lettered={LETTERED} org={null} phone="stage" />
         </div>
       </ArcBeat>
 
       <ArcSectionRenderer sections={[section("the-line")]} motion="reveal" indexOffset={2} />
 
-      <ArcBeat id="cases" kind="proof-card" className="arc-section" ariaLabel="The cases" motion="reveal">
+      <ArcBeat
+        id="cases"
+        kind="proof-card"
+        className="arc-section"
+        ariaLabel="The cases"
+        motion="reveal"
+      >
         <CaseDossier cases={cases} initial={one(q.case)} head={HEAD_DEFAULT} still={still} />
       </ArcBeat>
 

@@ -45,6 +45,11 @@ const ADOPTERS = [
   // ADR-125: the rail's click-to-navigate scrubs the corridor mount's
   // runway, which is stage − one layout screen.
   "lib/rail-manifest/clickToNavigate.ts",
+  // ADR-160: the phone stages measure their svh runways against the frame
+  // they are on screen in, and the talk's reader hands its consumers the same.
+  "components/xb-proposal/phone/usePhoneStage.ts",
+  "components/xb-proposal/stack/StackFlow.tsx",
+  "app/(marketing)/arcs/thoughtform/ux-meetup/useTalkFrame.ts",
 ];
 
 describe("layoutViewportHeight", () => {

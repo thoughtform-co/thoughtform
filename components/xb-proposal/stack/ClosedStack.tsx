@@ -29,7 +29,7 @@ export function ClosedStack() {
       {PLATES.map((Plate, i) => ({ Plate, i }))
         .reverse()
         .map(({ Plate, i }) => (
-          <g key={i} transform={`translate(0 ${i * STACK.closed})`}>
+          <g key={i} transform={`translate(0 ${i * STACK.closed})`} data-plate={i}>
             <Plate iso={iso} />
           </g>
         ))}

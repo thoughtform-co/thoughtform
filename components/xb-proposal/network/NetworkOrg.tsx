@@ -29,6 +29,8 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import { MastheadTitle } from "../Masthead";
+import { clockAt, NETWORK_PHONE_LEGS, seatsOf, travelOf } from "../phone/stageClock";
+import { readBand, usePhoneStage } from "../phone/usePhoneStage";
 
 import {
   at,
@@ -152,16 +154,86 @@ export type Lettered = {
 export function NetworkOrg({
   lettered,
   org = ORG,
+  phone,
 }: {
   lettered?: Lettered;
   /** The organisation the drawing names; `null` for a page read by anyone
       (the cases page): Marketing alone, and "The organisation" on its housing. */
   org?: string | null;
+  /** `"stage"`: on a phone with room for it, the column figure is a pinned
+      band that plays the desktop's acts (ADR-160): Marketing's name and
+      courses typed as it arrives, then the ribbon down the gutter and every
+      team grown along it, in the desktop's order. Absent, its last frame. */
+  phone?: "stage";
 } = {}) {
   const MKT_NAME = org ? `${org} · Marketing` : "Marketing";
   const runway = useRef<HTMLDivElement>(null);
   const fig = useRef<HTMLDivElement>(null);
+  const band = useRef<HTMLDivElement>(null);
+  const spacer = useRef<HTMLSpanElement>(null);
   const [r, setR] = useState<Reading>({ p: 0, q: 0, from: null });
+  const stage = usePhoneStage(phone === "stage");
+
+  /* THE PHONE STAGE (ADR-160): one writer, imperative, no React state per
+     frame. The arrival types Marketing in; the travel runs the desktop's
+     ribbon acts (`T.ribs` to the end) through `moment()`, so the teams land
+     in `TURNS` order at the desktop's pace. */
+  useEffect(() => {
+    if (!stage) return;
+    const b = band.current;
+    const t = spacer.current;
+    if (!b || !t) return;
+    const name = b.querySelector<HTMLElement>(".xno-phone__mod[data-lit] .xno-phone__tw");
+    const courses = [...b.querySelectorAll<HTMLElement>(".xno-phone__courses .xno-phone__tw")];
+    const teams = [...b.querySelectorAll<HTMLElement>(".xno-phone__teams > li")];
+    const list = b.querySelector<HTMLElement>(".xno-phone__teams");
+    if (!name || !list) return;
+    const write = (el: HTMLElement, prop: string, v: string) => {
+      if (el.style.getPropertyValue(prop) !== v) el.style.setProperty(prop, v);
+    };
+    const type = (el: HTMLElement, text: string, f: number) => {
+      const n = Math.floor(text.length * f + 1e-6);
+      if (el.dataset.n === String(n)) return;
+      el.dataset.n = String(n);
+      el.textContent = text.slice(0, n);
+      el.toggleAttribute("data-typing", n < text.length);
+    };
+    let raf = 0;
+    const frame = () => {
+      raf = 0;
+      const at = readBand(b, t);
+      if (!at.onScreen) return;
+      type(name, MKT_NAME, seg(at.arrival, 0.3, 0.6));
+      courses.forEach((el, i) =>
+        type(el, COURSES[i], seg(at.arrival, 0.5 + i * 0.12, 0.72 + i * 0.12))
+      );
+      const m = moment(T.ribs + clockAt(NETWORK_PHONE_LEGS, at.travelled) * (1 - T.ribs));
+      /* the ribbon runs from Marketing's floor down the gutter, as far as
+         the lowest team whose stub is drawing */
+      const last = teams[teams.length - 1];
+      const reachOf = (li: HTMLElement) => (li.offsetTop + 14 + 32) / (last.offsetTop + 14 + 32);
+      let reach = 0;
+      teams.forEach((li, i) => {
+        const rib = m.rib(i);
+        write(li, "--rib", rib.toFixed(3));
+        write(li, "--grow", m.grow(i).toFixed(3));
+        li.toggleAttribute("data-on", m.on(i));
+        if (rib > 0) reach = Math.max(reach, reachOf(li) * Math.min(1, rib * 2));
+      });
+      write(list, "--trunk", reach.toFixed(3));
+    };
+    const on = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    frame();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [stage, MKT_NAME]);
 
   /* `NetworkPlug`'s reader, as it stands: the pinned scroll, and the stack's
      seat in the steps' section for the hand-over */
@@ -276,7 +348,7 @@ export function NetworkOrg({
   );
 
   return (
-    <div className="xn xno" ref={runway}>
+    <div className="xn xno" ref={runway} data-phone={phone}>
       <div className="xn-pin">
         <MastheadTitle lines={TITLE} />
         <div className="xn-fig" ref={fig}>
@@ -574,15 +646,24 @@ export function NetworkOrg({
           module and its three courses, then the six teams on one ribbon,
           each its band, its three courses and "Navigate next". The same
           records, never a second copy. */}
-      <div className="xno-phone">
+      <div className="xno-phone" ref={band}>
         <MastheadTitle lines={TITLE} />
         <div className="xno-phone__fig">
           <div className="xno-phone__mod" data-lit="">
-            <span className="xno-phone__band">{MKT_NAME}</span>
+            <span className="xno-phone__band">
+              {/* typed on the phone stage; the reader hears it whole */}
+              <span className="xno-phone__tw" aria-hidden>
+                {MKT_NAME}
+              </span>
+              <span className="sr-only">{MKT_NAME}</span>
+            </span>
             <ol className="xno-phone__courses">
               {COURSES.map((c, i) => (
                 <li key={c} data-tone={i}>
-                  {c}
+                  <span className="xno-phone__tw" aria-hidden>
+                    {c}
+                  </span>
+                  <span className="sr-only">{c}</span>
                 </li>
               ))}
             </ol>
@@ -604,6 +685,25 @@ export function NetworkOrg({
           </ul>
         </div>
       </div>
+      {phone === "stage" && (
+        /* the band's travel on a phone, after it in flow, and a seat at
+           every dwell (ADR-160); nothing on desktop */
+        <span
+          ref={spacer}
+          className="xno-travel"
+          aria-hidden
+          style={{ "--xno-travel": `${travelOf(NETWORK_PHONE_LEGS)}svh` } as CSSProperties}
+        >
+          {seatsOf(NETWORK_PHONE_LEGS).map((seat) => (
+            <span
+              key={seat.id}
+              className="xno-seat"
+              data-xno-seat={seat.id}
+              style={{ "--seat": `${seat.at}svh`, "--seat-len": `${seat.len}svh` } as CSSProperties}
+            />
+          ))}
+        </span>
+      )}
     </div>
   );
 }
