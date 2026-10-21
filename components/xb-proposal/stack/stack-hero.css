@@ -299,3 +299,92 @@
     transform: none;
   }
 }
+
+/* ================================================================== */
+/* StackFlow below the frame tier                                      */
+/* ================================================================== */
+
+/* (owner, 2026-10-21, on a phone: "the mobile version looks bad") The flow
+   is a 1200-unit frame with its words seated over it, so at 390px its teams
+   ran off both edges and its three tabs printed through each other. Below
+   the frame tier it reads as StackHero's does: the stack, then each part as
+   plain rows under its own tab, in the flow's order (your team, the layer,
+   Claude Enterprise). The line work goes; every word, chip and card is the
+   frame's own element, re-laid, never a second copy. */
+@media (max-width: 960px) {
+  .xb-in-frame.xb-sec:has(> .shf) {
+    height: auto;
+    min-height: 0;
+    padding: calc(var(--mobile-chrome-top, 56px) + 24px) 24px
+      calc(var(--mobile-chrome-bottom, 56px) + 8px);
+  }
+  .shf {
+    height: auto;
+    gap: 32px;
+  }
+  .shf .pl-fig {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: auto;
+    margin: 0;
+    aspect-ratio: auto;
+    container-type: normal;
+    background-image: none;
+  }
+  .shf .pl-svg {
+    display: none;
+  }
+  .shf .pl-fig > div,
+  .shf .pl-fig > a,
+  .shf .shf-parts > div {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+  }
+  .shf .pl-fig > div,
+  .shf .shf-parts > div {
+    font-size: 15px;
+  }
+  /* the stack first, centred, at the size StackHero gives it here */
+  .shf .shf-stage {
+    order: 0;
+    align-self: center;
+    width: min(220px, 64%);
+    margin-bottom: 16px;
+  }
+  /* then each tab over its own part: the tabs are the frame's only links */
+  .shf .pl-fig > .pl-tab {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    align-self: flex-start;
+    margin-top: 20px;
+    padding: 0;
+    font-size: 12px;
+  }
+  .shf .pl-tab:nth-of-type(1) {
+    order: 1;
+    margin-top: 0;
+  }
+  .shf .pl-chip {
+    order: 2;
+    width: auto;
+  }
+  .shf .pl-tab:nth-of-type(2) {
+    order: 3;
+  }
+  .shf .shf-parts {
+    order: 4;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .shf .pl-tab:nth-of-type(3) {
+    order: 5;
+  }
+  .shf .pl-card {
+    order: 6;
+    width: auto;
+  }
+}

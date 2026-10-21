@@ -60,3 +60,217 @@
     transition: none;
   }
 }
+
+/* ---- below the frame tier: the last frame, for the column ---- */
+
+/* (owner, 2026-10-21, on a phone) The camera and its 1200-unit frame step
+   down for `.xno-phone`: Marketing's module, then the six teams in two
+   columns on one ribbon down the gutter, in the frame's own materials (the
+   notched housing and its gold band, the module's courses in their tones,
+   a team's three courses empty but the first). */
+.xno-phone {
+  display: none;
+}
+@media (max-width: 960px) {
+  .xn.xno {
+    height: auto;
+    padding: calc(var(--mobile-chrome-top, 56px) + 24px) 24px
+      calc(var(--mobile-chrome-bottom, 56px) + 8px);
+  }
+  .xno > .xn-pin {
+    display: none;
+  }
+  .xno-phone {
+    display: grid;
+    gap: 40px;
+  }
+  .xno-phone__fig {
+    --mod-cut: 12px;
+    --mod-band: 28px;
+    --team-h: 100px;
+    --wire: color-mix(in srgb, var(--xb-gold) 70%, transparent);
+    display: grid;
+    gap: 32px;
+  }
+  .xno-phone ol,
+  .xno-phone ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* the housing: notched top right, its edge a ring of its own, because a
+     clip cuts a border and never strokes one */
+  .xno-phone__mod {
+    position: relative;
+    display: grid;
+    align-content: start;
+    background: color-mix(in srgb, var(--xb-ground) 70%, transparent);
+    clip-path: polygon(0 0, calc(100% - var(--mod-cut)) 0, 100% var(--mod-cut), 100% 100%, 0 100%);
+  }
+  .xno-phone__mod::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: color-mix(in srgb, var(--xb-gold) 55%, transparent);
+    clip-path: polygon(
+      evenodd,
+      0 0,
+      calc(100% - var(--mod-cut)) 0,
+      100% var(--mod-cut),
+      100% 100%,
+      0 100%,
+      0 0,
+      1px 1px,
+      1px calc(100% - 1px),
+      calc(100% - 1px) calc(100% - 1px),
+      calc(100% - 1px) calc(var(--mod-cut) + 0.414px),
+      calc(100% - var(--mod-cut) - 0.414px) 1px,
+      1px 1px
+    );
+  }
+  .xno-phone__band {
+    display: flex;
+    align-items: center;
+    height: var(--mod-band);
+    padding: 0 10px;
+    background: color-mix(in srgb, var(--xb-gold) 16%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--xb-gold) 40%, transparent);
+    font-family: var(--xb-mono);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--xb-gold);
+  }
+
+  /* Marketing: its three courses, each in its plate's tone */
+  .xno-phone .xno-phone__courses {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+  }
+  .xno-phone__courses li {
+    --tone: var(--es-green);
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--tone);
+    background: var(--xb-ground-2);
+    font-family: var(--xb-mono);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--xb-text-2);
+  }
+  .xno-phone__courses li[data-tone="1"] {
+    --tone: var(--xb-gold);
+  }
+  .xno-phone__courses li[data-tone="2"] {
+    --tone: var(--xb-text-2);
+  }
+
+  /* the six teams, two columns, the ribbon down the gutter between them */
+  .xno-phone__teams {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+  }
+  .xno-phone__teams > li {
+    position: relative;
+  }
+  /* one height a team, so the ribbon knows where the last row's bands are */
+  .xno-phone__teams .xno-phone__mod {
+    height: var(--team-h);
+  }
+  /* the ribbon: out of Marketing's floor, down to the last row's bands */
+  .xno-phone__teams::before {
+    content: "";
+    position: absolute;
+    left: calc(50% - 0.5px);
+    top: -32px;
+    bottom: calc(var(--team-h) - var(--mod-band) / 2 - 0.5px);
+    width: 1px;
+    background: repeating-linear-gradient(to bottom, var(--wire) 0 1px, transparent 1px 2px);
+  }
+  /* its port on Marketing's floor */
+  .xno-phone__teams::after {
+    content: "";
+    position: absolute;
+    left: calc(50% - 3px);
+    top: -35px;
+    width: 6px;
+    height: 6px;
+    background: var(--xb-gold);
+  }
+  /* each team's stub off the ribbon, and its port on the band's inner edge */
+  .xno-phone__teams > li::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--mod-band) / 2 - 0.5px);
+    width: 12px;
+    height: 1px;
+    background: repeating-linear-gradient(to right, var(--wire) 0 1px, transparent 1px 2px);
+  }
+  .xno-phone__teams > li::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: calc(var(--mod-band) / 2 - 3px);
+    width: 6px;
+    height: 6px;
+    background: var(--xb-gold);
+  }
+  .xno-phone__teams > li:nth-child(odd)::before {
+    left: 100%;
+  }
+  .xno-phone__teams > li:nth-child(odd)::after {
+    right: -3px;
+  }
+  .xno-phone__teams > li:nth-child(even)::before {
+    right: 100%;
+  }
+  .xno-phone__teams > li:nth-child(even)::after {
+    left: -3px;
+  }
+
+  /* a team's three courses, empty but the first */
+  .xno-phone__slots {
+    display: grid;
+    gap: 4px;
+    padding: 10px 10px 8px;
+  }
+  .xno-phone__slots i {
+    --tone: var(--es-green);
+    display: block;
+    height: 7px;
+    border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+    background: var(--xb-ground-2);
+  }
+  .xno-phone__slots i:first-child {
+    border-color: var(--tone);
+    background: color-mix(in srgb, var(--tone) 16%, var(--xb-ground-2));
+  }
+  .xno-phone__slots i:nth-child(2) {
+    --tone: var(--xb-gold);
+  }
+  .xno-phone__slots i:nth-child(3) {
+    --tone: var(--xb-text);
+  }
+  .xno-phone__next {
+    padding: 0 10px 12px;
+    font-family: var(--xb-mono);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--xb-text-2);
+  }
+}

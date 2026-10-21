@@ -200,3 +200,68 @@
     transition: none;
   }
 }
+
+/* ---- below the frame tier: one column, in flow ---- */
+
+/* (owner, 2026-10-21, on a phone) The section reads plain here
+   (`EmbedStack`): no runway, the head over its brief, the three steps open,
+   then the closed stack under them, cropped to its ink. Before hydration
+   the same box, so nothing jumps when the query lands. */
+@media (max-width: 960px) {
+  .es {
+    padding: 0 24px;
+  }
+  .es-runway,
+  .es[data-plain] .es-runway {
+    height: auto;
+  }
+  /* the flow's tabs land on the section, not a runway's third */
+  .es-anchor {
+    top: 0;
+  }
+  .es-pin,
+  .es[data-plain] .es-pin {
+    position: relative;
+    display: block;
+    height: auto;
+    padding: calc(var(--mobile-chrome-top, 56px) + 24px) 0
+      calc(var(--mobile-chrome-bottom, 56px) + 8px);
+  }
+  .es-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+    margin-top: 48px;
+  }
+  .es-lines {
+    gap: 28px;
+  }
+  .es-line {
+    font-size: 26px;
+  }
+  .es-say__in {
+    max-width: none;
+  }
+  /* the closed stack: the drawing is 700 × 760 for three plates apart, and
+     closed they fill only its upper middle, so the stage shows that much */
+  .es-stage {
+    --es-crop-x: 120;
+    --es-crop-y: 40;
+    --es-crop-w: 460;
+    --es-crop-h: 430;
+    width: min(260px, 72%);
+    height: auto;
+    margin: 0 auto;
+    aspect-ratio: var(--es-crop-w) / var(--es-crop-h);
+    overflow: hidden;
+    container-type: inline-size;
+  }
+  /* and nothing takes it from here: the network reads its last frame */
+  .es[data-handed] .es-stage .es-svg {
+    visibility: visible;
+  }
+  .es-svg {
+    left: calc(-1 * var(--es-crop-x) / var(--es-crop-w) * 100cqw);
+    top: calc(-1 * var(--es-crop-y) / var(--es-crop-w) * 100cqw);
+    width: calc(700 / var(--es-crop-w) * 100cqw);
+  }
+}
