@@ -43,7 +43,9 @@ export function TalkMarkField() {
     });
     if (sample.count === 0) return;
     const holder = canvas.closest<HTMLElement>("[data-uxm-ground]");
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    /* still under reduced motion, and on a phone: one frame, no loop of
+       1400 dots redrawn every frame behind a page that flows (ADR-160) */
+    const still = window.matchMedia("(prefers-reduced-motion: reduce), (max-width: 960px)").matches;
 
     let raf = 0;
     let disposed = false;

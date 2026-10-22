@@ -27,24 +27,96 @@
    The stack is the arrival's donor (`ClosedStack`); the lines that touch it
    let go as it leaves (`--sh-away`, written by the steps' section). */
 
-import type { CSSProperties } from "react";
+import { type CSSProperties, useEffect } from "react";
+
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 import { Junction, Tap } from "../kit/marks";
 import { pathOf } from "../kit/trace";
 import { MastheadTitle } from "../Masthead";
 import { CARDS, H, Tab, TITLE, W } from "../plug/PlugFlow";
 import { Cards, Chips, delay, Draw, FIG_LABEL, PartTags } from "../plug/plugShared";
+import { usePhoneStage } from "../phone/usePhoneStage";
 import { useArrive } from "../useArrive";
 
 import { ClosedStack } from "./ClosedStack";
 import { FLOW as L } from "./heroLayouts";
 
-export function StackFlow() {
+/* When each plate falls in on the phone stage, on the section's arrival
+   (0 as its top meets the fold, 1 as it reaches the top): bottom plate
+   first, as the swarm's fall lands it on desktop. Indexed by plate: the
+   team (top), the layer, the agents (bottom). */
+const FALL: readonly (readonly [number, number])[] = [
+  [0.45, 0.75],
+  [0.3, 0.6],
+  [0.15, 0.45],
+];
+
+export function StackFlow({
+  phone,
+}: {
+  /** `"stage"`: on a phone with room for it (ADR-160), the stack falls
+      together plate by plate as the section arrives, then holds under the
+      chrome while its three parts pass beneath it, lighting the plate each
+      one names. Absent, the phone reads the stack and its rows still. */
+  phone?: "stage";
+} = {}) {
   const ref = useArrive<HTMLDivElement>();
   const [team, layer, agents] = L.ports;
+  const stage = usePhoneStage(phone === "stage");
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!stage || !root) return;
+    const plates = [...root.querySelectorAll<SVGGElement>(".shf-stage [data-plate]")];
+    const tabs = [...root.querySelectorAll<HTMLElement>(".pl-fig > .pl-tab")];
+    let raf = 0;
+    const frame = () => {
+      raf = 0;
+      const vh = layoutViewportHeight();
+      const top = root.getBoundingClientRect().top;
+      if (top > vh || top < -2 * vh) return;
+      const q = Math.min(1, Math.max(0, 1 - top / vh));
+      plates.forEach((g) => {
+        const [a, b] = FALL[Number(g.dataset.plate)];
+        const t = Math.min(1, Math.max(0, (q - a) / (b - a)));
+        const v = (t * t * (3 - 2 * t)).toFixed(3);
+        if (g.style.getPropertyValue("--fall") !== v) g.style.setProperty("--fall", v);
+      });
+    };
+    const on = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    /* the part being read lights its plate: the tab that crosses the
+       reading band just under the held stack (from its foot, 160px down) */
+    const held = root.querySelector<HTMLElement>(".shf-stage");
+    const foot = (held?.offsetHeight ?? 220) + 64;
+    const vh = layoutViewportHeight();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting)
+            root.dataset.shfPart = String(tabs.indexOf(e.target as HTMLElement));
+        }
+      },
+      { rootMargin: `-${foot}px 0px -${Math.max(0, vh - foot - 160)}px 0px` }
+    );
+    tabs.forEach((tab) => io.observe(tab));
+    frame();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      if (raf) cancelAnimationFrame(raf);
+      plates.forEach((g) => g.style.removeProperty("--fall"));
+      delete root.dataset.shfPart;
+    };
+  }, [stage, ref]);
 
   return (
-    <div className="pl sh shf" ref={ref}>
+    <div className="pl sh shf" ref={ref} data-phone={phone}>
       <MastheadTitle lines={TITLE} />
 
       <figure

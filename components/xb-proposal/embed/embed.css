@@ -265,3 +265,197 @@
     width: calc(700 / var(--es-crop-w) * 100cqw);
   }
 }
+
+/* ---- the phone stage (ADR-160) ---- */
+
+/* (owner, 2026-10-21: the phone must not be "a shitty version of our
+   desktop page") On a phone with room for it, a page that asks for it
+   (`phone="stage"`) plays the steps as desktop does, in a portrait band:
+   the head flows and scrolls away, then the band pins for the stage's
+   travel. Up top the plates open and close on the desktop's own reading;
+   below, on an opaque panel, the step in view with its tone, "01 / 03" and
+   a stepper (Polestar's onboarding, Life Reset's stepper), and its two
+   callouts as words. A seat at every dwell. Everything else, a short phone
+   and reduced motion included, reads the plain layout above. */
+.es-travel,
+.es-ph {
+  display: none;
+}
+@media (max-width: 960px) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+  .es[data-phone="stage"] .es-pin {
+    padding-bottom: 0;
+  }
+  /* the band: one screen, pinned, edge to edge over its own ground */
+  .es[data-phone="stage"] .es-body {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0;
+    box-sizing: border-box;
+    height: 100dvh;
+    margin: 32px -24px 0;
+    padding: calc(var(--mobile-chrome-top, 56px) + 8px) 24px
+      calc(var(--mobile-chrome-bottom, 56px) + 16px);
+    background: var(--xb-ground);
+  }
+  /* the plates, up top: a plate leaves by the panel's foot, under the text */
+  .es[data-phone="stage"] .es-right {
+    grid-row: 1;
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .es[data-phone="stage"] .es-stage {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    aspect-ratio: auto;
+    overflow: visible;
+    container-type: inline-size;
+  }
+  /* the drawing 520 of its 700 units wide across the panel: the plates'
+     own span with a little air, centred */
+  .es[data-phone="stage"] .es-svg {
+    left: calc((100cqw - 700 / 520 * 100cqw) / 2);
+    top: 0;
+    width: calc(700 / 520 * 100cqw);
+  }
+  /* the drawing's callouts would print under 12px here: they are words below */
+  .es[data-phone="stage"] .es-call {
+    display: none;
+  }
+
+  /* the step in view, below */
+  .es[data-phone="stage"] .es-left {
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    row-gap: 14px;
+    padding-top: 18px;
+    border-top: 1px solid var(--xb-line);
+    background: var(--xb-ground);
+  }
+  .es[data-phone="stage"] .es-ph {
+    display: contents;
+  }
+  .es[data-phone="stage"] .es-count {
+    grid-row: 1;
+    grid-column: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--xb-mono);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--xb-text-2);
+  }
+  .es[data-phone="stage"] .es-count i {
+    width: 6px;
+    height: 6px;
+    background: var(--tone, var(--xb-text-2));
+  }
+  /* the stepper: three nodes on one line, lit up to the step in view */
+  .es[data-phone="stage"] .es-dots {
+    grid-row: 1;
+    grid-column: 2;
+    display: inline-flex;
+    gap: 18px;
+    background: linear-gradient(var(--xb-line-2), var(--xb-line-2)) center / 100% 1px no-repeat;
+  }
+  .es[data-phone="stage"] .es-dots i {
+    display: block;
+    width: 8px;
+    height: 8px;
+    box-sizing: border-box;
+    border: 1px solid var(--xb-line-2);
+    background: var(--xb-ground);
+    transition:
+      background 300ms ease,
+      border-color 300ms ease;
+  }
+  .es[data-phone="stage"] .es-dots i[data-on] {
+    border-color: var(--tone, var(--xb-text-2));
+    background: var(--tone, var(--xb-text-2));
+  }
+  /* the three steps share one cell: the one in view shows, the cell is as
+     tall as the longest, so nothing moves as they change */
+  .es[data-phone="stage"] .es-lines {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 0;
+  }
+  .es[data-phone="stage"] .es-lines li {
+    grid-area: 1 / 1;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 280ms ease,
+      visibility 0s linear 280ms;
+  }
+  .es[data-phone="stage"] .es-lines li[data-on] {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 280ms ease 80ms;
+  }
+  .es[data-phone="stage"] .es-n {
+    display: none;
+  }
+  .es[data-phone="stage"] .es-say,
+  .es[data-phone="stage"] .es-lines li[data-on] .es-say {
+    transition: none;
+  }
+  /* one callout a row, so the panel is one height at every step (two
+     callouts side by side fit Navigate's and Build's, not Encode's) */
+  .es[data-phone="stage"] .es-tags {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .es[data-phone="stage"] .es-tags span {
+    padding: 6px 8px;
+    border: 1px solid color-mix(in srgb, var(--tone, var(--xb-text-2)) 50%, transparent);
+    font-family: var(--xb-mono);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    color: var(--xb-text-2);
+  }
+  .es[data-phone="stage"] [data-tone="green"] {
+    --tone: var(--es-green);
+  }
+  .es[data-phone="stage"] [data-tone="gold"] {
+    --tone: var(--xb-gold);
+  }
+  .es[data-phone="stage"] [data-tone="dawn"] {
+    --tone: var(--xb-text);
+  }
+
+  /* the band's travel, and a seat at every dwell: a seat's top is where the
+     band's flow top stands when that dwell begins (travel's top − one band) */
+  .es[data-phone="stage"] .es-travel {
+    position: relative;
+    display: block;
+    height: var(--es-travel);
+  }
+  .es[data-phone="stage"] .es-seat {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--seat) - 100dvh);
+    height: var(--seat-len);
+    pointer-events: none;
+    scroll-snap-align: start;
+  }
+}

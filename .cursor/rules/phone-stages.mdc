@@ -1,0 +1,13 @@
+---
+description: The phone stages (ADR-160) — /cases and the UX meetup swarm chapter play the opening sections pinned and scrubbed at ≤960, opt-in by `phone="stage"`
+globs:
+  - "components/xb-proposal/phone/**"
+  - "components/xb-proposal/embed/**"
+  - "components/xb-proposal/network/**"
+  - "components/xb-proposal/stack/**"
+  - "components/arcs/case-dossier/**"
+  - "app/(marketing)/cases/**"
+  - "app/(marketing)/arcs/thoughtform/ux-meetup/**"
+---
+
+See `.claude/rules/phone-stages.md` and ADR-160. Opt-in by prop on two pages only; one media literal (`PHONE_STAGE_MEDIA`) shared by the hook and the three sheets; dwells under one snap radius, passes over two; the desktop's own progress functions; `dvh` only on the pinned band inside the gate; the band opaque.

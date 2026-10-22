@@ -11,6 +11,8 @@ import {
   type WorkshopProofTrack,
 } from "@/lib/arcs/content/shared/workshopIntro";
 import type { CaseTrack } from "@/lib/cases/types";
+import { PROOF_STACK_SPLIT_MEDIA } from "@/components/landing/home-v2/unifiedServicesInstrument";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
 /**
  * The third cut's proof (ADR-143 U3, U6): v1's pile, the same four Loop
@@ -58,8 +60,29 @@ export function workshopV3Tracks(
   });
 }
 
-export default function WorkshopV3Proof({ ledes }: { ledes?: ProofLedes }) {
+/**
+ * `split` (ADR-160): on the phone rung each project is two sticky panels, as
+ * the homepage's pile reads there (ADR-107), and the pile remounts when the
+ * query flips, because the stack hook collects its slots once. Opt-in, so v3,
+ * Suri's cut and the keynote template render as before; the server snapshot
+ * is `false`, so SSR is the whole-card tree everywhere.
+ */
+export default function WorkshopV3Proof({
+  ledes,
+  split = false,
+}: {
+  ledes?: ProofLedes;
+  split?: boolean;
+}) {
+  const phoneSplit = useMediaQuery(PROOF_STACK_SPLIT_MEDIA);
+  const on = split && phoneSplit;
   return (
-    <ProofStack tracks={workshopV3Tracks(ledes)} client={proofStackClient()} arrival="glitch" />
+    <ProofStack
+      key={on ? "split" : "whole"}
+      tracks={workshopV3Tracks(ledes)}
+      client={proofStackClient()}
+      arrival="glitch"
+      split={on}
+    />
   );
 }

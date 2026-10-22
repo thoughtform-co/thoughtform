@@ -42,7 +42,7 @@ export function UxMeetupPortals() {
   useNestedRoot(
     ".tw-root [data-tw-proof-root]",
     <Suspense fallback={null}>
-      <WorkshopProof ledes={UX_MEETUP_PROOF_LEDES} />
+      <WorkshopProof ledes={UX_MEETUP_PROOF_LEDES} split />
     </Suspense>
   );
   useNestedRoot(

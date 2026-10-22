@@ -23,6 +23,16 @@
 .tw-root[data-tw-order="talk-first"] #workshop .arc-root {
   background: none;
 }
+/* On a phone the talk is not welded up into anything (the weld below is
+   1101px and up), so its station takes the void: before its first beat and
+   after its last the landing's fixed gateway showed through it as a gold
+   wash (ADR-160, owner 2026-10-21: "don't want different sections to bleed
+   into each other"). */
+@media (max-width: 960px) {
+  .tw-root[data-tw-order="talk-first"] #workshop.station.tw-arc {
+    background: var(--void, #0a0908);
+  }
+}
 
 /* ⚠ THE TALK'S OWN WELD (U3, owner 2026-10-15: no slide-over, the eras'
    elements move away and the next title glitches in where it stands). The

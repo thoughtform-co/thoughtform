@@ -388,3 +388,45 @@
     width: auto;
   }
 }
+
+/* StackFlow's phone stage (ADR-160; owner, 2026-10-21: keep "our cool
+   transitions" on a phone). On a phone with room for it, a page that asks
+   for it (`phone="stage"`) has the stack fall together plate by plate as
+   the section arrives, bottom plate first as the swarm lands it on desktop
+   (`--fall`, written by `StackFlow`), then hold under the chrome on its own
+   ground while the three parts pass beneath it: the part being read lights
+   the plate it names (`data-shf-part`), the other two step back. */
+@media (max-width: 960px) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+  .shf[data-phone="stage"] .shf-stage {
+    position: sticky;
+    top: calc(var(--mobile-chrome-top, 56px) + 8px);
+    z-index: 2;
+  }
+  /* its bed, edge to edge, fading at its foot so a row slides under it */
+  .shf[data-phone="stage"] .shf-stage::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: calc(-1 * (var(--mobile-chrome-top, 56px) + 8px));
+    bottom: -32px;
+    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
+    background: linear-gradient(to bottom, var(--xb-ground) calc(100% - 32px), transparent);
+    pointer-events: none;
+  }
+  /* the head stays over that bed while the two scroll together */
+  .shf[data-phone="stage"] > .xm {
+    position: relative;
+    z-index: 3;
+  }
+  .shf[data-phone="stage"] .shf-stage [data-plate] {
+    translate: 0 calc((1 - var(--fall, 1)) * -64px);
+    opacity: calc(var(--fall, 1) * var(--lit, 1));
+    transition: opacity 240ms ease;
+  }
+  .shf[data-phone="stage"][data-shf-part="0"] .shf-stage [data-plate]:not([data-plate="0"]),
+  .shf[data-phone="stage"][data-shf-part="1"] .shf-stage [data-plate]:not([data-plate="1"]),
+  .shf[data-phone="stage"][data-shf-part="2"] .shf-stage [data-plate]:not([data-plate="2"]) {
+    --lit: 0.35;
+  }
+}
