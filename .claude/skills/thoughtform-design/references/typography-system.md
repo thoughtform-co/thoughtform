@@ -6,14 +6,14 @@ Fluid type scale, font roles, weights, and letter-spacing. All type uses CSS var
 
 ## Font Stacks
 
-Two faces, two roles. PT Mono covers everything that wants to read like an instrument readout (titles, HUD labels, data, eyebrows, captions). PP Neue Montreal covers everything that wants to read like a sentence (paragraphs, descriptions, long-form copy).
+Two faces, two roles. PT Mono covers everything that wants to read like an instrument readout (HUD labels, data, eyebrows, captions, chips) and the one mono display. PP Neue Montreal covers titles and everything that wants to read like a sentence (section headers, H1s, paragraphs, descriptions, long-form copy). ADR-092 settled the title face: a section title is the sans at 500, sentence case; PT Mono titles survive only as the mono display (the hero headline, the arc card titles), uppercase at 400.
 
 | Role         | Stack                                      | CSS Variable              | Tailwind class | Usage                                                                                              |
 | ------------ | ------------------------------------------ | ------------------------- | -------------- | -------------------------------------------------------------------------------------------------- |
-| Title / mono | `var(--font-pt-mono), monospace`           | `--font-pt-mono`          | `font-mono`    | Headings, HUD labels, eyebrows, data readouts, timestamps, coordinates, pagination, chapter labels |
-| Body / sans  | `var(--font-pp-neue-montreal), sans-serif` | `--font-pp-neue-montreal` | `font-sans`    | Paragraphs, descriptions, long-form copy, CTAs reading as sentences                                |
+| Chrome / mono | `var(--font-pt-mono), monospace`           | `--font-pt-mono`          | `font-mono`    | HUD labels, eyebrows, data readouts, timestamps, coordinates, pagination, chapter labels, the mono display (hero headline, arc card titles) |
+| Title + body / sans | `var(--font-pp-neue-montreal), sans-serif` | `--font-pp-neue-montreal` | `font-sans`    | Section headers and H1s (500, sentence case), paragraphs, descriptions, long-form copy, CTAs reading as sentences |
 
-Both faces are loaded via `next/font/local` in `app/layout.tsx` (files in `public/fonts/`). PP Mondwest, IBM Plex Sans, and IBM Plex Mono have been retired from this system. The Thoughtform wordmark is preserved as inline SVG geometry in `components/brand/Wordmark.tsx` — it does NOT depend on any font.
+Both faces are loaded via `next/font/local` in `app/layout.tsx` (files in `public/fonts/`). PP Mondwest and IBM Plex Mono have been retired from this system (Plex Mono still loads as `--font-mono`, which is why inheriting it is a leak, never a choice). IBM Plex Sans is retired with exactly one sanctioned consumer: the proof map's hub, where the drawing writes prose (ADR-085 U2; weights 400/500 under ADR-092, `app/layout.tsx`). Nothing else may use it. The Thoughtform wordmark is preserved as inline SVG geometry in `components/brand/Wordmark.tsx` — it does NOT depend on any font.
 
 Tailwind's `font-display` token is kept as a deprecated alias mapping to PT Mono so legacy class names keep working; prefer `font-mono` in new code.
 
@@ -32,7 +32,7 @@ All sizes use `clamp()` for fluid scaling. Map to CSS variables; do not hardcode
 | lg      | `clamp(16px, 0.9rem + 0.4vw, 20px)`  | `--type-lg`      | Large text                                            |
 | xl      | `clamp(18px, 1rem + 0.6vw, 26px)`    | `--type-xl`      | Section titles                                        |
 | 2xl     | `clamp(22px, 1.2rem + 1vw, 32px)`    | `--type-2xl`     | Large headlines                                       |
-| display | `clamp(28px, 1.5rem + 2vw, 48px)`    | `--type-display` | Display headlines (PT Mono uppercase, tracking-tight) |
+| display | `clamp(28px, 1.5rem + 2vw, 48px)`    | `--type-display` | Display headlines (sans sentence case; the hero's mono display uppercase) |
 
 ---
 
@@ -94,8 +94,9 @@ only where the label is an eyebrow, a designation or a count.
 
 ## Hierarchy Rules
 
-- One display (PT Mono, large + uppercase + tight tracking) headline per viewport when used; do not stack multiple display headings in one block.
-- PT Mono is the system's working voice — titles, HUD labels, data, timestamps. Reserve PP Neue Montreal for prose: paragraph descriptions, body copy, long-form sentences.
+- Titles are PP Neue Montreal: section headers and H1s at `--weight-lit` (500), sentence case, `--track-display` (ADR-092).
+- One mono display (PT Mono, large + uppercase, 400) per viewport, and only where ADR-092 keeps it: the hero headline, the arc card titles. Do not stack display headings in one block.
+- PT Mono is the system's working voice for chrome — HUD labels, eyebrows, data, timestamps, chips. It never sets a section title or a sentence.
 - If you need another size, use the nearest scale step; do not invent intermediate values.
 
 ---
@@ -104,6 +105,6 @@ only where the label is an eyebrow, a designation or a count.
 
 - System font stacks (Arial, Helvetica, sans-serif as primary)
 - Rounded or playful typefaces
-- PP Mondwest, IBM Plex Sans, or IBM Plex Mono — all three have been retired
+- PP Mondwest or IBM Plex Mono (retired), or IBM Plex Sans anywhere but the proof map's hub
 - More than one display face per screen
-- Body / paragraph copy in PT Mono — reserve PT Mono for titles, HUD labels, and data readouts
+- A section title or body / paragraph copy in PT Mono — reserve PT Mono for HUD labels, data readouts and the one mono display

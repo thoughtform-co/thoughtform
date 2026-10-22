@@ -112,12 +112,12 @@ the pre-lattice spelling; a new rule reads `--lat-rule` or `--lat-seam`.
 
 ### Font Stacks
 
-Two faces. PT Mono = HUD labels + data + the hero headline. PP Neue Montreal = titles (500, sentence case, ADR-092) + paragraphs + descriptions. PP Mondwest, IBM Plex Sans, and IBM Plex Mono have been retired.
+Two faces. PT Mono = HUD labels + data + the hero headline. PP Neue Montreal = titles (500, sentence case, ADR-092) + paragraphs + descriptions. PP Mondwest and IBM Plex Mono have been retired; IBM Plex Sans survives only in the proof map's hub (ADR-085 U2).
 
 | Token          | Stack                                      | CSS Variable              | Tailwind class                              | Usage                                                             |
 | -------------- | ------------------------------------------ | ------------------------- | ------------------------------------------- | ----------------------------------------------------------------- |
-| mono / display | `var(--font-pt-mono), monospace`           | `--font-pt-mono`          | `font-mono` (and deprecated `font-display`) | Titles, headings, HUD labels, eyebrows, data readouts, timestamps |
-| sans / body    | `var(--font-pp-neue-montreal), sans-serif` | `--font-pp-neue-montreal` | `font-sans`                                 | Paragraphs, descriptions, long-form copy                          |
+| mono / display | `var(--font-pt-mono), monospace`           | `--font-pt-mono`          | `font-mono` (and deprecated `font-display`) | HUD labels, eyebrows, data readouts, timestamps, the hero headline |
+| sans / body    | `var(--font-pp-neue-montreal), sans-serif` | `--font-pp-neue-montreal` | `font-sans`                                 | Titles (500, sentence case), paragraphs, descriptions, long-form  |
 
 ### Fluid Size Scale
 

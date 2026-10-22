@@ -106,12 +106,17 @@ Re-derive per theme; never inherit.
 ### Typography — two families, by ROLE
 
 ```css
---font-pt-mono: "PT Mono", monospace; /* chrome: headings, HUD labels, readouts */
---font-pp-neue-montreal: "PP Neue Montreal", sans-serif; /* prose: body, descriptions, long-form */
+--font-pt-mono: "PT Mono", monospace; /* chrome: HUD labels, eyebrows, readouts, the hero headline */
+--font-pp-neue-montreal: "PP Neue Montreal", sans-serif; /* titles and prose: headings, body, long-form */
 ```
 
-PT Mono owns instrument chrome; PP Neue Montreal owns titles and prose. Sizes divisible by
-5 at reference scale. PP Mondwest is retired; the wordmark is inline SVG, not a font.
+PT Mono owns instrument chrome; PP Neue Montreal owns titles and prose. **Titles are the
+sans**: every section header and H1 is PP Neue Montreal at 500, sentence case,
+`--track-display` (ADR-092). The only mono titles are the mono display, the hero headline
+and the arc card titles, uppercase at 400: chrome register, one per viewport. Sizes
+divisible by 5 at reference scale. PP Mondwest and IBM Plex Mono are retired; IBM Plex Sans
+is retired with one sanctioned consumer, the proof map's hub (ADR-085 U2, 400/500 under
+ADR-092), and appears nowhere else. The wordmark is inline SVG, not a font.
 `references/typography-system.md`.
 
 ⚠ **Anything whose content is a sentence must DECLARE its family explicitly.** Inheriting is

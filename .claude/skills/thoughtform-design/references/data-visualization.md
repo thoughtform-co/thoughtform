@@ -35,7 +35,7 @@ Charting rules, line weights, and semantic color mapping. Graphs and telemetry s
 
 ## Axes & Labels
 
-- **Font:** Mono (IBM Plex Mono or PT Mono). Uppercase optional for axis labels.
+- **Font:** PT Mono (IBM Plex Mono is retired). Uppercase optional for axis labels.
 - **Size:** 9–11px for tick labels and axis titles.
 - **Color:** dawn-30 for labels, dawn-50 for ticks/grid. Gold only for emphasized axis (e.g. current time marker).
 
